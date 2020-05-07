@@ -6,6 +6,8 @@
 #define __VPP_NAT_API_H__
 
 #ifndef __cplusplus
+#include <vlib/vlib.h>
+#include <vnet/ip/ip4.h>
 #include "nic/vpp/infra/ipc/pdsa_vpp_hdlr.h"
 #endif
 
@@ -57,10 +59,10 @@ typedef enum {
 } nat_proto_t;
 
 // API
-nat_err_t
-nat_port_block_get_stats(const uint8_t id[PDS_MAX_KEY_LEN], uint32_t vpc_hw_id,
-                         uint8_t protocol, nat_addr_type_t nat_addr_type,
-                         pds_nat_port_block_export_t *export_pb);
+nat_err_t nat_port_block_get_stats(const uint8_t id[PDS_MAX_KEY_LEN],
+                                   uint32_t vpc_hw_id, uint8_t protocol,
+                                   nat_addr_type_t nat_addr_type,
+                                   pds_nat_port_block_export_t *export_pb);
 #ifdef __cplusplus
 nat_err_t nat_port_block_add(const uint8_t key[PDS_MAX_KEY_LEN],
                              uint32_t vpc_hw_id,
@@ -86,6 +88,7 @@ nat_err_t nat_port_block_del(const uint8_t key[PDS_MAX_KEY_LEN],
 #else
 
 typedef u32 nat_hw_index_t;
+typedef int (*nat_vendor_invalidate_cb)(vlib_buffer_t *b, u16 *next);
 
 void nat_init(void);
 nat_err_t nat_port_block_add(const u8 id[PDS_MAX_KEY_LEN], u32 vpc_hw_id,
@@ -110,10 +113,15 @@ nat_err_t nat_flow_alloc(u32 vpc_hw_id, ip4_address_t dip, u16 dport,
                          nat_hw_index_t *xlate_idx_rflow);
 nat_err_t nat_flow_dealloc(u32 vpc_hw_id, ip4_address_t dip, u16 dport, u8 protocol,
                            ip4_address_t sip, u16 sport);
+bool nat_flow_is_dst_valid(u32 vpc_id, ip4_address_t dip, u16 dport,
+                           u8 protocol, nat_addr_type_t nat_addr_type);
 nat_err_t nat_usage(u32 vpc_hw_id, u8 protocol, nat_addr_type_t nat_addr_type,
                     u32 *num_ports_total, u32 *num_ports_alloc,
                     u32 *num_flows_alloc);
 nat_err_t nat_hw_usage(u32 *total_hw_indices, u32 *total_alloc_indices);
+
+void nat_register_vendor_invalidate_cb(nat_vendor_invalidate_cb cb);
+
 #endif // __cplusplus
 
 #ifdef __cplusplus

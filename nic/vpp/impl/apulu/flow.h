@@ -671,8 +671,13 @@ pds_flow_packet_type_derive (vlib_buffer_t *p, p4_rx_cpu_hdr_t *hdr,
                             pkt_type = PDS_FLOW_N2L_OVERLAY_ROUTE_DIS_NAT;
                         }
                     } else {
+                        /*
+                         * We should not reach here since in NAT invalid case,
+                         * vnic is not found and this function is not called.
+                         * But still increment the NAT invalidate counter
+                         */
                         *next = FLOW_CLASSIFY_NEXT_DROP;
-                        counter[FLOW_CLASSIFY_COUNTER_UNKOWN] += 1;
+                        counter[FLOW_CLASSIFY_COUNTER_IP4_NAT_INVAL] += 1;
                         return;
                     }
                 }
@@ -758,9 +763,33 @@ pds_flow_classify_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
     flag_orig = hdr->flags;
     u8 flags = BIT_ISSET(flag_orig, VPP_CPU_FLAGS_IP_VALID);
     vnic = pds_impl_db_vnic_get(hdr->vnic_id);
-    if (!vnic) {
-        *next = FLOW_CLASSIFY_NEXT_DROP;
-        counter[FLOW_CLASSIFY_COUNTER_VNIC_NOT_FOUND] += 1;
+    if (PREDICT_FALSE(!vnic)) {
+        if (hdr->rx_packet && flag_orig & VPP_CPU_FLAGS_IPV4_2_VALID) {
+            /*
+             * When vnic lookup fails in P4, P4/P4+ cannot do a route lookup on
+             * the source ip to determine route hit with NAT rule enabled. We
+             * assume such packets are invalid NAT flows (sent to server not
+             * containing the NAT port block matching the dest ip)
+             */
+            vnet_buffer(p)->pds_flow_data.flags |= flag_orig;
+            vnet_buffer2(p)->pds_nat_data.vpc_id = hdr->vpc_id;
+            /*
+             * set l3_hdr_offset to offset to outer header from current
+             * location. set l4_hdr_offset to offset to inner l4 header from
+             * current location
+             */
+            vnet_buffer(p)->l3_hdr_offset = hdr->l3_offset - 
+                                            hdr->l3_inner_offset;
+            vnet_buffer(p)->l4_hdr_offset = hdr->l4_inner_offset -
+                                            hdr->l3_inner_offset;
+            vlib_buffer_advance(p, VPP_P4_TO_ARM_HDR_SZ +
+                                hdr->l3_inner_offset - hdr->l2_offset);
+            *next = FLOW_CLASSIFY_NEXT_IP4_NAT_INVAL;
+            counter[FLOW_CLASSIFY_COUNTER_IP4_NAT_INVAL] += 1;
+        } else {
+            *next = FLOW_CLASSIFY_NEXT_DROP;
+            counter[FLOW_CLASSIFY_COUNTER_VNIC_NOT_FOUND] += 1;
+        }
         return;
     }
     vnet_buffer(p)->pds_flow_data.ses_id = hdr->session_id;

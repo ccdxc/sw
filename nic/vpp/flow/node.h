@@ -40,6 +40,7 @@
         _(IP4_L2L_FLOW_PROG, "pds-l2l-ip4-flow-program" )           \
         _(AGE_FLOW, "pds-flow-age-setup" )                          \
         _(IP4_NAT, "pds-nat44" )                                    \
+        _(IP4_NAT_INVAL, "pds-nat44-inval" )                        \
         _(ICMP_VRIP, "ip4-icmp-echo-request")                       \
         _(DROP, "pds-error-drop")                                   \
 
@@ -51,6 +52,7 @@
         _(IP6_TUN_FLOW, "IPv6 tunnel flow packets" )                \
         _(IP4_L2L_FLOW, "IPv4 l2l flow packets" )                   \
         _(IP4_NAT, "NAPT flow packets" )                            \
+        _(IP4_NAT_INVAL, "NAT Invalid packets" )                    \
         _(MAX_EXCEEDED, "Session count exceeded packets")           \
         _(VNIC_NOT_FOUND, "Unknown vnic")                           \
         _(VPC_NOT_FOUND, "Unknown vpc")                             \

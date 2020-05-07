@@ -18,6 +18,8 @@ VLIB_PLUGIN_REGISTER () = {
 
 vlib_node_registration_t nat_node;
 
+nat_node_main_t nat_node_main;
+
 always_inline void
 nat_next_node_fill (u16 *next0, u32 *counters, u16 node,
                     u32 cidx)
@@ -30,7 +32,7 @@ static void
 nat_trace_add (nat_trace_t *trace, u16 vpc_id, ip4_address_t pvt_ip,
                u16 pvt_port, ip4_address_t dip, u16 dport, u8 protocol,
                ip4_address_t public_ip, u16 public_port, nat_err_t err,
-               bool alloc)
+               nat_node_type_t type)
 {
     trace->vpc_id = vpc_id;
     trace->pvt_ip.as_u32 = clib_host_to_net_u32(pvt_ip.as_u32);
@@ -41,7 +43,7 @@ nat_trace_add (nat_trace_t *trace, u16 vpc_id, ip4_address_t pvt_ip,
     trace->public_ip.as_u32 = clib_host_to_net_u32(public_ip.as_u32);
     trace->public_port = public_port;
     trace->err = err;
-    trace->alloc = alloc;
+    trace->type = type;
 }
 
 always_inline void
@@ -111,7 +113,7 @@ nat_internal (vlib_buffer_t *p0, u16 *next0, u32 *counter,
                       p0->flags & VLIB_BUFFER_IS_TRACED)) {
         trace = vlib_add_trace (vm, node, p0, sizeof (trace[0]));
         nat_trace_add(trace, vpc_id, pvt_ip, pvt_port, dip, dport, protocol,
-                      sip, sport, NAT_ERR_OK, true);
+                      sip, sport, NAT_ERR_OK, NAT_NODE_ALLOC);
     }
 
     nat_next_node_fill(next0, counter,
@@ -124,11 +126,62 @@ error:
                       p0->flags & VLIB_BUFFER_IS_TRACED)) {
         trace = vlib_add_trace (vm, node, p0, sizeof (trace[0]));
         nat_trace_add(trace, vpc_id, pvt_ip, pvt_port, dip, dport, protocol,
-                      sip, sport, nat_ret, true);
+                      sip, sport, nat_ret, NAT_NODE_ALLOC);
     }
     nat_next_node_fill(next0, counter,
                        NAT_NEXT_DROP,
                        NAT_COUNTER_FAILED);
+    return;
+}
+
+always_inline void
+nat_internal_invalidate (vlib_buffer_t *p0, u16 *next0, u32 *counter,
+                         vlib_node_runtime_t *node, vlib_main_t *vm)
+{
+    nat_trace_t *trace;
+    ip4_header_t *ip40;
+    udp_header_t *udp0;
+    ip4_address_t dip, zero_ip = { 0 };
+    u16 dport = 0;
+    u16 vpc_id;
+    u8 protocol;
+    nat_addr_type_t nat_addr_type = NAT_ADDR_TYPE_INTERNET;
+    u8 cidx;
+
+    vpc_id = vnet_buffer2(p0)->pds_nat_data.vpc_id;
+    ip40 = vlib_buffer_get_current(p0);
+    dip.as_u32 = clib_net_to_host_u32(ip40->dst_address.as_u32);
+    protocol = ip40->protocol;
+    if (protocol == IP_PROTOCOL_UDP || protocol == IP_PROTOCOL_TCP) {
+        udp0 = (udp_header_t *) (((u8 *) ip40) +
+               vnet_buffer (p0)->l4_hdr_offset);
+        dport = clib_net_to_host_u16(udp0->dst_port);
+    }
+
+    if (pds_is_flow_napt_svc_en(p0)) {
+        nat_addr_type = NAT_ADDR_TYPE_INFRA;
+    }
+    if (nat_flow_is_dst_valid(vpc_id, dip, dport, protocol, nat_addr_type)) {
+        cidx = NAT_COUNTER_INVALID_EXISTS;
+        *next0 = NAT_NEXT_DROP;
+    } else {
+        if (nat_node_main.invalidate_cb &&
+            nat_node_main.invalidate_cb(p0, next0) == 0) {
+                *next0 = NAT_NEXT_IP4_LINUX_INJECT;
+        } else {
+            *next0 = NAT_NEXT_DROP;
+        }
+        cidx = NAT_COUNTER_INVALID;
+    }
+
+    if (PREDICT_FALSE(node->flags & VLIB_NODE_FLAG_TRACE &&
+                      p0->flags & VLIB_BUFFER_IS_TRACED)) {
+        trace = vlib_add_trace (vm, node, p0, sizeof (trace[0]));
+        nat_trace_add(trace, vpc_id, zero_ip, 0, dip, dport, protocol,
+                      zero_ip, 0, NAT_ERR_OK, NAT_NODE_INVALIDATE);
+    }
+
+    counter[cidx]++;
     return;
 }
 
@@ -166,7 +219,7 @@ nat_internal_error (vlib_buffer_t *p0, u16 *next0, u32 *counter,
                       p0->flags & VLIB_BUFFER_IS_TRACED)) {
         trace = vlib_add_trace (vm, node, p0, sizeof (trace[0]));
         nat_trace_add(trace, vpc_id, pvt_ip, pvt_port, dip, dport, protocol,
-                      sip, sport, nat_ret, false);
+                      sip, sport, nat_ret, NAT_NODE_DEALLOC);
     }
 
     nat_next_node_fill(next0, counter,
@@ -209,6 +262,39 @@ nat (vlib_main_t * vm,
 }
 
 static uword
+nat_invalidate (vlib_main_t * vm,
+                vlib_node_runtime_t * node,
+                vlib_frame_t * from_frame)
+{
+    u32 counter[NAT_COUNTER_LAST] = {0};
+
+    PDS_PACKET_LOOP_START {
+
+        PDS_PACKET_DUAL_LOOP_START (READ, READ) {
+            nat_internal_invalidate(PDS_PACKET_BUFFER(0), PDS_PACKET_NEXT_NODE_PTR(0), counter, node, vm);
+
+            nat_internal_invalidate(PDS_PACKET_BUFFER(1), PDS_PACKET_NEXT_NODE_PTR(1), counter, node, vm);
+
+        } PDS_PACKET_DUAL_LOOP_END;
+
+        PDS_PACKET_SINGLE_LOOP_START {
+            nat_internal_invalidate(PDS_PACKET_BUFFER(0), PDS_PACKET_NEXT_NODE_PTR(0), counter, node, vm);
+
+        } PDS_PACKET_SINGLE_LOOP_END;
+
+    } PDS_PACKET_LOOP_END;
+
+#define _(n, s) \
+    vlib_node_increment_counter (vm, node->node_index,           \
+            NAT_COUNTER_##n,                               \
+            counter[NAT_COUNTER_##n]);
+    foreach_nat_counter
+#undef _
+
+    return from_frame->n_vectors;
+}
+
+static uword
 nat_error (vlib_main_t * vm,
            vlib_node_runtime_t * node,
            vlib_frame_t * from_frame)
@@ -217,7 +303,7 @@ nat_error (vlib_main_t * vm,
 
     PDS_PACKET_LOOP_START {
 
-        PDS_PACKET_DUAL_LOOP_START (WRITE, READ) {
+        PDS_PACKET_DUAL_LOOP_START (READ, READ) {
             nat_internal_error(PDS_PACKET_BUFFER(0), PDS_PACKET_NEXT_NODE_PTR(0), counter, node, vm);
 
             nat_internal_error(PDS_PACKET_BUFFER(1), PDS_PACKET_NEXT_NODE_PTR(1), counter, node, vm);
@@ -247,12 +333,14 @@ nat_trace (u8 * s, va_list * args)
     CLIB_UNUSED (vlib_main_t * vm) = va_arg(*args, vlib_main_t *);
     CLIB_UNUSED (vlib_node_t * node) = va_arg(*args, vlib_node_t *);
     nat_trace_t *t = va_arg(*args, nat_trace_t *);
+    static char *type_str[] = { "ALLOC", "DEALLOC", "INVALIDATE" };
 
-    s= format(s, "NAT Flow Alloc[%d] Err[%d] vpc_id[%d] pvt_ip[%U] pvt_port[%d]"
+    s= format(s, "NAT Flow Type[%s] Err[%d] vpc_id[%d] pvt_ip[%U] pvt_port[%d]"
               " proto[%U] dip[%U] dport[%d] public_ip[%U] public_port[%d]",
-              t->alloc, t->err, t->vpc_id, format_ip4_address, &t->pvt_ip, t->pvt_port,
-              format_ip_protocol, t->protocol, format_ip4_address, &t->dip,
-              t->dport, format_ip4_address, &t->public_ip, t->public_port);
+              type_str[t->type], t->err, t->vpc_id, format_ip4_address,
+              &t->pvt_ip, t->pvt_port, format_ip_protocol, t->protocol,
+              format_ip4_address, &t->dip, t->dport, format_ip4_address,
+              &t->public_ip, t->public_port);
     return s;
 }
 
@@ -265,6 +353,31 @@ static char * nat_error_strings[] = {
 VLIB_REGISTER_NODE (nat_node) = {
     .function = nat,
     .name = "pds-nat44",
+    /* Takes a vector of packets. */
+    .vector_size = sizeof (u32),
+
+    .n_errors = NAT_COUNTER_LAST,
+    .error_strings = nat_error_strings,
+
+    .n_next_nodes = NAT_N_NEXT,
+    .next_nodes = {
+#define _(s,n) [NAT_NEXT_##s] = n,
+    foreach_nat_next
+#undef _
+    },
+
+    .format_trace = nat_trace,
+};
+
+void
+nat_register_vendor_invalidate_cb(nat_vendor_invalidate_cb cb)
+{
+    nat_node_main.invalidate_cb = cb;
+}
+
+VLIB_REGISTER_NODE (nat_invalidate_node) = {
+    .function = nat_invalidate,
+    .name = "pds-nat44-inval",
     /* Takes a vector of packets. */
     .vector_size = sizeof (u32),
 
