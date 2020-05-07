@@ -352,13 +352,39 @@ action rfc_action_p3(pad,pr45, res45, pr44, res44,
     modify_field(scratch_metadata.field1,res00>>(txdma_control.rfc_index%
                  SACL_P3_ENTRIES_PER_CACHE_LINE)*SACL_P3_ENTRY_WIDTH);
 
-    // If the priority of the current result is higher than whats in the PHV
-    if (txdma_control.rule_priority > scratch_metadata.field10) {
-        // Then overwrite the result in the PHV with the current one
-        modify_field(txdma_control.rule_priority, scratch_metadata.field10);
-        modify_field(txdma_to_p4e.drop, scratch_metadata.field1);
-        modify_field(txdma_to_p4e.sacl_action, scratch_metadata.field1);
-        modify_field(txdma_to_p4e.sacl_root_num, txdma_control.root_count);
+    // Is the device configured for 'any deny is deny' ?
+    if (scratch_metadata.flag == FW_ACTION_XPOSN_ANY_DENY) {
+        // If so, is the current policy action a deny ?
+        if (scratch_metadata.field1 == SACL_P3_ENTRY_ACTION_DENY) {
+            // Is this a higher priority deny than before ?
+            if ((txdma_to_p4e.drop != SACL_P3_ENTRY_ACTION_DENY) or
+                (txdma_control.rule_priority > scratch_metadata.field10)) {
+                // Then overwrite the result in the PHV with the current one
+                modify_field(txdma_control.rule_priority, scratch_metadata.field10);
+                modify_field(txdma_to_p4e.drop, scratch_metadata.field1);
+                modify_field(txdma_to_p4e.sacl_action, scratch_metadata.field1);
+                modify_field(txdma_to_p4e.sacl_root_num, txdma_control.root_count);
+            }
+        } else {
+            // Is this a higher priority allow than before ?
+            if ((txdma_to_p4e.drop != SACL_P3_ENTRY_ACTION_DENY) and
+                (txdma_control.rule_priority > scratch_metadata.field10)) {
+                // Then overwrite the result in the PHV with the current one
+                modify_field(txdma_control.rule_priority, scratch_metadata.field10);
+                modify_field(txdma_to_p4e.drop, scratch_metadata.field1);
+                modify_field(txdma_to_p4e.sacl_action, scratch_metadata.field1);
+                modify_field(txdma_to_p4e.sacl_root_num, txdma_control.root_count);
+            }
+        }
+  } else {
+        // If the priority of the current result is higher than whats in the PHV
+        if (txdma_control.rule_priority > scratch_metadata.field10) {
+            // Then overwrite the result in the PHV with the current one
+            modify_field(txdma_control.rule_priority, scratch_metadata.field10);
+            modify_field(txdma_to_p4e.drop, scratch_metadata.field1);
+            modify_field(txdma_to_p4e.sacl_action, scratch_metadata.field1);
+            modify_field(txdma_to_p4e.sacl_root_num, txdma_control.root_count);
+        }
     }
 
     // Initialize the correct table base and index based on the recirc count
@@ -757,13 +783,39 @@ action rfc_action_p3_1(pad,pr45, res45, pr44, res44,
     modify_field(scratch_metadata.field1,res00>>(txdma_control.rfc_index%
                  SACL_P3_ENTRIES_PER_CACHE_LINE)*SACL_P3_ENTRY_WIDTH);
 
-    // If the priority of the current result is higher than whats in the PHV
-    if (txdma_control.rule_priority > scratch_metadata.field10) {
-        // Then overwrite the result in the PHV with the current one
-        modify_field(txdma_control.rule_priority, scratch_metadata.field10);
-        modify_field(txdma_to_p4e.drop, scratch_metadata.field1);
-        modify_field(txdma_to_p4e.sacl_action, scratch_metadata.field1);
-        modify_field(txdma_to_p4e.sacl_root_num, txdma_control.root_count);
+    // Is the device configured for 'any deny is deny' ?
+    if (scratch_metadata.flag == FW_ACTION_XPOSN_ANY_DENY) {
+        // If so, is the current policy action a deny ?
+        if (scratch_metadata.field1 == SACL_P3_ENTRY_ACTION_DENY) {
+            // Is this a higher priority deny than before ?
+            if ((txdma_to_p4e.drop != SACL_P3_ENTRY_ACTION_DENY) or
+                (txdma_control.rule_priority > scratch_metadata.field10)) {
+                // Then overwrite the result in the PHV with the current one
+                modify_field(txdma_control.rule_priority, scratch_metadata.field10);
+                modify_field(txdma_to_p4e.drop, scratch_metadata.field1);
+                modify_field(txdma_to_p4e.sacl_action, scratch_metadata.field1);
+                modify_field(txdma_to_p4e.sacl_root_num, txdma_control.root_count);
+            }
+        } else {
+            // Is this a higher priority allow than before ?
+            if ((txdma_to_p4e.drop != SACL_P3_ENTRY_ACTION_DENY) and
+                (txdma_control.rule_priority > scratch_metadata.field10)) {
+                // Then overwrite the result in the PHV with the current one
+                modify_field(txdma_control.rule_priority, scratch_metadata.field10);
+                modify_field(txdma_to_p4e.drop, scratch_metadata.field1);
+                modify_field(txdma_to_p4e.sacl_action, scratch_metadata.field1);
+                modify_field(txdma_to_p4e.sacl_root_num, txdma_control.root_count);
+            }
+        }
+    } else {
+        // If the priority of the current result is higher than whats in the PHV
+        if (txdma_control.rule_priority > scratch_metadata.field10) {
+            // Then overwrite the result in the PHV with the current one
+            modify_field(txdma_control.rule_priority, scratch_metadata.field10);
+            modify_field(txdma_to_p4e.drop, scratch_metadata.field1);
+            modify_field(txdma_to_p4e.sacl_action, scratch_metadata.field1);
+            modify_field(txdma_to_p4e.sacl_root_num, txdma_control.root_count);
+        }
     }
 
     if (rx_to_tx_hdr.sacl_base_addr0 != 0) {

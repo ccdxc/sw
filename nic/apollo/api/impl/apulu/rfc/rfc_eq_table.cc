@@ -17,8 +17,8 @@
 #include "gen/p4gen/p4plus_txdma/include/p4plus_txdma_p4pd.h"
 #include "nic/apollo/p4/include/apulu_sacl_defines.h"
 
-#define RFC_RESULT_RULE_ACTION_ALLOW               0
-#define RFC_RESULT_RULE_ACTION_DENY                1
+#define RFC_RESULT_RULE_ACTION_ALLOW               SACL_P3_ENTRY_ACTION_ALLOW
+#define RFC_RESULT_RULE_ACTION_DENY                SACL_P3_ENTRY_ACTION_DENY
 #define RFC_RESULT_SET_ACTION_BIT(val, action)     ((val) |= action)
 #define RFC_RESULT_BITS_PRIORITY_MASK              0x7FE
 #define RFC_RESULT_SET_PRIORITY_BITS(val, prio)    ((val) |= ((prio<<1) & RFC_RESULT_BITS_PRIORITY_MASK))
