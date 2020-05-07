@@ -17,7 +17,7 @@ builds:
     artifacts:
       - /sw/build_iris_sim.tar.gz
   build-iris-arm:
-    commands: ["sh", "-c", "cd /usr/src/github.com/pensando/sw && ls -al && make ws-tools && go install ./asset-build/... && make pull-assets && V=1 make CUSTOM_BUILDROOT=1 naples-firmware && ./tools/scripts/check-local-files.sh && make PIPELINE=iris naples-firmware-tarball-iris &&  ./tools/scripts/check-local-files.sh"]
+    commands: ["sh", "-c", "cd /usr/src/github.com/pensando/sw && ls -al && make ws-tools && go install ./asset-build/... && make pull-assets && V=1 make CUSTOM_BUILDROOT=1 naples-firmware && make PIPELINE=iris naples-firmware-tarball-iris"]
     owners: ["email:jainvipin@pensando.io"]
     artifacts:
       - /sw/naples_fw_all.tgz
