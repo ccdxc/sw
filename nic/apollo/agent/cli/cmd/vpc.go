@@ -10,6 +10,8 @@ import (
 	"reflect"
 	"strings"
 
+	"google.golang.org/grpc"
+
 	uuid "github.com/satori/go.uuid"
 	"github.com/spf13/cobra"
 	yaml "gopkg.in/yaml.v2"
@@ -66,7 +68,8 @@ func vpcShowCmdHandler(cmd *cobra.Command, args []string) {
 			req, respMsg)
 	} else {
 		// Connect to PDS
-		c, err := utils.CreateNewGRPCClient()
+		var c *grpc.ClientConn
+		c, err = utils.CreateNewGRPCClient()
 		if err != nil {
 			fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 			return
@@ -86,7 +89,6 @@ func vpcShowCmdHandler(cmd *cobra.Command, args []string) {
 		fmt.Printf("Getting VPC failed, err %v\n", err)
 		return
 	}
-
 	if respMsg.ApiStatus != pds.ApiStatus_API_STATUS_OK {
 		fmt.Printf("Operation failed with %v error\n", respMsg.ApiStatus)
 		return

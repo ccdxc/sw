@@ -14,15 +14,17 @@ using grpc::ServerContext;
 
 using pds::NhSvc;
 
-typedef struct nh_get_all_args_s {
+typedef struct nh_read_args_s {
+    bool is_read_all;
     pds_nh_type_t type;
     void *ctxt;
-} nh_get_all_args_t;
+} nh_read_args_t;
 
-typedef struct nh_group_get_all_args_s {
+typedef struct nh_group_read_args_s {
+    bool is_read_all;
     pds_nexthop_group_type_t type;
     void *ctxt;
-} nh_group_get_all_args_t;
+} nh_group_read_args_t;
 
 class NhSvcImpl final : public NhSvc::Service {
 public:
