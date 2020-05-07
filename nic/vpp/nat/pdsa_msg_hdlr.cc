@@ -3,7 +3,6 @@
 //
 
 #include "nic/vpp/infra/cfg/pdsa_db.hpp"
-#include "nic/vpp/nat/pdsa_uds_hdlr.h"
 #include "nic/vpp/infra/ipc/pdsa_hdlr.hpp"
 #include "nat_api.h"
 
@@ -63,7 +62,8 @@ pds_nat_cfg_set(const pds_cfg_msg_t *cfg_msg) {
                                      addr, nat_msg->spec.ip_proto,
                                      nat_msg->spec.nat_port_range.port_lo,
                                      nat_msg->spec.nat_port_range.port_hi,
-                                     nat_addr_type);
+                                     nat_addr_type,
+                                     nat_msg->spec.threshold);
             if (ret != NAT_ERR_OK) {
                 break;
             }
@@ -154,7 +154,7 @@ pds_nat_cfg_act(const pds_cfg_msg_t *cfg_msg) {
                                     addr, nat_msg->spec.ip_proto,
                                     nat_msg->spec.nat_port_range.port_lo,
                                     nat_msg->spec.nat_port_range.port_hi,
-                                    nat_addr_type);
+                                    nat_addr_type, nat_msg->spec.threshold);
     }
 
     if (ret == NAT_ERR_OK) {

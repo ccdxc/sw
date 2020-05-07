@@ -119,6 +119,8 @@ message NatPortBlockSpec {
   types.PortRange   Ports       = 5;
   // NAT address is from Internet or Cloud Infra space
   types.AddressType AddressType = 6;
+  // ports usage threshold (percent) to generate alerts. 0 disables alerts
+  uint32            Threshold   = 7 [(gogoproto.moretags) = "meta:range:0-99, meta:default=0"];
 }
 
 // operational status of NAT port block

@@ -66,7 +66,7 @@ nat_err_t nat_port_block_add(const uint8_t key[PDS_MAX_KEY_LEN],
                              uint32_t vpc_hw_id,
                              uint32_t addr, uint8_t protocol,
                              uint16_t start_port, uint16_t end_port,
-                             nat_addr_type_t nat_addr_type);
+                             nat_addr_type_t nat_addr_type, uint8_t threshold);
 nat_err_t nat_port_block_update(const uint8_t key[PDS_MAX_KEY_LEN],
                                 uint32_t vpc_hw_id,
                                 uint32_t addr, uint8_t protocol,
@@ -76,7 +76,8 @@ nat_err_t nat_port_block_commit(const uint8_t key[PDS_MAX_KEY_LEN],
                                 uint32_t vpc_hw_id,
                                 uint32_t addr, uint8_t protocol,
                                 uint16_t start_port, uint16_t end_port,
-                                nat_addr_type_t nat_addr_type);
+                                nat_addr_type_t nat_addr_type,
+                                uint8_t threshold);
 nat_err_t nat_port_block_del(const uint8_t key[PDS_MAX_KEY_LEN],
                              uint32_t vpc_hw_id,
                              uint32_t addr, uint8_t protocol,
@@ -89,13 +90,15 @@ typedef u32 nat_hw_index_t;
 void nat_init(void);
 nat_err_t nat_port_block_add(const u8 id[PDS_MAX_KEY_LEN], u32 vpc_hw_id,
                              ip4_address_t addr, u8 protocol, u16 start_port,
-                             u16 end_port, nat_addr_type_t nat_addr_type);
+                             u16 end_port, nat_addr_type_t nat_addr_type,
+                             u8 threshold);
 nat_err_t nat_port_block_update(const u8 id[PDS_MAX_KEY_LEN], u32 vpc_hw_id,
                                 ip4_address_t addr, u8 protocol, u16 start_port,
                                 u16 end_port, nat_addr_type_t nat_addr_type);
 nat_err_t nat_port_block_commit(const u8 id[PDS_MAX_KEY_LEN], u32 vpc_hw_id,
                                 ip4_address_t addr, u8 protocol, u16 start_port,
-                                u16 end_port, nat_addr_type_t nat_addr_type);
+                                u16 end_port, nat_addr_type_t nat_addr_type,
+                                u8 threshold);
 nat_err_t nat_port_block_del(const u8 id[PDS_MAX_KEY_LEN], u32 vpc_hw_id,
                              ip4_address_t addr, u8 protocol, u16 start_port,
                              u16 end_port, nat_addr_type_t nat_addr_type);

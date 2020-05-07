@@ -9,7 +9,6 @@
 #include <pkt.h>
 #include "nat_api.h"
 #include "nat_utils.h"
-#include "pdsa_uds_hdlr.h"
 
 // *INDENT-OFF*
 VLIB_PLUGIN_REGISTER () = {
@@ -306,7 +305,6 @@ vpp_nat_init (vlib_main_t * vm)
 {
     pds_nat_cfg_init();
     nat_init();
-    pds_nat_dump_init();
     return 0;
 }
 

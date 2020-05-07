@@ -26,12 +26,6 @@ handle_pds_cmd (cmd_ctxt_t *ctxt, int fd)
             flow_cb(fd);
         }
         break;
-    case CMD_MSG_NAT_PB_DUMP:
-        flow_cb = vpp_uds_callbacks[VPP_UDS_NAT_PB_DUMP];
-        if (flow_cb) {
-            flow_cb(fd);
-        }
-        break;
     default:
         // Nothing to do
         break;

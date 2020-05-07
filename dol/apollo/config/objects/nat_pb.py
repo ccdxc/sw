@@ -20,6 +20,8 @@ import service_pb2 as service_pb2
 import types_pb2 as types_pb2
 import nat_pb2 as nat_pb2
 
+NAT_PB_THRESHOLD = 70
+
 class NatPbStats:
     def __init__(self):
         self.InUseCount = 0
@@ -32,7 +34,7 @@ class NatPbStats:
         self.SessionCount += stats.SessionCount
 
 class NatPbObject(base.ConfigObjectBase):
-    def __init__(self, node, parent, prefix, port_lo, port_hi, proto, addr_type):
+    def __init__(self, node, parent, prefix, port_lo, port_hi, proto, addr_type, threshold=0):
         super().__init__(api.ObjectTypes.NAT, node)
         self.Id = next(ResmgrClient[node].NatPoolIdAllocator)
         self.GID('NatPortBlock%d'%self.Id)
@@ -44,6 +46,7 @@ class NatPbObject(base.ConfigObjectBase):
         self.ProtoName = proto
         self.ProtoNum = utils.GetIPProtoByName(proto)
         self.AddrType = addr_type
+        self.Threshold = threshold
 
     def Show(self):
         logger.info("NAT Port Block object:", self)
@@ -69,6 +72,7 @@ class NatPbObject(base.ConfigObjectBase):
             spec.AddressType = types_pb2.ADDR_TYPE_PUBLIC
         else:
             spec.AddressType = types_pb2.ADDR_TYPE_SERVICE
+        spec.Threshold = self.Threshold
 
     def ValidateSpec(self, spec):
         if spec.Id != self.GetKey():
@@ -79,6 +83,8 @@ class NatPbObject(base.ConfigObjectBase):
         if ports.PortLow != self.PortLo:
             return False
         if ports.PortHigh != self.PortHi:
+            return False
+        if spec.Threshold != self.Threshold:
             return False
         return True
 
@@ -146,12 +152,12 @@ class NatPbObjectClient(base.ConfigClientBase):
                 port_lo, port_hi = ResmgrClient[node].GetNatPoolPortRange(proto)
                 if prefix_internet:
                     obj = NatPbObject(node, parent, prefix_internet, port_lo, \
-                        port_hi, proto, utils.NAT_ADDR_TYPE_PUBLIC)
+                        port_hi, proto, utils.NAT_ADDR_TYPE_PUBLIC, NAT_PB_THRESHOLD)
                     self.Objs[node].update({obj.Id : obj})
                     self.__add_to_vpc_db(utils.NAT_ADDR_TYPE_PUBLIC, parent, obj)
                 if prefix_infra:
                     obj = NatPbObject(node, parent, prefix_infra, port_lo, \
-                        port_hi, proto, utils.NAT_ADDR_TYPE_SERVICE)
+                        port_hi, proto, utils.NAT_ADDR_TYPE_SERVICE, NAT_PB_THRESHOLD)
                     self.Objs[node].update({obj.Id : obj})
                     self.__add_to_vpc_db(utils.NAT_ADDR_TYPE_SERVICE, parent, obj)
 

@@ -29,6 +29,7 @@ typedef struct pds_nat_port_block_spec_s {
     ipvx_range_t     nat_ip_range;   ///< NAT ip range
     port_range_t     nat_port_range; ///< NAT port range
     address_type_t   address_type;   ///< Public or Service address
+    uint8_t          threshold;      ///< port usage event threshold
 } __PACK__ pds_nat_port_block_spec_t;
 
 /// \brief NAT port block status

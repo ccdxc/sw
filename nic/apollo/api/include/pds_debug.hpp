@@ -115,7 +115,6 @@ typedef enum cmd_msg_e {
     CMD_MSG_API_ENGINE_STATS_DUMP,
     CMD_MSG_FLOW_DUMP,
     CMD_MSG_STORE_STATS_DUMP,
-    CMD_MSG_NAT_PB_DUMP,
     CMD_MSG_NACL_DUMP,
     CMD_MSG_PORT_FSM_DUMP,
 } cmd_msg_t;

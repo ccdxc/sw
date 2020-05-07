@@ -45,6 +45,7 @@ pds_nat_port_block_proto_to_api_spec (pds_nat_port_block_spec_t *api_spec,
         SDK_ASSERT(FALSE);
         return SDK_RET_INVALID_ARG;
     }
+    api_spec->threshold = proto_spec.threshold();
     return SDK_RET_OK;
 }
 
@@ -70,6 +71,7 @@ pds_nat_port_block_api_spec_to_proto (pds::NatPortBlockSpec *proto_spec,
         SDK_ASSERT(FALSE);
         return SDK_RET_INVALID_ARG;
     }
+    proto_spec->set_threshold(api_spec->threshold);
     return SDK_RET_OK;
 }
 

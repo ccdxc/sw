@@ -7,7 +7,6 @@
 #include <vnet/plugin/plugin.h>
 #include <vppinfra/clib.h>
 #include <nic/vpp/impl/nat.h>
-#include "pdsa_uds_hdlr.h"
 #include "nat_api.h"
 
 // TODO move to right place
@@ -36,11 +35,14 @@ typedef struct nat_port_block_s {
 
     // allocated
     nat_port_block_state_t state;
-    int num_flow_alloc;
+    u32 num_flow_alloc;
+    u32 ports_in_use;
     u32 *ref_count;
     nat_hw_index_t *nat_tx_hw_index;
     uword *port_bitmap;
     nat_hw_index_t icmp_rx_hw_index;
+    u8 threshold;
+    u8 alert_raised;
 } nat_port_block_t;
 
 typedef struct nat_vpc_config_s {
@@ -231,7 +233,7 @@ get_proto_from_nat_proto(nat_proto_t nat_proto)
 nat_err_t
 nat_port_block_add(const u8 id[PDS_MAX_KEY_LEN], u32 vpc_id, ip4_address_t addr,
                    u8 protocol, u16 start_port, u16 end_port,
-                   nat_addr_type_t nat_addr_type)
+                   nat_addr_type_t nat_addr_type, u8 threshold)
 {
     nat_port_block_t *pb;
     nat_vpc_config_t *vpc;
@@ -269,6 +271,7 @@ nat_port_block_add(const u8 id[PDS_MAX_KEY_LEN], u32 vpc_id, ip4_address_t addr,
     pb->addr = addr;
     pb->start_port = start_port;
     pb->end_port = end_port;
+    pb->threshold = threshold;
     pb->state = NAT_PB_STATE_ADDED;
 
     pub_key.nat_addr_type = (u8)nat_addr_type;
@@ -309,7 +312,7 @@ nat_port_block_update(const u8 id[PDS_MAX_KEY_LEN], u32 vpc_id,
         return NAT_ERR_NOT_FOUND;
     }
 
-    if (pb->port_bitmap && !clib_bitmap_is_zero(pb->port_bitmap)) {
+    if (pb->ports_in_use != 0) {
         // port block is in use, cannot update
         return NAT_ERR_IN_USE;
     }
@@ -362,7 +365,7 @@ nat_port_block_del(const u8 id[PDS_MAX_KEY_LEN], u32 vpc_id,
         return NAT_ERR_NOT_FOUND;
     }
 
-    if (pb->port_bitmap && !clib_bitmap_is_zero(pb->port_bitmap)) {
+    if (pb->ports_in_use != 0) {
         // port block is in use, cannot update
         return NAT_ERR_IN_USE;
     }
@@ -378,7 +381,8 @@ nat_port_block_del(const u8 id[PDS_MAX_KEY_LEN], u32 vpc_id,
 nat_err_t
 nat_port_block_commit(const u8 id[PDS_MAX_KEY_LEN], u32 vpc_id,
                       ip4_address_t addr, u8 protocol, u16 start_port,
-                      u16 end_port, nat_addr_type_t nat_addr_type)
+                      u16 end_port, nat_addr_type_t nat_addr_type,
+                      u8 threshold)
 {
     nat_port_block_t *pb;
     nat_vpc_config_t *vpc;
@@ -409,6 +413,7 @@ nat_port_block_commit(const u8 id[PDS_MAX_KEY_LEN], u32 vpc_id,
         pb->addr = addr;
         pb->start_port = start_port;
         pb->end_port = end_port;
+        pb->threshold = threshold;
         pb->state = NAT_PB_STATE_OK;
         return NAT_ERR_OK;
     }
@@ -445,7 +450,7 @@ nat_port_block_get_stats(const u8 id[PDS_MAX_KEY_LEN], u32 vpc_id,
     pool_foreach (pb, nat_pb,
     ({
         if (pds_id_equals(id, pb->id)) {
-            in_use_cnt += clib_bitmap_count_set_bits(pb->port_bitmap);
+            in_use_cnt += pb->ports_in_use;
             session_cnt += pb->num_flow_alloc;
         }
     }));
@@ -588,6 +593,7 @@ nat_flow_alloc_for_pb(nat_vpc_config_t *vpc, nat_port_block_t *pb,
     u8 *tx_hw_index_ptr = NULL, *rx_hw_index_ptr;
     nat_hw_index_t rx_hw_index;
     u16 index = sport - pb->start_port;
+    float port_use_percent;
 
     //
     // Allocate NAT hw indices
@@ -611,6 +617,7 @@ nat_flow_alloc_for_pb(nat_vpc_config_t *vpc, nat_port_block_t *pb,
 
     if (vec_elt(pb->ref_count, index) == 0) {
         clib_bitmap_set_no_check(pb->port_bitmap, index, 1);
+        pb->ports_in_use++;
         vec_elt(pb->nat_tx_hw_index, index) = nat_get_hw_index(tx_hw_index_ptr);
         pds_snat_tbl_write_ip4(vec_elt(pb->nat_tx_hw_index, index),
                                        sip.as_u32, sport);
@@ -633,6 +640,15 @@ nat_flow_alloc_for_pb(nat_vpc_config_t *vpc, nat_port_block_t *pb,
 
     // Add the pvt_ip to the pvt_ip hash table
     nat_flow_add_ip_mapping(vpc, pvt_ip, sip, nat_addr_type);
+
+    if (pb->threshold && !pb->alert_raised) {
+        port_use_percent = pb->ports_in_use * 100 /
+                           (pb->end_port - pb->start_port + 1);
+        if (port_use_percent > pb->threshold) {
+            // TODO : raise alert event
+            pb->alert_raised = 1;
+        }
+    }
 
     return NAT_ERR_OK;
 }
@@ -668,6 +684,7 @@ nat_flow_alloc_for_pb_icmp(nat_vpc_config_t *vpc, nat_port_block_t *pb,
 
     if (vec_elt(pb->ref_count, index) == 0) {
         clib_bitmap_set_no_check(pb->port_bitmap, index, 1);
+        pb->ports_in_use++;
         vec_elt(pb->nat_tx_hw_index, index) = nat_get_hw_index(tx_hw_index_ptr);
         pb->icmp_rx_hw_index = nat_get_hw_index(rx_hw_index_ptr);
         pds_snat_tbl_write_ip4(vec_elt(pb->nat_tx_hw_index, index),
@@ -729,11 +746,11 @@ nat_flow_alloc_inline_icmp(u32 vpc_id, ip4_address_t dip, u16 dport,
         *sip = pb->addr;
         *sport = pvt_port;
 
-        nat_flow_alloc_for_pb_icmp(vpc, pb, *sip, *sport, pvt_ip, pvt_port,
-                                   &key, xlate_idx, xlate_idx_rflow,
-                                   nat_addr_type, nat_proto);
+        return nat_flow_alloc_for_pb_icmp(vpc, pb, *sip, *sport, pvt_ip,
+                                          pvt_port, &key, xlate_idx,
+                                          xlate_idx_rflow, nat_addr_type,
+                                          nat_proto);
 
-        return NAT_ERR_OK;
     }
 
     return NAT_ERR_NO_RESOURCE;
@@ -783,11 +800,10 @@ nat_flow_alloc_inline(u32 vpc_id, ip4_address_t dip, u16 dport,
             *sip = pb->addr;
             *sport = try_sport;
 
-            nat_flow_alloc_for_pb(vpc, pb, *sip, *sport, pvt_ip, pvt_port,
-                                  &key, xlate_idx, xlate_idx_rflow,
-                                  nat_addr_type, nat_proto);
-
-            return NAT_ERR_OK;
+            return nat_flow_alloc_for_pb(vpc, pb, *sip, *sport, pvt_ip,
+                                         pvt_port, &key, xlate_idx,
+                                         xlate_idx_rflow, nat_addr_type,
+                                         nat_proto);
         }
     }
 
@@ -936,6 +952,7 @@ nat_flow_dealloc_inline_icmp(u32 vpc_id, ip4_address_t dip, u16 dport,
     pb->ref_count[index]--;
     if (pb->ref_count[index] == 0) {
         clib_bitmap_set_no_check(pb->port_bitmap, index, 0);
+        pb->ports_in_use--;
 
         clib_spinlock_lock(&nat_main.lock);
         pool_put_index(nat_main.hw_index_pool,
@@ -962,6 +979,7 @@ nat_flow_dealloc_inline(u32 vpc_id, ip4_address_t dip, u16 dport,
                         nat_port_block_t *pb)
 {
     u16 index;
+    float port_use_percent;
 
     if (sport < pb->start_port || sport > pb->end_port) {
         // not in this port block
@@ -972,6 +990,7 @@ nat_flow_dealloc_inline(u32 vpc_id, ip4_address_t dip, u16 dport,
     pb->ref_count[index]--;
     if (pb->ref_count[index] == 0) {
         clib_bitmap_set_no_check(pb->port_bitmap, index, 0);
+        pb->ports_in_use--;
 
         clib_spinlock_lock(&nat_main.lock);
         pool_put_index(nat_main.hw_index_pool,
@@ -984,6 +1003,15 @@ nat_flow_dealloc_inline(u32 vpc_id, ip4_address_t dip, u16 dport,
         vec_free(pb->ref_count);
         vec_free(pb->nat_tx_hw_index);
         clib_bitmap_free(pb->port_bitmap);
+    }
+
+    if (pb->threshold && pb->alert_raised) {
+        port_use_percent = pb->ports_in_use * 100 /
+                           (pb->end_port - pb->start_port + 1);
+        // 10% hysteresis
+        if (port_use_percent <= clib_max(pb->threshold - 10, 0)) {
+            pb->alert_raised = 0;
+        }
     }
 
     return NAT_ERR_OK;
@@ -1090,7 +1118,7 @@ nat_usage(u32 vpc_id, u8 protocol, nat_addr_type_t nat_addr_type,
     pool_foreach (pb, nat_pb,
     ({
         *num_ports_total += pb->end_port - pb->start_port + 1;
-        *num_ports_alloc += clib_bitmap_count_set_bits(pb->port_bitmap);
+        *num_ports_alloc += pb->ports_in_use;
         *num_flows_alloc += pb->num_flow_alloc;
     }));
 
@@ -1109,51 +1137,6 @@ nat_hw_usage(u32 *total_hw_indices, u32 *total_alloc_indices)
     return NAT_ERR_OK;
 }
 
-//
-// Get SNAT usage
-//
-bool
-nat_pb_iterate_for_proto_and_type(u32 vpc_id, nat_proto_t nat_proto,
-                                  nat_addr_type_t nat_addr_type,
-                                  pds_nat_iterate_params_t *params)
-{
-    nat_port_block_t *pb;
-    nat_vpc_config_t *vpc;
-    nat_port_block_t *nat_pb;
-    pds_nat_port_block_export_t *pb_out = params->pb;
-
-    ASSERT(vpc_id < PDS_MAX_VPC);
-
-    vpc = &nat_main.vpc_config[vpc_id];
-
-    nat_pb = vpc->nat_pb[nat_addr_type][nat_proto - 1];
-
-    pool_foreach (pb, nat_pb,
-    ({
-        pds_id_set(pb_out->id, pb->id);
-        pb_out->addr = pb->addr.as_u32;
-        pb_out->start_port = pb->start_port;
-        pb_out->end_port = pb->end_port;
-        if (nat_addr_type == NAT_ADDR_TYPE_INTERNET) {
-            pb_out->address_type = NAT_ADDR_TYPE_INTERNET;
-        } else {
-            pb_out->address_type = NAT_ADDR_TYPE_INFRA;
-        }
-        pb_out->protocol = get_proto_from_nat_proto(nat_proto);
-        pb_out->in_use_cnt = clib_bitmap_count_set_bits(pb->port_bitmap);
-        pb_out->session_cnt = pb->num_flow_alloc;
-
-        if (params->itercb(params)) {
-            goto end;
-        }
-    }));
-
-    return false;
-
-end:
-    return true;
-}
-
 uint16_t
 nat_pb_count() {
     uint16_t count = 0;
@@ -1161,44 +1144,6 @@ nat_pb_count() {
         count += nat_main.vpc_config[i].num_port_blocks;
     }
     return count;
-}
-
-//
-// Iterate over NAT port blocks
-//
-void
-nat_pb_iterate(pds_nat_iterate_params_t *params)
-{
-    for (int i = 0; i < PDS_MAX_VPC; i++) {
-        if (nat_main.vpc_config[i].num_port_blocks == 0) {
-            continue;
-        }
-        if (nat_pb_iterate_for_proto_and_type(i, NAT_PROTO_UDP, NAT_ADDR_TYPE_INTERNET,
-                                              params)) {
-            break;
-        }
-        if (nat_pb_iterate_for_proto_and_type(i, NAT_PROTO_TCP, NAT_ADDR_TYPE_INTERNET,
-                                              params)) {
-            break;
-        }
-        if (nat_pb_iterate_for_proto_and_type(i, NAT_PROTO_ICMP, NAT_ADDR_TYPE_INTERNET,
-                                              params)) {
-            break;
-        }
-        if (nat_pb_iterate_for_proto_and_type(i, NAT_PROTO_UDP, NAT_ADDR_TYPE_INFRA,
-                                              params)) {
-            break;
-        }
-        if (nat_pb_iterate_for_proto_and_type(i, NAT_PROTO_TCP, NAT_ADDR_TYPE_INFRA,
-                                              params)) {
-            break;
-        }
-        if (nat_pb_iterate_for_proto_and_type(i, NAT_PROTO_ICMP, NAT_ADDR_TYPE_INFRA,
-                                              params)) {
-            break;
-        }
-    }
-    return;
 }
 
 //

@@ -2,7 +2,7 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //
 
-#define NAT_TEST 0
+//#define NAT_TEST 1
 
 #ifdef NAT_TEST
 
@@ -54,14 +54,14 @@ test_nat_add_pb (vlib_main_t *vm,
     }
 
     ret = nat_port_block_add(id_str, vpc_id, ip, proto, start_port, end_port,
-                             NAT_ADDR_TYPE_INTERNET);
+                             NAT_ADDR_TYPE_INTERNET, 50);
     if (ret != NAT_ERR_OK) {
         vlib_cli_output(vm, "Error: nat pb add failed! ret = %d\n", ret);
         goto done;
     }
 
     ret = nat_port_block_commit(id_str, vpc_id, ip, proto, start_port, end_port,
-                             NAT_ADDR_TYPE_INTERNET);
+                             NAT_ADDR_TYPE_INTERNET, 50);
     if (ret != NAT_ERR_OK) {
         vlib_cli_output(vm, "Error: nat pb add failed! ret = %d\n", ret);
     } else {
