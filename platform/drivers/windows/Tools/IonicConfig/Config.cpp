@@ -196,7 +196,7 @@ CmdVersionRun(command_info& info)
         return info.status;
     }
 
-    std::string VerStr = IONICCONFIG_VERSION_STRING IONICCONFIG_VERSION_EXTENSION;
+    std::string VerStr = IONICCONFIG_VERSION_STRING "-" IONICCONFIG_VERSION_EXTENSION;
 
     std::cout << std::endl;
     std::cout << "Name:\t\t" << IONICCONFIG_TOOL_NAME << std::endl;

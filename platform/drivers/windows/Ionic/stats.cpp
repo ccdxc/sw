@@ -186,7 +186,7 @@ IoctlPortStats(PVOID buf, ULONG inlen, ULONG outlen, PULONG outbytes)
         NdisMoveMemory(&resp->stats, &ionic->idev.port_info->stats,
                        sizeof(resp->stats));
 
-        *outbytes = sizeof(struct port_stats);
+        *outbytes = sizeof(PortStatsRespCB);
 
         ++resp;
     }
