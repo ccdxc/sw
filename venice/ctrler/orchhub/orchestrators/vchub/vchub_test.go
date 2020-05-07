@@ -726,13 +726,14 @@ func createProbe(ctx context.Context, uri, user, pass string) *mock.ProbeMock {
 	u.User = url.UserPassword(user, pass)
 
 	state := defs.State{
-		VcURL:    u,
-		VcID:     "VCProbe",
-		Ctx:      ctx,
-		Log:      logger.WithContext("submodule", "vcprobe"),
-		Wg:       &sync.WaitGroup{},
-		DcIDMap:  map[string]types.ManagedObjectReference{},
-		DvsIDMap: map[string]types.ManagedObjectReference{},
+		VcURL:      u,
+		VcID:       "VCProbe",
+		Ctx:        ctx,
+		Log:        logger.WithContext("submodule", "vcprobe"),
+		Wg:         &sync.WaitGroup{},
+		DcIDMap:    map[string]types.ManagedObjectReference{},
+		DvsIDMap:   map[string]types.ManagedObjectReference{},
+		OrchConfig: smmock.GetOrchestratorConfig(defaultTestParams.TestOrchName, user, pass),
 	}
 	vcp := vcprobe.NewVCProbe(nil, nil, &state)
 	mockProbe := mock.NewProbeMock(vcp)

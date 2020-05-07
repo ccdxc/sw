@@ -33,7 +33,7 @@ func TestOrchestrationConnectionStatus(t *testing.T) {
 	// Teardown vcsim
 	//  - connection updates to not connected
 	// Update orch object without supplying credentials
-	eventRecorder.ClearEvents()
+	tinfo.eventRecorder.ClearEvents()
 
 	vcInfo := tinfo.vcConfig
 	// Only use sim for this test, so we ignore user config's uri
@@ -59,7 +59,7 @@ func TestOrchestrationConnectionStatus(t *testing.T) {
 	// Should have gotten connection failure event
 	AssertEventually(t, func() (bool, interface{}) {
 		foundEvent := false
-		for _, evt := range eventRecorder.GetEvents() {
+		for _, evt := range tinfo.eventRecorder.GetEvents() {
 			if evt.EventType == eventtypes.ORCH_CONNECTION_ERROR.String() {
 				foundEvent = true
 			}
@@ -67,7 +67,7 @@ func TestOrchestrationConnectionStatus(t *testing.T) {
 		return foundEvent, nil
 	}, "Failed to find connection error event", "1s", "10s")
 
-	eventRecorder.ClearEvents()
+	tinfo.eventRecorder.ClearEvents()
 
 	// bring up sim
 	vcSim, err := startVCSim(uri, vcInfo.user, vcInfo.pass)
@@ -78,7 +78,7 @@ func TestOrchestrationConnectionStatus(t *testing.T) {
 	// Should have gotten login failure event
 	AssertEventually(t, func() (bool, interface{}) {
 		foundEvent := false
-		for _, evt := range eventRecorder.GetEvents() {
+		for _, evt := range tinfo.eventRecorder.GetEvents() {
 			if evt.EventType == eventtypes.ORCH_LOGIN_FAILURE.String() {
 				foundEvent = true
 			}
@@ -86,7 +86,7 @@ func TestOrchestrationConnectionStatus(t *testing.T) {
 		return foundEvent, nil
 	}, "Failed to find login error event", "100ms", "10s")
 
-	eventRecorder.ClearEvents()
+	tinfo.eventRecorder.ClearEvents()
 
 	// update password
 	orchConfig, err = updateOrchConfig("vc1", uri, vcInfo.user, vcInfo.pass)
@@ -104,7 +104,7 @@ func TestOrchestrationConnectionStatus(t *testing.T) {
 		return true, nil
 	}, "Orch status never updated to success", "100ms", "10s")
 
-	eventRecorder.ClearEvents()
+	tinfo.eventRecorder.ClearEvents()
 
 	// Bring down vcsim
 	// Sim server will block while trying to wait for connections to terminate
@@ -127,14 +127,14 @@ func TestOrchestrationConnectionStatus(t *testing.T) {
 	// Should have gotten connection failure event
 	AssertEventually(t, func() (bool, interface{}) {
 		foundEvent := false
-		for _, evt := range eventRecorder.GetEvents() {
+		for _, evt := range tinfo.eventRecorder.GetEvents() {
 			if evt.EventType == eventtypes.ORCH_CONNECTION_ERROR.String() {
 				foundEvent = true
 			}
 		}
 		return foundEvent, nil
 	}, "Failed to find connection error event", "100ms", "10s")
-	eventRecorder.ClearEvents()
+	tinfo.eventRecorder.ClearEvents()
 
 	orchConfig, err = tinfo.apicl.OrchestratorV1().Orchestrator().Get(ctx, orchConfig.GetObjectMeta())
 	AssertOk(t, err, "Failed to get object: %v", apierrors.FromError(err))
@@ -274,7 +274,7 @@ func TestNetworks(t *testing.T) {
 		return true, nil
 	}, "Failed to find PGs", "30s", "360s")
 
-	eventRecorder.ClearEvents()
+	tinfo.eventRecorder.ClearEvents()
 
 	if networkExhaust {
 		// Next creation should exceed limit
@@ -284,7 +284,7 @@ func TestNetworks(t *testing.T) {
 		// Check config failure event was generated
 		AssertEventually(t, func() (bool, interface{}) {
 			foundEvent := false
-			for _, evt := range eventRecorder.GetEvents() {
+			for _, evt := range tinfo.eventRecorder.GetEvents() {
 				if evt.EventType == eventtypes.ORCH_CONFIG_PUSH_FAILURE.String() {
 					if strings.Contains(evt.Message, nw.Name) {
 						foundEvent = true

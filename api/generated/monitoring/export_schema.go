@@ -46,11 +46,13 @@ var typesMapExport = map[string]*api.Struct{
 
 			"BearerToken": api.Field{Name: "BearerToken", CLITag: api.CLIInfo{ID: "bearer-token", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "bearer-token", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"CertData": api.Field{Name: "CertData", CLITag: api.CLIInfo{ID: "cert-data", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "cert-data", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BYTES"},
+			"CertData": api.Field{Name: "CertData", CLITag: api.CLIInfo{ID: "cert-data", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "cert-data", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"KeyData": api.Field{Name: "KeyData", CLITag: api.CLIInfo{ID: "key-data", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "key-data", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BYTES"},
+			"KeyData": api.Field{Name: "KeyData", CLITag: api.CLIInfo{ID: "key-data", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "key-data", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"CaData": api.Field{Name: "CaData", CLITag: api.CLIInfo{ID: "ca-data", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ca-data", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BYTES"},
+			"CaData": api.Field{Name: "CaData", CLITag: api.CLIInfo{ID: "ca-data", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ca-data", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"DisableServerAuthentication": api.Field{Name: "DisableServerAuthentication", CLITag: api.CLIInfo{ID: "disable-server-authentication", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "disable-server-authentication", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
 		},
 	},
 	"monitoring.PSMExportTarget": &api.Struct{

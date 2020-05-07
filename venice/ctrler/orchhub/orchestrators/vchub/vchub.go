@@ -1,7 +1,6 @@
 package vchub
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"net/url"
@@ -265,13 +264,10 @@ func (v *VCHub) isCredentialChanged(config *orchestration.Orchestrator) bool {
 
 	switch v.OrchConfig.Spec.Credentials.AuthType {
 	case monitoring.ExportAuthType_AUTHTYPE_USERNAMEPASSWORD.String():
-		return (v.OrchConfig.Spec.Credentials.UserName != config.Spec.Credentials.UserName) || (v.OrchConfig.Spec.Credentials.Password != config.Spec.Credentials.Password)
-	case monitoring.ExportAuthType_AUTHTYPE_TOKEN.String():
-		return v.OrchConfig.Spec.Credentials.BearerToken != config.Spec.Credentials.BearerToken
-	case monitoring.ExportAuthType_AUTHTYPE_CERTS.String():
-		return bytes.Compare(v.OrchConfig.Spec.Credentials.KeyData, config.Spec.Credentials.KeyData) != 0
-	case monitoring.ExportAuthType_AUTHTYPE_NONE.String():
-		return false
+		return (v.OrchConfig.Spec.Credentials.UserName != config.Spec.Credentials.UserName) ||
+			(v.OrchConfig.Spec.Credentials.Password != config.Spec.Credentials.Password) ||
+			(v.OrchConfig.Spec.Credentials.DisableServerAuthentication != config.Spec.Credentials.DisableServerAuthentication) ||
+			(v.OrchConfig.Spec.Credentials.CaData != config.Spec.Credentials.CaData)
 	}
 
 	return false

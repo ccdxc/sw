@@ -98,6 +98,37 @@ func NewClient(ctx context.Context, u *url.URL, insecure bool) (*Client, error) 
 	return c, nil
 }
 
+// NewClientWithCA  creates a new client from a URL. The server is authenticated using CA certificates
+// The client authenticates with the server with username/password before returning if the URL contains user information.
+func NewClientWithCA(ctx context.Context, u *url.URL, insecure bool, caData []byte) (*Client, error) {
+	soapClient := soap.NewClient(u, insecure)
+	if len(caData) != 0 {
+		// Vim Client tries to retrieve Servicecontets from the server.. so need to fix the Root CA here
+		err := soapClient.SetRootCAsBytes(caData)
+		if err != nil {
+			return nil, err
+		}
+	}
+	vimClient, err := vim25.NewClient(ctx, soapClient)
+	if err != nil {
+		return nil, err
+	}
+
+	c := &Client{
+		Client:         vimClient,
+		SessionManager: session.NewManager(vimClient),
+	}
+
+	// Only login if the URL contains user information.
+	if u.User != nil {
+		err = c.Login(ctx, u.User)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return c, nil
+}
 // Login dispatches to the SessionManager.
 func (c *Client) Login(ctx context.Context, u *url.Userinfo) error {
 	return c.SessionManager.Login(ctx, u)

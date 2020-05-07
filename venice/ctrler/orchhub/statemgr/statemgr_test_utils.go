@@ -98,9 +98,10 @@ func GetOrchestratorConfig(name, user, pass string) *orchestration.Orchestrator 
 			Type: "vcenter",
 			URI:  name,
 			Credentials: &monitoring.ExternalCred{
-				AuthType: "username-password",
-				UserName: user,
-				Password: pass,
+				AuthType:                    "username-password",
+				UserName:                    user,
+				Password:                    pass,
+				DisableServerAuthentication: true,
 			},
 		},
 	}

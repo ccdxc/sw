@@ -40,10 +40,6 @@ import (
 
 var (
 	logger = log.WithContext("module", "orchhub_integ_test")
-
-	// create mock events recorder
-	eventRecorder = mockevtsrecorder.NewRecorder("orchhub_integ_test", logger)
-	_             = recorder.Override(eventRecorder)
 )
 
 type tInfo struct {
@@ -54,6 +50,7 @@ type tInfo struct {
 	mockResolver  *mockresolver.ResolverClient
 	apicl         apiclient.Services
 	vcConfig      VcConfig
+	eventRecorder *mockevtsrecorder.Recorder
 }
 
 type VcConfig struct {
@@ -77,6 +74,10 @@ func (tInfo *tInfo) setup() error {
 	if err != nil {
 		log.Fatalf("Error setting up TLS provider: %v", err)
 	}
+
+	// create mock events recorder
+	tinfo.eventRecorder = mockevtsrecorder.NewRecorder("orchhub_integ_test", logger)
+	recorder.Override(tinfo.eventRecorder)
 
 	// start API server
 	trace.Init("ApiServer")
@@ -117,7 +118,6 @@ func (tInfo *tInfo) setup() error {
 		return err
 	}
 	tinfo.apicl = apicl
-
 	// Create default tenant
 	err = createTenant()
 	return err
@@ -184,9 +184,10 @@ func createOrchConfig(name, uri, user, pass, forceDCs string) (*orchestration.Or
 			Type: "vcenter",
 			URI:  uri,
 			Credentials: &monitoring.ExternalCred{
-				AuthType: "username-password",
-				UserName: user,
-				Password: pass,
+				AuthType:                    "username-password",
+				UserName:                    user,
+				Password:                    pass,
+				DisableServerAuthentication: true,
 			},
 		},
 	}
@@ -206,9 +207,10 @@ func updateOrchConfig(name, uri, user, pass string) (*orchestration.Orchestrator
 	obj, err := tinfo.apicl.OrchestratorV1().Orchestrator().Get(context.Background(), configMeta)
 	obj.Spec.URI = uri
 	obj.Spec.Credentials = &monitoring.ExternalCred{
-		AuthType: "username-password",
-		UserName: user,
-		Password: pass,
+		AuthType:                    "username-password",
+		UserName:                    user,
+		Password:                    pass,
+		DisableServerAuthentication: true,
 	}
 
 	obj, err = tinfo.apicl.OrchestratorV1().Orchestrator().Update(context.Background(), obj)
@@ -310,12 +312,35 @@ func createProbe(ctx context.Context, uri, user, pass string) *mock.ProbeMock {
 	}
 	u.User = url.UserPassword(user, pass)
 
+	// Create a dummy orch config (needed for login)
+	config := &orchestration.Orchestrator{
+		ObjectMeta: api.ObjectMeta{
+			Name: "TestOrch",
+			// Don't set Tenant as object is not scoped inside Tenant in proto file.
+		},
+		TypeMeta: api.TypeMeta{
+			Kind: "Orchestrator",
+		},
+		Spec: orchestration.OrchestratorSpec{
+			Type: "vcenter",
+			URI:  uri,
+			Credentials: &monitoring.ExternalCred{
+				AuthType:                    "username-password",
+				UserName:                    user,
+				Password:                    pass,
+				DisableServerAuthentication: true,
+			},
+		},
+	}
 	state := defs.State{
 		VcURL: u,
 		VcID:  "VCProbe",
 		Ctx:   ctx,
 		Log:   logger.WithContext("submodule", "vcprobe"),
 		Wg:    &sync.WaitGroup{},
+
+		// Create OrchCofig with some name .. does not mapper
+		OrchConfig: config,
 	}
 	vcp := vcprobe.NewVCProbe(vcReadCh, vcEventCh, &state)
 	mockProbe := mock.NewProbeMock(vcp)

@@ -128,7 +128,7 @@ func NewVCProbe(hOutbox, hEventCh chan<- defs.Probe2StoreMsg, state *defs.State)
 		Started:  false,
 		outbox:   hOutbox,
 		eventCh:  hEventCh,
-		Session:  session.NewSession(state.Ctx, state.VcURL, state.Log),
+		Session:  session.NewSession(state.Ctx, state.VcURL, state.Log, state.OrchConfig),
 		dcCtxMap: map[string]dcCtxEntry{},
 	}
 	probe.newTagsProbe()

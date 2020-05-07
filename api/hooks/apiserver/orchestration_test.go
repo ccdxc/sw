@@ -309,7 +309,8 @@ func TestOrchHandleCredentialUpdate(t *testing.T) {
 				Spec: orchestration.OrchestratorSpec{
 					URI: "oldUri",
 					Credentials: &monitoring.ExternalCred{
-						Password: "testPassword",
+						Password:                    "testPassword",
+						DisableServerAuthentication: true,
 					},
 				},
 			},
@@ -321,7 +322,8 @@ func TestOrchHandleCredentialUpdate(t *testing.T) {
 				Spec: orchestration.OrchestratorSpec{
 					URI: "newUri",
 					Credentials: &monitoring.ExternalCred{
-						Password: "testPassword",
+						Password:                    "testPassword",
+						DisableServerAuthentication: true,
 					},
 				},
 			},
@@ -430,6 +432,82 @@ func TestOrchestratorPreCommit(t *testing.T) {
 	kv, err := store.New(config)
 	AssertOk(t, err, "Error instantiating KVStore")
 
+	goodCerts := `-----BEGIN CERTIFICATE-----
+MIIEHTCCAwWgAwIBAgIJAOK2C5qCd96+MA0GCSqGSIb3DQEBCwUAMIGZMQswCQYD
+VQQDDAJDQTEYMBYGCgmSJomT8ixkARkWCHBlbnNhbmRvMRIwEAYKCZImiZPyLGQB
+GRYCaW8xCzAJBgNVBAYTAlVTMRMwEQYDVQQIDApDYWxpZm9ybmlhMR0wGwYDVQQK
+DBRiYXJ1bi12Yy5wZW5zYW5kby5pbzEbMBkGA1UECwwSVk13YXJlIEVuZ2luZWVy
+aW5nMB4XDTE5MTIzMDEzMDkyMVoXDTI5MTIyNzEzMDkyMVowgZkxCzAJBgNVBAMM
+AkNBMRgwFgYKCZImiZPyLGQBGRYIcGVuc2FuZG8xEjAQBgoJkiaJk/IsZAEZFgJp
+bzELMAkGA1UEBhMCVVMxEzARBgNVBAgMCkNhbGlmb3JuaWExHTAbBgNVBAoMFGJh
+cnVuLXZjLnBlbnNhbmRvLmlvMRswGQYDVQQLDBJWTXdhcmUgRW5naW5lZXJpbmcw
+ggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDLLZSJ+mWyYhpdfw3kuHeC
+KXl4r+KeHJlC02WnNYnMlVyG5xV/EHjsJctUjfx1kXtGGZ/k+Tgwp82JFzM6uLrQ
+p3jEjHS0PCccDOV6JibkbK/O1VQobwiA+FKLIAskUUH7h01anvQiy2coZjeqOWaa
+EoV4J1LpYXJp1LaQlqFrKcUTCtkSlKUStWlIe6coJotd+GAde4lQv84INPFZjFnn
+u/IWL69E9Z527dkPSZrRryLnIT93bzhs5Pkt8g+0ZNSU9YE9r1UeXHJrgVe8qMFT
+KdkDgIv9Gan0t45ptGnEfkCfqVdmmP+iAUGsoHDvUcS6qKh9rk6YfHfjlHDo/vjB
+AgMBAAGjZjBkMB0GA1UdDgQWBBTEr7pjg/VxDVif7aPYgjcYopZeQDAfBgNVHREE
+GDAWgQ5lbWFpbEBhY21lLmNvbYcEfwAAATAOBgNVHQ8BAf8EBAMCAQYwEgYDVR0T
+AQH/BAgwBgEB/wIBADANBgkqhkiG9w0BAQsFAAOCAQEAK1XYBF4pYaM2itX0Gcdr
+3MlwgDigCwPpopDo9m+y0U+nw2B/aBtdl9uYqWN3IDcjAqa6B2PEBPjjpxGfhi0H
+BKe0glEkG5ZbsV+U3bQv9uz1r9M1UcWrr2SWuC4CMYxsEi05j2Qd7h7M3fUcs0ku
+PyFY1aXMQD46NrluT7PHa2C1X2Hz05e9KbacL5DugdMOpyaQxlBAA6kaHYNZFhAw
+tx7Xsgpu1VSRXJhub7AlRG2uF1fRclZQcv2wjQWu+I5YVDKEbBtBVS4+9sXxvSSF
+SaaaoBOlM7xX8mfjpg4fD5VY9G/c3E3zaUamceS7C7IzIE0psokWPMePmARgVoj2
+nA==
+-----END CERTIFICATE-----
+-----BEGIN CERTIFICATE-----
+MIIEHTCCAwWgAwIBAgIJAOK2C5qCd96+MA0GCSqGSIb3DQEBCwUAMIGZMQswCQYD
+VQQDDAJDQTEYMBYGCgmSJomT8ixkARkWCHBlbnNhbmRvMRIwEAYKCZImiZPyLGQB
+GRYCaW8xCzAJBgNVBAYTAlVTMRMwEQYDVQQIDApDYWxpZm9ybmlhMR0wGwYDVQQK
+DBRiYXJ1bi12Yy5wZW5zYW5kby5pbzEbMBkGA1UECwwSVk13YXJlIEVuZ2luZWVy
+aW5nMB4XDTE5MTIzMDEzMDkyMVoXDTI5MTIyNzEzMDkyMVowgZkxCzAJBgNVBAMM
+AkNBMRgwFgYKCZImiZPyLGQBGRYIcGVuc2FuZG8xEjAQBgoJkiaJk/IsZAEZFgJp
+bzELMAkGA1UEBhMCVVMxEzARBgNVBAgMCkNhbGlmb3JuaWExHTAbBgNVBAoMFGJh
+cnVuLXZjLnBlbnNhbmRvLmlvMRswGQYDVQQLDBJWTXdhcmUgRW5naW5lZXJpbmcw
+ggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDLLZSJ+mWyYhpdfw3kuHeC
+KXl4r+KeHJlC02WnNYnMlVyG5xV/EHjsJctUjfx1kXtGGZ/k+Tgwp82JFzM6uLrQ
+p3jEjHS0PCccDOV6JibkbK/O1VQobwiA+FKLIAskUUH7h01anvQiy2coZjeqOWaa
+EoV4J1LpYXJp1LaQlqFrKcUTCtkSlKUStWlIe6coJotd+GAde4lQv84INPFZjFnn
+u/IWL69E9Z527dkPSZrRryLnIT93bzhs5Pkt8g+0ZNSU9YE9r1UeXHJrgVe8qMFT
+KdkDgIv9Gan0t45ptGnEfkCfqVdmmP+iAUGsoHDvUcS6qKh9rk6YfHfjlHDo/vjB
+AgMBAAGjZjBkMB0GA1UdDgQWBBTEr7pjg/VxDVif7aPYgjcYopZeQDAfBgNVHREE
+GDAWgQ5lbWFpbEBhY21lLmNvbYcEfwAAATAOBgNVHQ8BAf8EBAMCAQYwEgYDVR0T
+AQH/BAgwBgEB/wIBADANBgkqhkiG9w0BAQsFAAOCAQEAK1XYBF4pYaM2itX0Gcdr
+3MlwgDigCwPpopDo9m+y0U+nw2B/aBtdl9uYqWN3IDcjAqa6B2PEBPjjpxGfhi0H
+BKe0glEkG5ZbsV+U3bQv9uz1r9M1UcWrr2SWuC4CMYxsEi05j2Qd7h7M3fUcs0ku
+PyFY1aXMQD46NrluT7PHa2C1X2Hz05e9KbacL5DugdMOpyaQxlBAA6kaHYNZFhAw
+tx7Xsgpu1VSRXJhub7AlRG2uF1fRclZQcv2wjQWu+I5YVDKEbBtBVS4+9sXxvSSF
+SaaaoBOlM7xX8mfjpg4fD5VY9G/c3E3zaUamceS7C7IzIE0psokWPMePmARgVoj2
+nA==
+-----END CERTIFICATE-----`
+	badCerts := `-----JUNK BEGIN CERTIFICATE-----
+MIIEHTCCAwWgAwIBAgIJAOK2C5qCd96+MA0GCSqGSIb3DQEBCwUAMIGZMQswCQYD
+VQQDDAJDQTEYMBYGCgmSJomT8ixkARkWCHBlbnNhbmRvMRIwEAYKCZImiZPyLGQB
+GRYCaW8xCzAJBgNVBAYTAlVTMRMwEQYDVQQIDApDYWxpZm9ybmlhMR0wGwYDVQQK
+DBRiYXJ1bi12Yy5wZW5zYW5kby5pbzEbMBkGA1UECwwSVk13YXJlIEVuZ2luZWVy
+aW5nMB4XDTE5MTIzMDEzMDkyMVoXDTI5MTIyNzEzMDkyMVowgZkxCzAJBgNVBAMM
+AkNBMRgwFgYKCZImiZPyLGQBGRYIcGVuc2FuZG8xEjAQBgoJkiaJk/IsZAEZFgJp
+bzELMAkGA1UEBhMCVVMxEzARBgNVBAgMCkNhbGlmb3JuaWExHTAbBgNVBAoMFGJh
+cnVuLXZjLnBlbnNhbmRvLmlvMRswGQYDVQQLDBJWTXdhcmUgRW5naW5lZXJpbmcw
+ggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDLLZSJ+mWyYhpdfw3kuHeC
+KXl4r+KeHJlC02WnNYnMlVyG5xV/EHjsJctUjfx1kXtGGZ/k+Tgwp82JFzM6uLrQ
+p3jEjHS0PCccDOV6JibkbK/O1VQobwiA+FKLIAskUUH7h01anvQiy2coZjeqOWaa
+EoV4J1LpYXJp1LaQlqFrKcUTCtkSlKUStWlIe6coJotd+GAde4lQv84INPFZjFnn
+u/IWL69E9Z527dkPSZrRryLnIT93bzhs5Pkt8g+0ZNSU9YE9r1UeXHJrgVe8qMFT
+KdkDgIv9Gan0t45ptGnEfkCfqVdmmP+iAUGsoHDvUcS6qKh9rk6YfHfjlHDo/vjB
+AgMBAAGjZjBkMB0GA1UdDgQWBBTEr7pjg/VxDVif7aPYgjcYopZeQDAfBgNVHREE
+GDAWgQ5lbWFpbEBhY21lLmNvbYcEfwAAATAOBgNVHQ8BAf8EBAMCAQYwEgYDVR0T
+AQH/BAgwBgEB/wIBADANBgkqhkiG9w0BAQsFAAOCAQEAK1XYBF4pYaM2itX0Gcdr
+3MlwgDigCwPpopDo9m+y0U+nw2B/aBtdl9uYqWN3IDcjAqa6B2PEBPjjpxGfhi0H
+BKe0glEkG5ZbsV+U3bQv9uz1r9M1UcWrr2SWuC4CMYxsEi05j2Qd7h7M3fUcs0ku
+PyFY1aXMQD46NrluT7PHa2C1X2Hz05e9KbacL5DugdMOpyaQxlBAA6kaHYNZFhAw
+tx7Xsgpu1VSRXJhub7AlRG2uF1fRclZQcv2wjQWu+I5YVDKEbBtBVS4+9sXxvSSF
+SaaaoBOlM7xX8mfjpg4fD5VY9G/c3E3zaUamceS7C7IzIE0psokWPMePmARgVoj2
+nA==
+-----END CERTIFICATE-----`
+
 	type testCase struct {
 		op  apiintf.APIOperType
 		obj *orchestration.Orchestrator
@@ -522,7 +600,7 @@ func TestOrchestratorPreCommit(t *testing.T) {
 					},
 				},
 			},
-			fmt.Errorf("Credentials for orchestrator extra-elem has unnecessary fields passed"),
+			fmt.Errorf("Credentials for orchestrator extra-elem has unnecessary fields"),
 		},
 		{
 			apiintf.CreateOper,
@@ -542,50 +620,7 @@ func TestOrchestratorPreCommit(t *testing.T) {
 					},
 				},
 			},
-			fmt.Errorf("Credentials for orchestrator empty missing token"),
-		},
-		{
-			apiintf.CreateOper,
-			&orchestration.Orchestrator{
-				ObjectMeta: api.ObjectMeta{
-					Name:            "wrong-elem-2",
-					ResourceVersion: "1",
-				},
-				TypeMeta: api.TypeMeta{
-					Kind:       "Orchestrator",
-					APIVersion: "v1",
-				},
-				Spec: orchestration.OrchestratorSpec{
-					URI: "vc.pensando.io",
-					Credentials: &monitoring.ExternalCred{
-						AuthType: monitoring.ExportAuthType_AUTHTYPE_TOKEN.String(),
-						UserName: "user",
-					},
-				},
-			},
-			fmt.Errorf("Credentials for orchestrator wrong-elem-2 missing token"),
-		},
-		{
-			apiintf.CreateOper,
-			&orchestration.Orchestrator{
-				ObjectMeta: api.ObjectMeta{
-					Name:            "extra-elem",
-					ResourceVersion: "1",
-				},
-				TypeMeta: api.TypeMeta{
-					Kind:       "Orchestrator",
-					APIVersion: "v1",
-				},
-				Spec: orchestration.OrchestratorSpec{
-					URI: "vc.pensando.io",
-					Credentials: &monitoring.ExternalCred{
-						AuthType:    monitoring.ExportAuthType_AUTHTYPE_TOKEN.String(),
-						BearerToken: "token",
-						Password:    "pass",
-					},
-				},
-			},
-			fmt.Errorf("Credentials for orchestrator extra-elem has unnecessary fields passed"),
+			fmt.Errorf("Unsupported auth type [%v] passed in orchestrator %v", monitoring.ExportAuthType_AUTHTYPE_TOKEN, "empty"),
 		},
 		{
 			apiintf.CreateOper,
@@ -605,7 +640,79 @@ func TestOrchestratorPreCommit(t *testing.T) {
 					},
 				},
 			},
-			fmt.Errorf("Credentials for orchestrator empty missing fields"),
+			fmt.Errorf("Unsupported auth type [%v] passed in orchestrator %v", monitoring.ExportAuthType_AUTHTYPE_CERTS, "empty"),
+		},
+		{
+			apiintf.CreateOper,
+			&orchestration.Orchestrator{
+				ObjectMeta: api.ObjectMeta{
+					Name:            "empty",
+					ResourceVersion: "1",
+				},
+				TypeMeta: api.TypeMeta{
+					Kind:       "Orchestrator",
+					APIVersion: "v1",
+				},
+				Spec: orchestration.OrchestratorSpec{
+					URI: "vc.pensando.io",
+					Credentials: &monitoring.ExternalCred{
+						AuthType:                    monitoring.ExportAuthType_AUTHTYPE_USERNAMEPASSWORD.String(),
+						UserName:                    "user",
+						Password:                    "pass",
+						DisableServerAuthentication: false,
+						CaData:                      goodCerts,
+					},
+				},
+			},
+			nil,
+		},
+		{
+			apiintf.UpdateOper,
+			&orchestration.Orchestrator{
+				ObjectMeta: api.ObjectMeta{
+					Name:            "empty",
+					ResourceVersion: "1",
+				},
+				TypeMeta: api.TypeMeta{
+					Kind:       "Orchestrator",
+					APIVersion: "v1",
+				},
+				Spec: orchestration.OrchestratorSpec{
+					URI: "vc.pensando.io",
+					Credentials: &monitoring.ExternalCred{
+						AuthType:                    monitoring.ExportAuthType_AUTHTYPE_USERNAMEPASSWORD.String(),
+						UserName:                    "user",
+						Password:                    "pass",
+						DisableServerAuthentication: false,
+						CaData:                      badCerts,
+					},
+				},
+			},
+			fmt.Errorf("Invalid ca-data certificates"),
+		},
+		{
+			apiintf.CreateOper,
+			&orchestration.Orchestrator{
+				ObjectMeta: api.ObjectMeta{
+					Name:            "empty",
+					ResourceVersion: "1",
+				},
+				TypeMeta: api.TypeMeta{
+					Kind:       "Orchestrator",
+					APIVersion: "v1",
+				},
+				Spec: orchestration.OrchestratorSpec{
+					URI: "vc.pensando.io",
+					Credentials: &monitoring.ExternalCred{
+						AuthType:                    monitoring.ExportAuthType_AUTHTYPE_USERNAMEPASSWORD.String(),
+						UserName:                    "user",
+						Password:                    "pass",
+						DisableServerAuthentication: true,
+						CaData:                      goodCerts,
+					},
+				},
+			},
+			fmt.Errorf("Cannot use ca-data when server authentication is not used"),
 		},
 	}
 

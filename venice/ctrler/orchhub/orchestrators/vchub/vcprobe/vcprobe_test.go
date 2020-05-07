@@ -11,6 +11,7 @@ import (
 
 	"github.com/pensando/sw/venice/utils/tsdb"
 
+	"github.com/vmware/govmomi"
 	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/types"
 
@@ -19,6 +20,7 @@ import (
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/testutils"
 	smmock "github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/log"
 	conv "github.com/pensando/sw/venice/utils/strconv"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -575,4 +577,77 @@ func TestEventReceiver(t *testing.T) {
 	vcp.receiveEvents(dc.Obj.Reference(), events2)
 	vcp.receiveEvents(dc.Obj.Reference(), events3)
 	vcp.deleteEventTracker(dc.Obj.Reference())
+}
+
+func TestVcLogin(t *testing.T) {
+	// skip  during UT as Vcenter is not avaialble - keep it as a quick test tool with real VC
+	skip := true
+	if !skip {
+		vcURL := &url.URL{
+			Scheme: "https",
+			Host:   "barun-vc.pensando.io",
+			Path:   "/sdk",
+		}
+		certificates := `-----BEGIN CERTIFICATE-----
+MIIEHTCCAwWgAwIBAgIJAOK2C5qCd96+MA0GCSqGSIb3DQEBCwUAMIGZMQswCQYD
+VQQDDAJDQTEYMBYGCgmSJomT8ixkARkWCHBlbnNhbmRvMRIwEAYKCZImiZPyLGQB
+GRYCaW8xCzAJBgNVBAYTAlVTMRMwEQYDVQQIDApDYWxpZm9ybmlhMR0wGwYDVQQK
+DBRiYXJ1bi12Yy5wZW5zYW5kby5pbzEbMBkGA1UECwwSVk13YXJlIEVuZ2luZWVy
+aW5nMB4XDTE5MTIzMDEzMDkyMVoXDTI5MTIyNzEzMDkyMVowgZkxCzAJBgNVBAMM
+AkNBMRgwFgYKCZImiZPyLGQBGRYIcGVuc2FuZG8xEjAQBgoJkiaJk/IsZAEZFgJp
+bzELMAkGA1UEBhMCVVMxEzARBgNVBAgMCkNhbGlmb3JuaWExHTAbBgNVBAoMFGJh
+cnVuLXZjLnBlbnNhbmRvLmlvMRswGQYDVQQLDBJWTXdhcmUgRW5naW5lZXJpbmcw
+ggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDLLZSJ+mWyYhpdfw3kuHeC
+KXl4r+KeHJlC02WnNYnMlVyG5xV/EHjsJctUjfx1kXtGGZ/k+Tgwp82JFzM6uLrQ
+p3jEjHS0PCccDOV6JibkbK/O1VQobwiA+FKLIAskUUH7h01anvQiy2coZjeqOWaa
+EoV4J1LpYXJp1LaQlqFrKcUTCtkSlKUStWlIe6coJotd+GAde4lQv84INPFZjFnn
+u/IWL69E9Z527dkPSZrRryLnIT93bzhs5Pkt8g+0ZNSU9YE9r1UeXHJrgVe8qMFT
+KdkDgIv9Gan0t45ptGnEfkCfqVdmmP+iAUGsoHDvUcS6qKh9rk6YfHfjlHDo/vjB
+AgMBAAGjZjBkMB0GA1UdDgQWBBTEr7pjg/VxDVif7aPYgjcYopZeQDAfBgNVHREE
+GDAWgQ5lbWFpbEBhY21lLmNvbYcEfwAAATAOBgNVHQ8BAf8EBAMCAQYwEgYDVR0T
+AQH/BAgwBgEB/wIBADANBgkqhkiG9w0BAQsFAAOCAQEAK1XYBF4pYaM2itX0Gcdr
+3MlwgDigCwPpopDo9m+y0U+nw2B/aBtdl9uYqWN3IDcjAqa6B2PEBPjjpxGfhi0H
+BKe0glEkG5ZbsV+U3bQv9uz1r9M1UcWrr2SWuC4CMYxsEi05j2Qd7h7M3fUcs0ku
+PyFY1aXMQD46NrluT7PHa2C1X2Hz05e9KbacL5DugdMOpyaQxlBAA6kaHYNZFhAw
+tx7Xsgpu1VSRXJhub7AlRG2uF1fRclZQcv2wjQWu+I5YVDKEbBtBVS4+9sXxvSSF
+SaaaoBOlM7xX8mfjpg4fD5VY9G/c3E3zaUamceS7C7IzIE0psokWPMePmARgVoj2
+nA==
+-----END CERTIFICATE-----
+-----BEGIN CERTIFICATE-----
+MIIEHTCCAwWgAwIBAgIJAPoZhZscIfrMMA0GCSqGSIb3DQEBCwUAMIGZMQswCQYD
+VQQDDAJDQTEYMBYGCgmSJomT8ixkARkWCHBlbnNhbmRvMRIwEAYKCZImiZPyLGQB
+GRYCaW8xCzAJBgNVBAYTAlVTMRMwEQYDVQQIDApDYWxpZm9ybmlhMR0wGwYDVQQK
+DBRyb2hhbi12Yy5wZW5zYW5kby5pbzEbMBkGA1UECwwSVk13YXJlIEVuZ2luZWVy
+aW5nMB4XDTIwMDEyNTIyNDY0OFoXDTMwMDEyMjIyNDY0OFowgZkxCzAJBgNVBAMM
+AkNBMRgwFgYKCZImiZPyLGQBGRYIcGVuc2FuZG8xEjAQBgoJkiaJk/IsZAEZFgJp
+bzELMAkGA1UEBhMCVVMxEzARBgNVBAgMCkNhbGlmb3JuaWExHTAbBgNVBAoMFHJv
+aGFuLXZjLnBlbnNhbmRvLmlvMRswGQYDVQQLDBJWTXdhcmUgRW5naW5lZXJpbmcw
+ggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDRqVWo1CZabh6UISnBa0rd
+wfeJPHdikzbE99Sj5ic7tkA0Z5hNSO0K4KmbHbsMPYFb+pQmVW437nmh/G/rGzNB
+c/xiZO2ZaxpZBTsIHbhctrGFMbyCuLPPTlmodYwcDe3mQvcjg+Z5qmFe3/uYKusd
+b3PAXdVPf75GLawQUJ7pNb0lR+DyRM0r/arMd1tOpPbYFdQAxDBTn96NEYm4n7zJ
+RZ7W9nxi0oLZQpR1v7iBK648rzkM10s8tmyXbWTfiaibT6tcdV2jBYETnVstWpV6
+0+pdtGbkP1g2JVMnyHyCUjRSNUzR2rq4s/zqgBgnqUmS1H7zix+VpIALbiTrnAAz
+AgMBAAGjZjBkMB0GA1UdDgQWBBSYCZeClfjMsPYlTcus34yn94sKdjAfBgNVHREE
+GDAWgQ5lbWFpbEBhY21lLmNvbYcEfwAAATAOBgNVHQ8BAf8EBAMCAQYwEgYDVR0T
+AQH/BAgwBgEB/wIBADANBgkqhkiG9w0BAQsFAAOCAQEAL80IAT/yM/YDwubAfXlT
+2KLaHLaVEs5iu/7URLUzUJKQwN0td2J5oERxJJGCgiShKwknweh04mmB3Stwkxcl
+QujrkTHnWT7MXYRXYmpFj6Tv2lJxkajtWHbhUqXpKz9LZmQUrbyVRCettvAuR6QR
+1kVd2vS4MB2zWJPRr561mGqzU/9tgFb3bBiwkW1Hueh/1ZCE61iEVar/kE9AGe9G
+3cObj4Gnx/HDK4qjpcOplbIL81k5nOY+1a7LqFxJMeDWloGoQ+AJvB3V4cAWfKBg
+qb7IfhKYGZSLD6kdxGqDotHExUoiWgsxEMCydZaWJ3QysZrANI0VIcRDPpPuHG/x
+uA==
+-----END CERTIFICATE-----`
+		_, err := certs.DecodePEMCertificates([]byte(certificates))
+		fmt.Printf("DecodePEM err - %s", err)
+		AssertOk(t, err, "Cert validation Failed")
+		vcURL.User = url.UserPassword("administrator@pensando.io", "N0isystem$")
+		fmt.Printf("Secured client")
+		_, err = govmomi.NewClientWithCA(context.Background(), vcURL, false /* insecure */, []byte(certificates))
+		AssertOk(t, err, "Login Failed")
+		fmt.Printf("Insecured client")
+		_, err = govmomi.NewClientWithCA(context.Background(), vcURL, true /* insecure */, nil)
+		AssertOk(t, err, "Login Failed")
+		fmt.Printf("Client Created %s", err)
+	}
 }

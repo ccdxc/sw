@@ -477,6 +477,7 @@ func TestVmotionWithWatchers(t *testing.T) {
 		ForceDCNames: map[string]bool{orchutils.ManageAllDcs: true},
 		DcIDMap:      map[string]types.ManagedObjectReference{},
 		DvsIDMap:     map[string]types.ManagedObjectReference{},
+		OrchConfig:   orchConfig,
 	}
 
 	vcp := vcprobe.NewVCProbe(nil, nil, &state)

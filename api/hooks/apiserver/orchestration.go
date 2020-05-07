@@ -18,6 +18,7 @@ import (
 	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
 	"github.com/pensando/sw/venice/globals"
 	authzgrpcctx "github.com/pensando/sw/venice/utils/authz/grpc/context"
+	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/ctxutils"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
@@ -84,6 +85,16 @@ func (o *orchHooks) validateOrchestrator(ctx context.Context, kv kvstore.Interfa
 		return i, true, fmt.Errorf("Orch %v has credentials missing", orch.Name)
 	}
 
+	if len(orch.Spec.Credentials.CaData) > 0 {
+		if orch.Spec.Credentials.DisableServerAuthentication {
+			return i, true, fmt.Errorf("Cannot use ca-data when server authentication is not used")
+		}
+		// validate the certificate format
+		_, err := certs.DecodePEMCertificates([]byte(orch.Spec.Credentials.CaData))
+		if err != nil {
+			return i, true, fmt.Errorf("Invalid ca-data certificates")
+		}
+	}
 	switch orch.Spec.Credentials.AuthType {
 	case monitoring.ExportAuthType_AUTHTYPE_USERNAMEPASSWORD.String():
 		if len(orch.Spec.Credentials.UserName) == 0 {
@@ -94,27 +105,9 @@ func (o *orchHooks) validateOrchestrator(ctx context.Context, kv kvstore.Interfa
 			return i, true, fmt.Errorf("Credentials for orchestrator %v missing password", orch.Name)
 		}
 
-		if len(orch.Spec.Credentials.BearerToken) > 0 || len(orch.Spec.Credentials.KeyData) > 0 || len(orch.Spec.Credentials.CertData) > 0 || len(orch.Spec.Credentials.CaData) > 0 {
-			return i, true, fmt.Errorf("Credentials for orchestrator %v has unnecessary fields passed", orch.Name)
+		if len(orch.Spec.Credentials.BearerToken) > 0 || len(orch.Spec.Credentials.KeyData) > 0 || len(orch.Spec.Credentials.CertData) > 0 {
+			return i, true, fmt.Errorf("Credentials for orchestrator %v has unnecessary fields", orch.Name)
 		}
-	case monitoring.ExportAuthType_AUTHTYPE_TOKEN.String():
-		if len(orch.Spec.Credentials.BearerToken) == 0 {
-			return i, true, fmt.Errorf("Credentials for orchestrator %v missing token", orch.Name)
-		}
-
-		if len(orch.Spec.Credentials.KeyData) > 0 || len(orch.Spec.Credentials.CertData) > 0 || len(orch.Spec.Credentials.CaData) > 0 || len(orch.Spec.Credentials.UserName) > 0 || len(orch.Spec.Credentials.Password) > 0 {
-			return i, true, fmt.Errorf("Credentials for orchestrator %v has unnecessary fields passed", orch.Name)
-		}
-	case monitoring.ExportAuthType_AUTHTYPE_CERTS.String():
-		if len(orch.Spec.Credentials.KeyData) == 0 || len(orch.Spec.Credentials.CertData) == 0 || len(orch.Spec.Credentials.CaData) == 0 {
-			return i, true, fmt.Errorf("Credentials for orchestrator %v missing fields", orch.Name)
-		}
-
-		if len(orch.Spec.Credentials.UserName) > 0 || len(orch.Spec.Credentials.Password) > 0 || len(orch.Spec.Credentials.BearerToken) > 0 {
-			return i, true, fmt.Errorf("Credentials for orchestrator %v has unnecessary fields passed", orch.Name)
-		}
-	case monitoring.ExportAuthType_AUTHTYPE_NONE.String():
-		fallthrough
 	default:
 		return i, true, fmt.Errorf("Unsupported auth type [%v] passed in orchestrator %v", orch.Spec.Credentials.AuthType, orch.Name)
 	}
@@ -199,19 +192,21 @@ func (o *orchHooks) handleCredentialUpdate(ctx context.Context, kv kvstore.Inter
 	// Check and merge credentials
 
 	newCred := new.Spec.Credentials
-	curCred := cur.Spec.Credentials
-
-	if newCred != nil {
-		return new, true, nil
-	}
 
 	// decrypt credentials as it is stored as secret. Cannot use passed in context because peer id in it is APIGw and transform returns empty key in that case
 	if err := cur.ApplyStorageTransformer(context.Background(), false); err != nil {
 		logger.ErrorLog("method", methodName, "msg", "error decrypting credentials field", "error", err)
 		return new, true, err
 	}
+	curCred := cur.Spec.Credentials
 
-	new.Spec.Credentials = curCred
+	if newCred == nil {
+		new.Spec.Credentials = curCred
+	} else {
+		if len(newCred.Password) == 0 {
+			newCred.Password = curCred.Password
+		}
+	}
 
 	if !dryRun {
 		logger.DebugLog("method", methodName, "msg", fmt.Sprintf("set the comparator version for [%s] as [%s]", key, cur.ResourceVersion))

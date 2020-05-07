@@ -811,7 +811,7 @@ func init() {
 				} else {
 					data, err = ExternalCredKeyDataTx.TransformFromStorage(ctx, []byte(m.KeyData))
 				}
-				m.KeyData = []byte(data)
+				m.KeyData = string(data)
 
 				return err
 			})
@@ -820,7 +820,7 @@ func init() {
 			m := i.(*ExternalCred)
 
 			var data []byte
-			m.KeyData = []byte(data)
+			m.KeyData = string(data)
 
 			return
 		}

@@ -62,14 +62,18 @@ message ExternalCred {
     string BearerToken = 4 [(venice.storageTransformer) = "Secret()", (gogoproto.jsontag) = "bearer-token,omitempty"];
 
     // CertData holds PEM-encoded bytes (typically read from a client certificate file).
-    bytes CertData = 5 [(gogoproto.jsontag) = "cert-data,omitempty"];
+    string CertData = 5 [(gogoproto.jsontag) = "cert-data,omitempty"];
 
     // KeyData holds PEM-encoded bytes (typically read from a client certificate key file).
     // TBD: need to add (venice.secret) = "true" support for this
-    bytes KeyData = 6 [(venice.storageTransformer) = "Secret()", (gogoproto.jsontag) = "key-data,omitempty"];
+    string KeyData = 6 [(venice.storageTransformer) = "Secret()", (gogoproto.jsontag) = "key-data,omitempty"];
 
     // CaData holds PEM-encoded bytes (typically read from a root certificates bundle).
-    bytes CaData = 7 [(gogoproto.jsontag) = "ca-data,omitempty"];
+	// CaData is used by client to autheticate external server. This is applicable to all authentication methods
+    string CaData = 7 [(gogoproto.jsontag) = "ca-data,omitempty"];
+
+	// DisableServerAuthentication flag can be used when a client does not want to authenticate a server
+	bool DisableServerAuthentication = 8 [(gogoproto.jsontag) = "disable-server-authentication,omitempty"];
 }
 
 enum SyslogFacility {

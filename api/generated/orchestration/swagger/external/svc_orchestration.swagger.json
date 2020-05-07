@@ -418,24 +418,29 @@
             "description": "CertData holds PEM-encoded bytes (typically read from a client certificate file).",
             "in": "query",
             "required": false,
-            "type": "string",
-            "format": "byte"
+            "type": "string"
           },
           {
             "name": "credentials.key-data",
             "description": "KeyData holds PEM-encoded bytes (typically read from a client certificate key file). TBD: need to add (venice.secret) = \"true\" support for this.",
             "in": "query",
             "required": false,
-            "type": "string",
-            "format": "byte"
+            "type": "string"
           },
           {
             "name": "credentials.ca-data",
-            "description": "CaData holds PEM-encoded bytes (typically read from a root certificates bundle).",
+            "description": "CaData holds PEM-encoded bytes (typically read from a root certificates bundle). CaData is used by client to autheticate external server. This is applicable to all authentication methods.",
             "in": "query",
             "required": false,
-            "type": "string",
-            "format": "byte"
+            "type": "string"
+          },
+          {
+            "name": "credentials.disable-server-authentication",
+            "description": "DisableServerAuthentication flag can be used when a client does not want to authenticate a server.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
           },
           {
             "name": "spec.manage-namespaces",
@@ -1356,18 +1361,20 @@
         },
         "cert-data": {
           "type": "string",
-          "format": "byte",
           "description": "CertData holds PEM-encoded bytes (typically read from a client certificate file)."
         },
         "key-data": {
           "type": "string",
-          "format": "byte",
           "description": "KeyData holds PEM-encoded bytes (typically read from a client certificate key file). TBD: need to add (venice.secret) = \"true\" support for this."
         },
         "ca-data": {
           "type": "string",
-          "format": "byte",
-          "description": "CaData holds PEM-encoded bytes (typically read from a root certificates bundle)."
+          "description": "CaData holds PEM-encoded bytes (typically read from a root certificates bundle). CaData is used by client to autheticate external server. This is applicable to all authentication methods."
+        },
+        "disable-server-authentication": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "DisableServerAuthentication flag can be used when a client does not want to authenticate a server."
         }
       },
       "description": "ExternalCred defines credentials required to access an external entity, such as a stats collector, compute orchestration entity, or a syslog server. External entity may support a variety of methods, like username/password, TLS Client authentication, or Bearer Token based authentication. User is expected to configure one of the methods."

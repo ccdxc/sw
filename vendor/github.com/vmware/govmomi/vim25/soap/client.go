@@ -215,7 +215,7 @@ func (c *Client) NewServiceClient(path string, namespace string) *Client {
 	return client
 }
 
-// SetRootCAs defines the set of root certificate authorities
+// SetRootCAs defines the set of root certificate authorities (read from cert pem files)
 // that clients use when verifying server certificates.
 // By default TLS uses the host's root CA set.
 //
@@ -241,6 +241,24 @@ func (c *Client) SetRootCAs(file string) error {
 	return nil
 }
 
+// SetRootCAsBytes defines the set of root certificate authorities
+// that clients use when verifying server certificates.
+// By default TLS uses the host's root CA set.
+//
+// See: http.Client.Transport.TLSClientConfig.RootCAs
+func (c *Client) SetRootCAsBytes(caData []byte) error {
+	pool := x509.NewCertPool()
+
+	if ok := pool.AppendCertsFromPEM(caData); !ok {
+		return errInvalidCACertificate{
+			File: "",
+		}
+	}
+
+	c.t.TLSClientConfig.RootCAs = pool
+
+	return nil
+}
 // Add default https port if missing
 func hostAddr(addr string) string {
 	_, port := splitHostPort(addr)

@@ -17,6 +17,7 @@ export interface IMonitoringExternalCred {
     'cert-data'?: string;
     'key-data'?: string;
     'ca-data'?: string;
+    'disable-server-authentication'?: boolean;
     '_ui'?: any;
 }
 
@@ -36,8 +37,10 @@ export class MonitoringExternalCred extends BaseModel implements IMonitoringExte
     'cert-data': string = null;
     /** KeyData holds PEM-encoded bytes (typically read from a client certificate key file). TBD: need to add (venice.secret) = "true" support for this. */
     'key-data': string = null;
-    /** CaData holds PEM-encoded bytes (typically read from a root certificates bundle). */
+    /** CaData holds PEM-encoded bytes (typically read from a root certificates bundle). CaData is used by client to autheticate external server. This is applicable to all authentication methods. */
     'ca-data': string = null;
+    /** DisableServerAuthentication flag can be used when a client does not want to authenticate a server. */
+    'disable-server-authentication': boolean = null;
     public static propInfo: { [prop in keyof IMonitoringExternalCred]: PropInfoItem } = {
         'auth-type': {
             enum: MonitoringExternalCred_auth_type_uihint,
@@ -72,9 +75,14 @@ export class MonitoringExternalCred extends BaseModel implements IMonitoringExte
             type: 'string'
         },
         'ca-data': {
-            description:  `CaData holds PEM-encoded bytes (typically read from a root certificates bundle).`,
+            description:  `CaData holds PEM-encoded bytes (typically read from a root certificates bundle). CaData is used by client to autheticate external server. This is applicable to all authentication methods.`,
             required: false,
             type: 'string'
+        },
+        'disable-server-authentication': {
+            description:  `DisableServerAuthentication flag can be used when a client does not want to authenticate a server.`,
+            required: false,
+            type: 'boolean'
         },
     }
 
@@ -161,6 +169,13 @@ export class MonitoringExternalCred extends BaseModel implements IMonitoringExte
         } else {
             this['ca-data'] = null
         }
+        if (values && values['disable-server-authentication'] != null) {
+            this['disable-server-authentication'] = values['disable-server-authentication'];
+        } else if (fillDefaults && MonitoringExternalCred.hasDefaultValue('disable-server-authentication')) {
+            this['disable-server-authentication'] = MonitoringExternalCred.propInfo['disable-server-authentication'].default;
+        } else {
+            this['disable-server-authentication'] = null
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -175,6 +190,7 @@ export class MonitoringExternalCred extends BaseModel implements IMonitoringExte
                 'cert-data': CustomFormControl(new FormControl(this['cert-data']), MonitoringExternalCred.propInfo['cert-data']),
                 'key-data': CustomFormControl(new FormControl(this['key-data']), MonitoringExternalCred.propInfo['key-data']),
                 'ca-data': CustomFormControl(new FormControl(this['ca-data']), MonitoringExternalCred.propInfo['ca-data']),
+                'disable-server-authentication': CustomFormControl(new FormControl(this['disable-server-authentication']), MonitoringExternalCred.propInfo['disable-server-authentication']),
             });
         }
         return this._formGroup;
@@ -193,6 +209,7 @@ export class MonitoringExternalCred extends BaseModel implements IMonitoringExte
             this._formGroup.controls['cert-data'].setValue(this['cert-data']);
             this._formGroup.controls['key-data'].setValue(this['key-data']);
             this._formGroup.controls['ca-data'].setValue(this['ca-data']);
+            this._formGroup.controls['disable-server-authentication'].setValue(this['disable-server-authentication']);
         }
     }
 }

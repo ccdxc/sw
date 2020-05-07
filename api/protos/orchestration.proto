@@ -39,20 +39,19 @@ message Orchestrator {
 // OrchestratorSpec contains the configuration of the cluster.
 message OrchestratorSpec {
     enum OrchestratorType {
-	// ui-hint: vcenter
+        // ui-hint: vcenter
         VCenter = 0 [(venice.enumValueStr) = "vcenter"];
     }
 
     // Type of orchestrator
-    string Type = 1 [(gogoproto.jsontag) = "type", (venice.check) = "StrEnum(OrchestratorSpec.OrchestratorType)", (venice.mutable) = false];
+    string Type 						= 1 [(gogoproto.jsontag) = "type", (venice.check) = "StrEnum(OrchestratorSpec.OrchestratorType)", (venice.mutable) = false];
     // URI of the orchestrator
-    string URI = 2 [(gogoproto.jsontag) = "uri", (venice.check) = "StrLen(1,-1)"]; 
+    string URI 						    = 2 [(gogoproto.jsontag) = "uri", (venice.check) = "StrLen(1,-1)"]; 
     // Credentials for the orchestrator
     monitoring.ExternalCred Credentials = 3 [(gogoproto.jsontag) = "credentials,omitempty"];
 
     // Namespaces that will be managed by this orchestrator. "all_namespaces" will manage all namespaces.
-    repeated string ManageNamespaces = 4 [(gogoproto.nullable) = true,
-                             (gogoproto.jsontag) = "manage-namespaces,omitempty"];
+    repeated string ManageNamespaces    = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "manage-namespaces,omitempty"];
 }
 
 // OrchestratorStatus contains the current state of connection with the orchestrator.

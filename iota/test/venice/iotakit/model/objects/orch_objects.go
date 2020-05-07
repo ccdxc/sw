@@ -36,6 +36,7 @@ func createOrchestrator(name, ip, user, password string) *orchestration.Orchestr
 				AuthType: "username-password",
 				UserName: user,
 				Password: password,
+				DisableServerAuthentication: true,
 			},
 		},
 		Status: orchestration.OrchestratorStatus{

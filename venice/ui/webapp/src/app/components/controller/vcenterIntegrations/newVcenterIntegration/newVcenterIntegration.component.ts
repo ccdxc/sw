@@ -311,6 +311,9 @@ export class NewVcenterIntegrationComponent extends CreationForm<IOrchestrationO
 
   getObjectValues(): IOrchestrationOrchestrator {
     const currValue: IOrchestrationOrchestrator =  this.newObject.getFormGroupValues();
+    if (currValue.spec.credentials['disable-server-authentication'] == null) {
+      currValue.spec.credentials['disable-server-authentication'] = true;
+    }
     if (this.pickedOption === this.ALL_DATACENTERS) {
       currValue.spec['manage-namespaces'] = [this.ALL_DATACENTERS];
     }

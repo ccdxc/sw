@@ -60,6 +60,7 @@ type Session struct {
 	ConnUpdate chan ConnectionState
 	vcURL      *url.URL
 	logger     log.Logger
+	OrchConfig *orchestration.Orchestrator
 
 	client    *govmomi.Client
 	viewMgr   *view.Manager
@@ -83,11 +84,12 @@ type Session struct {
 }
 
 // NewSession returns a new session object
-func NewSession(ctx context.Context, VcURL *url.URL, logger log.Logger) *Session {
+func NewSession(ctx context.Context, VcURL *url.URL, logger log.Logger, orchConfig *orchestration.Orchestrator) *Session {
 	return &Session{
 		ctx:        ctx,
 		vcURL:      VcURL,
 		logger:     logger,
+		OrchConfig: orchConfig,
 		WatcherWg:  &sync.WaitGroup{},
 		ConnUpdate: make(chan ConnectionState, 100),
 		LastEvent:  make(map[string]int32),
@@ -218,7 +220,15 @@ func (s *Session) PeriodicSessionCheck(wg *sync.WaitGroup) {
 
 		// Forever try to login until it succeeds
 		for {
-			c, err = govmomi.NewClient(s.ClientCtx, s.vcURL, true)
+			if s.OrchConfig.Spec.Credentials.DisableServerAuthentication {
+				s.logger.Infof("Client using insecure mode")
+				c, err = govmomi.NewClientWithCA(s.ClientCtx, s.vcURL, true, []byte{})
+			} else {
+				s.logger.Infof("Client using secure mode")
+				c, err = govmomi.NewClientWithCA(s.ClientCtx, s.vcURL, false,
+					[]byte(s.OrchConfig.Spec.Credentials.CaData))
+			}
+
 			var versionErr error
 
 			if err == nil {
