@@ -1390,6 +1390,7 @@ type ShadowBGPPrfxCntrsStatus struct {
 	InPrfxesImpWdr          uint32
 	InPrfxesExpWdr          uint32
 	CurPrfxesDeniedByPol    uint32
+	PeerAddr                string
 	*pds.BGPPrfxCntrsStatus
 }
 

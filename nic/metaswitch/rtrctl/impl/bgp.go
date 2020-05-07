@@ -460,6 +460,7 @@ var bgpPfxCountersShowCmd = &cobra.Command{
 
 const (
 	bgpPfxCntrs = `-----------------------------------
+  PeerAddr                : %v
   EntIndex                : %v
   PeerIndex               : %v
   Afi                     : %v
@@ -504,6 +505,20 @@ func bgpPfxCountersShowCmdHandler(cmd *cobra.Command, args []string) error {
 	defer c.Close()
 	client := types.NewBGPSvcClient(c)
 
+	reqPeer := &types.BGPPeerGetRequest{}
+	respMsgPeer, err := client.BGPPeerGet(context.Background(), reqPeer)
+	if err != nil {
+		return fmt.Errorf("Getting Peers failed (%s)", err)
+	}
+
+	if respMsgPeer.ApiStatus != types.ApiStatus_API_STATUS_OK {
+		return errors.New("Operation failed with error")
+	}
+	peers := make(map[uint32]utils.ShadowBGPPeer)
+	for _, p := range respMsgPeer.Response {
+		peer := utils.NewBGPPeer(p)
+		peers[peer.Status.PeerIndex] = *peer
+	}
 	req := &types.BGPPrfxCntrsGetRequest{}
 	respMsg, err := client.BGPPrfxCntrsGet(context.Background(), req)
 	if err != nil {
@@ -518,9 +533,11 @@ func bgpPfxCountersShowCmdHandler(cmd *cobra.Command, args []string) error {
 	var pfxCntrs []*utils.ShadowBGPPrfxCntrsStatus
 	for _, p := range respMsg.Response {
 		pfxCntr := utils.NewBGPPrfxCntrsStatus(p.Status)
+		pfxCntr.PeerAddr = peers[pfxCntr.PeerIndex].Spec.PeerAddr
 		pfxCntrs = append(pfxCntrs, pfxCntr)
 		if !doJSON {
 			fmt.Printf(bgpPfxCntrs,
+				pfxCntr.PeerAddr,
 				pfxCntr.EntIndex,
 				pfxCntr.PeerIndex,
 				pfxCntr.Afi,

@@ -325,6 +325,7 @@ message BGPPeerStatus {
   uint32          InUpdatesElpsTime     = 42 [(venice.pdsaFields) = {Field: "in_updates_elpsed_time"}];
   uint32          InOpens               = 43 [(venice.pdsaFields) = {Field: "in_opens"}];
   uint32          OutOpens              = 44 [(venice.pdsaFields) = {Field: "out_opens"}];
+  uint32          PeerIndex             = 45 [(venice.pdsaFields) = {Field: "peer_index"}];
 }
 
 // BGP peer object

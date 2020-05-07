@@ -310,6 +310,8 @@ message BGPPeerStatus {
  uint32          InOpens               = 43;
  // Number of BGP Opens sent for this connection.
  uint32          OutOpens              = 44;
+ // Peer Index
+ uint32          PeerIndex             = 45;
 }
 
 // BGP peer object
