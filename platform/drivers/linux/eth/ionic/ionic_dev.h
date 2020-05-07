@@ -176,9 +176,10 @@ struct ionic_desc_info {
 	unsigned int index;
 	unsigned int left;
 	unsigned int npages;
-	struct ionic_page_info pages[IONIC_RX_MAX_SG_ELEMS + 1];
+	unsigned int bytes;
 	ionic_desc_cb cb;
 	void *cb_arg;
+	struct ionic_page_info pages[IONIC_RX_MAX_SG_ELEMS + 1];
 };
 
 #define IONIC_QUEUE_NAME_MAX_SZ		32

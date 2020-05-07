@@ -15,10 +15,10 @@ static void ionic_rx_clean(struct ionic_queue *q,
 			   struct ionic_desc_info *desc_info,
 			   struct ionic_cq_info *cq_info,
 			   void *cb_arg);
-
-static bool ionic_rx_service(struct ionic_cq *cq, struct ionic_cq_info *cq_info);
-
-static bool ionic_tx_service(struct ionic_cq *cq, struct ionic_cq_info *cq_info);
+static bool ionic_rx_service(struct ionic_cq *cq,
+			     struct ionic_cq_info *cq_info);
+static bool ionic_tx_service(struct ionic_cq *cq,
+			     struct ionic_cq_info *cq_info);
 
 static inline void ionic_txq_post(struct ionic_queue *q, bool ring_dbell,
 				  ionic_desc_cb cb_func, void *cb_arg)
@@ -447,9 +447,8 @@ void ionic_rx_empty(struct ionic_queue *q)
 		desc->addr = 0;
 		desc->len = 0;
 
-		for (i = 0; i < cur->npages; i++) {
+		for (i = 0; i < cur->npages; i++)
 			ionic_rx_page_free(q, &cur->pages[i]);
-		}
 
 		cur->cb_arg = NULL;
 	}
@@ -476,10 +475,10 @@ int ionic_rx_napi(struct napi_struct *napi, int budget)
 	txcq = &lif->txqcqs[qi].qcq->cq;
 
 	tx_work_done = ionic_cq_service(txcq, tx_budget,
-						ionic_tx_service, NULL, NULL);
+					ionic_tx_service, NULL, NULL);
 
 	rx_work_done = ionic_cq_service(rxcq, budget,
-						ionic_rx_service, NULL, NULL);
+					ionic_rx_service, NULL, NULL);
 	if (rx_work_done)
 		ionic_rx_fill_cb(rxcq->bound_q);
 
@@ -594,7 +593,6 @@ static void ionic_tx_clean(struct ionic_queue *q,
 
 	if (cb_arg) {
 		struct sk_buff *skb = cb_arg;
-		//u32 len = skb->len;
 		u16 qi;
 
 		qi = skb_get_queue_mapping(skb);
@@ -603,9 +601,9 @@ static void ionic_tx_clean(struct ionic_queue *q,
 			netif_wake_subqueue(q->lif->netdev, qi);
 			q->wake++;
 		}
+		desc_info->bytes = skb->len;
 		dev_kfree_skb_any(skb);
 		stats->clean++;
-		//netdev_tx_completed_queue(q_to_ndq(q), 1, len);
 	}
 }
 
@@ -614,21 +612,30 @@ static bool ionic_tx_service(struct ionic_cq *cq, struct ionic_cq_info *cq_info)
 	struct ionic_txq_comp *comp = cq_info->cq_desc;
 	struct ionic_queue *q = cq->bound_q;
 	struct ionic_desc_info *desc_info;
+	int bytes = 0;
+	int pkts = 0;
 
 	if (!color_match(comp->color, cq->done_color))
 		return false;
 
 	/* clean the related q entries, there could be
-	*  several q entries completed for each cq completion
-	*/
+	 * several q entries completed for each cq completion
+	 */
 	do {
 		desc_info = q->tail;
+		desc_info->bytes = 0;
 		q->tail = desc_info->next;
-		ionic_tx_clean(q, desc_info, cq->tail,
-					desc_info->cb_arg);
+		ionic_tx_clean(q, desc_info, cq->tail, desc_info->cb_arg);
+		if (desc_info->cb_arg) {
+			pkts++;
+			bytes += desc_info->bytes;
+		}
 		desc_info->cb = NULL;
 		desc_info->cb_arg = NULL;
 	} while (desc_info->index != le16_to_cpu(comp->comp_index));
+
+	if (pkts && bytes)
+		netdev_tx_completed_queue(q_to_ndq(q), pkts, bytes);
 
 	return true;
 }
@@ -639,29 +646,37 @@ void ionic_tx_flush(struct ionic_cq *cq)
 	u32 work_done;
 
 	work_done = ionic_cq_service(cq, cq->num_descs,
-					ionic_tx_service, NULL, NULL);
+				     ionic_tx_service, NULL, NULL);
 
 	if (work_done && !cq->lif->ionic->neth_eqs)
 		ionic_intr_credits(idev->intr_ctrl, cq->bound_intr->index,
 				   work_done, IONIC_INTR_CRED_RESET_COALESCE);
-
-	return;
 }
 
 void ionic_tx_empty(struct ionic_queue *q)
 {
 	struct ionic_desc_info *desc_info;
+	int bytes = 0;
+	int pkts = 0;
 	int done = 0;
 
 	/* walk the not completed tx entries, if any */
 	while (q->head != q->tail) {
 		desc_info = q->tail;
+		desc_info->bytes = 0;
 		q->tail = desc_info->next;
 		ionic_tx_clean(q, desc_info, NULL, desc_info->cb_arg);
+		if (desc_info->cb_arg) {
+			pkts++;
+			bytes += desc_info->bytes;
+		}
 		desc_info->cb = NULL;
 		desc_info->cb_arg = NULL;
 		done++;
 	}
+
+	if (pkts && bytes)
+		netdev_tx_completed_queue(q_to_ndq(q), pkts, bytes);
 }
 
 static int ionic_tx_tcp_inner_pseudo_csum(struct sk_buff *skb)
@@ -712,7 +727,8 @@ static int ionic_tx_tcp_pseudo_csum(struct sk_buff *skb)
 	return 0;
 }
 
-static void ionic_tx_tso_post(struct ionic_queue *q, struct ionic_txq_desc *desc,
+static void ionic_tx_tso_post(struct ionic_queue *q,
+			      struct ionic_txq_desc *desc,
 			      struct sk_buff *skb,
 			      dma_addr_t addr, u8 nsge, u16 len,
 			      unsigned int hdrlen, unsigned int mss,
@@ -737,7 +753,7 @@ static void ionic_tx_tso_post(struct ionic_queue *q, struct ionic_txq_desc *desc
 
 	if (done) {
 		skb_tx_timestamp(skb);
-		//netdev_tx_sent_queue(q_to_ndq(q), skb->len);
+		netdev_tx_sent_queue(q_to_ndq(q), skb->len);
 #ifdef HAVE_NETDEV_XMIT_MORE
 		ionic_txq_post(q, !netdev_xmit_more(), ionic_tx_clean, skb);
 #elif defined HAVE_SKB_XMIT_MORE
@@ -1054,7 +1070,7 @@ static int ionic_tx(struct ionic_queue *q, struct sk_buff *skb)
 	stats->pkts++;
 	stats->bytes += skb->len;
 
-	//netdev_tx_sent_queue(q_to_ndq(q), skb->len);
+	netdev_tx_sent_queue(q_to_ndq(q), skb->len);
 #ifdef HAVE_NETDEV_XMIT_MORE
 	ionic_txq_post(q, !netdev_xmit_more(), ionic_tx_clean, skb);
 #elif defined HAVE_SKB_XMIT_MORE
