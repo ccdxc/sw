@@ -18,7 +18,7 @@ if   [ $LinkMgrTest = "100Gb" ]; then
 elif [ $LinkMgrTest = "40Gb" ]; then
 	sshpass -p lab123 ssh -o StrictHostKeyChecking=no diag@192.168.69.245 "$LinkMgrTestScript -s $LinkMgrTestPath/setup_3_40G_only.json -t 103 -v $LinkMgrTestPath/$FW.tar"
 elif [ $LinkMgrTest = "25Gb" ]; then
-	sshpass -p lab123 ssh -o StrictHostKeyChecking=no diag@192.168.69.245 "$LinkMgrTestScript -s $LinkMgrTestPath/setup_4_10-25G_only.json -t 103 -v $LinkMgrTestPath/$FW.tar"
+	sshpass -p lab123 ssh -o StrictHostKeyChecking=no diag@192.168.69.245 "$LinkMgrTestScript -s $LinkMgrTestPath/setup_6_10-25G_only.json -t 103 -v $LinkMgrTestPath/$FW.tar"
 elif [ $LinkMgrTest = "100Gb_vomero" ]; then
 	sshpass -p lab123 ssh -o StrictHostKeyChecking=no diag@192.168.69.245 "$LinkMgrTestScript -s $LinkMgrTestPath/setup_4_100g_vomero.json -t 103 -v $LinkMgrTestPath/$FW.tar"
 fi
