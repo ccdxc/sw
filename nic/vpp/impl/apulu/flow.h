@@ -508,7 +508,8 @@ pds_flow_classify_get_advance_offset (vlib_buffer_t *b, u8 p4_flags)
 
 void
 pds_flow_packet_type_derive (vlib_buffer_t *p, p4_rx_cpu_hdr_t *hdr,
-                             u16 flags, u16 *next, u32 *counter)
+                             u16 flags, u16 *next, u32 *counter,
+                             pds_flow_hw_ctx_t *ctx)
 {
     u16 xlate_id;
     u8 intra_subnet = 0;
@@ -690,9 +691,7 @@ pds_flow_packet_type_derive (vlib_buffer_t *p, p4_rx_cpu_hdr_t *hdr,
     }
 
     // if existing session then retain packet type last known 
-    if (pds_is_flow_session_present(p)) {
-        pds_flow_hw_ctx_t *ctx =
-            pds_flow_get_hw_ctx(vnet_buffer(p)->pds_flow_data.ses_id);
+    if (PREDICT_FALSE(NULL != ctx)) {
         pkt_type = ctx->packet_type;
     }
     vnet_buffer(p)->pds_flow_data.packet_type = pkt_type;
@@ -747,265 +746,13 @@ pds_flow_vr_ip_ping (p4_rx_cpu_hdr_t *hdr, vlib_buffer_t *vlib, u16 nh_hw_id,
 }
 
 always_inline void
-pds_flow_classify_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
-                        u16 *next0, u16 *next1, u32 *counter)
-{
-    p4_rx_cpu_hdr_t *hdr0 = vlib_buffer_get_current(p0);
-    p4_rx_cpu_hdr_t *hdr1 = vlib_buffer_get_current(p1);
-    u8 flag_orig0, flag_orig1;
-    u32 nexthop;
-    u8 next_determined = 0;
-    pds_impl_db_vnic_entry_t *vnic0, *vnic1;
-    u8 next_offset_done = 0;
-
-    *next0 = *next1 = FLOW_CLASSIFY_N_NEXT;
-
-    flag_orig0 = hdr0->flags;
-    flag_orig1 = hdr1->flags;
-
-    u8 flags0 = BIT_ISSET(flag_orig0,
-                          (VPP_CPU_FLAGS_IP_VALID | VPP_CPU_FLAGS_VLAN_VALID));
-    u8 flags1 = BIT_ISSET(flag_orig1,
-                          (VPP_CPU_FLAGS_IP_VALID | VPP_CPU_FLAGS_VLAN_VALID));
-
-    vnic0 = pds_impl_db_vnic_get(hdr0->vnic_id);
-    if (!vnic0) {
-        *next0 = FLOW_CLASSIFY_NEXT_DROP;
-        counter[FLOW_CLASSIFY_COUNTER_VNIC_NOT_FOUND] += 1;
-        next_determined |= 0x1;
-    } else {
-        vnet_buffer(p0)->pds_flow_data.flow_hash = hdr0->flow_hash;
-        vnet_buffer(p0)->pds_flow_data.ses_id = hdr0->session_id;
-        BIT_SET(vnet_buffer(p0)->pds_flow_data.flags,
-                pds_get_cpu_flags_from_hdr(hdr0));
-        BIT_SET(vnet_buffer(p0)->pds_flow_data.flags,
-                pds_get_cpu_flags_from_vnic(vnic0));
-        vnet_buffer(p0)->pds_flow_data.tcp_flags = hdr0->tcp_flags;
-        vnet_buffer(p0)->pds_flow_data.epoch = hdr0->epoch;
-        nexthop = hdr0->nexthop_id;
-        // program nexthop always if there is one with priority.
-        // p4 will decide if to take mapping or route.
-        if (nexthop) {
-            PDS_FLOW_NH_TYPE_SET(nexthop, hdr0->nexthop_type);
-            PDS_FLOW_NH_PRIO_SET(nexthop, hdr0->route_priority);
-        }
-        PDS_FLOW_NH_DROP_SET(nexthop, hdr0->drop);
-        vnet_buffer(p0)->pds_flow_data.nexthop = nexthop;
-
-        vnet_buffer(p0)->l2_hdr_offset = hdr0->l2_offset;
-        if (BIT_ISSET(hdr0->flags, VPP_CPU_FLAGS_IPV4_2_VALID)) {
-            vnet_buffer(p0)->l3_hdr_offset =
-                    hdr0->l3_inner_offset ? hdr0->l3_inner_offset : hdr0->l3_offset;
-            vnet_buffer(p0)->l4_hdr_offset =
-                    hdr0->l4_inner_offset ? hdr0->l4_inner_offset : hdr0->l4_offset;
-        } else {
-            vnet_buffer(p0)->l3_hdr_offset = hdr0->l3_offset;
-            vnet_buffer(p0)->l4_hdr_offset = hdr0->l4_offset;
-        }
-        vnet_buffer(p0)->pds_flow_data.l2_inner_offset = hdr0->l2_inner_offset;
-        vnet_buffer(p0)->pds_flow_data.lif = hdr0->lif;
-        vnet_buffer2(p0)->pds_nat_data.vpc_id = hdr0->vpc_id;
-        vnet_buffer2(p0)->pds_nat_data.vnic_id = hdr0->vnic_id;
-
-        // If it's a TCP SYN packet, it should always go to FLOW_PROG node
-        if (PREDICT_TRUE(!hdr0->defunct_flow) && hdr0->tcp_flags &&
-            !(hdr0->tcp_flags & TCP_FLAG_SYN)) {
-            // IF flow ageing is not supported or session is not present, all other 
-            // TCP packets can be dropped
-            if (!pds_flow_age_supported() || (PREDICT_FALSE(0 == hdr0->session_id))) {
-                *next0 = FLOW_CLASSIFY_NEXT_DROP;
-                counter[FLOW_CLASSIFY_COUNTER_TCP_PKT_NO_SES] += 1;
-                next_determined |= 0x1;
-                goto next_pak;
-            }
-            // If ageing is supported, all TCP packets excpet SYN should go to 
-            // AGE_FLOW node
-            vlib_buffer_advance(p0, (APULU_P4_TO_ARM_HDR_SZ -
-                                     APULU_ARM_TO_P4_HDR_SZ));
-            *next0 = FLOW_CLASSIFY_NEXT_AGE_FLOW;
-            counter[FLOW_CLASSIFY_COUNTER_TCP_PKT] += 1;
-            next_determined |= 0x1;
-            next_offset_done |= 0x1;
-            goto next_pak;
-        } 
-
-        if (PREDICT_FALSE(vnic0->max_sessions &&
-                (vnic0->active_ses_count >= vnic0->max_sessions))) {
-            *next0 = FLOW_CLASSIFY_NEXT_DROP;
-            counter[FLOW_CLASSIFY_COUNTER_MAX_EXCEEDED] += 1;
-            next_determined |= 0x1;
-            goto next_pak;
-        }
-        vnic0->active_ses_count++;
-        pds_flow_packet_type_derive(p0, hdr0, flags0, next0, counter);
-        if (FLOW_CLASSIFY_N_NEXT != *next0) {
-            next_determined |= 0x1;
-            goto next_pak;
-        }
-    }
-
-next_pak:
-    vnic1 = pds_impl_db_vnic_get(hdr1->vnic_id);
-    if (!vnic1) {
-        *next1 = FLOW_CLASSIFY_NEXT_DROP;
-        counter[FLOW_CLASSIFY_COUNTER_VNIC_NOT_FOUND] += 1;
-        next_determined |= 0x2;
-    } else {
-        vnet_buffer(p1)->pds_flow_data.flow_hash = hdr1->flow_hash;
-        vnet_buffer(p1)->pds_flow_data.ses_id = hdr1->session_id;
-        BIT_SET(vnet_buffer(p1)->pds_flow_data.flags,
-                pds_get_cpu_flags_from_hdr(hdr1));
-        BIT_SET(vnet_buffer(p1)->pds_flow_data.flags,
-                pds_get_cpu_flags_from_vnic(vnic1));
-        vnet_buffer(p1)->pds_flow_data.tcp_flags = hdr1->tcp_flags;
-        vnet_buffer(p1)->pds_flow_data.epoch = hdr1->epoch;
-        nexthop = hdr1->nexthop_id;
-        // program nexthop always if there is one with priority.
-        // p4 will decide if to take mapping or route.
-        if (nexthop) {
-            PDS_FLOW_NH_TYPE_SET(nexthop, hdr1->nexthop_type);
-            PDS_FLOW_NH_PRIO_SET(nexthop, hdr1->route_priority);
-        }
-        PDS_FLOW_NH_DROP_SET(nexthop, hdr1->drop);
-        vnet_buffer(p1)->pds_flow_data.nexthop = nexthop;
-
-        vnet_buffer(p1)->l2_hdr_offset = hdr1->l2_offset;
-        if (BIT_ISSET(hdr1->flags, VPP_CPU_FLAGS_IPV4_2_VALID)) {
-            vnet_buffer(p1)->l3_hdr_offset =
-                    hdr1->l3_inner_offset ? hdr1->l3_inner_offset : hdr1->l3_offset;
-            vnet_buffer(p1)->l4_hdr_offset =
-                    hdr1->l4_inner_offset ? hdr1->l4_inner_offset : hdr1->l4_offset;
-        } else {
-            vnet_buffer(p1)->l3_hdr_offset = hdr1->l3_offset;
-            vnet_buffer(p1)->l4_hdr_offset = hdr1->l4_offset;
-        }
-        vnet_buffer(p1)->pds_flow_data.l2_inner_offset = hdr1->l2_inner_offset;
-        vnet_buffer(p1)->pds_flow_data.lif = hdr1->lif;
-        vnet_buffer2(p1)->pds_nat_data.vpc_id = hdr1->vpc_id;
-        vnet_buffer2(p1)->pds_nat_data.vnic_id = hdr1->vnic_id;
-
-        // If it's a TCP SYN packet, it should always go to FLOW_PROG node
-        if (PREDICT_TRUE(!hdr1->defunct_flow) && hdr1->tcp_flags &&
-            !(hdr1->tcp_flags & TCP_FLAG_SYN)) {
-            // IF flow ageing is not supported or session is not present, all other
-            // TCP packets can be dropped
-            if (!pds_flow_age_supported() || (PREDICT_FALSE(0 == hdr1->session_id))) {
-                *next1 = FLOW_CLASSIFY_NEXT_DROP;
-                counter[FLOW_CLASSIFY_COUNTER_TCP_PKT_NO_SES] += 1;
-                next_determined |= 0x2;
-                goto pak_done;
-            }
-            // If ageing is supported, all TCP packets excpet SYN should go to
-            // AGE_FLOW node
-            vlib_buffer_advance(p1, (APULU_P4_TO_ARM_HDR_SZ -
-                                     APULU_ARM_TO_P4_HDR_SZ));
-            *next1 = FLOW_CLASSIFY_NEXT_AGE_FLOW;
-            counter[FLOW_CLASSIFY_COUNTER_TCP_PKT] += 1;
-            next_determined |= 0x2;
-            next_offset_done |= 0x2;
-            goto pak_done;
-        }
-
-        if (PREDICT_FALSE(vnic1->max_sessions &&
-            (vnic1->active_ses_count >= vnic1->max_sessions))) {
-            *next1 = FLOW_CLASSIFY_NEXT_DROP;
-            counter[FLOW_CLASSIFY_COUNTER_MAX_EXCEEDED] += 1;
-            next_determined |= 0x2;
-            goto pak_done;
-        }
-        vnic1->active_ses_count++;
-        pds_flow_packet_type_derive(p1, hdr1, flags1, next1, counter);
-        if (FLOW_CLASSIFY_N_NEXT != *next1) {
-            next_determined |= 0x2;
-            goto pak_done;
-        }
-    }
-
-pak_done:
-    if ((next_offset_done & 0x1) == 0) {
-        vlib_buffer_advance(p0,
-            pds_flow_classify_get_advance_offset(p0, flag_orig0));
-    }
-    if ((next_offset_done & 0x2) == 0) {
-        vlib_buffer_advance(p1,
-            pds_flow_classify_get_advance_offset(p1, flag_orig1));
-    }
-
-    if ((flags0 == flags1) && !next_determined) {
-        if ((flags0 == VPP_CPU_FLAGS_IPV4_1_VALID)) {
-            if (pds_flow_vr_ip_ping(hdr0, p0, vnic0->nh_hw_id,
-                                    true, next0, counter)) {
-                *next0 = FLOW_CLASSIFY_NEXT_IP4_FLOW_PROG;
-                counter[FLOW_CLASSIFY_COUNTER_IP4_FLOW] += 1;
-            }
-            if (pds_flow_vr_ip_ping(hdr1, p1, vnic1->nh_hw_id,
-                                    true, next1, counter)) {
-                *next1 = FLOW_CLASSIFY_NEXT_IP4_FLOW_PROG;
-                counter[FLOW_CLASSIFY_COUNTER_IP4_FLOW] += 1;
-            }
-        } else if (BIT_ISSET(flags0, VPP_CPU_FLAGS_IPV4_2_VALID)) {
-            *next0 = *next1 = FLOW_CLASSIFY_NEXT_IP4_TUN_FLOW_PROG;
-            counter[FLOW_CLASSIFY_COUNTER_IP4_TUN_FLOW] += 2;
-        } else if (PREDICT_FALSE(BIT_ISSET(flags0,
-                   VPP_CPU_FLAGS_IPV6_VALID))) {
-            *next0 = *next1 = FLOW_CLASSIFY_NEXT_DROP;
-            counter[FLOW_CLASSIFY_COUNTER_IP6_FLOW] += 2;
-        } else {
-            *next0 = *next1 = FLOW_CLASSIFY_NEXT_DROP;
-            counter[FLOW_CLASSIFY_COUNTER_L2_FLOW] += 2;
-        }
-        return;
-    }
-
-    if ((next_determined & 0x1) == 0) {
-        if ((flags0 == VPP_CPU_FLAGS_IPV4_1_VALID)) {
-            if (pds_flow_vr_ip_ping(hdr0, p0, vnic0->nh_hw_id,
-                                    true, next0, counter)) {
-                *next0 = FLOW_CLASSIFY_NEXT_IP4_FLOW_PROG;
-                counter[FLOW_CLASSIFY_COUNTER_IP4_FLOW] += 1;
-            }
-        } else if (BIT_ISSET(flags0, VPP_CPU_FLAGS_IPV4_2_VALID)) {
-            *next0 = FLOW_CLASSIFY_NEXT_IP4_TUN_FLOW_PROG;
-            counter[FLOW_CLASSIFY_COUNTER_IP4_TUN_FLOW] += 1;
-        } else if (PREDICT_FALSE(BIT_ISSET(flags0,
-                   VPP_CPU_FLAGS_IPV6_VALID))) {
-            *next0 = FLOW_CLASSIFY_NEXT_DROP;
-            counter[FLOW_CLASSIFY_COUNTER_IP6_FLOW] += 1;
-        } else {
-            *next0 = FLOW_CLASSIFY_NEXT_DROP;
-            counter[FLOW_CLASSIFY_COUNTER_L2_FLOW] += 1;
-        }
-    }
-
-    if ((next_determined & 0x2) == 0) {
-        if ((flags1 == VPP_CPU_FLAGS_IPV4_1_VALID)) {
-            if (pds_flow_vr_ip_ping(hdr1, p1, vnic1->nh_hw_id,
-                                    true, next1, counter)) {
-                *next1 = FLOW_CLASSIFY_NEXT_IP4_FLOW_PROG;
-                counter[FLOW_CLASSIFY_COUNTER_IP4_FLOW] += 1;
-            }
-        } else if (BIT_ISSET(flags1, VPP_CPU_FLAGS_IPV4_2_VALID)) {
-            *next1 = FLOW_CLASSIFY_NEXT_IP4_TUN_FLOW_PROG;
-            counter[FLOW_CLASSIFY_COUNTER_IP4_TUN_FLOW] += 1;
-        } else if (PREDICT_FALSE(BIT_ISSET(flags1,
-                   VPP_CPU_FLAGS_IPV6_VALID))) {
-            *next1 = FLOW_CLASSIFY_NEXT_DROP;
-            counter[FLOW_CLASSIFY_COUNTER_IP6_FLOW] += 1;
-        } else {
-            *next1 = FLOW_CLASSIFY_NEXT_DROP;
-            counter[FLOW_CLASSIFY_COUNTER_L2_FLOW] += 1;
-        }
-    }
-    return;
-}
-
-always_inline void
 pds_flow_classify_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
 {
     p4_rx_cpu_hdr_t *hdr = vlib_buffer_get_current(p);
     u8 flag_orig;
     u32 nexthop;
     pds_impl_db_vnic_entry_t *vnic;
+    pds_flow_hw_ctx_t *ctx = NULL;
 
     *next = FLOW_CLASSIFY_N_NEXT;
     flag_orig = hdr->flags;
@@ -1048,12 +795,35 @@ pds_flow_classify_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
     vnet_buffer2(p)->pds_nat_data.vpc_id = hdr->vpc_id;
     vnet_buffer2(p)->pds_nat_data.vnic_id = hdr->vnic_id;
 
+    if (PREDICT_FALSE(pds_is_flow_session_present(p))) {
+        ctx = pds_flow_get_hw_ctx(vnet_buffer(p)->pds_flow_data.ses_id);
+        if (pds_flow_packet_l2l(ctx->packet_type) && hdr->rx_packet) {
+            if (BIT_ISSET(flags, VPP_CPU_FLAGS_IPV4_2_VALID)) {
+                vnic = pds_impl_db_vnic_get(ctx->vnic_id);
+                if (PREDICT_FALSE(!vnic)) {
+                    *next = FLOW_CLASSIFY_NEXT_DROP;
+                    counter[FLOW_CLASSIFY_COUNTER_VNIC_NOT_FOUND] += 1;
+                    return;
+                }
+                vnet_buffer(p)->pds_flow_data.lif = vnic->host_lif_hw_id;
+                vnet_buffer(p)->pds_flow_data.l2_inner_offset =
+                    hdr->l2_inner_offset;
+                vlib_buffer_advance(p, pds_flow_classify_get_advance_offset(p,
+                                    flag_orig));
+                *next = FLOW_CLASSIFY_NEXT_IP4_L2L_FLOW_PROG;
+                counter[FLOW_CLASSIFY_COUNTER_IP4_L2L_FLOW] += 1;
+                goto end;
+            }
+        }
+    }
+
     // If it's a TCP SYN packet, it should always go to FLOW_PROG node
     if (PREDICT_TRUE(!hdr->defunct_flow) && hdr->tcp_flags &&
-        !(hdr->tcp_flags & TCP_FLAG_SYN)) { 
+        !(hdr->tcp_flags & TCP_FLAG_SYN)) {
         // IF flow ageing is not supported or session is not present, all other TCP
         // packets can be dropped
-        if (!pds_flow_age_supported() || (PREDICT_FALSE(0 == hdr->session_id))) {
+        if (PREDICT_FALSE(!pds_flow_age_supported() ||
+                          !pds_is_flow_session_present(p))) {
             *next = FLOW_CLASSIFY_NEXT_DROP;
             counter[FLOW_CLASSIFY_COUNTER_TCP_PKT_NO_SES] += 1;
             goto end;
@@ -1076,7 +846,7 @@ pds_flow_classify_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
     }
     vnic->active_ses_count++;
 
-    pds_flow_packet_type_derive(p, hdr, flags, next, counter);
+    pds_flow_packet_type_derive(p, hdr, flags, next, counter, ctx);
     if (FLOW_CLASSIFY_N_NEXT != *next) {
         goto end;
     }
@@ -1101,6 +871,14 @@ pds_flow_classify_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
 
 end:
     return;
+}
+
+always_inline void
+pds_flow_classify_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
+                      u16 *next0, u16 *next1, u32 *counter)
+{
+    pds_flow_classify_x1(p0, next0, counter);
+    pds_flow_classify_x1(p1, next1, counter);
 }
 
 always_inline void

@@ -22,7 +22,8 @@ vlib_node_registration_t pds_fwd_flow_node,
                          pds_ip6_flow_prog_node,
                          pds_tun_ip4_flow_prog_node,
                          pds_tun_ip6_flow_prog_node,
-                         pds_flow_classify_node;
+                         pds_flow_classify_node,
+                         pds_l2l_ip4_flow_prog_node;
 
 u8 g_dis_reinject = 0;
 
@@ -463,6 +464,174 @@ pds_flow_prog_trace_add (vlib_main_t *vm,
         } PDS_PACKET_TRACE_SINGLE_LOOP_END;
     } PDS_PACKET_TRACE_LOOP_END;
 }
+
+always_inline void
+pds_l2l_flow_prog_internal (vlib_buffer_t *p0,
+                            u32 session_id,
+                            u8 is_ip4, u8 is_l2,
+                            u16 *next, u32 *counter)
+{
+    u8                  miss_hit;
+    pds_flow_hw_ctx_t   *session = pds_flow_get_hw_ctx(session_id);
+    u8                  epoch;
+
+    if (is_ip4) {
+        ftlv4 *table4 = (ftlv4 *)pds_flow_get_table4();
+
+        if (PREDICT_FALSE(ftlv4_get_with_handle(table4,
+                                                session->iflow.table_id,
+                                                session->iflow.primary) != 0)) {
+            *next = FLOW_PROG_NEXT_DROP;
+            counter[FLOW_PROG_COUNTER_FLOW_FAILED]++;
+            goto del;
+        }
+
+        epoch = pds_get_flow_epoch(p0);
+        miss_hit = 0;
+        ftlv4_set_last_read_entry_miss_hit(miss_hit);
+        if (PREDICT_FALSE(ftlv4_update_cached_entry(table4) != 0)) {
+            *next = FLOW_PROG_NEXT_DROP;
+            counter[FLOW_PROG_COUNTER_FLOW_FAILED]++;
+            goto del;
+        }
+
+        if (PREDICT_FALSE(ftlv4_get_with_handle(table4,
+                                                session->rflow.table_id,
+                                                session->rflow.primary) != 0)) {
+            *next = FLOW_PROG_NEXT_DROP;
+            counter[FLOW_PROG_COUNTER_FLOW_FAILED]++;
+            goto del;
+        }
+
+        ftlv4_set_last_read_entry_epoch(epoch);
+        ftlv4_set_last_read_entry_miss_hit(miss_hit);
+        if (PREDICT_FALSE(ftlv4_update_cached_entry(table4) != 0)) {
+            *next = FLOW_PROG_NEXT_DROP;
+            counter[FLOW_PROG_COUNTER_FLOW_FAILED]++;
+            goto del;
+        }
+    } else {
+        // todo when ipv6/l2 support is added
+    }
+    *next = FLOW_PROG_NEXT_SESSION_PROG;
+    counter[FLOW_PROG_COUNTER_FLOW_SUCCESS]++;
+    return;
+
+del:
+    pds_flow_delete_session(session_id);
+    return;
+}
+
+always_inline int
+pds_l2l_flow_prog_get_next_offset (vlib_buffer_t *p0)
+{
+       return -(VPP_P4_TO_ARM_HDR_SZ +
+                (vnet_buffer(p0)->l3_hdr_offset - 
+                vnet_buffer(p0)->pds_flow_data.l2_inner_offset));
+}
+
+always_inline uword
+pds_l2l_flow_prog (vlib_main_t *vm,
+                   vlib_node_runtime_t *node,
+                   vlib_frame_t *from_frame,
+                   u8 is_ip4)
+{
+    u32 counter[FLOW_PROG_COUNTER_LAST] = {0};
+    pds_flow_main_t *fm = &pds_flow_main;
+
+    if (is_ip4) {
+        ftlv4_cache_batch_init();
+    } else {
+        ftlv6_cache_batch_init();
+    }
+    PDS_PACKET_LOOP_START {
+        PDS_PACKET_DUAL_LOOP_START(LOAD, LOAD) {
+            u32 session_id0 = 0, session_id1 = 0;
+            int offset0, offset1;
+            vlib_buffer_t *b0, *b1;
+
+            b0 = PDS_PACKET_BUFFER(0);
+            b1 = PDS_PACKET_BUFFER(1);
+
+            session_id0 = vnet_buffer(b0)->pds_flow_data.ses_id;
+            session_id1 = vnet_buffer(b1)->pds_flow_data.ses_id;
+            pds_l2l_flow_prog_internal(b0, session_id0, is_ip4, 0,
+                                       PDS_PACKET_NEXT_NODE_PTR(0),
+                                       counter);
+            pds_l2l_flow_prog_internal(b1, session_id1, is_ip4, 0,
+                                       PDS_PACKET_NEXT_NODE_PTR(1),
+                                       counter);
+            offset0 = pds_l2l_flow_prog_get_next_offset(b0);
+            offset1 = pds_l2l_flow_prog_get_next_offset(b1);
+            vlib_buffer_advance(b0, offset0);
+            vlib_buffer_advance(b1, offset1);
+        } PDS_PACKET_DUAL_LOOP_END;
+
+        PDS_PACKET_SINGLE_LOOP_START {
+            u32 session_id0;
+            int offset0;
+            vlib_buffer_t *b0;
+
+            b0 = PDS_PACKET_BUFFER(0);
+
+            session_id0 = vnet_buffer(b0)->pds_flow_data.ses_id;
+            pds_l2l_flow_prog_internal(b0, session_id0, is_ip4, 0,
+                                       PDS_PACKET_NEXT_NODE_PTR(0),
+                                       counter);
+            offset0 = pds_l2l_flow_prog_get_next_offset(b0);
+            vlib_buffer_advance(b0, offset0);
+        } PDS_PACKET_SINGLE_LOOP_END;
+    } PDS_PACKET_LOOP_END;
+
+    clib_atomic_fetch_add(&fm->stats.counter[FLOW_TYPE_COUNTER_ERROR],
+                          counter[FLOW_PROG_COUNTER_FLOW_FAILED]);
+
+#define _(n, s)                                                 \
+    vlib_node_increment_counter (vm, node->node_index,          \
+            FLOW_PROG_COUNTER_##n,                              \
+            counter[FLOW_PROG_COUNTER_##n]);
+    foreach_flow_prog_counter
+#undef _
+
+    if (node->flags & VLIB_NODE_FLAG_TRACE) {
+        pds_flow_prog_trace_add(vm, node, from_frame, is_ip4, 0);
+    }
+
+    return from_frame->n_vectors;
+}
+
+static uword
+pds_l2l_ip4_flow_prog (vlib_main_t * vm,
+                       vlib_node_runtime_t * node,
+                       vlib_frame_t * from_frame)
+{
+    return pds_l2l_flow_prog(vm, node, from_frame, 1);
+}
+
+static char * flow_prog_error_strings[] = {
+#define _(n,s) s,
+    foreach_flow_prog_counter
+#undef _
+};
+
+VLIB_REGISTER_NODE(pds_l2l_ip4_flow_prog_node) = {
+    .function = pds_l2l_ip4_flow_prog,
+    .name = "pds-l2l-ip4-flow-program",
+
+    .vector_size = sizeof(u32),  // takes a vector of packets
+
+    .n_errors = FLOW_PROG_COUNTER_LAST,
+    .error_strings = flow_prog_error_strings,
+
+    .n_next_nodes = FLOW_PROG_N_NEXT,
+    .next_nodes = {
+#define _(s,n) [FLOW_PROG_NEXT_##s] = n,
+    foreach_flow_prog_next
+#undef _
+    },
+
+    .format_trace = format_pds_flow_prog_trace,
+};
 
 always_inline void
 pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
@@ -924,12 +1093,6 @@ pds_ip6_flow_prog (vlib_main_t * vm,
     return pds_flow_prog(vm, node, from_frame, 0, 0);
 }
 
-static char * flow_prog_error_strings[] = {
-#define _(n,s) s,
-    foreach_flow_prog_counter
-#undef _
-};
-
 VLIB_REGISTER_NODE (pds_ip6_flow_prog_node) = {
     .function = pds_ip6_flow_prog,
     .name = "pds-ip6-flow-program",
@@ -1145,11 +1308,13 @@ pds_flow_classify (vlib_main_t *vm,
 
     PDS_PACKET_LOOP_START {
         PDS_PACKET_DUAL_LOOP_START(WRITE, WRITE) {
-            pds_flow_classify_x2(PDS_PACKET_BUFFER(0),
-                                 PDS_PACKET_BUFFER(1),
+            pds_flow_classify_x1(PDS_PACKET_BUFFER(0),
                                  PDS_PACKET_NEXT_NODE_PTR(0),
+                                 counter);
+            pds_flow_classify_x1(PDS_PACKET_BUFFER(1),
                                  PDS_PACKET_NEXT_NODE_PTR(1),
                                  counter);
+
         } PDS_PACKET_DUAL_LOOP_END;
         PDS_PACKET_SINGLE_LOOP_START {
             pds_flow_classify_x1(PDS_PACKET_BUFFER(0),

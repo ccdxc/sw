@@ -1,0 +1,174 @@
+# Test Spec for local2local scenarios from host
+selectors:
+    root: ref://store/templates/id=FLOW
+    maxlimits: 1
+    flow: filter://any
+    vnic: filter://any
+
+packets:
+    - packet:
+        id          : BASE_PKT # Base packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : callback://networking/packets/GetPacketTemplateFromMapping/proto=TCP
+        headers     :
+            eth:
+                src     : ref://testcase/config/localmapping/VNIC/MACAddr
+                dst     : callback://networking/packets/GetDstMac/direction=TX
+            qtag:
+                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
+            ipv4:
+                src     : ref://testcase/config/localmapping/IP
+                dst     : ref://testcase/config/remotemapping/IP
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/localmapping/IP
+                dst     : ref://testcase/config/remotemapping/IP
+                hlim    : 64
+            tcp:
+                sport   : 100
+                dport   : 200
+                flags   : syn
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+    - packet:
+        id          : FROM_HOST_PKT # Input packet
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : callback://networking/packets/GetHostPacketEncapFromVnic
+
+    - packet:
+        id          : TO_HOST_PKT # Expected packet
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : callback://networking/packets/GetHostPacketEncapFromVnic/vnic=remote
+        headers     :
+            eth:
+                dst     : ref://testcase/config/remotemapping/VNIC/MACAddr
+                src     : callback://networking/packets/GetPacketSrcMacFromMapping/Fwdmode=L2L
+            qtag:
+                vlan    : ref://testcase/config/remotemapping/VNIC/VlanId
+                prio    : 0
+            ipv4:
+                ttl     : callback://networking/packets/GetPacketTtl/Fwdmode=L2L,ipkt=FROM_HOST_PKT
+
+buffers:
+    - buffer:
+        id      : BUF1    # Input Buffer
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields  :
+           bind : True
+           size : ref://testcase/packets/id=FROM_HOST_PKT/size
+           data : ref://testcase/packets/id=FROM_HOST_PKT/rawbytes
+
+    - buffer:
+        id       : BUF2  # Expected Buffer
+        template : ref://factory/templates/id=ETH_BUFFER
+        fields   :
+            bind : False
+            size : ref://testcase/packets/id=TO_HOST_PKT/size
+            data : ref://testcase/packets/id=TO_HOST_PKT/rawbytes
+
+    - buffer:
+        id          : BUF3  # Input Buffer
+        template    : ref://factory/templates/id=ETH_BUFFER
+        fields      :
+            bind    : True
+            size    : 1518
+            data    : None
+
+descriptors:
+    - descriptor:
+        id          : DESC1
+        template    : ref://factory/templates/id=DESCR_ETH_TX
+        fields      :
+            _buf    : ref://testcase/buffers/id=BUF1
+            addr    : ref://testcase/buffers/id=BUF1/addr
+            len     : ref://testcase/buffers/id=BUF1/size
+
+    - descriptor:
+        id          : DESC2 # Expected Descriptor
+        template    : ref://factory/templates/id=DESCR_ETH_TX_CQ
+        fields      :
+            status  : 0x0
+
+    - descriptor:
+        id          : DESC3 # Input Descriptor
+        template    : ref://factory/templates/id=DESCR_ETH_RX
+        fields      :
+            _buf    : ref://testcase/buffers/id=BUF3
+            addr    : ref://testcase/buffers/id=BUF3/addr
+            len     : ref://testcase/buffers/id=BUF3/size
+
+    - descriptor:
+        id          : DESC4 # Expected Descriptor
+        template    : ref://factory/templates/id=DESCR_ETH_RX_CQ
+        fields      :
+            _buf    : ref://testcase/buffers/id=BUF2
+            len     : ref://testcase/buffers/id=BUF2/size
+
+
+session:
+    - step:
+        trigger:
+            configs:
+                - object: ref://testcase/config/localmapping/VNIC/SUBNET
+                  method: ChangePolicyAction
+                  fields:
+                      af: ipv4
+                      direction: egress
+                      # following are policy attrributes
+                      # TODO: enhance DOL infra to allow fields as dict of dict
+                      DefaultFWAction : deny
+                      Action : deny
+                - object: ref://testcase/config/localmapping/VNIC/SUBNET
+                  method: ChangePolicyAction
+                  fields:
+                      af: ipv4
+                      direction: egress
+                      # following are policy attrributes
+                      # TODO: enhance DOL infra to allow fields as dict of dict
+                      DefaultFWAction : allow
+                      Action : allow
+        expect:
+            delay    :    5
+
+    - step:
+        trigger:
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC3
+                    ring    : callback://networking/packets/GetRingFromMapping/type=remote,qid=RX
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC1
+                    ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
+
+        expect:
+            delay: 1
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC2
+                    ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
+                - descriptor:
+                    negtest : callback://networking/packets/IsNegativeTestCase
+                    object  : ref://testcase/descriptors/id=DESC4
+                    ring    : callback://networking/packets/GetRingFromMapping/type=remote,qid=RX
+
+    - step:
+        trigger:
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC3
+                    ring    : callback://networking/packets/GetRingFromMapping/type=remote,qid=RX
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC1
+                    ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
+
+        expect:
+            delay: 1
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC2
+                    ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
+                - descriptor:
+                    negtest : callback://networking/packets/IsNegativeTestCase
+                    object  : ref://testcase/descriptors/id=DESC4
+                    ring    : callback://networking/packets/GetRingFromMapping/type=remote,qid=RX

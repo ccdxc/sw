@@ -37,6 +37,7 @@
         _(L2_FLOW_PROG, "pds-l2-flow-program" )                     \
         _(IP4_TUN_FLOW_PROG, "pds-tunnel-ip4-flow-program" )        \
         _(IP6_TUN_FLOW_PROG, "pds-tunnel-ip6-flow-program" )        \
+        _(IP4_L2L_FLOW_PROG, "pds-l2l-ip4-flow-program" )           \
         _(AGE_FLOW, "pds-flow-age-setup" )                          \
         _(IP4_NAT, "pds-nat44" )                                    \
         _(ICMP_VRIP, "ip4-icmp-echo-request")                       \
@@ -48,6 +49,7 @@
         _(L2_FLOW, "L2 flow packets" )                              \
         _(IP4_TUN_FLOW, "IPv4 tunnel flow packets" )                \
         _(IP6_TUN_FLOW, "IPv6 tunnel flow packets" )                \
+        _(IP4_L2L_FLOW, "IPv4 l2l flow packets" )                   \
         _(IP4_NAT, "NAPT flow packets" )                            \
         _(MAX_EXCEEDED, "Session count exceeded packets")           \
         _(VNIC_NOT_FOUND, "Unknown vnic")                           \
@@ -256,7 +258,7 @@ typedef CLIB_PACKED(struct pds_flow_hw_ctx_s {
     // lock per session entry: since iflow/rflow index may get updated from
     // other threads, we need lock here.
     volatile u8 lock;
-    u8 packet_type : 5; // pds_flow_pkt_sub_type
+    u8 packet_type : 5; // pds_flow_pkt_type
     u8 iflow_rx : 1; // true if iflow is towards the host
     u8 monitor_seen : 1; // 1 if monitor process has seen flow
     u8 reserved : 1;
@@ -340,9 +342,14 @@ typedef enum {
     PDS_FLOW_N2L_OVERLAY_ROUTE_DIS_SVC_NAT,
     PDS_FLOW_N2L_INTRA_VCN_ROUTE,
     PDS_FLOW_PKT_TYPE_MAX,
-} pds_flow_pkt_sub_type;
+} pds_flow_pkt_type;
 
 extern pds_flow_main_t pds_flow_main;
+
+always_inline bool pds_flow_packet_l2l(u8 packet_type)
+{
+    return (packet_type <= PDS_FLOW_L2L_INTER_SUBNET) ? true : false;
+}
 
 always_inline void pds_flow_prog_lock(void)
 {

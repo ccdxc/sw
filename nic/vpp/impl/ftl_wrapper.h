@@ -322,10 +322,16 @@ int ftlv4_remove(ftlv4 *obj, v4_flow_entry *entry, uint32_t hash);
 
 int ftlv4_remove_cached_entry(ftlv4 *obj);
 
+int ftlv4_update_cached_entry(ftlv4 *obj);
+
 int ftlv4_get_with_handle(ftlv4 *obj, uint32_t index, bool primary);
 
-void ftlv4_get_last_read_session_info (uint32_t *sip, uint32_t *dip, uint16_t *sport,
-                                       uint16_t *dport, uint16_t *lkp_id);
+void ftlv4_get_last_read_session_info(uint32_t *sip, uint32_t *dip, uint16_t *sport,
+                                      uint16_t *dport, uint16_t *lkp_id);
+
+void ftlv4_set_last_read_entry_epoch(uint8_t epoch);
+
+void ftlv4_set_last_read_entry_miss_hit(uint8_t flow_miss);
 
 enum flow_export_reason_e {
     FLOW_EXPORT_REASON_ADD,

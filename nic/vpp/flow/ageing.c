@@ -660,8 +660,7 @@ pds_flow_send_keep_alive_helper (pds_flow_hw_ctx_t *session,
     }
     
     b = vlib_get_buffer(vm, bi);
-    if ((session->packet_type == PDS_FLOW_L2L_INTRA_SUBNET) ||
-        (session->packet_type == PDS_FLOW_L2L_INTER_SUBNET)) {
+    if (pds_flow_packet_l2l(session->packet_type)) {
         to_host = true;
     } else {
         to_host = (iflow && session->iflow_rx) || (!iflow && !session->iflow_rx);

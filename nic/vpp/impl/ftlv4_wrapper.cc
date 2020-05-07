@@ -139,7 +139,9 @@ int
 ftlv4_get_with_handle (ftlv4 *obj, uint32_t index, bool primary)
 {
     sdk_table_api_params_t params = {0};
-    ipv4_flow_hash_entry_t v4entry;
+    ipv4_flow_hash_entry_t *v4entry = &g_ip4_flow_cache.ip4_last_read_flow;
+
+    v4entry->clear();
 
     if (get_skip_ftl_program()) {
         return 0;
@@ -150,20 +152,22 @@ ftlv4_get_with_handle (ftlv4 *obj, uint32_t index, bool primary)
     } else {
         params.handle.sindex(index);
     }
-    params.entry = &v4entry;
+    params.entry = v4entry;
 
     if (SDK_RET_OK != obj->get_with_handle(&params)) {
         return -1;
     }
 
-    ftlv4_set_key(&g_ip4_flow_cache.ip4_last_read_flow, 
-                  v4entry.get_key_metadata_ipv4_src(),
-                  v4entry.get_key_metadata_ipv4_dst(),
-                  v4entry.get_key_metadata_proto(),
-                  v4entry.get_key_metadata_sport(),
-                  v4entry.get_key_metadata_dport(),
-                  ftlv4_get_key_lookup_id(&v4entry));
     return 0;
+}
+
+int
+ftlv4_update_cached_entry (ftlv4 *obj)
+{
+    uint32_t pindex;
+    uint32_t sindex;
+    return ftlv4_insert(obj, &g_ip4_flow_cache.ip4_last_read_flow, 0,
+                        &pindex, &sindex, 1);
 }
 
 int
@@ -773,16 +777,30 @@ ftlv4_cache_batch_flush (ftlv4 *obj, int *status)
 }
 */
 
-void 
+void
 ftlv4_get_last_read_session_info (uint32_t *sip, uint32_t *dip, uint16_t *sport,
                                   uint16_t *dport, uint16_t *lkd_id)
 {
-    ipv4_flow_hash_entry_t v4entry = g_ip4_flow_cache.ip4_last_read_flow;
-    *sip = v4entry.get_key_metadata_ipv4_src();
-    *dip = v4entry.get_key_metadata_ipv4_dst();
-    *sport = v4entry.get_key_metadata_sport();
-    *dport = v4entry.get_key_metadata_dport();
-    *lkd_id = ftlv4_get_key_lookup_id(&v4entry);
+    ipv4_flow_hash_entry_t *v4entry = &g_ip4_flow_cache.ip4_last_read_flow;
+    *sip = v4entry->get_key_metadata_ipv4_src();
+    *dip = v4entry->get_key_metadata_ipv4_dst();
+    *sport = v4entry->get_key_metadata_sport();
+    *dport = v4entry->get_key_metadata_dport();
+    *lkd_id = ftlv4_get_key_lookup_id(v4entry);
+}
+
+void
+ftlv4_set_last_read_entry_epoch (uint8_t epoch)
+{
+    ipv4_flow_hash_entry_t *v4entry = &g_ip4_flow_cache.ip4_last_read_flow;
+    ftlv4_set_epoch(v4entry, epoch);
+}
+
+void
+ftlv4_set_last_read_entry_miss_hit (uint8_t flow_miss)
+{
+    ipv4_flow_hash_entry_t *v4entry = &g_ip4_flow_cache.ip4_last_read_flow;
+    ftlv4_set_entry_flow_miss_hit(v4entry, flow_miss);
 }
 
 void
