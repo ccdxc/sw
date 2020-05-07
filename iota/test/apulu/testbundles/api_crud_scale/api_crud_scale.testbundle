@@ -10,8 +10,8 @@ testcases:
         stress  : True
         iterators :
             type    : nested
-            #objtype : [ policy, route_table, tunnel, rmapping, lmapping, interface, nexthop, nexthopgroup, vnic, subnet, vpc, device ]
-            objtype : [ policy, route_table, tunnel, rmapping, lmapping, nexthop, nexthopgroup ]
+            #objtype : [ policy, route, tunnel, rmapping, lmapping, interface, nexthop, nexthopgroup, vnic, subnet, vpc, device ]
+            objtype : [ policy, route, tunnel, rmapping, lmapping, nexthop, nexthopgroup ]
             oper    : [ delete ]
 
     -   name    : API_CRUD_SCALE_UPDATE
@@ -27,8 +27,8 @@ testcases:
         stress  : True
         iterators :
             type    : nested
-            #objtype : [ policy, route_table, tunnel, rmapping, lmapping, interface, nexthop, nexthopgroup, vnic, subnet, vpc, device ]
-            objtype : [ policy, route_table, rmapping, lmapping, nexthop, nexthopgroup ]
+            #objtype : [ policy, route, tunnel, rmapping, lmapping, interface, nexthop, nexthopgroup, vnic, subnet, vpc, device ]
+            objtype : [ policy, route, rmapping, lmapping, nexthop, nexthopgroup ]
             oper    : [ delete ]
         background_tasks:
             switchPortFlap   :
