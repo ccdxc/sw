@@ -255,7 +255,7 @@ jobs:
   iota/test/standalone/regression/swm:
     labels: ["daily"]
   iota/test/venice/regression:
-    labels: ["2xhourly"]
+    labels: ["daily"]
   iota/test/venice/sim:
     labels: ["precommit", "hourly"]
   nic:
