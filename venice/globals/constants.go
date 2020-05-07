@@ -139,7 +139,8 @@ const (
 	APIServerRESTPort = "9103"
 
 	// Orch Hub
-	OrchHubAPIPort = "9004"
+	OrchHubAPIPort  = "9004"
+	OrchHubRESTPort = "9025"
 
 	// NPM
 	NpmRPCPort  = "9005"
