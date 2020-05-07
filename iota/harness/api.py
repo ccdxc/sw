@@ -1176,8 +1176,8 @@ def WaitForTestCase(tc, sub_testcase):
             return testcase.result
         time.sleep(1)
 
-def UpdatePipeline(node, index, version, pipeline, mode):
-    pl = {'node':node, 'index':index, 'version':version, 'pipeline':pipeline, 'mode':mode}
+def UpdateNaplesPipeline(node, nicNumber, version, pipeline, mode):
+    pl = {'node':node, 'nicNumber':nicNumber, 'version':version, 'pipeline':pipeline, 'mode':mode}
     pl = [parser.Dict2Object(pl)]
-    store.GetTestbed().GetCurrentTestsuite().UpdatePipelines(pl)
+    store.GetTestbed().GetCurrentTestsuite().UpdateNaplesPipelines(pl)
 

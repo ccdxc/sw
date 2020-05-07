@@ -165,7 +165,7 @@ class TestSuite:
     def SetNicMode(self, mode):
         self.__spec.meta.nicmode = mode
 
-    def GetPipelines(self):
+    def GetNaplesPipelines(self):
         return self.__pipelines
 
     def GetVerifs(self):
@@ -516,9 +516,9 @@ class TestSuite:
             return None
         return node[0]
 
-    def UpdatePipelines(self, pipelines=[]):
+    def UpdateNaplesPipelines(self, pipelines=[]):
         if not pipelines:
-            pipelines = self.GetPipelines()
+            pipelines = self.GetNaplesPipelines()
             if not pipelines:
                 Logger.debug("no pipelines found")
                 return
@@ -532,6 +532,8 @@ class TestSuite:
                     raise ValueError("nic mode {0} is not valid. must be one of: {1}".format(pl.mode, types.nicModes.str_enums.values()))
                 if not types.pipelines.valid(pl.pipeline.upper()):
                     raise ValueError("nic pipeline {0} is not valid. must be one of: {1}".format(pl.pipeline, types.pipelines.str_enums.values()))
+                if pl.nicNumber < 1:
+                    raise ValueError("nic number must be >= 1. value from testsuite files was {0}".format(pl.nicNumber))
                 Logger.debug("checking pipeline info for {0}".format(pl))
                 topoNode = self.__getNodeByName(pl.node)
                 if not topoNode:
@@ -540,10 +542,10 @@ class TestSuite:
                 instId = topoNode.GetNodeInfo()["InstanceID"]
                 for node in warmd['Instances']:
                     if instId == node.get('ID',None):
-                        device = topoNode.GetDeviceByIndex(pl.index)
+                        device = topoNode.GetDeviceByNicNumber(pl.nicNumber)
                         device.SetMode(pl.mode)
-                        device.SetPipeline(pl.pipeline)
-                        nic = node['Nics'][pl.index]
+                        device.SetNaplesPipeline(pl.pipeline)
+                        nic = node['Nics'][pl.nicNumber-1]
                         nic['version'] = pl.version
                         nic['pipeline'] = pl.pipeline
                         nic['mode'] = pl.mode
@@ -551,17 +553,18 @@ class TestSuite:
                         if pl.version not in alreadyDownloaded:
                             api.DownloadAssets(pl.version)
                             alreadyDownloaded.append(pl.version)
-                        Logger.info("upgrading node/nic {0}/{1}".format(topoNode.MgmtIpAddress(),pl.index))
-                        devices = {instId : { "nics":[pl.index], "nodeName":pl.node} }
+                        Logger.info("upgrading node:nic {0}:{1}".format(topoNode.MgmtIpAddress(),pl.nicNumber))
+                        devices = {instId : { "nics":[pl.nicNumber], "nodeName":pl.node} }
                         Logger.debug("writing updated warmd.json to {0}".format(nwarmd))
                         with open(nwarmd,'w') as outfile:
                             json.dump(warmd,outfile,indent=4)
                         resp = api.ReInstallImage(fw_version=pl.version, dr_version=pl.version, devices=devices)
                         if resp != api.types.status.SUCCESS:
-                            Logger.error(f"Failed to install images on the node/nic {0}/{1}".format(topoNode.MgmtIpAddress(),pl.index))
+                            Logger.error(f"Failed to install images on the node:nic {0}:{1}".format(topoNode.MgmtIpAddress(),pl.nicNumber))
                         break
                 else:
                     Logger.warn("failed to find node {0} / id {1} in warmd".format(topoNode.MgmtIpAddress(),instId))
+
 
     def writeTestResults(self):
         filename = "testsuite_{0}_results.json".format(self.Name())
@@ -636,7 +639,7 @@ class TestSuite:
             self.__timer.Stop()
             return status
 
-        self.UpdatePipelines()
+        self.UpdateNaplesPipelines()
 
         self.result = self.__execute_testbundles()
         self.__update_stats()

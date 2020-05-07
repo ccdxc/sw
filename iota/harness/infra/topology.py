@@ -127,7 +127,7 @@ class Node(object):
             self.__bond_ip = None
             self.__mode = None
             self.__pipeline = None
-            self.__index = 0
+            self.__nicNumber = 0
             self.__ports = []
             self.__data_networks = []
 
@@ -158,17 +158,17 @@ class Node(object):
         def GetMode(self):
             return self.__mode
 
-        def SetPipeline(self, pipeline):
+        def SetNaplesPipeline(self, pipeline):
             self.__pipeline = pipeline
 
-        def GetPipeline(self):
+        def GetNaplesPipeline(self):
             return self.__pipeline
 
-        def SetIndex(self, index):
-            self.__index = index
+        def SetNicNumber(self, nicNumber):
+            self.__nicNumber = nicNumber
 
-        def GetIndex(self):
-            return self.__index
+        def GetNicNumber(self):
+            return self.__nicNumber
 
         def SetHostIntfs(self, host_intfs):
             self.__host_intfs = host_intfs
@@ -324,7 +324,7 @@ class Node(object):
                     nic_type = getattr(nic, "Type", "pensando-sim")
                     name = nic_type + str(self.__dev_index)
                     device = Node.NicDevice(name, nic_type)
-                    device.SetIndex(self.__dev_index-1)
+                    device.SetNicNumber(self.__dev_index)
                     self.__dev_index = self.__dev_index + 1
                     self.__devices[name] = device
                     device.SetNicMgmtIP(getattr(nic, "MgmtIP", None))
@@ -339,14 +339,14 @@ class Node(object):
                         break
                     device.read_from_console()       
                     device.SetMode(defaultMode)
-                    device.SetPipeline(defaultPipeline)
+                    device.SetNaplesPipeline(defaultPipeline)
 
                     device.SetPorts(getattr(nic, 'Ports', []))
             else:
                 for index in range(1):
                     name = self.GetNicType() + str(self.__dev_index)
                     device = Node.NicDevice(name, self.GetNicType())
-                    device.SetIndex(self.__dev_index-1)
+                    device.SetNicNumber(self.__dev_index)
                     self.__dev_index = self.__dev_index + 1
                     self.__devices[name] = device
                     device.SetNicMgmtIP(getattr(self.__inst, "NicMgmtIP", None))
@@ -358,7 +358,7 @@ class Node(object):
                     device.SetNicStaticRoutes(getattr(self.__inst, "NicStaticRoutes", []))
                     device.read_from_console()
                     device.SetMode(defaultMode)
-                    device.SetPipeline(defaultPipeline)
+                    device.SetNaplesPipeline(defaultPipeline)
 
         self.__role = self.__get_instance_role(spec.role, getattr(spec, "mode", None))
         self.__nic_pci_info = {}  # not used
@@ -455,16 +455,16 @@ class Node(object):
             raise ValueError("pipeline {0} is not valid".format(pipeline))
         nics = []
         for name,nic in self.GetDevices():
-            if nic.GetPipeline() == pipeline:
+            if nic.GetNaplesPipeline() == pipeline:
                 nics.append(nic)
         return nics
 
-    def GetDeviceByIndex(self, index):
+    def GetDeviceByNicNumber(self, nicNumber):
         nics = self.GetDevices()
         for name,nic in nics.items():
-            if nic.GetIndex() == index:
+            if nic.GetNicNumber() == nicNumber:
                 return nic
-        raise Exception("failed to find nic index {0}. len of devices is {1}".format(index, len(nics)))
+        raise Exception("failed to find nic number {0}. len of devices is {1}".format(nicNumber, len(nics)))
 
     def GetApcInfo(self):
         return self.__apcInfo
