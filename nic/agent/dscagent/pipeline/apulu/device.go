@@ -29,17 +29,7 @@ func HandleDevice(oper types.Operation, client halapi.DeviceSvcClient, lbip *hal
 }
 
 func createDeviceHandler(client halapi.DeviceSvcClient, lbip *halapi.IPAddress) error {
-	deviceRequest := &halapi.DeviceRequest{
-		Request: &halapi.DeviceSpec{
-			DevOperMode:      halapi.DeviceOperMode_DEVICE_OPER_MODE_HOST,
-			MemoryProfile:    halapi.MemoryProfile_MEMORY_PROFILE_DEFAULT,
-			BridgingEn:       true,
-			LearningEn:       true,
-			LearnAgeTimeout:  300,
-			OverlayRoutingEn: true,
-			IPAddr:           lbip,
-		},
-	}
+	deviceRequest := convertDevice(lbip)
 	resp, err := client.DeviceCreate(context.Background(), deviceRequest)
 	log.Infof("createDeviceHandler Response: %v. Err : %v", resp, err)
 	if err == nil {
@@ -53,17 +43,7 @@ func createDeviceHandler(client halapi.DeviceSvcClient, lbip *halapi.IPAddress) 
 }
 
 func updateDeviceHandler(client halapi.DeviceSvcClient, lbip *halapi.IPAddress) error {
-	deviceRequest := &halapi.DeviceRequest{
-		Request: &halapi.DeviceSpec{
-			DevOperMode:      halapi.DeviceOperMode_DEVICE_OPER_MODE_HOST,
-			MemoryProfile:    halapi.MemoryProfile_MEMORY_PROFILE_DEFAULT,
-			BridgingEn:       true,
-			LearningEn:       true,
-			LearnAgeTimeout:  300,
-			OverlayRoutingEn: true,
-			IPAddr:           lbip,
-		},
-	}
+	deviceRequest := convertDevice(lbip)
 	resp, err := client.DeviceUpdate(context.Background(), deviceRequest)
 	log.Infof("update DeviceHandler Response: %v. Err : %v", resp, err)
 	if err == nil {
@@ -85,4 +65,19 @@ func deleteDeviceHandler(client halapi.DeviceSvcClient) error {
 		}
 	}
 	return nil
+}
+
+func convertDevice(lbip *halapi.IPAddress) *halapi.DeviceRequest {
+	return &halapi.DeviceRequest{
+		Request: &halapi.DeviceSpec{
+			DevOperMode:         halapi.DeviceOperMode_DEVICE_OPER_MODE_HOST,
+			MemoryProfile:       halapi.MemoryProfile_MEMORY_PROFILE_DEFAULT,
+			BridgingEn:          true,
+			LearningEn:          true,
+			LearnAgeTimeout:     300,
+			OverlayRoutingEn:    true,
+			IPAddr:              lbip,
+			FwPolicyXposnScheme: halapi.FwPolicyXposn_FW_POLICY_XPOSN_ANY_DENY,
+		},
+	}
 }
