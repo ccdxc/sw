@@ -79,6 +79,19 @@ public:
     /// \param[in] impl mapping to be freed
     static void soft_delete(mapping_impl *impl);
 
+    /// \brief     stash object having valid nat indexes for public - private
+    ///            and vice versa IP translation into persistent storage
+    /// \param[in] info pointer to the info object
+    /// \param[in] upg_info contains location to put stashed object
+    /// \return    sdk_ret_ok or error code
+    virtual sdk_ret_t backup(obj_info_t *info, upg_obj_info_t *upg_info) override;
+
+    /// \brief     restore stashed object from persistent storage
+    /// \param[in] info pointer to the info object
+    /// \param[in] upg_info contains location to read stashed object
+    /// \return    sdk_ret_ok or error code
+    virtual sdk_ret_t restore(obj_info_t *info, upg_obj_info_t *upg_info) override;
+
     /// \brief     allocate/reserve h/w resources for this object
     /// \param[in] api_obj  object for which resources are being reserved
     /// \param[in] orig_obj old version of the unmodified object
@@ -97,6 +110,11 @@ public:
     /// \param[in] api_obj API object holding the resources
     /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t nuke_resources(api_base *api_obj) override;
+
+    /// \brief restore h/w resources for this obj from persistent storage
+    /// \param[in] info pointer to the info object
+    /// \return    SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t restore_resources(obj_info_t *info) override;
 
     /// \brief     program all h/w tables relevant to this object except stage 0
     ///            table(s), if any
@@ -625,6 +643,23 @@ private:
     /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t deactivate_ip_local_mapping_entry_(pds_obj_key_t vpc,
                                                  ip_addr_t *ip);
+
+    /// \brief      populate status with operational state only for
+    ///             object having valid nat indexes for public - private
+    ///             and vice versa IP translation
+    /// \param[out] upgrade information
+    /// \param[out] status status
+    /// \return     #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t fill_status_(upg_obj_info_t *upg_info,
+                           pds_mapping_status_t *status);
+
+    /// \brief      populate info with operational state only for
+    ///             object having valid nat indexes for public - private
+    ///             and vice versa IP translation
+    /// \param[out] upgrade information
+    /// \param[out] info information
+    /// \return     #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t fill_info_(upg_obj_info_t *upg_info, pds_mapping_info_t *minfo);
 
 private:
     uint32_t    vnic_hw_id_;

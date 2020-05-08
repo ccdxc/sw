@@ -179,6 +179,7 @@ pds_local_mapping_read (pds_obj_key_t *key,
     rv = entry->read(key, &info);
     if (rv == SDK_RET_OK) {
         pds_mapping_spec_to_local_spec(&local_info->spec, &info.spec);
+        pds_mapping_status_to_local_status(local_info, &info);
     }
     mapping_entry::soft_delete(entry);
     return rv;

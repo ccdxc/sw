@@ -130,7 +130,8 @@ protected:
 /// helper functions to create feeders
 static void create_local_mapping_feeders(local_mapping_feeder feeders[],
                                          int num_feeders, int nvnics,
-                                         int nips, int ntags)
+                                         int nips, int ntags,
+                                         int stash = false)
 {
     int i;
 
@@ -149,7 +150,7 @@ static void create_local_mapping_feeders(local_mapping_feeder feeders[],
     feeders[0].init(k_vpc_key, k_subnet_key, "10.0.0.2/8",
                 0x000000030b020a01, g_encap_type, g_encap_val, int2pdsobjkey(1),
                 true, "12.0.0.0/16", num_vnics, num_ips, PDS_MAPPING_TYPE_L3,
-                ntags);
+                ntags, stash);
 
     // subsequent sets can be copied from first set and iterated to
     // required position.
@@ -389,6 +390,16 @@ TEST_F(mapping_test, local_mapping_workflow_neg_8) {
     create_local_mapping_feeders(feeders, 2, k_max_vnic, PDS_MAX_VNIC_IP,
                                  PDS_MAX_TAGS_PER_MAPPING);
     workflow_neg_8<local_mapping_feeder>(feeders[0], feeders[1]);
+}
+
+/// \brief Local mapping WF_U_1
+/// \ref WF_U_1
+TEST_F(mapping_test, local_mapping_workflow_u1) {
+    local_mapping_feeder feeders[1];
+
+    create_local_mapping_feeders(feeders, 1, k_max_vnic, PDS_MAX_VNIC_IP,
+                                 PDS_MAX_TAGS_PER_MAPPING, true);
+    workflow_u1<local_mapping_feeder>(feeders[0]);
 }
 
 //---------------------------------------------------------------------

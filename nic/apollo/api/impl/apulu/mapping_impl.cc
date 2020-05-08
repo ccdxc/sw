@@ -26,6 +26,7 @@
 #include "nic/apollo/api/impl/apulu/nexthop_group_impl.hpp"
 #include "nic/apollo/api/impl/apulu/mapping_impl.hpp"
 #include "nic/apollo/api/impl/apulu/pds_impl_state.hpp"
+#include "nic/apollo/api/impl/apulu/specs.hpp"
 #include "nic/apollo/p4/include/apulu_defines.h"
 #include "gen/p4gen/p4plus_rxdma/include/p4plus_rxdma_p4pd.h"
 #include "gen/p4gen/p4/include/ftl.h"
@@ -376,6 +377,12 @@ sdk_ret_t
 mapping_impl::reserve_nat_resources_(mapping_entry *mapping, vnic_entry *vnic,
                                      pds_mapping_spec_t *spec) {
     sdk_ret_t ret;
+
+    // if this object is restored from persistent storage
+    // resources are reserved already
+    if (mapping->in_restore_list()) {
+        return SDK_RET_OK;
+    }
 
     // reserve an entry for overlay IP to public IP xlation in NAT table
     ret = apulu_impl_db()->nat_idxr()->alloc(&to_public_ip_nat_idx_);
@@ -2312,6 +2319,8 @@ mapping_impl::read_local_mapping_(vpc_entry *vpc, subnet_entry *subnet,
         spec->public_ip_valid = true;
         P4_IPADDR_TO_IPADDR(nat_data.ip, spec->public_ip,
                             spec->skey.ip_addr.af);
+        status->public_ip_nat_idx = to_public_ip_nat_idx_;
+        status->overlay_ip_nat_idx = to_overlay_ip_nat_idx_;
     }
     // TODO: tag support
     spec->num_tags = 0;
@@ -2348,6 +2357,160 @@ mapping_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
         ret = read_local_mapping_(vpc, subnet, minfo);
     } else {
         ret = read_remote_mapping_(vpc, subnet, minfo);
+    }
+    return ret;
+}
+
+sdk_ret_t
+mapping_impl::fill_status_(upg_obj_info_t *upg_info,
+                           pds_mapping_status_t *status) {
+    if (to_public_ip_nat_idx_ == PDS_IMPL_RSVD_NAT_HW_ID) {
+        upg_info->size = PDS_UPGRADE_API_OBJ_RSRVD_SIZE;
+        return SDK_RET_OK;
+    }
+
+    status->public_ip_nat_idx = to_public_ip_nat_idx_;
+    status->overlay_ip_nat_idx = to_overlay_ip_nat_idx_;
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+mapping_impl::fill_info_(upg_obj_info_t *upg_info,
+                         pds_mapping_info_t *info) {
+    pds_mapping_key_t *key;
+
+    key = &info->spec.skey;
+    if (key->type != PDS_MAPPING_TYPE_L3) {
+        goto exit;
+    }
+    // saving only local mapping with public - private and vice-versa ip xlation
+    if (!info->spec.is_local || !info->spec.public_ip_valid) {
+        goto exit;
+    }
+    // nothing from impl we need as of now
+    return SDK_RET_OK;
+
+exit:
+    upg_info->size = PDS_UPGRADE_API_OBJ_RSRVD_SIZE;
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+mapping_impl::backup(obj_info_t *info, upg_obj_info_t *upg_info) {
+    sdk_ret_t ret;
+    pds::MappingGetResponse proto_msg;
+    pds_mapping_info_t *mapping_info;
+    upg_obj_tlv_t *tlv;
+    uint32_t obj_size, meta_size, size_left;
+
+    tlv = (upg_obj_tlv_t *)upg_info->mem;
+    size_left = upg_info->backup.size_left;
+    mapping_info = (pds_mapping_info_t *)info;
+
+    ret = fill_info_(upg_info, mapping_info);
+    if (ret != SDK_RET_OK) {
+       return ret;
+    }
+    ret = fill_status_(upg_info, &mapping_info->status);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+
+    // convert api info to proto
+    pds_mapping_api_info_to_proto(mapping_info, (void *)&proto_msg);
+    obj_size = proto_msg.ByteSizeLong();
+    meta_size = sizeof(upg_obj_tlv_t);
+    if ((obj_size + meta_size) > size_left) {
+        PDS_TRACE_ERR("Failed to backup mapping %s, bytes needed %u left %u",
+                      mapping_info->spec.key.str(), obj_size + meta_size,
+                      size_left);
+        return SDK_RET_OOM;
+    }
+
+    // now serialize the proto msg
+    tlv->len = obj_size;
+    if (proto_msg.SerializeToArray(tlv->obj, tlv->len) == false) {
+        PDS_TRACE_ERR("Failed to serialize mapping %s",
+                      mapping_info->spec.key.str());
+        return SDK_RET_OOM;
+    }
+    upg_info->size = obj_size + meta_size;
+    return ret;
+}
+
+sdk_ret_t
+mapping_impl::restore_resources(obj_info_t *info) {
+    sdk_ret_t ret;
+    pds_mapping_info_t *mapping_info;
+    pds_mapping_spec_t *spec;
+    pds_mapping_status_t *status;
+
+    mapping_info = (pds_mapping_info_t *)info;
+    spec = &mapping_info->spec;
+    status = &mapping_info->status;
+
+    // restore overlay IP to public IP xlation entry in NAT table
+    ret = apulu_impl_db()->nat_idxr()->alloc(status->public_ip_nat_idx);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to restore entry for public IP %s in NAT table "
+                      "for mapping (vpc %s, ip %s), err %u",
+                      ipaddr2str(&spec->public_ip), spec->skey.vpc.str(),
+                      ipaddr2str(&spec->skey.ip_addr), ret);
+        return ret;
+    }
+    to_public_ip_nat_idx_ = status->public_ip_nat_idx;
+
+    // restore public IP to overlay IP xlation entry in NAT table
+    ret = apulu_impl_db()->nat_idxr()->alloc(status->overlay_ip_nat_idx);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to restore entry for overlay IP %s in NAT table"
+                      "for mapping (vpc %s, ip %s), err %u",
+                      ipaddr2str(&spec->skey.ip_addr), spec->skey.vpc.str(),
+                      ipaddr2str(&spec->public_ip), ret);
+        goto error;
+    }
+    to_overlay_ip_nat_idx_ = status->overlay_ip_nat_idx;
+    return SDK_RET_OK;
+
+error:
+    if (to_public_ip_nat_idx_ != 0xFFFF) {
+        apulu_impl_db()->nat_idxr()->free(to_public_ip_nat_idx_);
+    }
+    return ret;
+}
+
+sdk_ret_t
+mapping_impl::restore(obj_info_t *info, upg_obj_info_t *upg_info) {
+    sdk_ret_t ret;
+    pds::MappingGetResponse proto_msg;
+    pds_mapping_info_t *mapping_info;
+    upg_obj_tlv_t *tlv;
+    uint32_t obj_size, meta_size;
+
+    tlv = (upg_obj_tlv_t *)upg_info->mem;
+    mapping_info = (pds_mapping_info_t *)info;
+    obj_size = tlv->len;
+    meta_size = sizeof(upg_obj_tlv_t);
+    // fill up the size, even if it fails later. to try and restore next obj
+    upg_info->size = obj_size + meta_size;
+    // de-serialize proto msg
+    if (proto_msg.ParseFromArray(tlv->obj, tlv->len) == false) {
+        PDS_TRACE_ERR("Failed to de-serialize mapping");
+        return SDK_RET_OOM;
+    }
+    // convert proto msg to mapping info
+    ret = pds_mapping_proto_to_api_info(mapping_info, &proto_msg);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to convert mapping proto msg to info, err %u",
+                      ret);
+        return ret;
+    }
+    // now restore hw resources
+    ret = restore_resources((obj_info_t *)mapping_info);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to restore hw resources for mapping %s",
+                      mapping_info->spec.key.str());
+        return ret;
     }
     return ret;
 }

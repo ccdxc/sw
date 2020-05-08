@@ -251,6 +251,14 @@ mapping_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
     return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
 }
 
+void
+mapping_entry::fill_spec_(pds_mapping_spec_t *spec) {
+    memcpy(&spec->key, &key_, sizeof(pds_obj_key_t));
+    memcpy(&spec->skey, &skey_, sizeof(pds_mapping_key_t));
+    memcpy(&spec->is_local, &is_local_, sizeof(bool));
+    memcpy(&spec->public_ip_valid, &public_ip_valid_, sizeof(bool));
+}
+
 sdk_ret_t
 mapping_entry::read(pds_obj_key_t *key, pds_mapping_info_t *info) {
     pds_mapping_key_t  skey;
@@ -299,6 +307,51 @@ mapping_entry::update_db(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 mapping_entry::delay_delete(void) {
     return delay_delete_to_slab(PDS_SLAB_ID_MAPPING, this);
+}
+
+sdk_ret_t
+mapping_entry::backup(upg_obj_info_t *upg_info) {
+    sdk_ret_t ret;
+    pds_mapping_info_t info;
+
+    memset(&info, 0, sizeof(pds_mapping_info_t));
+    fill_spec_(&info.spec);
+    // let impl decide whether we need to save this obj
+    ret = impl_->backup((impl::obj_info_t *)&info, upg_info);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to backup mapping %s err %u", key_.str(), ret);
+    }
+    return ret;
+}
+
+sdk_ret_t
+mapping_entry::restore(upg_obj_info_t *upg_info) {
+    sdk_ret_t ret;
+    api_ctxt_t *api_ctxt;
+    pds_mapping_info_t info;
+
+    memset(&info, 0, sizeof(pds_mapping_info_t));
+    // fetch info from proto buf
+    ret = impl_->restore((impl::obj_info_t *)&info, upg_info);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to restore mapping, err %u", ret);
+        return ret;
+    }
+    // restore PI fields
+    api_ctxt = api::api_ctxt_alloc((obj_id_t)upg_info->obj_id, API_OP_NONE);
+    if (api_ctxt == NULL) {
+        return SDK_RET_OOM;
+    }
+    api_ctxt->api_params->mapping_spec = info.spec;
+    ret = init_config(api_ctxt);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to restore mapping %s, err %u",
+                      info.spec.key.str(), ret);
+        return ret;
+    }
+    is_local_ = info.spec.is_local;
+    api_ctxt_free(api_ctxt);
+    return ret;
 }
 
 }    // namespace api

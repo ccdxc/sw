@@ -754,6 +754,15 @@ inline void workflow_u1(feeder_T& feeder1)
 
     // compare read values with stashed during backup
     many_read_cmp<feeder_T>(feeder1);
+
+    // cleanup
+    bctxt = batch_start();
+    ret = many_delete<feeder_T>(bctxt, feeder1);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_U1 cleanup - delete set1 failed");
+    batch_commit(bctxt);
+
+    ret = many_read<feeder_T>(feeder1, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_U1 cleanup - read set1 failed");
 }
 
 /// @}

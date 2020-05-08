@@ -110,16 +110,12 @@ public:
     /// \brief    stash this object into persistent storage
     /// \param[in] upg_obj_info contains location to put stashed object
     /// \return   sdk_ret_ok or error code
-    virtual sdk_ret_t backup(upg_obj_info_t *info) override {
-        return SDK_RET_INVALID_OP;
-    }
+    virtual sdk_ret_t backup(upg_obj_info_t *info) override;
 
     /// \brief    restore stashed object from persistent storage
     /// \param[in] upg_obj_info contains location to read stashed object
     /// \return   SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t restore(upg_obj_info_t *info) override {
-        return SDK_RET_INVALID_OP;
-    }
+    virtual sdk_ret_t restore(upg_obj_info_t *info) override;
 
     /**
      * @brief    build object given its key from the (sw and/or hw state we
@@ -407,6 +403,10 @@ private:
 
     /**< @brief    destructor */
     ~mapping_entry();
+
+    /// \brief      fill the mapping sw spec
+    /// \param[out] spec specification
+    void fill_spec_(pds_mapping_spec_t *spec);
 
     /**
      * @brief     free h/w resources used by this object, if any

@@ -84,6 +84,12 @@ backup_statless_obj_cb (void *key, void *val, void *info)
         SDK_ASSERT(0);
     }
 
+    if (ret == SDK_RET_OK &&
+        upg_info->size  == PDS_UPGRADE_API_OBJ_RSRVD_SIZE ) {
+        PDS_TRACE_VERBOSE("Stateless obj id %u key %s intentionally skipped",
+                          obj_id, pkey->str());
+        return;
+    }
     if (ret != SDK_RET_OK) {
         api::g_upg_state->set_backup_status(false);
         PDS_TRACE_ERR("Backup stateless obj id %u failed for key %s, err %u",
@@ -119,7 +125,7 @@ backup_mapping (upg_obj_info_t *info)
     sdk_ret_t ret;
 
     kvs = api::g_pds_state.kvstore();
-    ret = (kvs->iterate(backup_statless_obj_cb, (void *)&info, "mapping"));
+    ret = (kvs->iterate(backup_statless_obj_cb, (void *)info, "mapping"));
     // adjust the offset in persistent storage in the end of walk
     api::g_upg_state->api_upg_ctx()->incr_obj_offset(info->backup.total_size);
     return ret;
@@ -173,6 +179,8 @@ upg_ev_backup (upg_ev_params_t *params)
 
         case OBJ_ID_MAPPING:
             ret = backup_mapping(&info);
+            // update total number of mapping objs stashed
+            hdr[id].obj_count = info.backup.stashed_obj_count;
             break;
 
         default:

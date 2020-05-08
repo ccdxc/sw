@@ -66,8 +66,10 @@ typedef struct pds_remote_mapping_spec_s {
 
 /// \brief    mapping status
 typedef struct pds_mapping_status_s {
-    uint16_t subnet_hw_id; ///< subnet hw id
-    uint16_t vnic_hw_id;   ///< vnic hw id
+    uint16_t subnet_hw_id;         ///< subnet hw id
+    uint16_t vnic_hw_id;           ///< vnic hw id
+    uint16_t public_ip_nat_idx;    ///< to public ip nat index
+    uint16_t overlay_ip_nat_idx;   ///< to overlay ip nat index
 } __PACK__ pds_mapping_status_t;
 
 /// \brief    mapping statistics

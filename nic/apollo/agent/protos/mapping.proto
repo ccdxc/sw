@@ -89,6 +89,8 @@ message MappingSpec {
 
 // operational status of a mapping
 message MappingStatus {
+    uint32 PublicIPNatIdx= 1;   // private - public IP xlation nat index
+    uint32 PrivateIPNatIdx = 2; // public - private IP xlation nat index
 }
 
 // stats of a mapping

@@ -16,7 +16,8 @@
 // total size of the below should not exceed PDS_UPG_SHM_SIZE
 // api objects
 #define PDS_UPGRADE_API_OBJ_STORE_NAME "pds_upg_api_objs_info"
-#define PDS_UPGRADE_API_OBJ_STORE_SIZE (50 * 1024)
+#define PDS_UPGRADE_API_OBJ_STORE_SIZE (1 * 1024 * 1024)
+#define PDS_UPGRADE_API_OBJ_RSRVD_SIZE UINT_MAX
 // nicmgr objects
 #define PDS_UPGRADE_NICMGR_OBJ_STORE_NAME "pds_upg_nicmgr_objs_info"
 #define PDS_UPGRADE_NICMGR_OBJ_STORE_SIZE (20 * 1024)

@@ -8,7 +8,6 @@
 ///
 //----------------------------------------------------------------------------
 
-#include "grpc++/grpc++.h"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/sdk/lib/utils/utils.hpp"
 #include "nic/apollo/core/mem.hpp"
@@ -22,8 +21,6 @@
 #include "nic/apollo/api/impl/apulu/nexthop_impl.hpp"
 #include "nic/apollo/api/impl/apulu/nexthop_group_impl.hpp"
 #include "nic/apollo/api/impl/apulu/pds_impl_state.hpp"
-#include "gen/proto/types.pb.h"
-#include "gen/proto/nh.grpc.pb.h"
 #include "nic/apollo/api/impl/apulu/specs.hpp"
 
 namespace api {
@@ -79,8 +76,7 @@ nexthop_group_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
 
     // if this object is restored from persistent storage
     // resources are reserved already
-    // use in_restore_list() instead.????
-    if (api_obj->rsvd_rsc()) {
+    if (api_obj->in_restore_list()) {
         return SDK_RET_OK;
     }
 
@@ -409,7 +405,7 @@ nexthop_group_impl::backup(obj_info_t *info, upg_obj_info_t *upg_info) {
     pds::NhGroupGetResponse proto_msg;;
     pds_nexthop_group_info_t *nh_group_info;
     upg_obj_tlv_t *tlv;
-    uint32_t obj_size, size_left;
+    uint32_t obj_size, meta_size, size_left;
 
     tlv = (upg_obj_tlv_t *)upg_info->mem;
     size_left = upg_info->backup.size_left;
@@ -422,10 +418,11 @@ nexthop_group_impl::backup(obj_info_t *info, upg_obj_info_t *upg_info) {
     // convert api info to proto
     pds_nh_group_api_info_to_proto(nh_group_info, (void *)&proto_msg);
     obj_size = proto_msg.ByteSizeLong();
-    if ((obj_size + 4) > size_left) {   // 4 bytes for len
+    meta_size = sizeof(upg_obj_tlv_t);
+    if ((obj_size + meta_size) > size_left) {
         PDS_TRACE_ERR("Failed to backup nh group %s, bytes needed %u left %u",
                       nh_group_info->spec.key.str(),
-                      obj_size + 4, size_left);
+                      obj_size + meta_size, size_left);
         return SDK_RET_OOM;
     }
 
@@ -436,7 +433,7 @@ nexthop_group_impl::backup(obj_info_t *info, upg_obj_info_t *upg_info) {
                       nh_group_info->spec.key.str());
         return SDK_RET_OOM;
     }
-    upg_info->size = obj_size + 4;
+    upg_info->size = obj_size + meta_size;
     return ret;
 }
 
@@ -489,13 +486,14 @@ nexthop_group_impl::restore(obj_info_t *info, upg_obj_info_t *upg_info) {
     pds::NhGroupGetResponse proto_msg;;
     pds_nexthop_group_info_t *nh_group_info;
     upg_obj_tlv_t *tlv;
-    uint32_t obj_size;
+    uint32_t obj_size, meta_size;
 
     tlv = (upg_obj_tlv_t *)upg_info->mem;
     nh_group_info = (pds_nexthop_group_info_t *)info;
     obj_size = tlv->len;
+    meta_size = sizeof(upg_obj_tlv_t);
     // fill up the size, even if it fails later. to try and restore next obj
-    upg_info->size = obj_size + 4;  // 4 bytes for length
+    upg_info->size = obj_size + meta_size;
     // de-serialize proto msg
     if (proto_msg.ParseFromArray(tlv->obj, tlv->len) == false) {
         PDS_TRACE_ERR("Failed to de-serialize nexthop group");

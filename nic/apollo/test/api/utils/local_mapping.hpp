@@ -31,6 +31,7 @@ class local_mapping_feeder : public feeder {
 public:
     // spec fields
     pds_local_mapping_spec_t spec;
+    vector<pds_local_mapping_info_t *> vec;
 
     // feeder cfg and state
     uint32_t num_vnics;
@@ -55,7 +56,8 @@ public:
               uint32_t num_vnics = k_max_vnic,
               uint32_t num_ip_per_vnic = PDS_MAX_VNIC_IP,
               pds_mapping_type_t map_type = PDS_MAPPING_TYPE_L3,
-              int num_tags = 1);
+              int num_tags = 1,
+              bool stash_ = false);
 
     // iterate helper
     void iter_next(int width = 1);
@@ -96,6 +98,7 @@ using pds_local_mapping_key_t = pds_mapping_key_t;
 
 API_CREATE(local_mapping);
 API_READ(local_mapping);
+API_READ_CMP(local_mapping);
 API_UPDATE(local_mapping);
 API_DELETE(local_mapping);
 

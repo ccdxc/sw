@@ -119,6 +119,13 @@ pds_mapping_spec_to_local_spec (pds_local_mapping_spec_t *local_spec,
 }
 
 static inline void
+pds_mapping_status_to_local_status (pds_local_mapping_info_t *local_info,
+                                    pds_mapping_info_t *info)
+{
+    memcpy(&local_info->status, &info->status, sizeof(pds_mapping_status_t));
+}
+
+static inline void
 pds_mapping_spec_to_remote_spec (pds_remote_mapping_spec_t *remote_spec,
                                  pds_mapping_spec_t *spec)
 {

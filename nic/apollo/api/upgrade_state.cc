@@ -22,7 +22,7 @@ upg_state *g_upg_state;
 // TODO: below size depends on the size of the config hw states to be saved
 // and other nicmgr/linkmgr states etc. need to calculate for the maximum
 // and adjust its size.
-#define PDS_UPG_SHM_SIZE (100 << 10)  // 100KB
+#define PDS_UPG_SHM_SIZE (2 * 1024 * 1024)  // 2MB
 
 sdk_ret_t
 upg_state::init_(bool shm_create) {

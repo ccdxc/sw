@@ -25,7 +25,7 @@ local_mapping_feeder::init(pds_obj_key_t vpc, pds_obj_key_t subnet,
                            std::string pub_ip_cidr_str, uint32_t num_vnics,
                            uint32_t num_ip_per_vnic,
                            pds_mapping_type_t map_type,
-                           int num_tags) {
+                           int num_tags, bool stash) {
     ip_prefix_t vnic_ip_pfx;
     ip_prefix_t public_ip_pfx;
 
@@ -71,6 +71,7 @@ local_mapping_feeder::init(pds_obj_key_t vpc, pds_obj_key_t subnet,
     this->num_ip_per_vnic = num_ip_per_vnic;
     this->curr_vnic_ip_cnt = 0;
     this->num_obj = num_vnics * num_ip_per_vnic;
+    this->stash_ = stash;
 }
 
 local_mapping_feeder::local_mapping_feeder(const local_mapping_feeder& feeder) {
@@ -79,6 +80,7 @@ local_mapping_feeder::local_mapping_feeder(const local_mapping_feeder& feeder) {
     num_vnics = feeder.num_vnics;
     num_ip_per_vnic = feeder.num_ip_per_vnic;
     curr_vnic_ip_cnt = feeder.curr_vnic_ip_cnt;
+    stash_ = feeder.stash();
 }
 
 void
@@ -177,7 +179,7 @@ local_mapping_feeder::spec_compare(const pds_local_mapping_spec_t *spec) const {
 bool
 local_mapping_feeder::status_compare(const pds_mapping_status_t *status1,
                                      const pds_mapping_status_t *status2) const {
-    return true;
+    return (!memcmp(status1, status2, sizeof(pds_mapping_status_t)));
 }
 
 void
