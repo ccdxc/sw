@@ -61,6 +61,7 @@
         _(VRIP_DROP, "Unknown VR IPv4 packets")                     \
         _(TCP_PKT, "TCP packets")                                   \
         _(TCP_PKT_NO_SES, "TCP packets with invalid session id")    \
+        _(SES_NOT_FOUND, "Packets with invalid session id")         \
 
 #define foreach_flow_prog_next                                      \
         _(FWD_FLOW, "pds-fwd-flow" )                                \
@@ -480,6 +481,19 @@ always_inline void pds_session_id_dealloc(u32 ses_id)
     pool_put_index(fm->session_index_pool, (ses_id - 1));
     pds_flow_prog_unlock();
     return;
+}
+
+always_inline pds_flow_hw_ctx_t * pds_flow_validate_get_hw_ctx (u32 ses_id)
+{
+    pds_flow_main_t *fm = &pds_flow_main;
+    pds_flow_hw_ctx_t *ctx;
+
+    if (PREDICT_FALSE(pool_is_free_index(fm->session_index_pool,
+                                         (ses_id - 1)))) {
+        return NULL;
+    }
+    ctx = pool_elt_at_index(fm->session_index_pool, (ses_id - 1));
+    return ctx;
 }
 
 always_inline pds_flow_hw_ctx_t * pds_flow_get_hw_ctx (u32 ses_id)

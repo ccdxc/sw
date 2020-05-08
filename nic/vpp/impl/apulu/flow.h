@@ -825,7 +825,13 @@ pds_flow_classify_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
     vnet_buffer2(p)->pds_nat_data.vnic_id = hdr->vnic_id;
 
     if (PREDICT_FALSE(pds_is_flow_session_present(p))) {
-        ctx = pds_flow_get_hw_ctx(vnet_buffer(p)->pds_flow_data.ses_id);
+        ctx = pds_flow_validate_get_hw_ctx(
+              vnet_buffer(p)->pds_flow_data.ses_id);
+        if (PREDICT_FALSE(!ctx || !ctx->is_in_use)) {
+            *next = FLOW_CLASSIFY_NEXT_DROP;
+            counter[FLOW_CLASSIFY_COUNTER_SES_NOT_FOUND] += 1;
+            return;
+        }
         if (pds_flow_packet_l2l(ctx->packet_type) && hdr->rx_packet) {
             if (BIT_ISSET(flags, VPP_CPU_FLAGS_IPV4_2_VALID)) {
                 vnic = pds_impl_db_vnic_get(ctx->vnic_id);
