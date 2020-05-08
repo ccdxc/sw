@@ -21,14 +21,13 @@ import * as _ from 'lodash';
 import { SelectItem } from 'primeng/primeng';
 import { Observable, Subscription } from 'rxjs';
 import { SearchUtil } from '../search/SearchUtil';
-import { AdvancedSearchComponent } from '../shared/advanced-search/advanced-search.component';
 import { LabelEditorMetadataModel } from '../shared/labeleditor';
 import { CustomExportMap, TableCol } from '../shared/tableviewedit';
 import { TableUtility } from '../shared/tableviewedit/tableutility';
 import { PentableComponent } from '../shared/pentable/pentable.component';
-import { BaseComponent } from '../base/base.component';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { DataComponent } from '@app/components/shared/datacomponent/datacomponent.component';
+import { IStagingBulkEditAction } from '@sdk/v1/models/generated/staging';
 
 interface WorkloadUiModel {
   dscs: ClusterDistributedServiceCard[];
@@ -551,7 +550,28 @@ export class WorkloadComponent extends DataComponent  implements OnInit {
   }
 
   handleEditSave(updatedWorkloads: WorkloadWorkload[]) {
-    this.updateWithForkjoin(updatedWorkloads);
+    // this.updateWithForkjoin(updatedWorkloads);
+    this.bulkeditLabels(updatedWorkloads); // Use bulkedit to update meta.labels
+  }
+
+  onBulkEditSuccess(veniceObjects: any[], stagingBulkEditAction: IStagingBulkEditAction, successMsg: string, failureMsg: string) {
+    this.inLabelEditMode = false;
+  }
+
+  onBulkEditFailure(error: Error, veniceObjects: any[], stagingBulkEditAction: IStagingBulkEditAction, successMsg: string, failureMsg: string, ) {
+      this.dataObjects = Utility.getLodash().cloneDeepWith(this.dataObjectsBackUp);
+  }
+
+  /**
+   * Invoke changing meta.lablels using bulkedit API
+   * @param updatedWorkloads
+   */
+  bulkeditLabels(updatedWorkloads: WorkloadWorkload[]) {
+
+    const successMsg: string = 'Updated ' + updatedWorkloads.length + ' workload labels';
+    const failureMsg: string = 'Failed to update workload labels';
+    const stagingBulkEditAction = this.buildBulkEditLabelsPayload(updatedWorkloads);
+    this.bulkEditHelper(updatedWorkloads, stagingBulkEditAction, successMsg, failureMsg );
   }
 
 
@@ -750,6 +770,10 @@ export class WorkloadComponent extends DataComponent  implements OnInit {
 
   getSelectedDataObjects() {
     return this.workloadTable.selectedDataObjects;
+  }
+
+  clearSelectedDataObjects() {
+    this.workloadTable.selectedDataObjects = [];
   }
 
 

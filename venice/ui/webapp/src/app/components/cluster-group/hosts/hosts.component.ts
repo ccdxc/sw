@@ -14,7 +14,7 @@ import { WorkloadService } from '@app/services/generated/workload.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { Utility } from '@common/Utility';
 import { TablevieweditAbstract } from '@components/shared/tableviewedit/tableviewedit.component';
-import { ClusterDistributedServiceCard, IApiStatus, ClusterDistributedServiceCardID } from '@sdk/v1/models/generated/cluster';
+import { ClusterDistributedServiceCard, ClusterDistributedServiceCardID, IApiStatus } from '@sdk/v1/models/generated/cluster';
 import { ClusterHost, IClusterHost } from '@sdk/v1/models/generated/cluster/cluster-host.model';
 import { FieldsRequirement } from '@sdk/v1/models/generated/search';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';

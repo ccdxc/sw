@@ -35,6 +35,7 @@ export abstract class DataComponent extends BaseComponent implements OnInit {
   }
 
   abstract getSelectedDataObjects(): any[];
+  abstract clearSelectedDataObjects();
 
   hasSelectedRows(): boolean {
     return this.getSelectedDataObjects().length > 0;
@@ -300,6 +301,7 @@ export abstract class DataComponent extends BaseComponent implements OnInit {
     ).subscribe(
       (responseCommitBuffer) => {
         this._controllerService.invokeSuccessToaster(successTitle, successMsg);
+        this.clearSelectedDataObjects();
         this.onBulkEditSuccess(veniceObjects, stagingBulkEditAction, successMsg, failureMsg);
         this.deleteStagingBuffer(buffername, failureMsg, false); // if bulked is successful  just delete tbe buffer to release resource
       },

@@ -402,6 +402,11 @@ export abstract class TableviewAbstract<I, T extends I> extends DataComponent im
     return (this.tableContainer) ? this.tableContainer.selectedDataObjects : [];
   }
 
+  clearSelectedDataObjects() {
+    if (this.tableContainer) {
+      this.tableContainer.selectedDataObjects = [];
+    }
+  }
 
   // Hook to add extra logic during component initialization
   // Defining as abstract to enforce the idea that ngOnInit shouldn't be overriden unless

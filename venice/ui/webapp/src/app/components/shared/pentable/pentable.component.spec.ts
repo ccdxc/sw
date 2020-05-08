@@ -62,7 +62,6 @@ describe('PentableComponent', () => {
         MessageService,
         ChangeDetectorRef,
         UIConfigsService,
-        LicenseService
       ]
     });
   });

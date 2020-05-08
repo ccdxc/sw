@@ -784,7 +784,7 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
         // We are watching alerts. So when there are new alerts coming in, we display a toaster.
         if (this.alertNumbers > 0 && this.alertNumbers < this.alerts.length) {
           const diff = this.alerts.length - this.alertNumbers;
-          const alertMsg = (diff === 1) ? diff + ' new alert arrived' : diff + 'new alerts arrived';
+          const alertMsg = (diff === 1) ? diff + ' new alert arrived' : diff + ' new alerts arrived';
           const tooManyOpenAlerts: boolean = (this.alerts.length > Utility.DEFAULT_OPEN_ALERTS_NUMBER_TO_STOP_TOASTER);
           // User has no way to see alerts if Venice is in maintenance mode.
           // If there are too many open alerts already and alerts keep coming from web-socket connection, it is likely system is running alert script or system is big problem.
