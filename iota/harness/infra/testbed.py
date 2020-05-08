@@ -493,7 +493,7 @@ class _Testbed:
 
                 cmd.extend(["--image-manifest", manifest_file])
 
-                if self.__fw_upgrade_done or GlobalOptions.only_reboot:
+                if GlobalOptions.only_reboot:
                     logfile = "%s/%s-%s-reboot.log" % (GlobalOptions.logdir, self.curr_ts.Name(), instance.Name)
                     Logger.info("Rebooting Node %s (logfile = %s)" % (instance.Name, logfile))
                     cmd.extend(["--only-mode-change"])
