@@ -453,12 +453,12 @@ route_table_impl::program_route_table_(pds_route_table_spec_t *spec) {
                                           dnat_base_idx_ + dnat_idx);
 
             rtable->routes[i].nhid = nh_val;
-            PDS_TRACE_DEBUG("Processing route table %s, route %s prio %u -> "
-                            "DNAT %s, nh id 0x%x", spec->key.str(),
-                            ippfx2str(&rtable->routes[i].prefix),
-                            rtable->routes[i].prio,
-                            ipaddr2str(&route_spec->attrs.nat.dst_nat_ip),
-                            nh_val);
+            PDS_TRACE_VERBOSE("Processing route table %s, route %s prio %u -> "
+                              "DNAT %s, nh id 0x%x", spec->key.str(),
+                              ippfx2str(&rtable->routes[i].prefix),
+                              rtable->routes[i].prio,
+                              ipaddr2str(&route_spec->attrs.nat.dst_nat_ip),
+                              nh_val);
 
             // write to DNAT table at this index
             dnat_data.action_id = DNAT_DNAT_ID;
@@ -484,9 +484,9 @@ route_table_impl::program_route_table_(pds_route_table_spec_t *spec) {
                 goto cleanup;
             }
 
-            PDS_TRACE_DEBUG("Programmed DNAT table at %u for IP %s",
-                            dnat_base_idx_ + dnat_idx,
-                            ipaddr2str(&route_spec->attrs.nat.dst_nat_ip));
+            PDS_TRACE_VERBOSE("Programmed DNAT table at %u for IP %s",
+                              dnat_base_idx_ + dnat_idx,
+                              ipaddr2str(&route_spec->attrs.nat.dst_nat_ip));
 
             // write to NAT2 table at this index
             nat2_data.action_id = NAT2_NAT2_REWRITE_ID;
@@ -549,9 +549,9 @@ route_table_impl::program_route_table_(pds_route_table_spec_t *spec) {
                                         route_spec->attrs.class_priority,
                                         PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID);
             rtable->routes[i].nhid = nh_val;
-            PDS_TRACE_DEBUG("Processing route table %s, route %s -> blackhole "
-                            "nh id %u, ", spec->key.str(),
-                            ippfx2str(&rtable->routes[i].prefix), nh_val);
+            PDS_TRACE_VERBOSE("Processing route table %s, route %s -> "
+                              "blackhole nh id %u", spec->key.str(),
+                              ippfx2str(&rtable->routes[i].prefix), nh_val);
             break;
 
         case PDS_NH_TYPE_OVERLAY:
@@ -570,11 +570,11 @@ route_table_impl::program_route_table_(pds_route_table_spec_t *spec) {
                                         route_spec->attrs.class_priority,
                                         ((tep_impl *)(tep->impl()))->hw_id1());
             rtable->routes[i].nhid = nh_val;
-            PDS_TRACE_DEBUG("Processing route table %s, route %s prio %u -> "
-                            "TEP %s, nh id 0x%x", spec->key.str(),
-                            ippfx2str(&rtable->routes[i].prefix),
-                            rtable->routes[i].prio, tep->key2str().c_str(),
-                            nh_val);
+            PDS_TRACE_VERBOSE("Processing route table %s, route %s prio %u -> "
+                              "TEP %s, nh id 0x%x", spec->key.str(),
+                              ippfx2str(&rtable->routes[i].prefix),
+                              rtable->routes[i].prio, tep->key2str().c_str(),
+                              nh_val);
             break;
 
         case PDS_NH_TYPE_OVERLAY_ECMP:
@@ -593,10 +593,10 @@ route_table_impl::program_route_table_(pds_route_table_spec_t *spec) {
                                         route_spec->attrs.class_priority,
                 ((nexthop_group_impl *)nh_group->impl())->hw_id());
             rtable->routes[i].nhid = nh_val;
-            PDS_TRACE_DEBUG("Processing route table %s, route %s -> "
-                            "nh group %s, nh id 0x%x", spec->key.str(),
-                            ippfx2str(&rtable->routes[i].prefix),
-                            nh_group->key2str().c_str(), nh_val);
+            PDS_TRACE_VERBOSE("Processing route table %s, route %s -> "
+                              "nh group %s, nh id 0x%x", spec->key.str(),
+                              ippfx2str(&rtable->routes[i].prefix),
+                              nh_group->key2str().c_str(), nh_val);
             break;
 
         case PDS_NH_TYPE_PEER_VPC:
@@ -614,10 +614,10 @@ route_table_impl::program_route_table_(pds_route_table_spec_t *spec) {
                                         route_spec->attrs.class_priority,
                                         ((vpc_impl *)vpc->impl())->hw_id());
             rtable->routes[i].nhid = nh_val;
-            PDS_TRACE_DEBUG("Processing route table %s, route %s -> vpc %s, "
-                            "nh id 0x%x, ", spec->key.str(),
-                            ippfx2str(&rtable->routes[i].prefix),
-                            vpc->key2str().c_str(), nh_val);
+            PDS_TRACE_VERBOSE("Processing route table %s, route %s -> vpc %s, "
+                              "nh id 0x%x, ", spec->key.str(),
+                              ippfx2str(&rtable->routes[i].prefix),
+                              vpc->key2str().c_str(), nh_val);
             break;
 
         case PDS_NH_TYPE_VNIC:
@@ -634,10 +634,10 @@ route_table_impl::program_route_table_(pds_route_table_spec_t *spec) {
                                         route_spec->attrs.class_priority,
                                         ((vnic_impl *)vnic->impl())->nh_idx());
             rtable->routes[i].nhid = nh_val;
-            PDS_TRACE_DEBUG("Processing route table %s, route %s -> vnic %s, "
-                            "nh id 0x%x, ", spec->key.str(),
-                            ippfx2str(&rtable->routes[i].prefix),
-                            vnic->key2str().c_str(), nh_val);
+            PDS_TRACE_VERBOSE("Processing route table %s, route %s -> vnic %s, "
+                              "nh id 0x%x, ", spec->key.str(),
+                              ippfx2str(&rtable->routes[i].prefix),
+                              vnic->key2str().c_str(), nh_val);
             break;
 
         default:
