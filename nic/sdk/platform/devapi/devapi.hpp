@@ -44,11 +44,14 @@ public:
     virtual sdk_ret_t lif_get_max_filters(uint32_t *ucast_filters, uint32_t *mcast_filters) = 0;
     virtual sdk_ret_t lif_upd_state(uint32_t lif_id, lif_state_t state) = 0;
     virtual sdk_ret_t lif_upd_rdma_sniff(uint32_t lif_id, bool rdma_sniff) = 0;
-    virtual sdk_ret_t lif_upd_bcast_filter(uint32_t lif_id, 
-                                           lif_bcast_filter_t bcast_filter) = 0; 
-    virtual sdk_ret_t lif_upd_mcast_filter(uint32_t lif_id, 
-                                           lif_mcast_filter_t mcast_filter) = 0; 
+    virtual sdk_ret_t lif_upd_bcast_filter(uint32_t lif_id,
+                                           lif_bcast_filter_t bcast_filter) = 0;
+    virtual sdk_ret_t lif_upd_mcast_filter(uint32_t lif_id,
+                                           lif_mcast_filter_t mcast_filter) = 0;
     virtual sdk_ret_t lif_upd_rx_en(uint32_t lif_id, bool rx_en) = 0;
+
+    // eth APIs
+    virtual sdk_ret_t eth_dev_admin_status_update(uint32_t lif_id) = 0;
 
     // qos APIs
     virtual sdk_ret_t qos_class_get(uint8_t group, qos_class_info_t *info) = 0;

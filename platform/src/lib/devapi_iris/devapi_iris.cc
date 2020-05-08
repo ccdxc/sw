@@ -350,7 +350,7 @@ end:
 }
 
 sdk_ret_t
-devapi_iris::lif_upd_bcast_filter(uint32_t lif_id, 
+devapi_iris::lif_upd_bcast_filter(uint32_t lif_id,
                                   lif_bcast_filter_t bcast_filter)
 {
     sdk_ret_t ret = SDK_RET_OK;
@@ -370,7 +370,7 @@ end:
 }
 
 sdk_ret_t
-devapi_iris::lif_upd_mcast_filter(uint32_t lif_id, 
+devapi_iris::lif_upd_mcast_filter(uint32_t lif_id,
                                   lif_mcast_filter_t mcast_filter)
 {
     sdk_ret_t ret = SDK_RET_OK;
@@ -436,6 +436,12 @@ devapi_iris::lif_get_max_filters(uint32_t *ucast_filters,
 }
 
 sdk_ret_t
+devapi_iris::eth_dev_admin_status_update(uint32_t lif_id)
+{
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 devapi_iris::qos_class_get(uint8_t group, qos_class_info_t *info)
 {
     return devapi_qos::qos_class_get(group, info);
@@ -489,7 +495,7 @@ devapi_iris::set_fwd_mode(sdk::lib::dev_forwarding_mode_t fwd_mode)
     return SDK_RET_OK;
 }
 
-sdk_ret_t 
+sdk_ret_t
 devapi_iris::micro_seg_halupdate_(bool en)
 {
     grpc::Status         status;
@@ -499,7 +505,7 @@ devapi_iris::micro_seg_halupdate_(bool en)
     MicroSegResponse rsp;
 
     req = req_msg.add_request();
-    req->set_micro_seg_mode(en ? sys::MICRO_SEG_ENABLE : 
+    req->set_micro_seg_mode(en ? sys::MICRO_SEG_ENABLE :
                             sys::MICRO_SEG_DISABLE);
     req->set_status(sys::MICRO_SEG_STATUS_SUCCESS);
 
@@ -509,20 +515,20 @@ devapi_iris::micro_seg_halupdate_(bool en)
         rsp = rsp_msg.response(0);
         if (rsp.api_status() == types::API_STATUS_OK) {
             NIC_LOG_DEBUG("Updated micro_seg mode: Mode: {}:{}, Status: {}:{}",
-                          req->micro_seg_mode(), 
-                          sys::MicroSegMode_Name(req->micro_seg_mode()), 
+                          req->micro_seg_mode(),
+                          sys::MicroSegMode_Name(req->micro_seg_mode()),
                           req->status(), sys::MicroSegStatus_Name(req->status()));
         } else {
             NIC_LOG_DEBUG("Failed to update micro_seg mode: Mode: {}:{}, "
                           "Status: {}:{}. err: {}",
-                          req->micro_seg_mode(), MicroSegMode_Name(req->micro_seg_mode()), 
+                          req->micro_seg_mode(), MicroSegMode_Name(req->micro_seg_mode()),
                           req->status(), MicroSegStatus_Name(req->status()),
                           rsp.api_status());
         }
     } else {
         NIC_LOG_DEBUG("Failed to update micro_seg mode: Mode: {}:{}, "
                       "Status: {}:{}. err: {}:{}",
-                      req->micro_seg_mode(), MicroSegMode_Name(req->micro_seg_mode()), 
+                      req->micro_seg_mode(), MicroSegMode_Name(req->micro_seg_mode()),
                       req->status(), MicroSegStatus_Name(req->status()),
                       status.error_code(), status.error_message());
     }
@@ -581,7 +587,7 @@ devapi_iris::get_micro_seg_cfg_en(void)
                               sys::ForwardMode_Name(rsp.spec().fwd_mode()));
                 micro_seg_cfg_en = (rsp.spec().fwd_mode() == sys::FWD_MODE_MICROSEG);
             } else {
-                NIC_LOG_DEBUG("Failed to get micro seg cfg en. err: {}:{}", 
+                NIC_LOG_DEBUG("Failed to get micro seg cfg en. err: {}:{}",
                               status.error_code(), status.error_message());
             }
         }

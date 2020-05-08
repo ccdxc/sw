@@ -45,6 +45,9 @@ public:
     sdk_ret_t lif_upd_mcast_filter(uint32_t lif_id, lif_mcast_filter_t mcast_filter);
     sdk_ret_t lif_upd_rx_en(uint32_t lif_id, bool rx_en);
 
+    // Eth APIs
+    sdk_ret_t eth_dev_admin_status_update(uint32_t lif_id);
+
     // Qos APIs
     sdk_ret_t qos_class_get(uint8_t group, qos_class_info_t *info);
     sdk_ret_t qos_class_exist(uint8_t group);

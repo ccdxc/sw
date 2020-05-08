@@ -160,6 +160,8 @@ public:
     // device list
     std::vector<struct EthDevInfo *> GetEthDevStateInfo();
     std::map<uint32_t, uplink_t *> GetUplinks() { return uplinks; };
+    uplink_t * GetOOBUplink(void);
+    uplink_t * GetUplink(uint32_t id);
 
     // swm functions
     void swm_update(bool enable, uint32_t port_num, uint32_t vlan, mac_t mac);

@@ -2185,6 +2185,7 @@ EthLif::_CmdSetAttr(void *req, void *req_data, void *resp, void *resp_data)
     } cfg = {0};
     uint64_t addr, off;
     asic_db_addr_t db_addr = { 0 };
+    sdk_ret_t ret;
 
     NIC_LOG_DEBUG("{}: {}: attr {}", hal_lif_info_.name, opcode_to_str(cmd->opcode), cmd->attr);
 
@@ -2250,11 +2251,15 @@ EthLif::_CmdSetAttr(void *req, void *req_data, void *resp, void *resp_data)
         /* TODO: Need to implement queue flushing */
         if (cmd->state == IONIC_LIF_DISABLE)
             ev_sleep(RXDMA_LIF_QUIESCE_WAIT_S);
+
+        ret = dev_api->eth_dev_admin_status_update(hal_lif_info_.lif_id);
+        if (ret != SDK_RET_OK) {
+            NIC_LOG_ERR("{}: Failed to eth state in controller", hal_lif_info_.name);
+        }
         break;
     case IONIC_LIF_ATTR_NAME:
         strncpy0(name, cmd->name, sizeof(name));
         strncpy0(hal_lif_info_.name, cmd->name, sizeof(hal_lif_info_.name));
-        DEVAPI_CHECK
         dev_api->lif_upd_name(hal_lif_info_.lif_id, name);
         break;
     case IONIC_LIF_ATTR_MTU:
@@ -2426,6 +2431,7 @@ status_code_t
 EthLif::_CmdQControl(void *req, void *req_data, void *resp, void *resp_data)
 {
     status_code_t st = IONIC_RC_SUCCESS;
+    sdk_ret_t ret;
     int64_t addr, off;
     struct ionic_q_control_cmd *cmd = (struct ionic_q_control_cmd *)req;
     // q_enable_comp *comp = (q_enable_comp *)resp;
@@ -2475,6 +2481,11 @@ EthLif::_CmdQControl(void *req, void *req_data, void *resp, void *resp_data)
         /* TODO: Need to implement queue flushing */
         if (cmd->oper == IONIC_Q_DISABLE)
             ev_sleep(RXDMA_Q_QUIESCE_WAIT_S);
+
+        ret = dev_api->eth_dev_admin_status_update(hal_lif_info_.lif_id);
+        if (ret != SDK_RET_OK) {
+            NIC_LOG_ERR("{}: Failed to eth state in controller", hal_lif_info_.name);
+        }
         break;
     case IONIC_QTYPE_TXQ:
         if (cmd->index >= spec->txq_count) {

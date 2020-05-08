@@ -277,6 +277,12 @@ devapi_impl::lif_get_max_filters(uint32_t *ucast_filters,
 }
 
 sdk_ret_t
+devapi_impl::eth_dev_admin_status_update(uint32_t lif_id) {
+    PDS_TRACE_WARN("Not implemented");
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 devapi_impl::qos_class_get(uint8_t group, qos_class_info_t *info) {
     PDS_TRACE_WARN("Not implemented");
     return SDK_RET_OK;

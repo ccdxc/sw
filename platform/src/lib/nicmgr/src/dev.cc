@@ -317,6 +317,46 @@ DeviceManager::CreateUplink(uint32_t id, uint32_t port, bool is_oob)
     uplinks[up->id] = up;
 }
 
+uplink_t *
+DeviceManager::GetOOBUplink(void) {
+    uplink_t *uplink = NULL;
+
+    // return oob port from uplink list
+    for (auto it = uplinks.begin(); it != uplinks.end(); it++) {
+        uplink = it->second;
+        if (uplink->is_oob) {
+            break;
+        }
+    }
+
+    return uplink;
+}
+
+uplink_t *
+DeviceManager::GetUplink(uint32_t id) {
+    uplink_t *uplink = NULL;
+
+    // search the uplink port by id
+    if (id != 0) {
+        auto it = uplinks.find(id);
+        if (it != uplinks.end()) {
+            uplink = it->second;
+        }
+        goto end;
+    }
+
+    // returns the first uplink port if port id is 0
+    for (auto it = uplinks.begin(); it != uplinks.end(); it++) {
+        uplink = it->second;
+        if (!uplink->is_oob) {
+            break;
+        }
+    }
+
+end:
+    return uplink;
+}
+
 static bool
 valid_mac_base(string where, uint64_t mac_base, uint32_t &mac_count)
 {

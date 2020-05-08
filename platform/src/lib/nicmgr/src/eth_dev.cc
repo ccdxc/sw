@@ -1377,6 +1377,8 @@ status_code_t
 Eth::_CmdPortIdentify(void *req, void *req_data, void *resp, void *resp_data)
 {
     sdk_ret_t ret = SDK_RET_OK;
+    uint32_t port_id = 0;
+    uplink_t *uplink;
     union ionic_port_identity *info = (union ionic_port_identity *)resp_data;
     union ionic_port_config *cfg = (union ionic_port_config *)&info->config;
     struct ionic_port_identify_cmd *cmd = (struct ionic_port_identify_cmd *)req;
@@ -1389,17 +1391,34 @@ Eth::_CmdPortIdentify(void *req, void *req_data, void *resp, void *resp_data)
 
     info->type = spec->eth_type;
 
+    port_id = spec->uplink_port_num;
+    // if uplink port is 0. Get the uplink from uplink list to read
+    // port config and status. For Management lifs, use OOB link and
+    // for Host lifs, use uplink port other than OOB
     if (spec->uplink_port_num == 0) {
-        port_config->speed = IONIC_SPEED_1G;
-        port_config->mtu = MTU_DEFAULT + ETH_FCS;
-        port_config->state = IONIC_PORT_ADMIN_STATE_UP;
-        return (IONIC_RC_SUCCESS);
+        DeviceManager *devmgr = DeviceManager::GetInstance();
+        if (spec->eth_type == ETH_HOST) {
+            uplink = devmgr->GetUplink(0);
+        } else {
+            uplink = devmgr->GetOOBUplink();
+        }
+
+        if (uplink != NULL) {
+            port_id = uplink->port;
+        }
     }
 
-    ret = dev_api->port_get_config(spec->uplink_port_num, (port_config_t *)cfg);
-    if (ret != SDK_RET_OK) {
-        NIC_LOG_ERR("{}: failed to get port config", spec->name);
-        return (IONIC_RC_ERROR);
+    // if there is no uplink port. by default Assign the speed as 1G
+    if (port_id != 0) {
+        ret = dev_api->port_get_config(port_id, (port_config_t *)cfg);
+        if (ret != SDK_RET_OK) {
+            NIC_LOG_ERR("{}: failed to get port config", spec->name);
+            return (IONIC_RC_ERROR);
+        }
+    } else {
+        port_status->speed = IONIC_SPEED_1G;
+        port_status->status = IONIC_PORT_OPER_STATUS_UP;
+        port_status->fec_type = IONIC_PORT_FEC_TYPE_NONE;
     }
 
     // The port mtu would incude the FCS.
@@ -1417,19 +1436,17 @@ Eth::_CmdPortInit(void *req, void *req_data, void *resp, void *resp_data)
 
     NIC_LOG_DEBUG("{}: {}", spec->name, opcode_to_str(cmd->opcode));
 
-    if (spec->uplink_port_num == 0) {
-        return (IONIC_RC_SUCCESS);
-    }
-
     DEVAPI_CHECK
 
     // The host mtu would not incude the FCS.
     port_config->mtu += ETH_FCS;
 
-    ret = dev_api->port_set_config(spec->uplink_port_num, (port_config_t *)cfg);
-    if (ret != SDK_RET_OK) {
-        NIC_LOG_ERR("{}: failed to set port config", spec->name);
-        return (IONIC_RC_ERROR);
+    if (spec->uplink_port_num != 0) {
+        ret = dev_api->port_set_config(spec->uplink_port_num, (port_config_t *)cfg);
+        if (ret != SDK_RET_OK) {
+            NIC_LOG_ERR("{}: failed to set port config", spec->name);
+            return (IONIC_RC_ERROR);
+        }
     }
 
     if (cmd->info_pa) {
@@ -1467,10 +1484,6 @@ Eth::_CmdPortReset(void *req, void *req_data, void *resp, void *resp_data)
     struct ionic_port_reset_cmd *cmd = (struct ionic_port_reset_cmd *)req;
 
     NIC_LOG_DEBUG("{}: {}", spec->name, opcode_to_str(cmd->opcode));
-
-    if (spec->uplink_port_num == 0) {
-        return (IONIC_RC_SUCCESS);
-    }
 
     host_port_info_addr = 0;
     host_port_config_addr = 0;
@@ -1994,6 +2007,8 @@ Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
     struct ionic_lif_init_cmd *cmd = (struct ionic_lif_init_cmd *)req;
     struct ionic_lif_init_comp *comp = (struct ionic_lif_init_comp *)resp;
     uint64_t lif_id = 0;
+    uplink_t *uplink;
+    uint32_t port_id = 0;
     EthLif *eth_lif = NULL;
     status_code_t ret = IONIC_RC_SUCCESS;
     sdk_ret_t rs = SDK_RET_OK;
@@ -2031,26 +2046,44 @@ Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
     active_lif_set.insert(lif_id);
     NIC_LOG_DEBUG("{}: active_lif_cnt: {}", spec->name, active_lif_set.size());
 
+    port_id = spec->uplink_port_num;
+
+    // if uplink port is 0. Get the uplink from uplink list to read
+    // port config and status. For Management lifs, use OOB link and
+    // for Host lifs, use uplink port other than OOB
     if (spec->uplink_port_num == 0) {
-        port_status->id = 0;
-        port_status->speed = IONIC_SPEED_1G;
-        port_status->status = IONIC_PORT_OPER_STATUS_UP;
-        port_status->fec_type = IONIC_PORT_FEC_TYPE_NONE;
-    } else {
+        DeviceManager *devmgr = DeviceManager::GetInstance();
+        if (spec->eth_type == ETH_HOST) {
+            uplink = devmgr->GetUplink(0);
+        } else {
+            uplink = devmgr->GetOOBUplink();
+        }
+
+        if (uplink != NULL) {
+            port_id = uplink->port;
+        }
+    }
+
+    // if there is no uplink port. by default Assign the speed as 1G
+    if (port_id != 0) {
         // Update port config
-        rs = dev_api->port_get_config(spec->uplink_port_num, (port_config_t *)port_config);
+        rs = dev_api->port_get_config(port_id, (port_config_t *)port_config);
         if (rs != SDK_RET_OK) {
             NIC_LOG_ERR("{}: Unable to get port config {}", spec->name, lif_id);
             return (IONIC_RC_ERROR);
         }
 
         // Update port status
-        rs = dev_api->port_get_status(spec->uplink_port_num, (port_status_t *)port_status);
+        rs = dev_api->port_get_status(port_id, (port_status_t *)port_status);
         if (rs != SDK_RET_OK) {
             NIC_LOG_ERR("{}: Unable to get port status {}", spec->name, lif_id);
             return (IONIC_RC_ERROR);
         }
-    };
+    } else {
+        port_status->speed = IONIC_SPEED_1G;
+        port_status->status = IONIC_PORT_OPER_STATUS_UP;
+        port_status->fec_type = IONIC_PORT_FEC_TYPE_NONE;
+    }
 
     if (spec->eth_type == ETH_HOST && cmd->index == 0 && host_port_mac_stats_addr != 0) {
         NIC_LOG_INFO("{}: port{}: Starting stats update to "
