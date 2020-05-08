@@ -18,6 +18,7 @@ const fwlogIpcShm = "/fwlog_ipc_shm"
 
 var numEntries = flag.Int("num", 1000, "Number of firewall entries")
 var rateps = flag.Int("rate", 100, "Rate per second")
+var vrfID = flag.Int("vrf", 1, "VRF ID")
 var metrics = flag.Bool("metrics", false, "Initialize metrics")
 
 func main() {
@@ -36,14 +37,14 @@ func main() {
 		metricsInit()
 	}
 
-	fmt.Printf("Generating %d fwlog entries at rate %d per second\n", *numEntries, *rateps)
-	err := fwlogGen(fwlogIpcShm, *numEntries, *rateps)
+	fmt.Printf("Generating %d fwlog entries at rate %d per second, vrfID %d\n", *numEntries, *rateps, *vrfID)
+	err := fwlogGen(fwlogIpcShm, *numEntries, *rateps, *vrfID)
 	if err != nil {
 		fmt.Printf("Error generating logs: %v\n", err)
 	}
 }
 
-func fwlogGen(fwlogShm string, numEntries, rateps int) error {
+func fwlogGen(fwlogShm string, numEntries, rateps int, vrf int) error {
 	mSize := int(ipc.GetSharedConstant("IPC_MEM_SIZE"))
 	instCount := int(ipc.GetSharedConstant("IPC_INSTANCES"))
 	protKey := func() int32 {
@@ -53,6 +54,13 @@ func fwlogGen(fwlogShm string, numEntries, rateps int) error {
 			}
 		}
 		return 1 // TCP
+	}
+
+	flowActionKey := func() int32 {
+		for k := range halproto.FlowLogEventType_name {
+			return k
+		}
+		return 1 // DELETE
 	}
 
 	fwActionKey := func() int32 {
@@ -80,18 +88,19 @@ func fwlogGen(fwlogShm string, numEntries, rateps int) error {
 		for idx := 0; idx < nEntries; idx++ {
 			for _, fd := range ipcList {
 				ev := &halproto.FWEvent{
-					SourceVrf: uint64(1),
-					DestVrf:   uint64(1),
-					Sipv4:     uint32(rand.Int31n(200) + rand.Int31n(200)<<8 + rand.Int31n(200)<<16 + rand.Int31n(200)<<24),
-					Dipv4:     uint32(192 + 168<<8 + rand.Int31n(200)<<16 + rand.Int31n(200)<<24),
-					Dport:     uint32(rand.Int31n(4096)),
-					Sport:     uint32(rand.Int31n(5000)),
-					IpProt:    halproto.IPProtocol(protKey()),
-					Fwaction:  halproto.SecurityAction(fwActionKey()),
-					Direction: uint32(rand.Int31n(2) + 1),
-					RuleId:    uint64(rand.Int63n(5000)),
-					SessionId: uint64(rand.Int63n(5000)),
-					AppId:     uint32(rand.Int31n(5000)),
+					SourceVrf:  uint64(vrf),
+					DestVrf:    uint64(vrf),
+					Sipv4:      uint32(rand.Int31n(200) + rand.Int31n(200)<<8 + rand.Int31n(200)<<16 + rand.Int31n(200)<<24),
+					Dipv4:      uint32(192 + 168<<8 + rand.Int31n(200)<<16 + rand.Int31n(200)<<24),
+					Dport:      uint32(rand.Int31n(4096)),
+					Sport:      uint32(rand.Int31n(5000)),
+					IpProt:     halproto.IPProtocol(protKey()),
+					Flowaction: halproto.FlowLogEventType(flowActionKey()),
+					Fwaction:   halproto.SecurityAction(fwActionKey()),
+					Direction:  uint32(rand.Int31n(2) + 1),
+					RuleId:     uint64(rand.Int63n(5000)),
+					SessionId:  uint64(rand.Int63n(5000)),
+					AppId:      uint32(rand.Int31n(5000)),
 				}
 
 				if ev.IpProt == halproto.IPProtocol_IPPROTO_ICMP {
@@ -99,6 +108,12 @@ func fwlogGen(fwlogShm string, numEntries, rateps int) error {
 					ev.Icmptype = uint32(rand.Int31n(5))
 					ev.Icmpid = uint32(rand.Int31n(5000))
 				}
+
+				if ev.Flowaction == halproto.FlowLogEventType_FLOW_LOG_EVENT_TYPE_DELETE {
+					ev.IflowBytes = uint64(rand.Int63n(100))
+					ev.RflowBytes = uint64(rand.Int63n(100))
+				}
+
 				if err := fd.Write(ev); err != nil {
 					log.Errorf("failed to write fwlog, %s", err)
 				}
