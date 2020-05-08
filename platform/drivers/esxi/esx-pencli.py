@@ -906,7 +906,7 @@ def ChangeDscMode(args):
         print('Failed at changing Pensando DSC mode')
         return 1
 
-    print('Pensando DSC mode has been changed to network managed successfully, please reboot the host')
+    print('Pensando DSC mode has been changed to network managed successfully')
 
     return ret
 
@@ -934,7 +934,7 @@ if __name__ == '__main__':
                    python esx-pencli.pyc get_dsc_all_mgmt_interfaces                   
                 3. Perform FW upgrade(Require to reboot the ESXi host after this)
                    python esx-pencli.pyc upgrade_dsc  --fw_img /vmfs/volumes/datastore1/naples_fw.tar
-                4. Change Pensando DSC mode from host managed to network managed(Require to reboot the ESXi host after this)
+                4. Change Pensando DSC mode from host managed to network managed
                    python esx-pencli.pyc change_dsc_mode --config_opt static --management_network oob --dsc_id pen_dsc1 --mgmt_ip 10.10.10.10/24 --gw 10.10.10.1 --controllers 10.10.10.11,10.10.10.12,10.10.10.13
         '''))          
     subparsers = parser.add_subparsers()
@@ -963,7 +963,7 @@ if __name__ == '__main__':
     subparser.add_argument('--uplink', default = '', help = 'Which management uplink to be used, required only in dual DSCs environment')
     subparser.add_argument('--verbose', action='store_true', help = 'increase output verbosity')
 
-    subparser = subparsers.add_parser('change_dsc_mode', help = 'Change Pensando DSC mode from host managed to network managed(Require to reboot the ESXi host after this)')
+    subparser = subparsers.add_parser('change_dsc_mode', help = 'Change Pensando DSC mode from host managed to network managed')
     subparser.set_defaults(callback=ChangeDscMode) 
     subparser.add_argument('--config_opt', required=True, help = 'Use static/dhcp based configurations for DSC mode change(static/dhcp)')
     subparser.add_argument('--management_network', required=True, help = 'Management Network(inband or oob)')
