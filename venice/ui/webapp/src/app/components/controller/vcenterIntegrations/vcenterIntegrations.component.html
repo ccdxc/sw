@@ -43,13 +43,13 @@
 </ng-template>
 
 <!-- TABLE BODY -->
-<ng-template #bodyTemplate let-rowData let-col="col">
+<ng-template #bodyTemplate let-rowData let-col="col" let-hovered="hovered">
   <ng-container [ngSwitch]="col.field">
     <ng-container *ngSwitchCase="'meta.creation-time'">
       {{rowData.meta['creation-time'] | PrettyDate }}
     </ng-container>
-    <ng-container *ngSwitchCase="'status.last-connected'">
-      {{rowData.status['last-connected'] | PrettyDate }}
+    <ng-container *ngSwitchCase="'status.last-transition-time'">
+      {{rowData.status['last-transition-time'] | PrettyDate }}
     </ng-container>
     <ng-container *ngSwitchCase="'spec.uri'">
       <a [href]="'https://' + rowData.spec.uri" target="_blank">{{ rowData.spec.uri }}</a>
@@ -65,6 +65,13 @@
           {{ workloads.list }}
         </div>
       </ng-container>
+    </ng-container>
+    <ng-container *ngSwitchCase="'status.connection-status'">
+      <span>{{ displayColumn(rowData, col) }}</span>
+      <div [ngClass]="['vcenter-integrations-errormsg', hovered ? '' : 'ellipsisText']"
+           *ngIf="rowData.status['connection-status'] !== 'success' && rowData.status.message">
+        {{ rowData.status.message }}
+      </div>
     </ng-container>
     <ng-container *ngSwitchDefault>
       {{displayColumn(rowData, col)}}
