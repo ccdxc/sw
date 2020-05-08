@@ -639,7 +639,7 @@ func (w *watchEventQ) janitor() {
 
 func (w *watchEventQ) notifier() {
 	for {
-		w.log.DebugLog("msg", "strarting notifier instance")
+		w.log.DebugLog("msg", "starting notifier instance")
 		select {
 		case <-w.stopCh:
 			return

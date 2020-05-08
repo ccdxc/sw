@@ -29,7 +29,7 @@ get_main_config_file (void)
 
     fwd_mode = ptree.get<std::string>("forwarding-mode",
         "FORWARDING_MODE_CLASSIC");
-    
+
     if (fwd_mode == "FORWARDING_MODE_CLASSIC" ||
         fwd_mode == std::to_string(device::FORWARDING_MODE_CLASSIC))
     {
@@ -51,17 +51,17 @@ get_main_config_file (void)
     }
 
     int feature_profile = ptree.get<int>(
-        "feature-profile", 
+        "feature-profile",
          device::FEATURE_PROFILE_BASE);
     if (feature_profile == device::FEATURE_PROFILE_NONE ||
-	feature_profile == device::FEATURE_PROFILE_BASE ||
-	feature_profile == device::FEATURE_PROFILE_STORAGE ||
-	feature_profile == device::FEATURE_PROFILE_SRIOV ||
-	feature_profile == device::FEATURE_PROFILE_VIRTUALIZED ||
-	feature_profile == device::FEATURE_PROFILE_PROXY ||
+        feature_profile == device::FEATURE_PROFILE_BASE ||
+        feature_profile == device::FEATURE_PROFILE_STORAGE ||
+        feature_profile == device::FEATURE_PROFILE_SRIOV ||
+        feature_profile == device::FEATURE_PROFILE_VIRTUALIZED ||
+        feature_profile == device::FEATURE_PROFILE_PROXY ||
         feature_profile == device::FEATURE_PROFILE_DEVELOPER) {
-	// For all feature profiles naples_hostpin is to be selected
-	return DEFAULT_SYSMGR_JSON;
+        // For all feature profiles naples_hostpin is to be selected
+        return DEFAULT_SYSMGR_JSON;
     }
 
     return DEFAULT_SYSMGR_JSON;

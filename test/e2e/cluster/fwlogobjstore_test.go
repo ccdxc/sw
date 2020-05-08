@@ -191,7 +191,7 @@ var _ = Describe("firewall log tests", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 		})
 
-		It("veirfy file through PSM REST API", func() {
+		It("verify file through PSM REST API", func() {
 			objName, err := getLastObjectName(fwLogClient, "")
 			Expect(err).NotTo(HaveOccurred())
 			downloadCsvFileViaPSMRESTAPI("fwlogs", objName, ts.tu.APIGwAddr)
@@ -203,13 +203,13 @@ var _ = Describe("firewall log tests", func() {
 			verifyLogsOnElastic(esClient, fwLogClient, dataIndex)
 		})
 
-		It("veirfy firewallobjects index on elastic", func() {
+		It("verify firewallobjects index on elastic", func() {
 			objectsIndex := elastic.GetIndex(globals.FwLogsObjects, "")
 			verifyIndexExistsOnElastic(esClient, objectsIndex)
 			verifyMinioObjectsOnElastic(esClient, fwLogClient, objectsIndex)
 		})
 
-		It("veirfy api that downloads object content", func() {
+		It("verify api that downloads object content", func() {
 			objName, err := getLastObjectName(fwLogClient, "")
 			Expect(err).NotTo(HaveOccurred())
 			verifyObjectContentAPI(objName, ts.tu.APIGwAddr)

@@ -1434,7 +1434,7 @@ func (n *NMD) writeDeviceFiles() (err error) {
 		var profile *nmd.DSCProfile
 		var defaultPortAdmin string
 		var ok bool
-		log.Info("Updating feature profile.")
+		log.Infof("Updating feature-profile %v", n.config.Spec.DSCProfile)
 		// Check if the profile exists.
 		for _, p := range n.profiles {
 			if p.Name == n.config.Spec.DSCProfile {

@@ -14,5 +14,5 @@ if [ -n "$A" ] ; then
     printf "=================================================================\n"
 	exit 1
 fi
-echo No uncomitted locally modified files
+echo No uncommitted locally modified files
 exit 0
