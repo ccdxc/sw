@@ -31,10 +31,11 @@
 // reserved VNIC h/w id
 #define PDS_IMPL_RSVD_VNIC_HW_ID               0
 
-// reserved BD h/w id
+// reserved BD and VPC h/w ids
+// NOTE: we have a NACL using PDS_IMPL_RSVD_VPC_HW_ID and if
+//       PDS_IMPL_RSVD_BD_HW_ID and PDS_IMPL_RSVD_VPC_HW_ID are
+//       numerically different, we need to install one NACL each
 #define PDS_IMPL_RSVD_BD_HW_ID                 0
-
-// reserved VPC h/w id
 #define PDS_IMPL_RSVD_VPC_HW_ID                0
 
 // reserved NAT h/w id

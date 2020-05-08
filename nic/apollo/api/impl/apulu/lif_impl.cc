@@ -519,7 +519,7 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
         return ret;
     }
 
-    // program the nexthop
+    // program the nexthop to point to vpp lif
     memset(&nexthop_info_entry, 0, nexthop_info_entry.entry_size());
     nexthop_info_entry.lif = id_;
     nexthop_info_entry.port = TM_PORT_DMA;
@@ -531,6 +531,35 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
         goto error;
     }
 
+    // drop traffic from host PF/VFs when no subnet is associated with it
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+    key.key_metadata_entry_valid = 1;
+    key.control_metadata_rx_packet = 0;
+    key.control_metadata_lif_type = P4_LIF_TYPE_HOST;
+    key.control_metadata_flow_miss = 1;
+    key.control_metadata_tunneled_packet = 0;
+    key.key_metadata_flow_lkp_id = PDS_IMPL_RSVD_VPC_HW_ID;
+    mask.key_metadata_entry_valid_mask = ~0;
+    mask.control_metadata_rx_packet_mask = ~0;
+    mask.control_metadata_lif_type_mask = ~0;
+    mask.control_metadata_flow_miss_mask = ~0;
+    mask.control_metadata_tunneled_packet_mask = ~0;
+    mask.key_metadata_flow_lkp_id_mask = ~0;
+    data.action_id = NACL_NACL_DROP_ID;
+    SDK_ASSERT(apulu_impl_db()->nacl_idxr()->alloc(&nacl_idx) == SDK_RET_OK);
+    p4pd_ret = p4pd_entry_install(P4TBL_ID_NACL, nacl_idx, &key, &mask, &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to program NACL %u entry to drop traffic from "
+                      "host lifs not associated with any subnet", nacl_idx);
+        ret = sdk::SDK_RET_HW_PROGRAM_ERR;
+        goto error;
+    } else {
+        PDS_TRACE_DEBUG("Programmed NACL entry idx %u to drop traffic from "
+                        "host lifs not associated with any subnet", nacl_idx);
+    }
+
     // cap ARP requests from host lifs to 256/sec
     ret = apulu_impl_db()->copp_idxr()->alloc(&idx);
     SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
@@ -539,7 +568,7 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
         COPP_FLOW_MISS_ARP_REQ_FROM_HOST_PPS
     };
     program_copp_entry_(&policer, idx, false);
-    // install NACL entry
+    // install NACL entry for ARP requests from host
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
