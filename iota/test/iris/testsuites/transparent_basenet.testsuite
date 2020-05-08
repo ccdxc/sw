@@ -96,6 +96,7 @@ testbundles:
 
     regression:
         # Relative paths from iota/test/iris/testbundles/
+        - networking/lif_telemetry_regression.testbundle
         - tso/tso_regr.testbundle
         - classic/driver-features.testbundle
         - rss/rss.testbundle

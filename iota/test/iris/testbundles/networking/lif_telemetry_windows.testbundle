@@ -18,7 +18,7 @@ testcases:
             type      : nested
             pktsize   : [128]
             peer      : [remote]
-            collector : [local, remote]
+            collector : [remote]
             session   : [single, multiple]
             vlan      : [native]
             iftype    : [uplink]
@@ -32,5 +32,4 @@ testcases:
             ps_2263   : [bypass]
             ps_2790   : [bypass]
             pkt_count : [bypass]
-            timeout   : 7200
 

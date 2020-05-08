@@ -97,6 +97,7 @@ testbundles:
 
     regression:
         # Relative paths from iota/test/iris/testbundles/
+        - networking/lif_telemetry_regression.testbundle
 
 teardown:
     #- step      : verif.utils.collect_logs_and_cores

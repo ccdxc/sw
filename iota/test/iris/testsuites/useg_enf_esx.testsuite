@@ -93,6 +93,7 @@ testbundles:
 
     regression:
         - networking/connectivity.testbundle
+        - networking/lif_telemetry_regression.testbundle
         - firewall/policy_scale.testbundle
         - alg/alg_regression.testbundle
         #- ipsec/ipsec.testbundle

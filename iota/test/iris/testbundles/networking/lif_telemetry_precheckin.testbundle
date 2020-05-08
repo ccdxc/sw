@@ -22,7 +22,7 @@ testcases:
             session   : [single, multiple]
             vlan      : [native, tag]
             iftype    : [uplink]
-            direction : [ingress, egress, both]
+            direction : [both]
             ccount    : [1, 2]
             collection: [unified]
             erspan    : [mixed]
