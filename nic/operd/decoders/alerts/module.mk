@@ -3,7 +3,7 @@
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = libalerts_operd_dec.lib
 MODULE_PIPELINE = apulu
-MODULE_SOLIBS   = pdsproto operd_alerts
+MODULE_SOLIBS   = pdsproto operd_alerts operd_alert_defs
 MODULE_LDLIBS   = ${NIC_THIRDPARTY_GOOGLE_LDLIBS} rt pthread
 MODULE_ARLIBS   =
 MODULE_INCS     = /usr/local/include \

@@ -15,6 +15,7 @@
 #include "binary.hpp"
 #include "output.hpp"
 #include "rotated_file.hpp"
+#include "operd_impl.hpp"
 
 namespace pt = boost::property_tree;
 
@@ -389,6 +390,9 @@ main (int argc, const char *argv[])
         decoders = load_decoders(argv[2]);
     }
     
+    impl_svc_init();
+    fprintf(stdout, "operd spinning forever\n");
+
     while (true) {
         bool more = false;
         for (auto pair: inputs) {

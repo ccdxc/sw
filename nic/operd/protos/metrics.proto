@@ -1,0 +1,55 @@
+//
+// {C} Copyright 2020 Pensando Systems Inc. All rights reserved
+//
+//------------------------------------------------------------------------------
+///
+/// \file
+/// protobuf specification for metrics
+///
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+package operd;
+
+import "gogo.proto";
+import "meta/meta.proto";
+import "types.proto";
+
+service MetricsSvc {
+  // Metrics exposes the metric counters kept by components
+  rpc MetricsGet(stream MetricsGetRequest) returns (stream MetricsGetResponse) {}
+}
+
+message MetricsGetRequest {
+  // Name identifies the name of the statistics table
+  // NOTE: supported names are "Port", "MgmtPort", "HostIf"
+  string Name = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  // Key identifies particular instance of the statistics table (e.g. uuid)
+  // NOTE: if key is not passed, counters associated with all instances of
+  //       given table name are are returned
+  bytes  Key  = 2;
+}
+
+// CounterStatus defines each individual counter that consists of
+// name and value
+message CounterStatus {
+  // (user visible) name of the metric
+  string Name  = 1;
+  // value of the counter
+  uint64 Value = 2;
+}
+
+// CountersStatus defines generic metrics object that can be used for any set
+// of counters per object (e.g., port counters, lif/pf counters, vpp counters,
+// s/w counters etc.)
+message CountersStatus {
+  // collection of metrics
+  repeated CounterStatus Counters = 1;
+}
+
+message MetricsGetResponse {
+  // ApiStatus indicates the success/failure status of the get operation
+  types.ApiStatus         ApiStatus = 1;
+  // batched response containing potentially mutiple counter objects
+  repeated CountersStatus Response  = 2;
+}

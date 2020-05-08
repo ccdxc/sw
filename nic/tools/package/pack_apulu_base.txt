@@ -110,6 +110,8 @@ nic/build/$ARCH/$PIPELINE/lib/libsdkring.so                       /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libdpdk_device.so                   /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpdslearn.so                      /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/liboperd.so                         /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/liboperdproto.so                    /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/liboperdsvc.so                      /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libvpp_operd_dec.so                 /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libalerts_operd_dec.so              /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpenmetrics.so                    /nic/lib/
