@@ -159,8 +159,8 @@ ionic_en_priv_stats_get(vmk_AddrCookie driver_data,
                 stat_buf += vmk_Sprintf((char *) stat_buf,
                                         "\n    %s[%d]: packets=%lu, bytes=%lu,"
                                         " tso=%lu, csum=%lu, no_csum=%lu,"
-                                        " linearize=%lu, frags=%lu, wake=%lu,"
-                                        " stop=%lu, clean=%lu, busy=%lu, encap=%lu",
+                                        " linearize=%lu, frags=%lu, w/s/c/b=%lu/%lu/%lu/%lu,"
+                                        " encap=%lu",
                                         "tx_queue", i, tx_stats->pkts,
                                         tx_stats->bytes, tx_stats->tso,
                                         tx_stats->csum, tx_stats->no_csum,
@@ -170,7 +170,7 @@ ionic_en_priv_stats_get(vmk_AddrCookie driver_data,
         }
 
         stat_buf += vmk_Sprintf((char *) stat_buf,
-                                "\n Number of RSS queues=%d, "
+                                "\n Num of RSS-Q=%d, "
                                 "ntxq_descs=%d, nrxq_descs=%d, "
                                 "log_level=%d, vlan_tx_insert=%d, "
                                 "vlan_rx_strip=%d, geneve_offload=%d",
