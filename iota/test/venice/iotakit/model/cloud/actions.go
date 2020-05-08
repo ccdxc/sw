@@ -522,6 +522,23 @@ func (sm *SysModel) StartEventsGenOnNaples(npc *objects.NaplesCollection, rate, 
 	return nil
 }
 
+// VerifyPortFlapEvents verifies that there are at least 1 link down/up events since given time.
+func (sm *SysModel) VerifyPortFlapEvents(since time.Time, npc *objects.NaplesCollection) error {
+	ec := sm.LinkDownEventsSince(since, npc)
+	if !ec.LenGreaterThanEqualTo(1) {
+		log.Errorf("got less than 1 link down event")
+		return fmt.Errorf("got less than 1 link down event")
+	}
+
+	ec = sm.LinkUpEventsSince(since, npc)
+	if !ec.LenGreaterThanEqualTo(1) {
+		log.Errorf("got less than 1 link up event")
+		return fmt.Errorf("got less than 1 link up event")
+	}
+
+	return nil
+}
+
 // SystemBootEvents returns all SYSTEM_COLDBOOT events.
 func (sm *SysModel) SystemBootEvents(npc *objects.NaplesCollection) *objects.EventsCollection {
 	fieldSelector := fmt.Sprintf("type=%s,object-ref.kind=DistributedServiceCard", eventtypes.SYSTEM_COLDBOOT.String())

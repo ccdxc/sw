@@ -156,6 +156,7 @@ type NaplesActionIntf interface {
 	StartFWLogGenOnNaples(naples *objects.NaplesCollection, rate, count string) error
 	StopFWLogGenOnNaples(naples *objects.NaplesCollection) error
 	PortFlap(npc *objects.NaplesCollection) error
+	VerifyPortFlapEvents(since time.Time, npc *objects.NaplesCollection) error
 	VerifyFwlogErrors() error
 }
 

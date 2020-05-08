@@ -85,3 +85,7 @@ func (sm *SysModel) LinkDownEventsSince(since time.Time, npc *objects.NaplesColl
 
 	return &objects.EventsCollection{List: eventsList}
 }
+
+func (sm *SysModel) VerifyPortFlapEvents(since time.Time, npc *objects.NaplesCollection) error {
+	return nil
+}
