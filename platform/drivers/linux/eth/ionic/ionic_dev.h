@@ -185,16 +185,17 @@ struct ionic_desc_info {
 #define IONIC_QUEUE_NAME_MAX_SZ		32
 
 struct ionic_queue {
-	u64 dbell_count;
-	u64 drop;
-	u64 stop;
-	u64 wake;
 	struct ionic_lif *lif;
 	struct ionic_desc_info *info;
 	struct ionic_desc_info *tail;
 	struct ionic_desc_info *head;
-	struct ionic_dev *idev;
 	unsigned int index;
+	unsigned int num_descs;
+	u64 dbell_count;
+	u64 stop;
+	u64 wake;
+	u64 drop;
+	struct ionic_dev *idev;
 	unsigned int type;
 	unsigned int hw_index;
 	unsigned int hw_type;
@@ -203,7 +204,6 @@ struct ionic_queue {
 	void *sg_base;
 	dma_addr_t base_pa;
 	dma_addr_t sg_base_pa;
-	unsigned int num_descs;
 	unsigned int desc_size;
 	unsigned int sg_desc_size;
 	unsigned int pid;
@@ -223,8 +223,6 @@ struct ionic_intr_info {
 };
 
 struct ionic_cq {
-	void *base;
-	dma_addr_t base_pa;
 	struct ionic_lif *lif;
 	struct ionic_cq_info *info;
 	struct ionic_cq_info *tail;
@@ -232,8 +230,10 @@ struct ionic_cq {
 	struct ionic_intr_info *bound_intr;
 	bool done_color;
 	unsigned int num_descs;
-	u64 compl_count;
 	unsigned int desc_size;
+	u64 compl_count;
+	void *base;
+	dma_addr_t base_pa;
 };
 
 struct ionic_eq_ring {
