@@ -399,19 +399,20 @@ func bgpNlriShowCmdHandler(cmd *cobra.Command, _afisafi string, args []string) e
 	var network string
 	for _, p := range respMsg.Response {
 		nlri := utils.NewBGPNLRIPrefixStatus(p.Status)
+
+		//Print AFI/SAFI info
+		afi = strings.TrimPrefix(nlri.Afi.String(), "BGP_AFI_")
+		safi = strings.TrimPrefix(nlri.Safi.String(), "BGP_SAFI_")
+
+		//Lets check if its right afi/safi
+		afisafi := strings.ToLower(afi) + "-" + strings.ToLower(safi)
+		if strings.Compare(_afisafi, afisafi) != 0 {
+			continue
+		}
+
 		nlris = append(nlris, nlri)
+
 		if !doJSON {
-
-			//Print AFI/SAFI info
-			afi = strings.TrimPrefix(nlri.Afi.String(), "BGP_AFI_")
-			safi = strings.TrimPrefix(nlri.Safi.String(), "BGP_SAFI_")
-
-			//Lets check if its right afi/safi
-			afisafi := strings.ToLower(afi) + "-" + strings.ToLower(safi)
-			if strings.Compare(_afisafi, afisafi) != 0 {
-				continue
-			}
-
 			var plen string
 			plen = fmt.Sprint(nlri.PrefixLen)
 			if network != nlri.Prefix.String()+"/"+plen {
