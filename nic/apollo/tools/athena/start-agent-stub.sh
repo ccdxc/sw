@@ -1,10 +1,7 @@
 #!/bin/sh
 
-ATHENA_APP_EN_FILE=/data/athena_app_en
+# start memtun
+[ ! -f $SYSCONFIG/memtun_enable ] && (taskset 1 $PDSPKG_TOPDIR/bin/memtun &)
 
-if [ -f $ATHENA_APP_EN_FILE ]; then
-    echo "Execing Athena App"
-    exec taskset 1 /nic/tools/start-agent-skip-dpdk.sh
-else
-    echo "Skipping Execing of Athena App"
-fi
+echo "Execing Athena App"
+exec taskset 1 /nic/tools/start-agent-skip-dpdk.sh
