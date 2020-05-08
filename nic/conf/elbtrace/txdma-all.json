@@ -1,0 +1,23 @@
+{
+  "instances": [
+    {
+      "pipeline": "txdma",
+      "stage": ".*",
+      "mpu": ".*",
+      "control": {
+        "trace": true,
+        "phv-debug": true,
+        "phv-error": true
+      },
+      "capture": {
+        "key-data": true,
+        "instructions": true
+      },
+      "settings": {
+        "trace-size": "8192",
+        "wrap": true
+      },
+      "description": "this enables tracing for all mpus in all stages in txdma pipeline"
+    }
+  ]
+}

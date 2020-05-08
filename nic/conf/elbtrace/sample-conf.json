@@ -1,0 +1,101 @@
+{
+  "instances": [
+    {
+      "pipeline": "txdma",
+      "stage": "1",
+      "mpu": "1",
+      "control": {
+        "trace": false,
+        "phv-debug": false,
+        "phv-error": false
+      "watch_pc": {
+        "trace": false,
+        "count": false,
+        "intr": false,
+        "stop": false,
+        "exception": false
+        "addr_lo": "<pgm_lbl_name>"
+        "addr_hi": "<pgm_lbl_name>"
+      },
+      "watch_data": {
+        "rtrace": false,
+        "wtrace": false,
+        "rintr": false,
+        "wintr": false,
+        "rstop": false,
+        "wstop": false
+        "rexception": false
+        "wexception": false
+        "addr_lo": "0x<addr>"
+        "addr_hi": "0x<addr>"
+      },
+      },
+      "capture": {
+        "key-data": true,
+        "instructions": true
+      },
+      "settings": {
+        "trace-size": "8192",
+        "wrap": true
+      },
+      "description": "this enables for txdma pipeline, stage 1 and mpu 1 with the specified options"
+    },
+    {
+      "pipeline": "rxdma",
+      "stage": "1",
+      "mpu": "1",
+      "control": {
+        "trace": false,
+        "phv-debug": false,
+        "phv-error": false
+      },
+      "capture": {
+        "key-data": true,
+        "instructions": true
+      },
+      "settings": {
+        "trace-size": "8192",
+        "wrap": true
+      },
+      "description": "this enables for rxdma pipeline, stage 1 and mpu 1 with the specified options"
+    },
+    {
+      "pipeline": "p4ig",
+      "stage": ".",
+      "mpu": ".",
+      "control": {
+        "trace": false,
+        "phv-debug": false,
+        "phv-error": false
+      },
+      "capture": {
+        "key-data": true,
+        "instructions": true
+      },
+      "settings": {
+        "trace-size": "1024",
+        "wrap": true
+      },
+      "description": "this enables for p4 ingress pipeline, all mpus in all stages with the specified options"
+    },
+    {
+      "pipeline": "p4eg",
+      "stage": "2",
+      "mpu": "2",
+      "control": {
+        "trace": false,
+        "phv-debug": false,
+        "phv-error": false
+      },
+      "capture": {
+        "key-data": true,
+        "instructions": true
+      },
+      "settings": {
+        "trace-size": "1024",
+        "wrap": true
+      },
+      "description": "this tries to overwrite p4 ingress pipeline, stage 2 mpu 2 with the specified options. The current behaviour is to ignore this config."
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "instances": [
+    {
+      "pipeline": "p4eg",
+      "stage": ".*",
+      "mpu": ".*",
+      "control": {
+        "trace": false,
+        "phv-debug": false,
+        "phv-error": false
+      },
+      "capture": {
+        "key-data": true,
+        "instructions": true
+      },
+      "settings": {
+        "trace-size": "8192",
+        "wrap": true
+      },
+      "description": "this enables tracing for all mpus in all stages in p4 egress pipeline"
+    }
+  ]
+}

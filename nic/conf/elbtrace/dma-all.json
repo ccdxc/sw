@@ -1,0 +1,23 @@
+{
+  "instances": [
+    {
+      "pipeline": ".*dma",
+      "stage": ".*",
+      "mpu": ".*",
+      "control": {
+        "trace": false,
+        "phv-debug": false,
+        "phv-error": false
+      },
+      "capture": {
+        "key-data": true,
+        "instructions": true
+      },
+      "settings": {
+        "trace-size": "4096",
+        "wrap": true
+      },
+      "description": "this enables for all mpus in all stages in txdma and rxdma pipelines"
+    }
+  ]
+}

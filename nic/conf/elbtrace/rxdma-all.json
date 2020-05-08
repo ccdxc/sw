@@ -1,0 +1,44 @@
+{
+  "instances": [
+    {
+      "pipeline": "rxdma",
+      "stage": ".*",
+      "mpu": ".*",
+      "control": {
+        "trace": false,
+        "phv-debug": false,
+        "phv-error": false,
+      "watch_pc": {
+        "trace": false,
+        "count": false,
+        "intr": false,
+        "stop": false,
+        "exception": false,
+        "addr_lo": "adminq_commit.bin",
+        "addr_hi": "adminq_commit.bin"
+      },
+      "watch_data": {
+        "rtrace": false,
+        "wtrace": false,
+        "rintr": false,
+        "wintr": false,
+        "rstop": false,
+        "wstop": false,
+        "rexception": false,
+        "wexception": false,
+        "addr_lo": "0x0",
+        "addr_hi": "0x40"
+      }
+      },
+      "capture": {
+        "key-data": true,
+        "instructions": true
+      },
+      "settings": {
+        "trace-size": "8192",
+        "wrap": true
+      },
+      "description": "this enables tracing for all mpus in all stages in rxdma pipeline"
+    }
+  ]
+}
