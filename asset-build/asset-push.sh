@@ -98,6 +98,9 @@ mv bin/venice-install/initrd0.img /sw/output/psm-install
 mv bin/venice-install/squashfs.img /sw/output/psm-install
 mv tools/docker-files/vinstall/PEN-VERSION /sw/output/psm-install
 
+mkdir -p /sw/output/psm-swagger-files
+cp api/generated/*/swagger/external/svc_*.swagger.json /sw/output/psm-swagger-files
+
 cd /sw/output
 find . -type f -print0 | while IFS= read -r -d $'\0' file;
   do asset-push builds hourly $RELEASE "$file" ;
