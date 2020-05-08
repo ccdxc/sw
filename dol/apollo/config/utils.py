@@ -896,6 +896,8 @@ def IsVnicPolicySupported():
 def IsTagSupported():
     if IsPipelineArtemis():
         return True
+    if IsPipelineApulu():
+        return True
     return False
 
 def IsMeteringSupported():

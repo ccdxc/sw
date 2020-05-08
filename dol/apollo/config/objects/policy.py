@@ -18,6 +18,8 @@ import apollo.config.agent.api as api
 from apollo.config.resmgr import client as ResmgrClient
 from apollo.config.resmgr import Resmgr
 from apollo.config.objects.security_profile import client as SecurityProfileClient
+from apollo.config.objects.lmapping import client as LmappingClient
+from apollo.config.objects.rmapping import client as RmappingClient
 
 import apollo.config.objects.base as base
 import apollo.config.objects.lmapping as lmapping
@@ -156,8 +158,13 @@ class L3MatchObject:
                         %(self.SrcIPLow, self.SrcIPHigh))
             logger.info("    DstIPLow:%s DstIPHigh:%s"\
                         %(self.DstIPLow, self.DstIPHigh))
-            logger.info("    SrcTag:%s DstTag:%s"\
-                        %(__get_tag_id(self.SrcTag), __get_tag_id(self.DstTag)))
+            if utils.IsPipelineArtemis():
+                logger.info("    SrcTag:%s DstTag:%s"\
+                            %(__get_tag_id(self.SrcTag), \
+                            __get_tag_id(self.DstTag)))
+            elif utils.IsPipelineApulu():
+                logger.info("    SrcTag:%s DstTag:%s" \
+                            %(self.SrcTag, self.DstTag))
         else:
             logger.info("    No L3Match")
 
@@ -173,7 +180,10 @@ class L3MatchObject:
             return False if spec.SrcPrefix != srcprefix else True
 
         def __validate_src_tag(l3match, spec):
-            return False if spec.SrcTag != l3match.SrcTag.TagId else True
+            if utils.IsPipelineArtemis():
+                return False if spec.SrcTag != l3match.SrcTag.TagId else True
+            elif utils.IsPipelineApulu():
+                return False if spec.SrcTag != l3match.SrcTag else True
 
         def __validate_dst_range(l3match, spec):
             dstrange = types_pb2.AddressRange()
@@ -186,7 +196,10 @@ class L3MatchObject:
             return False if spec.DstPrefix != dstprefix else True
 
         def __validate_dst_tag(l3match, spec):
-            return False if spec.DstTag != l3match.DstTag.TagId else True
+            if utils.IsPipelineArtemis():
+                return False if spec.DstTag != l3match.DstTag.TagId else True
+            elif utils.IsPipelineApulu():
+                return False if spec.DstTag != l3match.DstTag else True
 
         def __validate_proto_num(l3match, spec):
             return False if spec.ProtoNum != self.Proto else True
@@ -330,12 +343,13 @@ class RuleObject:
 
 class PolicyObject(base.ConfigObjectBase):
     def __init__(self, node, vpcid, af, direction, rules, policytype, overlaptype, level='subnet',
-                 defaultfwaction='allow'):
+                 defaultfwaction='allow', fwdmode=None):
 
         super().__init__(api.ObjectTypes.POLICY, node)
         ################# PUBLIC ATTRIBUTES OF POLICY OBJECT #####################
         self.VPCId = vpcid
         self.Direction = direction
+        self.FwdMode = fwdmode
         if af == utils.IP_VERSION_6:
             self.PolicyId = next(ResmgrClient[node].V6SecurityPolicyIdAllocator)
             self.AddrFamily = 'IPV6'
@@ -444,9 +458,15 @@ class PolicyObject(base.ConfigObjectBase):
             if l3match.DstIPLow and l3match.DstIPHigh:
                 utils.GetRpcIPRange(l3match.DstIPLow, l3match.DstIPHigh, specrule.Attrs.Match.L3Match.DstRange)
             if l3match.SrcTag:
-                specrule.Attrs.Match.L3Match.SrcTag = l3match.SrcTag.TagId
+                if utils.IsPipelineArtemis():
+                    specrule.Attrs.Match.L3Match.SrcTag = l3match.SrcTag.TagId
+                elif utils.IsPipelineApulu():
+                    specrule.Attrs.Match.L3Match.SrcTag = l3match.SrcTag
             if l3match.DstTag:
-                specrule.Attrs.Match.L3Match.DstTag = l3match.DstTag.TagId
+                if utils.IsPipelineArtemis():
+                    specrule.Attrs.Match.L3Match.DstTag = l3match.DstTag.TagId
+                elif utils.IsPipelineApulu():
+                    specrule.Attrs.Match.L3Match.DstTag = l3match.DstTag
             if l3match.SrcPrefix is not None:
                 utils.GetRpcIPPrefix(l3match.SrcPrefix, specrule.Attrs.Match.L3Match.SrcPrefix)
             if l3match.DstPrefix is not None:
@@ -566,6 +586,8 @@ class PolicyObject(base.ConfigObjectBase):
         obj.localmapping = self.l_obj
         obj.remotemapping = None
         obj.policy = self
+        obj.root = self
+        obj.root.FwdMode = self.FwdMode
         obj.route = self.l_obj.VNIC.SUBNET.V6RouteTable if self.AddrFamily == 'IPV6' else self.l_obj.VNIC.SUBNET.V4RouteTable
         obj.tunnel = obj.route.TUNNEL
         obj.hostport = EzAccessStoreClient[self.Node].GetHostPort()
@@ -579,6 +601,12 @@ class PolicyObject(base.ConfigObjectBase):
             obj.tc_rule = self.__get_non_default_random_rule()
         else:
             obj.tc_rule = self.__get_random_rule()
+        #set tag dbs for apulu pipeline
+        if utils.IsPipelineApulu():
+            obj.v4ltags = LmappingClient.GetLmappingV4Tags(self.Node)
+            obj.v6ltags = LmappingClient.GetLmappingV6Tags(self.Node)
+            obj.v4rtags = RmappingClient.GetRmappingV4Tags(self.Node)
+            obj.v6rtags = RmappingClient.GetRmappingV6Tags(self.Node)
         utils.DumpTestcaseConfig(obj)
         return
 
@@ -659,7 +687,10 @@ class PolicyObjectClient(base.ConfigClientBase):
             elif matchtype == topo.L3MatchType.PFXRANGE:
                 return utils.isDefaultAddrRange(iplow, iphigh)
             elif matchtype == topo.L3MatchType.TAG:
-                return utils.isTagWithDefaultRoute(tag)
+                if utils.IsPipelineArtemis():
+                    return utils.isTagWithDefaultRoute(tag)
+                else:
+                    return True
             return False
 
         def __get_l3_attr(l3matchtype, newpfx, newtag):
@@ -697,7 +728,8 @@ class PolicyObjectClient(base.ConfigClientBase):
         subnetpfx = subnetobj.IPPrefix[1] if af == utils.IP_VERSION_4 else subnetobj.IPPrefix[0]
         subnettag = None
         if utils.IsTagSupported():
-            subnettag = tag.client.GetCreateTag(policy.VPCId, af, subnetpfx)
+            if utils.IsPipelineArtemis():
+                subnettag = tag.client.GetCreateTag(policy.VPCId, af, subnetpfx)
         for rule in policy.rules:
             __modify_l3_match(direction, rule.L3Match, subnetpfx, subnettag)
         return
@@ -723,9 +755,9 @@ class PolicyObjectClient(base.ConfigClientBase):
         return self.__v6epolicyiter[node][vpcid].rrnext().PolicyId
 
     def Add_V4Policy(self, node, vpcid, direction, v4rules, policytype, overlaptype, level='subnet',
-                     defaultfwaction='allow'):
+                     defaultfwaction='allow', fwdmode=None):
         obj = PolicyObject(node, vpcid, utils.IP_VERSION_4, direction, v4rules, policytype, overlaptype, level,
-                           defaultfwaction)
+                           defaultfwaction, fwdmode)
         if direction == 'ingress':
             self.__v4ingressobjs[node][vpcid].append(obj)
         else:
@@ -734,9 +766,9 @@ class PolicyObjectClient(base.ConfigClientBase):
         return obj.PolicyId
 
     def Add_V6Policy(self, node, vpcid, direction, v6rules, policytype, overlaptype, level='subnet',
-                     defaultfwaction='allow'):
+                     defaultfwaction='allow', fwdmode=None):
         obj = PolicyObject(node, vpcid, utils.IP_VERSION_6, direction, v6rules, policytype, overlaptype, level,
-                           defaultfwaction)
+                           defaultfwaction, fwdmode)
         if direction == 'ingress':
             self.__v6ingressobjs[node][vpcid].append(obj)
         else:
@@ -965,12 +997,16 @@ class PolicyObjectClient(base.ConfigClientBase):
                 # no need to create tag if none of src,dst is of tag type
                 return srctag, dsttag
             #get pfx from rule and configure tag on the fly to tagtable of af in this vpc
-            pfx = __get_pfx_from_rule(af, rulespec, 'pfx')
-            tagObj = tag.client.GetCreateTag(vpcid, af, pfx)
-            if srctype == topo.L3MatchType.TAG:
-                srctag = tagObj
-            if dsttype == topo.L3MatchType.TAG:
-                dsttag = tagObj
+            if utils.IsPipelineArtemis():
+                pfx = __get_pfx_from_rule(af, rulespec, 'pfx')
+                tagObj = tag.client.GetCreateTag(vpcid, af, pfx)
+                if srctype == topo.L3MatchType.TAG:
+                    srctag = tagObj
+                if dsttype == topo.L3MatchType.TAG:
+                    dsttag = tagObj
+            elif utils.IsPipelineApulu():
+                srctag = getattr(rulespec, 'srctag', None)
+                dsttag = getattr(rulespec, 'dsttag', None)
             return srctag, dsttag
 
         def __get_l3_rule(af, rulespec):
@@ -1003,6 +1039,13 @@ class PolicyObjectClient(base.ConfigClientBase):
             if not utils.IsTagSupported():
                 srctype = __convert_tag2pfx(srctype)
                 dsttype = __convert_tag2pfx(dsttype)
+            else:
+                srctag = getattr(rulespec, 'srctag', None)
+                dsttag = getattr(rulespec, 'dsttag', None)
+                if srctag == None:
+                    srctype = __convert_tag2pfx(srctype)
+                if dsttag == None:
+                    dsttype = __convert_tag2pfx(dsttype)
             if (not __is_l3_matchtype_supported(srctype)) or (not __is_l3_matchtype_supported(dsttype)):
                 logger.error("Unsupported l3match type ", srctype, dsttype)
                 return None
@@ -1141,25 +1184,25 @@ class PolicyObjectClient(base.ConfigClientBase):
                     rules.append(rule)
             return rules
 
-        def __add_v4policy(direction, v4rules, policytype, overlaptype, defaultfwaction):
+        def __add_v4policy(direction, v4rules, policytype, overlaptype, defaultfwaction, fwdmode=None):
             obj = PolicyObject(node, vpcid, utils.IP_VERSION_4, direction, v4rules, policytype, overlaptype,
-                               defaultfwaction=defaultfwaction)
+                               defaultfwaction=defaultfwaction, fwdmode=fwdmode)
             if direction == 'ingress':
                 self.__v4ingressobjs[node][vpcid].append(obj)
             else:
                 self.__v4egressobjs[node][vpcid].append(obj)
             self.Objs[node].update({obj.PolicyId: obj})
 
-        def __add_v6policy(direction, v6rules, policytype, overlaptype, defaultfwaction):
+        def __add_v6policy(direction, v6rules, policytype, overlaptype, defaultfwaction, fwdmode=None):
             obj = PolicyObject(node, vpcid, utils.IP_VERSION_6, direction, v6rules, policytype, overlaptype,
-                               defaultfwaction=defaultfwaction)
+                               defaultfwaction=defaultfwaction, fwdmode=fwdmode)
             if direction == 'ingress':
                 self.__v6ingressobjs[node][vpcid].append(obj)
             else:
                 self.__v6egressobjs[node][vpcid].append(obj)
             self.Objs[node].update({obj.PolicyId: obj})
 
-        def __add_user_specified_policy(policyspec, policytype, overlaptype, defaultfwaction):
+        def __add_user_specified_policy(policyspec, policytype, overlaptype, defaultfwaction, fwdmode=None):
             direction = policyspec.direction
             if isV4Stack:
                 v4rules = __get_rules(utils.IP_VERSION_4, policyspec, overlaptype)
@@ -1167,10 +1210,10 @@ class PolicyObjectClient(base.ConfigClientBase):
                     return
                 if direction == 'bidir':
                     #For bidirectional, add policy in both directions
-                    policyobj = __add_v4policy('ingress', v4rules, policytype, overlaptype, defaultfwaction)
-                    policyobj = __add_v4policy('egress', v4rules, policytype, overlaptype, defaultfwaction)
+                    policyobj = __add_v4policy('ingress', v4rules, policytype, overlaptype, defaultfwaction, fwdmode)
+                    policyobj = __add_v4policy('egress', v4rules, policytype, overlaptype, defaultfwaction, fwdmode)
                 else:
-                    policyobj = __add_v4policy(direction, v4rules, policytype, overlaptype, defaultfwaction)
+                    policyobj = __add_v4policy(direction, v4rules, policytype, overlaptype, defaultfwaction, fwdmode)
 
             if isV6Stack:
                 v6rules = __get_rules(utils.IP_VERSION_6, policyspec, overlaptype)
@@ -1178,10 +1221,10 @@ class PolicyObjectClient(base.ConfigClientBase):
                     return
                 if direction == 'bidir':
                     #For bidirectional, add policy in both directions
-                    policyobj = __add_v6policy('ingress', v6rules, policytype, overlaptype, defaultfwaction)
-                    policyobj = __add_v6policy('egress', v6rules, policytype, overlaptype, defaultfwaction)
+                    policyobj = __add_v6policy('ingress', v6rules, policytype, overlaptype, defaultfwaction, fwdmode)
+                    policyobj = __add_v6policy('egress', v6rules, policytype, overlaptype, defaultfwaction, fwdmode)
                 else:
-                    policyobj = __add_v6policy(direction, v6rules, policytype, overlaptype, defaultfwaction)
+                    policyobj = __add_v6policy(direction, v6rules, policytype, overlaptype, defaultfwaction, fwdmode)
 
         def __get_num_subnets(vpc_spec_obj):
             count = 0
@@ -1190,29 +1233,30 @@ class PolicyObjectClient(base.ConfigClientBase):
                     count += subnet_obj.count
             return count
 
-        def __add_default_policies(vpc_spec_obj, policyspec, defaultfwaction):
+        def __add_default_policies(vpc_spec_obj, policyspec, defaultfwaction, fwdmode=None):
             policycount = getattr(policyspec, 'count', 0)
             if policycount == 0:
                 # use number of subnets instead
                 policycount = __get_num_subnets(vpc_spec_obj)
             for i in range(policycount):
-                __add_user_specified_policy(policyspec, policyspec.policytype, None, defaultfwaction)
+                __add_user_specified_policy(policyspec, policyspec.policytype, None, defaultfwaction, fwdmode)
 
         for policy_spec_obj in vpc_spec_obj.policy:
             policy_spec_type = policy_spec_obj.type
             policytype = policy_spec_obj.policytype
             defaultfwaction = getattr(policy_spec_obj, 'defaultfwaction', "allow")
+            fwdmode = getattr(policy_spec_obj, 'fwdmode', None)
             if policy_spec_type == "specific":
                 if policytype == 'default' or policytype == 'subnet':
-                    __add_default_policies(vpc_spec_obj, policy_spec_obj, defaultfwaction)
+                    __add_default_policies(vpc_spec_obj, policy_spec_obj, defaultfwaction, fwdmode)
                 else:
                     overlaptype = getattr(policy_spec_obj, 'overlaptype', None)
                     __add_user_specified_policy(policy_spec_obj, \
-                                                policytype, overlaptype, defaultfwaction)
+                                                policytype, overlaptype, defaultfwaction, fwdmode)
             elif policy_spec_type == "base":
                 overlaptype = getattr(policy_spec_obj, 'overlaptype', 'none')
                 __add_user_specified_policy(policy_spec_obj, policytype, overlaptype,
-                                            defaultfwaction)
+                                            defaultfwaction, fwdmode)
 
         if len(self.__v4ingressobjs[node][vpcid]) != 0:
             self.__v4ipolicyiter[node][vpcid] = utils.rrobiniter(self.__v4ingressobjs[node][vpcid])

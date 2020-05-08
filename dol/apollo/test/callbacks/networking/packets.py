@@ -148,7 +148,7 @@ def __get_usable_pfx_from_rule_impl(matchtype, ippfx=None, ipaddrLow=None, ipadd
         return __get_usable_pfx_from_tag(tag, pfxpos)
     return None
 
-def __get_usable_host_from_rule(rule, policy, pfxpos):
+def __get_usable_host_from_rule(rule, policy, pfxpos, testcase):
     af = policy.AddrFamily
     if rule is None:
         return __get_host_from_pfx(None, af, pfxpos)
@@ -157,16 +157,36 @@ def __get_usable_host_from_rule(rule, policy, pfxpos):
     if not l3match.valid:
         pfx = None
     elif direction == types_pb2.RULE_DIR_INGRESS:
-        pfx = __get_usable_pfx_from_rule_impl(l3match.SrcType, l3match.SrcPrefix, l3match.SrcIPLow, l3match.SrcIPHigh, l3match.SrcTag, pfxpos)
+        if utils.IsPipelineApulu() and (l3match.SrcType == topo.L3MatchType.TAG):
+            if af == "IPV4":
+                obj = random.choice(config.v4rtags[l3match.SrcTag])
+                testcase.config.remotemapping = obj
+                return obj.IP
+            else:
+                obj = random.choice(config.v6rtags[l3match.SrcTag])
+                testcase.config.remotemapping = obj
+                return obj.IP
+        else:
+            pfx = __get_usable_pfx_from_rule_impl(l3match.SrcType, l3match.SrcPrefix, l3match.SrcIPLow, l3match.SrcIPHigh, l3match.SrcTag, pfxpos)
     else:
-        pfx = __get_usable_pfx_from_rule_impl(l3match.DstType, l3match.DstPrefix, l3match.DstIPLow, l3match.DstIPHigh, l3match.DstTag, pfxpos)
+        if utils.IsPipelineApulu() and (l3match.DstType == topo.L3MatchType.TAG):
+            if af == "IPV4":
+                obj = random.choice(testcase.config.v4rtags[l3match.DstTag])
+                testcase.config.remotemapping = obj
+                return obj.IP
+            else:
+                obj = random.choice(testcase.config.v6rtags[l3match.DstTag])
+                testcase.config.remotemapping = obj
+                return obj.IP
+        else:
+            pfx = __get_usable_pfx_from_rule_impl(l3match.DstType, l3match.DstPrefix, l3match.DstIPLow, l3match.DstIPHigh, l3match.DstTag, pfxpos)
     return __get_host_from_pfx(pfx, af, pfxpos)
 
 def GetUsableHostFromPolicy(testcase, packet, args=None):
     policy = testcase.config.policy
     rule = testcase.config.tc_rule
     pfxpos = __get_pfx_position_selector(testcase.module.args)
-    return __get_usable_host_from_rule(rule, policy, pfxpos)
+    return __get_usable_host_from_rule(rule, policy, pfxpos, testcase)
 
 def __get_non_default_random_route(routeTable):
     routes = list(routeTable.routes.values())
@@ -307,10 +327,52 @@ def __is_matching_ip(matchtype, ipaddr, ippfx=None, ipaddrLow=None, ipaddrHigh=N
                 return True
     return False
 
-def __is_matching_src_ip(src_ip, l3matchobj):
+def __is_matching_src_ip(src_ip, l3matchobj, direction, testcase):
+    af = testcase.config.localmapping.AddrFamily
+    if utils.IsPipelineApulu() and (l3matchobj.SrcType == topo.L3MatchType.TAG):
+        if direction == "ingress":
+            if af == 'IPV4':
+                for obj in testcase.config.v4rtags[l3matchobj.SrcTag]:
+                    if str(src_ip) == obj.IP:
+                        return True
+            else:
+                for obj in testcase.config.v6rtags[l3matchobj.SrcTag]:
+                    if str(src_ip) == obj.IP:
+                        return True
+        else:
+            if af == 'IPV4':
+                for obj in testcase.config.v4ltags[l3matchobj.SrcTag]:
+                    if str(src_ip) == obj.IP:
+                        return True
+            else:
+                for obj in testcase.config.v6ltags[l3matchobj.SrcTag]:
+                    if str(src_ip) == obj.IP:
+                        return True
+        return False
     return __is_matching_ip(l3matchobj.SrcType, src_ip, l3matchobj.SrcPrefix, l3matchobj.SrcIPLow, l3matchobj.SrcIPHigh, l3matchobj.SrcTag)
 
-def __is_matching_dst_ip(dst_ip, l3matchobj):
+def __is_matching_dst_ip(dst_ip, l3matchobj, direction, testcase):
+    af = testcase.config.localmapping.AddrFamily
+    if utils.IsPipelineApulu() and (l3matchobj.DstType == topo.L3MatchType.TAG):
+        if direction == "ingress":
+            if af == 'IPV4':
+                for obj in testcase.config.v4ltags[l3matchobj.DstTag]:
+                    if str(dst_ip) == obj.IP:
+                        return True
+            else:
+                for obj in testcase.config.v6ltags[l3matchobj.DstTag]:
+                    if str(dst_ip) == obj.IP:
+                        return True
+        else:
+            if af == 'IPV4':
+                for obj in testcase.config.v4rtags[l3matchobj.DstTag]:
+                    if str(dst_ip) == obj.IP:
+                        return True
+            else:
+                for obj in testcase.config.v6rtags[l3matchobj.DstTag]:
+                    if str(dst_ip) == obj.IP:
+                        return True
+        return False
     return __is_matching_ip(l3matchobj.DstType, dst_ip, l3matchobj.DstPrefix, l3matchobj.DstIPLow, l3matchobj.DstIPHigh, l3matchobj.DstTag)
 
 def __is_matching_proto(proto1, proto2):
@@ -336,13 +398,13 @@ def __is_matching_icmpcode(icmpcode, l4matchobj):
     return ((icmpcode == l4matchobj.IcmpCode) or
             (l4matchobj.IcmpCode == types_pb2.MATCH_ANY))
 
-def __is_l3_match(packet_tuples, l3matchobj):
+def __is_l3_match(packet_tuples, l3matchobj, direction, testcase):
     if not l3matchobj.valid:
         return True
-    if not __is_matching_src_ip(packet_tuples[0], l3matchobj):
+    if not __is_matching_src_ip(packet_tuples[0], l3matchobj, direction, testcase):
         logger.verbose("l3match sip fail")
         return False
-    if not __is_matching_dst_ip(packet_tuples[1], l3matchobj):
+    if not __is_matching_dst_ip(packet_tuples[1], l3matchobj, direction, testcase):
         logger.verbose("l3match dip fail")
         return False
     if not __is_matching_proto(packet_tuples[2], l3matchobj.Proto):
@@ -369,8 +431,8 @@ def __is_l4_match(packet_tuples, l4matchobj):
             return False
     return True
 
-def __is_matching_rule(packet_tuples, rule):
-    if not __is_l3_match(packet_tuples, rule.L3Match):
+def __is_matching_rule(packet_tuples, rule, direction, testcase):
+    if not __is_l3_match(packet_tuples, rule.L3Match, direction, testcase):
         logger.verbose("l3match fail")
         return False
     if not __is_l4_match(packet_tuples, rule.L4Match):
@@ -442,7 +504,7 @@ def __get_final_result(tc_rule, match_rule, testcase):
         match_rule.Show()
     return final_result
 
-def __get_matching_rule(policies, pkt):
+def __get_matching_rule(policies, pkt, direction, testcase):
     packet_tuples = __get_packet_tuples(pkt)
     rules = []
     for policyid in policies:
@@ -453,7 +515,7 @@ def __get_matching_rule(policies, pkt):
     rules = sorted(rules, key=lambda x: x.Priority)
     match_rule = None
     for rule in rules:
-        if __is_matching_rule(packet_tuples, rule):
+        if __is_matching_rule(packet_tuples, rule, direction, testcase):
             # if priorities are same for multiple rules, choose the first
             match_rule = rule
             break
@@ -479,7 +541,7 @@ def GetExpectedCPSPacket(testcase, args):
     # get all security policies which needs to be applied
     policies = __get_security_policies_from_lmapping(testcase.config.localmapping, policy.Direction)
     pkt = testcase.packets.Get(args.ipkt).GetScapyPacket()
-    match_rule = __get_matching_rule(policies, pkt)
+    match_rule = __get_matching_rule(policies, pkt, policy.Direction, testcase)
     final_result = __get_final_result(tc_rule, match_rule, testcase)
     if final_result == types_pb2.SECURITY_RULE_ACTION_DENY:
         logger.info("GetExpectedCPSPacket: packet denied")

@@ -19,7 +19,9 @@ import service_pb2 as service_pb2
 import types_pb2 as types_pb2
 
 class LocalMappingObject(base.ConfigObjectBase):
-    def __init__(self, node, parent, spec, ipversion, count):
+    tagbase = 1
+    def __init__(self, node, parent, spec, ipversion, count, \
+                 tag_enabled = False):
         super().__init__(api.ObjectTypes.LMAPPING, node)
         parent.AddChild(self)
         if hasattr(spec, 'origin'):
@@ -36,6 +38,8 @@ class LocalMappingObject(base.ConfigObjectBase):
         self.GID('LocalMapping%d'%self.MappingId)
         self.UUID = utils.PdsUuid(self.MappingId, self.ObjType)
         self.VNIC = parent
+        self.TagBase = None
+        self.TagEnabled = tag_enabled
         public_ip = getattr(spec, 'publicip', None)
         if public_ip:
             self.PublicIPAddr = ipaddress.IPv4Address(public_ip)
@@ -65,6 +69,10 @@ class LocalMappingObject(base.ConfigObjectBase):
             if parent.SUBNET.V4RouteTable:
                 self.HasDefaultRoute = parent.SUBNET.V4RouteTable.HasDefaultRoute
             self.SvcIPAddr, self.SvcPort = EzAccessStoreClient[node].GetSvcMapping(utils.IP_VERSION_4)
+        # creating overlapping tags, i.e make sure some tags has more than one prefix
+        if tag_enabled == True:
+            self.TagBase = LocalMappingObject.tagbase
+            self.MaxTags = 5
         self.Label = 'NETWORKING'
         self.FlType = "MAPPING"
         self.IP = str(self.IPAddr) # for testspec
@@ -110,6 +118,9 @@ class LocalMappingObject(base.ConfigObjectBase):
         spec.Id = self.GetKey()
         spec.IPKey.VPCId = self.VNIC.SUBNET.VPC.GetKey()
         utils.GetRpcIPAddr(self.IPAddr, spec.IPKey.IPAddr)
+        if self.TagEnabled == True:
+            for i in range(self.MaxTags):
+                spec.Tags.append(self.TagBase + i)
         spec.SubnetId = self.VNIC.SUBNET.GetKey()
         spec.VnicId = self.VNIC.GetKey()
         spec.MACAddr = self.VNIC.MACAddr.getnum()
@@ -160,7 +171,15 @@ class LocalMappingObjectClient(base.ConfigClientBase):
     def __init__(self):
         super().__init__(api.ObjectTypes.LMAPPING, Resmgr.MAX_LMAPPING)
         self.__epip_objs = defaultdict(dict)
+        self.v4tags = defaultdict(dict)
+        self.v6tags = defaultdict(dict)
         return
+
+    def GetLmappingV4Tags(self, node):
+        return self.v4tags[node]
+
+    def GetLmappingV6Tags(self, node):
+        return self.v6tags[node]
 
     def GetLocalMapObjByEpIpKey(self, node, ip, vpcid):
         return self.__epip_objs[node].get((ip, vpcid), None)
@@ -236,11 +255,25 @@ class LocalMappingObjectClient(base.ConfigClientBase):
         else: #Dol case
             lmap_spec = vnic_spec_obj
             lmap_count = vnic_spec_obj.ipcount
+        tag_enabled = hasattr(vnic_spec_obj, 'tag')
         while c < lmap_count:
             if isV6Stack:
-                obj = LocalMappingObject(node, parent, lmap_spec, utils.IP_VERSION_6, v6c)
+                obj = LocalMappingObject(node, parent, lmap_spec, \
+                utils.IP_VERSION_6, v6c, tag_enabled)
                 self.Objs[node].update({obj.MappingId: obj})
                 self.__epip_objs[node].update({(obj.IP, obj.VNIC.SUBNET.VPC.UUID.GetUuid()): obj})
+                if obj.TagEnabled == True:
+                    LocalMappingObject.tagbase = LocalMappingObject.tagbase + 1
+                    for i in range(obj.MaxTags):
+                        if obj.TagBase+i in self.v6tags[node]:
+                            self.v6tags[node][obj.TagBase+i].append(obj)
+                        else:
+                            self.v6tags[node][obj.TagBase+i] = [obj]
+                for tag, objs in self.v6tags[node].items():
+                    ips  = []
+                    for obj in objs:
+                        ips.append(obj.IP)
+                    logger.info(f"ltagv6 and value {tag} {ips}")
 
                 c = c + 1
                 if c < lmap_count and hasLocalMap:
@@ -248,10 +281,22 @@ class LocalMappingObjectClient(base.ConfigClientBase):
                 else:
                     v6c = v6c + 1
             if c < lmap_count and isV4Stack:
-                obj = LocalMappingObject(node, parent, lmap_spec, utils.IP_VERSION_4, v4c)
+                obj = LocalMappingObject(node, parent, lmap_spec, \
+                utils.IP_VERSION_4, v4c, tag_enabled)
                 self.Objs[node].update({obj.MappingId: obj})
                 self.__epip_objs[node].update({(obj.IP, obj.VNIC.SUBNET.VPC.UUID.GetUuid()): obj})
-
+                if obj.TagEnabled == True:
+                    LocalMappingObject.tagbase = LocalMappingObject.tagbase + 1
+                    for i in range(obj.MaxTags):
+                        if obj.TagBase+i in self.v4tags[node]:
+                            self.v4tags[node][obj.TagBase+i].append(obj)
+                        else:
+                            self.v4tags[node][obj.TagBase+i] = [obj]
+                for tag, objs in self.v4tags[node].items():
+                    ips = []
+                    for obj in objs:
+                        ips.append(obj.IP)
+                    logger.info(f"ltagv4 and value {tag} {ips}")
                 c = c + 1
                 if c < lmap_count and hasLocalMap:
                     lmap_spec = vnic_spec_obj.lmap[c]

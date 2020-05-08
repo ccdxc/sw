@@ -1,0 +1,153 @@
+# RFC Topology Specification for tags
+meta:
+    id: TOPO_RFC_TAGS
+
+dutnode : 1
+node:
+  - id : 1
+    uplink:
+        - entry:
+            id      : uplink0
+            port    : 1
+            mode    : auto # host, switch, auto (default, depending on device mode)
+            status  : UP
+
+        - entry:
+            id      : uplink1
+            port    : 2
+            mode    : auto
+            status  : UP
+
+    hostinterface:
+        lif         : ref://store/specs/id=LIF_ETH
+
+    device:
+        mode        : auto # auto (default, based on pipeline), host, bitw
+        stack       : ipv4 # ipv4 (default), ipv6
+        bridging    : false # false (default), true
+        learning    : false # false (default), true
+        ipaddress   : None # Taken from resmgr
+        gateway     : None # Taken from resmgr
+        encap       : vxlan # vxlan or mplsodup
+        tunnel      :
+            - count : 16
+              type  : underlay
+
+    vpc:
+        # If dual stack true, VPC and Subnet will have both v4 & v6 based on the prefixlen.
+        - stack  : dual # dual, ipv4 , ipv6
+          count : 1
+          type  : underlay  # This VPC is applicable only for ARTEMIS pipeline.
+          nexthop:
+            - type : underlay
+              count : 2
+          interface:
+            - iid           : 1
+              iftype        : l3
+              ifadminstatus : UP
+              ipprefix      : '1.1.0.102\24'
+              macaddress    : macaddr/00ae.cd00.4fde
+              portid        : 1
+              encap         : none
+            - iid           : 2
+              iftype        : l3
+              ifadminstatus : UP
+              ipprefix      : '1.2.0.102\24'
+              macaddress    : macaddr/00ae.cd00.4fdd
+              portid        : 2
+              encap         : none
+        - stack  : dual
+          count : 1
+          type  : tenant
+          subnet:
+            # apulu supports max 8 lifs - so 8 subnets & 8 policies for now
+            - count            : 1        # should be same as total routetbl / policy
+              v4prefixlen      : 24
+              v6prefixlen      : 64
+              v4ingrpolicycount: 1        # default 0
+              v4egrpolicycount : 1        # default 0
+              v6ingrpolicycount: 1        # default 0
+              v6egrpolicycount : 1        # default 0
+              vnic:
+                - count   : 1             # VNICs per subnet
+                  ipcount : 10            # Local IP mapping per vnic
+                  tag     : true
+                  public  : true
+                  policy  : false         # security policy at vnic level (0 - 2)
+                  tagged  : false         # true or false (default true)
+              rmap:                       # Remote IP mappings per subnet
+                - count : 10
+                  tag     : true
+          routetbl:
+                 - type: base
+                   routetype: fulloverlap_max_with_default
+                   count : 8
+                   teptype : underlay
+                   v4base: '66.0.0.0\16'
+                   v4prefixlen: 24
+                   nv4routes   : 1023     # Max routes per route table
+                   v6base: '2002::\65'
+                   v6prefixlen: 120
+                   nv6routes   : 1023
+                   v4routes:
+                       - '0.0.0.0\0'
+                   v6routes:
+                       - '0::\0'
+          nexthop:
+                 - type : underlay
+                   count : 2
+          policy:
+                  - type : specific
+                    policytype : stateless
+                    overlaptype : adjacent   # all attr are adjacent
+                    direction  : bidir
+                    fwdmode    : L2R
+                    defaultfwaction : deny
+                    rule:
+                      - protocol: tcp
+                        priority: 'MAXPRIO'
+                        action  : allow
+                        sportlow: 10
+                        sporthigh: 20
+                        dportlow: 10
+                        dporthigh: 20
+                        srctype : tag
+                        dsttype : tag
+                        srctag  : 10
+                        dsttag  : 10
+
+                      - protocol: tcp
+                        priority: 'MAXPRIO - 1'
+                        action  : allow
+                        sportlow: 21
+                        sporthigh: 30
+                        dportlow: 21
+                        dporthigh: 30
+                        srctype : tag
+                        dsttype : tag
+                        srctag  : 3
+                        dsttag  : 3
+
+                      - protocol: tcp
+                        priority: 'MAXPRIO - 2'
+                        action  : allow
+                        sportlow: 31
+                        sporthigh: 40
+                        dportlow: 31
+                        dporthigh: 40
+                        srctype : tag
+                        dsttype : tag
+                        srctag  : 2
+                        dsttag  : 2
+
+                      - protocol: tcp
+                        priority: 'MAXPRIO - 3'
+                        action  : allow
+                        sportlow: 10
+                        sporthigh: 20
+                        dportlow: 10
+                        dporthigh: 20
+                        srctype : tag
+                        dsttype : tag
+                        srctag  : 2
+                        dsttag  : 10
