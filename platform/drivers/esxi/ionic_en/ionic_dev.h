@@ -16,7 +16,12 @@
 #include "ionic_if.h"
 
 #define IONIC_MIN_MTU           1500 
+
+#if VSPHERE_VER >= VSPHERE_VERS(2020)
+#define IONIC_MAX_MTU           9198
+#else
 #define IONIC_MAX_MTU           9000
+#endif
 
 struct ionic_dev_bar {
         void __iomem *vaddr;
