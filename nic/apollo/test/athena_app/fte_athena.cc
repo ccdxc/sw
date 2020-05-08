@@ -96,9 +96,15 @@ char const * g_eal_args[] = {"fte",
 #endif
 #define FTE_PREFETCH_NLINES 7
 
+#define JUMBO_FRAME_LEN 9194
+// Size = MTU + Ethernet header + VLAN + QinQ
+#define MAX_ETH_RX_LEN  JUMBO_FRAME_LEN + 14 + 4 + 4
+
 const static enum rte_rmt_call_master_t fte_call_master_type = SKIP_MASTER;
 static uint16_t nb_rxd = FTE_MAX_RXDSCR;
 static uint16_t nb_txd = FTE_MAX_TXDSCR;
+static uint16_t nsegs = ( MAX_ETH_RX_LEN + RTE_MBUF_DEFAULT_DATAROOM - 1) / RTE_MBUF_DEFAULT_DATAROOM;
+
 
 typedef std::vector<uint32_t> pollers_qid_vec_t;
 static pollers_qid_vec_t pollers_qid_conf[FTE_MAX_CORES];
@@ -939,7 +945,7 @@ check_port_config (void)
 // RTE_MAX is used to ensure that NB_MBUF never goes below a minimum
 // value of 8192
 #define NB_MBUF RTE_MAX(                        \
-        (nb_ports*nb_rx_queue*nb_rxd +          \
+        (nb_ports*nb_rx_queue*nb_rxd* nsegs +    \
         nb_ports*nb_lcores*MAX_PKT_BURST +      \
         nb_ports*n_tx_queue*nb_txd +            \
         nb_lcores*MEMPOOL_CACHE_SIZE),          \
@@ -1129,7 +1135,7 @@ _init_port (void)
         }
 
         local_port_conf.rxmode.mq_mode = ETH_MQ_RX_RSS;
-        local_port_conf.rxmode.max_rx_pkt_len = ETHER_MAX_LEN;
+        local_port_conf.rxmode.max_rx_pkt_len = MAX_ETH_RX_LEN;
         local_port_conf.rxmode.split_hdr_size = 0;
         local_port_conf.rxmode.offloads = DEV_RX_OFFLOAD_CHECKSUM;
 
@@ -1144,7 +1150,15 @@ _init_port (void)
                      "Cannot configure device: err=%d, port=%d\n",
                      ret, portid);
         }
+       
 
+        ret = rte_eth_dev_set_mtu(portid, JUMBO_FRAME_LEN);
+        if (ret < 0) {
+            rte_exit(EXIT_FAILURE,
+                     "Cannot configure device: err=%d, port=%d\n",
+                     ret, portid);
+        }
+ 
         ret = rte_eth_dev_adjust_nb_rx_tx_desc(portid, &nb_rxd,
                                                &nb_txd);
         if (ret < 0) {
