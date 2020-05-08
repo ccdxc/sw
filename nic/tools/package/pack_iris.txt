@@ -17,6 +17,7 @@ nic/sysmgr/src/naples_classic.json                                  /nic/conf/sy
 nic/sysmgr/src/naples_hostpin.json                                  /nic/conf/sysmgr-hostpin-default.json
 nic/sysmgr/src/naples_gold.json                                     /nic/conf/sysmgr_gold.json
 nic/conf/naples-tsa.json                                            /nic/conf/
+nic/conf/iris/sshd_boot_config                                      /nic/conf/
 nic/build/$ARCH/$PIPELINE/bin/p4asm/                                /nic/conf/iris/asm_bin/
 nic/build/$ARCH/$PIPELINE/bin/p4pasm/                               /nic/conf/iris/p4plus_bin/
 nic/build/$ARCH/$PIPELINE/pgm_bin/                                  /nic/conf/iris/pgm_bin/

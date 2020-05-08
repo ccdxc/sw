@@ -1,35 +1,40 @@
 SSHD behavior on boot up and customzation of it:
 ================================================
 
-sshd start at boot up time of Naples Distributed Services Card (DSC), and sshd configuration persistence ('sshd_config' file content) across reloads of system is controlled through sshd behavior customization file that is packaged with the Naples system image.
-
-That sshd behvaior customization file is kept as '/nic/conf/sshd_boot_config', which is processed at the boot up time of the system.
+sshd being brought up or not on Naples Distributed Services Card (DSC) boot up and the sshd configuration to be used ('sshd_config' file content) is controlled by sshd behavior customization file '/nic/conf/sshd_boot_config'. This file gets processed at the boot up time of DSC.  
 
 There are two knobs provided through this file:
-    1.    BOOT_BEHAVIOR={ON|OFF|LAST}
-    2.    PERSIST={yes}
+    1.    BOOT_BEHAVIOR={ON|OFF}
+    2.    PERSIST={ON|OFF}
 
     BOOT_BEHAVIOR
     --------------
-    Setting of ON brings up sshd on system start while the setting OFF doesn't.
-    Setting of 'LAST' means the previous run state of sshd on the system
-    should be maintained.
+    Setting of ON indicates that sshd be started on system boot up, with default
+    sshd_config file content.
 
-    Note: If this knob is omitted in the boot config file, it is treated as
-          'LAST'.
-          With 'LAST' being the setting, if the system is coming up
-          for the first time of its life, sshd will be kept down.
+    This setting solely controls start of sshd in any of the below three cases:
+    1. If the system is being booted up for the first of its life.
+    2. If 'PERSIST' setting is not turned ON.
+    3. If 'PERSIST' is turned ON but there is no prior boot up time 
+       cached sshd state on the system.
+
+    Refer to description of 'PERSIST' setting for explanation of sshd 
+    configuration cache.
 
     PERSIST
     -------
-    Setting this to 'yes' means sshd should retain its running configuration
-    ('sshd_config' file content) across reloads of the system.
-    Default setting is OFF, i.e. system comes up with default content in
-    'sshd_config' file on every reload.
+    Setting this to 'ON' means sshd should retain its running configuration
+    ('sshd_config' file content, and the state of sshd being UP or not) across
+    reloads of the system.
 
-    Enabling this setting gets system start with default configuration content,
-    when system comes up for the first time, caches it as the file
-    '/sysconfig/config0/ssh/sshd_config' and uses it across reloads.
+    Default setting is OFF.
+    
+    Enabling this setting gets sshd start with default configuration content,
+    when system comes up for the first time(assuming BOOT_BEHAVIOR is set to ON
+    as well), caches it as the file '/sysconfig/config0/ssh/sshd_config' and
+    uses it across reloads. Seperately sshd run state (i.e sshd is UP or
+    stopped) is cached as well.
+    On subsequent reloads whole of this cached sshd state is restored.
 
     With persistence enabled, any customization that system administrator
     needs to make to sshd configuration itself should be done by editing
@@ -37,4 +42,3 @@ There are two knobs provided through this file:
 
     sshd can be stopped and started or just re-started, on a running system, by:
         /etc/init.d/S50sshd {stop|start|restart}
-
