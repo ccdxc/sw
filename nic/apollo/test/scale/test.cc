@@ -1558,7 +1558,8 @@ create_security_policy (uint32_t num_vpcs, uint32_t num_subnets,
                     uint16_t dport_base = 1024;
                     for (uint32_t l = 0; l < num_sub_rules; l++) {
                         rule = &policy.rule_info->rules[idx];
-                        rule->key = test::int2pdsobjkey(rule_id++);
+                        if (l % 5 != 0)
+                            rule->key = test::int2pdsobjkey(rule_id++);
                         if (priority_step == TESTAPP_POLICY_PRIORITY_STEP) {
                             priority = idx + (priority_step - 1);
                         }

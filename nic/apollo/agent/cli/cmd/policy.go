@@ -5,6 +5,7 @@
 package cmd
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"reflect"
@@ -145,6 +146,7 @@ func securityPolicyShowCmdHandler(cmd *cobra.Command, args []string) {
 	} else if cmd != nil && cmd.Flags().Changed("summary") {
 		printPolicySummary(len(respMsg.Response))
 	} else {
+		printPolicyLegend()
 		for _, resp := range respMsg.Response {
 			printPolicy(resp)
 		}
@@ -152,18 +154,22 @@ func securityPolicyShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 }
 
+func printPolicyLegend() {
+	fmt.Printf("ICMP T/C : ICMP Type/Code\n\n")
+}
+
 func printPolicySummary(count int) {
 	fmt.Printf("\nNo. of security policies : %d\n\n", count)
 }
 
 func printPolicyRuleHeader() {
-	hdrLine := strings.Repeat("-", 202)
+	hdrLine := strings.Repeat("-", 203)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-40s%-8s%-48s%-48s%-12s%-12s%-8s%-10s%-10s%-6s\n",
-		"RuleID", "IPProto", "    Source", "  Destination",
+	fmt.Printf("%-40s%-9s%-48s%-48s%-12s%-12s%-8s%-10s%-10s%-6s\n",
+		"RuleID", "IPProto", "        Source", "     Destination",
 		"SrcPort", "DestPort", "ICMP", "Priority", "Stateful", "Action")
-	fmt.Printf("%-40s%-8s%-48s%-48s%-12s%-12s%-8s%-10s%-10s%-6s\n",
-		"", "", "Prefix|Range|Tag", "Prefix|Range|Tag",
+	fmt.Printf("%-40s%-9s%-48s%-48s%-12s%-12s%-8s%-10s%-10s%-6s\n",
+		"", "", "Prefix | Range | Tag", "Prefix | Range | Tag",
 		"Range", "Range", "T/C", "", "", "")
 	fmt.Println(hdrLine)
 }
@@ -180,10 +186,10 @@ func printPolicy(resp *pds.SecurityPolicy) {
 	printPolicyRuleHeader()
 
 	for _, rule := range spec.Rules {
-		srcIPStr := "-"
-		dstIPStr := "-"
-		srcPortStr := "-"
-		dstPortStr := "-"
+		srcIPStr := "*"
+		dstIPStr := "*"
+		srcPortStr := "*"
+		dstPortStr := "*"
 		protoStr := "-"
 		icmpStr := "-"
 		actionStr := "-"
@@ -195,6 +201,8 @@ func printPolicy(resp *pds.SecurityPolicy) {
 			protoStr = fmt.Sprint(l3Match.GetProtoNum())
 		case *pds.RuleL3Match_ProtoWildcard:
 			protoStr = "*"
+			srcPortStr = "-"
+			dstPortStr = "-"
 		}
 
 		switch l3Match.GetSrcmatch().(type) {
@@ -257,27 +265,33 @@ func printPolicy(resp *pds.SecurityPolicy) {
 			actionStr = "-"
 		}
 
+		ruleIDStr := "-"
+		if !bytes.Equal(rule.GetId(), make([]byte, len(rule.GetId()))) {
+			ruleIDStr = uuid.FromBytesOrNil(rule.GetId()).String()
+		}
+
 		if needSecondLine {
 			srcStrs := strings.Split(srcIPStr, "-")
 			dstStrs := strings.Split(dstIPStr, "-")
-			fmt.Printf("%-40s%-8s%-48s%-48s%-12s%-12s%-8s%-10d%-10s%-6s\n",
-				uuid.FromBytesOrNil(rule.GetId()).String(),
+			fmt.Printf("%-40s%-9s%-48s%-48s%-12s%-12s%-8s%-10d%-10s%-6s\n",
+				ruleIDStr,
 				protoStr, srcStrs[0]+"-", dstStrs[0]+"-",
 				srcPortStr, dstPortStr, icmpStr,
 				rule.GetAttrs().GetPriority(),
 				utils.BoolToString(rule.GetAttrs().GetStateful()),
 				actionStr)
-			fmt.Printf("%-40s%-8s%-48s%-48s%-50s\n",
+			fmt.Printf("%-40s%-9s%-48s%-48s%-50s\n",
 				"", "", srcStrs[1], dstStrs[1], "")
 		} else {
-			fmt.Printf("%-40s%-8s%-48s%-48s%-12s%-12s%-8s%-10d%-10s%-6s\n",
-				uuid.FromBytesOrNil(rule.GetId()).String(),
+			fmt.Printf("%-40s%-9s%-48s%-48s%-12s%-12s%-8s%-10d%-10s%-6s\n",
+				ruleIDStr,
 				protoStr, srcIPStr, dstIPStr, srcPortStr, dstPortStr,
 				icmpStr, rule.GetAttrs().GetPriority(),
 				utils.BoolToString(rule.GetAttrs().GetStateful()),
 				actionStr)
 		}
 	}
+	fmt.Println("")
 }
 
 func securityProfileShowCmdHandler(cmd *cobra.Command, args []string) {
