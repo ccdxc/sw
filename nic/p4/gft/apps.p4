@@ -22,7 +22,7 @@ action tx_fixup() {
 
     // update packet length
     subtract(scratch_metadata.packet_len, capri_p4_intrinsic.frame_size,
-             (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_TXDMA_INTRINSIC_HDR_SZ +
+             (ASICPD_GLOBAL_INTRINSIC_HDR_SZ + ASICPD_TXDMA_INTRINSIC_HDR_SZ +
               P4PLUS_TO_P4_HDR_SZ));
     modify_field(capri_p4_intrinsic.packet_len, scratch_metadata.packet_len);
 

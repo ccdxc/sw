@@ -52,8 +52,8 @@ action ingress_to_cps() {
     modify_field(capri_intrinsic.tm_oport, TM_PORT_DMA);
     modify_field(capri_intrinsic.lif, ARTEMIS_SERVICE_LIF);
     modify_field(capri_rxdma_intrinsic.rx_splitter_offset,
-                 (CAPRI_GLOBAL_INTRINSIC_HDR_SZ +
-                  CAPRI_RXDMA_INTRINSIC_HDR_SZ + ARTEMIS_P4_TO_RXDMA_HDR_SZ));
+                 (ASICPD_GLOBAL_INTRINSIC_HDR_SZ +
+                  ASICPD_RXDMA_INTRINSIC_HDR_SZ + ARTEMIS_P4_TO_RXDMA_HDR_SZ));
     modify_field(p4_to_rxdma.cps_path_en, TRUE);
     modify_field(p4_to_rxdma.vnic_info_en, TRUE);
     modify_field(p4_to_rxdma.direction, control_metadata.direction);
@@ -113,7 +113,7 @@ action ingress_to_classic_nic() {
     modify_field(p4_to_p4plus_classic_nic.p4plus_app_id,
                  P4PLUS_APPTYPE_CLASSIC_NIC);
     modify_field(capri_rxdma_intrinsic.rx_splitter_offset,
-                 (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ +
+                 (ASICPD_GLOBAL_INTRINSIC_HDR_SZ + ASICPD_RXDMA_INTRINSIC_HDR_SZ +
                   P4PLUS_CLASSIC_NIC_HDR_SZ));
 }
 

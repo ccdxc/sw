@@ -33,8 +33,8 @@ decode_roce_opcode:
   phvwr       p.capri_rxdma_intrinsic_qtype, d.u.decode_roce_opcode_d.qtype
   phvwr       p.{p4_to_p4plus_roce_table0_valid...p4_to_p4plus_roce_table1_valid}, 0x3
   add         r1, d.u.decode_roce_opcode_d.len, \
-                  (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + \
-                   CAPRI_RXDMA_INTRINSIC_HDR_SZ + P4PLUS_ROCE_HDR_SZ)
+                  (ASICPD_GLOBAL_INTRINSIC_HDR_SZ + \
+                   ASICPD_RXDMA_INTRINSIC_HDR_SZ + P4PLUS_ROCE_HDR_SZ)
 
   smeqb       c1, k.roce_bth_opCode, 0xE0, 0x60
 

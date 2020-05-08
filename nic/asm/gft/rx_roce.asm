@@ -37,8 +37,8 @@ rx_roce:
 
     // splitter offset => r7[61:52]
     add             r1, d.u.rx_roce_d.len, \
-                        (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + \
-                        CAPRI_RXDMA_INTRINSIC_HDR_SZ + P4PLUS_ROCE_HDR_SZ)
+                        (ASICPD_GLOBAL_INTRINSIC_HDR_SZ + \
+                        ASICPD_RXDMA_INTRINSIC_HDR_SZ + P4PLUS_ROCE_HDR_SZ)
     smeqb           c1, k.roce_bth_opCode, 0xE0, 0x60
     add.c1          r1, r1, 14
     or              r7, r7, r1, 51

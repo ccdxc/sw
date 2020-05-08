@@ -26,7 +26,7 @@ tcp_ooq_txdma_dma_cmds:
 
     phvwr           p.intr_rxdma_qid, k.common_phv_fid
     phvwr           p.intr_rxdma_rx_splitter_offset, \
-                    (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ + \
+                    (ASICPD_GLOBAL_INTRINSIC_HDR_SZ + ASICPD_RXDMA_INTRINSIC_HDR_SZ + \
                     P4PLUS_TCP_PROXY_BASE_HDR_SZ + P4PLUS_TCP_PROXY_OOQ_HDR_SZ)
     CAPRI_DMA_CMD_PHV2PKT_SETUP2(intrinsic_dma_cmd, p4_intr_global_tm_iport,
                                 p4_intr_packet_len,
@@ -50,7 +50,7 @@ tcp_ooq_txdma_win_upd_mem2pkt_dma:
                                 intr_rxdma2_qid, intr_rxdma2_rxdma_rsv)
     phvwr           p.intr_rxdma2_qid, k.common_phv_fid
     phvwr           p.intr_rxdma2_rx_splitter_offset, \
-                    (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ + \
+                    (ASICPD_GLOBAL_INTRINSIC_HDR_SZ + ASICPD_RXDMA_INTRINSIC_HDR_SZ + \
                     P4PLUS_TCP_PROXY_BASE_HDR_SZ + 1)
     CAPRI_DMA_CMD_MEM2PKT_SETUP(tcp_app_header2_dma_cmd, r1, \
                         P4PLUS_TCP_PROXY_BASE_HDR_SZ)
@@ -75,7 +75,7 @@ tcp_ooq_txdma_win_upd_phv2pkt_dma:
                                 intr_rxdma2_qid, intr_rxdma2_rxdma_rsv)
     phvwr           p.intr_rxdma2_qid, k.common_phv_fid
     phvwr           p.intr_rxdma2_rx_splitter_offset, \
-                    (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ + \
+                    (ASICPD_GLOBAL_INTRINSIC_HDR_SZ + ASICPD_RXDMA_INTRINSIC_HDR_SZ + \
                     P4PLUS_TCP_PROXY_BASE_HDR_SZ + 1)
     CAPRI_DMA_CMD_PHV2PKT_SETUP(tcp_app_hdr1_dma_cmd, tcp_app_hdr_p4plus_app_id, tcp_app_hdr_prev_echo_ts)
     

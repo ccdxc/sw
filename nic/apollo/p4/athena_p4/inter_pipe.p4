@@ -5,7 +5,7 @@
 
 
 action p4i_to_p4e() {
-    if ((ingress_recirc_header.flow_done != TRUE) or 
+    if ((ingress_recirc_header.flow_done != TRUE) or
         (ingress_recirc_header.dnat_done != TRUE)) {
         /* Recirc back to P4I */
         add_header(ingress_recirc_header);
@@ -86,8 +86,8 @@ action p4e_to_rxdma() {
     modify_field(capri_rxdma_intrinsic.qid, control_metadata.redir_qid);
     modify_field(capri_rxdma_intrinsic.qtype, control_metadata.redir_qtype);
     modify_field(capri_rxdma_intrinsic.rx_splitter_offset,
-            CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_P4_INTRINSIC_HDR_SZ +
-            CAPRI_RXDMA_INTRINSIC_HDR_SZ + P4PLUS_CLASSIC_NIC_HDR_SZ);
+            ASICPD_GLOBAL_INTRINSIC_HDR_SZ + ASICPD_P4_INTRINSIC_HDR_SZ +
+            ASICPD_RXDMA_INTRINSIC_HDR_SZ + P4PLUS_CLASSIC_NIC_HDR_SZ);
     add_header(p4e_to_p4plus_classic_nic);
     modify_field(p4e_to_p4plus_classic_nic.p4plus_app_id, control_metadata.redir_app_id);
     add_header(p4e_to_p4plus_classic_nic_ip);
@@ -137,10 +137,10 @@ table p4e_redir {
         p4e_to_rxdma;
         p4e_to_uplink;
     }
-    size : P4E_REDIR_TABLE_SIZE; 
+    size : P4E_REDIR_TABLE_SIZE;
 }
 
 control egress_inter_pipe {
-    apply(p4i_to_p4e_state);    
+    apply(p4i_to_p4e_state);
     apply(p4e_redir);
 }

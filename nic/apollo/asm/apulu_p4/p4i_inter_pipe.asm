@@ -127,8 +127,8 @@ ingress_to_rxdma2:
     phvwr           p.capri_intrinsic_tm_oport, TM_PORT_DMA
     phvwr.e         p.capri_intrinsic_lif, APULU_SERVICE_LIF
     phvwr.f         p.capri_rxdma_intrinsic_rx_splitter_offset, \
-                        (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + \
-                         CAPRI_RXDMA_INTRINSIC_HDR_SZ + \
+                        (ASICPD_GLOBAL_INTRINSIC_HDR_SZ + \
+                         ASICPD_RXDMA_INTRINSIC_HDR_SZ + \
                          APULU_P4I_TO_RXDMA_HDR_SZ)
 
 ingress_recirc:

@@ -81,7 +81,7 @@ action update_stats(in_pkts, in_bytes) {
 
     add_to_field(scratch_metadata.in_pkts, 1);
     add_to_field(scratch_metadata.in_bytes,
-                 capri_p4_intrinsic.frame_size - CAPRI_GLOBAL_INTRINSIC_HDR_SZ);
+                 capri_p4_intrinsic.frame_size - ASICPD_GLOBAL_INTRINSIC_HDR_SZ);
 }
 
 @pragma stage 1
@@ -160,7 +160,7 @@ action tunnel_rewrite(dmac, smac, sip, dip, slot_id) {
 
     // subtract ethernet + vlan (optional) header size
     subtract(scratch_metadata.ip_totallen, capri_p4_intrinsic.frame_size,
-             (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + 14));
+             (ASICPD_GLOBAL_INTRINSIC_HDR_SZ + 14));
     if (ctag_1.valid == TRUE) {
         subtract_from_field(scratch_metadata.ip_totallen, 4);
     }

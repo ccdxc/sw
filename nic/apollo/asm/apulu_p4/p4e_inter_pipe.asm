@@ -68,8 +68,8 @@ egress_to_rxdma_common:
     phvwr           p.p4e_to_p4plus_classic_nic_p4plus_app_id, \
                         P4PLUS_APPTYPE_CLASSIC_NIC
     phvwr           p.capri_rxdma_intrinsic_rx_splitter_offset, \
-                        (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + \
-                         CAPRI_RXDMA_INTRINSIC_HDR_SZ + \
+                        (ASICPD_GLOBAL_INTRINSIC_HDR_SZ + \
+                         ASICPD_RXDMA_INTRINSIC_HDR_SZ + \
                          P4PLUS_CLASSIC_NIC_HDR_SZ)
 
     // l2 checksum computation

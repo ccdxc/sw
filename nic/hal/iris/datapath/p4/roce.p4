@@ -27,7 +27,7 @@ action decode_roce_opcode(raw_flags, len, qtype, tm_oq_overwrite, tm_oq) {
             modify_field(p4_to_p4plus_roce.table0_valid, TRUE);
         }
         add(capri_rxdma_intrinsic.rx_splitter_offset, len,
-            (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ +
+            (ASICPD_GLOBAL_INTRINSIC_HDR_SZ + ASICPD_RXDMA_INTRINSIC_HDR_SZ +
              P4PLUS_ROCE_HDR_SZ));
         if ((roce_bth.opCode & 0xE0) == 0x60) {
             /* unreliable delivery */

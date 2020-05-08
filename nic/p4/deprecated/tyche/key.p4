@@ -109,7 +109,7 @@ action rx_key2(match_fields) {
 
 action rx_key3(match_fields) {
     modify_field(capri_p4_intrinsic.packet_len,
-                 capri_p4_intrinsic.frame_size - CAPRI_GLOBAL_INTRINSIC_HDR_SZ);
+                 capri_p4_intrinsic.frame_size - ASICPD_GLOBAL_INTRINSIC_HDR_SZ);
     modify_field(capri_intrinsic.tm_iq, capri_intrinsic.tm_oq);
 
     if ((match_fields & MATCH_TRANSPORT_SRC_PORT_1) != 0) {

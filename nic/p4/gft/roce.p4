@@ -15,7 +15,7 @@ action rx_roce(raw_flags, len, parsed_hdrs_len, qtype, tm_oq_overwrite, tm_oq) {
     modify_field(capri_rxdma_intrinsic.qid, roce_bth.destQP);
 
     add(capri_rxdma_intrinsic.rx_splitter_offset, len,
-        (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ +
+        (ASICPD_GLOBAL_INTRINSIC_HDR_SZ + ASICPD_RXDMA_INTRINSIC_HDR_SZ +
          P4PLUS_ROCE_HDR_SZ));
     if ((roce_bth.opCode & 0xE0) == 0x60) {
         add_to_field(capri_rxdma_intrinsic.rx_splitter_offset, 14);

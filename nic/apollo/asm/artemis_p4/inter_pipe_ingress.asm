@@ -77,8 +77,8 @@ ingress_to_cps:
     phvwr           p.capri_intrinsic_tm_oport, TM_PORT_DMA
     phvwr           p.capri_intrinsic_lif, ARTEMIS_SERVICE_LIF
     phvwr           p.capri_rxdma_intrinsic_rx_splitter_offset, \
-                        (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + \
-                         CAPRI_RXDMA_INTRINSIC_HDR_SZ + \
+                        (ASICPD_GLOBAL_INTRINSIC_HDR_SZ + \
+                         ASICPD_RXDMA_INTRINSIC_HDR_SZ + \
                          ARTEMIS_P4_TO_RXDMA_HDR_SZ)
     phvwr           p.predicate_header_direction, k.control_metadata_direction
     phvwr           p.p4_to_rxdma_vnic_info_en, TRUE
@@ -113,8 +113,8 @@ ingress_to_classic_nic_post_vlan_strip:
     phvwr           p.p4_to_p4plus_classic_nic_p4plus_app_id, \
                         P4PLUS_APPTYPE_CLASSIC_NIC
     phvwr           p.capri_rxdma_intrinsic_rx_splitter_offset, \
-                        (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + \
-                        CAPRI_RXDMA_INTRINSIC_HDR_SZ + \
+                        (ASICPD_GLOBAL_INTRINSIC_HDR_SZ + \
+                        ASICPD_RXDMA_INTRINSIC_HDR_SZ + \
                         P4PLUS_CLASSIC_NIC_HDR_SZ)
     seq             c1, k.key_metadata_ktype, KEY_TYPE_IPV4
     bcf             [c1], ingress_to_classic_nic_ipv4

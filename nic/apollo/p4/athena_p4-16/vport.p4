@@ -11,7 +11,7 @@ control RxVport(inout cap_phv_intr_global_h intr_global,
 
     @name(".rx_vport_action") action rx_vport_action() {
         intr_p4.setValid();
-        intr_p4.packet_len = intr_p4.frame_size - CAPRI_GLOBAL_INTRINSIC_HDR_SZ;
+        intr_p4.packet_len = intr_p4.frame_size - ASICPD_GLOBAL_INTRINSIC_HDR_SZ;
 	hdr.capri_txdma_intrinsic.setInvalid();
 	hdr.p4plus_to_p4.setInvalid();
         intr_global.tm_iq      = intr_global.tm_oq;

@@ -3,7 +3,7 @@
 /******************************************************************************/
 action rx_vport(vport, tm_oport, rdma_enabled) {
     modify_field(capri_p4_intrinsic.packet_len,
-                 capri_p4_intrinsic.frame_size - CAPRI_GLOBAL_INTRINSIC_HDR_SZ);
+                 capri_p4_intrinsic.frame_size - ASICPD_GLOBAL_INTRINSIC_HDR_SZ);
 
     modify_field(capri_intrinsic.tm_iq, capri_intrinsic.tm_oq);
 

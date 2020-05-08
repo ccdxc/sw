@@ -14,8 +14,8 @@
 #include "nic/apollo/p4/include/artemis_defines.h"
 
 #define TESTAPP_PKT_META_HDR_SIZE \
-            (ARTEMIS_P4_TO_ARM_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ \
-            - CAPRI_P4_INTRINSIC_HDR_SZ + P4PLUS_CLASSIC_NIC_HDR_SZ)
+            (ARTEMIS_P4_TO_ARM_HDR_SZ + ASICPD_RXDMA_INTRINSIC_HDR_SZ \
+            - ASICPD_P4_INTRINSIC_HDR_SZ + P4PLUS_CLASSIC_NIC_HDR_SZ)
 
 // Vxlan encap: vnid 1
 uint8_t g_vnet1_vnet_out_input[] = {

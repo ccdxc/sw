@@ -118,8 +118,8 @@
 #define APOLLO_P4_TO_TXDMA_HDR_SZ       25
 #define APOLLO_I2E_HDR_SZ               40
 
-#define APOLLO_INGRESS_MIRROR_BLOB_SZ   (CAPRI_RXDMA_INTRINSIC_HDR_SZ - \
-                                         CAPRI_P4_INTRINSIC_HDR_SZ + \
+#define APOLLO_INGRESS_MIRROR_BLOB_SZ   (ASICPD_RXDMA_INTRINSIC_HDR_SZ - \
+                                         ASICPD_P4_INTRINSIC_HDR_SZ + \
                                          APOLLO_P4_TO_RXDMA_HDR_SZ + \
                                          APOLLO_PREDICATE_HDR_SZ + \
                                          APOLLO_PREDICATE_HDR_SZ + \

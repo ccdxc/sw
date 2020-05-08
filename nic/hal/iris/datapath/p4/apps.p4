@@ -69,7 +69,7 @@ action p4plus_app_tcp_proxy() {
 
     add_header(capri_rxdma_intrinsic);
     modify_field(capri_rxdma_intrinsic.rx_splitter_offset,
-                 (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ +
+                 (ASICPD_GLOBAL_INTRINSIC_HDR_SZ + ASICPD_RXDMA_INTRINSIC_HDR_SZ +
                   P4PLUS_TCP_PROXY_HDR_SZ));
     modify_field(capri_rxdma_intrinsic.qid, control_metadata.qid);
     modify_field(capri_rxdma_intrinsic.qtype, control_metadata.qtype);
@@ -216,7 +216,7 @@ action p4plus_app_classic_nic() {
     modify_field(p4_to_p4plus_classic_nic.p4plus_app_id,
                  control_metadata.p4plus_app_id);
     modify_field(capri_rxdma_intrinsic.rx_splitter_offset,
-                 (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ +
+                 (ASICPD_GLOBAL_INTRINSIC_HDR_SZ + ASICPD_RXDMA_INTRINSIC_HDR_SZ +
                   P4PLUS_CLASSIC_NIC_HDR_SZ));
     modify_field(capri_rxdma_intrinsic.qid, control_metadata.qid);
     modify_field(capri_rxdma_intrinsic.qtype, control_metadata.qtype);
@@ -235,7 +235,7 @@ action p4plus_app_ipsec() {
 
     add_header(capri_rxdma_intrinsic);
     modify_field(capri_rxdma_intrinsic.rx_splitter_offset,
-                 (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ +
+                 (ASICPD_GLOBAL_INTRINSIC_HDR_SZ + ASICPD_RXDMA_INTRINSIC_HDR_SZ +
                   P4PLUS_IPSEC_HDR_SZ));
 
     if (ipv4.valid == TRUE) {
@@ -466,7 +466,7 @@ action p4plus_app_cpu() {
 
     add_header(capri_rxdma_intrinsic);
     modify_field(capri_rxdma_intrinsic.rx_splitter_offset,
-                 (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ +
+                 (ASICPD_GLOBAL_INTRINSIC_HDR_SZ + ASICPD_RXDMA_INTRINSIC_HDR_SZ +
                   P4PLUS_CPU_HDR_SZ));
     modify_field(capri_rxdma_intrinsic.qid, control_metadata.qid);
     modify_field(capri_rxdma_intrinsic.qtype, control_metadata.qtype);
@@ -505,7 +505,7 @@ action p4plus_app_raw_redir() {
 
     add_header(capri_rxdma_intrinsic);
     modify_field(capri_rxdma_intrinsic.rx_splitter_offset,
-                 (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ +
+                 (ASICPD_GLOBAL_INTRINSIC_HDR_SZ + ASICPD_RXDMA_INTRINSIC_HDR_SZ +
                   P4PLUS_CPU_HDR_SZ));
     modify_field(capri_rxdma_intrinsic.qid, control_metadata.qid);
     modify_field(capri_rxdma_intrinsic.qtype, control_metadata.qtype);
@@ -554,7 +554,7 @@ action p4plus_app_p4pt() {
     modify_field(p4_to_p4plus_p4pt.payload_len, scratch_metadata.packet_len);
     add_header(capri_rxdma_intrinsic);
     modify_field(capri_rxdma_intrinsic.rx_splitter_offset,
-                 (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ +
+                 (ASICPD_GLOBAL_INTRINSIC_HDR_SZ + ASICPD_RXDMA_INTRINSIC_HDR_SZ +
                   P4PLUS_P4PT_HDR_SZ));
     add_to_field(capri_rxdma_intrinsic.rx_splitter_offset,
                  scratch_metadata.packet_len);
@@ -576,7 +576,7 @@ action p4plus_app_mirror() {
 
     add_header(capri_rxdma_intrinsic);
     modify_field(capri_rxdma_intrinsic.rx_splitter_offset,
-                 (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ +
+                 (ASICPD_GLOBAL_INTRINSIC_HDR_SZ + ASICPD_RXDMA_INTRINSIC_HDR_SZ +
                   P4PLUS_MIRROR_HDR_SZ));
 }
 

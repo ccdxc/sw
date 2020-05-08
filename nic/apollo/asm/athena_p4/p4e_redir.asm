@@ -30,8 +30,8 @@ p4e_to_rxdma:
     phvwr           p.capri_rxdma_intrinsic_qtype, k.control_metadata_redir_qtype
     phvwr           p.capri_rxdma_intrinsic_qid, k.control_metadata_redir_qid
     phvwr           p.capri_rxdma_intrinsic_rx_splitter_offset, \
-                    (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_P4_INTRINSIC_HDR_SZ +\
-                    /*CAPRI_RXDMA_INTRINSIC_HDR_SZ*/ 10 + P4PLUS_CLASSIC_NIC_HDR_SZ)
+                    (ASICPD_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_P4_INTRINSIC_HDR_SZ +\
+                    /*ASICPD_RXDMA_INTRINSIC_HDR_SZ*/ 10 + P4PLUS_CLASSIC_NIC_HDR_SZ)
     phvwr           p.p4e_to_p4plus_classic_nic_p4plus_app_id, k.control_metadata_redir_app_id
     phvwr           p.p4e_to_p4plus_classic_nic_packet_len, \
                     k.p4i_to_p4e_header_packet_len

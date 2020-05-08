@@ -35,8 +35,8 @@ action ingress_to_rxdma() {
             add_header(predicate_header);
             // Splitter offset should point to here
             modify_field(capri_rxdma_intrinsic.rx_splitter_offset,
-                         (CAPRI_GLOBAL_INTRINSIC_HDR_SZ +
-                          CAPRI_RXDMA_INTRINSIC_HDR_SZ +
+                         (ASICPD_GLOBAL_INTRINSIC_HDR_SZ +
+                          ASICPD_RXDMA_INTRINSIC_HDR_SZ +
                           APOLLO_P4_TO_RXDMA_HDR_SZ + APOLLO_PREDICATE_HDR_SZ));
             add_header(predicate_header2);
             add_header(p4_to_txdma_header);
@@ -116,7 +116,7 @@ action classic_nic_to_rxdma() {
     modify_field(p4_to_p4plus_classic_nic.p4plus_app_id,
                  control_metadata.p4plus_app_id);
     modify_field(capri_rxdma_intrinsic.rx_splitter_offset,
-                 (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ +
+                 (ASICPD_GLOBAL_INTRINSIC_HDR_SZ + ASICPD_RXDMA_INTRINSIC_HDR_SZ +
                   P4PLUS_CLASSIC_NIC_HDR_SZ));
 }
 
@@ -228,7 +228,7 @@ action p4plus_app_tcp_proxy() {
 
     add_header(capri_rxdma_intrinsic);
     modify_field(capri_rxdma_intrinsic.rx_splitter_offset,
-                 (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ +
+                 (ASICPD_GLOBAL_INTRINSIC_HDR_SZ + ASICPD_RXDMA_INTRINSIC_HDR_SZ +
                   P4PLUS_TCP_PROXY_HDR_SZ));
 }
 
@@ -275,7 +275,7 @@ action egress_to_uplink() {
             modify_field(p4_to_p4plus_classic_nic.p4plus_app_id,
                          P4PLUS_APPTYPE_CLASSIC_NIC);
             modify_field(capri_rxdma_intrinsic.rx_splitter_offset,
-                         (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ +
+                         (ASICPD_GLOBAL_INTRINSIC_HDR_SZ + ASICPD_RXDMA_INTRINSIC_HDR_SZ +
                           P4PLUS_CLASSIC_NIC_HDR_SZ));
         }
         remove_header(predicate_header);

@@ -56,7 +56,7 @@ p4plus_app_classic_nic_post_vlan_strip:
   phvwr         p.p4_to_p4plus_classic_nic_p4plus_app_id, \
                     k.control_metadata_p4plus_app_id[3:0]
   phvwr         p.capri_rxdma_intrinsic_rx_splitter_offset, \
-                (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ + \
+                (ASICPD_GLOBAL_INTRINSIC_HDR_SZ + ASICPD_RXDMA_INTRINSIC_HDR_SZ + \
                 P4PLUS_CLASSIC_NIC_HDR_SZ)
   phvwr         p.capri_rxdma_intrinsic_qid, k.control_metadata_qid
   phvwr.e       p.capri_rxdma_intrinsic_qtype, k.control_metadata_qtype[2:0]
@@ -101,8 +101,8 @@ p4plus_app_tcp_proxy:
 
   phvwr         p.capri_rxdma_intrinsic_valid, TRUE
   phvwr         p.capri_rxdma_intrinsic_rx_splitter_offset, \
-                    (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + \
-                     CAPRI_RXDMA_INTRINSIC_HDR_SZ + P4PLUS_TCP_PROXY_HDR_SZ)
+                    (ASICPD_GLOBAL_INTRINSIC_HDR_SZ + \
+                     ASICPD_RXDMA_INTRINSIC_HDR_SZ + P4PLUS_TCP_PROXY_HDR_SZ)
   phvwr.e       p.capri_rxdma_intrinsic_qid, k.control_metadata_qid
   phvwr.f           p.capri_rxdma_intrinsic_qtype, k.control_metadata_qtype[2:0]
 
@@ -151,7 +151,7 @@ p4plus_app_cpu_common:
   phvwr       p.{p4_to_p4plus_cpu_ip_valid, p4_to_p4plus_cpu_valid, \
                  capri_rxdma_intrinsic_valid}, 0x7
   phvwr       p.capri_rxdma_intrinsic_rx_splitter_offset, \
-              (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ + \
+              (ASICPD_GLOBAL_INTRINSIC_HDR_SZ + ASICPD_RXDMA_INTRINSIC_HDR_SZ + \
               P4PLUS_CPU_HDR_SZ)
   phvwr.e     p.capri_rxdma_intrinsic_qid, k.control_metadata_qid
   phvwr.f     p.capri_rxdma_intrinsic_qtype, k.control_metadata_qtype[2:0]
@@ -168,7 +168,7 @@ p4plus_app_ipsec:
   phvwr       p.p4_to_p4plus_ipsec_spi, r4
   phvwr       p.capri_rxdma_intrinsic_valid, TRUE
   phvwr       p.capri_rxdma_intrinsic_rx_splitter_offset, \
-              (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ + \
+              (ASICPD_GLOBAL_INTRINSIC_HDR_SZ + ASICPD_RXDMA_INTRINSIC_HDR_SZ + \
               P4PLUS_IPSEC_HDR_SZ)
   phvwr      p.capri_rxdma_intrinsic_qid, k.control_metadata_qid
   phvwr       p.capri_rxdma_intrinsic_qtype, k.control_metadata_qtype
@@ -249,8 +249,8 @@ p4plus_app_p4pt:
   phvwr       p.tcp_valid, r0
 
   phvwr       p.p4_to_p4plus_p4pt_payload_len, r1
-  add         r1, r1, (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + \
-                       CAPRI_RXDMA_INTRINSIC_HDR_SZ + P4PLUS_P4PT_HDR_SZ)
+  add         r1, r1, (ASICPD_GLOBAL_INTRINSIC_HDR_SZ + \
+                       ASICPD_RXDMA_INTRINSIC_HDR_SZ + P4PLUS_P4PT_HDR_SZ)
   phvwr       p.capri_rxdma_intrinsic_valid, TRUE
   phvwr       p.capri_rxdma_intrinsic_rx_splitter_offset, r1
   phvwr.e     p.capri_rxdma_intrinsic_qid, k.control_metadata_qid
@@ -273,7 +273,7 @@ p4plus_app_mirror:
   phvwrpair.e p.p4_to_p4plus_mirror_valid, TRUE, \
                 p.capri_rxdma_intrinsic_valid, TRUE
   phvwr       p.capri_rxdma_intrinsic_rx_splitter_offset, \
-                (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ +\
+                (ASICPD_GLOBAL_INTRINSIC_HDR_SZ + ASICPD_RXDMA_INTRINSIC_HDR_SZ +\
                  P4PLUS_MIRROR_HDR_SZ)
 
 // input r6 : packet start offset

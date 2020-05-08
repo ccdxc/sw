@@ -11,7 +11,7 @@ struct phv_ p;
 rx_vport:
     sub         r1, k.{capri_p4_intrinsic_frame_size_sbit0_ebit5,\
                        capri_p4_intrinsic_frame_size_sbit6_ebit13}, \
-                    CAPRI_GLOBAL_INTRINSIC_HDR_SZ
+                    ASICPD_GLOBAL_INTRINSIC_HDR_SZ
     phvwr       p.capri_intrinsic_tm_iq, k.capri_intrinsic_tm_oq
     phvwr       p.capri_p4_intrinsic_packet_len, r1
     cmov        r1, c1, d.rx_vport_d.vport, EXCEPTION_VPORT
