@@ -53,6 +53,7 @@ table nacl {
         control_metadata.learn_enabled      : ternary;
         control_metadata.lif_type           : ternary;
         arm_to_p4i.nexthop_valid            : ternary;
+        ingress_recirc.defunct_flow         : ternary;
         key_metadata.entry_valid            : ternary;
     }
     actions {

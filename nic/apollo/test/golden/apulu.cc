@@ -471,13 +471,25 @@ nacl_init ()
     uint32_t tbl_id = P4TBL_ID_NACL;
     uint32_t index;
 
+    index = 0;
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
-
-    index = 0;
     key.control_metadata_flow_miss = 1;
-    mask.control_metadata_flow_miss_mask = 1;
+    mask.control_metadata_flow_miss_mask = ~0;
+    key.ingress_recirc_defunct_flow = 1;
+    mask.ingress_recirc_defunct_flow_mask = ~0;
+    data.action_id = NACL_NACL_REDIRECT_TO_ARM_ID;
+    data.action_u.nacl_nacl_redirect_to_arm.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
+    data.action_u.nacl_nacl_redirect_to_arm.nexthop_id = g_nexthop_id_arm;
+    entry_write(tbl_id, index, &key, &mask, &data, false, 0);
+
+    index++;
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+    key.control_metadata_flow_miss = 1;
+    mask.control_metadata_flow_miss_mask = ~0;
     data.action_id = NACL_NACL_REDIRECT_TO_ARM_ID;
     data.action_u.nacl_nacl_redirect_to_arm.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
     data.action_u.nacl_nacl_redirect_to_arm.nexthop_id = g_nexthop_id_arm;
