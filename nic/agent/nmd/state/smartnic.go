@@ -79,11 +79,15 @@ func (n *NMD) UpdateSmartNIC(nic *cmd.DistributedServiceCard) error {
 
 	log.Infof("SmartNIC update, mac: %s, phase: %s, mgmt mode: %s", nic.ObjectMeta.Name, nic.Status.AdmissionPhase, nic.Spec.MgmtMode)
 
+	n.modeChange.Lock()
 	// get current state from db
 	oldNic, err := n.GetSmartNIC()
 	if err != nil {
 		log.Errorf("Error retrieving state for nic %+v: %v", nic, err)
 	}
+
+	log.Infof("Current SmartNIC State: %v", oldNic)
+	log.Infof("Updated SmartNIC State: %v", nic)
 
 	// update nic in the DB
 	n.SetSmartNIC(nic)
@@ -91,6 +95,7 @@ func (n *NMD) UpdateSmartNIC(nic *cmd.DistributedServiceCard) error {
 	if err != nil {
 		log.Errorf("Error updating NMD state %+v: %v", nic, err)
 	}
+	n.modeChange.Unlock()
 
 	// Handle de-admission and decommission
 
@@ -167,6 +172,12 @@ func (n *NMD) UpdateSmartNIC(nic *cmd.DistributedServiceCard) error {
 					n.config.Status.AdmissionPhase = cmd.DistributedServiceCardStatus_DECOMMISSIONED.String()
 					n.config.Status.AdmissionPhaseReason = "DistributedServiceCard management mode changed to HOST"
 					log.Infof("Naples successfully decommissioned and moved to HOST mode.")
+					// update nic in the DB
+					n.SetSmartNIC(nic)
+					err = n.store.Write(nic)
+					if err != nil {
+						log.Errorf("Error updating NMD state %+v: %v", nic, err)
+					}
 				} else {
 					recorder.Event(eventtypes.DSC_DEADMITTED, fmt.Sprintf("DSC %s(%s) de-admitted from the cluster", nic.Spec.ID, nic.Name), nic)
 
@@ -238,6 +249,12 @@ func (n *NMD) UpdateSmartNIC(nic *cmd.DistributedServiceCard) error {
 
 					n.modeChange.Unlock()
 
+					// update nic in the DB
+					n.SetSmartNIC(nic)
+					err = n.store.Write(nic)
+					if err != nil {
+						log.Errorf("Error updating NMD state %+v: %v", nic, err)
+					}
 					go n.AdmitNaples()
 				}
 			}()
