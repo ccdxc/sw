@@ -950,6 +950,19 @@ mac_mgmt_tx_drain_hw (uint32_t mac_inst, uint32_t mac_ch, bool drain)
     return 0;
 }
 
+static int
+mac_mgmt_stats_reset_hw (uint32_t mac_inst, uint32_t mac_ch, bool reset)
+{
+    int chip_id = 0;
+
+    if (reset == true) {
+        cap_bx_stats_reset(chip_id, 0, mac_ch, 1);
+    } else {
+        cap_bx_stats_reset(chip_id, 0, mac_ch, 0);
+    }
+    return 0;
+}
+
 //----------------------------------------------------------------------------
 // Mock methods
 //----------------------------------------------------------------------------
@@ -1163,6 +1176,7 @@ port_mac_fn_init(linkmgr_cfg_t *cfg)
         mac_mgmt_fn->mac_stats_get    = &mac_mgmt_stats_get_hw;
         mac_mgmt_fn->mac_deinit       = &mac_mgmt_deinit_hw;
         mac_mgmt_fn->mac_tx_drain     = &mac_mgmt_tx_drain_hw;
+        mac_mgmt_fn->mac_stats_reset  = &mac_mgmt_stats_reset_hw;
         break;
 
     case platform_type_t::PLATFORM_TYPE_ZEBU:
@@ -1195,6 +1209,7 @@ port_mac_fn_init(linkmgr_cfg_t *cfg)
         mac_mgmt_fn->mac_stats_get   = &mac_mgmt_stats_get_hw;
         mac_mgmt_fn->mac_deinit      = &mac_mgmt_deinit_hw;
         mac_mgmt_fn->mac_tx_drain    = &mac_mgmt_tx_drain_hw;
+        mac_mgmt_fn->mac_stats_reset = &mac_mgmt_stats_reset_hw;
         break;
 
     default:

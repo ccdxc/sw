@@ -542,3 +542,19 @@ cap_bx_tx_drain (int chip_id, int inst_id, int mac_ch, bool drain)
 #endif
     return 0;
 }
+
+void
+cap_bx_stats_reset (int chip_id, int inst_id, int ch, int value)
+{
+#if 0
+    // TBD-ELBA-REBASE
+    int rdata;
+    int wdata;
+    int mask = ((1 << ch) ^ 0xf) & 0xf;
+    int addr = 0x2000;
+
+    rdata = cap_bx_apb_read(chip_id, inst_id, addr);
+    wdata = (rdata & mask) | ((value << ch) & 0xf);
+    cap_bx_apb_write(chip_id, inst_id, addr, wdata);
+#endif
+}
