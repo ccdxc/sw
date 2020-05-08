@@ -289,6 +289,194 @@ func testBlacklistPolicy(fromIP, toIP, proto, port string) error {
 	return nil
 }
 
+var _ = Describe("single policy", func() {
+	var startTime time.Time
+	BeforeEach(func() {
+		//verify cluster is in good health
+		startTime = time.Now().UTC()
+
+		Eventually(func() error {
+			return ts.model.VerifyClusterStatus()
+		}).Should(Succeed())
+
+		// delete the default allow policy
+		Expect(ts.model.DefaultNetworkSecurityPolicy().Delete()).ShouldNot(HaveOccurred())
+	})
+	AfterEach(func() {
+		//Expect No Service is stopped
+		Expect(ts.model.ServiceStoppedEvents(startTime, ts.model.Naples()).Len(0))
+
+		nwc, err := getNetworkCollection()
+		Expect(err).Should(Succeed())
+
+		//Reset ingress and egress policies
+		nwc.SetIngressSecurityPolicy(nil)
+		nwc.SetEgressSecurityPolicy(nil)
+
+		// Delete the policies. we can ignore the error here
+		for index := 1; index <= 12; index++ {
+			ts.model.NetworkSecurityPolicy(fmt.Sprintf("p%v", index)).Delete()
+		}
+		ts.model.DefaultNetworkSecurityPolicy().Delete()
+		// recreate default allow policy
+		Expect(ts.model.DefaultNetworkSecurityPolicy().Restore()).ShouldNot(HaveOccurred())
+	})
+	Context("Single Policy tests", func() {
+		It("Multiple rule combinations", func() {
+			if !ts.tb.HasNaplesHW() {
+				Skip("Disabling on naples sim till traffic issue is debugged")
+			}
+			selNetwork, err := getNetworkCollection()
+			Expect(err).Should(Succeed())
+			workloadPairWithinNetwork := ts.model.WorkloadPairs().WithinNetwork().Any(1)
+			workloadPairAcrossNetwork := ts.model.WorkloadPairs().AcrossNetwork(workloadPairWithinNetwork.Pairs[0].First).Any(1)
+
+			//Case 1: No rule Specified
+			policy1 := ts.model.NewNetworkSecurityPolicy("p1")
+			policy2 := ts.model.NewNetworkSecurityPolicy("p2")
+			policy1.SetTenant(selNetwork.GetTenant())
+			policy2.SetTenant(selNetwork.GetTenant())
+			Expect(policy1.Commit()).Should(Succeed())
+			Expect(policy2.Commit()).Should(Succeed())
+			selNetwork.SetIngressSecurityPolicy(policy1)
+			selNetwork.SetEgressSecurityPolicy(policy2)
+			// Verify if policies are successfully applied
+			Eventually(func() error { return ts.model.VerifyPolicyStatus(policy1) }).Should(Succeed())
+			Eventually(func() error { return ts.model.VerifyPolicyStatus(policy2) }).Should(Succeed())
+			// Verify traffic does not flow
+			Expect(ts.model.PingFails(workloadPairWithinNetwork)).Should(BeNil())
+			Expect(ts.model.PingFails(workloadPairAcrossNetwork)).Should(BeNil())
+			// Reset policies
+			selNetwork.SetIngressSecurityPolicy(nil)
+			selNetwork.SetEgressSecurityPolicy(nil)
+
+			//Case 2: One rule with Permit Action Specified
+			policy1 = ts.model.NewNetworkSecurityPolicy("p3").AddRuleForWorkloadCombo(
+				workloadPairWithinNetwork, "workload-subnet", "workload-subnet", "TCP", "80", "PERMIT")
+			policy2 = ts.model.NewNetworkSecurityPolicy("p4").AddRuleForWorkloadCombo(
+				workloadPairWithinNetwork, "workload-subnet", "workload-subnet", "TCP", "80", "PERMIT")
+			policy1.SetTenant(selNetwork.GetTenant())
+			policy2.SetTenant(selNetwork.GetTenant())
+			Expect(policy1.Commit()).Should(Succeed())
+			Expect(policy2.Commit()).Should(Succeed())
+			selNetwork.SetIngressSecurityPolicy(policy1)
+			selNetwork.SetEgressSecurityPolicy(policy2)
+			// Verify if policies are successfully applied
+			Eventually(func() error { return ts.model.VerifyPolicyStatus(policy1) }).Should(Succeed())
+			Eventually(func() error { return ts.model.VerifyPolicyStatus(policy2) }).Should(Succeed())
+			// Verify only TCP traffic flows
+			Expect(ts.model.TCPSession(workloadPairWithinNetwork, 80)).Should(BeNil())
+			Expect(ts.model.PingFails(workloadPairWithinNetwork)).Should(BeNil())
+			// Reset policies
+			selNetwork.SetIngressSecurityPolicy(nil)
+			selNetwork.SetEgressSecurityPolicy(nil)
+
+			//Case 3: One rule with Deny Action Specified
+			policy1 = ts.model.NewNetworkSecurityPolicy("p5").AddRuleForWorkloadCombo(
+				workloadPairWithinNetwork, "workload-subnet", "workload-subnet", "TCP", "80", "DENY")
+			policy2 = ts.model.NewNetworkSecurityPolicy("p6").AddRuleForWorkloadCombo(
+				workloadPairWithinNetwork, "workload-subnet", "workload-subnet", "TCP", "80", "DENY")
+			policy1.SetTenant(selNetwork.GetTenant())
+			policy2.SetTenant(selNetwork.GetTenant())
+			Expect(policy1.Commit()).Should(Succeed())
+			Expect(policy2.Commit()).Should(Succeed())
+			selNetwork.SetIngressSecurityPolicy(policy1)
+			selNetwork.SetEgressSecurityPolicy(policy2)
+			// Verify if policies are successfully applied
+			Eventually(func() error { return ts.model.VerifyPolicyStatus(policy1) }).Should(Succeed())
+			Eventually(func() error { return ts.model.VerifyPolicyStatus(policy2) }).Should(Succeed())
+			// Verify only TCP traffic flows
+			Expect(ts.model.TCPSessionFails(workloadPairWithinNetwork, 80)).Should(BeNil())
+			Expect(ts.model.PingFails(workloadPairWithinNetwork)).Should(BeNil())
+			// Reset policies
+			selNetwork.SetIngressSecurityPolicy(nil)
+			selNetwork.SetEgressSecurityPolicy(nil)
+
+			//Case 4: Two rules with with selective permit
+			policy1 = ts.model.NewNetworkSecurityPolicy("p7").AddRuleForWorkloadCombo(
+				workloadPairWithinNetwork, "workload-subnet", "workload-subnet", "udp", "9100", "PERMIT")
+			policy1.AddRuleForWorkloadCombo(
+				workloadPairAcrossNetwork, "workload-subnet", "workload-subnet", "icmp", "", "PERMIT")
+			policy1.AddRuleForWorkloadCombo(
+				workloadPairAcrossNetwork.ReversePairs(), "workload-subnet", "workload-subnet", "icmp", "", "PERMIT")
+			policy2 = ts.model.NewNetworkSecurityPolicy("p8").AddRuleForWorkloadCombo(
+				workloadPairWithinNetwork, "workload-subnet", "workload-subnet", "udp", "9100", "PERMIT")
+			policy2.AddRuleForWorkloadCombo(
+				workloadPairAcrossNetwork, "workload-subnet", "workload-subnet", "icmp", "", "PERMIT")
+			policy2.AddRuleForWorkloadCombo(
+				workloadPairAcrossNetwork.ReversePairs(), "workload-subnet", "workload-subnet", "icmp", "", "PERMIT")
+			policy1.SetTenant(selNetwork.GetTenant())
+			policy2.SetTenant(selNetwork.GetTenant())
+			Expect(policy1.Commit()).Should(Succeed())
+			Expect(policy2.Commit()).Should(Succeed())
+			selNetwork.SetIngressSecurityPolicy(policy1)
+			selNetwork.SetEgressSecurityPolicy(policy2)
+			// Verify if policies are successfully applied
+			Eventually(func() error { return ts.model.VerifyPolicyStatus(policy1) }).Should(Succeed())
+			Eventually(func() error { return ts.model.VerifyPolicyStatus(policy2) }).Should(Succeed())
+			// Verify only UDP 9100 and ICMP flows
+			Expect(ts.model.PingPairs(workloadPairAcrossNetwork)).Should(BeNil())
+			Expect(ts.model.UDPSession(workloadPairWithinNetwork, 9100)).Should(BeNil())
+			Expect(ts.model.TCPSessionFails(workloadPairWithinNetwork, 80)).Should(BeNil())
+			// Reset policies
+			selNetwork.SetIngressSecurityPolicy(nil)
+			selNetwork.SetEgressSecurityPolicy(nil)
+
+			//Case 5: Two rules with conflicting rules allowing traffic
+			policy1 = ts.model.NewNetworkSecurityPolicy("p9").AddRuleForWorkloadCombo(
+				workloadPairWithinNetwork, "any", "any", "any", "any", "PERMIT")
+			policy1.AddRuleForWorkloadCombo(
+				workloadPairWithinNetwork, "any", "any", "any", "any", "DENY")
+			policy2 = ts.model.NewNetworkSecurityPolicy("p10").AddRuleForWorkloadCombo(
+				workloadPairWithinNetwork, "any", "any", "any", "any", "PERMIT")
+			policy2.AddRuleForWorkloadCombo(
+				workloadPairWithinNetwork, "any", "any", "any", "any", "DENY")
+			policy1.SetTenant(selNetwork.GetTenant())
+			policy2.SetTenant(selNetwork.GetTenant())
+			Expect(policy1.Commit()).Should(Succeed())
+			Expect(policy2.Commit()).Should(Succeed())
+			selNetwork.SetIngressSecurityPolicy(policy1)
+			selNetwork.SetEgressSecurityPolicy(policy2)
+			// Verify if policies are successfully applied
+			Eventually(func() error { return ts.model.VerifyPolicyStatus(policy1) }).Should(Succeed())
+			Eventually(func() error { return ts.model.VerifyPolicyStatus(policy2) }).Should(Succeed())
+			// Verify only UDP 9100 and ICMP flows
+			Expect(ts.model.UDPSession(workloadPairWithinNetwork, 9100)).Should(BeNil())
+			Expect(ts.model.TCPSession(workloadPairWithinNetwork, 80)).Should(BeNil())
+			Expect(ts.model.PingPairs(workloadPairWithinNetwork)).Should(BeNil())
+			// Reset policies
+			selNetwork.SetIngressSecurityPolicy(nil)
+			selNetwork.SetEgressSecurityPolicy(nil)
+
+			//Case 6: Two rules with conflicting information Deny Traffic
+			policy1 = ts.model.NewNetworkSecurityPolicy("p11").AddRuleForWorkloadCombo(
+				workloadPairWithinNetwork, "any", "any", "any", "any", "DENY")
+			policy1.AddRuleForWorkloadCombo(
+				workloadPairWithinNetwork, "any", "any", "any", "any", "PERMIT")
+			policy2 = ts.model.NewNetworkSecurityPolicy("p12").AddRuleForWorkloadCombo(
+				workloadPairWithinNetwork, "any", "any", "any", "any", "DENY")
+			policy2.AddRuleForWorkloadCombo(
+				workloadPairWithinNetwork, "any", "any", "any", "any", "PERMIT")
+			policy1.SetTenant(selNetwork.GetTenant())
+			policy2.SetTenant(selNetwork.GetTenant())
+			Expect(policy1.Commit()).Should(Succeed())
+			Expect(policy2.Commit()).Should(Succeed())
+			selNetwork.SetIngressSecurityPolicy(policy1)
+			selNetwork.SetEgressSecurityPolicy(policy2)
+			// Verify if policies are successfully applied
+			Eventually(func() error { return ts.model.VerifyPolicyStatus(policy1) }).Should(Succeed())
+			Eventually(func() error { return ts.model.VerifyPolicyStatus(policy2) }).Should(Succeed())
+			// Verify only UDP 9100 and ICMP flows
+			Expect(ts.model.UDPSessionFails(workloadPairWithinNetwork, 9100)).Should(BeNil())
+			Expect(ts.model.TCPSessionFails(workloadPairWithinNetwork, 80)).Should(BeNil())
+			Expect(ts.model.PingFails(workloadPairWithinNetwork)).Should(BeNil())
+			// Reset policies
+			selNetwork.SetIngressSecurityPolicy(nil)
+			selNetwork.SetEgressSecurityPolicy(nil)
+		})
+	})
+})
+
 var _ = Describe("multiple policies", func() {
 	var startTime time.Time
 	BeforeEach(func() {
