@@ -222,6 +222,10 @@ jobs:
     labels: ["2xhourly"]
   iota/test/standalone/sanity/windows:
     labels: ["daily"]
+  nic/apollo/tools/apulu/sanity/base:
+    labels: ["2xhourly"]
+  nic/apollo/tools/apulu/sanity/customer-docker:
+    labels: ["2xhourly"]
   iota/test/standalone/sanity/apulu-core:
     labels: ["2xhourly"]
   iota/test/standalone/sanity/apulu-sdn-pds:
@@ -266,10 +270,6 @@ jobs:
 #    labels: ["daily"]
 #  nic/apollo/tools/artemis/sanity/base:
 #    labels: ["daily"]
-  nic/apollo/tools/apulu/sanity/base:
-    labels: ["precommit", "hourly"]
-  nic/apollo/tools/apulu/sanity/customer-docker:
-    labels: ["daily"]
   nic/apollo/tools/athena/sanity/base:
     labels: ["precommit", "hourly"]
   # nic/apollo/tools/athena/sanity/customer-docker:
@@ -303,7 +303,7 @@ jobs:
   venice/ui:
     labels: ["hourly"]
   test/ci_targets/controlplane-dol:
-    labels: ["precommit", "daily"]
+    labels: ["2xhourly"]
 
 dependencies:
   api:
