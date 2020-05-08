@@ -99,7 +99,8 @@ static vmk_UplinkCoalesceParamsOps ionic_en_uplink_coal_params_ops = {
                 (VMK_UPLINK_GENEVE_FLAG_INNER_IPV4_CSO |       \
                  VMK_UPLINK_GENEVE_FLAG_INNER_IPV4_TSO |       \
                  VMK_UPLINK_GENEVE_FLAG_INNER_IPV6_CSO |       \
-                 VMK_UPLINK_GENEVE_FLAG_INNER_IPV6_TSO)
+                 VMK_UPLINK_GENEVE_FLAG_INNER_IPV6_TSO |       \
+                 VMK_UPLINK_GENEVE_FLAG_OUTER_UDP_CSO)
 #else
 #define IONIC_EN_UPLINK_GENEVE_OFFLOAD_FLAGS 0
 #endif
