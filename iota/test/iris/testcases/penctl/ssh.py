@@ -26,6 +26,7 @@ def Verify(tc):
         if cmd.exit_code != 0:
             return api.types.status.FAILURE
 
+    time.sleep(5)
     req = api.Trigger_CreateExecuteCommandsRequest()
     for n in tc.Nodes:
         cmd = "sshpass -p pen123 ssh -o StrictHostKeyChecking=no root@{} ls -al /".format(common.GetNaplesMgmtIP(n))
