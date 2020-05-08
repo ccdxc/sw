@@ -4828,26 +4828,26 @@ func TestRoutingSecrets(t *testing.T) {
 		Spec: network.RoutingConfigSpec{
 			BGPConfig: &network.BGPConfig{
 				RouterId:          "1.1.1.1",
-				ASNumber:          6500,
+				ASNumber:          api.BgpAsn{ASNumber: 6500},
 				KeepaliveInterval: 30,
 				Holdtime:          90,
 				Neighbors: []*network.BGPNeighbor{
 					{
 						IPAddress:             "10.1.1.1",
-						RemoteAS:              62000,
+						RemoteAS:              api.BgpAsn{ASNumber: 62000},
 						EnableAddressFamilies: []string{network.BGPAddressFamily_L2vpnEvpn.String()},
 						MultiHop:              6,
 					},
 					{
 						IPAddress:             "10.1.1.2",
-						RemoteAS:              63000,
+						RemoteAS:              api.BgpAsn{ASNumber: 63000},
 						MultiHop:              6,
 						EnableAddressFamilies: []string{network.BGPAddressFamily_L2vpnEvpn.String()},
 						Password:              "testPassword",
 					},
 					{
 						DSCAutoConfig:         true,
-						RemoteAS:              6500,
+						RemoteAS:              api.BgpAsn{ASNumber: 6500},
 						MultiHop:              6,
 						EnableAddressFamilies: []string{network.BGPAddressFamily_L2vpnEvpn.String()},
 						Password:              "testPassword2",

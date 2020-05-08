@@ -72,7 +72,7 @@ func createRoutingConfig(stateMgr *Statemgr, tenant, name, IP string) (*network.
 		Spec: network.RoutingConfigSpec{
 			BGPConfig: &network.BGPConfig{
 				RouterId: "1.1.1.1",
-				ASNumber: 100,
+				ASNumber: api.BgpAsn{ASNumber: 100},
 			},
 		},
 		Status: network.RoutingConfigStatus{},
@@ -81,7 +81,7 @@ func createRoutingConfig(stateMgr *Statemgr, tenant, name, IP string) (*network.
 	cfg := &network.BGPNeighbor{
 		Shutdown:              false,
 		IPAddress:             IP,
-		RemoteAS:              1,
+		RemoteAS:              api.BgpAsn{ASNumber: 1},
 		MultiHop:              1,
 		EnableAddressFamilies: []string{"IPV4", "EVPN"},
 	}

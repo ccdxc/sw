@@ -7,11 +7,12 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
+import { ApiBgpAsn, IApiBgpAsn } from './api-bgp-asn.model';
 import { NetworkBGPNeighbor, INetworkBGPNeighbor } from './network-bgp-neighbor.model';
 
 export interface INetworkBGPConfig {
     'router-id'?: string;
-    'as-number'?: number;
+    'as-number'?: IApiBgpAsn;
     'keepalive-interval': number;
     'holdtime': number;
     'dsc-auto-config'?: boolean;
@@ -26,7 +27,7 @@ export class NetworkBGPConfig extends BaseModel implements INetworkBGPConfig {
     /** Router ID for the BGP Instance. Should be a valid v4 or v6 IP address. */
     'router-id': string = null;
     /** Local ASN for the BGP Instance. */
-    'as-number': number = null;
+    'as-number': ApiBgpAsn = null;
     /** KeepaliveInterval is time interval at which keepalive messages are sent. Value should be between 0 and 3600. */
     'keepalive-interval': number = null;
     /** Holdtime is time for which not receiving a keepalive message results in declaring the peer as dead. Value should be between 0 and 3600. */
@@ -45,7 +46,7 @@ export class NetworkBGPConfig extends BaseModel implements INetworkBGPConfig {
         'as-number': {
             description:  `Local ASN for the BGP Instance.`,
             required: false,
-            type: 'number'
+            type: 'object'
         },
         'keepalive-interval': {
             default: parseInt('60'),
@@ -93,6 +94,7 @@ export class NetworkBGPConfig extends BaseModel implements INetworkBGPConfig {
     */
     constructor(values?: any, setDefaults:boolean = true) {
         super();
+        this['as-number'] = new ApiBgpAsn();
         this['neighbors'] = new Array<NetworkBGPNeighbor>();
         this._inputValue = values;
         this.setValues(values, setDefaults);
@@ -113,12 +115,10 @@ export class NetworkBGPConfig extends BaseModel implements INetworkBGPConfig {
         } else {
             this['router-id'] = null
         }
-        if (values && values['as-number'] != null) {
-            this['as-number'] = values['as-number'];
-        } else if (fillDefaults && NetworkBGPConfig.hasDefaultValue('as-number')) {
-            this['as-number'] = NetworkBGPConfig.propInfo['as-number'].default;
+        if (values) {
+            this['as-number'].setValues(values['as-number'], fillDefaults);
         } else {
-            this['as-number'] = null
+            this['as-number'].setValues(null, fillDefaults);
         }
         if (values && values['keepalive-interval'] != null) {
             this['keepalive-interval'] = values['keepalive-interval'];
@@ -154,7 +154,7 @@ export class NetworkBGPConfig extends BaseModel implements INetworkBGPConfig {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'router-id': CustomFormControl(new FormControl(this['router-id']), NetworkBGPConfig.propInfo['router-id']),
-                'as-number': CustomFormControl(new FormControl(this['as-number']), NetworkBGPConfig.propInfo['as-number']),
+                'as-number': CustomFormGroup(this['as-number'].$formGroup, NetworkBGPConfig.propInfo['as-number'].required),
                 'keepalive-interval': CustomFormControl(new FormControl(this['keepalive-interval'], [required, maxValueValidator(3600), ]), NetworkBGPConfig.propInfo['keepalive-interval']),
                 'holdtime': CustomFormControl(new FormControl(this['holdtime'], [required, maxValueValidator(3600), ]), NetworkBGPConfig.propInfo['holdtime']),
                 'dsc-auto-config': CustomFormControl(new FormControl(this['dsc-auto-config']), NetworkBGPConfig.propInfo['dsc-auto-config']),
@@ -162,6 +162,11 @@ export class NetworkBGPConfig extends BaseModel implements INetworkBGPConfig {
             });
             // generate FormArray control elements
             this.fillFormArray<NetworkBGPNeighbor>('neighbors', this['neighbors'], NetworkBGPNeighbor);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('as-number') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('as-number').get(field);
+                control.updateValueAndValidity();
+            });
             // We force recalculation of controls under a form group
             Object.keys((this._formGroup.get('neighbors') as FormGroup).controls).forEach(field => {
                 const control = this._formGroup.get('neighbors').get(field);
@@ -178,7 +183,7 @@ export class NetworkBGPConfig extends BaseModel implements INetworkBGPConfig {
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['router-id'].setValue(this['router-id']);
-            this._formGroup.controls['as-number'].setValue(this['as-number']);
+            this['as-number'].setFormGroupValuesToBeModelValues();
             this._formGroup.controls['keepalive-interval'].setValue(this['keepalive-interval']);
             this._formGroup.controls['holdtime'].setValue(this['holdtime']);
             this._formGroup.controls['dsc-auto-config'].setValue(this['dsc-auto-config']);

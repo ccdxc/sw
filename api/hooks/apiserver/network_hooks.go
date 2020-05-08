@@ -564,7 +564,7 @@ func (h *networkHooks) updateAuthStatus(ctx context.Context, kvs kvstore.Interfa
 				for _, n := range inRtCfg.Spec.BGPConfig.Neighbors {
 					stat := &network.BGPAuthStatus{
 						IPAddress: n.IPAddress,
-						RemoteAS:  n.RemoteAS,
+						RemoteAS:  n.RemoteAS.ASNumber,
 					}
 					if n.Password != "" {
 						stat.Status = network.BGPAuthStatus_Enabled.String()
@@ -597,7 +597,7 @@ func (h *networkHooks) updateAuthStatus(ctx context.Context, kvs kvstore.Interfa
 					for _, n := range r1.Spec.BGPConfig.Neighbors {
 						stat := &network.BGPAuthStatus{
 							IPAddress: n.IPAddress,
-							RemoteAS:  n.RemoteAS,
+							RemoteAS:  n.RemoteAS.ASNumber,
 						}
 						if n.Password != "" {
 							stat.Status = network.BGPAuthStatus_Enabled.String()

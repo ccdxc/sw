@@ -7,7 +7,7 @@ import (
 	"net"
 	"reflect"
 
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
@@ -222,14 +222,14 @@ func GetBGPConfiguration(old interface{}, new interface{}, oldLb string, newLb s
 			newCfg = &bgpConfig{
 				uid:       uid.Bytes(),
 				routerID:  newLb,
-				asn:       b.ASNumber,
+				asn:       b.ASNumber.ASNumber,
 				keepalive: b.KeepaliveInterval,
 				holdtime:  b.Holdtime,
 			}
 			peers := "new config peers - "
 			for _, n := range b.Neighbors {
 				laddr := newLb
-				if n.RemoteAS != newCfg.asn {
+				if n.RemoteAS.ASNumber != newCfg.asn {
 					// Force to use local IP for the eBGP sessions
 					laddr = ""
 				}
@@ -247,7 +247,7 @@ func GetBGPConfiguration(old interface{}, new interface{}, oldLb string, newLb s
 				newCfg.neighbors = append(newCfg.neighbors, &bgpNeighbor{
 					shutdown:     n.Shutdown,
 					ipaddress:    n.IPAddress,
-					remoteAS:     n.RemoteAS,
+					remoteAS:     n.RemoteAS.ASNumber,
 					multihop:     n.MultiHop,
 					addrFamilies: n.EnableAddressFamilies,
 					password:     n.Password,
@@ -329,14 +329,14 @@ func GetBGPConfiguration(old interface{}, new interface{}, oldLb string, newLb s
 			b := c.Spec.BGPConfig
 			oldCfg = &bgpConfig{
 				uid:       uid.Bytes(),
-				asn:       b.ASNumber,
+				asn:       b.ASNumber.ASNumber,
 				keepalive: b.KeepaliveInterval,
 				holdtime:  b.Holdtime,
 			}
 			peers := "old config peers - "
 			for _, n := range b.Neighbors {
 				laddr := oldLb
-				if n.RemoteAS != oldCfg.asn {
+				if n.RemoteAS.ASNumber != oldCfg.asn {
 					// Force to use local IP for the eBGP sessions
 					laddr = ""
 				}
@@ -354,7 +354,7 @@ func GetBGPConfiguration(old interface{}, new interface{}, oldLb string, newLb s
 				oldCfg.neighbors = append(oldCfg.neighbors, &bgpNeighbor{
 					shutdown:     n.Shutdown,
 					ipaddress:    n.IPAddress,
-					remoteAS:     n.RemoteAS,
+					remoteAS:     n.RemoteAS.ASNumber,
 					multihop:     n.MultiHop,
 					addrFamilies: n.EnableAddressFamilies,
 					password:     n.Password,

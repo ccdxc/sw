@@ -15,6 +15,7 @@
 		WatchSpec
 		AggWatchOptions
 		Any
+		BgpAsn
 		Interface
 		InterfaceSlice
 		KindWatchOptions

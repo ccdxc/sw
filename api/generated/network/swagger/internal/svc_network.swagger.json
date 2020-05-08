@@ -2613,8 +2613,7 @@
             "type": "string"
           },
           {
-            "name": "bgp-config.as-number",
-            "description": "Local ASN for the BGP Instance.",
+            "name": "as-number.ASNumber",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -7468,6 +7467,15 @@
     }
   },
   "definitions": {
+    "apiBgpAsn": {
+      "type": "object",
+      "properties": {
+        "ASNumber": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
     "apiLabel": {
       "type": "object",
       "properties": {
@@ -8097,8 +8105,7 @@
           "description": "Router ID for the BGP Instance. Should be a valid v4 or v6 IP address."
         },
         "as-number": {
-          "type": "integer",
-          "format": "int64",
+          "$ref": "#/definitions/apiBgpAsn",
           "description": "Local ASN for the BGP Instance."
         },
         "keepalive-interval": {
@@ -8149,8 +8156,7 @@
           "description": "Neighbor IP Address. Should be a valid v4 or v6 IP address."
         },
         "remote-as": {
-          "type": "integer",
-          "format": "int64",
+          "$ref": "#/definitions/apiBgpAsn",
           "description": "ASN the neighbor belongs to."
         },
         "multi-hop": {

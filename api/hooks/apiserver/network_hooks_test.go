@@ -269,17 +269,17 @@ func TestValidateHooks(t *testing.T) {
 	rtcfg := network.RoutingConfig{
 		Spec: network.RoutingConfigSpec{
 			BGPConfig: &network.BGPConfig{
-				ASNumber: 1000,
+				ASNumber: api.BgpAsn{ASNumber: 1000},
 				Neighbors: []*network.BGPNeighbor{
 					{
 						DSCAutoConfig:         true,
 						EnableAddressFamilies: []string{"l2vpn-evpn"},
-						RemoteAS:              1000,
+						RemoteAS:              api.BgpAsn{ASNumber: 1000},
 					},
 					{
 						DSCAutoConfig:         true,
 						EnableAddressFamilies: []string{"ipv4-unicast"},
-						RemoteAS:              1000,
+						RemoteAS:              api.BgpAsn{ASNumber: 1000},
 					},
 				},
 			},
@@ -290,13 +290,13 @@ func TestValidateHooks(t *testing.T) {
 	rtcfg.Spec.BGPConfig.DSCAutoConfig = true
 	errs = nh.validateRoutingConfig(rtcfg, "v1", false, false)
 	Assert(t, len(errs) > 0, "Expecting errors %s", errs)
-	rtcfg.Spec.BGPConfig.Neighbors[1].RemoteAS = 2000
+	rtcfg.Spec.BGPConfig.Neighbors[1].RemoteAS.ASNumber = 2000
 	errs = nh.validateRoutingConfig(rtcfg, "v1", false, false)
 	Assert(t, len(errs) == 0, "found errors %s", errs)
 	rtcfg.Spec.BGPConfig.Neighbors = append(rtcfg.Spec.BGPConfig.Neighbors, &network.BGPNeighbor{
 		DSCAutoConfig:         true,
 		EnableAddressFamilies: []string{"ipv4-unicast"},
-		RemoteAS:              1000,
+		RemoteAS:              api.BgpAsn{ASNumber: 1000},
 	})
 	errs = nh.validateRoutingConfig(rtcfg, "v1", false, false)
 	Assert(t, len(errs) > 0, "Expecting errors %s", errs)
@@ -333,7 +333,7 @@ func TestValidateHooks(t *testing.T) {
 	rtcfg.Spec.BGPConfig.Neighbors = append(rtcfg.Spec.BGPConfig.Neighbors, &network.BGPNeighbor{
 		DSCAutoConfig:         true,
 		EnableAddressFamilies: []string{"l2vpn-evpn"},
-		RemoteAS:              1000,
+		RemoteAS:              api.BgpAsn{ASNumber: 1000},
 	})
 	for _, c := range cases {
 		rtcfg.Spec.BGPConfig.Neighbors[0].Holdtime, rtcfg.Spec.BGPConfig.Neighbors[0].KeepaliveInterval = c.holdtime, c.keepalive
@@ -380,7 +380,7 @@ func TestNetworkPrecommitHooks(t *testing.T) {
 	existingrtcfg := network.RoutingConfig{
 		Spec: network.RoutingConfigSpec{
 			BGPConfig: &network.BGPConfig{
-				ASNumber: 1000,
+				ASNumber: api.BgpAsn{ASNumber: 1000},
 			},
 		},
 	}
@@ -392,13 +392,13 @@ func TestNetworkPrecommitHooks(t *testing.T) {
 	rtCfg := network.RoutingConfig{
 		Spec: network.RoutingConfigSpec{
 			BGPConfig: &network.BGPConfig{
-				ASNumber: 1000,
+				ASNumber: api.BgpAsn{ASNumber: 1000},
 			},
 		},
 	}
 	_, _, err = nh.routingConfigPreCommit(ctx, kvs, txn, "/test/key", apiintf.UpdateOper, false, rtCfg)
 	AssertOk(t, err, "expecting to succeed (%v)", err)
-	rtCfg.Spec.BGPConfig.ASNumber = 2000
+	rtCfg.Spec.BGPConfig.ASNumber.ASNumber = 2000
 	_, _, err = nh.routingConfigPreCommit(ctx, kvs, txn, "/test/key", apiintf.UpdateOper, false, rtCfg)
 	Assert(t, err != nil, "expecting to fail (%v)", err)
 
@@ -846,17 +846,17 @@ func TestRoutingConfigResponseWriter(t *testing.T) {
 	existingrtcfg := network.RoutingConfig{
 		Spec: network.RoutingConfigSpec{
 			BGPConfig: &network.BGPConfig{
-				ASNumber: 1000,
+				ASNumber: api.BgpAsn{ASNumber: 1000},
 				Neighbors: []*network.BGPNeighbor{
 					{
 						IPAddress:             "10.1.1.1",
-						RemoteAS:              62000,
+						RemoteAS:              api.BgpAsn{ASNumber: 62000},
 						EnableAddressFamilies: []string{network.BGPAddressFamily_L2vpnEvpn.String()},
 						MultiHop:              6,
 					},
 					{
 						IPAddress:             "10.1.1.2",
-						RemoteAS:              63000,
+						RemoteAS:              api.BgpAsn{ASNumber: 63000},
 						MultiHop:              6,
 						EnableAddressFamilies: []string{network.BGPAddressFamily_L2vpnEvpn.String()},
 						Password:              "testPassword",

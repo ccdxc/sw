@@ -29,13 +29,6 @@ func removeRouteTableOper(obj interface{}) error {
 // CreateRoutingConfigFlags specifies flags for RoutingConfig create operation
 var CreateRoutingConfigFlags = []gen.CliFlag{
 	{
-		ID:     "as-number",
-		Type:   "String",
-		Help:   "",
-		Skip:   false,
-		Insert: "",
-	},
-	{
 		ID:     "dsc-auto-config",
 		Type:   "Bool",
 		Help:   "",
@@ -79,13 +72,6 @@ var CreateRoutingConfigFlags = []gen.CliFlag{
 	},
 	{
 		ID:     "password",
-		Type:   "StringSlice",
-		Help:   "",
-		Skip:   false,
-		Insert: "",
-	},
-	{
-		ID:     "remote-as",
 		Type:   "StringSlice",
 		Help:   "",
 		Skip:   false,

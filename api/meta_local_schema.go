@@ -48,6 +48,12 @@ var typesMapMeta = map[string]*Struct{
 			"value": Field{Name: "value", CLITag: CLIInfo{ID: "value", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_BYTES"},
 		},
 	},
+	"api.BgpAsn": &Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(BgpAsn{}) },
+		Fields: map[string]Field{
+			"ASNumber": Field{Name: "ASNumber", CLITag: CLIInfo{ID: "ASNumber", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
+		},
+	},
 	"api.Interface": &Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(Interface{}) },
 		Fields: map[string]Field{

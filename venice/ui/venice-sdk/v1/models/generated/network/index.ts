@@ -5,6 +5,7 @@
 /* tslint:disable */
 
 export * from './enums';
+export * from './api-bgp-asn.model';
 export * from './api-label.model';
 export * from './api-list-meta.model';
 export * from './api-list-watch-options.model';

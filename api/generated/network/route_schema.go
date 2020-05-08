@@ -30,7 +30,7 @@ var typesMapRoute = map[string]*api.Struct{
 		Fields: map[string]api.Field{
 			"RouterId": api.Field{Name: "RouterId", CLITag: api.CLIInfo{ID: "router-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "router-id", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"ASNumber": api.Field{Name: "ASNumber", CLITag: api.CLIInfo{ID: "as-number", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "as-number", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
+			"ASNumber": api.Field{Name: "ASNumber", CLITag: api.CLIInfo{ID: "as-number", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "as-number", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.BgpAsn"},
 
 			"KeepaliveInterval": api.Field{Name: "KeepaliveInterval", CLITag: api.CLIInfo{ID: "keepalive-interval", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "keepalive-interval", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
 
@@ -48,7 +48,7 @@ var typesMapRoute = map[string]*api.Struct{
 
 			"IPAddress": api.Field{Name: "IPAddress", CLITag: api.CLIInfo{ID: "ip-address", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ip-address", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"RemoteAS": api.Field{Name: "RemoteAS", CLITag: api.CLIInfo{ID: "remote-as", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "remote-as", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
+			"RemoteAS": api.Field{Name: "RemoteAS", CLITag: api.CLIInfo{ID: "remote-as", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "remote-as", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.BgpAsn"},
 
 			"MultiHop": api.Field{Name: "MultiHop", CLITag: api.CLIInfo{ID: "multi-hop", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "multi-hop", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
 
@@ -203,7 +203,6 @@ var typesMapRoute = map[string]*api.Struct{
 
 		CLITags: map[string]api.CLIInfo{
 			"api-version":             api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
-			"as-number":               api.CLIInfo{Path: "Spec.BGPConfig.ASNumber", Skip: false, Insert: "", Help: ""},
 			"dsc-auto-config":         api.CLIInfo{Path: "Spec.BGPConfig.DSCAutoConfig", Skip: false, Insert: "", Help: ""},
 			"enable-address-families": api.CLIInfo{Path: "Spec.BGPConfig.Neighbors[].EnableAddressFamilies", Skip: false, Insert: "", Help: ""},
 			"generation-id":           api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
@@ -216,7 +215,7 @@ var typesMapRoute = map[string]*api.Struct{
 			"name":                    api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
 			"namespace":               api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
 			"password":                api.CLIInfo{Path: "Spec.BGPConfig.Neighbors[].Password", Skip: false, Insert: "", Help: ""},
-			"remote-as":               api.CLIInfo{Path: "Spec.BGPConfig.Neighbors[].RemoteAS", Skip: false, Insert: "", Help: ""},
+			"remote-as":               api.CLIInfo{Path: "Status.AuthConfigStatus[].RemoteAS", Skip: false, Insert: "", Help: ""},
 			"resource-version":        api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
 			"router-id":               api.CLIInfo{Path: "Spec.BGPConfig.RouterId", Skip: false, Insert: "", Help: ""},
 			"self-link":               api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},

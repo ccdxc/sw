@@ -97,7 +97,8 @@ message BGPNeighbor {
                                                 (venice.check) = "EmptyOr(IPAddr())"];
 
     // ASN the neighbor belongs to.
-    uint32 RemoteAS                         = 3 [(gogoproto.jsontag) = "remote-as,omitempty"];
+    api.BgpAsn RemoteAS                     = 3 [(gogoproto.nullable) = false,
+                                                (gogoproto.jsontag) = "remote-as,omitempty"];
 
     // BGP Multihop configuration.
     uint32 MultiHop                         = 4 [(gogoproto.jsontag) = "multi-hop,omitempty",
@@ -130,7 +131,8 @@ message BGPConfig {
                                         (venice.check) = "EmptyOr(IPAddr())"];
 
     // Local ASN for the BGP Instance.
-    uint32 ASNumber                 = 2 [(gogoproto.jsontag) = "as-number,omitempty"];
+    api.BgpAsn ASNumber             = 2 [(gogoproto.nullable) = false,
+                                        (gogoproto.jsontag) = "as-number,omitempty"];
 
     // KeepaliveInterval is time interval at which keepalive messages are sent.
     uint32 KeepaliveInterval        = 3 [(gogoproto.jsontag) = "keepalive-interval,omitempty",

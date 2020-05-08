@@ -10,6 +10,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/network"
 	iota "github.com/pensando/sw/iota/protos/gogen"
@@ -47,9 +48,9 @@ var _ = Describe("Routing Config Tests", func() {
 						if strings.Contains(string(out), "ipv4-unicast") {
 							log.Debugf("RoutingConfig %v has ipv4-unicast AF", v.RoutingObj.Name)
 							match = true
-							remoteASN = n.RemoteAS
-							n.RemoteAS = testASN
-							log.Infof("RoutingConfig %v Underlay RemoteAS is updated from %v to %v", v.RoutingObj.Name, remoteASN, n.RemoteAS)
+							remoteASN = n.RemoteAS.ASNumber
+							n.RemoteAS.ASNumber = testASN
+							log.Infof("RoutingConfig %v Underlay RemoteAS is updated from %v to %v", v.RoutingObj.Name, remoteASN, n.RemoteAS.ASNumber)
 							break
 						}
 					}
@@ -115,8 +116,8 @@ var _ = Describe("Routing Config Tests", func() {
 				for _, n := range v.RoutingObj.Spec.BGPConfig.Neighbors {
 					out := strings.Join(n.EnableAddressFamilies, " ")
 					if strings.Contains(string(out), "ipv4-unicast") {
-						n.RemoteAS = remoteASN
-						log.Infof("RoutingConfig %v Underlay RemoteAS is reset from %v to %v", v.RoutingObj.Name, testASN, n.RemoteAS)
+						n.RemoteAS.ASNumber = remoteASN
+						log.Infof("RoutingConfig %v Underlay RemoteAS is reset from %v to %v", v.RoutingObj.Name, testASN, n.RemoteAS.ASNumber)
 						break
 					}
 				}
@@ -168,7 +169,7 @@ var _ = Describe("Routing Config Tests", func() {
 					newNbr := &network.BGPNeighbor{
 						Shutdown:              false,
 						IPAddress:             "22.1.1.50",
-						RemoteAS:              100,
+						RemoteAS:              api.BgpAsn{ASNumber: 100},
 						MultiHop:              10,
 						EnableAddressFamilies: []string{"l2vpn-evpn"},
 						Password:              "",
@@ -217,7 +218,7 @@ var _ = Describe("Routing Config Tests", func() {
 					newNbr := &network.BGPNeighbor{
 						Shutdown:              false,
 						IPAddress:             "",
-						RemoteAS:              100,
+						RemoteAS:              api.BgpAsn{ASNumber: 100},
 						MultiHop:              10,
 						EnableAddressFamilies: []string{"l2vpn-evpn"},
 						Password:              "",
@@ -821,7 +822,7 @@ func getExpectedNaplesState(r *objects.RoutingConfig, node *objects.Naples, isHw
 		return &cfg, nil
 	}
 
-	cfg.LocalASNumber = r.RoutingObj.Spec.BGPConfig.GetASNumber()
+	cfg.LocalASNumber = r.RoutingObj.Spec.BGPConfig.GetASNumber().ASNumber
 
 	if isHwNode {
 		cfg.RouterId = strings.Split(node.Instances[0].LoopbackIP, "/")[0]
@@ -892,7 +893,7 @@ func getExpectedRRState(r *objects.RoutingConfig) *pdsConfigCmp {
 		return &cfg
 	}
 
-	cfg.LocalASNumber = r.RoutingObj.Spec.BGPConfig.GetASNumber()
+	cfg.LocalASNumber = r.RoutingObj.Spec.BGPConfig.GetASNumber().ASNumber
 	cfg.RouterId = r.RoutingObj.Spec.BGPConfig.GetRouterId()
 
 	//Add all non auto config nodes (ECX and any such DSCs) first

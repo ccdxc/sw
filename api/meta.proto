@@ -187,3 +187,7 @@ enum EventType {
     UpdateEvent   = 1 [(venice.enumValueStr) = "update-event"];
     DeleteEvent   = 2 [(venice.enumValueStr) = "delete-event"];
 }
+
+message BgpAsn {
+  uint32 ASNumber = 1;
+}

@@ -7,12 +7,13 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
+import { ApiBgpAsn, IApiBgpAsn } from './api-bgp-asn.model';
 import { NetworkBGPNeighbor_enable_address_families,  } from './enums';
 
 export interface INetworkBGPNeighbor {
     'shutdown'?: boolean;
     'ip-address'?: string;
-    'remote-as'?: number;
+    'remote-as'?: IApiBgpAsn;
     'multi-hop': number;
     'enable-address-families': Array<NetworkBGPNeighbor_enable_address_families>;
     'password'?: string;
@@ -31,7 +32,7 @@ export class NetworkBGPNeighbor extends BaseModel implements INetworkBGPNeighbor
     /** Neighbor IP Address. Should be a valid v4 or v6 IP address. */
     'ip-address': string = null;
     /** ASN the neighbor belongs to. */
-    'remote-as': number = null;
+    'remote-as': ApiBgpAsn = null;
     /** BGP Multihop configuration. Value should be between 1 and 255. */
     'multi-hop': number = null;
     /** Address families to enable on the neighbor. */
@@ -59,7 +60,7 @@ export class NetworkBGPNeighbor extends BaseModel implements INetworkBGPNeighbor
         'remote-as': {
             description:  `ASN the neighbor belongs to.`,
             required: false,
-            type: 'number'
+            type: 'object'
         },
         'multi-hop': {
             default: parseInt('64'),
@@ -118,6 +119,7 @@ export class NetworkBGPNeighbor extends BaseModel implements INetworkBGPNeighbor
     */
     constructor(values?: any, setDefaults:boolean = true) {
         super();
+        this['remote-as'] = new ApiBgpAsn();
         this['enable-address-families'] = new Array<NetworkBGPNeighbor_enable_address_families>();
         this._inputValue = values;
         this.setValues(values, setDefaults);
@@ -145,12 +147,10 @@ export class NetworkBGPNeighbor extends BaseModel implements INetworkBGPNeighbor
         } else {
             this['ip-address'] = null
         }
-        if (values && values['remote-as'] != null) {
-            this['remote-as'] = values['remote-as'];
-        } else if (fillDefaults && NetworkBGPNeighbor.hasDefaultValue('remote-as')) {
-            this['remote-as'] = NetworkBGPNeighbor.propInfo['remote-as'].default;
+        if (values) {
+            this['remote-as'].setValues(values['remote-as'], fillDefaults);
         } else {
-            this['remote-as'] = null
+            this['remote-as'].setValues(null, fillDefaults);
         }
         if (values && values['multi-hop'] != null) {
             this['multi-hop'] = values['multi-hop'];
@@ -203,13 +203,18 @@ export class NetworkBGPNeighbor extends BaseModel implements INetworkBGPNeighbor
             this._formGroup = new FormGroup({
                 'shutdown': CustomFormControl(new FormControl(this['shutdown']), NetworkBGPNeighbor.propInfo['shutdown']),
                 'ip-address': CustomFormControl(new FormControl(this['ip-address']), NetworkBGPNeighbor.propInfo['ip-address']),
-                'remote-as': CustomFormControl(new FormControl(this['remote-as']), NetworkBGPNeighbor.propInfo['remote-as']),
+                'remote-as': CustomFormGroup(this['remote-as'].$formGroup, NetworkBGPNeighbor.propInfo['remote-as'].required),
                 'multi-hop': CustomFormControl(new FormControl(this['multi-hop'], [required, minValueValidator(1), maxValueValidator(255), ]), NetworkBGPNeighbor.propInfo['multi-hop']),
                 'enable-address-families': CustomFormControl(new FormControl(this['enable-address-families']), NetworkBGPNeighbor.propInfo['enable-address-families']),
                 'password': CustomFormControl(new FormControl(this['password'], [minLengthValidator(1), maxLengthValidator(128), ]), NetworkBGPNeighbor.propInfo['password']),
                 'dsc-auto-config': CustomFormControl(new FormControl(this['dsc-auto-config']), NetworkBGPNeighbor.propInfo['dsc-auto-config']),
                 'keepalive-interval': CustomFormControl(new FormControl(this['keepalive-interval'], [required, maxValueValidator(3600), ]), NetworkBGPNeighbor.propInfo['keepalive-interval']),
                 'holdtime': CustomFormControl(new FormControl(this['holdtime'], [required, maxValueValidator(3600), ]), NetworkBGPNeighbor.propInfo['holdtime']),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('remote-as') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('remote-as').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;
@@ -223,7 +228,7 @@ export class NetworkBGPNeighbor extends BaseModel implements INetworkBGPNeighbor
         if (this._formGroup) {
             this._formGroup.controls['shutdown'].setValue(this['shutdown']);
             this._formGroup.controls['ip-address'].setValue(this['ip-address']);
-            this._formGroup.controls['remote-as'].setValue(this['remote-as']);
+            this['remote-as'].setFormGroupValuesToBeModelValues();
             this._formGroup.controls['multi-hop'].setValue(this['multi-hop']);
             this._formGroup.controls['enable-address-families'].setValue(this['enable-address-families']);
             this._formGroup.controls['password'].setValue(this['password']);

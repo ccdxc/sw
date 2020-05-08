@@ -155,7 +155,7 @@ var scaleCfgenParams = &Cfgen{
 			},
 			Spec: network.RoutingConfigSpec{
 				BGPConfig: &network.BGPConfig{
-					ASNumber:  100,
+					ASNumber:  api.BgpAsn{ASNumber: 100},
 					RouterId:  "{{ipv4:10.1.1.0}}",
 					Neighbors: []*network.BGPNeighbor{},
 				},
@@ -163,7 +163,7 @@ var scaleCfgenParams = &Cfgen{
 		},
 		BgpNeihbourTemplate: &network.BGPNeighbor{
 			EnableAddressFamilies: []string{"l2vpn-evpn"},
-			RemoteAS:              100,
+			RemoteAS:              api.BgpAsn{ASNumber: 100},
 			MultiHop:              10,
 			IPAddress:             "{{ipv4:22.x.1.1}}",
 		},
@@ -178,20 +178,20 @@ var scaleCfgenParams = &Cfgen{
 			},
 			Spec: network.RoutingConfigSpec{
 				BGPConfig: &network.BGPConfig{
-					ASNumber:      100, //Static testbeds had this AS number
+					ASNumber:      api.BgpAsn{ASNumber: 100}, //Static testbeds had this AS number
 					DSCAutoConfig: true,
 					Neighbors:     []*network.BGPNeighbor{},
 				},
 			},
 		},
 		UnderlayBgpNeihbourTemplate: &network.BGPNeighbor{
-			RemoteAS:              600, //Static testbed has this AS number
+			RemoteAS:              api.BgpAsn{ASNumber: 600}, //Static testbed has this AS number
 			MultiHop:              10,
 			DSCAutoConfig:         true,
 			EnableAddressFamilies: []string{"ipv4-unicast"},
 		},
 		OverlayBgpNeihbourTemplate: &network.BGPNeighbor{
-			RemoteAS:              100, //Static testbed has this AS number
+			RemoteAS:              api.BgpAsn{ASNumber: 100}, //Static testbed has this AS number
 			MultiHop:              10,
 			DSCAutoConfig:         true,
 			EnableAddressFamilies: []string{"l2vpn-evpn"},

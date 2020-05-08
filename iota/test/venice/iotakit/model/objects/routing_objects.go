@@ -29,18 +29,18 @@ func NewRoutingConfig(name string, client objClient.ObjClient, testbed *testbed.
 					Spec: network.RoutingConfigSpec{
 						BGPConfig: &network.BGPConfig{
 							RouterId: "0.0.0.0",
-							ASNumber: 100,
+							ASNumber: api.BgpAsn{ASNumber: 100},
 							Neighbors: []*network.BGPNeighbor{
 								{
 									IPAddress: "0.0.0.0",
-									RemoteAS:  600,
+									RemoteAS:  api.BgpAsn{ASNumber: 600},
 									EnableAddressFamilies: []string{
 										"ipv4-unicast",
 									},
 								},
 								{
 									IPAddress: "0.0.0.0",
-									RemoteAS:  100,
+									RemoteAS:  api.BgpAsn{ASNumber: 100},
 									MultiHop:  10,
 									EnableAddressFamilies: []string{
 										"l2vpn-evpn",
