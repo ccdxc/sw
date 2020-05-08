@@ -46,8 +46,14 @@ then
     : ${COMMON_GEN_DIR:="$GEN_DIR/common/"}
     : ${GEN_PKG:="$GEN_DIR.tar.xz"}
     : ${REL_DROP:="$TOP/platform/gen/esxi_rel_drop_6.5"}
+elif [ $1 -eq 70 ]
+then
+    : ${GEN_DIR:="$TOP/platform/gen/drivers-esx-eth-70"}
+    : ${COMMON_GEN_DIR:="$GEN_DIR/common/"}
+    : ${GEN_PKG:="$GEN_DIR.tar.xz"}
+    : ${REL_DROP:="$TOP/platform/gen/esxi_rel_drop_7.0"}
 else
-    echo "Bad argument, should be 67 or 65"
+    echo "Bad argument, should be 70, 67 or 65"
     exit
 fi
 

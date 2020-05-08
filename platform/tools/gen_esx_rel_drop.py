@@ -20,6 +20,10 @@ if GlobalOptions.drop_version == '67':
 elif GlobalOptions.drop_version == '65':
     bundle_name = "VMW-ESX-6.5.0-"
     untar_dir_name = "drivers-esx-eth-65"
+elif GlobalOptions.drop_version == "70":
+    # 7.0 does not use bundle anymore
+    bundle_name = ""
+    untar_dir_name = "drivers-esx-eth-70"
 else:
     print ("Unknown version of release drop that requested to be generated %s" % GlobalOptions.drop_version)
     sys.exit(1)
@@ -55,6 +59,14 @@ def copy_vib():
     assert(ret == 0)
     return 0
 
+# Only needed for vSphere 7.0
+def copy_component():
+    cmd = "mv %s/%s/drivers/esxi/ionic_en/build/component/VMW*.zip %s" % (GlobalOptions.rel_drop_dir, untar_dir_name, GlobalOptions.rel_drop_dir)
+    print(cmd)
+    ret = os.system(cmd)
+    assert(ret == 0)
+    return 0
+
 def get_pencli():
     cmd = "mv %s/%s/drivers/esxi/esx-pencli.pyc %s" % (GlobalOptions.rel_drop_dir, untar_dir_name, GlobalOptions.rel_drop_dir)
     print(cmd)
@@ -76,12 +88,20 @@ def del_untar_dir():
     assert(ret == 0)
 
     return 0
- 
-drv_name_ver = get_drv_name_ver()
-bundle_name += drv_name_ver + "-offline_bundle"
-get_offline_bundle()
+
+if GlobalOptions.drop_version == "65" or GlobalOptions.drop_version == "67":
+    drv_name_ver = get_drv_name_ver()
+    bundle_name += drv_name_ver + "-offline_bundle"
+    get_offline_bundle()
+    
 copy_vib()
+
+# Only needed for vSphere 7.0
+if GlobalOptions.drop_version == "70":
+    copy_component()
+
 get_doc()
 get_pencli()
 get_bulletin_xml()
 del_untar_dir()
+

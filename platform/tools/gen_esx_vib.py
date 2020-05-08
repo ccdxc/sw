@@ -27,10 +27,17 @@ GlobalOptions = parser.parse_args()
 if GlobalOptions.vib_version == '67':
     # Will be changed to -67 once we have IOTA change for ESXi version
     vib_ver_str = ""
+    ddk_str = "nativeddk-6.*"
     GlobalOptions.esx_bld_vm = "esx-6.7-vib.pensando.io"
 elif GlobalOptions.vib_version == '65':
-    GlobalOptions.esx_bld_vm = "esx-6.5-vib.pensando.io"
     vib_ver_str = "-65"
+    ddk_str = "nativeddk-6.*"
+    GlobalOptions.esx_bld_vm = "esx-6.5-vib.pensando.io"
+elif GlobalOptions.vib_version == '70':
+    vib_ver_str = "-70"
+    ddk_str = "nativeddk-7.0.0-15843807"
+    GlobalOptions.esx_bld_vm = "esx-7.0-vib.pensando.io"
+    GlobalOptions.esx_bld_vm_password = "docker"
 else:
     print ("Unknown version of vib that requested to be generated %s" % GlobalOptions.vib_version)
     sys.exit(1)
@@ -70,7 +77,7 @@ def bld_vm_copyout(src_filename, dest_dir):
 
 pkg_name = os.path.basename(GlobalOptions.drivers_pkg)
 dst_pkg_base_name = "_".join([pkg_name, socket.gethostname(), getpass.getuser()])
-stdout, _, exit_status  = bld_vm_run("find  /opt/vmware/  -type d  -name   nativeddk-6.*")
+stdout, _, exit_status  = bld_vm_run("find  /opt/vmware/  -type d  -name   " + ddk_str)
 print ("Native DDK dir out ", stdout)
 if len(stdout) == 0:
     print ("Invalid output when discovering native ddk", stdout)
