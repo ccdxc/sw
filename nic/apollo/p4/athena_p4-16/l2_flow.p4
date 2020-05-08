@@ -14,8 +14,6 @@ control l2_flow_lookup(inout cap_phv_intr_global_h intr_global,
     @name(".l2_flow_hash")
     action l2_flow_hash(
 		           bit<22>     idx,
-                            bit<1>     idx_type,
-			   //    bit<8>     pad,
 		            bit<11>    hash1,
 		            bit<19>    hint1,
 		            bit<11>    hash2,

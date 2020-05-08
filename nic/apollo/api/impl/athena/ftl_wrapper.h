@@ -135,6 +135,46 @@ ftlv6_get_key_dst_ip (flow_hash_entry_t *entry, uint8_t *dst)
     return entry->get_key_metadata_dst(dst);
 }
 
+#ifndef P4_14
+// L2 Flow hash table set/get API wrappers
+static inline void
+l2flow_set_index (l2_flow_hash_entry_t *entry, uint32_t index)
+{
+    return entry->set_idx(index);
+}
+ 
+static inline void
+l2flow_set_key_vnic_id (l2_flow_hash_entry_t *entry, uint16_t vnic_id)
+{
+    return entry->set_key_metadata_vnic_id(vnic_id);
+}
+
+static inline void
+l2flow_set_key_dmac (l2_flow_hash_entry_t *entry, uint64_t dmac)
+{
+    return entry->set_key_metadata_dmac(dmac);
+}
+
+static inline uint32_t
+l2flow_get_index (l2_flow_hash_entry_t *entry)
+{
+    return entry->get_idx();
+}
+
+static inline uint16_t
+l2flow_get_key_vnic_id (l2_flow_hash_entry_t *entry)
+{
+  return entry->get_key_metadata_vnic_id();
+}
+
+static inline uint64_t
+l2flow_get_key_dmac (l2_flow_hash_entry_t *entry)
+{
+    return entry->get_key_metadata_dmac();
+}
+
+#endif
+
 // DNAT hash table set/get API wrappers
 static inline void
 dnat_set_map_ip (dnat_entry_t *entry, uint8_t *ipaddr)

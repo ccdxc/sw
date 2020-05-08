@@ -17,8 +17,9 @@ header p4i_to_p4e_header_h {
     bit<1>  direction;
     bit<1>  update_checksum;
     bit<1>  l2_vnic;
-    bit<3>  pad1;
-    //    bit<1>  pad1;
+    bit<1>  session_info_en;
+    bit<1>  conntrack_en;
+    bit<1>  pad1;
     bit<16> packet_len;
     bit<16> dnat_epoch;
     bit<32> flow_hash;

@@ -96,6 +96,14 @@ fill_data (pds_flow_session_rewrite_data_t *data, uint32_t index,
         geneve_encap->sg_id6 = sg_id + index + 6;
         geneve_encap->originator_physical_ip = origin_ip_addr + index;
     }
+#ifndef P4_14
+    else if (encap_type == ENCAP_TYPE_INSERT_CTAG) {
+        pds_flow_session_insert_ctag_t *insert_ctag =
+            &data->u.insert_ctag;
+        insert_ctag->vlan_id = index & 0xFFF;
+    }
+#endif
+
     return;
 }
 

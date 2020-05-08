@@ -215,6 +215,22 @@ TEST_F(flow_session_rewrite_test, flow_session_rewrite_crud) {
     SDK_ASSERT(memcmp(&info.spec.data, &spec.data,
                sizeof(pds_flow_session_rewrite_data_t)) == 0);
 
+
+#ifndef P4_14
+    memset(&spec, 0, sizeof(spec)); 
+    fill_key(&spec.key, 13);
+    fill_data(&spec.data, 13, REWRITE_NAT_TYPE_IPV4_SDPAT, ENCAP_TYPE_INSERT_CTAG);
+    SDK_ASSERT(pds_flow_session_rewrite_create(&spec) == PDS_RET_OK);
+
+    memset(&info, 0, sizeof(info));
+    fill_key(&key, 13);
+    SDK_ASSERT(pds_flow_session_rewrite_read(&key, &info) == 
+            PDS_RET_OK);
+    SDK_ASSERT(memcmp(&info.spec.data, &spec.data,
+               sizeof(pds_flow_session_rewrite_data_t)) == 0);
+
+#endif
+
     memset(&spec, 0, sizeof(spec)); 
     fill_key(&spec.key, 24);
     fill_data(&spec.data, 24, REWRITE_NAT_TYPE_MAX, ENCAP_TYPE_GENEVE);

@@ -326,6 +326,25 @@ pds_flow_session_rewrite_create (pds_flow_session_rewrite_spec_t *spec)
 
         p4pd_ret = session_encap_geneve.write(session_rewrite_id);
     }
+#ifndef P4_14
+    else if (spec->data.encap_type == ENCAP_TYPE_INSERT_CTAG) {
+        session_rewrite_insert_ctag_entry_t session_encap_insert_ctag;
+        uint16_t   vlan_id = 0;
+
+        session_encap_insert_ctag.clear();
+
+        session_encap_insert_ctag.set_actionid(
+            sdk::asic::pd::asicpd_get_action_pc(
+                P4TBL_ID_SESSION_REWRITE_ENCAP, 
+                SESSION_REWRITE_ENCAP_SESSION_REWRITE_INSERT_CTAG_ID));
+        session_encap_insert_ctag.set_vlan(
+            spec->data.u.insert_ctag.vlan_id);
+        session_encap_insert_ctag.set_valid_flag(TRUE);
+        p4pd_ret = session_encap_insert_ctag.write(session_rewrite_id);
+
+    }      
+#endif
+
     if (p4pd_ret != P4PD_SUCCESS) {
         PDS_TRACE_ERR("Failed to write session rewrite encap table at index %u",
                        session_rewrite_id);
@@ -633,7 +652,27 @@ pds_flow_session_rewrite_read (pds_flow_session_rewrite_key_t *key,
         info->spec.data.u.geneve_encap.originator_physical_ip =
             session_encap_geneve.get_originator_physical_ip();
         info->spec.data.encap_type = ENCAP_TYPE_GENEVE;
-    } else {
+    } 
+ #ifndef P4_14
+    else if (action_id == SESSION_REWRITE_ENCAP_SESSION_REWRITE_INSERT_CTAG_ID) {
+
+        session_rewrite_insert_ctag_entry_t session_encap_insert_ctag;
+        session_encap_insert_ctag.clear();
+        session_encap_insert_ctag.copy_data(&session_encap_l2);
+
+        if (!session_encap_insert_ctag.get_valid_flag()) {
+            PDS_TRACE_ERR("Invalid entry in session encap table at index %u",
+                          session_rewrite_id);
+            return PDS_RET_ERR;
+        }
+        info->spec.data.u.insert_ctag.vlan_id =
+            session_encap_insert_ctag.get_vlan();
+        info->spec.data.encap_type = ENCAP_TYPE_INSERT_CTAG;
+
+    }      
+#endif
+   
+    else {
         PDS_TRACE_ERR("Invalid action/entry in session encap table"
                       " at index %u", session_rewrite_id);
         return PDS_RET_ERR;

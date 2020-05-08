@@ -26,7 +26,7 @@ control key_init(inout cap_phv_intr_global_h intr_global,
 	  metadata.key.dst = (bit<128>)hdr.ip_1.ipv4.srcAddr;
 	  metadata.key.src = (bit<128>)hdr.ip_1.ipv4.dstAddr;
 	  //	  metadata.l2_key.dmac = (bit<128>)hdr.ethernet_1.srcAddr;
-	  metadata.l2_key.dmac = hdr.ethernet_1.srcAddr;
+	  metadata.l2_key.dmac = hdr.ethernet_1.dstAddr;
 
 	  //	  if(hdr.l4_u.icmpv4.isValid() || hdr.l4_u.icmpv6.isValid()) {
 	  if(metadata.l4.icmp_valid == TRUE) {
@@ -57,7 +57,7 @@ control key_init(inout cap_phv_intr_global_h intr_global,
 	  metadata.key.dst = hdr.ip_1.ipv6.srcAddr;
 	  metadata.key.src = hdr.ip_1.ipv6.dstAddr;
 	  //	  metadata.l2_key.dst = (bit<128>)hdr.ethernet_1.srcAddr;
-	  metadata.l2_key.dmac = hdr.ethernet_1.srcAddr;
+	  metadata.l2_key.dmac = hdr.ethernet_1.dstAddr;
 	  
 	  //	  if(hdr.l4_u.icmpv4.isValid() || hdr.l4_u.icmpv6.isValid()) {
 	  if(metadata.l4.icmp_valid == TRUE) {
@@ -90,14 +90,14 @@ control key_init(inout cap_phv_intr_global_h intr_global,
 	  metadata.key.sport = metadata.l4.l4_sport_2;
 	  metadata.key.dport = metadata.l4.l4_dport_2; 
 	  //	  metadata.l2_key.dst = (bit<128>)hdr.ethernet_1.dstAddr;
-	  metadata.l2_key.dmac = hdr.ethernet_1.dstAddr;
+	  metadata.l2_key.dmac = hdr.ethernet_2.dstAddr;
 
 	}
 	if(metadata.cntrl.direction == RX_FROM_SWITCH) {	
 	  metadata.key.src = (bit<128>)hdr.ip_2.ipv4.dstAddr;
 	  metadata.key.dst = (bit<128>)hdr.ip_2.ipv4.srcAddr;
 	  //	  metadata.l2_key.dst = (bit<128>)hdr.ethernet_1.srcAddr;
-	  metadata.l2_key.dmac = hdr.ethernet_1.srcAddr;
+	  metadata.l2_key.dmac = hdr.ethernet_2.dstAddr;
 
 	  //	  if(hdr.l4_u.icmpv4.isValid() || hdr.l4_u.icmpv6.isValid()) {
 	  if(metadata.l4.icmp_valid == TRUE) {
@@ -122,14 +122,14 @@ control key_init(inout cap_phv_intr_global_h intr_global,
 	  metadata.key.sport = metadata.l4.l4_sport_2;
 	  metadata.key.dport = metadata.l4.l4_dport_2;
 	  //	  metadata.l2_key.dst = (bit<128>)hdr.ethernet_1.dstAddr;
-	  metadata.l2_key.dmac = hdr.ethernet_1.dstAddr;
+	  metadata.l2_key.dmac = hdr.ethernet_2.dstAddr;
 	
 	}
 	if(metadata.cntrl.direction == RX_FROM_SWITCH) {	
 	  metadata.key.src = hdr.ip_2.ipv6.dstAddr;
 	  metadata.key.dst = hdr.ip_2.ipv6.srcAddr;
 	  //	  metadata.l2_key.dst = (bit<128>)hdr.ethernet_1.srcAddr;
-	  metadata.l2_key.dmac = hdr.ethernet_1.srcAddr;
+	  metadata.l2_key.dmac = hdr.ethernet_2.dstAddr;
 	  //	  if(hdr.l4_u.icmpv4.isValid() || hdr.l4_u.icmpv6.isValid()) {
 	  if(metadata.l4.icmp_valid == TRUE) {
 	    metadata.key.sport = metadata.l4.l4_sport_2;
@@ -145,7 +145,7 @@ control key_init(inout cap_phv_intr_global_h intr_global,
    @name(".tunneled_nonip_packet") action tunneled_nonip_packet() {
 	metadata.l2_key.ktype = P4_KEY_TYPE_MAC;
         metadata.cntrl.skip_flow_lkp = TRUE;
-	  metadata.l2_key.src = (bit<128>)hdr.ethernet_1.dstAddr;
+	metadata.l2_key.src = (bit<128>)hdr.ethernet_1.dstAddr;
     }
 
     
@@ -198,6 +198,12 @@ control key_init(inout cap_phv_intr_global_h intr_global,
 
   @name(".init_config")
   action init_config_a() {
+      //  if(hdr.geneve_1.protoType == 0x1) {
+//	  metadata.cntrl.flow_miss = TRUE;
+//	}
+	//	if(metadata.cntrl.geneve_prototype == 0x2) {
+	// metadata.cntrl.flow_miss = TRUE;
+    //}
     ingress_recirc_header_info();
     intr_p4.setValid();
     intr_p4.packet_len = intr_p4.frame_size - (bit<14>)metadata.offset.l2_1;
@@ -205,17 +211,8 @@ control key_init(inout cap_phv_intr_global_h intr_global,
     if (intr_global.tm_oq != TM_P4_RECIRC_QUEUE) {
         intr_global.tm_iq = intr_global.tm_oq;
     }
-    if (metadata.cntrl.skip_flow_lkp == TRUE) {
-      hdr.ingress_recirc_header.flow_done = TRUE;
-      metadata.cntrl.flow_miss = TRUE;
-    }
-   if (metadata.cntrl.skip_l2_flow_lkp == TRUE) {
-      hdr.ingress_recirc_header.l2_flow_done = TRUE;
-      metadata.cntrl.l2_flow_miss = TRUE;
-    }
-      
+    
   }
-
 
   @name(".err_handler_init_config_a")
   action err_handler_init_config_a() {
@@ -226,8 +223,6 @@ control key_init(inout cap_phv_intr_global_h intr_global,
     }
     
   }
-    
-
     
  @name(".init_config") table init_config {
    actions  = {

@@ -47,7 +47,13 @@ control flow_lookup(inout cap_phv_intr_global_h intr_global,
 	    hdr.p4i_to_p4e_header.index = (bit<24>)idx;
 	    hdr.p4i_to_p4e_header.index_type = idx_type;
 	    hdr.p4i_to_p4e_header.direction = metadata.cntrl.direction;
-	    metadata.cntrl.index = idx;
+	    if(idx_type == FLOW_CACHE_INDEX_TYPE_CONNTRACK_INFO) {
+	      hdr.p4i_to_p4e_header.conntrack_en = TRUE;
+	    } else {
+	      hdr.p4i_to_p4e_header.session_info_en = TRUE;
+	    }
+	    hdr.p4i_to_p4e_header.direction = metadata.cntrl.direction;
+	    //    metadata.cntrl.index = idx;
             metadata.scratch.hint_valid = TRUE;
 
 	} else {
@@ -129,101 +135,6 @@ control flow_lookup(inout cap_phv_intr_global_h intr_global,
 
 
 
-/*
-    @appdatafields ("idx", "idx_type")
-    @hwfields_access_api  
-    @name(".ipv4_flow_hash")
-    action ipv4_flow_hash(bit<1>      entry_valid, 
-                            bit<22>     idx,
-                            bit<1>     idx_type,
-			    bit<4>     pad,
-		            bit<10>    hash1,
-		            bit<20>    hint1,
-		            bit<10>    hash2,
-		            bit<20>    hint2,
-		            bit<10>    hash3,
-		            bit<20>    hint3,
-                            bit<1>      more_hashes,
-                            bit<20>     more_hints) {
-       bit<32>  hardware_hash = __hash_value();
-       hdr.p4i_to_p4e_header.flow_hash = hardware_hash;
-
-        if (entry_valid == FALSE) {
-	    hdr.ingress_recirc_header.flow_done = TRUE;
-	    hdr.p4i_to_p4e_header.index = 0;
-	    hdr.p4i_to_p4e_header.flow_miss = TRUE;
-            metadata.cntrl.flow_miss = TRUE;
- 	    metadata.cntrl.session_index = 0;
-          return;
-        }
-
-        if (__table_hit()) {
-	    hdr.ingress_recirc_header.flow_done = TRUE;
-	    hdr.p4i_to_p4e_header.index = idx;
-	    hdr.p4i_to_p4e_header.direction = metadata.cntrl.direction;
-	    metadata.cntrl.session_index = idx;
-
-       } else {
-            metadata.cntrl.flow_ohash_lkp = TRUE;
-            if ((hint1 != 0 ) && (hash1 == hardware_hash[31:22])) {
-                hdr.ingress_recirc_header.flow_ohash = 
-                    POS_OVERFLOW_HASH_BIT | (bit<32>)hint1;
-            } else if ((hint2 != 0 ) && (hash2 == hardware_hash[31:22])) {
-                hdr.ingress_recirc_header.flow_ohash = 
-                    POS_OVERFLOW_HASH_BIT | (bit<32>)hint2;
-            } else if ((hint3 != 0 ) && (hash3 == hardware_hash[31:22])) {
-                hdr.ingress_recirc_header.flow_ohash = 
-                    POS_OVERFLOW_HASH_BIT | (bit<32>)hint3;
-            } else if (more_hashes == 1) {
-                hdr.ingress_recirc_header.flow_ohash=
-                    POS_OVERFLOW_HASH_BIT | (bit<32>)more_hints;
-            } else {
-	        hdr.p4i_to_p4e_header.index = 0;
-	        hdr.p4i_to_p4e_header.flow_miss = TRUE;
-		metadata.cntrl.session_index = 0;
-                metadata.cntrl.flow_miss = TRUE;
-           }
-        }
-    }
-
-
-    
-    @name(".ipv4_flow_ohash") table ipv4_flow_ohash {
-        key = {
-            hdr.ingress_recirc_header.flow_ohash : exact;
-
-        }
-        actions = {
-            ipv4_flow_hash;
-        }
-        size = IPV4_FLOW_OHASH_TABLE_SIZE;
-        placement = HBM;
-        default_action = ipv4_flow_hash;
-        stage = 5;
-    }
-    
-    @name(".ipv4_flow") table ipv4_flow {
-        key = {
-            metadata.key.vnic_id       : exact;
-            metadata.key.ipv4_src          : exact;
-            metadata.key.ipv4_dst          : exact;
-            metadata.key.proto         : exact;
-            metadata.key.sport         : exact;
-            metadata.key.dport         : exact;
-
-        }
-        actions = {
-            ipv4_flow_hash;
-        }
-        size = IPV4_FLOW_TABLE_SIZE;
-        placement = HBM;
-        default_action = ipv4_flow_hash;
-        stage = 4;
-        hash_collision_table = ipv4_flow_ohash;
-    }
-
-
-*/
 
     apply {
       if (!hdr.ingress_recirc_header.isValid()) {
@@ -235,14 +146,6 @@ control flow_lookup(inout cap_phv_intr_global_h intr_global,
       if (metadata.cntrl.flow_ohash_lkp == TRUE) {
 	 flow_ohash.apply();
        } 
-/*
-    // Dummy v4 table for generating FTL structs/apis
-    // Never launched as the predicate never been set
-    if (metadata.cntrl.launch_v4 == TRUE) {
-      ipv4_flow.apply();
-      ipv4_flow_ohash.apply();
-    }
-*/
     }
 
 }

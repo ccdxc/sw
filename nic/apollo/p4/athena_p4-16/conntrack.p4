@@ -15,12 +15,14 @@ control conntrack_state_update(inout cap_phv_intr_global_h intr_global,
      action conntrack_a (@__ref bit<1> valid_flag,
 			   @__ref bit<2> flow_type,
 			   @__ref bit<8> flow_state,
-			   @__ref bit<18> timestamp) {
+			   @__ref bit<24> timestamp) {
      
 	 metadata.scratch.flag =  valid_flag;
 	 metadata.scratch.flow_type =  flow_type;
 	 metadata.cntrl.conn_track_prev_state =  flow_state;
-	 timestamp = intr_global.timestamp[47:30];
+	 bit<48> current_time;
+	 current_time = __current_time();
+	 timestamp = current_time[46:23];
 	 if(metadata.cntrl.conn_track_tcp == TRUE) {
 	 }
 	 if(metadata.cntrl.conn_track_tcp == FALSE) {
@@ -50,7 +52,7 @@ control conntrack_state_update(inout cap_phv_intr_global_h intr_global,
 
 
     apply {
-      if(metadata.cntrl.conntrack_index_valid == TRUE) {
+      if(hdr.p4i_to_p4e_header.conntrack_en == TRUE) {
 	conntrack.apply();
       }
     }

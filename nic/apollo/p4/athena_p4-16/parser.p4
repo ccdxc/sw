@@ -525,8 +525,9 @@ state parse_txdma_gso {
     //    metadata.tunnel.tunnel_type_1 = INGRESS_TUNNEL_TYPE_GENEVE;
      //TODO
      packet.extract(hdr.geneve_1);
-     geneve_options_len = (bit<16>)(hdr.geneve_1.optLen << 3);
-     geneve_prototype = hdr.geneve_1.protoType;
+     geneve_options_len = ((bit<16>)hdr.geneve_1.optLen << 2);
+     //    metadata.prs.geneve_prototype = hdr.geneve_1.protoType;
+     //     geneve_prototype = hdr.geneve_1.protoType;
      transition select(geneve_options_len) {
         0                    : parse_geneve_ulp;
         default              : parse_geneve_options_blob;
@@ -568,7 +569,6 @@ state parse_txdma_gso {
   }
 
   state parse_geneve_option_dst_slot_id {
-    bit<8> dstSlotId_b3_b0 = (bit<8>)(packet.lookahead<bit<32>>()[3:0]);
     packet.extract(hdr.geneve_option_dstSlotIdSplit);
     //    metadata.cntrl.mpls_vnic_label = hdr.geneve_option_dstSlotIdSplit.dstSlotId_b20_b0;
 
@@ -597,30 +597,34 @@ state parse_txdma_gso {
     packet.extract_bytes(hdr.geneve_option_srcSecGrpList, (bit<16>)src_sec_grp_list_opt_len);
     geneve_options_len = geneve_options_len - (bit<16>)src_sec_grp_list_opt_len;
     transition select(geneve_options_len) {
-    0x00 : parse_geneve_ulp;
+       0x00 : parse_geneve_ulp;
        default : parse_geneve_options;
     }
   }
 
   state parse_geneve_option_unknown {
-    bit<8> unk_opt_len = (bit<8>)(packet.lookahead<bit<32>>()[4:0]) << 3;
+    bit<8> unk_opt_len = (bit<8>)(packet.lookahead<bit<32>>()[4:0]) << 2;
     packet.extract_bytes(hdr.geneve_option_unknown, (bit<16>)unk_opt_len);
     geneve_options_len = geneve_options_len - (bit<16>)unk_opt_len;
     transition select(geneve_options_len) {
-    0x00 : parse_geneve_ulp;
+       0x00 : parse_geneve_ulp;
        default : parse_geneve_options;
     }
   }
 
 
   state parse_geneve_ulp {
-     
-     transition select(geneve_prototype) {
+    //  metadata.cntrl.geneve_prototype = geneve_prototype;
+     transition  parse_ethernet_2;
+     /* TO BE FIXED IN SORRENTO
+     transition select(hdr.geneve_1.protoType) {
+       //     transition select(geneve_prototype) {
        ETHERTYPE_ETHERNET   : parse_ethernet_2;
        ETHERTYPE_IPV4       : parse_ipv4_2;
        ETHERTYPE_IPV6       : parse_ipv6_2;
        default              : accept;
      }
+     */
   }
   
   

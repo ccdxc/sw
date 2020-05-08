@@ -7,17 +7,42 @@
 #define VNIC_ID_ICMP        0x0004
 #define VNIC_ID_NAT         0x0005
 
+#define VNIC_ID_L2_UDP         0x0006
+#define VNIC_ID_L2_TCP         0x0007
+#define VNIC_ID_L2_SLOW_PATH   0x0008
+#define VNIC_ID_L2_ICMP        0x0009
+#define VNIC_ID_L2_NAT         0x000a
+
 #define VLAN_ID_UDP         0x0001
 #define VLAN_ID_TCP         0x0002
 #define VLAN_ID_SLOW_PATH   0x0003
 #define VLAN_ID_ICMP        0x0004
 #define VLAN_ID_NAT         0x0005
 
+#define VLAN_ID_L2_UDP         0x0006
+#define VLAN_ID_L2_TCP         0x0007
+#define VLAN_ID_L2_SLOW_PATH   0x0008
+#define VLAN_ID_L2_ICMP        0x0009
+#define VLAN_ID_L2_NAT         0x000a
+
+#define VLAN_ID_VLAN0         0x0
+#define VNIC_ID_VLAN0         0x000b
+#define MPLS_LABEL_VLAN0      0x6789f
+
+
+//#define MPLS_LABEL_UDP      0x49440
 #define MPLS_LABEL_UDP      0x6789a
 #define MPLS_LABEL_TCP      0x6789b
 #define MPLS_LABEL_SLOW_PATH    0x6789c
 #define MPLS_LABEL_ICMP     0x6789d
 #define MPLS_LABEL_NAT      0x6789e
+
+#define GENEVE_DST_SLOT_ID_UDP      0x1234a
+#define GENEVE_DST_SLOT_ID_TCP      0x1234b
+#define GENEVE_DST_SLOT_ID_SLOW_PATH    0x1234c
+#define GENEVE_DST_SLOT_ID_ICMP     0x1234d
+#define GENEVE_DST_SLOT_ID_NAT      0x1234e
+
 
 extern uint8_t     g_h_port;
 extern uint8_t     g_s_port;
@@ -56,13 +81,13 @@ sdk_ret_t
 create_s2h_session_rewrite_nat_ipv4(uint32_t session_rewrite_id,
         mac_addr_t *ep_dmac, mac_addr_t *ep_smac, uint16_t vnic_vlan,
         pds_flow_session_rewrite_nat_type_t nat_type,
-        ipv4_addr_t ipv4_addr);
+	ipv4_addr_t ipv4_addr, pds_vnic_type_t vnic_type = VNIC_TYPE_L3);
 
 sdk_ret_t
 create_s2h_session_rewrite_nat_ipv6(uint32_t session_rewrite_id,
         mac_addr_t *ep_dmac, mac_addr_t *ep_smac, uint16_t vnic_vlan,
         pds_flow_session_rewrite_nat_type_t nat_type,
-        ipv6_addr_t *ipv6_addr
+	ipv6_addr_t *ipv6_addr, pds_vnic_type_t vnic_type = VNIC_TYPE_L3
         );
 
 sdk_ret_t
@@ -91,10 +116,57 @@ create_h2s_session_rewrite_mplsoudp_nat_ipv6(uint32_t session_rewrite_id,
         ipv6_addr_t *ipv6_addr);
 
 sdk_ret_t
-vlan_to_vnic_map(uint16_t vlan_id, uint16_t vnic_id);
+vlan_to_vnic_map(uint16_t vlan_id, uint16_t vnic_id, pds_vnic_type_t vnic_type = VNIC_TYPE_L3 );
 
 sdk_ret_t
-mpls_label_to_vnic_map(uint32_t mpls_label, uint16_t vnic_id);
+mpls_label_to_vnic_map(uint32_t mpls_label, uint16_t vnic_id, pds_vnic_type_t vnic_type = VNIC_TYPE_L3);
+
+#ifndef P4_14
+sdk_ret_t
+create_l2_flow (uint16_t vnic_id, mac_addr_t dmac,  uint32_t index);
+
+sdk_ret_t
+create_h2s_session_rewrite_geneve(uint32_t session_rewrite_id,
+        mac_addr_t *substrate_dmac, mac_addr_t *substrate_smac,
+        uint16_t substrate_vlan,
+        uint32_t substrate_sip, uint32_t substrate_dip,
+	uint32_t vni, uint32_t source_slot_id,
+	uint32_t destination_slot_id, uint16_t sg_id1,
+	uint16_t sg_id2, uint16_t sg_id3,
+        uint16_t sg_id4, uint16_t sg_id5,
+        uint16_t sg_id6, uint32_t originator_physical_ip);
+
+sdk_ret_t
+create_h2s_session_rewrite_geneve_nat_ipv4(uint32_t session_rewrite_id,
+        mac_addr_t *substrate_dmac, mac_addr_t *substrate_smac,
+        uint16_t substrate_vlan,
+        uint32_t substrate_sip, uint32_t substrate_dip,
+	uint32_t vni, uint32_t source_slot_id,
+	uint32_t destination_slot_id, uint16_t sg_id1,
+	uint16_t sg_id2, uint16_t sg_id3,
+        uint16_t sg_id4, uint16_t sg_id5,
+	uint16_t sg_id6, uint32_t originator_physical_ip,        
+        pds_flow_session_rewrite_nat_type_t nat_type,
+        ipv4_addr_t ipv4_addr);
+
+sdk_ret_t
+create_h2s_session_rewrite_geneve_nat_ipv6(uint32_t session_rewrite_id,
+        mac_addr_t *substrate_dmac, mac_addr_t *substrate_smac,
+        uint16_t substrate_vlan,
+        uint32_t substrate_sip, uint32_t substrate_dip,
+	uint32_t vni, uint32_t source_slot_id,
+	uint32_t destination_slot_id, uint16_t sg_id1,
+	uint16_t sg_id2, uint16_t sg_id3,
+        uint16_t sg_id4, uint16_t sg_id5,
+	uint16_t sg_id6, uint32_t originator_physical_ip, 
+        pds_flow_session_rewrite_nat_type_t nat_type,
+        ipv6_addr_t *ipv6_addr);
+
+sdk_ret_t
+create_s2h_session_rewrite_insert_ctag(uint32_t session_rewrite_id,
+				       uint16_t vlan);
+
+#endif
 
 sdk_ret_t
 create_session_info_all(uint32_t session_id, uint32_t conntrack_id,
@@ -139,6 +211,13 @@ sdk_ret_t
 create_dnat_map_ipv6(uint16_t vnic_id, ipv6_addr_t *v6_nat_dip, 
         ipv6_addr_t *v6_orig_dip, uint16_t dnat_epoch);
 
+/* VLAN0 Flows */
+sdk_ret_t
+athena_gtest_setup_flows_vlan0(void);
+
+sdk_ret_t
+athena_gtest_test_flows_vlan0(void);
+
 /* UDP Flows */
 sdk_ret_t
 athena_gtest_setup_flows_udp(void);
@@ -173,5 +252,36 @@ athena_gtest_setup_flows_nat(void);
 
 sdk_ret_t
 athena_gtest_test_flows_nat(void);
+
+#ifndef P4_14
+/* L2 UDP Flows */
+sdk_ret_t
+athena_gtest_setup_l2_flows_udp(void);
+
+sdk_ret_t
+athena_gtest_test_l2_flows_udp(void);
+
+/* L2 TCP Flows */
+sdk_ret_t
+athena_gtest_setup_l2_flows_tcp(void);
+
+sdk_ret_t
+athena_gtest_test_l2_flows_tcp(void);
+
+/* L2 ICMP Flows */
+sdk_ret_t
+athena_gtest_setup_l2_flows_icmp(void);
+
+sdk_ret_t
+athena_gtest_test_l2_flows_icmp(void);
+
+/* NAT Flows */
+sdk_ret_t
+athena_gtest_setup_l2_flows_nat(void);
+
+sdk_ret_t
+athena_gtest_test_l2_flows_nat(void);
+
+#endif
 
 #endif /* __ATHENA_GTEST_HPP__ */

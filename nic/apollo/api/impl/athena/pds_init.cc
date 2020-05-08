@@ -13,6 +13,7 @@
 #include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/apollo/api/include/athena/pds_init.h"
 #include "nic/apollo/api/include/athena/pds_flow_cache.h"
+#include "nic/apollo/api/include/athena/pds_l2_flow_cache.h"
 #include "nic/apollo/api/include/athena/pds_flow_age.h"
 #include "nic/sdk/asic/asic.hpp"
 
@@ -24,6 +25,11 @@ extern "C" {
 sdk_ret_t pds_flow_cache_create(void);
 void pds_flow_cache_delete(void);
 void pds_flow_cache_set_core_id(uint32_t core_id);
+#ifndef P4_14
+sdk_ret_t pds_l2_flow_cache_create(void);
+void pds_l2_flow_cache_delete(void);
+void pds_l2_flow_cache_set_core_id(uint32_t core_id);
+#endif
 sdk_ret_t pds_dnat_map_create(void);
 sdk_ret_t pds_dnat_map_delete(void);
 void pds_dnat_map_set_core_id(uint32_t core_id);
@@ -75,6 +81,13 @@ pds_global_init (pds_cinit_params_t *params)
         PDS_TRACE_ERR("Flow cache init failed with ret %u\n", ret);
         return (pds_ret_t)ret;
     }
+#ifndef P4_14
+    ret = pds_l2_flow_cache_create();
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("L2 Flow cache init failed with ret %u\n", ret);
+        return (pds_ret_t)ret;
+    }
+#endif
     ret = pds_dnat_map_create();
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("DNAT map init failed with ret %u\n", ret);
@@ -93,6 +106,9 @@ pds_ret_t
 pds_thread_init (uint32_t core_id)
 {
     pds_flow_cache_set_core_id(core_id);
+#ifndef P4_14
+    pds_l2_flow_cache_set_core_id(core_id);
+#endif
     pds_dnat_map_set_core_id(core_id);
     return PDS_RET_OK;
 }
@@ -105,6 +121,9 @@ pds_global_teardown ()
     }
     pds_dnat_map_delete();
     pds_flow_cache_delete();
+#ifndef P4_14
+    pds_l2_flow_cache_delete();
+#endif
     pds_teardown();
     return;
 }

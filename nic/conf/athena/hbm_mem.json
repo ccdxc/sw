@@ -340,6 +340,18 @@
             "size": "64B",
             "reset": true,
             "cache": "p4eg"
+        },
+        {
+            "name": "l2_flow",
+            "size": "32M",
+            "cache": "p4ig",
+            "_comment": "1M * 32B"
+        },
+        {
+            "name": "l2_flow_ohash",
+            "size": "8M",
+            "cache": "p4ig",
+            "_comment": "256K * 32B"
         }
     ]
 }

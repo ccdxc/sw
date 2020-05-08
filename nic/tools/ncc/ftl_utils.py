@@ -101,7 +101,8 @@ def is_table_pad_256(table, pipeline):
     if pipeline == 'apulu' and ('nexthop' in str(table) or 'session_track' in str(table) or 'nat' in str(table) or 'session' in str(table)):
         return True
 
-    if pipeline == 'athena' and ('session_rewrite' == str(table)):
+    if pipeline == 'athena' and ('session_rewrite' == str(table) or 'l2_flow' == str(table)):
+#    if pipeline == 'athena' and ('session_rewrite' == str(table)):
         return True
 
     return False

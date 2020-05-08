@@ -47,6 +47,7 @@ struct l2_key_metadata_t {
     }
 
 struct control_metadata_t {
+        bit<16> geneve_prototype;
         bit<1> conn_track_tcp;
         bit<8> conn_track_prev_state;
         bit<8> conn_track_curr_state;
@@ -87,6 +88,7 @@ struct control_metadata_t {
 	bit<1> skip_flow_log;
 	bit<1> l2_vnic;
 	bit<1> session_rewrite_id_valid;
+	bit<1> session_encap_id_valid;
 	bit<2> nat_type;
 	bit<2> encap_type;
 	bit<16> mpls_label_b20_b4;
@@ -121,6 +123,7 @@ struct control_metadata_t {
 	bit<24> session_index;
 	bit<22> conntrack_index;
 	bit<22> session_rewrite_id;
+	bit<22> session_encap_id;
 	bit<16> l2_epoch1_value;
 	bit<16> l2_epoch2_value;
 	bit<20> l2_epoch1_id;
@@ -158,7 +161,7 @@ struct scratch_metadata_t {
 	bit<18> flow_hash;
 	bit<20> flow_hint;
 	bit<18> l2_flow_hash;
-	bit<17> l2_flow_hint;
+	bit<18> l2_flow_hint;
 	bit<8> class_id;
 	bit<32> addr;
 	bit<10> local_vnic_tag;
@@ -289,6 +292,10 @@ struct csum_metadata_t {
 
 }
 
+struct parser_metadata_t {
+     bit<16> geneve_prototype;
+}
+
 struct metadata_t {
     @name(".scratch_metadata")
     scratch_metadata_t  scratch;
@@ -302,4 +309,5 @@ struct metadata_t {
     @name(".offset_metadata")
     offset_metadata_t     offset;
     csum_metadata_t csum;
+    parser_metadata_t prs;
 }

@@ -40,6 +40,10 @@
 #include "nic/apollo/api/include/athena/pds_dnat.h"
 #include "athena_gtest.hpp"
 
+#ifndef P4_14
+#include "nic/apollo/api/include/athena/pds_l2_flow_cache.h"
+#endif
+
 namespace core {
 // number of trace files to keep
 #define TRACE_NUM_FILES                        5
@@ -349,7 +353,7 @@ sdk_ret_t
 create_s2h_session_rewrite_nat_ipv4(uint32_t session_rewrite_id,
         mac_addr_t *ep_dmac, mac_addr_t *ep_smac, uint16_t vnic_vlan,
         pds_flow_session_rewrite_nat_type_t nat_type,
-        ipv4_addr_t ipv4_addr)
+	ipv4_addr_t ipv4_addr, pds_vnic_type_t vnic_type)
 { 
     pds_ret_t                                   ret = PDS_RET_OK;
     pds_flow_session_rewrite_spec_t             spec;
@@ -364,12 +368,20 @@ create_s2h_session_rewrite_nat_ipv4(uint32_t session_rewrite_id,
     spec.data.nat_info.nat_type = nat_type;
     spec.data.nat_info.u.ipv4_addr = (uint32_t) ipv4_addr;
 
-    spec.data.encap_type = ENCAP_TYPE_L2;
-    sdk::lib::memrev(spec.data.u.l2_encap.dmac, (uint8_t*)ep_dmac, sizeof(mac_addr_t));
-    sdk::lib::memrev(spec.data.u.l2_encap.smac, (uint8_t*)ep_smac, sizeof(mac_addr_t));
-    spec.data.u.l2_encap.insert_vlan_tag = TRUE;
-    spec.data.u.l2_encap.vlan_id = vnic_vlan;
-
+    if(vnic_type == VNIC_TYPE_L3) {
+      spec.data.encap_type = ENCAP_TYPE_L2;
+      sdk::lib::memrev(spec.data.u.l2_encap.dmac, (uint8_t*)ep_dmac, sizeof(mac_addr_t));
+      sdk::lib::memrev(spec.data.u.l2_encap.smac, (uint8_t*)ep_smac, sizeof(mac_addr_t));
+      spec.data.u.l2_encap.insert_vlan_tag = TRUE;
+      spec.data.u.l2_encap.vlan_id = vnic_vlan;
+    }
+    
+#ifndef P4_14
+    else {
+      spec.data.encap_type = ENCAP_TYPE_INSERT_CTAG;
+      spec.data.u.insert_ctag.vlan_id = vnic_vlan;      
+    }
+#endif
     ret = pds_flow_session_rewrite_create(&spec);
     if (ret != PDS_RET_OK) {
         printf("Failed to program session rewrite s2h info : %u\n", ret);
@@ -382,7 +394,7 @@ sdk_ret_t
 create_s2h_session_rewrite_nat_ipv6(uint32_t session_rewrite_id,
         mac_addr_t *ep_dmac, mac_addr_t *ep_smac, uint16_t vnic_vlan,
         pds_flow_session_rewrite_nat_type_t nat_type,
-        ipv6_addr_t *ipv6_addr)
+	ipv6_addr_t *ipv6_addr, pds_vnic_type_t vnic_type)
 { 
     pds_ret_t                                   ret = PDS_RET_OK;
     pds_flow_session_rewrite_spec_t             spec;
@@ -398,11 +410,20 @@ create_s2h_session_rewrite_nat_ipv6(uint32_t session_rewrite_id,
     sdk::lib::memrev(spec.data.nat_info.u.ipv6_addr, (uint8_t *)ipv6_addr,
             sizeof(ipv6_addr_t));
 
-    spec.data.encap_type = ENCAP_TYPE_L2;
-    sdk::lib::memrev(spec.data.u.l2_encap.dmac, (uint8_t*)ep_dmac, sizeof(mac_addr_t));
-    sdk::lib::memrev(spec.data.u.l2_encap.smac, (uint8_t*)ep_smac, sizeof(mac_addr_t));
-    spec.data.u.l2_encap.insert_vlan_tag = TRUE;
-    spec.data.u.l2_encap.vlan_id = vnic_vlan;
+
+    if(vnic_type == VNIC_TYPE_L3) {
+      spec.data.encap_type = ENCAP_TYPE_L2;
+      sdk::lib::memrev(spec.data.u.l2_encap.dmac, (uint8_t*)ep_dmac, sizeof(mac_addr_t));
+      sdk::lib::memrev(spec.data.u.l2_encap.smac, (uint8_t*)ep_smac, sizeof(mac_addr_t));
+      spec.data.u.l2_encap.insert_vlan_tag = TRUE;
+      spec.data.u.l2_encap.vlan_id = vnic_vlan;
+    } 
+#ifndef P4_14
+    else {
+      spec.data.encap_type = ENCAP_TYPE_INSERT_CTAG;
+      spec.data.u.insert_ctag.vlan_id = vnic_vlan;      
+    }
+#endif
 
     ret = pds_flow_session_rewrite_create(&spec);
     if (ret != PDS_RET_OK) {
@@ -533,6 +554,195 @@ create_h2s_session_rewrite_mplsoudp_nat_ipv6(uint32_t session_rewrite_id,
     return (sdk_ret_t)ret;
 }
 
+
+#ifndef P4_14
+sdk_ret_t
+create_h2s_session_rewrite_geneve(uint32_t session_rewrite_id,
+        mac_addr_t *substrate_dmac, mac_addr_t *substrate_smac,
+        uint16_t substrate_vlan,
+        uint32_t substrate_sip, uint32_t substrate_dip,
+	uint32_t vni, uint32_t source_slot_id,
+	uint32_t destination_slot_id, uint16_t sg_id1,
+	uint16_t sg_id2, uint16_t sg_id3,
+        uint16_t sg_id4, uint16_t sg_id5,
+        uint16_t sg_id6, uint32_t originator_physical_ip)
+{ 
+    pds_ret_t                                   ret = PDS_RET_OK;
+    pds_flow_session_rewrite_spec_t             spec;
+
+    memset(&spec, 0, sizeof(spec));
+    spec.key.session_rewrite_id = session_rewrite_id;
+
+    spec.data.strip_l2_header = FALSE;
+    spec.data.strip_vlan_tag = TRUE;
+
+    spec.data.nat_info.nat_type = REWRITE_NAT_TYPE_NONE;
+
+    spec.data.encap_type = ENCAP_TYPE_GENEVE;
+    sdk::lib::memrev(spec.data.u.geneve_encap.l2_encap.dmac, (uint8_t*)substrate_dmac, sizeof(mac_addr_t));
+    sdk::lib::memrev(spec.data.u.geneve_encap.l2_encap.smac, (uint8_t*)substrate_smac, sizeof(mac_addr_t));
+    spec.data.u.geneve_encap.l2_encap.insert_vlan_tag = TRUE;
+    spec.data.u.geneve_encap.l2_encap.vlan_id = substrate_vlan;
+
+    spec.data.u.geneve_encap.ip_encap.ip_saddr = substrate_sip;
+    spec.data.u.geneve_encap.ip_encap.ip_daddr = substrate_dip;
+
+    spec.data.u.geneve_encap.vni = vni;
+    spec.data.u.geneve_encap.source_slot_id = source_slot_id;
+    spec.data.u.geneve_encap.destination_slot_id = destination_slot_id;
+    spec.data.u.geneve_encap.sg_id1 = sg_id1;
+    spec.data.u.geneve_encap.sg_id2 = sg_id2;
+    spec.data.u.geneve_encap.sg_id3 = sg_id3;
+    spec.data.u.geneve_encap.sg_id4 = sg_id4;
+    spec.data.u.geneve_encap.sg_id5 = sg_id5;
+    spec.data.u.geneve_encap.sg_id6 = sg_id6;
+    spec.data.u.geneve_encap.originator_physical_ip = originator_physical_ip;
+
+    ret = pds_flow_session_rewrite_create(&spec);
+    if (ret != PDS_RET_OK) {
+        printf("Failed to program session rewrite h2s info : %u\n", ret);
+    }
+
+    return (sdk_ret_t) ret;
+}
+
+sdk_ret_t
+create_h2s_session_rewrite_geneve_nat_ipv4(uint32_t session_rewrite_id,
+        mac_addr_t *substrate_dmac, mac_addr_t *substrate_smac,
+        uint16_t substrate_vlan,
+        uint32_t substrate_sip, uint32_t substrate_dip,
+	uint32_t vni, uint32_t source_slot_id,
+	uint32_t destination_slot_id, uint16_t sg_id1,
+	uint16_t sg_id2, uint16_t sg_id3,
+        uint16_t sg_id4, uint16_t sg_id5,
+	uint16_t sg_id6, uint32_t originator_physical_ip,      
+        pds_flow_session_rewrite_nat_type_t nat_type,
+        ipv4_addr_t ipv4_addr)
+{ 
+    pds_ret_t                                   ret = PDS_RET_OK;
+    pds_flow_session_rewrite_spec_t             spec;
+
+    memset(&spec, 0, sizeof(spec));
+    spec.key.session_rewrite_id = session_rewrite_id;
+
+    spec.data.strip_l2_header = FALSE;
+    spec.data.strip_vlan_tag = TRUE;
+
+    spec.data.nat_info.nat_type = nat_type;
+    spec.data.nat_info.u.ipv4_addr = (uint32_t) ipv4_addr;
+
+    spec.data.encap_type = ENCAP_TYPE_GENEVE;
+    sdk::lib::memrev(spec.data.u.geneve_encap.l2_encap.dmac, (uint8_t*)substrate_dmac, sizeof(mac_addr_t));
+    sdk::lib::memrev(spec.data.u.geneve_encap.l2_encap.smac, (uint8_t*)substrate_smac, sizeof(mac_addr_t));
+    spec.data.u.geneve_encap.l2_encap.insert_vlan_tag = TRUE;
+    spec.data.u.geneve_encap.l2_encap.vlan_id = substrate_vlan;
+
+    spec.data.u.geneve_encap.ip_encap.ip_saddr = substrate_sip;
+    spec.data.u.geneve_encap.ip_encap.ip_daddr = substrate_dip;
+
+    spec.data.u.geneve_encap.vni = vni;
+    spec.data.u.geneve_encap.source_slot_id = source_slot_id;
+    spec.data.u.geneve_encap.destination_slot_id = destination_slot_id;
+    spec.data.u.geneve_encap.sg_id1 = sg_id1;
+    spec.data.u.geneve_encap.sg_id2 = sg_id2;
+    spec.data.u.geneve_encap.sg_id3 = sg_id3;
+    spec.data.u.geneve_encap.sg_id4 = sg_id4;
+    spec.data.u.geneve_encap.sg_id5 = sg_id5;
+    spec.data.u.geneve_encap.sg_id6 = sg_id6;
+    spec.data.u.geneve_encap.originator_physical_ip = originator_physical_ip;
+
+    ret = pds_flow_session_rewrite_create(&spec);
+    if (ret != PDS_RET_OK) {
+        printf("Failed to program session rewrite h2s info : %u\n", ret);
+    }
+
+    return (sdk_ret_t) ret;
+}
+
+sdk_ret_t
+create_h2s_session_rewrite_geneve_nat_ipv6(uint32_t session_rewrite_id,
+        mac_addr_t *substrate_dmac, mac_addr_t *substrate_smac,
+        uint16_t substrate_vlan,
+        uint32_t substrate_sip, uint32_t substrate_dip,
+	uint32_t vni, uint32_t source_slot_id,
+	uint32_t destination_slot_id, uint16_t sg_id1,
+	uint16_t sg_id2, uint16_t sg_id3,
+        uint16_t sg_id4, uint16_t sg_id5,
+	uint16_t sg_id6, uint32_t originator_physical_ip,      
+        pds_flow_session_rewrite_nat_type_t nat_type,
+        ipv6_addr_t *ipv6_addr)
+{ 
+    pds_ret_t                                   ret = PDS_RET_OK;
+    pds_flow_session_rewrite_spec_t             spec;
+
+    memset(&spec, 0, sizeof(spec));
+    spec.key.session_rewrite_id = session_rewrite_id;
+
+    spec.data.strip_l2_header = FALSE;
+    spec.data.strip_vlan_tag = TRUE;
+
+    spec.data.nat_info.nat_type = nat_type;
+    sdk::lib::memrev(spec.data.nat_info.u.ipv6_addr, (uint8_t *)ipv6_addr,
+            sizeof(ipv6_addr_t));
+
+    spec.data.encap_type = ENCAP_TYPE_GENEVE;
+    sdk::lib::memrev(spec.data.u.geneve_encap.l2_encap.dmac, (uint8_t*)substrate_dmac, sizeof(mac_addr_t));
+    sdk::lib::memrev(spec.data.u.geneve_encap.l2_encap.smac, (uint8_t*)substrate_smac, sizeof(mac_addr_t));
+    spec.data.u.geneve_encap.l2_encap.insert_vlan_tag = TRUE;
+    spec.data.u.geneve_encap.l2_encap.vlan_id = substrate_vlan;
+
+    spec.data.u.geneve_encap.ip_encap.ip_saddr = substrate_sip;
+    spec.data.u.geneve_encap.ip_encap.ip_daddr = substrate_dip;
+
+    spec.data.u.geneve_encap.vni = vni;
+    spec.data.u.geneve_encap.source_slot_id = source_slot_id;
+    spec.data.u.geneve_encap.destination_slot_id = destination_slot_id;
+    spec.data.u.geneve_encap.sg_id1 = sg_id1;
+    spec.data.u.geneve_encap.sg_id2 = sg_id2;
+    spec.data.u.geneve_encap.sg_id3 = sg_id3;
+    spec.data.u.geneve_encap.sg_id4 = sg_id4;
+    spec.data.u.geneve_encap.sg_id5 = sg_id5;
+    spec.data.u.geneve_encap.sg_id6 = sg_id6;
+    spec.data.u.geneve_encap.originator_physical_ip = originator_physical_ip;
+
+    ret = pds_flow_session_rewrite_create(&spec);
+    if (ret != PDS_RET_OK) {
+        printf("Failed to program session rewrite h2s info : %u\n", ret);
+    }
+
+    return (sdk_ret_t) ret;
+}
+
+
+sdk_ret_t
+create_s2h_session_rewrite_insert_ctag(uint32_t session_rewrite_id,
+        uint16_t vlan)
+{ 
+    pds_ret_t                                   ret = PDS_RET_OK;
+    pds_flow_session_rewrite_spec_t             spec;
+
+    memset(&spec, 0, sizeof(spec));
+    spec.key.session_rewrite_id = session_rewrite_id;
+
+    spec.data.strip_encap_header = TRUE;
+    spec.data.strip_l2_header = TRUE;
+    spec.data.strip_vlan_tag = TRUE;
+
+    spec.data.nat_info.nat_type = REWRITE_NAT_TYPE_NONE;
+
+    spec.data.encap_type = ENCAP_TYPE_INSERT_CTAG;
+    spec.data.u.insert_ctag.vlan_id = vlan;
+ 
+    ret = pds_flow_session_rewrite_create(&spec);
+    if (ret != PDS_RET_OK) {
+        printf("Failed to program session rewrite h2s info : %u\n", ret);
+    }
+
+    return (sdk_ret_t) ret;
+}
+
+#endif
+
 sdk_ret_t
 create_session_info_all(uint32_t session_id, uint32_t conntrack_id,
                 uint8_t skip_flow_log, mac_addr_t *host_mac,
@@ -607,13 +817,14 @@ create_session_info_all(uint32_t session_id, uint32_t conntrack_id,
 }
                             
 sdk_ret_t
-vlan_to_vnic_map(uint16_t vlan_id, uint16_t vnic_id)
+vlan_to_vnic_map(uint16_t vlan_id, uint16_t vnic_id, pds_vnic_type_t vnic_type)
 {
     pds_vlan_to_vnic_map_spec_t     spec;
     pds_ret_t                       ret = PDS_RET_OK;
 
     spec.key.vlan_id = vlan_id;
-    spec.data.vnic_type = VNIC_TYPE_L3;
+    //    spec.data.vnic_type = VNIC_TYPE_L3;
+    spec.data.vnic_type = vnic_type;
     spec.data.vnic_id = vnic_id;
 
     ret = pds_vlan_to_vnic_map_create(&spec);
@@ -628,13 +839,13 @@ vlan_to_vnic_map(uint16_t vlan_id, uint16_t vnic_id)
 
 
 sdk_ret_t
-mpls_label_to_vnic_map(uint32_t mpls_label, uint16_t vnic_id)
+mpls_label_to_vnic_map(uint32_t mpls_label, uint16_t vnic_id, pds_vnic_type_t vnic_type)
 {
     pds_mpls_label_to_vnic_map_spec_t       spec;
     pds_ret_t                               ret = PDS_RET_OK;
 
     spec.key.mpls_label = mpls_label;
-    spec.data.vnic_type = VNIC_TYPE_L3;
+    spec.data.vnic_type = vnic_type;
     spec.data.vnic_id = vnic_id;
 
     ret = pds_mpls_label_to_vnic_map_create(&spec);
@@ -694,7 +905,13 @@ setup_flows(void)
 {
     sdk_ret_t       ret = SDK_RET_OK;
 
+
     ret = athena_gtest_setup_flows_udp();
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+
+    ret = athena_gtest_setup_flows_vlan0();
     if (ret != SDK_RET_OK) {
         return ret;
     }
@@ -720,7 +937,29 @@ setup_flows(void)
         return ret;
     }
 #endif
+#ifndef P4_14
+    ret = athena_gtest_setup_l2_flows_udp();
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
 
+    ret = athena_gtest_setup_l2_flows_tcp();
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+
+    ret = athena_gtest_setup_l2_flows_icmp();
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+
+#ifdef NAT_1_TO_1
+    ret = athena_gtest_setup_l2_flows_nat();
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+#endif
+#endif
     return ret;
 }
 
@@ -757,6 +996,32 @@ iterate_dump_flows(void)
     ASSERT_TRUE(pds_flow_cache_entry_iterate(dump_single_flow, &iter_cb_arg)
         == PDS_RET_OK);
 }
+
+#ifndef P4_14
+void
+dump_single_l2_flow(pds_l2_flow_iter_cb_arg_t *iter_cb_arg)
+{
+    pds_l2_flow_key_t *key = &iter_cb_arg->l2_flow_key;
+    pds_l2_flow_data_t *data = &iter_cb_arg->l2_flow_appdata;
+
+    printf(" VNICID:%u "
+	   " DMAC:%06x "
+           "index:%u \n\n",
+	   key->vnic_id,key->dmac,
+           data->index);
+    return;
+}
+
+void
+iterate_dump_l2_flows(void)
+{
+    pds_l2_flow_iter_cb_arg_t iter_cb_arg = { 0 };
+
+    ASSERT_TRUE(pds_l2_flow_cache_entry_iterate(dump_single_l2_flow, &iter_cb_arg)
+        == PDS_RET_OK);
+}
+#endif
+
 
 void
 dump_stats(pds_flow_stats_t *stats)
@@ -815,6 +1080,9 @@ TEST(athena_gtest, sim)
     /* UDP Flow tests */
     ASSERT_TRUE(athena_gtest_test_flows_udp() == SDK_RET_OK);
 
+    /* VLAN0 Flow tests */
+    ASSERT_TRUE(athena_gtest_test_flows_vlan0() == SDK_RET_OK);
+
     /* TCP Flow tests */
     ASSERT_TRUE(athena_gtest_test_flows_tcp() == SDK_RET_OK);
 
@@ -827,6 +1095,22 @@ TEST(athena_gtest, sim)
 #ifdef NAT_1_TO_1
     /* NAT Flow tests */
     ASSERT_TRUE(athena_gtest_test_flows_nat() == SDK_RET_OK);
+#endif
+
+#ifndef P4_14
+    /* L2 UDP Flow tests */
+    ASSERT_TRUE(athena_gtest_test_l2_flows_udp() == SDK_RET_OK);
+
+    /* L2 TCP Flow tests */
+    ASSERT_TRUE(athena_gtest_test_l2_flows_tcp() == SDK_RET_OK);
+
+    /* L2 ICMP Flow tests */
+    ASSERT_TRUE(athena_gtest_test_l2_flows_icmp() == SDK_RET_OK);
+
+#ifdef NAT_1_TO_1
+    /* L2 NAT Flow tests */
+    ASSERT_TRUE(athena_gtest_test_l2_flows_nat() == SDK_RET_OK);
+#endif
 #endif
 
     iterate_dump_flows();

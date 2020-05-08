@@ -392,7 +392,7 @@ parser AthenaEgressParser(packet_in packet,
     //    metadata.tunnel.tunnel_type_1 = INGRESS_TUNNEL_TYPE_GENEVE;
      //TODO
      packet.extract(hdr.geneve_1);
-     geneve_options_len = (bit<16>)(hdr.geneve_1.optLen << 3);
+     geneve_options_len = ((bit<16>) hdr.geneve_1.optLen << 2);
      geneve_prototype = hdr.geneve_1.protoType;
      transition select(geneve_options_len) {
         0                    : parse_geneve_ulp;
@@ -410,13 +410,15 @@ parser AthenaEgressParser(packet_in packet,
   }
  
   state parse_geneve_ulp {
-     
-     transition select(geneve_prototype) {
+    transition parse_ethernet_2;
+    /*
+      transition select(geneve_prototype) {
        ETHERTYPE_ETHERNET   : parse_ethernet_2;
        ETHERTYPE_IPV4       : parse_ipv4_2;
        ETHERTYPE_IPV6       : parse_ipv6_2;
        default              : accept;
      }
+    */
   }
   
 

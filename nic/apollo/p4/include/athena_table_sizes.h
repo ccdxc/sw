@@ -6,6 +6,11 @@
 #define DNAT_TABLE_SIZE                                     16384       // 16K
 #define DNAT_OHASH_TABLE_SIZE                               4096        // 16K/4
 
+#define L2_FLOW_TABLE_SIZE                                     1048576     // 1M
+//#define L2_FLOW_OHASH_TABLE_SIZE                               524416      // 1M/2
+#define L2_FLOW_OHASH_TABLE_SIZE                               262144      // 1M/4 
+ 
+
 //Dummy IPv4 table for compilation
 #define IPV4_FLOW_TABLE_SIZE                                64
 #define IPV4_FLOW_OHASH_TABLE_SIZE                          64

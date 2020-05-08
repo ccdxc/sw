@@ -11,7 +11,7 @@ control dnat_lookup(inout cap_phv_intr_global_h capri_intrinsic,
     @name(".dnat")
     action dnat_a( 
 			bit<22>    pad1,
-			//	bit<3>     pad2,		
+			//bit<3>     pad2,		
 			bit<2>     addr_type,
 			bit<128>   addr,
                         bit<16>    epoch,

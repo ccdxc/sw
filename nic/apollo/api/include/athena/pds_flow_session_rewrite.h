@@ -41,6 +41,9 @@ typedef enum pds_flow_session_encap_e {
     ENCAP_TYPE_MPLSOUDP,    ///< MPLS over UDP encap
     ENCAP_TYPE_MPLSOGRE,    ///< MPLS over GRE encap
     ENCAP_TYPE_GENEVE,      ///< Geneve encap
+#ifndef P4_14
+    ENCAP_TYPE_INSERT_CTAG, ///< INSERT VLAN
+#endif
     ENCAP_TYPE_MAX
 } pds_flow_session_encap_t;
 
@@ -131,6 +134,11 @@ typedef struct pds_flow_session_geneve_encap_s {
     uint32_t                        originator_physical_ip;
 } pds_flow_session_geneve_encap_t;
 
+/// \brief Geneve encapsulation
+typedef struct pds_flow_session_insert_ctag_s {
+    uint16_t    vlan_id;               ///< VLAN id
+} pds_flow_session_insert_ctag_t;
+
 /// \brief Packet rewrite data
 typedef struct pds_flow_session_rewrite_data_s {
     /// \brief Corresponds to L2 header for switch-to-host direction or
@@ -143,7 +151,7 @@ typedef struct pds_flow_session_rewrite_data_s {
     ///< NAT rewrite info
     pds_flow_session_rewrite_nat_info_t     nat_info;
     ///< Encapsulation type
-    pds_flow_session_encap_t                encap_type;
+    pds_flow_session_encap_t               encap_type;
     ///< Encapsulation data
     union {
         ///< L2 encap
@@ -154,6 +162,8 @@ typedef struct pds_flow_session_rewrite_data_s {
         pds_flow_session_mplsogre_encap_t   mplsogre_encap;
         ///< Geneve encap
         pds_flow_session_geneve_encap_t     geneve_encap;
+        ///< CTAG insert
+        pds_flow_session_insert_ctag_t      insert_ctag;
     } u;
 } pds_flow_session_rewrite_data_t;
 

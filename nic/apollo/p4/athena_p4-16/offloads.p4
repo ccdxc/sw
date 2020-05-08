@@ -15,7 +15,7 @@ control offloads(inout cap_phv_intr_global_h capri_intrinsic,
 	
 	if(hdr.ip_1.ipv4.isValid()) {
 	  hdr.ip_1.ipv4.totalLen = metadata.scratch.packet_len;
-          metadata.scratch.packet_len = metadata.scratch.packet_len - (bit<16>)(hdr.ip_1.ipv4.ihl << 2);
+          metadata.scratch.packet_len = metadata.scratch.packet_len - ((bit<16>)hdr.ip_1.ipv4.ihl << 2);
 	  metadata.scratch.update_ip_chksum = TRUE;
 	} else {
 	  if (hdr.ip_1.ipv6.isValid()) {
@@ -26,7 +26,7 @@ control offloads(inout cap_phv_intr_global_h capri_intrinsic,
 	
       } else {
 	if (hdr.ip_1.ipv4.isValid()) {
-          metadata.scratch.packet_len = metadata.scratch.packet_len - (bit<16>)(hdr.ip_1.ipv4.ihl << 2);
+          metadata.scratch.packet_len = metadata.scratch.packet_len - ((bit<16>)hdr.ip_1.ipv4.ihl << 2);
 	  
 	} else {
 	  if (hdr.ip_1.ipv6.isValid()) {
