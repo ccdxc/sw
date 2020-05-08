@@ -98,9 +98,9 @@ mapping_impl::build(pds_mapping_key_t *key, mapping_entry *mapping) {
     ip_addr_t public_ip;
     subnet_entry *subnet;
     device_entry *device;
-    uint32_t num_class_id;
     pds_obj_key_t vpc_key;
     p4pd_error_t p4pd_ret;
+    uint32_t num_class_id, tag;
     mapping_swkey_t mapping_key;
     nat_rewrite_entry_t nat_data;
     bool public_ip_valid = false;
@@ -323,8 +323,13 @@ mapping_impl::build(pds_mapping_key_t *key, mapping_entry *mapping) {
     impl->rxdma_mapping_hdl_ = rxdma_mapping_hdl;
     impl->num_class_id_ = num_class_id;
     mapping->set_num_tags(num_class_id);
+    for (uint8_t i = 0; i < num_class_id; i++) {
+        ret = ((vpc_impl *)vpc->impl())->find_tag(class_id[i], &tag, is_local);
+        if (ret == SDK_RET_OK) {
+            mapping->set_tag(i, tag);
+        }
+    }
     memcpy(impl->class_id_, class_id, num_class_id * sizeof(class_id[0]));
-
     return impl;
 }
 

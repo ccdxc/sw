@@ -643,6 +643,11 @@ vpc_impl::release_tag(uint32_t tag, bool local) {
 #endif
 }
 
+sdk_ret_t
+vpc_impl::find_tag(uint32_t class_id, uint32_t *tag, bool local) {
+    return vpc_impl_db()->find_tag(class_id, tag, local);
+}
+
 /// \@}    // end of PDS_VPC_IMPL
 
 }    // namespace impl

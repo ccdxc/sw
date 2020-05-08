@@ -235,6 +235,14 @@ public:
     /// \return     SDK_RET_OK on success, failure status code on error
     sdk_ret_t release_tag(uint32_t tag, bool local);
 
+    /// \brief      API to find user configured tag, given the class id
+    /// \param[in]   class_id class id allocated
+    /// \param[out]  tag      user given tag (for the mapping)
+    /// \param[in]   local   if true, tag is that of local mapping, else for
+    ///                      remote mapping
+    /// \return     SDK_RET_OK on success, failure status code on error
+    sdk_ret_t find_tag(uint32_t class_id, uint32_t *tag, bool local);
+
     /// \brief     return vpc's h/w id
     /// \return    h/w id assigned to the vpc
     uint16_t hw_id(void) const { return hw_id_; }

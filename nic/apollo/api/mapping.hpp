@@ -371,6 +371,20 @@ public:
     void set_num_tags(uint32_t num_tags) { num_tags_ = num_tags; }
 
     /**
+     * @brief populate given tag for the mapping
+     * @param[in] tag_num    tag number or index
+     * @param[in] tag        tag number
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t set_tag(uint8_t tag_num, uint32_t tag) {
+        if (tag_num > PDS_MAX_TAGS_PER_MAPPING) {
+            return SDK_RET_INVALID_ARG;
+        }
+        tags_[tag_num] = tag;
+        return SDK_RET_OK;
+    }
+
+    /**
      * @brief    return whether public IP of this mapping is valid or not
      * @return     true if public IP is valid for the mapping, false otherwise
      */
@@ -422,6 +436,8 @@ private:
     ip_addr_t public_ip_;     ///< public IP, if its valid
     bool is_local_;           ///< is it local or remote object
     uint32_t num_tags_;       ///< number of tags configured
+    /// tags assigned to this mapping
+    uint32_t tags_[PDS_MAX_TAGS_PER_MAPPING];
     ht_ctxt_t ht_ctxt_;       ///< hash table context for primary key db
     ht_ctxt_t skey_ht_ctxt_;  ///< hash table context for 2nd-ary key db
     impl_base *impl_;         ///< impl object instance
@@ -429,7 +445,6 @@ private:
     /**< mapping_state is friend of mapping_entry */
     friend class mapping_state;
 } __PACK__;
-
 
 /** @} */    // end of PDS_MAPPING_ENTRY
 

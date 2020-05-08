@@ -333,6 +333,16 @@ vpc_impl_state::release_tag(uint32_t tag, bool local) {
     return SDK_RET_OK;
 }
 
+sdk_ret_t
+vpc_impl_state::find_tag(uint32_t class_id, uint32_t *tag, bool local) {
+    if (tag_state_->class2tag_map_.find(class_id) !=
+            tag_state_->class2tag_map_.end()) {
+        *tag = tag_state_->class2tag_map_[class_id];
+        return SDK_RET_OK;
+    }
+    return SDK_RET_ENTRY_NOT_FOUND;
+}
+
 /// @}
 
 }    // namespace impl
