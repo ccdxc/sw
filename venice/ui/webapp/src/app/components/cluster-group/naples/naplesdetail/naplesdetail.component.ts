@@ -49,7 +49,19 @@ export interface InterfaceTopos {
 export interface InterfaceStats {
   ifname: string;
   shortname: string;
-  stats: { status: string, rx: number, tx: number, rxDrop: number, txDrop: number};
+  stats: {
+    status: string,
+    // first set for bytes
+    rx: number,
+    tx: number,
+    rxDrop: number,
+    txDrop: number,
+    // second sets for packets
+    rx2: number,
+    tx2: number,
+    rxDrop2: number,
+    txDrop2: number
+  };
 }
 
 /**
@@ -374,8 +386,12 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
         if (itf) {
           itf.stats.rx = item.values[0][1];
           itf.stats.tx = item.values[0][2];
+          itf.stats.rx2 = item.values[0][3];
+          itf.stats.tx2 = item.values[0][4];
           itf.stats.rxDrop = -1000;
           itf.stats.txDrop = -1000;
+          itf.stats.rxDrop2 = -1000;
+          itf.stats.txDrop2 = -1000;
         }
       });
     }
@@ -393,6 +409,10 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
           itf.stats.tx = item.values[0][8];
           itf.stats.rxDrop = item.values[0][1] + item.values[0][2] + item.values[0][3];
           itf.stats.txDrop = item.values[0][4] + item.values[0][5] + item.values[0][6];
+          itf.stats.rxDrop2 = item.values[0][9] + item.values[0][10] + item.values[0][11];
+          itf.stats.txDrop2 = item.values[0][12] + item.values[0][13] + item.values[0][14];
+          itf.stats.rx2 = item.values[0][15] + item.values[0][16] + item.values[0][17];
+          itf.stats.tx2 = item.values[0][18] + item.values[0][19] + item.values[0][20];
         }
       });
     }
@@ -420,7 +440,11 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
             rx: -1,
             tx: -1,
             rxDrop: -1,
-            txDrop: -1
+            txDrop: -1,
+            rx2: -1,
+            tx2: -1,
+            rxDrop2: -1,
+            txDrop2: -1
           }
         });
       }
@@ -627,12 +651,16 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
       };
       const query1: MetricsPollingQuery = this.topologyInterfaceQuery(
         'LifMetrics', ['RxDropBroadcastBytes', 'RxDropMulticastBytes', 'RxDropUnicastBytes',
-        'TxDropBroadcastBytes', 'TxDropMulticastBytes', 'TxDropUnicastBytes', 'RxTotalBytes', 'TxTotalBytes'],
+        'TxDropBroadcastBytes', 'TxDropMulticastBytes', 'TxDropUnicastBytes', 'RxTotalBytes',
+        'TxTotalBytes', 'RxDropBroadcastPackets', 'RxDropMulticastPackets', 'RxDropUnicastPackets',
+        'TxDropBroadcastPackets', 'TxDropMulticastPackets', 'TxDropUnicastPackets',
+        'RxBroadcastPackets', 'RxMulticastPackets', 'RxUnicastPackets', 'TxBroadcastPackets',
+        'TxMulticastPackets', 'TxUnicastPackets'],
         MetricsUtility.createReporterIDSelector(this.selectedId));
       queryList.queries.push(query1);
 
       const query2: MetricsPollingQuery = this.topologyInterfaceQuery(
-        'MacMetrics', ['OctetsRxOk', 'OctetsTxOk'],
+        'MacMetrics', ['OctetsRxOk', 'OctetsTxOk', 'FramesRxOk', 'FramesTxOk'],
         MetricsUtility.createReporterIDSelector(this.selectedId));
       queryList.queries.push(query2);
 
@@ -661,6 +689,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
           if (data && data.results && data.results.length === queryList.queries.length) {
             this.lifInterfacePollingStats = data.results[0];
             this.pifInterfacePollingStats = data.results[1];
+            this.updateInterfacesStats();
             const asiqFreqStats: ITelemetry_queryMetricsQueryResult = data.results[2];
             if (asiqFreqStats && asiqFreqStats.series &&  asiqFreqStats.series.length > 0) {
               const series = asiqFreqStats.series;

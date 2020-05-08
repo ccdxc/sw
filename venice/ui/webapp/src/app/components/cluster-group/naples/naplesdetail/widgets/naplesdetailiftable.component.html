@@ -5,12 +5,23 @@
   <p-table [value]="interfaceStats">
     <ng-template pTemplate="header">
       <tr>
+        <th colspan="2"></th>
+        <th colspan="2">TX</th>
+        <th colspan="2">RX</th>
+        <th colspan="2">TX Drop</th>
+        <th colspan="2">RX Drop</th>
+      </tr>
+      <tr>
         <th>Interface</th>
         <th>Status</th>
-        <th>TX (bytes)</th>
-        <th>RX (bytes)</th>
-        <th>TX Drop (bytes)</th>
-        <th>RX Drop (bytes)</th>
+        <th>Bytes</th>
+        <th>Packets</th>
+        <th>Bytes</th>
+        <th>Packets</th>
+        <th>Bytes</th>
+        <th>Packets</th>
+        <th>Bytes</th>
+        <th>Packets</th>
       </tr>
     </ng-template>
     <ng-template pTemplate="body" let-itf>
@@ -25,13 +36,25 @@
           <div class="ellipsisText">{{showStatsNumber(itf.stats.tx)}}</div>
         </td>
         <td>
+          <div class="ellipsisText">{{showStatsNumber(itf.stats.tx2)}}</div>
+        </td>
+        <td>
           <div class="ellipsisText">{{showStatsNumber(itf.stats.rx)}}</div>
+        </td>
+        <td>
+          <div class="ellipsisText">{{showStatsNumber(itf.stats.rx2)}}</div>
         </td>
         <td>
           <div class="ellipsisText">{{showStatsNumber(itf.stats.txDrop)}}</div>
         </td>
         <td>
+          <div class="ellipsisText">{{showStatsNumber(itf.stats.txDrop2)}}</div>
+        </td>
+        <td>
           <div class="ellipsisText">{{showStatsNumber(itf.stats.rxDrop)}}</div>
+        </td>
+        <td>
+          <div class="ellipsisText">{{showStatsNumber(itf.stats.rxDrop2)}}</div>
         </td>
       </tr>
     </ng-template>

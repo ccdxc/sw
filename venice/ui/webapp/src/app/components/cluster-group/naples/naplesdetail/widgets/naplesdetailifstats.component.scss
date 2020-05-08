@@ -41,9 +41,11 @@
       width: 100%;
       opacity: 1;
 
-      .naplesdetail-interface-detail-statsrow-sublabel,
+      .naplesdetail-interface-detail-statsrow-shortLabel,
+      .naplesdetail-interface-detail-statsrow-longLabel,
+      .naplesdetail-interface-detail-statsrow-shortLabel2,
+      .naplesdetail-interface-detail-statsrow-longLabel2,
       .naplesdetail-interface-detail-statsrow-label {
-        width: 100px;
         padding-left: 5px;
         font-size: 16px;
         font-weight: 300;
@@ -54,14 +56,17 @@
         color: rgb(103, 103, 99);
       }
 
-      .naplesdetail-interface-detail-statsrow-label {
-        padding-left: 5px;
-        font-size: 16px;
+      .naplesdetail-interface-detail-statsrow-shortLabel {
+        width: 40px;
       }
 
-      .naplesdetail-interface-detail-statsrow-sublabel {
-        padding-left: 15px;
-        font-size: 12px;
+      .naplesdetail-interface-detail-statsrow-longLabel {
+        padding-left: 0px !important;
+        width: 70px;
+      }
+
+      .naplesdetail-interface-detail-statsrow-label {
+        width: 110px;
       }
 
       .naplesdetail-interface-detail-statsrow-subvalue,

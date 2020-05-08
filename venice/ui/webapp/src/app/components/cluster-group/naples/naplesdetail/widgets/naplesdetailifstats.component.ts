@@ -51,5 +51,17 @@ export class NaplesdetailIfstatsComponent implements OnInit {
 
     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
   }
+
+  displayStatsCount (count: number): string {
+    if (count === -1) {
+      return '';
+    }
+
+    if (count === -1000) {
+      return 'N/A';
+    }
+
+    return count.toString();
+  }
 }
 

@@ -11,31 +11,61 @@
       <div fxFlex="1 1 auto" class="naplesdetail-interface-detail-statsrow-value">
         {{ ifs.stats.status }}</div>
     </div>
-    <div fxFlex="20px"></div>
+    <div fxFlex="10px"></div>
     <div fxLayout="row" class="naplesdetail-interface-detail-statsrow">
-      <div class="naplesdetail-interface-detail-statsrow-label">RX</div>
+      <div class="naplesdetail-interface-detail-statsrow-shortLabel">RX</div>
+      <div class="naplesdetail-interface-detail-statsrow-longLabel">(bytes)</div>
       <div fxFlex="1 1 auto" class="naplesdetail-interface-detail-statsrow-value">
         {{ displayStatsNumber(ifs.stats.rx) }}
       </div>
     </div>
-    <div fxFlex="20px"></div>
     <div fxLayout="row" class="naplesdetail-interface-detail-statsrow">
-      <div class="naplesdetail-interface-detail-statsrow-label">TX</div>
+      <div class="naplesdetail-interface-detail-statsrow-shortLabel"></div>
+      <div class="naplesdetail-interface-detail-statsrow-longLabel">(packets)</div>
+      <div fxFlex="1 1 auto" class="naplesdetail-interface-detail-statsrow-value">
+        {{ displayStatsCount(ifs.stats.rx2) }}
+      </div>
+    </div>
+    <div fxFlex="10px"></div>
+    <div fxLayout="row" class="naplesdetail-interface-detail-statsrow">
+      <div class="naplesdetail-interface-detail-statsrow-shortLabel">TX</div>
+      <div class="naplesdetail-interface-detail-statsrow-longLabel">(bytes)</div>
       <div fxFlex="1 1 auto" class="naplesdetail-interface-detail-statsrow-value">
         {{ displayStatsNumber(ifs.stats.tx) }}
       </div>
     </div>
-    <div fxFlex="20px"></div>
     <div fxLayout="row" class="naplesdetail-interface-detail-statsrow">
-      <div class="naplesdetail-interface-detail-statsrow-label">RX Drop</div>
+      <div class="naplesdetail-interface-detail-statsrow-shortLabel"></div>
+      <div class="naplesdetail-interface-detail-statsrow-longLabel">(packets)</div>
+      <div fxFlex="1 1 auto" class="naplesdetail-interface-detail-statsrow-value">
+        {{ displayStatsCount(ifs.stats.tx2) }}
+      </div>
+    </div>
+    <div fxFlex="10px"></div>
+    <div fxLayout="row" class="naplesdetail-interface-detail-statsrow">
+      <div class="naplesdetail-interface-detail-statsrow-shortLabel">RX</div>
+      <div class="naplesdetail-interface-detail-statsrow-longLabel">(bytes)</div>
       <div fxFlex="1 1 auto" class="naplesdetail-interface-detail-statsrow-value">
         {{ displayStatsNumber(ifs.stats.rxDrop) }}</div>
     </div>
-    <div fxFlex="20px"></div>
     <div fxLayout="row" class="naplesdetail-interface-detail-statsrow">
-      <div class="naplesdetail-interface-detail-statsrow-label">TX Drop</div>
+      <div class="naplesdetail-interface-detail-statsrow-shortLabel">Drop</div>
+      <div class="naplesdetail-interface-detail-statsrow-longLabel">(packets)</div>
+      <div fxFlex="1 1 auto" class="naplesdetail-interface-detail-statsrow-value">
+        {{ displayStatsCount(ifs.stats.rxDrop2) }}</div>
+    </div>
+    <div fxFlex="10px"></div>
+    <div fxLayout="row" class="naplesdetail-interface-detail-statsrow">
+      <div class="naplesdetail-interface-detail-statsrow-shortLabel">TX</div>
+      <div class="naplesdetail-interface-detail-statsrow-longLabel">(bytes)</div>
       <div fxFlex="1 1 auto" class="naplesdetail-interface-detail-statsrow-value">
         {{ displayStatsNumber(ifs.stats.txDrop) }}</div>
+    </div>
+    <div fxLayout="row" class="naplesdetail-interface-detail-statsrow">
+      <div class="naplesdetail-interface-detail-statsrow-shortLabel">Drop</div>
+      <div class="naplesdetail-interface-detail-statsrow-longLabel">(packets)</div>
+      <div fxFlex="1 1 auto" class="naplesdetail-interface-detail-statsrow-value">
+        {{ displayStatsCount(ifs.stats.txDrop2) }}</div>
     </div>
   </div>
 </div>
