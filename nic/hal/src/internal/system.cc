@@ -792,7 +792,8 @@ system_mseg_enf_to_transp (const SysSpec *spec)
     // Clear sessions
     hal::session_delete_all();
 
-    // TODO: Clean up vmotion
+    // vMotion DeInit
+    ret = vmotion_deinit();
 
     // Change mode in hal
     hal::g_hal_state->set_fwd_mode(spec->fwd_mode());

@@ -26,6 +26,8 @@ namespace hal {
 #define VMOTION_CONNECT_RETRY_TIME   30           // in Seconds
 #define VMOTION_TIMEOUT              900000       // (in Milliseconds) - 15 Minutes
 #define VMOTION_THR_DELAY_DEL_TIME   1000         // (in Milliseconds) - 1 Sec
+#define VMOTION_DESTROY_DELAY_TIME   250          // (in Milliseconds) - 1 Sec
+#define VMOTION_DELAY_DEL_MAX_ATTEMPT  3
 
 #define VMOTION_WLOCK   vmotion_.rwlock.wlock();
 #define VMOTION_WUNLOCK vmotion_.rwlock.wunlock();
@@ -190,6 +192,10 @@ public:
     hal_ret_t     vmotion_ep_quiesce_program(ep_t *ep, bool entry_add);
     hal_ret_t     vmotion_ep_migration_normalization_cfg(ep_t *ep, bool disable);
     hal_ret_t     vmotion_ep_inp_mac_vlan_pgm(ep_t *ep, bool create);
+    int           get_master_sock(void) { return master_sock_fd_; } 
+    void          set_master_sock(int sock) { master_sock_fd_ = sock; } 
+    hal_ret_t     delay_deinit();
+    sdk::event_thread::event_thread* get_master_event_thrd(void) { return vmotion_.vmotion_master; }
 
     // FSM Related methods
     static vmotion_src_host_fsm_def* src_host_fsm_def_;
@@ -203,8 +209,11 @@ public:
 
 private:
     hal_ret_t   init(uint32_t max_threads, uint32_t vmotion_port);
+    hal_ret_t   deinit();
     static void master_thread_init(void *ctxt);
+    static void master_thread_exit(void *ctxt);
     static void master_thread_cb(sdk::event_thread::io_t *io, int sock_fd, int events);
+    void        vmotion_schedule_delay_destroy(void);
 
     typedef struct vmotion_s {
         sdk::event_thread::event_thread *vmotion_master;
@@ -220,6 +229,8 @@ private:
     std::vector<vmotion_ep *>  vmn_eps_;
     vmotion_stats_t            stats_; 
     TLSContext                *tls_context_; 
+    int                        master_sock_fd_;
+    int                        delay_del_attempt_cnt_ = 0;
 };
 
 // data passed to the destination/source host thread.
@@ -235,6 +246,7 @@ typedef struct vmotion_thread_ctx_s {
 
 
 hal_ret_t vmotion_init(int vmotion_port);
+hal_ret_t vmotion_deinit();
 
 } // namespace hal
 

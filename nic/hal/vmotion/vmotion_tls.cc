@@ -178,6 +178,13 @@ TLSContext::factory()
     return context;
 }
 
+void
+TLSContext::destroy(TLSContext *tls_ctx)
+{
+    tls_ctx->deinit();
+    HAL_FREE(HAL_MEM_ALLOC_VMOTION, tls_ctx);
+}
+
 hal_ret_t
 TLSContext::init(tls_connection_cfg_t *cfg)
 {
@@ -199,6 +206,20 @@ TLSContext::init(tls_connection_cfg_t *cfg)
         return HAL_RET_ERR;
     }
 
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+TLSContext::deinit()
+{
+    if (client_ctx_) {
+        SSL_CTX_free(client_ctx_);
+        client_ctx_ = NULL;
+    }
+    if (server_ctx_) {
+        SSL_CTX_free(server_ctx_);
+        server_ctx_ = NULL;
+    }
     return HAL_RET_OK;
 }
 

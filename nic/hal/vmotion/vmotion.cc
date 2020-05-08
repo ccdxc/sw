@@ -23,6 +23,24 @@ vmotion_init (int vmotion_port)
 
     return HAL_RET_OK;
 }
+
+hal_ret_t
+vmotion_deinit ()
+{
+    vmotion *vmn = g_hal_state->get_vmotion();
+
+    HAL_TRACE_DEBUG("vmotion deinit vmn:{:p}", (void *)vmn);
+
+    if (!vmn) {
+        return HAL_RET_OK;
+    }
+    // Reset the vMotion pointer in HAL Global
+    g_hal_state->set_vmotion(NULL);
+
+    // vMotion destroy
+    vmotion::destroy(vmn);
+    return HAL_RET_OK;
+}
 //-----------------------------------------------------------------------------
 // spawn vmotion thread
 //-----------------------------------------------------------------------------
@@ -43,6 +61,37 @@ vmotion::factory(uint32_t max_threads, uint32_t port)
     }
 
     return vmn;
+}
+
+void
+vmotion::destroy(vmotion *vmn)
+{
+    // deinit
+    hal_ret_t ret = vmn->deinit();
+
+    if (ret != HAL_RET_RETRY) {
+        HAL_FREE(hal::HAL_MEM_ALLOC_VMOTION, vmn);
+    }
+    HAL_TRACE_DEBUG("vMotion Destroy. Ret:{}", ret);
+}
+
+static void
+vmotion_delay_destroy_cb (void *timer, uint32_t timer_id, void *ctxt)
+{
+    vmotion *vmn = (vmotion *)ctxt;
+    if (vmn->delay_deinit() != HAL_RET_RETRY) {
+        HAL_FREE(hal::HAL_MEM_ALLOC_VMOTION, vmn);
+    }
+}
+
+void
+vmotion::vmotion_schedule_delay_destroy(void)
+{
+    if (sdk::lib::timer_schedule(HAL_TIMER_ID_THREAD_DELAY_DEL, VMOTION_DESTROY_DELAY_TIME,
+                                 reinterpret_cast<void *>(this),
+                                 vmotion_delay_destroy_cb, false) == NULL) {
+        HAL_TRACE_ERR("vMotion error in starting delay destroy timer");
+    }
 }
 
 hal_ret_t
@@ -67,7 +116,7 @@ vmotion::init(uint32_t max_threads, uint32_t vmotion_port)
                                                  sdk::lib::THREAD_ROLE_CONTROL,
                                                  0x0,    // use all control cores
                                                  master_thread_init,  // Thread Init Fn
-                                                 NULL,  // Thread Exit Fn
+                                                 master_thread_exit,  // Thread Exit Fn
                                                  NULL,  // Thread Event CB
                                                  sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
                                                  sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
@@ -75,6 +124,71 @@ vmotion::init(uint32_t max_threads, uint32_t vmotion_port)
 
     // Start the master thread
     vmotion_.vmotion_master->start(this);
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+vmotion::deinit()
+{
+    HAL_TRACE_DEBUG("vMotion Deinit. Active VMN_EPs:{}", vmn_eps_.size());
+
+    // Exit master thread
+    vmotion_.vmotion_master->stop();
+
+    // Free TLS Context
+    TLSContext::destroy(tls_context_);
+    tls_context_ = NULL;
+
+    // There is a possibility that, there could be some active vMotion going on.
+    // Then post event to those vMotion threads to exit
+    if (!vmn_eps_.empty()) {
+
+        std::vector<uint32_t> thrd_ids;
+        for (auto vmn_ep : vmn_eps_) {
+            thrd_ids.push_back(vmn_ep->get_thread_id());
+        }
+
+        for (auto thrd_id : thrd_ids) {
+            // Destroy vMotion EP
+            vmotion_thread_evt_t *evt =
+                (vmotion_thread_evt_t *)HAL_CALLOC(HAL_MEM_ALLOC_VMOTION, sizeof(vmotion_thread_evt_t));
+            *evt = VMOTION_EVT_EP_MV_ABORT;
+            sdk::event_thread::message_send(thrd_id, (void *)evt);
+        }
+        // Till vMotion threads close, delay the vMotion pointer cleanup
+        vmotion_schedule_delay_destroy();
+
+        return HAL_RET_RETRY;
+    }
+
+    // Free threads indexer
+    rte_indexer::destroy(vmotion_.threads_idxr);
+    vmotion_.threads_idxr = NULL;
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+vmotion::delay_deinit()
+{
+    HAL_TRACE_DEBUG("vMotion Delay Deinit Attempt:{}", delay_del_attempt_cnt_);
+
+    if (!vmn_eps_.empty() && delay_del_attempt_cnt_ < VMOTION_DELAY_DEL_MAX_ATTEMPT) {
+        delay_del_attempt_cnt_++;
+        vmotion_schedule_delay_destroy();
+        return HAL_RET_RETRY;
+    }
+
+    // Destroy EPs
+    for (std::vector<vmotion_ep *>::iterator vmn_ep = vmn_eps_.begin();
+         vmn_ep != vmn_eps_.end(); vmn_ep++) {
+        vmotion_ep::destroy(*vmn_ep);
+    }
+
+    // Free threads indexer
+    rte_indexer::destroy(vmotion_.threads_idxr);
+    vmotion_.threads_idxr = NULL;
 
     return HAL_RET_OK;
 }
@@ -146,11 +260,24 @@ vmotion::master_thread_init(void *ctxt)
     }
 
     vmn->get_master_thread_io()->ctx = ctxt;
+    vmn->set_master_sock(master_socket);
 
     // initialize and start a watcher to accept client requests
     sdk::event_thread::io_init(vmn->get_master_thread_io(), master_thread_cb,
                                master_socket, EVENT_READ);
     sdk::event_thread::io_start(vmn->get_master_thread_io());
+}
+
+void
+vmotion::master_thread_exit(void *ctxt)
+{
+    vmotion       *vmn = (vmotion *)ctxt;
+
+    HAL_TRACE_DEBUG("Master vMotion thread thread exit");
+
+    vmotion::delay_delete_thread(vmn->get_master_event_thrd());
+
+    close(vmn->get_master_sock());
 }
 
 // call back when a new client is trying to connect.
@@ -260,7 +387,6 @@ vmotion::vmotion_handle_ep_del(ep_t *ep)
     if (!VMOTION_IS_ENABLED()) {
         return HAL_RET_OK;
     }
-
     if (ep->vmotion_state == MigrationState::IN_PROGRESS) {
         // Loop the sessions, and start aging timer if any sync sessions received
         migration_done(ep->hal_handle, ep->vmotion_state);
@@ -452,7 +578,9 @@ vmotion_thread_delay_del_cb (void *timer, uint32_t timer_id, void *ctxt)
     sdk::event_thread::event_thread::destroy(thr);
 
     // Free up the thread ID
-    g_hal_state->get_vmotion()->release_thread_id(thr->thread_id());
+    if (g_hal_state->get_vmotion()) {
+        g_hal_state->get_vmotion()->release_thread_id(thr->thread_id());
+    }
 }
 
 struct migration_done_ctx_t {

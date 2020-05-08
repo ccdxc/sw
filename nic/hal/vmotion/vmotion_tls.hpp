@@ -41,8 +41,10 @@ class TLSContext {
 public:
     // Factory methods
     static TLSContext *factory();
+    static void        destroy(TLSContext *tls_ctx);
 
     hal_ret_t      init(tls_connection_cfg_t *cfg);
+    hal_ret_t      deinit();
     TLSConnection *init_ssl_connection(int sock, bool is_server);
     hal_ret_t      init_ssl_ctx(SSL_CTX *ctx, const char *cert_file, const char *key_file,
                                 const char *ca_file);
