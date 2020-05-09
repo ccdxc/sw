@@ -118,7 +118,7 @@ export class FlowexportpolicyComponent extends TablevieweditAbstract<IMonitoring
       ret += 'Src: ';
       let sources = [];
       for (const k in req.source) {
-        if (req.source.hasOwnProperty(k)) {
+        if (req.source.hasOwnProperty(k) && k !== '_ui') {
           const v: string[] = req.source[k];
           sources = sources.concat(v);
         }
@@ -132,7 +132,7 @@ export class FlowexportpolicyComponent extends TablevieweditAbstract<IMonitoring
       ret += '    Dest: ';
       let dest = [];
       for (const k in req.destination) {
-        if (req.destination.hasOwnProperty(k)) {
+        if (req.destination.hasOwnProperty(k)  && k !== '_ui') {
           const v: string[] = req.destination[k];
           dest = dest.concat(v);
         }

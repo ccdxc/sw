@@ -79,15 +79,15 @@
 <ng-template #match_rules>
   <div fxFlex="none" fxLayout="column">
     <div fxFlex="none" fxLayout="row">
-      <div fxFlex="none">Export Packet:</div>
+      <div fxFlex="none">Export Packet Rule:</div>
     </div>
     <div fxFlex="10px">
 
     </div>
-    <app-orderedlist
+    <app-orderedlist [enableDragDrop]="false" [enableOrdering]="false"
                      [dataArray]="ExportPolicyRules" [template]="ruleTemplate"
                      (itemClick)="orderedListClick($event)"></app-orderedlist>
-    <div fxFlex="none" (click)="addRule()" class="export-policy-add-rule">+ RULE</div>
+    <div fxFlex="none" (click)="addRule()" class="export-policy-add-rule">+ ADD</div>
   </div>
 </ng-template>
 
@@ -113,6 +113,19 @@
   <div fxFlex="auto" fxLayout="column" fxLayoutGap="10px"
        fxLayoutAlign="center none" class="new-export-policy-rule-template"
        [ngClass]="{'newmirrorsession-hide-primeng-panel': !ExportPolicyRules[index].inEdit}">
+    <div fxFlex="none" fxLayout="row" fxLayoutGap="40px" class="flow-export-policy-rule-row">
+      <app-formchips fxFlex="none" [chipsLabel]="'Source ' + IPS_LABEL"
+                     [formControl]="data.rule.$formGroup.get(['source', 'ip-addresses'])"
+                     boxStyleClass="export-policy-rule-boxes" [itemValidator]="isValidIP"
+                     [itemErrorMsg]="IPS_ERRORMSG" [toolTip]="IPS_TOOLTIP">
+      </app-formchips>
+      <app-formchips fxFlex="none" [chipsLabel]="'Target ' + IPS_LABEL"
+                     [formControl]="data.rule.$formGroup.get(['destination', 'ip-addresses'])"
+                     boxStyleClass="export-policy-rule-boxes" [itemValidator]="isValidIP"
+                     [itemErrorMsg]="IPS_ERRORMSG" [toolTip]="IPS_TOOLTIP">
+      </app-formchips>
+    </div>
+    <!--
     <div fxFlex="none">
       <fieldset>
         <legend>Source</legend>
@@ -155,7 +168,14 @@
         </div>
       </fieldset>
     </div>
-    <div fxFlex="none">
+    -->
+    <div fxFlex="none" class="flow-export-policy-rule-row">
+      <app-formchips fxFlex="none" [chipsLabel]="protoAppOptions[0]['value']"
+                     [formControl]="data.rule.$formGroup.get(['app-protocol-selectors', 'proto-ports'])"
+                     boxStyleClass="export-policy-rule-boxes" [itemValidator]="isValidProto"
+                     [itemErrorMsg]="PORTS_ERRORMSG" [toolTip]="PROTS_TOOLTIP">
+      </app-formchips>
+      <!--
       <fieldset>
         <legend>Protocol</legend>
 
@@ -167,6 +187,7 @@
           </app-formchips>
         </div>
       </fieldset>
+      -->
     </div>
   </div>
 </ng-template>
