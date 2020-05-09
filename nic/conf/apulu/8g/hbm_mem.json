@@ -378,7 +378,7 @@
         {
             "name": "qos-hbm-fifo",
             "kind": "cfgtbl",
-            "size": "0K"
+            "size": "262144K"
         },
         {
             "name": "tx-scheduler",
