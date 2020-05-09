@@ -1573,7 +1573,6 @@ ionic_link_up(struct ionic *ionic)
     ionic->port_stats.link_up++;
 
     EvLogInformational("%wZ - The network link is up.", ionic->name);
-
 }
 
 void
@@ -1662,6 +1661,7 @@ ionic_link_status_check(struct lif *lif, u16 link_status)
 
     // lif was up, but link or fw has gone down
     if (link_change && !link_up) {
+        EvLogWarning("%wZ - Link state changed to DOWN.", ionic->name);
         DbgTrace((TRACE_COMPONENT_LINK, TRACE_LEVEL_VERBOSE,
                   "%s Link down\n", __FUNCTION__));
         ionic_stop(lif->ionic);
@@ -1670,6 +1670,7 @@ ionic_link_status_check(struct lif *lif, u16 link_status)
 
     // lif was initted, but fw has gone down
     if (fw_change && !fw_run) {
+        EvLogWarning("%wZ - Firmware state changed to RESET.", ionic->name);
         DbgTrace((TRACE_COMPONENT_LINK, TRACE_LEVEL_VERBOSE,
             "%s Firmware down\n", __FUNCTION__));
         ionic_lif_deinit(lif);
@@ -1678,6 +1679,7 @@ ionic_link_status_check(struct lif *lif, u16 link_status)
 
     // lif was not initted, and fw has come up
     if (fw_change && fw_run) {
+        EvLogInformational("%wZ - Firmware state changed to RUNNING.", ionic->name);
         DbgTrace((TRACE_COMPONENT_LINK, TRACE_LEVEL_VERBOSE,
             "%s Firmware running\n", __FUNCTION__));
         status = ionic_lif_init(lif);
@@ -1688,6 +1690,8 @@ ionic_link_status_check(struct lif *lif, u16 link_status)
 
     // lif was not up, but link has come up
     if (link_change && link_up) {
+        EvLogInformational("%wZ - Link state changed to UP %d Gbps.", ionic->name,
+                           le32_to_cpu(lif->info->status.link_speed) / 1000);
         DbgTrace((TRACE_COMPONENT_LINK, TRACE_LEVEL_VERBOSE,
                   "%s Link up - %d Gbps\n", __FUNCTION__,
                   le32_to_cpu(lif->info->status.link_speed) / 1000));

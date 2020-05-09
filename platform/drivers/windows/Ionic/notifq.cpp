@@ -36,6 +36,8 @@ ionic_lif_notifyq_init(struct lif *lif)
               "%s notifyq_init.ring_size %d\n", __FUNCTION__,
               ctx.cmd.q_init.ring_size));
 
+    lif->last_eid = 0;
+
     status = ionic_adminq_post_wait(lif, &ctx);
     if (status != NDIS_STATUS_SUCCESS)
         return status;

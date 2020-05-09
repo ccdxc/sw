@@ -225,6 +225,8 @@ ionic_reset(struct ionic *ionic)
     struct ionic_dev *idev = &ionic->idev;
     NDIS_STATUS status = NDIS_STATUS_SUCCESS;
 
+    EvLogInformational("%wZ - Resetting Device", ionic->name);
+
     NdisAcquireSpinLock(&ionic->dev_cmd_lock);
     ionic_dev_cmd_reset(idev);
     status = ionic_dev_cmd_wait(ionic, devcmd_timeout);

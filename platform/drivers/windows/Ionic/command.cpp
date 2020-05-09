@@ -518,6 +518,8 @@ ionic_lif_reset(struct lif *lif)
 {
     struct ionic_dev *idev = &lif->ionic->idev;
 
+    EvLogInformational("%wZ - Resetting Lif %d", lif->ionic->name, lif->index);
+
     NdisAcquireSpinLock(&lif->ionic->dev_cmd_lock);
     ionic_dev_cmd_lif_reset(idev, (u16)lif->index);
     ionic_dev_cmd_wait(lif->ionic, devcmd_timeout);

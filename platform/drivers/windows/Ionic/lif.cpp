@@ -884,14 +884,6 @@ ionic_lifs_init(struct ionic *ionic)
                 return status;
             }
 
-            status = ionic_lif_set_name(lif);
-
-            if (status != NDIS_STATUS_SUCCESS) {
-                DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
-                          "%s ionic_lif_set_name failed %08lX\n", __FUNCTION__,
-                          status));
-            }
-
             cur = cur->Flink;
         } while (cur != &ionic->lifs);
     }
@@ -1030,11 +1022,20 @@ ionic_lif_init(struct lif *lif)
         goto err_out_notifyq_deinit;
     }
 
+    status = ionic_lif_set_name(lif);
+    if (status != NDIS_STATUS_SUCCESS) {
+	    DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
+		      "%s ionic_lif_set_name failed %08lX\n", __FUNCTION__,
+		      status));
+    }
+
     lif->rx_copybreak = rx_copybreak;
 
     lif->api_private = NULL;
     RtlSetBit(&lif->state, LIF_INITED);
     RtlSetBit(&lif->state, LIF_F_FW_READY);
+
+    EvLogSuccess("%wZ - Initialized Lif %d", lif->ionic->name, lif->index);
 
     return NDIS_STATUS_SUCCESS;
 
@@ -2533,14 +2534,6 @@ ionic_allocate_slave_lif(struct ionic *ionic)
                   "%s Cannot init slave lif %d: %08lX\n", __FUNCTION__,
                   lif_index, ntStatus));
         goto err_out_free_slave;
-    }
-
-    ntStatus = ionic_lif_set_name(lif);
-
-    if (ntStatus != NDIS_STATUS_SUCCESS) {
-        DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
-                  "%s ionic_lif_set_name failed %08lX\n", __FUNCTION__,
-                  ntStatus));
     }
 
     lif->lif_stats->lif_id = lif_index;
