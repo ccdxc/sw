@@ -1837,6 +1837,10 @@ port::port_mac_stats_errata_correct(uint64_t *stats_data)
 {
     uint64_t rx_pri_pause_all = 0;
 
+    // errata correction only for MX ports
+    if (port_type() == port_type_t::PORT_TYPE_MGMT) {
+        return SDK_RET_OK;
+    }
     // pripause frames summation is correct; PORT_FRAMES_RX_PRIPAUSE incorrect
     rx_pri_pause_all = stats_data[PORT_FRAMES_RX_PRI_0] +
                        stats_data[PORT_FRAMES_RX_PRI_1] +
