@@ -689,6 +689,11 @@ pciemgrd_vpd_params(pciemgrenv_t *pme)
 void
 pciemgrd_params(pciemgrenv_t *pme)
 {
+#ifdef ASIC_ELBA
+    /* XXX ELBA-TODO make elba interrupts work */
+    pme->poll_dev = 1;
+#endif
+
     pme->reboot_on_hostdn = pciemgrd_param_ull("PCIE_REBOOT_ON_HOSTDN",
                                                pme->reboot_on_hostdn);
     pme->enabled_ports = pciemgrd_param_ull("PCIE_ENABLED_PORTS",

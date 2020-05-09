@@ -92,10 +92,6 @@ main(int argc, char *argv[])
 
     pme->interactive = 1;
     pme->reboot_on_hostdn = pal_is_asic() ? 1 : 0;
-#ifdef ASIC_ELBA
-    /* XXX ELBA-TODO make elba interrupts work */
-    pme->poll_dev = 1;
-#endif
     pme->fifopri = 50;
     pme->poll_port = 1;
     pme->poll_tm = 500000; // 0.5s slow poll for non-essential events
