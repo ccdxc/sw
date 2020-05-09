@@ -103,7 +103,7 @@ func TestProcessFWEventForObjStore(t *testing.T) {
 		verifyLog(t, testObject)
 
 		err = deleteFwlogPolicy(ctx, ps, "psmTarget")
-		AssertOk(t, err, "failed to create policy")
+		AssertOk(t, err, "failed to delete policy")
 	})
 
 	t.Run("TestAllowFilter", func(t *testing.T) {
@@ -116,7 +116,7 @@ func TestProcessFWEventForObjStore(t *testing.T) {
 		verifyLog(t, testObject)
 
 		err = deleteFwlogPolicy(ctx, ps, "psmTarget")
-		AssertOk(t, err, "failed to create policy")
+		AssertOk(t, err, "failed to delete policy")
 	})
 
 	t.Run("TestAllFilter", func(t *testing.T) {
@@ -137,7 +137,7 @@ func TestProcessFWEventForObjStore(t *testing.T) {
 		verifyLog(t, testObject)
 
 		err = deleteFwlogPolicy(ctx, ps, "psmTarget")
-		AssertOk(t, err, "failed to create policy")
+		AssertOk(t, err, "failed to delete policy")
 	})
 
 	t.Run("TestNoneFilter", func(t *testing.T) {
@@ -167,7 +167,7 @@ func TestProcessFWEventForObjStore(t *testing.T) {
 		Assert(t, timedOut, "received log even after None filter")
 
 		err = deleteFwlogPolicy(ctx, ps, "psmTarget")
-		AssertOk(t, err, "failed to create policy")
+		AssertOk(t, err, "failed to delete policy")
 	})
 
 	// TestObjStoreErrors tests the error scenarios in the object store pipeline
@@ -236,7 +236,7 @@ func TestProcessFWEventForObjStore(t *testing.T) {
 		Assert(t, (aHeapAlloc-bHeapAlloc)/1000000 <= 50, "storing %d logs is taking more then 50Mb", numLogs)
 
 		err = deleteFwlogPolicy(ctx, ps, "psmTarget")
-		AssertOk(t, err, "failed to create policy")
+		AssertOk(t, err, "failed to delete policy")
 	})
 
 	// done := make(chan bool)
