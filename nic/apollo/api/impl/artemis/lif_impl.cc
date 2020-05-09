@@ -94,6 +94,14 @@ lif_impl::program_tx_policer(uint32_t lif_id, sdk::qos::policer_t *policer) {
     return SDK_RET_OK;
 }
 
+void
+lif_impl::set_name(const char *name) {
+    if ((type_ == sdk::platform::LIF_TYPE_HOST_MGMT) ||
+        (type_ == sdk::platform::LIF_TYPE_HOST)) {
+        memcpy(name_, name, SDK_MAX_NAME_LEN);
+    }
+}
+
 #define nacl_redirect_action    action_u.nacl_nacl_redirect
 sdk_ret_t
 lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {

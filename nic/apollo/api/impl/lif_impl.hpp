@@ -101,12 +101,7 @@ public:
 
     /// \brief     set/update the name of the lif
     /// \param[in] name    name of the device corresponding to this lif
-    void set_name(const char *name) {
-        if ((type_ == sdk::platform::LIF_TYPE_HOST_MGMT) ||
-            (type_ == sdk::platform::LIF_TYPE_HOST)) {
-            memcpy(name_, name, SDK_MAX_NAME_LEN);
-        }
-    }
+    void set_name(const char *name);
 
     /// \brief     return the name of the lif
     /// \return    return lif name

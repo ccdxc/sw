@@ -118,6 +118,21 @@ lif_impl::program_tx_policer(uint32_t lif_id, sdk::qos::policer_t *policer) {
     return SDK_RET_OK;
 }
 
+void
+lif_impl::set_name(const char *name) {
+    pds_event_t event;
+
+    if ((type_ == sdk::platform::LIF_TYPE_HOST_MGMT) ||
+        (type_ == sdk::platform::LIF_TYPE_HOST)) {
+        memcpy(name_, name, SDK_MAX_NAME_LEN);
+    }
+    // notify lif update
+    event.event_id = PDS_EVENT_ID_LIF_UPDATE;
+    pds_lif_to_lif_spec(&event.lif_info.spec, this);
+    pds_lif_to_lif_status(&event.lif_info.status, this);
+    g_pds_state.event_notify(&event);
+}
+
 #define nacl_redirect_action    action_u.nacl_nacl_redirect
 #define nexthop_info            action_u.nexthop_nexthop_info
 sdk_ret_t
