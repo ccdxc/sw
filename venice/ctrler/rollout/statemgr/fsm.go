@@ -292,6 +292,7 @@ func fsmAcCreated(ros *RolloutState) {
 		if allVeniceHalthy == false {
 			log.Errorf("Precheck failed: %v", msg)
 			ros.setVenicePhase(nodeName, "", msg, rollout.RolloutPhase_FAIL)
+			ros.veniceRolloutFailed = true
 			ros.eventChan <- fsmEvFail
 			return
 		}
@@ -300,6 +301,7 @@ func fsmAcCreated(ros *RolloutState) {
 		numPendingPrecheck, n, err := ros.preCheckNextVeniceNode()
 		if err != nil {
 			log.Errorf("Precheck failed: %v", err)
+			ros.veniceRolloutFailed = true
 			ros.setVenicePhase(n, "", err.Error(), rollout.RolloutPhase_FAIL)
 			ros.eventChan <- fsmEvFail
 			return
