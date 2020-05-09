@@ -905,6 +905,10 @@ static int ionic_get_module_info(struct net_device *netdev,
 		modinfo->type = ETH_MODULE_SFF_8436;
 		modinfo->eeprom_len = ETH_MODULE_SFF_8436_LEN;
 		break;
+	case SFF8024_ID_UNK:
+		netdev_info(netdev, "no xcvr connected? type 0x%02x\n",
+			    xcvr->sprom[0]);
+		return -EINVAL;
 	default:
 		if (!lif->ionic->is_mgmt_nic)
 			netdev_info(netdev, "unknown xcvr type 0x%02x\n",
