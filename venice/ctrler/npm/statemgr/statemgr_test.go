@@ -3708,7 +3708,7 @@ func getCollectorsWithGateway(start, end int) (collectors []monitoring.MirrorCol
 
 	for i := start; i < end; i++ {
 		collectors = append(collectors, monitoring.MirrorCollector{ExportCfg: &monitoring.MirrorExportConfig{
-			Destination: getCollectorName(i), Gateway: getCollectorName(i),
+			Destination: getCollectorName(i), Gateway: getGatewayCollectorName(i),
 		}})
 	}
 
@@ -3717,6 +3717,10 @@ func getCollectorsWithGateway(start, end int) (collectors []monitoring.MirrorCol
 
 func getCollectorName(i int) string {
 	return "col-" + strconv.Itoa(i)
+}
+
+func getGatewayCollectorName(i int) string {
+	return "col-gateway-" + strconv.Itoa(i)
 }
 
 func TestMirrorCreateDelete(t *testing.T) {
@@ -6596,10 +6600,23 @@ func TestWatcherWithMirrorCreateUpdate(t *testing.T) {
 	AssertOk(t, err, "Error creating mirror session ")
 
 	AssertEventually(t, func() (bool, interface{}) {
-		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		ms, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
 		if err == nil {
 			return true, nil
 		}
+		if len(ms.intfMirrorSession.obj.Spec.Collectors) != numCollectors {
+			return false, nil
+		}
+
+		for i, col := range ms.intfMirrorSession.obj.Spec.Collectors {
+			if col.ExportCfg.Destination != collectors[i].ExportCfg.Destination {
+				return false, nil
+			}
+			if col.ExportCfg.Gateway != "" {
+				return false, nil
+			}
+		}
+
 		return false, nil
 	}, "Mirror session not found", "1ms", "1s")
 
@@ -6645,11 +6662,76 @@ func TestWatcherWithMirrorCreateUpdate(t *testing.T) {
 	AssertOk(t, err, "Error creating mirror session ")
 
 	AssertEventually(t, func() (bool, interface{}) {
-		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
-		if err == nil {
-			return true, nil
+		ms, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err != nil {
+			return false, nil
 		}
-		return false, nil
+
+		if len(ms.intfMirrorSession.obj.Spec.Collectors) != numCollectors {
+			return false, nil
+		}
+
+		for i, col := range ms.intfMirrorSession.obj.Spec.Collectors {
+			if col.ExportCfg.Destination != updateCollectors[i].ExportCfg.Destination {
+				return false, nil
+			}
+			if col.ExportCfg.Gateway != updateCollectors[i].ExportCfg.Gateway {
+				return false, nil
+			}
+		}
+		return true, nil
+
+	}, "Mirror session not found", "1ms", "1s")
+
+	errs = make(chan error, len(watchers))
+	for _, watcher := range watchers {
+		watcher := watcher
+		go func() {
+			errs <- verifyEvObjects(t, watchMap[watcher.watcher.Name], time.Duration(1*time.Second))
+		}()
+
+	}
+
+	for _ = range watchers {
+		err := <-errs
+		AssertOk(t, err, "Error verifying objects")
+	}
+
+	for _, watcher := range watchers {
+		watcher.evtsExp.Reset()
+		watcher.evtsRcvd.Reset()
+		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["InterfaceMirrorSession"] = 1
+	}
+
+	updateCollectors = getCollectorsWithGateway(numCollectors, numCollectors+3)
+	_, err = updateMirror(stateMgr, "default", "testMirror", nil, nil, updateCollectors, labels.SelectorFromSet(labels.Set(label1)), 0)
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		ms, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err != nil {
+			return false, nil
+		}
+
+		if len(ms.intfMirrorSession.obj.Spec.Collectors) != 3 {
+			fmt.Printf("Collectors don't match %v\n", len(ms.intfMirrorSession.obj.Spec.Collectors))
+			return false, nil
+		}
+
+		for _, upCol := range updateCollectors {
+			found := false
+			for _, col := range ms.intfMirrorSession.obj.Spec.Collectors {
+				if col.ExportCfg.Destination == upCol.ExportCfg.Destination && col.ExportCfg.Gateway == upCol.ExportCfg.Gateway {
+					found = true
+					break
+				}
+			}
+			if !found {
+				return false, nil
+			}
+		}
+		return true, nil
+
 	}, "Mirror session not found", "1ms", "1s")
 
 	errs = make(chan error, len(watchers))

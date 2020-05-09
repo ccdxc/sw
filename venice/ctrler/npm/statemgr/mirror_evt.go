@@ -716,7 +716,7 @@ func (smm *SmMirrorSessionInterface) updateInterfaceMirror(ms *MirrorSessionStat
 						}
 						if cur.ExportCfg.Gateway != cref.col.ExportCfg.Gateway {
 							updateReqd = true
-							ms.intfMirrorSession.obj.Spec.Collectors[i].ExportCfg.Destination = cref.col.ExportCfg.Gateway
+							ms.intfMirrorSession.obj.Spec.Collectors[i].ExportCfg.Gateway = cref.col.ExportCfg.Gateway
 						}
 						break
 					}
