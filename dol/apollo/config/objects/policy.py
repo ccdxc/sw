@@ -932,13 +932,25 @@ class PolicyObjectClient(base.ConfigClientBase):
             obj = L4MatchObject(l4match, sportlow, sporthigh, dportlow, dporthigh, icmptype, icmpcode)
             return obj
 
+        def __get_any_other_proto(protocol):
+            proto = utils.GetIPProtoByName(protocol)
+            proto_list = []
+            for p in SupportedIPProtos:
+                if p != proto and p != utils.GetIPProtoByName("icmp"):
+                    proto_list.append(p)
+            res = random.choice(proto_list)
+            return random.choice(proto_list)
+
         def __get_l3_proto_from_rule(af, rulespec):
             proto = getattr(rulespec, 'protocol', utils.L3PROTO_MIN)
             if proto:
                 if proto != "any":
-                    if proto == "icmp" and af == utils.IP_VERSION_6:
-                        proto = "ipv6-" + proto
-                    proto = utils.GetIPProtoByName(proto)
+                    if 'no-' in proto:
+                        proto = __get_any_other_proto(proto[3:])
+                    else:
+                        if proto == "icmp" and af == utils.IP_VERSION_6:
+                            proto = "ipv6-" + proto
+                        proto = utils.GetIPProtoByName(proto)
                 else:
                     proto = utils.L3PROTO_MAX
             return proto

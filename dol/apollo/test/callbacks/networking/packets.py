@@ -50,8 +50,16 @@ def __get_proto_from_policy_rule(rule):
     return utils.GetIPProtoName(l3match.Proto, get_rand_l3_proto)
 
 def __get_packet_template_from_policy_impl(rule, policy, protocol=None):
-    protocol = protocol if protocol else __get_proto_from_policy_rule(rule)
-    template = 'ETH_%s_%s' % (policy.AddrFamily, protocol)
+    if 'no-' not in policy.PolicyType:
+        protocol = protocol if protocol else __get_proto_from_policy_rule(rule)
+        template = 'ETH_%s_%s' % (policy.AddrFamily, protocol)
+    else:
+        if "no-tcp" in policy.PolicyType:
+            template = 'ETH_%s_%s' % (policy.AddrFamily, 'TCP')
+        elif 'no-udp' in policy.PolicyType:
+            template = 'ETH_%s_%s' % (policy.AddrFamily, 'UDP')
+        elif 'no-icmp' in policy.PolicyType:
+            template = 'ETH_%s_%s' % (policy.AddrFamily, 'ICMP')
     return infra_api.GetPacketTemplate(template)
 
 def GetPacketTemplateFromPolicy(testcase, packet, args=None):

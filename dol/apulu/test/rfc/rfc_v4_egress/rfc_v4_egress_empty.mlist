@@ -4,7 +4,7 @@ feature:
     sub         : ipv4_egress_empty
     package     : test.rfc
     module      : rfc
-    runorder    : 21000
+    runorder    : 15000
     enable      : True
     ignore      : True
 
@@ -49,4 +49,4 @@ modules:
             - policy : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFWAction=none
               proto  : ESP
 
-       
+

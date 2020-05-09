@@ -1,0 +1,20 @@
+# Apulu RFC IPv4 Egress modules list for non-empty policy without any rules
+# that match the proto in the packet
+feature:
+    id          : rfc
+    sub         : ipv4_egress_no_match
+    package     : test.rfc
+    module      : rfc
+    runorder    : 15500
+    enable      : True
+    ignore      : False
+
+modules:
+
+    - module         :
+        name         : PROTO_NO_MATCH
+        spec         : rfc_egress.testspec
+        iterate      :
+            - policy : filter://AddrFamily=IPV4,PolicyType=no-tcp
+            - policy : filter://AddrFamily=IPV4,PolicyType=no-udp
+            - policy : filter://AddrFamily=IPV4,PolicyType=no-icmp
