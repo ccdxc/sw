@@ -177,7 +177,6 @@ pd_uplinkif_get (pd_if_get_args_t *args)
     if_t                    *hal_if = args->hal_if;
     pd_uplinkif_t           *uplinkif_pd = (pd_uplinkif_t *)hal_if->pd_if;
     InterfaceGetResponse    *rsp = args->rsp;
-    uint32_t                log_port;
     delphi::objects::MacMetricsPtr mac_metrics;
     delphi::objects::MgmtMacMetricsPtr mgmt_mac_metrics;
 #if 0
@@ -198,9 +197,6 @@ pd_uplinkif_get (pd_if_get_args_t *args)
     }
 #endif
 
-    log_port = g_hal_state->catalog()->ifindex_to_logical_port(args->hal_if->fp_port_num);
-
-
     auto up_info = rsp->mutable_status()->mutable_uplink_info();
     up_info->set_uplink_lport_id(uplinkif_pd->upif_lport_id);
     up_info->set_hw_lif_id(uplinkif_pd->hw_lif_id);
@@ -211,7 +207,7 @@ pd_uplinkif_get (pd_if_get_args_t *args)
     up_info->set_rx_pps(lif_metrics.rx_pps);
     up_info->set_rx_bytesps(lif_metrics.rx_bytesps);
 #endif
-    
+
     if (args->hal_if->is_oob_management) {
         mgmt_mac_metrics = delphi::objects::MgmtMacMetrics::Find(hal_if->if_id);
         if (mgmt_mac_metrics != nullptr) {

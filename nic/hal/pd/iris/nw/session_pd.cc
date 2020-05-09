@@ -380,7 +380,8 @@ p4pd_add_upd_flow_info_table_entry (pd_session_create_args_t *args, pd_flow_t *f
     bool entry_exists = false;
     sdk_table_api_params_t params;
     session_t *session = args->session;
-    uint64_t   clock = args->clock;
+    uint64_t clock = args->clock;
+    uint64_t t_clock = 0;
 
     sess_pd = session->pd;
 
@@ -406,7 +407,10 @@ p4pd_add_upd_flow_info_table_entry (pd_session_create_args_t *args, pd_flow_t *f
     }
     if (flow_attrs->drop) {
         d.action_id = FLOW_INFO_FLOW_HIT_DROP_ID;
-        d.action_u.flow_info_flow_hit_drop.start_timestamp = (clock>>16);
+        t_clock = clock >> 16;
+        sdk::lib::memrev(d.action_u.flow_info_flow_hit_drop.start_timestamp,
+                         (uint8_t *)&t_clock,
+                         sizeof(d.action_u.flow_info_flow_hit_drop.start_timestamp));
 
     } else {
         d.action_id = FLOW_INFO_FLOW_INFO_ID;
@@ -559,34 +563,41 @@ p4pd_add_upd_flow_info_table_entry (pd_session_create_args_t *args, pd_flow_t *f
 
         // Dont update the start timestamp during update
         // we dont want to mess up aging logic
-        if (!entry_exists)
-            d.action_u.flow_info_flow_info.start_timestamp = (clock>>16);
+        if (!entry_exists) {
+            t_clock = clock >> 16;
+            sdk::lib::memrev(d.action_u.flow_info_flow_info.start_timestamp,
+                         (uint8_t *)&t_clock,
+                         sizeof(d.action_u.flow_info_flow_info.start_timestamp));
+        }
     } // End updateion flow allow action
 
     if (entry_exists) {
-       params.handle.pindex(flow_pd->assoc_hw_id);
-       params.actiondata = &d;
-       // Update the entry
-       sdk_ret = info_table->update(&params);
-       ret = hal_sdk_ret_to_hal_ret(sdk_ret);
-       if (ret != HAL_RET_OK) {
-           HAL_TRACE_ERR("flow info table update failure, idx : {}, err : {}",
-                         flow_pd->assoc_hw_id, ret);
-           return ret;
-       }
+        params.handle.pindex(flow_pd->assoc_hw_id);
+        params.actiondata = &d;
+        // Update the entry
+        sdk_ret = info_table->update(&params);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("flow info table update failure, idx : {}, err : {}",
+                          flow_pd->assoc_hw_id, ret);
+            return ret;
+        }
     } else {
-       HAL_TRACE_DEBUG("Writing flow info start timestamp {} to flow index {} action id {}",
-                       d.action_u.flow_info_flow_info.start_timestamp, flow_pd->assoc_hw_id, d.action_id);
-       params.handle.pindex(flow_pd->assoc_hw_id);
-       params.actiondata = &d;
-       // insert the entry
-       sdk_ret = info_table->insert_withid(&params);
-       ret = hal_sdk_ret_to_hal_ret(sdk_ret);
-       if (ret != HAL_RET_OK) {
-           HAL_TRACE_ERR("flow info table write failure, idx : {}, err : {}",
-                             flow_pd->assoc_hw_id, ret);
-           return ret;
-       }
+        sdk::lib::memrev((uint8_t *)&t_clock,
+                         d.action_u.flow_info_flow_info.start_timestamp,
+                         sizeof(d.action_u.flow_info_flow_info.start_timestamp));
+        HAL_TRACE_DEBUG("Writing flow info start timestamp {} to flow index {} action id {}",
+                        t_clock, flow_pd->assoc_hw_id, d.action_id);
+        params.handle.pindex(flow_pd->assoc_hw_id);
+        params.actiondata = &d;
+        // insert the entry
+        sdk_ret = info_table->insert_withid(&params);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("flow info table write failure, idx : {}, err : {}",
+                          flow_pd->assoc_hw_id, ret);
+            return ret;
+        }
     }
 
     return HAL_RET_OK;
@@ -1487,10 +1498,14 @@ pd_flow_get (pd_func_args_t *pd_func_args)
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret == HAL_RET_OK) {
         if (f.action_id == FLOW_INFO_FLOW_HIT_DROP_ID) {
-            clock_args.hw_tick = f.action_u.flow_info_flow_hit_drop.start_timestamp;
+            sdk::lib::memrev((uint8_t *)&clock_args.hw_tick,
+                f.action_u.flow_info_flow_hit_drop.start_timestamp,
+                sizeof(f.action_u.flow_info_flow_hit_drop.start_timestamp));
 
         } else {
-            clock_args.hw_tick = f.action_u.flow_info_flow_info.start_timestamp;
+            sdk::lib::memrev((uint8_t *)&clock_args.hw_tick,
+                f.action_u.flow_info_flow_info.start_timestamp,
+                sizeof(f.action_u.flow_info_flow_info.start_timestamp));
         }
         clock_args.hw_tick = (clock_args.hw_tick << 16);
         clock_args.sw_ns = &args->flow_state->create_ts;

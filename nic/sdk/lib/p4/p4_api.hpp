@@ -89,6 +89,11 @@ typedef enum p4pd_table_cache_ {
     P4_TBL_CACHE_TXDMA_RXDMA    = P4_TBL_CACHE_TXDMA | P4_TBL_CACHE_RXDMA,
 } p4pd_table_cache_t;
 
+inline p4pd_table_cache_t operator |(p4pd_table_cache_t a, p4pd_table_cache_t b)
+{
+    return static_cast<p4pd_table_cache_t>(static_cast<int>(a) | static_cast<int>(b));
+}
+
 typedef struct p4pd_table_mem_layout_ {
     uint16_t    entry_width;    /* In units of memory words.. 16b  in case of PIPE tables */
                                 /* In units of bytes in case of HBM table */

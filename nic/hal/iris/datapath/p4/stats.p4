@@ -298,6 +298,8 @@ action flow_stats(last_seen_timestamp, permit_packets, permit_bytes,
         if (control_metadata.drop_reason == (1 << DROP_FLOW_HIT)) {
             modify_field(scratch_metadata.flow_last_seen_timestamp,
                          last_seen_timestamp);
+            modify_field(scratch_metadata.flow_last_seen_timestamp,
+                         control_metadata.current_time_in_ms);
         }
         bit_or(scratch_metadata.drop_reason, drop_reason,
                control_metadata.drop_reason);
@@ -308,6 +310,8 @@ action flow_stats(last_seen_timestamp, permit_packets, permit_bytes,
         // update timestamp
         modify_field(scratch_metadata.flow_last_seen_timestamp,
                      last_seen_timestamp);
+        modify_field(scratch_metadata.flow_last_seen_timestamp,
+                     control_metadata.current_time_in_ms);
         add(scratch_metadata.flow_packets, permit_packets, 1);
         add(scratch_metadata.flow_bytes, permit_bytes,
             scratch_metadata.flow_bytes);
@@ -362,6 +366,7 @@ table nacl_stats {
 }
 
 control process_stats {
+    apply(p4i_clock);
     if (capri_intrinsic.drop == TRUE) {
         apply(drop_stats);
     }

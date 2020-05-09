@@ -548,7 +548,7 @@
             "name": "qos-dscp-cos-map",
             "size": "64B",
             "reset": true
-        },   
+        },
         {
             "_comment" : "32 entries of 64 Bytes each",
             "name": "opaque_tag",
@@ -563,7 +563,14 @@
         {
             "name": "clock",
             "size": "64B",
-            "cache": "p4eg"
+            "cache": "p4ig",
+            "cache1": "p4eg"
+        },
+        {
+            "name": "p4iclock",
+            "size": "64B",
+            "base_region": "clock",
+            "_comment" : "alias to clock"
         },
         {
             "name": "port_stats",

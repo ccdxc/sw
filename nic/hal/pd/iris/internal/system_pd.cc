@@ -37,7 +37,7 @@ void *g_clock_rollover_timer = NULL;
 static clock_gettimeofday_t *g_hbm_clockaddr = NULL;
 static uint64_t g_clock_freq = 0;
 static struct clock_table_info_s {
-    uint8_t cache;
+    p4pd_table_cache_t cache;
     uint16_t entry_width;
     sdk::types::mem_addr_t start_addr;
     uint64_t multiplier;
@@ -780,21 +780,20 @@ clock_delta_comp_cb (void *timer, uint32_t timer_id, void *ctxt)
     clock_gettime(CLOCK_REALTIME, &sw_ts);
     sdk::timestamp_to_nsecs(&sw_ts, &sw_ns);
 
-#ifdef ELBA
-    sdk::platform::elba::elba_hbm_table_entry_cache_invalidate((p4pd_table_cache_t)g_clock_table_info.cache,
-                                          0,
-                                          g_clock_table_info.entry_width,
-                                          g_clock_table_info.start_addr);
-#else
-    capri_hbm_table_entry_cache_invalidate((p4pd_table_cache_t)g_clock_table_info.cache,
-                                           0,
-                                           g_clock_table_info.entry_width,
-                                           g_clock_table_info.start_addr);
-#endif
     bzero(g_hbm_clockaddr, sizeof(clock_gettimeofday_t));
     sdk::lib::memrev(g_hbm_clockaddr->time_in_ns, (uint8_t *)&sw_ns, CLOCK_WIDTH);
     sdk::lib::memrev(g_hbm_clockaddr->ticks, (uint8_t *)&hw_tick, CLOCK_WIDTH);
-    sdk::lib::memrev(g_hbm_clockaddr->multiplier, (uint8_t *)&g_clock_table_info.multiplier, CLOCK_WIDTH);
+    sdk::lib::memrev(g_hbm_clockaddr->multiplier_ns, (uint8_t *)&g_clock_table_info.multiplier, CLOCK_WIDTH);
+
+#ifdef ELBA
+    elba_hbm_table_entry_cache_invalidate(g_clock_table_info.cache, 0,
+                                          g_clock_table_info.entry_width,
+                                          g_clock_table_info.start_addr);
+#else
+    capri_hbm_table_entry_cache_invalidate(g_clock_table_info.cache, 0,
+                                           g_clock_table_info.entry_width,
+                                           g_clock_table_info.start_addr);
+#endif
 }
 
 //----------------------------------------------
@@ -844,7 +843,7 @@ pd_clock_delta_comp (pd_func_args_t *pd_func_args)
 
     // Fill in the table details for cache invalidate
     p4pd_table_properties_get(P4TBL_ID_CLOCK, &tinfo);
-    g_clock_table_info.cache = tinfo.cache;
+    g_clock_table_info.cache = P4_TBL_CACHE_INGRESS | P4_TBL_CACHE_EGRESS;
     g_clock_table_info.entry_width = tinfo.hbm_layout.entry_width;
     g_clock_table_info.start_addr = tinfo.base_mem_pa;
 

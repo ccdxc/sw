@@ -1188,8 +1188,6 @@ hal_state_pd::p4plus_txdma_init_tables(pd_mem_init_args_t *args)
 static hal_ret_t
 hal_pd_lif_stats_region_init (void)
 {
-    p4pd_table_properties_t     tbl_ctx;
-    p4pd_error_t                rc;
     uint64_t                    stats_base_addr;
 
     stats_base_addr = asicpd_get_mem_addr(ASIC_HBM_REG_LIF_STATS);
@@ -1206,8 +1204,6 @@ hal_pd_lif_stats_region_init (void)
 static hal_ret_t
 hal_pd_hwerr_stats_region_init (void)
 {
-    p4pd_table_properties_t     tbl_ctx;
-    p4pd_error_t                rc;
     uint64_t                    stats_base_addr;
 
     stats_base_addr = asicpd_get_mem_addr(ASIC_HBM_REG_P4_HWERR_STATS);
