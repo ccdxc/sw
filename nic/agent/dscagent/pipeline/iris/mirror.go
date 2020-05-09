@@ -9,7 +9,6 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/pensando/sw/nic/agent/dscagent/pipeline/iris/utils"
-	commonUtils "github.com/pensando/sw/nic/agent/dscagent/pipeline/utils"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
 	halapi "github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
@@ -20,6 +19,9 @@ const (
 	actionMirror = iota
 	actionCollectFlowStats
 )
+
+// MirrorDestToIDMapping maps the key for each session to keys for sessions created in HAL
+var MirrorDestToIDMapping = map[string][]uint64{}
 
 var mirrorSessionToFlowMonitorRuleMapping = map[string][]*halapi.FlowMonitorRuleKeyHandle{}
 
@@ -39,19 +41,22 @@ func HandleMirrorSession(infraAPI types.InfraAPI, telemetryClient halapi.Telemet
 
 func createMirrorSessionHandler(infraAPI types.InfraAPI, telemetryClient halapi.TelemetryClient, intfClient halapi.InterfaceClient, epClient halapi.EndpointClient, mirror netproto.MirrorSession, vrfID uint64) error {
 	var mirrorKeys []*halapi.MirrorSessionKeyHandle
+	mirrorKey := fmt.Sprintf("%s/%s", mirror.Kind, mirror.GetKey())
 	for _, c := range mirror.Spec.Collectors {
-		dstIP := c.ExportCfg.Destination
-		// Create the unique key for collector dest IP
-		destKey := commonUtils.BuildDestKey(mirror.Spec.VrfName, dstIP)
+		sessionID := infraAPI.AllocateID(types.MirrorSessionID, 0)
+		colName := fmt.Sprintf("%s-%d", mirrorKey, sessionID)
 		// Create collector
-		col := buildCollector(mirror.Name+"-"+destKey, mirror.Spec.VrfName, dstIP, c, mirror.Spec.PacketSize)
+		col := buildCollector(colName, sessionID, c, mirror.Spec.PacketSize, mirror.Spec.SpanID)
 		if err := HandleCol(infraAPI, telemetryClient, intfClient, epClient, types.Create, col, vrfID); err != nil {
 			log.Error(errors.Wrapf(types.ErrCollectorCreate, "MirrorSession: %s | Err: %v", mirror.GetKey(), err))
 			return errors.Wrapf(types.ErrCollectorCreate, "MirrorSession: %s | Err: %v", mirror.GetKey(), err)
 		}
 
+		// Populate the MirrorDestToIDMapping
+		MirrorDestToIDMapping[mirrorKey] = append(MirrorDestToIDMapping[mirrorKey], sessionID)
+
 		// Create MirrorSession handles
-		mirrorKeys = append(mirrorKeys, convertMirrorSessionKeyHandle(MirrorDestToIDMapping[destKey].sessionID))
+		mirrorKeys = append(mirrorKeys, convertMirrorSessionKeyHandle(sessionID))
 	}
 
 	flowMonitorReqMsg, flowMonitorIDs := convertFlowMonitor(actionMirror, infraAPI, mirror.Spec.MatchRules, mirrorKeys, nil, vrfID)
@@ -116,23 +121,20 @@ func deleteMirrorSessionHandler(infraAPI types.InfraAPI, telemetryClient halapi.
 	// TODO Remove this hack once HAL side's telemetry code is cleaned up and DSCAgent must not maintain any internal state
 	delete(mirrorSessionToFlowMonitorRuleMapping, mirror.GetKey())
 
-	for _, c := range mirror.Spec.Collectors {
-		dstIP := c.ExportCfg.Destination
-		// Create the unique key for collector dest IP
-		destKey := commonUtils.BuildDestKey(mirror.Spec.VrfName, dstIP)
-		_, ok := MirrorDestToIDMapping[destKey]
-
-		if !ok {
-			log.Error(errors.Wrapf(types.ErrDeleteReceivedForNonExistentCollector, "MirrorSession: %s | collectorKey: %s", mirror.GetKey(), destKey))
-			return errors.Wrapf(types.ErrDeleteReceivedForNonExistentCollector, "MirrorSession: %s | collectorKey: %s", mirror.GetKey(), destKey)
-		}
-		// Try to delete collector if ref count is 0
-		col := buildCollector(mirror.Name+"-"+destKey, mirror.Spec.VrfName, dstIP, c, mirror.Spec.PacketSize)
+	mirrorKey := fmt.Sprintf("%s/%s", mirror.Kind, mirror.GetKey())
+	sessionIDs := MirrorDestToIDMapping[mirrorKey]
+	for idx, c := range mirror.Spec.Collectors {
+		sessionID := sessionIDs[idx]
+		colName := fmt.Sprintf("%s-%d", mirrorKey, sessionID)
+		// Delete collector to HAL
+		col := buildCollector(colName, sessionID, c, mirror.Spec.PacketSize, mirror.Spec.SpanID)
 		if err := HandleCol(infraAPI, telemetryClient, intfClient, epClient, types.Delete, col, vrfID); err != nil {
 			log.Error(errors.Wrapf(types.ErrCollectorDelete, "MirrorSession: %s | Err: %v", mirror.GetKey(), err))
 		}
 	}
 
+	// Clean up MirrorDestToIDMapping for mirror key
+	delete(MirrorDestToIDMapping, mirrorKey)
 	if err := infraAPI.Delete(mirror.Kind, mirror.GetKey()); err != nil {
 		log.Error(errors.Wrapf(types.ErrBoltDBStoreDelete, "MirrorSession: %s | Err: %v", mirror.GetKey(), err))
 		return errors.Wrapf(types.ErrBoltDBStoreDelete, "MirrorSession: %s | Err: %v", mirror.GetKey(), err)
@@ -190,41 +192,41 @@ func convertTelemetryRuleMatches(rules []netproto.MatchRule) []*halapi.RuleMatch
 		if r.Src != nil {
 			srcAddress = convertIPAddress(r.Src.Addresses...)
 		}
-		if r.Dst != nil {
-			dstAddress = convertIPAddress(r.Dst.Addresses...)
-			if r.Dst.ProtoPorts != nil && len(r.Dst.ProtoPorts) > 0 {
-				for _, pp := range r.Dst.ProtoPorts {
-					protocol = convertProtocol(pp.Protocol)
-					if protocol == int32(halapi.IPProtocol_IPPROTO_ICMP) {
-						appMatch = &halapi.RuleMatch_AppMatch{
-							App: &halapi.RuleMatch_AppMatch_IcmpInfo{
-								IcmpInfo: &halapi.RuleMatch_ICMPAppInfo{
-									IcmpCode: 0, // TODO Support valid code/type parsing once the App is integrated with mirror
-									IcmpType: 0,
-								},
-							},
-						}
-					} else {
-						appMatch = convertPort(pp.Port)
-					}
-					m := &halapi.RuleMatch{
-						SrcAddress: srcAddress,
-						DstAddress: dstAddress,
-						Protocol:   protocol,
-						AppMatch:   appMatch,
-					}
-					ruleMatches = append(ruleMatches, m)
+		if r.Dst == nil {
+			m := &halapi.RuleMatch{
+				SrcAddress: srcAddress,
+				DstAddress: dstAddress,
+				Protocol:   protocol,
+				AppMatch:   appMatch,
+			}
+			ruleMatches = append(ruleMatches, m)
+			continue
+		}
+		dstAddress = convertIPAddress(r.Dst.Addresses...)
+		if r.Dst.ProtoPorts == nil || len(r.Dst.ProtoPorts) == 0 {
+			m := &halapi.RuleMatch{
+				SrcAddress: srcAddress,
+				DstAddress: dstAddress,
+				Protocol:   protocol,
+				AppMatch:   appMatch,
+			}
+			ruleMatches = append(ruleMatches, m)
+			continue
+		}
+		for _, pp := range r.Dst.ProtoPorts {
+			protocol = convertProtocol(pp.Protocol)
+			if protocol == int32(halapi.IPProtocol_IPPROTO_ICMP) {
+				appMatch = &halapi.RuleMatch_AppMatch{
+					App: &halapi.RuleMatch_AppMatch_IcmpInfo{
+						IcmpInfo: &halapi.RuleMatch_ICMPAppInfo{
+							IcmpCode: 0, // TODO Support valid code/type parsing once the App is integrated with mirror
+							IcmpType: 0,
+						},
+					},
 				}
 			} else {
-				m := &halapi.RuleMatch{
-					SrcAddress: srcAddress,
-					DstAddress: dstAddress,
-					Protocol:   protocol,
-					AppMatch:   appMatch,
-				}
-				ruleMatches = append(ruleMatches, m)
+				appMatch = convertPort(pp.Port)
 			}
-		} else {
 			m := &halapi.RuleMatch{
 				SrcAddress: srcAddress,
 				DstAddress: dstAddress,
@@ -246,14 +248,15 @@ func convertMirrorSessionKeyHandle(mirrorID uint64) *halapi.MirrorSessionKeyHand
 	}
 }
 
-func buildCollector(name, vrfName, dstIP string, mc netproto.MirrorCollector, packetSize uint32) Collector {
+func buildCollector(name string, sessionID uint64, mc netproto.MirrorCollector, packetSize, spanID uint32) Collector {
 	return Collector{
 		Name:         name,
-		VrfName:      vrfName,
-		Destination:  dstIP,
+		Destination:  mc.ExportCfg.Destination,
 		PacketSize:   packetSize,
 		Gateway:      mc.ExportCfg.Gateway,
 		Type:         mc.Type,
 		StripVlanHdr: mc.StripVlanHdr,
+		SessionID:    sessionID,
+		SpanID:       spanID,
 	}
 }

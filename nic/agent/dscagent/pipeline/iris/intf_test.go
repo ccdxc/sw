@@ -11,10 +11,10 @@ import (
 )
 
 func TestHandleInterfaceCollectors(t *testing.T) {
-	collectorToIDMap := map[string]int{
-		"-testCollector1": 1,
-		"-testCollector2": 1,
-		"-testCollector3": 2,
+	collectorToIDMap := map[uint64]int{
+		0: 1,
+		1: 1,
+		2: 2,
 	}
 	intf := netproto.Interface{
 		TypeMeta: api.TypeMeta{Kind: "Interface"},
@@ -24,10 +24,8 @@ func TestHandleInterfaceCollectors(t *testing.T) {
 			Name:      "testInterface",
 		},
 		Spec: netproto.InterfaceSpec{
-			Type:         "UPLINK_MGMT",
-			AdminStatus:  "UP",
-			TxCollectors: []string{"testCollector1", "testCollector2"},
-			RxCollectors: []string{"testCollector3"},
+			Type:        "UPLINK_MGMT",
+			AdminStatus: "UP",
 		},
 		Status: netproto.InterfaceStatus{
 			InterfaceID: 42,
@@ -51,7 +49,7 @@ func TestHandleInterfaceCollectors(t *testing.T) {
 }
 
 func TestHandleInterfaceUplinkEth(t *testing.T) {
-	collectorToIDMap := make(map[string]int)
+	collectorToIDMap := make(map[uint64]int)
 	intf := netproto.Interface{
 		TypeMeta: api.TypeMeta{Kind: "Interface"},
 		ObjectMeta: api.ObjectMeta{
@@ -93,7 +91,7 @@ func TestHandleInterfaceUplinkEth(t *testing.T) {
 }
 
 func TestHandleInterfaceUplinkMgmt(t *testing.T) {
-	collectorToIDMap := make(map[string]int)
+	collectorToIDMap := make(map[uint64]int)
 	intf := netproto.Interface{
 		TypeMeta: api.TypeMeta{Kind: "Interface"},
 		ObjectMeta: api.ObjectMeta{
@@ -127,7 +125,7 @@ func TestHandleInterfaceUplinkMgmt(t *testing.T) {
 }
 
 func TestHandleInterfaceUplinkEthInfraFailures(t *testing.T) {
-	collectorToIDMap := make(map[string]int)
+	collectorToIDMap := make(map[uint64]int)
 	intf := netproto.Interface{
 		TypeMeta: api.TypeMeta{Kind: "Interface"},
 		ObjectMeta: api.ObjectMeta{

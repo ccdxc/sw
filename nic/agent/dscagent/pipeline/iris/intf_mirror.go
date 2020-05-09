@@ -3,10 +3,11 @@
 package iris
 
 import (
+	"fmt"
+
 	"github.com/gogo/protobuf/proto"
 	"github.com/pkg/errors"
 
-	commonUtils "github.com/pensando/sw/nic/agent/dscagent/pipeline/utils"
 	"github.com/pensando/sw/nic/agent/dscagent/pipeline/utils/validator"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
 	halapi "github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
@@ -29,16 +30,19 @@ func HandleInterfaceMirrorSession(infraAPI types.InfraAPI, telemetryClient halap
 }
 
 func createInterfaceMirrorSessionHandler(infraAPI types.InfraAPI, telemetryClient halapi.TelemetryClient, intfClient halapi.InterfaceClient, epClient halapi.EndpointClient, mirror netproto.InterfaceMirrorSession, vrfID uint64) error {
+	mirrorKey := fmt.Sprintf("%s/%s", mirror.Kind, mirror.GetKey())
 	for _, c := range mirror.Spec.Collectors {
-		dstIP := c.ExportCfg.Destination
-		// Create the unique key for collector dest IP
-		destKey := commonUtils.BuildDestKey(mirror.Spec.VrfName, dstIP)
+		sessionID := infraAPI.AllocateID(types.MirrorSessionID, 0)
+		colName := fmt.Sprintf("%s-%d", mirrorKey, sessionID)
 		// Create collector
-		col := buildCollector(mirror.Name+"-"+destKey, mirror.Spec.VrfName, dstIP, c, mirror.Spec.PacketSize)
+		col := buildCollector(colName, sessionID, c, mirror.Spec.PacketSize, mirror.Spec.SpanID)
 		if err := HandleCol(infraAPI, telemetryClient, intfClient, epClient, types.Create, col, vrfID); err != nil {
 			log.Error(errors.Wrapf(types.ErrCollectorCreate, "InterfaceMirrorSession: %s | Err: %v", mirror.GetKey(), err))
 			return errors.Wrapf(types.ErrCollectorCreate, "InterfaceMirrorSession: %s | Err: %v", mirror.GetKey(), err)
 		}
+
+		// Populate the MirrorDestToIDMapping
+		MirrorDestToIDMapping[mirrorKey] = append(MirrorDestToIDMapping[mirrorKey], sessionID)
 	}
 
 	dat, _ := mirror.Marshal()
@@ -83,8 +87,8 @@ func updateInterfaceMirrorSessionHandler(infraAPI types.InfraAPI, telemetryClien
 		if !usingMirrorSession(intf, mirror.GetKey()) {
 			continue
 		}
-		collectorMap := make(map[string]int)
-		err = validator.ValidateInterface(infraAPI, intf, collectorMap)
+		collectorMap := make(map[uint64]int)
+		err = validator.ValidateInterface(infraAPI, intf, collectorMap, MirrorDestToIDMapping)
 		if err != nil {
 			log.Error(err)
 			continue
@@ -97,22 +101,20 @@ func updateInterfaceMirrorSessionHandler(infraAPI types.InfraAPI, telemetryClien
 }
 
 func deleteInterfaceMirrorSessionHandler(infraAPI types.InfraAPI, telemetryClient halapi.TelemetryClient, intfClient halapi.InterfaceClient, epClient halapi.EndpointClient, mirror netproto.InterfaceMirrorSession, vrfID uint64) error {
-	for _, c := range mirror.Spec.Collectors {
-		dstIP := c.ExportCfg.Destination
-		// Create the unique key for collector dest IP
-		destKey := commonUtils.BuildDestKey(mirror.Spec.VrfName, dstIP)
-		_, ok := MirrorDestToIDMapping[destKey]
-
-		if !ok {
-			log.Error(errors.Wrapf(types.ErrDeleteReceivedForNonExistentCollector, "InterfaceMirrorSession: %s | collectorKey: %s", mirror.GetKey(), destKey))
-			return errors.Wrapf(types.ErrDeleteReceivedForNonExistentCollector, "InterfaceMirrorSession: %s | collectorKey: %s", mirror.GetKey(), destKey)
-		}
-		// Try to delete collector if ref count is 0
-		col := buildCollector(mirror.Name+"-"+destKey, mirror.Spec.VrfName, dstIP, c, mirror.Spec.PacketSize)
+	mirrorKey := fmt.Sprintf("%s/%s", mirror.Kind, mirror.GetKey())
+	sessionIDs := MirrorDestToIDMapping[mirrorKey]
+	for idx, c := range mirror.Spec.Collectors {
+		sessionID := sessionIDs[idx]
+		colName := fmt.Sprintf("%s-%d", mirrorKey, sessionID)
+		// Delete collector to HAL
+		col := buildCollector(colName, sessionID, c, mirror.Spec.PacketSize, mirror.Spec.SpanID)
 		if err := HandleCol(infraAPI, telemetryClient, intfClient, epClient, types.Delete, col, vrfID); err != nil {
 			log.Error(errors.Wrapf(types.ErrCollectorDelete, "InterfaceMirrorSession: %s | Err: %v", mirror.GetKey(), err))
 		}
 	}
+
+	// Clean up MirrorDestToIDMapping for mirror key
+	delete(MirrorDestToIDMapping, mirrorKey)
 
 	if err := infraAPI.Delete(mirror.Kind, mirror.GetKey()); err != nil {
 		log.Error(errors.Wrapf(types.ErrBoltDBStoreDelete, "InterfaceMirrorSession: %s | Err: %v", mirror.GetKey(), err))

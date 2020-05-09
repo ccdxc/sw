@@ -1,6 +1,7 @@
 package validator
 
 import (
+	"fmt"
 	"hash/fnv"
 	"strings"
 	"sync"
@@ -85,7 +86,7 @@ func mirrorDir(dir netproto.MirrorDir) int {
 	}
 }
 
-func validateInterfaceMirrorSessions(i types.InfraAPI, mirrorSessions []string, collectorMap map[string]int) error {
+func validateInterfaceMirrorSessions(i types.InfraAPI, mirrorSessions []string, collectorMap map[uint64]int, mirrorSessionMap map[string][]uint64) error {
 	for _, ms := range mirrorSessions {
 		var intfMirror netproto.InterfaceMirrorSession
 		dat, err := i.Read("InterfaceMirrorSession", ms)
@@ -98,18 +99,18 @@ func validateInterfaceMirrorSessions(i types.InfraAPI, mirrorSessions []string, 
 			log.Error(errors.Wrapf(types.ErrUnmarshal, "InterfaceMirrorSession: %s | Err: %v", ms, err))
 			return errors.Wrapf(types.ErrUnmarshal, "InterfaceMirrorSession: %s | Err: %v", ms, err)
 		}
-		for _, c := range intfMirror.Spec.Collectors {
-			cKey := utils.BuildDestKey(intfMirror.Spec.VrfName, c.ExportCfg.Destination)
-			collectorMap[cKey] |= mirrorDir(intfMirror.Spec.MirrorDirection)
+		mirrorKey := fmt.Sprintf("%s/%s", intfMirror.Kind, intfMirror.GetKey())
+		for _, c := range mirrorSessionMap[mirrorKey] {
+			collectorMap[c] |= mirrorDir(intfMirror.Spec.MirrorDirection)
 		}
 	}
 	return nil
 }
 
 // ValidateInterface performs static field validations on interface type
-func ValidateInterface(i types.InfraAPI, intf netproto.Interface, collectorMap map[string]int) (err error) {
+func ValidateInterface(i types.InfraAPI, intf netproto.Interface, collectorMap map[uint64]int, mirrorSessionMap map[string][]uint64) (err error) {
 	// InterfaceMirrorSession validations
-	if err = validateInterfaceMirrorSessions(i, intf.Spec.MirrorSessions, collectorMap); err != nil {
+	if err = validateInterfaceMirrorSessions(i, intf.Spec.MirrorSessions, collectorMap, mirrorSessionMap); err != nil {
 		return
 	}
 	// Static Field  Validations
@@ -288,37 +289,14 @@ func ValidateTunnel(i types.InfraAPI, tunnel netproto.Tunnel) (vrf netproto.Vrf,
 	return
 }
 
-// ValidateCollector performs named reference validation on vrf and max mirror session check
-func ValidateCollector(i types.InfraAPI, col netproto.Collector, oper types.Operation, uniqueCollectors map[string]bool) (vrf netproto.Vrf, err error) {
-	_, existing := uniqueCollectors[utils.BuildDestKey(col.Spec.VrfName, col.Spec.Destination)]
-	if len(uniqueCollectors) == types.MaxMirrorSessions && oper == types.Create && !existing {
-		log.Error(errors.Wrapf(types.ErrBadRequest, "Collector: %s | Err: %v", col.GetKey(), types.ErrMaxMirrorSessionsConfigured))
-		return vrf, errors.Wrapf(types.ErrBadRequest, "Collector: %s | Err: %v", col.GetKey(), types.ErrMaxMirrorSessionsConfigured)
-	}
-
-	// Named reference validations
-	vrf, err = ValidateVrf(i, col.Tenant, col.Namespace, col.Spec.VrfName)
-	return
-}
-
 // ValidateMirrorSession performs named reference validation on vrf and max mirror session check
-func ValidateMirrorSession(i types.InfraAPI, mirror netproto.MirrorSession, oper types.Operation, mirrorDestToKeys map[string]int) (vrf netproto.Vrf, err error) {
-	// Named reference validations
+func ValidateMirrorSession(i types.InfraAPI, mirror netproto.MirrorSession, oper types.Operation, mirrorSessions int) (vrf netproto.Vrf, err error) {
 	uniqueCreates := 0
 
 	switch oper {
 	case types.Create:
-		// Get the count of unique creates
-		for _, c := range mirror.Spec.Collectors {
-			destKey := utils.BuildDestKey(mirror.Spec.VrfName, c.ExportCfg.Destination)
-			if _, ok := mirrorDestToKeys[destKey]; !ok {
-				uniqueCreates++
-			}
-		}
+		uniqueCreates += len(mirror.Spec.Collectors)
 	case types.Update:
-		// Get the existing mirror session object and consider valid deletes i.e
-		// objects that would get deleted (ones having single reference). Add the unique
-		// creates to the get the actual increase in collector number if any.
 		var existingMirror netproto.MirrorSession
 		dat, errr := i.Read(mirror.Kind, mirror.GetKey())
 		if errr != nil {
@@ -333,36 +311,11 @@ func ValidateMirrorSession(i types.InfraAPI, mirror netproto.MirrorSession, oper
 			return
 		}
 
-		// Track if the collector needs to deleted
-		deleteKey := map[string]bool{}
-		for _, c := range existingMirror.Spec.Collectors {
-			destKey := utils.BuildDestKey(existingMirror.Spec.VrfName, c.ExportCfg.Destination)
-			deleteKey[destKey] = false
-			// If referenced by a singular key then could be removed
-			if size, ok := mirrorDestToKeys[destKey]; ok && size == 1 {
-				deleteKey[destKey] = true
-			}
-		}
-
-		for _, c := range mirror.Spec.Collectors {
-			destKey := utils.BuildDestKey(mirror.Spec.VrfName, c.ExportCfg.Destination)
-			deleteKey[destKey] = false
-		}
-
-		for k, del := range deleteKey {
-			if del {
-				uniqueCreates--
-				continue
-			}
-			// For keys that are not to be deleted, check if they are new entries
-			if _, ok := mirrorDestToKeys[k]; !ok {
-				uniqueCreates++
-			}
-		}
+		uniqueCreates += len(mirror.Spec.Collectors) - len(existingMirror.Spec.Collectors)
 	case types.Delete:
 	}
 
-	if len(mirrorDestToKeys)+uniqueCreates > types.MaxMirrorSessions {
+	if mirrorSessions+uniqueCreates > types.MaxMirrorSessions {
 		log.Error(errors.Wrapf(types.ErrBadRequest, "MirrorSession: %s | Err: %v", mirror.GetKey(), types.ErrMaxMirrorSessionsExceeded))
 		err = errors.Wrapf(types.ErrBadRequest, "MirrorSession: %s | Err: %v", mirror.GetKey(), types.ErrMaxMirrorSessionsExceeded)
 		return
@@ -373,23 +326,13 @@ func ValidateMirrorSession(i types.InfraAPI, mirror netproto.MirrorSession, oper
 }
 
 // ValidateInterfaceMirrorSession performs named reference validation on vrf and max mirror session check
-func ValidateInterfaceMirrorSession(i types.InfraAPI, mirror netproto.InterfaceMirrorSession, oper types.Operation, mirrorDestToKeys map[string]int) (vrf netproto.Vrf, err error) {
-	// Named reference validations
+func ValidateInterfaceMirrorSession(i types.InfraAPI, mirror netproto.InterfaceMirrorSession, oper types.Operation, mirrorSessions int) (vrf netproto.Vrf, err error) {
 	uniqueCreates := 0
 
 	switch oper {
 	case types.Create:
-		// Get the count of unique creates
-		for _, c := range mirror.Spec.Collectors {
-			destKey := utils.BuildDestKey(mirror.Spec.VrfName, c.ExportCfg.Destination)
-			if _, ok := mirrorDestToKeys[destKey]; !ok {
-				uniqueCreates++
-			}
-		}
+		uniqueCreates += len(mirror.Spec.Collectors)
 	case types.Update:
-		// Get the existing mirror session object and consider valid deletes i.e
-		// objects that would get deleted (ones having single reference). Add the unique
-		// creates to the get the actual increase in collector number if any.
 		var existingMirror netproto.InterfaceMirrorSession
 		dat, errr := i.Read(mirror.Kind, mirror.GetKey())
 		if errr != nil {
@@ -404,36 +347,11 @@ func ValidateInterfaceMirrorSession(i types.InfraAPI, mirror netproto.InterfaceM
 			return
 		}
 
-		// Track if the collector needs to deleted
-		deleteKey := map[string]bool{}
-		for _, c := range existingMirror.Spec.Collectors {
-			destKey := utils.BuildDestKey(existingMirror.Spec.VrfName, c.ExportCfg.Destination)
-			deleteKey[destKey] = false
-			// If referenced by a singular key then could be removed
-			if size, ok := mirrorDestToKeys[destKey]; ok && size == 1 {
-				deleteKey[destKey] = true
-			}
-		}
-
-		for _, c := range mirror.Spec.Collectors {
-			destKey := utils.BuildDestKey(mirror.Spec.VrfName, c.ExportCfg.Destination)
-			deleteKey[destKey] = false
-		}
-
-		for k, del := range deleteKey {
-			if del {
-				uniqueCreates--
-				continue
-			}
-			// For keys that are not to be deleted, check if they are new entries
-			if _, ok := mirrorDestToKeys[k]; !ok {
-				uniqueCreates++
-			}
-		}
+		uniqueCreates += len(mirror.Spec.Collectors) - len(existingMirror.Spec.Collectors)
 	case types.Delete:
 	}
 
-	if len(mirrorDestToKeys)+uniqueCreates > types.MaxMirrorSessions {
+	if mirrorSessions+uniqueCreates > types.MaxMirrorSessions {
 		log.Error(errors.Wrapf(types.ErrBadRequest, "InterfaceMirrorSession: %s | Err: %v", mirror.GetKey(), types.ErrMaxMirrorSessionsExceeded))
 		err = errors.Wrapf(types.ErrBadRequest, "InterfaceMirrorSession: %s | Err: %v", mirror.GetKey(), types.ErrMaxMirrorSessionsExceeded)
 		return

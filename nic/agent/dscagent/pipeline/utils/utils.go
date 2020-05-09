@@ -389,11 +389,6 @@ func GetLifIndex(hwLifID uint64) uint32 {
 	return uint32((ifTypeLif << ifTypeShift) | hwLifID)
 }
 
-// BuildDestKey builds the destination key with vrf name
-func BuildDestKey(vrfName, dstIP string) string {
-	return vrfName + "-" + dstIP
-}
-
 // GetMgmtLink return the management link for an management IP
 func GetMgmtLink(mgmtIP string) (mgmtLink netlink.Link) {
 	links, err := netlink.LinkList()

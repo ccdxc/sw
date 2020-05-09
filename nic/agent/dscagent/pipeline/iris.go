@@ -696,8 +696,8 @@ func (i *IrisAPI) HandleInterface(oper types.Operation, intf netproto.Interface)
 		intf = existingInterface
 	}
 	// Perform object validations
-	collectorMap := make(map[string]int)
-	err = validator.ValidateInterface(i.InfraAPI, intf, collectorMap)
+	collectorMap := make(map[uint64]int)
+	err = validator.ValidateInterface(i.InfraAPI, intf, collectorMap, iris.MirrorDestToIDMapping)
 	if err != nil {
 		log.Error(err)
 		return nil, err
@@ -1236,11 +1236,11 @@ func (i *IrisAPI) HandleInterfaceMirrorSession(oper types.Operation, mirror netp
 	defer log.Infof("InterfaceMirrorSession: %s | Op: %s | %s", mirror.GetKey(), oper, types.InfoHandleObjEnd)
 
 	// Perform object validations
-	mirrorDestToKeys := map[string]int{}
-	for dest, keys := range iris.MirrorDestToIDMapping {
-		mirrorDestToKeys[dest] = len(keys.MirrorKeys)
+	mirrorSessions := 0
+	for _, collectors := range iris.MirrorDestToIDMapping {
+		mirrorSessions += len(collectors)
 	}
-	vrf, err := validator.ValidateInterfaceMirrorSession(i.InfraAPI, mirror, oper, mirrorDestToKeys)
+	vrf, err := validator.ValidateInterfaceMirrorSession(i.InfraAPI, mirror, oper, mirrorSessions)
 	if err != nil {
 		log.Error(err)
 		return nil, err
@@ -1353,11 +1353,11 @@ func (i *IrisAPI) HandleMirrorSession(oper types.Operation, mirror netproto.Mirr
 	defer log.Infof("MirrorSession: %s | Op: %s | %s", mirror.GetKey(), oper, types.InfoHandleObjEnd)
 
 	// Perform object validations
-	mirrorDestToKeys := map[string]int{}
-	for dest, keys := range iris.MirrorDestToIDMapping {
-		mirrorDestToKeys[dest] = len(keys.MirrorKeys)
+	mirrorSessions := 0
+	for _, collectors := range iris.MirrorDestToIDMapping {
+		mirrorSessions += len(collectors)
 	}
-	vrf, err := validator.ValidateMirrorSession(i.InfraAPI, mirror, oper, mirrorDestToKeys)
+	vrf, err := validator.ValidateMirrorSession(i.InfraAPI, mirror, oper, mirrorSessions)
 	if err != nil {
 		log.Error(err)
 		return nil, err

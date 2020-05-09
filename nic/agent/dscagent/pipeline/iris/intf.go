@@ -17,7 +17,7 @@ import (
 )
 
 // HandleInterface handles crud operations on intf
-func HandleInterface(infraAPI types.InfraAPI, client halapi.InterfaceClient, oper types.Operation, intf netproto.Interface, collectorMap map[string]int) error {
+func HandleInterface(infraAPI types.InfraAPI, client halapi.InterfaceClient, oper types.Operation, intf netproto.Interface, collectorMap map[uint64]int) error {
 	switch oper {
 	case types.Create:
 		return createInterfaceHandler(infraAPI, client, intf, collectorMap)
@@ -30,7 +30,7 @@ func HandleInterface(infraAPI types.InfraAPI, client halapi.InterfaceClient, ope
 	}
 }
 
-func createInterfaceHandler(infraAPI types.InfraAPI, client halapi.InterfaceClient, intf netproto.Interface, collectorMap map[string]int) error {
+func createInterfaceHandler(infraAPI types.InfraAPI, client halapi.InterfaceClient, intf netproto.Interface, collectorMap map[uint64]int) error {
 	intfReqMsg := convertInterface(intf, nil, collectorMap)
 	resp, err := client.InterfaceCreate(context.Background(), intfReqMsg)
 	if resp != nil {
@@ -47,7 +47,7 @@ func createInterfaceHandler(infraAPI types.InfraAPI, client halapi.InterfaceClie
 	return nil
 }
 
-func updateInterfaceHandler(infraAPI types.InfraAPI, client halapi.InterfaceClient, intf netproto.Interface, collectorMap map[string]int) error {
+func updateInterfaceHandler(infraAPI types.InfraAPI, client halapi.InterfaceClient, intf netproto.Interface, collectorMap map[uint64]int) error {
 	// Get the InterfaceSpec from HAL and populate the required field
 	intfGetReq := &halapi.InterfaceGetRequestMsg{
 		Request: []*halapi.InterfaceGetRequest{
@@ -104,20 +104,15 @@ func deleteInterfaceHandler(infraAPI types.InfraAPI, client halapi.InterfaceClie
 	return nil
 }
 
-func convertInterface(intf netproto.Interface, spec *halapi.InterfaceSpec, collectorMap map[string]int) *halapi.InterfaceRequestMsg {
+func convertInterface(intf netproto.Interface, spec *halapi.InterfaceSpec, collectorMap map[uint64]int) *halapi.InterfaceRequestMsg {
 	var txMirrorSessionhandles []*halapi.MirrorSessionKeyHandle
 	var rxMirrorSessionhandles []*halapi.MirrorSessionKeyHandle
 	for k, v := range collectorMap {
-		mirrorKeys, ok := MirrorDestToIDMapping[k]
-		if !ok {
-			log.Errorf("CollectorKey %s not found", k)
-			continue
-		}
 		if (v & types.MirrorDirINGRESS) != 0 {
-			rxMirrorSessionhandles = append(rxMirrorSessionhandles, convertMirrorSessionKeyHandle(mirrorKeys.sessionID))
+			rxMirrorSessionhandles = append(rxMirrorSessionhandles, convertMirrorSessionKeyHandle(k))
 		}
 		if (v & types.MirrorDirEGRESS) != 0 {
-			txMirrorSessionhandles = append(txMirrorSessionhandles, convertMirrorSessionKeyHandle(mirrorKeys.sessionID))
+			txMirrorSessionhandles = append(txMirrorSessionhandles, convertMirrorSessionKeyHandle(k))
 		}
 	}
 
