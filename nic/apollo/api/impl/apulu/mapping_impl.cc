@@ -26,7 +26,8 @@
 #include "nic/apollo/api/impl/apulu/nexthop_group_impl.hpp"
 #include "nic/apollo/api/impl/apulu/mapping_impl.hpp"
 #include "nic/apollo/api/impl/apulu/pds_impl_state.hpp"
-#include "nic/apollo/api/impl/apulu/specs.hpp"
+#include "nic/apollo/api/impl/apulu/svc/mapping_svc.hpp"
+#include "nic/apollo/api/impl/apulu/svc/svc_utils.hpp"
 #include "nic/apollo/p4/include/apulu_defines.h"
 #include "gen/p4gen/p4plus_rxdma/include/p4plus_rxdma_p4pd.h"
 #include "gen/p4gen/p4/include/ftl.h"
@@ -2406,10 +2407,8 @@ mapping_impl::backup(obj_info_t *info, upg_obj_info_t *upg_info) {
     pds::MappingGetResponse proto_msg;
     pds_mapping_info_t *mapping_info;
     upg_obj_tlv_t *tlv;
-    uint32_t obj_size, meta_size, size_left;
 
     tlv = (upg_obj_tlv_t *)upg_info->mem;
-    size_left = upg_info->backup.size_left;
     mapping_info = (pds_mapping_info_t *)info;
 
     ret = fill_info_(upg_info, mapping_info);
@@ -2420,26 +2419,14 @@ mapping_impl::backup(obj_info_t *info, upg_obj_info_t *upg_info) {
     if (ret != SDK_RET_OK) {
         return ret;
     }
-
     // convert api info to proto
     pds_mapping_api_info_to_proto(mapping_info, (void *)&proto_msg);
-    obj_size = proto_msg.ByteSizeLong();
-    meta_size = sizeof(upg_obj_tlv_t);
-    if ((obj_size + meta_size) > size_left) {
-        PDS_TRACE_ERR("Failed to backup mapping %s, bytes needed %u left %u",
-                      mapping_info->spec.key.str(), obj_size + meta_size,
-                      size_left);
-        return SDK_RET_OOM;
+    ret = pds_svc_serialize_proto_msg(upg_info, tlv,
+                                      (google::protobuf::Message *)&proto_msg);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to backup mapping %s err %u",
+                      mapping_info->spec.key.str(), ret);
     }
-
-    // now serialize the proto msg
-    tlv->len = obj_size;
-    if (proto_msg.SerializeToArray(tlv->obj, tlv->len) == false) {
-        PDS_TRACE_ERR("Failed to serialize mapping %s",
-                      mapping_info->spec.key.str());
-        return SDK_RET_OOM;
-    }
-    upg_info->size = obj_size + meta_size;
     return ret;
 }
 

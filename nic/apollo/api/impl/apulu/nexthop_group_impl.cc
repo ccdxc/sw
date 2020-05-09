@@ -21,7 +21,8 @@
 #include "nic/apollo/api/impl/apulu/nexthop_impl.hpp"
 #include "nic/apollo/api/impl/apulu/nexthop_group_impl.hpp"
 #include "nic/apollo/api/impl/apulu/pds_impl_state.hpp"
-#include "nic/apollo/api/impl/apulu/specs.hpp"
+#include "nic/apollo/api/impl/apulu/svc/nh_svc.hpp"
+#include "nic/apollo/api/impl/apulu/svc/svc_utils.hpp"
 
 namespace api {
 namespace impl {
@@ -405,10 +406,8 @@ nexthop_group_impl::backup(obj_info_t *info, upg_obj_info_t *upg_info) {
     pds::NhGroupGetResponse proto_msg;;
     pds_nexthop_group_info_t *nh_group_info;
     upg_obj_tlv_t *tlv;
-    uint32_t obj_size, meta_size, size_left;
 
     tlv = (upg_obj_tlv_t *)upg_info->mem;
-    size_left = upg_info->backup.size_left;
     nh_group_info = (pds_nexthop_group_info_t *)info;
 
     ret = fill_info_(nh_group_info);
@@ -417,23 +416,12 @@ nexthop_group_impl::backup(obj_info_t *info, upg_obj_info_t *upg_info) {
     }
     // convert api info to proto
     pds_nh_group_api_info_to_proto(nh_group_info, (void *)&proto_msg);
-    obj_size = proto_msg.ByteSizeLong();
-    meta_size = sizeof(upg_obj_tlv_t);
-    if ((obj_size + meta_size) > size_left) {
-        PDS_TRACE_ERR("Failed to backup nh group %s, bytes needed %u left %u",
-                      nh_group_info->spec.key.str(),
-                      obj_size + meta_size, size_left);
-        return SDK_RET_OOM;
+    ret = pds_svc_serialize_proto_msg(upg_info, tlv,
+                                      (google::protobuf::Message *)&proto_msg);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to serialize nh group %s err %u",
+                      nh_group_info->spec.key.str(), ret);
     }
-
-    // now serialize the proto msg
-    tlv->len = obj_size;
-    if (proto_msg.SerializeToArray(tlv->obj, tlv->len) == false) {
-        PDS_TRACE_ERR("Failed to serialize nh group %s",
-                      nh_group_info->spec.key.str());
-        return SDK_RET_OOM;
-    }
-    upg_info->size = obj_size + meta_size;
     return ret;
 }
 
