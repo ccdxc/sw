@@ -283,7 +283,7 @@ func verifyData(t *testing.T, data bytes.Buffer) {
 	Assert(t, lines[1][3] == "192.168.20.1", "incorrect dest ip")
 	Assert(t, lines[1][16] == "32", "incorrect app id")
 	Assert(t, lines[1][17] == "TFTP", "incorrect alg, %s", lines[1][17])
-	Assert(t, lines[1][18] == "1", "incorrect count")
+	Assert(t, lines[1][20] == "1", "incorrect count")
 }
 
 func createFwlogPolicy(ctx context.Context, ps *PolicyState, name string, filter monitoring.FwlogFilter) error {

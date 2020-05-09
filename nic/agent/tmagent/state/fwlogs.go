@@ -132,34 +132,13 @@ func (s *PolicyState) handleFwLog(ev *halproto.FWEvent, ts time.Time) {
 	icmpID := fmt.Sprintf("%v", int64(ev.GetIcmpid()))
 	icmpCode := fmt.Sprintf("%v", int64(ev.GetIcmpcode()))
 	appID := fmt.Sprintf("%v", ev.GetAppId()) // TODO: praveen convert to enum
+	iflowBytes := fmt.Sprintf("%v", ev.GetIflowBytes())
+	rflowBytes := fmt.Sprintf("%v", ev.GetRflowBytes())
 	unixnano := ev.GetTimestamp()
 	if unixnano != 0 {
 		// if a timestamp was specified in the msg, use it
 		ts = time.Unix(0, unixnano)
 	}
-
-	syslogFields := map[string]interface{}{
-		"destination-port":    ev.GetDport(),
-		"destination-address": ipDest,
-		"source-address":      ipSrc,
-		"source-port":         ev.GetSport(),
-		"protocol":            ipProt,
-		"action":              action,
-		"direction":           dir,
-		"rule-id":             ev.GetRuleId(),
-		"session-id":          ev.GetSessionId(),
-		"session-state":       state,
-		"timestamp":           ts.Format(time.RFC3339Nano),
-		"app-id":              appID,
-	}
-	// icmp fields
-	if ev.GetIpProt() == halproto.IPProtocol_IPPROTO_ICMP {
-		syslogFields["icmp-type"] = int64(ev.GetIcmptype())
-		syslogFields["icmp-id"] = int64(ev.GetIcmpid())
-		syslogFields["icmp-code"] = int64(ev.GetIcmpcode())
-	}
-
-	log.Debugf("Fwlog syslog: %+v", syslogFields)
 
 	// CSV file format
 	// Since no aggregation is done as fo now, just report count=1 for every log.
@@ -185,6 +164,8 @@ func (s *PolicyState) handleFwLog(ev *halproto.FWEvent, ts time.Time) {
 		icmpCode,
 		appID,
 		alg,
+		iflowBytes,
+		rflowBytes,
 		count,
 	}
 

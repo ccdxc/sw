@@ -401,7 +401,8 @@ func getCSVObjectBuffer(logs interface{}, b *bytes.Buffer, zip bool) {
 			"proto", "act", "dir", "ruleid",
 			"sessionid", "sessionstate",
 			"icmptype", "icmpid", "icmpcode",
-			"appid", "alg", "count"})
+			"appid", "alg", "iflowbytes",
+			"rflowbytes", "count"})
 		for _, l := range logs.([]interface{}) {
 			temp := l.([]string)
 			w.Write(temp)
@@ -501,8 +502,8 @@ func populateIndex(index map[string]string, l singleLog) {
 		src = temp["source"]
 		dest = temp["destination"]
 	} else if temp, ok := l.log.([]string); ok {
-		src = temp[0]
-		dest = temp[1]
+		src = temp[2]
+		dest = temp[3]
 	}
 
 	// 0 represents src

@@ -276,6 +276,8 @@ func (idr *Indexer) parseFwLogsCsvV1(id int, key string, data [][]string, uuid s
 			IcmpType:   uint32(icmpType),
 			IcmpID:     uint32(icmpID),
 			IcmpCode:   uint32(icmpCode),
+			AppID:      line[16],
+			ALG:        line[17],
 		}
 
 		// prepare the index request
