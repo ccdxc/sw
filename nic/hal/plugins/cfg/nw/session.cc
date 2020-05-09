@@ -2937,7 +2937,7 @@ build_tcp_packet (hal::flow_t *flow, session_t *session,
         }
     }
 
-    if (flow->config.dir == FLOW_DIR_FROM_UPLINK) {
+    if (sep == NULL || (sep && !(sep->ep_flags & EP_FLAGS_LOCAL))) { // source is not found or is remote
         cpu_header->src_lif = HAL_LIF_CPU;
         if (flow->pgm_attrs.use_vrf) {
             pd::pd_vrf_get_fromcpu_vlanid_args_t args;
@@ -2963,13 +2963,13 @@ build_tcp_packet (hal::flow_t *flow, session_t *session,
         eth_hdr = (ether_header_t *)(pkt);
         eth_hdr->etype = htons((key.flow_type == FLOW_TYPE_V4)?ETH_TYPE_IPV4:ETH_TYPE_IPV6);
         offset = sizeof(ether_header_t);
-    } else { // FROM_DMA
+    } else if (sep && (sep->ep_flags & EP_FLAGS_LOCAL)) {
         if_t   *sif = NULL;
 
         sif = hal::find_if_by_handle(sep->if_handle);
         if (sif == NULL) {
             HAL_TRACE_ERR("Couldnt get source if for session :{}", key);
-            return HAL_RET_ERR;
+            return 0;
         }
 
         pd::pd_if_get_hw_lif_id_args_t args;
