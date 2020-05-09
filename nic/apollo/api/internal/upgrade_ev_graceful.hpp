@@ -44,25 +44,23 @@ typedef struct upg_ev_graceful_s {
     upg_ev_hdlr_t hostdev_reset_hdlr;
 
     /// threads should be paused here to a safe point for switchover (on A)
-    /// also pipeline pause if required
     upg_ev_hdlr_t quiesce_hdlr;
 
     /// prepare for switching to B
     upg_ev_hdlr_t prep_switchover_hdlr;
 
-    /// switching to B
-    upg_ev_hdlr_t switchover_hdlr;
+    /// pipeline quiesce handler
+    upg_ev_hdlr_t pipeline_quiesce_hdlr;
 
     /// making sure B bringup is successful
     upg_ev_hdlr_t ready_hdlr;
 
-    /// repeal an upgrade (on A / B)
-    /// an repeal (on A)
-    ///   after backup, requires the thread to cleanup its saved states
-    ///   after quiesce, and ready for re-spawn
-    /// an repeal (on B)
-    ///   needs to restore old state (rollback), and ready to re-spawn previous
-    ///   version
+    /// respawn an upgrade (on A)
+    ///   after link-down, requires the thread to link-down and respawn
+    upg_ev_hdlr_t respawn_hdlr;
+
+    /// repeal an upgrade (on A)
+    ///   on/before backup, clear the saved states
     upg_ev_hdlr_t repeal_hdlr;
 
     /// completed the upgrade (on A / B)

@@ -39,8 +39,8 @@ source $CUR_DIR/../../../tools/setup_env_mock.sh $PIPELINE
 source $CUR_DIR/../setup_upgrade_gtests.sh
 upg_setup $BUILD_DIR/gen/graceful_test.json
 
-TEST_EXECUTOR=${PDSPKG_TOPDIR}/apollo/test/tools/apulu/fsm_test_executor.py
-TEST_JSON=${PDSPKG_TOPDIR}/apollo/test/tools/apulu/upgrade_fsm_test_cases.json
+TEST_EXECUTOR=${PDSPKG_TOPDIR}/apollo/test/upgrade/fsm/upgrade_fsm_test_exec.py
+TEST_JSON=${PDSPKG_TOPDIR}/apollo/test/upgrade/fsm/upgrade_fsm_test_cases.json
 
 if [ ! -z "${test_case}" ] ; then
     CMD="python -u ${TEST_EXECUTOR} -i ${TEST_JSON} -t ${test_case}"

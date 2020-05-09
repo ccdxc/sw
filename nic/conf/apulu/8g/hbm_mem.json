@@ -252,6 +252,7 @@
             "kind": "cfgtbl",
             "size": "128M",
             "cache": "p4plus-rxdma",
+            "reset": true,
             "_comment": "4M * 32B"
         },
         {
@@ -259,6 +260,7 @@
             "kind": "cfgtbl",
             "size": "16M",
             "cache": "p4plus-rxdma",
+            "reset": true,
             "_comment": "512K * 32B"
         },
         {

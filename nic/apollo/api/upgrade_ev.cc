@@ -49,11 +49,6 @@ upg_graceful_additional_ev_send (sdk::upg::upg_ev_params_t *params)
     std::list<api::upg_ev_graceful_t>::iterator ev = ev_threads.begin();
     upg_ev_msg_id_t id = g_upg_state->ev_in_progress_id();
 
-    if (api::g_upg_state->ev_in_progress() || !api::g_upg_state->ev_more() ||
-        (api::g_upg_state->ev_status() != SDK_RET_OK)) {
-        return;
-    }
-
     // send additional requests if there are any
     if (id == UPG_MSG_ID_LINK_DOWN) {
         INVOKE_EV_THREAD_HDLR(ev, hostdev_reset_hdlr,
@@ -67,6 +62,16 @@ upg_graceful_additional_ev_send (sdk::upg::upg_ev_params_t *params)
     }
     if (id == UPG_MSG_ID_HOSTDEV_RESET) {
         INVOKE_EV_THREAD_HDLR(ev, quiesce_hdlr, UPG_MSG_ID_QUIESCE);
+        if (ret != SDK_RET_OK && ret != SDK_RET_IN_PROGRESS) {
+            PDS_TRACE_ERR("Upgrade event %s failed",
+                          sdk::upg::upg_event2str(params->id));
+        }
+        api::g_upg_state->set_ev_status(ret);
+        api::g_upg_state->set_ev_more(false);
+    }
+
+    if (id == UPG_MSG_ID_PREP_SWITCHOVER) {
+        INVOKE_EV_THREAD_HDLR(ev, pipeline_quiesce_hdlr, UPG_MSG_ID_PIPELINE_QUIESCE);
         if (ret != SDK_RET_OK && ret != SDK_RET_IN_PROGRESS) {
             PDS_TRACE_ERR("Upgrade event %s failed",
                           sdk::upg::upg_event2str(params->id));
@@ -102,6 +107,10 @@ upg_graceful_ev_send (sdk::upg::upg_ev_params_t *params)
         INVOKE_EV_THREAD_HDLR(ev, backup_hdlr, UPG_MSG_ID_BACKUP);
         break;
     case UPG_EV_PREPARE:
+        // this should be executed in hal first and then nicmgr in sim
+        // environment. this is made sure by the thread_hdlr registration
+        // function. hal is registerd first before nicmgr
+        // TODO: split the events to remove the above restriction
         INVOKE_EV_THREAD_HDLR(ev, linkdown_hdlr, UPG_MSG_ID_LINK_DOWN);
         // have additional events to send when the first operation completes
         // on all threads
@@ -109,9 +118,15 @@ upg_graceful_ev_send (sdk::upg::upg_ev_params_t *params)
         break;
     case UPG_EV_PREP_SWITCHOVER:
         INVOKE_EV_THREAD_HDLR(ev, prep_switchover_hdlr, UPG_MSG_ID_PREP_SWITCHOVER);
+        // have additional events to send when the first operation completes
+        // on all threads
+        api::g_upg_state->set_ev_more(true);
+        break;
+    case UPG_EV_RESPAWN:
+        INVOKE_EV_THREAD_HDLR(ev, respawn_hdlr, UPG_MSG_ID_RESPAWN);
         break;
     case UPG_EV_SWITCHOVER:
-        INVOKE_EV_THREAD_HDLR(ev, switchover_hdlr, UPG_MSG_ID_SWITCHOVER);
+        ret = SDK_RET_OK;
         break;
     case UPG_EV_REPEAL:
         INVOKE_EV_THREAD_HDLR(ev, repeal_hdlr, UPG_MSG_ID_REPEAL);
@@ -160,12 +175,21 @@ upg_event_send (sdk::upg::upg_ev_params_t *params)
     }
     api::g_upg_state->ev_decr_in_progress();
     api::g_upg_state->set_ev_status(ret);
+
     // send additional events if there are any
-    if (upgrade_mode_graceful(params->mode)) {
-        upg_graceful_additional_ev_send(params);
-    } else {
-        upg_hitless_additional_ev_send(params);
+    while (!api::g_upg_state->ev_in_progress() &&
+           api::g_upg_state->ev_more() &&
+           (api::g_upg_state->ev_status() == SDK_RET_OK)) {
+        api::g_upg_state->ev_incr_in_progress();
+        if (upgrade_mode_graceful(params->mode)) {
+            upg_graceful_additional_ev_send(params);
+        } else {
+            upg_hitless_additional_ev_send(params);
+        }
+        api::g_upg_state->ev_decr_in_progress();
     }
+    ret = api::g_upg_state->ev_in_progress() ? SDK_RET_IN_PROGRESS :
+        api::g_upg_state->ev_status();
     return ret;
 }
 
@@ -192,11 +216,16 @@ upg_ev_process_response (sdk_ret_t ret, upg_ev_msg_id_t id)
         PDS_TRACE_ERR("Upgrade event %s failed", upg_event2str(params->id));
     }
     api::g_upg_state->set_ev_status(ret);
+
     // send additional events if there are any
-    if (upgrade_mode_graceful(params->mode)) {
-        upg_graceful_additional_ev_send(params);
-    } else {
-        upg_hitless_additional_ev_send(params);
+    if (!api::g_upg_state->ev_in_progress() &&
+        api::g_upg_state->ev_more() &&
+        (api::g_upg_state->ev_status() == SDK_RET_OK)) {
+        if (upgrade_mode_graceful(params->mode)) {
+            upg_graceful_additional_ev_send(params);
+        } else {
+            upg_hitless_additional_ev_send(params);
+        }
     }
     // wait for all the responses to come
     if (api::g_upg_state->ev_in_progress()) {

@@ -5,6 +5,7 @@
 
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/asic/pd/scheduler.hpp"
+#include "nic/sdk/asic/pd/pd.hpp"
 #include "nic/apollo/api/include/pds_upgrade.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/api/upgrade_state.hpp"
@@ -80,7 +81,20 @@ upg_ev_link_down (upg_ev_params_t *params)
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Upgrade Port shutdown failed, err %u", ret);
     }
+    // stop the learn thread
+    learn_state *lstate = api::g_pds_state.learn_db();
+    core::stop_learn_thread();
+    // detaching dpdk driver
+    if (lstate->learn_lif()) {
+        lstate->learn_lif()->destroy(lstate->learn_lif());
+    }
     return ret;
+}
+
+static sdk_ret_t
+upg_ev_hostdev_reset (upg_ev_params_t *params)
+{
+    return SDK_RET_OK;
 }
 
 static sdk_ret_t
@@ -93,36 +107,36 @@ upg_ev_quiesce (upg_ev_params_t *params)
     ret = lif_all_reset();
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Lifs reset failed, err %u", ret);
+        return ret;
     }
-    return ret;
-}
-
-static sdk_ret_t
-upg_ev_hostdev_reset (upg_ev_params_t *params)
-{
-    return SDK_RET_OK;
+   return SDK_RET_OK;
 }
 
 static sdk_ret_t
 upg_ev_prep_switchover (upg_ev_params_t *params)
 {
-    learn_state *lstate = api::g_pds_state.learn_db();
-    core::stop_learn_thread();
-    // detaching dpdk driver
-    if (lstate->learn_lif()) {
-        return dpdk_device::destroy(lstate->learn_lif());
-    }
     return SDK_RET_OK;
 }
 
 static sdk_ret_t
-upg_ev_switchover (upg_ev_params_t *params)
+upg_ev_pipeline_quiesce (upg_ev_params_t *params)
+{
+    sdk_ret_t ret = sdk::asic::pd::asicpd_quiesce_start();
+    // sim it always fail, so ignore
+    if (api::g_pds_state.platform_type() != platform_type_t::PLATFORM_TYPE_HW) {
+        ret = SDK_RET_OK;
+    }
+    return ret;
+}
+
+static sdk_ret_t
+upg_ev_repeal (upg_ev_params_t *params)
 {
     return SDK_RET_OK;
 }
 
 static sdk_ret_t
-upg_ev_repeal (upg_ev_params_t *params)
+upg_ev_respawn (upg_ev_params_t *params)
 {
     return SDK_RET_OK;
 }
@@ -149,8 +163,9 @@ upg_graceful_init (pds_init_params_t *params)
     ev_hdlr.ready_hdlr = upg_ev_ready;
     ev_hdlr.quiesce_hdlr = upg_ev_quiesce;
     ev_hdlr.prep_switchover_hdlr = upg_ev_prep_switchover;
-    ev_hdlr.switchover_hdlr = upg_ev_switchover;
+    ev_hdlr.pipeline_quiesce_hdlr = upg_ev_pipeline_quiesce;
     ev_hdlr.repeal_hdlr = upg_ev_repeal;
+    ev_hdlr.respawn_hdlr = upg_ev_respawn;
     ev_hdlr.finish_hdlr = upg_ev_finish;
 
     // register for upgrade events

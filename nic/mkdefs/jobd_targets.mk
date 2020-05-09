@@ -547,4 +547,4 @@ jobd/athena_app/make: ${JOBD_PREREQS}
 
 .PHONY: jobd/apulu/upgrade
 jobd/apulu/upgrade: ${JOBD_PREREQS}
-	${NICDIR}/apollo/test/upgrade/run_gtests_apulu.sh ${COVERAGE_OPTS}
+	${NICDIR}/apollo/test/tools/apulu/run_upgrade_gtests.sh ${COVERAGE_OPTS}

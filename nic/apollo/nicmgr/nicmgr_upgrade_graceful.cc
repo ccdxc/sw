@@ -378,33 +378,15 @@ nicmgr_upg_ev_hostdev_reset_hdlr (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
 }
 
 static void
-nicmgr_upg_ev_repeal_hdlr (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
+nicmgr_upg_ev_respawn_hdlr (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
 {
     upg_ev_info_s *info = new upg_ev_info_t();
     sdk_ret_t ret;
 
-    PDS_TRACE_DEBUG("Upgrade nicmgr IPC request repeal");
+    PDS_TRACE_DEBUG("Upgrade nicmgr IPC request respawn");
     info->msg_in = msg;
     ret = nicmgr::upg::upg_failed_handler(info);
     return nicmgr_upg_process_response(ret, info);
-}
-
-static void
-nicmgr_upg_ev_prep_switchover_hdlr (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
-{
-    upg_ev_info_s *info = new upg_ev_info_t();
-    sdk_ret_t ret;
-
-    PDS_TRACE_DEBUG("Upgrade nicmgr IPC request prep_switchover");
-    info->msg_in = msg;
-    ret = g_devmgr->RemoveDevice("cpu_mnic0");
-    if (ret == SDK_RET_OK || ret == SDK_RET_ENTRY_NOT_FOUND) {
-        ret = g_devmgr->RemoveDevice("cpu_mnic1");
-    }
-    if (ret == SDK_RET_OK || ret == SDK_RET_ENTRY_NOT_FOUND) {
-        ret = SDK_RET_OK;
-    }
-    nicmgr_upg_process_response(ret, info);
 }
 
 sdk_ret_t
@@ -421,10 +403,8 @@ nicmgr_upg_graceful_init (void)
                                   nicmgr_upg_ev_link_down_hdlr, NULL);
     sdk::ipc::reg_request_handler(UPG_MSG_ID_HOSTDEV_RESET,
                                   nicmgr_upg_ev_hostdev_reset_hdlr, NULL);
-    sdk::ipc::reg_request_handler(UPG_MSG_ID_REPEAL,
-                                  nicmgr_upg_ev_repeal_hdlr, NULL);
-    sdk::ipc::reg_request_handler(UPG_MSG_ID_PREP_SWITCHOVER,
-                                  nicmgr_upg_ev_prep_switchover_hdlr, NULL);
+    sdk::ipc::reg_request_handler(UPG_MSG_ID_RESPAWN,
+                                  nicmgr_upg_ev_respawn_hdlr, NULL);
 
     // register the async handlers to nicmgr library
     nicmgr::upg::upg_ev_init(nicmgr_device_reset_status_cb,
@@ -453,10 +433,6 @@ nicmgr_upg_ev_response_hdlr (sdk::ipc::ipc_msg_ptr msg,
 
     PDS_TRACE_DEBUG("Upgrade ipc rsp %s from nicmgr is %u",
                     upg_msgid2str(params->id), params->rsp_code);
-    // TODO : ignore the nicmgr swquiesce failure now
-    if (params->id == UPG_MSG_ID_LINK_DOWN && params->rsp_code == SDK_RET_ERR) {
-        return api::upg_ev_process_response(SDK_RET_OK, params->id);
-    }
     api::upg_ev_process_response(params->rsp_code, params->id);
 }
 
@@ -504,7 +480,7 @@ upg_ev_backup (upg_ev_params_t *params)
 static sdk_ret_t
 upg_ev_repeal (upg_ev_params_t *params)
 {
-    return nicmgr_send_ipc(params);
+    return SDK_RET_OK;
 }
 
 static sdk_ret_t
@@ -522,11 +498,11 @@ upg_ev_ready (upg_ev_params_t *params)
 static sdk_ret_t
 upg_ev_prep_switchover (upg_ev_params_t *params)
 {
-    return nicmgr_send_ipc(params);
+    return SDK_RET_OK;
 }
 
 static sdk_ret_t
-upg_ev_switchover (upg_ev_params_t *params)
+upg_ev_pipeline_quiesce (upg_ev_params_t *params)
 {
     return SDK_RET_OK;
 }
@@ -539,6 +515,12 @@ upg_ev_link_down (upg_ev_params_t *params)
 
 static sdk_ret_t
 upg_ev_hostdev_reset (upg_ev_params_t *params)
+{
+    return nicmgr_send_ipc(params);
+}
+
+static sdk_ret_t
+upg_ev_respawn (upg_ev_params_t *params)
 {
     return nicmgr_send_ipc(params);
 }
@@ -563,9 +545,10 @@ nicmgr_upg_graceful_init (void)
     ev_hdlr.linkdown_hdlr = upg_ev_link_down;
     ev_hdlr.hostdev_reset_hdlr = upg_ev_hostdev_reset;
     ev_hdlr.ready_hdlr = upg_ev_ready;
+    ev_hdlr.respawn_hdlr = upg_ev_respawn;
     ev_hdlr.quiesce_hdlr = upg_ev_quiesce;
     ev_hdlr.prep_switchover_hdlr = upg_ev_prep_switchover;
-    ev_hdlr.switchover_hdlr = upg_ev_switchover;
+    ev_hdlr.pipeline_quiesce_hdlr = upg_ev_pipeline_quiesce;
     ev_hdlr.repeal_hdlr = upg_ev_repeal;
     ev_hdlr.finish_hdlr = upg_ev_finish;
 

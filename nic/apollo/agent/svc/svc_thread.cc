@@ -105,6 +105,7 @@ upg_ev_fill (sdk::upg::upg_ev_t *ev)
     ev->rollback_hdlr = pds_upgrade;
     ev->ready_hdlr = pds_upgrade;
     ev->repeal_hdlr = pds_upgrade;
+    ev->respawn_hdlr = pds_upgrade;
     ev->finish_hdlr = pds_upgrade;
 }
 
@@ -113,7 +114,7 @@ void
 svc_server_thread_init (void *ctxt)
 {
     struct sockaddr_un sock_addr;
-    sdk::upg::upg_ev_t ev;
+    sdk::upg::upg_ev_t ev = { 0 };
 
     // register for upgrade events
     upg_ev_fill(&ev);

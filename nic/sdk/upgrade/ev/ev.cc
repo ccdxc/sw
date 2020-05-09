@@ -120,6 +120,7 @@ upg_ev_handler (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
     params.mode = event->mode;
     params.response_cb = upg_ev_process_response;
     params.response_cookie = info;
+    params.svc_ctx = upg_ev.svc_ctx;
     ret = ev_func(&params);
     SDK_TRACE_DEBUG("Upgrade IPC event stage %s ret %u",
                     upg_stage2str(event->stage), ret);
@@ -135,9 +136,6 @@ upg_ev_hdlr_register(upg_ev_t &ev)
     memcpy(&upg_ev, &ev, sizeof(upg_ev_t));
 
     // subscribe for upgrade events from upgrade manager
-    // below 2 are broadcast events and it is mandatory to be provided
-    SDK_ASSERT(ev.compat_check_hdlr);
-    SDK_ASSERT(ev.ready_hdlr);
     sdk::ipc::subscribe(UPG_EV_COMPAT_CHECK, upg_ev_handler, NULL);
     sdk::ipc::subscribe(UPG_EV_READY, upg_ev_handler, NULL);
 

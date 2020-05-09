@@ -179,6 +179,9 @@ fi
 #mount the new disk at /ro under new rootfs so we can figure out which mmc partition we are in once we do pivot_root
 mount --bind --no-mtab /new /new/rw/ro
 
+if [ -d /dev/hugepages ];then
+    umount /dev/hugepages
+fi
 umount /dev/shm
 umount /run
 umount /tmp

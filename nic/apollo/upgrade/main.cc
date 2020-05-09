@@ -38,11 +38,9 @@ fsm_completion_hdlr (upg_status_t status, sdk::ipc::ipc_msg_ptr msg_in)
     } else {
         UPG_TRACE_ERR("Upgrade failed !!");
     }
-    // upgmgr not expecting any return from here. sysmgr will kill
-    // this process as the upgrade stages are done now
-    while (1) {
-        sleep(1);
-    }
+    // this process is no more needed as the upgrade stages are done now
+    sleep(5);
+    exit(0);
 }
 
 static void

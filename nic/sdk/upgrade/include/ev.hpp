@@ -71,7 +71,7 @@ upg_stage2event (upg_stage_t stage)
 
 // file setup by the upgrade loader during bringup
 // if it not set, regular boot is assumed
-#define UPGRADE_INIT_MODE_FILE "/data/upgrade_init_mode.txt"
+#define UPGRADE_INIT_MODE_FILE "/update/upgrade_init_mode.txt"
 
 static inline upg_mode_t
 upg_init_mode(void)
@@ -104,7 +104,9 @@ typedef struct upg_ev_params_s {
     upg_ev_id_t id;                         ///< upgrade event id
     sdk::platform::upg_mode_t mode;         ///< upgrade mode
     upg_async_ev_response_cb_t response_cb; ///< response callback
-    void *response_cookie;                ///< response cookie
+    void *response_cookie;                  ///< response cookie
+    void *svc_ctx;                          ///< service context, given during
+                                            ///< registration
     // TODO other infos
 } __PACK__ upg_ev_params_t;
 
@@ -114,11 +116,14 @@ typedef sdk_ret_t (*upg_ev_hdlr_t)(upg_ev_params_t *params);
 /// \brief upgrade event handlers for upgrade
 typedef struct upg_ev_s {
 
-    // service name. used for debug trace only
+    /// service name. used for debug trace only
     char svc_name[SDK_MAX_NAME_LEN];
 
-    // service ipc id
+    /// service ipc id
     uint32_t svc_ipc_id;
+
+    /// service context
+    void *svc_ctx;
 
     /// compat checks should be done here (on A)
     upg_ev_hdlr_t compat_check_hdlr;
@@ -146,19 +151,16 @@ typedef struct upg_ev_s {
     /// config replay, operational table syncing (on B)
     upg_ev_hdlr_t sync_hdlr;
 
-    /// respawn processes (on B)
+    /// respawn processes (on A)
+    /// used in graceful to restart the processes with previously
+    /// saved states
     upg_ev_hdlr_t respawn_hdlr;
 
     /// making sure B bringup is successful (on B)
     upg_ev_hdlr_t ready_hdlr;
 
     /// repeal an upgrade (on A / B)
-    /// an repeal (on A)
-    ///   after backup, requires the process to cleanup its saved states
-    ///   after quiesce, and ready for re-spawn
-    /// an repeal (on B)
-    ///   needs to restore old state (rollback), and ready to re-spawn previous
-    ///   version. this won't come if there a rollback request already
+    /// undo what it has been done and go to safe state
     upg_ev_hdlr_t repeal_hdlr;
 
     /// finish the upgrade (on A / B)
@@ -184,6 +186,7 @@ using sdk::upg::upg_ev_id_t::UPG_EV_SWITCHOVER;
 using sdk::upg::upg_ev_id_t::UPG_EV_READY;
 using sdk::upg::upg_ev_id_t::UPG_EV_ROLLBACK;
 using sdk::upg::upg_ev_id_t::UPG_EV_REPEAL;
+using sdk::upg::upg_ev_id_t::UPG_EV_RESPAWN;
 using sdk::upg::upg_ev_id_t::UPG_EV_FINISH;
 using sdk::upg::upg_ev_id_t::UPG_EV_MAX;
 

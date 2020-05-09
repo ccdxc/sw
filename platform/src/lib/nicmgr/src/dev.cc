@@ -1292,26 +1292,6 @@ DeviceManager::IsDataPathQuiesced()
     return is_allDevQuiesced;
 }
 
-sdk_ret_t
-DeviceManager::RemoveDevice(std::string name)
-{
-    Device *dev;
-
-    for (auto it = devices.begin(); it != devices.end(); it++) {
-        if (it->first != name) {
-           continue;
-        }
-        dev = it->second;
-        if (dev->GetType() == ETH) {
-            Eth *eth_dev = (Eth *) dev;
-            return eth_dev->RemoveDevice();
-        }
-        // TODO : other device types
-    }
-    return SDK_RET_ENTRY_NOT_FOUND;
-}
-
-
 bool
 DeviceManager::CheckAllDevsDisabled()
 {

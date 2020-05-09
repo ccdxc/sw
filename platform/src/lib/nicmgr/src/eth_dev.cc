@@ -840,20 +840,6 @@ Eth::LocalDeviceInit()
 
 }
 
-sdk_ret_t
-Eth::RemoveDevice(void)
-{
-#ifdef __aarch64__
-    if (remove_mnet(spec->name.c_str()) != 0) {
-        NIC_LOG_ERR("{}: Unable to remove the device", spec->name);
-        return SDK_RET_ERR;
-    }
-#else
-    NIC_LOG_DEBUG("{}: Skipping device removal", spec->name);
-#endif
-    return SDK_RET_OK;
-}
-
 bool
 Eth::LoadOprom()
 {

@@ -96,13 +96,13 @@ public:
     void tbl_eng_rss_cfg(p4_tbl_eng_cfg_t **cfg) { *cfg = &tbl_eng_cfg_rss_; }
     // register event threads
     void register_ev_thread_hdlr(upg_ev_hitless_t &ev) {
-        ev_threads_hdlr_hl_.push_front(ev);
+        ev_threads_hdlr_hl_.push_back(ev);
     }
     std::list<upg_ev_hitless_t> &ev_threads_hdlr_hitless(void) {
         return ev_threads_hdlr_hl_;
     }
     void register_ev_thread_hdlr(upg_ev_graceful_t &ev) {
-        ev_threads_hdlr_gf_.push_front(ev);
+        ev_threads_hdlr_gf_.push_back(ev);
     }
     std::list<upg_ev_graceful_t> &ev_threads_hdlr_graceful(void) {
         return ev_threads_hdlr_gf_;

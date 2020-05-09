@@ -21,6 +21,7 @@
 struct mnet_dev_t {
 	struct device_node *of_node;
 	uint32_t busy;
+	bool cpu_mnic_dev;
 	struct platform_device *mnic_pdev;
 	struct list_head node;
 };
@@ -107,7 +108,7 @@ static long mnet_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 {
 	int ret = 0;
 	struct mnet_dev_t *mnet;
-	uint8_t found_dev_node = 0, cpu_mnic_dev = 0;
+	uint8_t found_dev_node = 0;
 	struct mnet_dev_create_req_t req;
 	char iface_name[MNIC_NAME_LEN] = {0};
 	void __user *argp = (void __user *)arg;
@@ -147,11 +148,12 @@ static long mnet_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 		 * would be pass on a flag called no-probe in mnet_dev_create_req_t struct
 		 */
 		if (!strncmp(req.iface_name, "cpu_mnic", 8))
-			cpu_mnic_dev = 1;
-		dev_info(mnet_device, "MNET_CREATE_DEV called iface name %s (is cpu mnic: %d)\n", req.iface_name, cpu_mnic_dev);
+			mnet->cpu_mnic_dev = 1;
+		dev_info(mnet_device, "MNET_CREATE_DEV called iface name %s (is cpu mnic: %d)\n",
+                         req.iface_name, mnet->cpu_mnic_dev);
 
 		/* call probe with this platform_device */
-		if (cpu_mnic_dev) {
+		if (mnet->cpu_mnic_dev) {
 			ret = mnet_uio_pdrv_genirq_probe(mnet->mnic_pdev);
 		} else {
 			ret = ionic_probe(mnet->mnic_pdev);
@@ -184,9 +186,6 @@ static long mnet_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 			/* find the mnet device which is bound to this interface */
 			if (!strcmp(mnet->mnic_pdev->name, iface_name)) {
 				found_dev_node = 1;
-				/* For CPU MNIC devices, call a different remove */
-				if (!strncmp(iface_name, "cpu_mnic", 8))
-					cpu_mnic_dev = 1;
 				break;
 			}
 		}
@@ -195,7 +194,7 @@ static long mnet_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 			return -EDQUOT;
 
 		if (mnet->busy) {
-			if (cpu_mnic_dev)
+			if (mnet->cpu_mnic_dev)
 				ret = mnet_uio_pdrv_genirq_remove(mnet->mnic_pdev);
 			else
 				ret = ionic_remove(mnet->mnic_pdev);
@@ -237,8 +236,13 @@ static int mnet_remove(struct platform_device *pfdev)
 		if (mnet->mnic_pdev) {
 
 			if (mnet->busy) {
-
-				ret = ionic_remove(mnet->mnic_pdev);
+                                dev_info(mnet_device, "Removing device "
+                                                    "mnic interface %s\n\n\n", mnet->mnic_pdev->name);
+			        if (mnet->cpu_mnic_dev) {
+				    ret = mnet_uio_pdrv_genirq_remove(mnet->mnic_pdev);
+                                } else {
+				    ret = ionic_remove(mnet->mnic_pdev);
+                                }
 
 				if (ret) {
 					dev_err(mnet_device, "ionic_remove failed to remove %s "

@@ -54,8 +54,8 @@ wait_for_svc_ready (ipc_svc_dom_id_t dom_id, uint32_t ev_id,
             if (count % 100 == 0) {
                 UPG_TRACE_INFO("Waiting for services to be up.., expected %u now %u",
                                num_svcs, (uint32_t)recipients.size());
-                count++;
             }
+            count++;
         } else {
             return SDK_RET_OK;
         }

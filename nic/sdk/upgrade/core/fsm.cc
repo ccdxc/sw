@@ -184,8 +184,8 @@ send_ipc_to_next_service (void)
             upg_svc svc = fsm_services[svc_name];
             if (svc.has_valid_ipc_id()) {
                 fsm_states.timer_stop();
-                dispatch_event(domain, id, svc);
                 fsm_states.timer_start();
+                dispatch_event(domain, id, svc);
                 UPG_TRACE_INFO("Sending %s serial event to %s, IPC ID %u",
                                name.c_str(), svc_name.c_str(), svc.ipc_id());
                 break;
@@ -409,13 +409,14 @@ fsm::timer_init(struct ev_loop *ev_loop) {
     UPG_TRACE("Initializing the timer with timeout %f", timeout_);
 
     loop = ev_loop;
-    ev_timer_init(&timeout_watcher, timeout_cb, timeout_, 0.0);
+    ev_timer_init(&timeout_watcher, timeout_cb,
+                  ev_time() - ev_now(loop) + timeout_, 0.0);
 }
 
 void
 fsm::timer_start(void) {
     UPG_TRACE("Starting the timer");
-    ev_timer_set(&timeout_watcher, timeout_, 0.0);
+    ev_timer_set(&timeout_watcher, ev_time() - ev_now(loop) + timeout_, 0.0);
     ev_timer_start(loop, &timeout_watcher);
 }
 

@@ -279,8 +279,10 @@ dpdk_device::destroy(dpdk_device *dev) {
 
     SDK_DPDK_LOG_INFO("Destroying dpdk dev, port %u", dev->portid);
     if (rte_eth_dev_is_valid_port(dev->portid)) {
-        rte_dev =  rte_eth_devices[dev->portid].device;
+        rte_eth_dev_stop(dev->portid);
+        rte_eth_dev_close(dev->portid);
 
+        rte_dev =  rte_eth_devices[dev->portid].device;
         SDK_DPDK_LOG_INFO("Removing RTE device, port %u", dev->portid);
         if (!rte_dev) {
             SDK_DPDK_LOG_ERR("RTE Device for port %u not exist", dev->portid);

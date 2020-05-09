@@ -17,12 +17,13 @@ namespace api {
 
 upg_state *g_upg_state;
 
-#define PDS_UPG_SHM_NAME        "pds_upgrade"
-#define PDS_UPG_SHM_PSTATE_NAME "pds_upgrade_pstate"
+#define PDS_API_UPG_SHM_NAME        "pds_api_upgrade"
+#define PDS_API_UPG_SHM_PSTATE_NAME "pds_api_upgrade_pstate"
 // TODO: below size depends on the size of the config hw states to be saved
 // and other nicmgr/linkmgr states etc. need to calculate for the maximum
 // and adjust its size.
-#define PDS_UPG_SHM_SIZE (2 * 1024 * 1024)  // 2MB
+#define PDS_API_UPG_SHM_SIZE (2 * 1024 * 1024)  // 2MB
+
 
 sdk_ret_t
 upg_state::init_(bool shm_create) {
@@ -32,9 +33,9 @@ upg_state::init_(bool shm_create) {
     try {
         // if create, delete and re-create as previous size and current size may be different
         if (shm_create) {
-            shmmgr::remove(PDS_UPG_SHM_NAME);
+            shmmgr::remove(PDS_API_UPG_SHM_NAME);
         }
-        shm_mmgr_ = shmmgr::factory(PDS_UPG_SHM_NAME, PDS_UPG_SHM_SIZE, mode, NULL);
+        shm_mmgr_ = shmmgr::factory(PDS_API_UPG_SHM_NAME, PDS_API_UPG_SHM_SIZE, mode, NULL);
         if (shm_mmgr_ == NULL) {
             PDS_TRACE_ERR("Upgrade shared mem %s failed", op);
             return SDK_RET_ERR;
@@ -44,7 +45,7 @@ upg_state::init_(bool shm_create) {
         return SDK_RET_ERR;
     }
 
-    pstate_ = (upg_pstate_t *)shm_mmgr_->segment_find(PDS_UPG_SHM_PSTATE_NAME,
+    pstate_ = (upg_pstate_t *)shm_mmgr_->segment_find(PDS_API_UPG_SHM_PSTATE_NAME,
                                                       shm_create, sizeof(upg_pstate_t));
     if (!pstate_) {
         PDS_TRACE_ERR("Upgrade pstate %s failed", op);
@@ -60,7 +61,7 @@ upg_state::destroy(upg_state *state) {
     upg_ctxt::destroy(state->api_upg_ctx());
     upg_ctxt::destroy(state->nicmgr_upg_ctx());
     SDK_FREE(api::PDS_MEM_ALLOC_UPG, state);
-    shmmgr::remove(PDS_UPG_SHM_NAME);
+    shmmgr::remove(PDS_API_UPG_SHM_NAME);
 }
 
 upg_state *

@@ -53,11 +53,11 @@ typedef struct upg_ev_hitless_s {
     /// if it is success, it can start shared resource access
     upg_ev_hdlr_t switchover_hdlr;
 
-    /// abort an upgrade (on A / B)
-    /// an abort (on A)
+    /// repeal an upgrade (on A / B)
+    /// an repeal (on A)
     ///   after backup, requires the thread to cleanup its saved states
     ///   after sw_quiesce, requires the thread to resume and goes to ready state
-    /// an abort (on B)
+    /// an repeal (on B)
     ///   after restore, requires the thread to cleanup its state and go to
     ///   sofware quiesce state.
     ///   after switchover, requires the threads to rollback and go to software

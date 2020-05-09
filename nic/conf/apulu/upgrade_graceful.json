@@ -1,6 +1,6 @@
 {
     "svc": {
-        "names": [ "pdsagent", "vpp", "pciemgr" ],
+        "names": [ "sysmgr", "pdsagent", "vpp", "pciemgr" ],
         "event_sequence": "parallel",
         "rsp_timeout": "60000ms",
         "domain": "A",
@@ -28,7 +28,7 @@
             "//": "stops external communication channels and",
             "//": "prepare for B bringup",
             "svc": {
-                "rsp_timeout": "120000"
+                "rsp_timeout": "300000"
             },
             "events": [
                 { "name": "svc_rsp_ok",   "next_stage": "backup" },
@@ -59,11 +59,16 @@
                 { "name": "svc_rsp_fail", "next_stage": "respawn"            },
                 { "name": "svc_rsp_crit", "next_stage": "respawn"            },
                 { "name": "svc_no_rsp",   "next_stage": "respawn"            }
-            ]
+            ],
+            "post_hooks" : ["upgmgr_graceful.sh"]
         },
 
         "prepare_switchover": {
             "//" : "quiescing",
+            "svc": {
+                "event_sequence": "serial",
+                "names": [ "pdsagent" ]
+            },
             "events": [
                 { "name": "svc_rsp_ok",   "next_stage": "switchover" },
                 { "name": "svc_rsp_fail", "next_stage": "respawn"    },
@@ -75,6 +80,10 @@
 
         "switchover": {
             "//": "kill A and bringup B",
+            "svc": {
+                "event_sequence": "serial",
+                "names": [ "sysmgr" ]
+            },
             "events": [
                 { "name": "svc_rsp_ok",   "next_stage": "exit"   },
                 { "name": "svc_rsp_fail", "next_stage": "respawn" },
@@ -88,7 +97,7 @@
             "//": "runtime compatchecks, service readiness",
             "svc": {
                 "discovery": "yes",
-                "rsp_timeout": "5000ms"
+                "rsp_timeout": "30000ms"
             },
             "events": [
                 { "name": "svc_rsp_ok",   "next_stage": "finish"   },

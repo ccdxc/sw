@@ -31,6 +31,7 @@ pds_upgrade (sdk::upg::upg_ev_params_t *params)
 
     // starting new, clear the status
     api::g_upg_state->clear_ev_status();
+    api::g_upg_state->set_ev_more(false);
     // set ongoing spec
     api::g_upg_state->set_ev_params(params);
 

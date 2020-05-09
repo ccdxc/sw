@@ -5,6 +5,7 @@
 #include <string.h>
 #include "lib/pal/pal.hpp"
 #include "include/sdk/lock.hpp"
+#include "upgrade/include/ev.hpp"
 #include "lib/dpdk/sim/sim.hpp"
 #include "platform/utils/mpart_rsvd.hpp"
 
@@ -43,11 +44,24 @@ static std::map<std::string, uint32_t> lif_map;
 
 extern "C" {
 
+static void
+dpdk_sim_mem_reset (uint64_t pa, size_t size)
+{
+    uint8_t zeros[1024] = {0};
+    int64_t rem = size;
+    while (rem > 0) {
+        sdk::lib::pal_mem_write(pa, zeros, (uint64_t)rem > sizeof(zeros) ? sizeof(zeros) : rem);
+        pa += sizeof(zeros);
+        rem -= sizeof(zeros);
+    }
+}
+
 int
 dpdk_sim_init(void)
 {
     int err;
     int app_id = 0;
+    upg_mode_t mode = sdk::upg::upg_init_mode();
 
     if (std::getenv("DPDK_SIM_APP_ID")) {
         std::string dpdk_id_str(std::getenv("DPDK_SIM_APP_ID"));
@@ -58,6 +72,10 @@ dpdk_sim_init(void)
     err = sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_SIM);
     SDK_ASSERT(err == sdk::lib::PAL_RET_OK);
     pmem_base = DPDK_SIM_MEM_START + (app_id * DPDK_SIM_APP_MEM_SIZE);
+    /* clear the memory, otherwise upgrade boot breaks */
+    if (sdk::platform::upgrade_mode_graceful(mode)) {
+        dpdk_sim_mem_reset(pmem_base, DPDK_SIM_APP_MEM_SIZE);
+    }
     return 0;
 }
 

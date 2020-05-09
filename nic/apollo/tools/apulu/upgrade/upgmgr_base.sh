@@ -4,9 +4,22 @@ unset FW_PATH RUNNING_IMAGE FW_UPDATE_TOOL SYS_UPDATE_TOOL
 
 source $PDSPKG_TOPDIR/tools/upgmgr_core_base.sh
 
+UPGRADE_STATUS_FILE='/update/pds_upg_status.txt'
+
+function upgmgr_set_upgrade_status() {
+    echo "success" > $UPGRADE_STATUS_FILE
+}
+
+function upgmgr_clear_upgrade_status() {
+    rm -f $UPGRADE_STATUS_FILE
+}
+
 function upgmgr_setup() {
     FW_UPDATE_TOOL=$PDSPKG_TOPDIR/tools/fwupdate
     SYS_UPDATE_TOOL=$PDSPKG_TOPDIR/tools/sysupdate.sh
+
+    # clear the status from previous run
+    upgmgr_clear_upgrade_status
 
     if [[ -f "$FW_PKG_NAME" ]];then
         FW_PATH=$FW_PKG_NAME
@@ -57,9 +70,9 @@ function upgmgr_pkgcheck() {
 }
 
 function upgmgr_backup() {
-    cp /dev/shm/pds_upgrade /update/pds_upgdata
+    cp /dev/shm/pds_api_upgrade /update/pds_api_upgdata
     local files_must="/update/pcieport_upgdata /update/pciemgr_upgdata "
-    files_must+="/update/pds_upgdata "
+    files_must+="/update/pds_api_upgdata "
     local files_optional="/update/pciemgr_upgrollback "
     for e in $files_must; do
         if [[ ! -f $e ]]; then
@@ -72,23 +85,5 @@ function upgmgr_backup() {
 
 function upgmgr_restore() {
     # TODO : check graceful upgrade and validate the file existance
-    cp /update/pds_upgdata /dev/shm/pds_upgrade
-}
-
-function wait_for_vpp_exit() {
-# vpp uses mnet uio, and its exis is mandatory for switch_rootfs.sh
-# to succeed in rmmod of this driver
-    local refcnt=`lsmod | grep mnet_uio_pdrv_genirq | awk '{print $3}'`
-    local count=0
-    while [[ $refcnt -gt 1 && $count -lt 5000 ]];do
-        refcnt=`lsmod | grep mnet_uio_pdrv_genirq | awk '{print $3}'`
-        usleep 10
-        count=`expr $count + 1`
-    done
-    if  [[ $count -lt 5000 ]];then
-        return 0
-    else
-        echo "vpp exit, uio driver refcount check exceeded the limit $count"
-        return 1
-    fi
+    mv /update/pds_api_upgdata /dev/shm/pds_api_upgrade
 }

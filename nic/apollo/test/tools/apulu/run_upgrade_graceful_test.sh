@@ -21,8 +21,7 @@ upg_wait_for_pdsagent
 
 # override trap
 function trap_finish () {
-#   pkill fsm_test
-    pkill pdsupgmgr
+    pkill fsm_test
     stop_process
     pkill pciemgrd
     stop_model
@@ -38,7 +37,7 @@ status=${PIPESTATUS[0]}
 
 # create a dummy instance from test service for easy validations which sends
 # ok for all events
-#$BUILD_DIR/bin/fsm_test -s sysmgr -i 62 > upgrade_service.log 2>&1 &
+$BUILD_DIR/bin/fsm_test -s sysmgr -i 62 > upgrade_service.log 2>&1 &
 sleep 2
 
 # start upgrade manager
@@ -54,7 +53,6 @@ echo "upgrade command successful"
 # kill testing services
 echo "stopping processes including upgrademgr"
 stop_process
-pkill pdsupgmgr
 pkill pciemgrd
 sleep 2
 
