@@ -36,8 +36,8 @@ func Execute() {
 }
 
 var (
-	configFile, topology, timeout, testbed, suite, focus                         string
-	debugFlag, dryRun, scale, skipSetup, skipInstall, stopOnError, randomTrigger bool
+	configFile, topology, timeout, testbed, suite, focus                                     string
+	debugFlag, dryRun, scale, skipSetup, skipInstall, stopOnError, randomTrigger, regression bool
 )
 
 var (

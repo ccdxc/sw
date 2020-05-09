@@ -10,6 +10,7 @@ func init() {
 	rootCmd.AddCommand(runCommand)
 	runCommand.PersistentFlags().BoolVar(&skipSetup, "skip-setup", false, "skips setup")
 	runCommand.PersistentFlags().BoolVar(&skipInstall, "skip-install", false, "skips naples install")
+	runCommand.PersistentFlags().BoolVar(&regression, "regression", false, "run regression testcases")
 	runCommand.PersistentFlags().BoolVar(&stopOnError, "stop-on-error", false, "stops on error")
 	runCommand.PersistentFlags().StringVar(&suite, "suite", "", "suite to run")
 	runCommand.PersistentFlags().StringVar(&focus, "focus", "", "Focus test")
@@ -28,7 +29,7 @@ func runCommandAction(cmd *cobra.Command, args []string) {
 	os.Setenv("JOB_ID", "1")
 
 	st := testsuite{name: suite, path: suiteDirectory + "/" + suite, focus: focus,
-		scaleData: scale, runRandomTrigger: randomTrigger, stopOnError: stopOnError}
+		scaleData: scale, runRandomTrigger: randomTrigger, stopOnError: stopOnError, regression: regression}
 
 	err := st.run(skipSetup, skipInstall, false, false, "")
 	if err != nil {

@@ -11,7 +11,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"os/exec"
 	"strings"
 	"time"
 
@@ -872,7 +871,7 @@ func (sm *SysModel) CheckNaplesHealth(node *objects.Naples) error {
 	}
 
 	if os.Getenv("RELEASE_A") != "" {
-			// get naples info from Netagent
+		// get naples info from Netagent
 		// Note: struct redefined here to avoid dependency on netagent package
 		var naplesInfo struct {
 			UUID                 string   `json:"naples-uuid,omitempty"`
@@ -1326,115 +1325,5 @@ L2:
 
 func (sm *SysModel) CollectLogs() error {
 
-	// create logs directory if it doesnt exists
-	cmdStr := fmt.Sprintf("mkdir -p %s/src/github.com/pensando/sw/iota/logs", os.Getenv("GOPATH"))
-	cmd := exec.Command("bash", "-c", cmdStr)
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		log.Errorf("creating log directory failed with: %s\n", err)
-	}
-
-	if sm.Tb.IsMockMode() {
-		// create a tar.gz from all log files
-		cmdStr := fmt.Sprintf("pushd %s/src/github.com/pensando/sw/iota/logs && tar cvzf venice-iota.tgz ../*.log && popd", os.Getenv("GOPATH"))
-		cmd = exec.Command("bash", "-c", cmdStr)
-		out, err = cmd.CombinedOutput()
-		if err != nil {
-			fmt.Printf("tar command out:\n%s\n", string(out))
-			log.Errorf("Collecting server log files failed with: %s.\n", err)
-		} else {
-			log.Infof("created %s/src/github.com/pensando/sw/iota/logs/venice-iota.tgz", os.Getenv("GOPATH"))
-		}
-
-		return nil
-	}
-
-	// walk all venice nodes
-	trig := sm.Tb.NewTrigger()
-	for _, node := range sm.Tb.Nodes {
-		if node.Personality == iota.PersonalityType_PERSONALITY_VENICE {
-			entity := node.NodeName + "_venice"
-			trig.AddCommand(fmt.Sprintf("mkdir -p /pensando/iota/entities/%s", entity), entity, node.NodeName)
-			trig.AddCommand(fmt.Sprintf("journalctl -a > /var/log/pensando/iotajournalctl"), entity, node.NodeName)
-			trig.AddCommand(fmt.Sprintf("uptime > /var/log/pensando/uptime"), entity, node.NodeName)
-			trig.AddCommand(fmt.Sprintf("tar -cvf  /pensando/iota/entities/%s/%s.tar /var/log/pensando/* /var/log/dmesg* /etc/pensando/ /var/lib/pensando/pki/ /var/lib/pensando/events/", entity, entity), entity, node.NodeName)
-		}
-	}
-
-	// trigger commands
-	_, err = trig.Run()
-	if err == nil {
-		for _, node := range sm.Tb.Nodes {
-			switch node.Personality {
-			case iota.PersonalityType_PERSONALITY_VENICE:
-				sm.Tb.CopyFromVenice(node.NodeName, []string{fmt.Sprintf("%s_venice.tar", node.NodeName)}, "logs")
-			}
-		}
-	} else {
-		log.Errorf("Failed to run commands on venice node. Err: %v", err)
-	}
-
-	// get token ao authenticate to agent
-	veniceCtx, err := sm.VeniceLoggedInCtx(context.Background())
-	// get token ao authenticate to agent
-	trig = sm.Tb.NewTrigger()
-	if err == nil {
-		ctx, cancel := context.WithTimeout(veniceCtx, 5*time.Second)
-		defer cancel()
-		token, err := utils.GetNodeAuthToken(ctx, sm.GetVeniceURL()[0], []string{"*"})
-		if err == nil {
-			// collect tech-support on
-			for _, node := range sm.Tb.Nodes {
-				if testbed.IsNaplesHW(node.Personality) {
-					cmd := fmt.Sprintf("echo \"%s\" > %s", token, agentAuthTokenFile)
-					trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
-					for _, naples := range node.NaplesConfigs.Configs {
-						penctlNaplesURL := "http://" + naples.NaplesIpAddress
-						cmd = fmt.Sprintf("NAPLES_URL=%s %s/entities/%s_host/%s/%s system tech-support -a %s -b %s-tech-support", penctlNaplesURL, hostToolsDir, node.NodeName, penctlPath, penctlLinuxBinary, agentAuthTokenFile, node.NodeName)
-						trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
-					}
-				}
-			}
-			resp, err := trig.Run()
-			if err != nil {
-				log.Errorf("Error collecting logs. Err: %v", err)
-			}
-			// check the response
-			for _, cmdResp := range resp {
-				if cmdResp.ExitCode != 0 {
-					log.Errorf("collecting logs failed. %+v", cmdResp)
-				}
-			}
-			for _, node := range sm.Tb.Nodes {
-				if testbed.IsNaplesHW(node.Personality) {
-					sm.Tb.CopyFromHost(node.NodeName, []string{fmt.Sprintf("%s-tech-support.tar.gz", node.NodeName)}, "logs")
-				}
-			}
-		} else {
-			nerr := fmt.Errorf("Could not get naples authentication token from Venice: %v", err)
-			log.Errorf("%v", nerr)
-		}
-	} else {
-		nerr := fmt.Errorf("Could not get Venice logged in context: %v", err)
-		log.Errorf("%v", nerr)
-	}
-
-	// create a tar.gz from all log files
-	cmdStr = fmt.Sprintf("pushd %s/src/github.com/pensando/sw/iota/logs && tar cvzf venice-iota.tgz *.tar* ../*.log && popd", os.Getenv("GOPATH"))
-	cmd = exec.Command("bash", "-c", cmdStr)
-	out, err = cmd.CombinedOutput()
-	if err != nil {
-		fmt.Printf("tar command out:\n%s\n", string(out))
-		log.Errorf("Collecting log files failed with: %s. trying to collect server logs\n", err)
-		cmdStr = fmt.Sprintf("pushd %s/src/github.com/pensando/sw/iota/logs && tar cvzf venice-iota.tgz ../*.log && popd", os.Getenv("GOPATH"))
-		cmd = exec.Command("bash", "-c", cmdStr)
-		out, err = cmd.CombinedOutput()
-		if err != nil {
-			fmt.Printf("tar command out:\n%s\n", string(out))
-			log.Errorf("Collecting server log files failed with: %s.\n", err)
-		}
-	}
-
-	log.Infof("created %s/src/github.com/pensando/sw/iota/logs/venice-iota.tgz", os.Getenv("GOPATH"))
-	return nil
+	return sm.DownloadTechsupport("")
 }

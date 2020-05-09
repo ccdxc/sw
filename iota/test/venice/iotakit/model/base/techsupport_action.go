@@ -60,6 +60,32 @@ func (sm *SysModel) VerifyTechsupport(techsupportName string) error {
 	return nil
 }
 
+// GetTechSupportInstanceID returns instanceID
+func (sm *SysModel) GetTechSupportInstanceID(techsupportName string) (string, error) {
+	bkCtx, cancelFunc := context.WithTimeout(context.Background(), 10*time.Minute)
+	defer cancelFunc()
+	ctx, err := sm.VeniceLoggedInCtx(bkCtx)
+
+	if err != nil {
+		return "", err
+	}
+
+	restcls, err := sm.VeniceRestClient()
+	if err != nil {
+		return "", err
+	}
+
+	obj := api.ObjectMeta{Name: techsupportName, Tenant: "default"}
+	resp, err := restcls[0].MonitoringV1().TechSupportRequest().Get(ctx, &obj)
+	if err != nil || resp.Name != techsupportName {
+		return "", fmt.Errorf("ts:%s Techsupport [%s] read failed, err: %+v response: %+v\n", time.Now().String(), techsupportName, err, resp)
+	}
+	if resp.Status.Status != "completed" {
+		return "", fmt.Errorf("ts:%s Techsupport [%s] status mismatch, resp: %+v\n", time.Now().String(), techsupportName, resp)
+	}
+	return resp.Status.InstanceID, nil
+}
+
 // PerformTechsupport performs a techsupport in the cluster
 func (sm *SysModel) PerformTechsupport(techsupport *monitoring.TechSupportRequest) error {
 	bkCtx, cancelFunc := context.WithTimeout(context.Background(), 15*time.Minute)

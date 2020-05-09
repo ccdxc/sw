@@ -36,6 +36,7 @@ type testsuite struct {
 	runRandomTrigger bool
 	successCnt       int
 	runCnt           int
+	regression       bool
 }
 
 //runCmd run shell command
@@ -144,6 +145,12 @@ func (suite testsuite) run(skipSetup, skipInstall, skipConfig, rebootOnly bool, 
 		cmd = append(cmd, "-ginkgo.focus")
 		cmd = append(cmd, "\""+suite.focus+"\"")
 	}
+
+	if !suite.regression {
+		cmd = append(cmd, "-ginkgo.skip")
+		cmd = append(cmd, "regression=true")
+	}
+
 	if suite.scaleData {
 		cmd = append(cmd, " -scale-data")
 		cmd = append(cmd, " -scale")

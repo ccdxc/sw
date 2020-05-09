@@ -17,8 +17,10 @@ import (
 	"github.com/onsi/ginkgo/types"
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/api/generated/security"
 	iota "github.com/pensando/sw/iota/protos/gogen"
+	Utils "github.com/pensando/sw/iota/svcs/agent/utils"
 	constants "github.com/pensando/sw/iota/svcs/common"
 	"github.com/pensando/sw/iota/test/venice/iotakit/cfg/enterprise"
 	cfgModel "github.com/pensando/sw/iota/test/venice/iotakit/cfg/enterprise"
@@ -1174,6 +1176,7 @@ func (sm *SysModel) SpecDidComplete(specSummary *types.SpecSummary) {
 	groupName := specSummary.ComponentTexts[2]
 	testcaseDescr := specSummary.ComponentTexts[3]
 
+	tcDir := modelLogsDir + "/" + "'" + bundleName + "'" + "/" + "'" + groupName + "'" + "/" + "'" + testcaseDescr + "'"
 	if !specSummary.Skipped() {
 		resultColor := greenColor
 		resultString := "PASS"
@@ -1184,6 +1187,7 @@ func (sm *SysModel) SpecDidComplete(specSummary *types.SpecSummary) {
 			fmt.Printf("\t%v\n", specSummary.Failure.ComponentCodeLocation.String())
 			fmt.Printf("%s%s%s\n", redColor, specSummary.Failure.Message, defaultStyle)
 			fmt.Printf("\t%v\n", specSummary.Failure.Location.String())
+			sm.DownloadTechsupport(tcDir)
 		} else if specSummary.Panicked() {
 			resultString = "FAIL"
 			fmt.Printf("%s%s%s\n", redColor, "Panicked", defaultStyle)
@@ -1250,7 +1254,110 @@ func (sm *SysModel) SpecSuiteDidEnd(summary *types.SuiteSummary) {
 func (sm *SysModel) ModelExit() {
 
 	fmt.Printf("%s%sSystem not in good health, stopping running tests %s\n", redColor, boldStyle, defaultStyle)
+	sm.DownloadTechsupport(modelLogsDir)
 	sm.PrintResult()
 	fmt.Printf("%s%sStopped running tests as system not in good state%s\n", redColor, boldStyle, defaultStyle)
 	os.Exit(1)
 }
+
+func getTechSupportRequest(name string, nodeNames []string) monitoring.TechSupportRequest {
+	return monitoring.TechSupportRequest{
+		TypeMeta: api.TypeMeta{
+			Kind: string(monitoring.KindTechSupportRequest),
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: name,
+		},
+		Spec: monitoring.TechSupportRequestSpec{
+			Verbosity: 1,
+			NodeSelector: &monitoring.TechSupportRequestSpec_NodeSelectorSpec{
+				Names: nodeNames,
+			},
+		},
+	}
+}
+
+//DownloadTechsupport download techsuport
+func (sm *SysModel) DownloadTechsupport(dir string) error {
+
+	log.Infof("Performing techsuppprt....")
+	var nodeNames []string
+
+	if dir == "" {
+		dir = modelLogsDir
+	}
+	techsupportName := "iota-techsupport"
+	techsupportFileName := techsupportName
+	naples := sm.Naples().Names()
+	nodeNames = append(nodeNames, naples...)
+	for _, vn := range sm.VeniceNodes().Nodes {
+		nodeNames = append(nodeNames, vn.IP())
+	}
+	techsupport := getTechSupportRequest(techsupportName, nodeNames)
+
+	mkdirCmd := []string{"mkdir", "-p", dir}
+
+	if retCode, stdout, err := Utils.RunCmd(mkdirCmd, 0, false, true, nil); err != nil || retCode != 0 {
+		log.Errorf("Failed to create directory %v", stdout)
+		return fmt.Errorf("Failed to create directory  %v", stdout)
+	}
+
+	rmOldTechsupport := []string{"rm", "-f", dir + "/" + techsupportName + "*"}
+
+	if retCode, stdout, err := Utils.RunCmd(rmOldTechsupport, 0, false, true, nil); err != nil || retCode != 0 {
+		log.Errorf("Failed to create directory %v", stdout)
+		return fmt.Errorf("Failed to create directory  %v", stdout)
+	}
+
+	sm.DeleteTechsupport(techsupportName)
+	err := sm.PerformTechsupport(&techsupport)
+	if err != nil {
+		log.Errorf("Error performing tech support %v", err.Error())
+		return fmt.Errorf("Error performing tech support %v", err.Error())
+	}
+
+	bkCtx, cancelFunc := context.WithTimeout(context.Background(), 10*time.Minute)
+	defer cancelFunc()
+L:
+	for {
+
+		select {
+		case <-bkCtx.Done():
+			log.Errorf("Error pulling techsupport, timeout!")
+			return fmt.Errorf("Error pulling techsupport %v, timeout", techsupportName)
+		default:
+			if err := sm.VerifyTechsupport(techsupportName); err == nil {
+				break L
+			}
+			time.Sleep(10 * time.Second)
+		}
+
+	}
+	instanceID, err := sm.GetTechSupportInstanceID(techsupportName)
+	if err != nil {
+		log.Errorf("Error getting techsupport status  %v", err.Error())
+		return fmt.Errorf("Error getting techsupport status %v", err.Error())
+	}
+	sessionIDFile := cookiefile
+	veniceIP := sm.VeniceNodes().Any(1).GenVeniceIPs()[0]
+	loginCmd := `curl -k -d '{"username":"admin", "password":"%s", "tenant":"default"}' -c %s -H "Content-Type: application/json" -X POST 'https://%s/v1/login'`
+	loginCmd = fmt.Sprintf(loginCmd, constants.UserPassword, sessionIDFile, veniceIP)
+
+	if retCode, stdout, err := Utils.RunCmd(strings.Split(loginCmd, " "), 0, false, true, nil); err != nil || retCode != 0 {
+		log.Errorf("Error logging into venice node %v", stdout)
+		return fmt.Errorf("Error logging into venice node %v", stdout)
+	}
+	downloadCmd := `curl -b %s -s -k https://%s/objstore/v1/downloads/all/tenant/default/techsupport/%s --output %s/%s`
+
+	techsupportFileName = techsupportFileName + "-" + strings.Split(instanceID, "-")[0] + ".zip"
+	downloadCmd = fmt.Sprintf(downloadCmd, sessionIDFile, veniceIP, techsupportFileName, dir, techsupportFileName)
+
+	if retCode, stdout, err := Utils.RunCmd(strings.Split(downloadCmd, " "), 0, false, true, nil); err != nil || retCode != 0 {
+		log.Errorf("Error downloading techsupport %v", stdout)
+		return fmt.Errorf("Error logging into venice node %v", stdout)
+	}
+	return nil
+}
+
+var modelLogsDir = fmt.Sprintf("%s/src/github.com/pensando/sw/iota/logs", os.Getenv("GOPATH"))
+var cookiefile = fmt.Sprintf("%s/src/github.com/pensando/sw/iota/logs/cookie.jar", os.Getenv("GOPATH"))
