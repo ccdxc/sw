@@ -3,7 +3,6 @@
 <h1 id="html"> Pensando API Documentation </h3>
 </center>
 
-[Getting Started Guide](gettingStarted.html)
 
 [Sample Postman Collection](examples/Sample.postman_collection.json)
 
