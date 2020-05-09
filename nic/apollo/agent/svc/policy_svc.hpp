@@ -561,8 +561,8 @@ pds_security_profile_proto_to_api_spec (pds_security_profile_spec_t *api_spec,
             pds_proto_action_to_rule_action(proto_spec.defaultfwaction());
     if (api_spec->default_action.fw_action.action ==
             SECURITY_RULE_ACTION_NONE) {
-        // global default action is allow
-        api_spec->default_action.fw_action.action = SECURITY_RULE_ACTION_ALLOW;
+        // global default action is deny
+        api_spec->default_action.fw_action.action = SECURITY_RULE_ACTION_DENY;
     }
     api_spec->tcp_idle_timeout = proto_spec.tcpidletimeout();
     api_spec->udp_idle_timeout = proto_spec.udpidletimeout();

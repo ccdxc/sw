@@ -6,7 +6,7 @@ feature:
     module      : rfc
     runorder    : 15000
     enable      : True
-    ignore      : True
+    ignore      : False
 
 modules:
 
@@ -39,6 +39,7 @@ modules:
     - module         :
         name         : EMPTY_NONE
         spec         : rfc_security_profile_egress.testspec
+        ignore       : True
         iterate      :
             - policy : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFWAction=none
               proto  : TCP
