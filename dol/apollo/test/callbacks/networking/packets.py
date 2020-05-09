@@ -476,6 +476,16 @@ def __get_packet_tuples(pkt):
     logger.info("Retrieved Packet Tuples ", packet_tuples)
     return packet_tuples
 
+def __rule_dump(tc_rule, match_rule):
+    logger.info("TestCase rule for packet ")
+    if tc_rule == None:
+        logger.info("No Rule ")
+    else:
+        tc_rule.Show()
+    if match_rule:
+        logger.info("Final matching rule for packet")
+        match_rule.Show()
+
 def __get_final_result(tc_rule, match_rule, testcase):
     policy = testcase.config.policy
     securityprofile = testcase.config.securityprofile
@@ -494,14 +504,25 @@ def __get_final_result(tc_rule, match_rule, testcase):
     else:
         final_result = types_pb2.SECURITY_RULE_ACTION_DENY
         logger.info(f"Matching to default action: {final_result}")
-    logger.info("TestCase rule for packet ")
-    if tc_rule == None:
-        logger.info("No Rule ")
-    else:
-        tc_rule.Show()
-    if match_rule:
-        logger.info("Final matching rule for packet")
-        match_rule.Show()
+    __rule_dump(tc_rule, match_rule)
+    return final_result
+
+def __match_and_get_final_result(policies, pkt, direction, testcase):
+    packet_tuples = __get_packet_tuples(pkt)
+    tc_rule = testcase.config.tc_rule
+    rules = []
+    for policyid in policies:
+        policyobj = __get_config_object(ObjectTypes.POLICY, policyid)
+        rules = sorted(policyobj.rules, key=lambda x: x.Priority)
+        match_rule = None
+        for rule in rules:
+            if __is_matching_rule(packet_tuples, rule, direction, testcase):
+                match_rule = rule
+                break
+        final_result = __get_final_result(tc_rule, match_rule, testcase)
+        if final_result is types_pb2.SECURITY_RULE_ACTION_DENY:
+            break
+    __rule_dump(tc_rule, match_rule)
     return final_result
 
 def __get_matching_rule(policies, pkt, direction, testcase):
@@ -535,14 +556,18 @@ def __get_security_policies_from_lmapping(lmapping, direction):
     return policies
 
 def GetExpectedCPSPacket(testcase, args):
+    device = testcase.config.devicecfg
     tc_rule = testcase.config.tc_rule
     # get nacl which we selected for testing
     policy = testcase.config.policy
     # get all security policies which needs to be applied
     policies = __get_security_policies_from_lmapping(testcase.config.localmapping, policy.Direction)
     pkt = testcase.packets.Get(args.ipkt).GetScapyPacket()
-    match_rule = __get_matching_rule(policies, pkt, policy.Direction, testcase)
-    final_result = __get_final_result(tc_rule, match_rule, testcase)
+    if device.PolicyAnyDeny:
+        final_result = __match_and_get_final_result(policies, pkt, policy.Direction, testcase)
+    else:
+        match_rule = __get_matching_rule(policies, pkt, policy.Direction, testcase)
+        final_result = __get_final_result(tc_rule, match_rule, testcase)
     if final_result == types_pb2.SECURITY_RULE_ACTION_DENY:
         logger.info("GetExpectedCPSPacket: packet denied")
         return None

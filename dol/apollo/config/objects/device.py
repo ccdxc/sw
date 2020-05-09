@@ -53,6 +53,7 @@ class DeviceObject(base.ConfigObjectBase):
             self.MACAddr = ResmgrClient[node].DeviceMacAllocator.get()
         self.IP = str(self.IPAddr) # For testspec
         self.EncapType = utils.GetEncapType(spec.encap)
+        self.PolicyAnyDeny = getattr(spec, 'any-deny-policy', False)
         self.Mutable = utils.IsUpdateSupported()
 
         ################# PRIVATE ATTRIBUTES OF DEVICE OBJECT #####################
