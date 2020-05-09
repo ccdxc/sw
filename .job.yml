@@ -493,11 +493,19 @@ dependencies:
     - reference: nic/apollo/tools/apulu/sanity/base
   nic/sdk/platform/cfgspace:
     - reference: platform/src/app/pciemgrd
+  nic/sdk/platform/intrutils:
+    - reference: platform/src/app/pciemgrd
   nic/sdk/platform/pciehdevices:
     - reference: platform/src/app/pciemgrd
   nic/sdk/platform/pciemgr:
     - reference: platform/src/app/pciemgrd
   nic/sdk/platform/pciemgrd:
+    - reference: platform/src/app/pciemgrd
+  nic/sdk/platform/pciemgrutils:
+    - reference: platform/src/app/pciemgrd
+  nic/sdk/platform/pcieport:
+    - reference: platform/src/app/pciemgrd
+  nic/sdk/platform/pcietlp:
     - reference: platform/src/app/pciemgrd
   nic/sdk/platform/ncsi:
     - reference: iota/test/standalone/sanity/swm

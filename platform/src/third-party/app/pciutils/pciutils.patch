@@ -257,9 +257,9 @@ diff -uprN pciutils-3.5.6-orig/Makefile pciutils-3.5.6/Makefile
  ls-kernel.o: CFLAGS+=$(LIBKMOD_CFLAGS)
  
 +ifdef PCI_HAVE_PM_PEN_LIBPCIEHOST
-+# expect PEN_TOP, BUILD_ARCH passed in
++# expect PEN_TOP, BUILD_ARCH ASIC passed in
 +PEN_TOP ?= path-to-pensando-topdir
-+LIBPCIEDIR = $(PEN_TOP)/../nic/build/$(BUILD_ARCH)/iris/lib
++LIBPCIEDIR = $(PEN_TOP)/../nic/build/$(BUILD_ARCH)/iris/$(ASIC)/lib
 +LIBPCIE = \
 +	$(LIBPCIEDIR)/libpciemgr.so \
 +	$(LIBPCIEDIR)/libpciemgrutils.so \
