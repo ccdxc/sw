@@ -1,5 +1,14 @@
 <app-pagebody [icon]="bodyicon" header="Cluster Overview">
   <div fxFlex="none" fxLayout="column">
+    <div fxLayout="row wrap" class="cluster-card-container" fxLayoutAlign="stretch stretch">
+      <app-telemetrychartview class="cluster-chart-item"
+                              fxFlex="nogrow"
+                              [hideEditButtons]="true"
+                              [selectedTimeRange]="selectedTimeRange"
+                              [chartConfig]="graphConfig">
+      </app-telemetrychartview>
+      <ng-container *ngTemplateOutlet="nodeTable"></ng-container>
+    </div>
     <div fxFlex="none" fxLayout="row wrap" class="cluster-card-container">
       <ng-container *roleGuard="{req: ['clusterNode_read']}">
         <ng-container *ngFor="let cardData of heroCards">
@@ -18,15 +27,6 @@
           </app-herocard>
         </ng-container>
       </ng-container>
-    </div>
-    <div fxLayout="row wrap" class="cluster-card-container" fxLayoutAlign="stretch stretch">
-      <ng-container *ngTemplateOutlet="nodeTable"></ng-container>
-      <app-telemetrychartview class="cluster-chart-item"
-                              fxFlex="nogrow"
-                              [hideEditButtons]="true"
-                              [selectedTimeRange]="selectedTimeRange"
-                              [chartConfig]="graphConfig">
-      </app-telemetrychartview>
     </div>
   </div>
   <div *roleGuard="{opt: ['monitoringAlert_read', 'eventsevent_read']}" fxFlex
