@@ -93,7 +93,8 @@ pd_enicif_update (pd_if_update_args_t *args)
         }
     } else {
         // Host-Pin or Switch mode
-        if (args->egress_en_change || args->lif_change || args->encap_vlan_change) {
+        if (args->egress_en_change || args->lif_change || args->encap_vlan_change ||
+            args->rx_mirr_change) {
             ret = pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif, args, NULL,
                                                       TABLE_OPER_UPDATE);
             if (ret != HAL_RET_OK) {
@@ -102,7 +103,7 @@ pd_enicif_update (pd_if_update_args_t *args)
             }
         }
 
-        if (args->lif_change) {
+        if (args->lif_change || args->tx_mirr_change) {
             ret = pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif, args, NULL,
                                                       TABLE_OPER_UPDATE);
             if (ret != HAL_RET_OK) {
@@ -1686,6 +1687,7 @@ pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
     copp_t                      *copp               = NULL;
     bool                        copp_en             = 0;
     uint32_t                    copp_hw_id          = 0;
+    uint32_t                    rx_mirr_bmap        = 0;
 
     memset(&data, 0, sizeof(data));
 
@@ -1712,6 +1714,12 @@ pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
         egress_en = (hal_if->enic_type == intf::IF_ENIC_TYPE_USEG ||
                      hal_if->enic_type == intf::IF_ENIC_TYPE_PVLAN) &&
                      hal_if->egress_en;
+    }
+
+    if (args && args->rx_mirr_change) {
+        rx_mirr_bmap = args->rx_mirr_bmap;
+    } else {
+        rx_mirr_bmap = ((if_t *)pd_enicif->pi_if)->programmed_rx_session_id_bitmap;
     }
 
     if (!pd_lif || !egress_en) {
@@ -1812,6 +1820,11 @@ pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
             om_tmoport.nacl_egress_drop_en = nacl_egress_drop_en;
             om_tmoport.apply_copp          = copp_en;
             om_tmoport.copp_index          = copp_hw_id;
+
+            if (rx_mirr_bmap) {
+                om_tmoport.mirror_en = 1;
+                om_tmoport.mirror_session_id = rx_mirr_bmap;
+            }
         }
     }
 
@@ -2149,6 +2162,7 @@ pd_enicif_inp_prop_mac_vlan_form_data (pd_enicif_t *pd_enicif,
     if_t            *hal_if = (if_t *)pd_enicif->pi_if;
     if_t            *uplink = NULL;
     uint8_t         ipsg_en = 0;
+    uint32_t        tx_mirr_bmap = 0;
 
     memset(&data, 0, sizeof(data));
 
@@ -2184,13 +2198,18 @@ pd_enicif_inp_prop_mac_vlan_form_data (pd_enicif_t *pd_enicif,
             nwsec_prof = (nwsec_profile_t *)if_enicif_get_pi_nwsec((if_t *)pd_enicif->pi_if);
         }
 
-
         if (pd_enicif_has_lif(hal_if, args)) {
             ipsg_en = nwsec_prof ? nwsec_prof->ipsg_en : 0;
         }
 
         if (!nwsec_prof) {
             nwsec_prof = find_nwsec_profile_by_id(L4_PROFILE_HOST_DEFAULT);
+        }
+
+        if (args && args->tx_mirr_change) {
+            tx_mirr_bmap = args->tx_mirr_bmap;
+        } else {
+            tx_mirr_bmap = ((if_t *)pd_enicif->pi_if)->programmed_tx_session_id_bitmap;
         }
 
         data.action_id = INPUT_PROPERTIES_MAC_VLAN_INPUT_PROPERTIES_MAC_VLAN_ID;
@@ -2206,6 +2225,7 @@ pd_enicif_inp_prop_mac_vlan_form_data (pd_enicif_t *pd_enicif,
         inp_prop_mac_vlan_data.flow_miss_idx = l2seg_base_oifl_id((l2seg_t*)(pd_l2seg->l2seg), uplink);
         // TODO get info from QOS class
         inp_prop_mac_vlan_data.flow_miss_qos_class_id = 0x2;
+        inp_prop_mac_vlan_data.ingress_mirror_session_id = tx_mirr_bmap;
 
 #if 0
         // Program dst_lport if there is pinning

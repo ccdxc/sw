@@ -235,8 +235,8 @@ typedef struct if_s {
 
     // MirrorSessions related fields
     if_mirror_info_t    mirror_cfg; // from cfg tx & rx mirror sessions
-    uint8_t             tx_mirror_session_id[MAX_MIRROR_SESSION_DEST]; // sw mirr sess id. TODO: Cleanup
-    uint8_t             rx_mirror_session_id[MAX_MIRROR_SESSION_DEST]; // sw mirr sess id. TODO: Cleanup
+    uint32_t            tx_mirror_session_id[MAX_MIRROR_SESSION_DEST]; // sw mirr sess id. TODO: Cleanup
+    uint32_t            rx_mirror_session_id[MAX_MIRROR_SESSION_DEST]; // sw mirr sess id. TODO: Cleanup
     uint8_t             programmed_tx_session_id_bitmap; // hw mirr sess id
     uint8_t             programmed_rx_session_id_bitmap; // hw mirr sess id
     uplink_erspan_direction_t direction; // temp variable for PD commn.
@@ -300,6 +300,14 @@ typedef struct if_update_app_ctxt_s {
             // host-pin: encap vlan change
             bool            encap_vlan_change;
             vlan_id_t       new_encap_vlan;
+
+            // mirror session change
+            bool            tx_mirr_change;
+            bool            rx_mirr_change;
+            uint32_t        tx_mirr_sw_id[MAX_MIRROR_SESSION_DEST];
+            uint32_t        rx_mirr_sw_id[MAX_MIRROR_SESSION_DEST];
+            uint8_t         tx_mirr_bmap;
+            uint8_t         rx_mirr_bmap;
         } __PACK__;
     } __PACK__;
 
@@ -465,6 +473,7 @@ hal_ret_t port_update_type_admin_state(port_type_t port_type,
                                        port_admin_state_t admin_state);
 hal_ret_t if_enic_install_ncsi_nacls(if_t *enic_if, lif_t *lif);
 hal_ret_t if_compute_bw(uint32_t interval);
+uint32_t count_set_bits(uint32_t n);
 
 
 }    // namespace hal

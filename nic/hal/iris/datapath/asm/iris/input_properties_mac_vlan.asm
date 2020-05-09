@@ -70,9 +70,9 @@ input_properties_mac_vlan_common:
     phvwr           p.capri_p4_intrinsic_packet_len, r1
 
     // clear mirror, return
-	seq             c1, d.input_properties_mac_vlan_d.clear_ingresss_mirror, TRUE
-	phvwr.c1.e      p.control_metadata_clear_ingresss_mirror, \
-	                    d.input_properties_mac_vlan_d.clear_ingresss_mirror
+    seq             c1, d.input_properties_mac_vlan_d.clear_ingresss_mirror, TRUE
+    phvwr.c1.e      p.control_metadata_clear_ingresss_mirror, \
+                        d.input_properties_mac_vlan_d.clear_ingresss_mirror
     // skip_flow_update, return
     seq             c2, d.input_properties_mac_vlan_d.skip_flow_update, TRUE
     phvwr.c2.e      p.control_metadata_skip_flow_update, \
@@ -83,6 +83,9 @@ input_properties_mac_vlan_common:
                         d.input_properties_mac_vlan_d.ep_learn_en
     phvwr           p.control_metadata_clear_ingresss_mirror, \
                         d.input_properties_mac_vlan_d.clear_ingresss_mirror
+    or              r1, k.capri_intrinsic_tm_span_session, \
+                        d.input_properties_mac_vlan_d.ingress_mirror_session_id
+    phvwr           p.capri_intrinsic_tm_span_session, r1
 
     // input_properties call
     or              r1, d.input_properties_mac_vlan_d.src_lport, \

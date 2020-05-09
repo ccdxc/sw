@@ -169,6 +169,13 @@ if_init (if_t *hal_if)
         hal_if->acl_list[i]= block_list::factory(sizeof(hal_handle_t));
     }
 
+    for (int i = 0; i < MAX_MIRROR_SESSION_DEST; i++) {
+        hal_if->tx_mirror_session_id[i] = MIRROR_SESSION_ID_INVALID;
+        hal_if->rx_mirror_session_id[i] = MIRROR_SESSION_ID_INVALID;
+    }
+    hal_if->programmed_tx_session_id_bitmap = 0;
+    hal_if->programmed_rx_session_id_bitmap = 0;
+
     return hal_if;
 }
 
@@ -1201,9 +1208,15 @@ if_update_mirror_sessions (if_t *hal_if, if_mirror_info_t *mirror_spec)
     bool             rx_mirror_sessions_update = false;
     if_mirror_info_t saved_mirror_cfg;
 
-    // For now, handle only UPLINK ERSPAN
-    if (hal_if->if_type != intf::IF_TYPE_UPLINK)
+    // For now, handle for UPLINK ERSPAN & WL ERSPAN
+#if 0
+    if (hal_if->if_type != intf::IF_TYPE_UPLINK && 
+        !(hal_if->if_type == intf::IF_TYPE_ENIC &&
+          hal_if->enic_type == intf::IF_ENIC_TYPE_USEG))
+#endif
+    if (hal_if->if_type != intf::IF_TYPE_UPLINK) {
         return HAL_RET_OK;
+    }
 
     // Preserve current sessions for roll-back due to error conditions
     saved_mirror_cfg = hal_if->mirror_cfg;
@@ -1856,21 +1869,21 @@ enic_if_update_check_for_change (InterfaceSpec& spec, if_t *hal_if,
             *has_changed = true;
         }
     } else {
-        if (hal_if->lif_learned) {
+        if (!hal_if->lif_learned) {
+            ret = get_lif_handle_from_spec(spec, &lif_handle);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Failed to find lif. ret: {}", ret);
+                goto end;
+            }
+            if (hal_if->lif_handle != lif_handle) {
+                app_ctxt->lif_change = true;
+                app_ctxt->lif = find_lif_by_handle(lif_handle);
+                *has_changed = true;
+                HAL_TRACE_DEBUG("updating lif hdl from {} -> {}",
+                                hal_if->lif_handle, lif_handle);
+            }
+        } else {
             HAL_TRACE_DEBUG("Lif already learnt. Skipping lif change check");
-            goto end;
-        }
-        ret = get_lif_handle_from_spec(spec, &lif_handle);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Failed to find lif. ret: {}", ret);
-            goto end;
-        }
-        if (hal_if->lif_handle != lif_handle) {
-            app_ctxt->lif_change = true;
-            app_ctxt->lif = find_lif_by_handle(lif_handle);
-            *has_changed = true;
-            HAL_TRACE_DEBUG("updating lif hdl from {} -> {}",
-                            hal_if->lif_handle, lif_handle);
         }
 
         if (hal_if->encap_vlan != if_enic_info.mutable_enic_info()->encap_vlan_id()) {
@@ -1881,6 +1894,63 @@ enic_if_update_check_for_change (InterfaceSpec& spec, if_t *hal_if,
                             hal_if->encap_vlan, app_ctxt->new_encap_vlan);
         }
 
+        // Check for mirror sessions change
+        mirror_session_id_t mirr_hw_id;
+        if (spec.txmirrorsessions_size() != 
+            count_set_bits(hal_if->programmed_tx_session_id_bitmap)) {
+            app_ctxt->tx_mirr_change = true;
+        }
+        for (int i = 0; i < spec.txmirrorsessions_size(); i++) {
+            if (hal_if->tx_mirror_session_id[i] != 
+                spec.txmirrorsessions(i).mirrorsession_id()) {
+                app_ctxt->tx_mirr_change = true;
+            }
+            app_ctxt->tx_mirr_sw_id[i] = spec.txmirrorsessions(i).mirrorsession_id();
+        }
+        if (app_ctxt->tx_mirr_change) {
+            *has_changed = true;
+            for (int i = 0; i < spec.txmirrorsessions_size(); i++) {
+                ret = mirror_session_get_hw_id(app_ctxt->tx_mirr_sw_id[i],
+                                               &mirr_hw_id);
+                if (ret != HAL_RET_OK) {
+                    HAL_TRACE_ERR("Failed to find mirror session for swid: {}. Skip it",
+                                  app_ctxt->tx_mirr_sw_id[i]);
+                    continue;
+                }
+                app_ctxt->tx_mirr_bmap |= (1 << mirr_hw_id);
+            }
+            HAL_TRACE_DEBUG("TX mirror session changed bmap: {} -> {}",
+                            hal_if->programmed_tx_session_id_bitmap,
+                            app_ctxt->tx_mirr_bmap);
+        }
+        // RX Mirror
+        if (spec.rxmirrorsessions_size() != 
+            count_set_bits(hal_if->programmed_rx_session_id_bitmap)) {
+            app_ctxt->rx_mirr_change = true;
+        }
+        for (int i = 0; i < spec.rxmirrorsessions_size(); i++) {
+            if (hal_if->rx_mirror_session_id[i] != 
+                spec.rxmirrorsessions(i).mirrorsession_id()) {
+                app_ctxt->rx_mirr_change = true;
+            }
+            app_ctxt->rx_mirr_sw_id[i] = spec.rxmirrorsessions(i).mirrorsession_id();
+        }
+        if (app_ctxt->rx_mirr_change) {
+            *has_changed = true;
+            for (int i = 0; i < spec.rxmirrorsessions_size(); i++) {
+                ret = mirror_session_get_hw_id(app_ctxt->rx_mirr_sw_id[i],
+                                               &mirr_hw_id);
+                if (ret != HAL_RET_OK) {
+                    HAL_TRACE_ERR("Failed to find mirror session for swid: {}. Skip it",
+                                  app_ctxt->rx_mirr_sw_id[i]);
+                    continue;
+                }
+                app_ctxt->rx_mirr_bmap |= (1 << mirr_hw_id);
+            }
+            HAL_TRACE_DEBUG("RX mirror session changed bmap: {} -> {}",
+                            hal_if->programmed_rx_session_id_bitmap,
+                            app_ctxt->rx_mirr_bmap);
+        }
     }
 
 end:
@@ -2077,6 +2147,17 @@ if_update_check_for_change (InterfaceSpec& spec, if_t *hal_if,
     case intf::IF_TYPE_UPLINK:
         ret = uplink_if_update_check_for_change(spec, hal_if, app_ctxt,
                                                 has_changed);
+        if (has_if_mirror_sessions_changed(hal_if, app_ctxt->mirror_spec,
+                                           UPLINK_ERSPAN_DIRECTION_INGRESS)) {
+            *has_changed = true;
+            HAL_TRACE_DEBUG("RX mirror sessions changed");
+        }
+
+        if (has_if_mirror_sessions_changed(hal_if, app_ctxt->mirror_spec,
+                                           UPLINK_ERSPAN_DIRECTION_EGRESS)) {
+            *has_changed = true;
+            HAL_TRACE_DEBUG("TX mirror sessions changed");
+        }
         break;
     case intf::IF_TYPE_UPLINK_PC:
         ret = uplink_pc_update_check_for_change(spec, hal_if, app_ctxt,
@@ -2100,18 +2181,6 @@ if_update_check_for_change (InterfaceSpec& spec, if_t *hal_if,
         HAL_TRACE_ERR("invalid if type : {}",
                       hal_if->if_type);
         ret = HAL_RET_INVALID_ARG;
-    }
-
-    if (has_if_mirror_sessions_changed(hal_if, app_ctxt->mirror_spec,
-                                       UPLINK_ERSPAN_DIRECTION_INGRESS)) {
-        *has_changed = true;
-        HAL_TRACE_DEBUG("RX mirror sessions changed");
-    }
-
-    if (has_if_mirror_sessions_changed(hal_if, app_ctxt->mirror_spec,
-                                       UPLINK_ERSPAN_DIRECTION_EGRESS)) {
-        *has_changed = true;
-        HAL_TRACE_DEBUG("TX mirror sessions changed");
     }
 
     return ret;
@@ -2179,6 +2248,14 @@ if_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
         pd_if_args.new_encap_vlan = app_ctxt->new_encap_vlan;
         if (app_ctxt->encap_vlan_change) {
             hal_if_clone->encap_vlan = app_ctxt->new_encap_vlan;
+        }
+        if (app_ctxt->tx_mirr_change) {
+            pd_if_args.tx_mirr_change = app_ctxt->tx_mirr_change;
+            pd_if_args.tx_mirr_bmap = app_ctxt->tx_mirr_bmap;
+        }
+        if (app_ctxt->rx_mirr_change) {
+            pd_if_args.rx_mirr_change = app_ctxt->rx_mirr_change;
+            pd_if_args.rx_mirr_bmap = app_ctxt->rx_mirr_bmap;
         }
         break;
     case intf::IF_TYPE_UPLINK:
@@ -2629,6 +2706,17 @@ if_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
                     HAL_ABORT(ret == HAL_RET_OK);
                 }
             }
+
+            if (app_ctxt->tx_mirr_change) {
+                memcpy(intf_clone->tx_mirror_session_id, app_ctxt->tx_mirr_sw_id,
+                       sizeof(app_ctxt->tx_mirr_sw_id));
+                intf_clone->programmed_tx_session_id_bitmap = app_ctxt->tx_mirr_bmap;
+            }
+            if (app_ctxt->rx_mirr_change) {
+                memcpy(intf_clone->rx_mirror_session_id, app_ctxt->rx_mirr_sw_id,
+                       sizeof(app_ctxt->rx_mirr_sw_id));
+                intf_clone->programmed_rx_session_id_bitmap = app_ctxt->rx_mirr_bmap;
+            }
             break;
 
         case intf::IF_TYPE_UPLINK:
@@ -2996,6 +3084,18 @@ if_process_get (if_t *hal_if, InterfaceGetResponse *rsp)
             enic_if_info->mutable_enic_info()->set_encap_vlan_id(hal_if->encap_vlan);
         } else {
             // enic_if_info->mutable_classic_enic_info()->
+        }
+        for (int i = 0; i < MAX_MIRROR_SESSION_DEST; i++) {
+            if (hal_if->tx_mirror_session_id[i] != MIRROR_SESSION_ID_INVALID) {
+                spec->add_txmirrorsessions()->
+                    set_mirrorsession_id(hal_if->tx_mirror_session_id[i]);
+            }
+        }
+        for (int i = 0; i < MAX_MIRROR_SESSION_DEST; i++) {
+            if (hal_if->rx_mirror_session_id[i] != MIRROR_SESSION_ID_INVALID) {
+                spec->add_rxmirrorsessions()->
+                    set_mirrorsession_id(hal_if->rx_mirror_session_id[i]);
+            }
         }
 
     }
@@ -3770,6 +3870,31 @@ enic_if_create (const InterfaceSpec& spec, if_t *hal_if)
     lif = find_lif_by_handle(hal_if->lif_handle);
     if (lif) {
         hal_if->lif_learned = false;
+    }
+
+    // Populate mirror sessions
+    mirror_session_id_t mirr_hw_id;
+    for (int i = 0; i < spec.txmirrorsessions_size(); i++) {
+        hal_if->tx_mirror_session_id[i] = spec.txmirrorsessions(i).mirrorsession_id();
+        ret = mirror_session_get_hw_id(hal_if->tx_mirror_session_id[i],
+                                       &mirr_hw_id);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to find mirror session for swid: {}. Skip it",
+                          hal_if->tx_mirror_session_id[i]);
+            continue;
+        }
+        hal_if->programmed_tx_session_id_bitmap |= (1 << mirr_hw_id);
+    }
+    for (int i = 0; i < spec.rxmirrorsessions_size(); i++) {
+        hal_if->rx_mirror_session_id[i] = spec.rxmirrorsessions(i).mirrorsession_id();
+        ret = mirror_session_get_hw_id(hal_if->rx_mirror_session_id[i],
+                                       &mirr_hw_id);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to find mirror session for swid: {}. Skip it",
+                          hal_if->rx_mirror_session_id[i]);
+            continue;
+        }
+        hal_if->programmed_rx_session_id_bitmap |= (1 << mirr_hw_id);
     }
 
     if (hal_if->enic_type == intf::IF_ENIC_TYPE_USEG ||
@@ -6521,6 +6646,17 @@ if_del_acl (if_t *hal_if, acl_t *acl, if_acl_ref_type_t type)
 
 end:
     return ret;
+}
+
+uint32_t
+count_set_bits(uint32_t n)
+{
+    uint32_t count = 0;
+    while (n) {
+        n &= (n-1);
+        count++;
+    }
+    return count;
 }
 
 //------------------------------------------------------------------------------

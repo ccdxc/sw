@@ -103,6 +103,8 @@ DEFINE_ENUM(export_formats_en, EXPORT_FORMATS)
 #define MAX_MIRROR_SESSION_DEST     8
 #define MAX_DROP_REASON             128
 #define MAX_COLLECTORS_PER_FLOW     4
+#define MIRROR_SESSION_ID_INVALID   0
+
 
 typedef struct telemetry_active_port_get_cb_ctxt_t_ {
     if_t *hal_if;

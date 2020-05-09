@@ -594,8 +594,6 @@ mirror_session_get_hw_id (mirror_session_id_t sw_id,
     mirror_session_t *session = NULL;
     auto ms_ht = g_hal_state->mirror_session_ht();
 
-    HAL_TRACE_DEBUG("Get hw id for Mirror session ID {} ", sw_id);
-
     // check if mirror session exists
     session = (mirror_session_t*)ms_ht->lookup(&sw_id);
     if (session == NULL) {
@@ -609,7 +607,7 @@ mirror_session_get_hw_id (mirror_session_id_t sw_id,
                       sw_id);
         return ret;
     } else {
-        HAL_TRACE_DEBUG("Got hw id {} successfully", *hw_id);
+        HAL_TRACE_DEBUG("Mirror swid: {} => hwid: {}", sw_id, *hw_id);
     }
     return ret;
 }

@@ -56,20 +56,28 @@ TEST_F (arp_track_test, mirror_order1) {
     uint32_t       test_id = 1;
     uint32_t       uplinkif_id1 = UPLINK_IF_ID_OFFSET + test_id,
                    uplinkif_id2 = uplinkif_id1 + 1, uplinkif_id3 = uplinkif_id1 + 2;
+    uint32_t       enic_wl1 = 256;
     uint32_t       tnnl_if_id1 = 100, tnnl_if_id2 = 101;
     uint32_t       up_port1 = PORT_NUM_1, up_port2 = PORT_NUM_2, up_port3 = PORT_NUM_3;
     uint32_t       vrf_id_hp1 = 65;
-    uint32_t       l2seg_id_hp1 = 101;
+    uint32_t       l2seg_id_hp1 = 101, l2seg_id_hp2 = 102;
     uint32_t       src_ip = 0x0a000001;
     uint32_t       ips[2] = {0x0a000002, 0x0a000003};
     uint32_t       sid1 = 1, sid2 = 2, cid1 = 1, cid2 = 2;
     uint32_t       up_ifid[2], ifid_count = 0;
     if_t           *up_if = NULL;
+    uint32_t       host_lifid1 = 68;
+    uint32_t       wl_encap1 = 100;
 
     // Create uplinks
     ASSERT_EQ(create_uplink(uplinkif_id1, up_port1), HAL_RET_OK);
     ASSERT_EQ(create_uplink(uplinkif_id2, up_port2), HAL_RET_OK);
     ASSERT_EQ(create_uplink(uplinkif_id3, up_port3, 0, true), HAL_RET_OK);
+
+    
+    // Create lif
+    ASSERT_EQ(create_lif(host_lifid1, uplinkif_id1, types::LIF_TYPE_HOST,
+                         "eth0"), HAL_RET_OK);
 
     up_if = find_if_by_id(uplinkif_id1);
 
@@ -123,6 +131,50 @@ TEST_F (arp_track_test, mirror_order1) {
 
     // Create Tunnel If
     ASSERT_EQ(create_tunnel(tnnl_if_id1, vrf_id_hp1, src_ip, ips[0]), HAL_RET_OK);
+
+    
+    // Create customer L2seg with wire encap as 8192 
+    up_ifid[0] = uplinkif_id1;
+    up_ifid[1] = uplinkif_id2;
+    ifid_count = 2;
+    ASSERT_EQ(update_l2seg(vrf_id_hp1, l2seg_id_hp2, 102, up_ifid, ifid_count,
+                           l2segment::MulticastFwdPolicy::MULTICAST_FWD_POLICY_FLOOD,
+                           l2segment::BroadcastFwdPolicy::BROADCAST_FWD_POLICY_FLOOD,
+                           false, true), HAL_RET_OK);
+    gtest_enic_t enic1 = {0};
+    enic1.if_id = enic_wl1;
+    enic1.lif_id = host_lifid1;
+    enic1.type = intf::IF_ENIC_TYPE_USEG;
+    enic1.l2seg_id = l2seg_id_hp2;
+    enic1.encap = wl_encap1;
+    enic1.native_l2seg_id = 0;
+    enic1.tx_mirr[0] = sid1;
+    enic1.tx_mirr[1] = sid2;
+    enic1.tx_mirr_count = 2;
+    enic1.rx_mirr[0] = sid1;
+    enic1.rx_mirr[1] = sid2;
+    enic1.rx_mirr_count = 2;
+
+    // Create Enic
+    ASSERT_EQ(update_enic(&enic1, GTEST_CREATE), HAL_RET_OK);
+
+    // Update rx mirr for enic
+    enic1.rx_mirr_count = 1;
+    ASSERT_EQ(update_enic(&enic1, GTEST_UPDATE), HAL_RET_OK);
+
+    enic1.tx_mirr_count = 1;
+    ASSERT_EQ(update_enic(&enic1, GTEST_UPDATE), HAL_RET_OK);
+
+    enic1.tx_mirr_count = 2;
+    enic1.rx_mirr_count = 2;
+    ASSERT_EQ(update_enic(&enic1, GTEST_UPDATE), HAL_RET_OK);
+
+    enic1.tx_mirr_count = 0;
+    enic1.rx_mirr_count = 0;
+    ASSERT_EQ(update_enic(&enic1, GTEST_UPDATE), HAL_RET_OK);
+
+    // Create WL EP
+    // ASSERT_EQ(create_ep(vrf_id_hp1, l2seg_id_hp1, enic_wl1, 0x000020002001), HAL_RET_OK);
 
     // For halctl cli
     // sleep(1000);

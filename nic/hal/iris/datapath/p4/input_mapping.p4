@@ -310,7 +310,8 @@ action input_properties_mac_vlan(vrf, dir, mdest_flow_miss_action,
                                  tunnel_rewrite_index, tunnel_vnid,
                                  tunnel_originate, mirror_on_drop_en,
                                  mirror_on_drop_session_id, skip_flow_update,
-                                 ep_learn_en, clear_ingresss_mirror) {
+                                 ep_learn_en, clear_ingresss_mirror,
+                                 ingress_mirror_session_id) {
     adjust_lkp_fields();
     modify_field(control_metadata.src_lif, capri_intrinsic.lif);
 
@@ -330,6 +331,8 @@ action input_properties_mac_vlan(vrf, dir, mdest_flow_miss_action,
     modify_field(control_metadata.ep_learn_en, ep_learn_en);
     // modify_field(rewrite_metadata.rewrite_index, rewrite_index);
     modify_field(flow_miss_metadata.tunnel_originate, tunnel_originate);
+    bit_or(capri_intrinsic.tm_span_session, capri_intrinsic.tm_span_session,
+           ingress_mirror_session_id);
 
     input_properties(vrf, vrf, dir, flow_miss_qos_class_id,
                      flow_miss_idx, ipsg_enable,

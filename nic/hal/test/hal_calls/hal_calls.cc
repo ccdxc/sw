@@ -275,6 +275,41 @@ create_enic(uint32_t if_id, uint32_t lif_id, intf::IfEnicType type,
 }
 
 hal_ret_t
+update_enic(gtest_enic_t *enic, gtest_oper_t oper)
+{
+    hal_ret_t           ret;
+    InterfaceSpec       enicif_spec;
+    InterfaceResponse   enicif_rsp;
+
+    enicif_spec.set_type(intf::IF_TYPE_ENIC);
+    enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(enic->lif_id);
+    enicif_spec.mutable_key_or_handle()->set_interface_id(enic->if_id);
+    enicif_spec.mutable_if_enic_info()->set_enic_type(enic->type);
+    if (enic->type == intf::IF_ENIC_TYPE_CLASSIC) {
+        enicif_spec.mutable_if_enic_info()->mutable_classic_enic_info()->
+            set_native_l2segment_id(enic->native_l2seg_id);
+    } else {
+        enicif_spec.mutable_if_enic_info()->mutable_enic_info()->mutable_l2segment_key_handle()->set_segment_id(enic->l2seg_id);
+        enicif_spec.mutable_if_enic_info()->mutable_enic_info()->set_encap_vlan_id(enic->encap);
+    }
+    for (int i = 0; i < enic->tx_mirr_count; i++) {
+        enicif_spec.add_txmirrorsessions()->set_mirrorsession_id(enic->tx_mirr[i]);
+    }
+    for (int i = 0; i < enic->rx_mirr_count; i++) {
+        enicif_spec.add_rxmirrorsessions()->set_mirrorsession_id(enic->rx_mirr[i]);
+    }
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    if (oper == GTEST_CREATE) {
+        ret = hal::interface_create(enicif_spec, &enicif_rsp);
+    } else {
+        ret = hal::interface_update(enicif_spec, &enicif_rsp);
+    }
+    hal::hal_cfg_db_close();
+    return ret;
+}
+
+
+hal_ret_t
 delete_enic (uint32_t if_id)
 {
     hal_ret_t                ret;
@@ -322,6 +357,28 @@ create_ep(uint32_t vrf_id, uint32_t l2seg_id, uint32_t if_id, uint64_t mac,
         ep_spec.mutable_endpoint_attrs()->add_ip_address();
         ep_spec.mutable_endpoint_attrs()->mutable_ip_address(i)->set_ip_af(types::IP_AF_INET);
         ep_spec.mutable_endpoint_attrs()->mutable_ip_address(i)->set_v4_addr(ip[i]);
+    }
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::endpoint_create(ep_spec, &ep_rsp);
+    hal::hal_cfg_db_close();
+    return ret;
+}
+
+hal_ret_t
+create_ep (gtest_ep_t *ep)
+{
+    hal_ret_t ret;
+    EndpointSpec             ep_spec;
+    EndpointResponse         ep_rsp;
+
+    ep_spec.mutable_vrf_key_handle()->set_vrf_id(ep->vrf_id);
+    ep_spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_segment_id(ep->l2seg_id);
+    ep_spec.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_interface_id(ep->if_id);
+    ep_spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(ep->mac);
+    for (uint32_t i = 0; i < ep->ip_count; i++) {
+        ep_spec.mutable_endpoint_attrs()->add_ip_address();
+        ep_spec.mutable_endpoint_attrs()->mutable_ip_address(i)->set_ip_af(types::IP_AF_INET);
+        ep_spec.mutable_endpoint_attrs()->mutable_ip_address(i)->set_v4_addr(ep->ip[i]);
     }
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::endpoint_create(ep_spec, &ep_rsp);

@@ -581,6 +581,10 @@ typedef struct pd_if_update_args_s {
                 lif_t           *new_lif;
                 bool            encap_vlan_change;
                 vlan_id_t       new_encap_vlan;
+                bool            tx_mirr_change;
+                uint32_t        tx_mirr_bmap;
+                bool            rx_mirr_change;
+                uint32_t        rx_mirr_bmap;
             } __PACK__;
         } __PACK__;
     } __PACK__;
