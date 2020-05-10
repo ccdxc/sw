@@ -12,6 +12,7 @@
 #include "intrutilspd.h"
 
 void
-intrpd_hwinit(void)
+intrpd_hwinit(const u_int32_t clock_freq)
 {
+    intrpd_coal_init(clock_freq);
 }

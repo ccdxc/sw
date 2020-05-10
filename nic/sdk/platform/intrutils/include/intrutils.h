@@ -105,8 +105,6 @@ void intr_state_get(const int intr, intr_state_t *st);
 void intr_state_set(const int intr, intr_state_t *st);
 
 /* interrupt coalescing */
-void intr_coal_set_resolution(const int ticks);
-int intr_coal_get_resolution(void);
 int intr_coal_get_params(int *mul, int *div);
 
 /*
@@ -131,7 +129,7 @@ void intr_reset_dev(const int intrb, const int intrc, const int dmask);
 
 void intr_reset_pba(const int intrb, const int intrc);
 
-void intr_hwinit(void);
+void intr_hwinit(const u_int32_t clock_freq);
 
 #ifdef __cplusplus
 }

@@ -18,7 +18,8 @@ extern "C" {
 #define ASIC_(REG)              ELB_ ##REG
 #define INTR_BASE               ASIC_(ADDR_BASE_INTR_INTR_OFFSET)
 
-void intrpd_hwinit(void);
+void intrpd_hwinit(const u_int32_t clock_freq);
+void intrpd_coal_init(const u_int32_t clock_freq);
 
 #ifdef __cplusplus
 }

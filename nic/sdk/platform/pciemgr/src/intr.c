@@ -83,5 +83,7 @@ pciehw_intr_init(pciehwdev_t *phwdev)
 void
 pciehw_intrhw_init(void)
 {
-    intr_hwinit();
+    const pciemgr_params_t *params = pciehw_get_params();
+
+    intr_hwinit(params->clock_freq);
 }

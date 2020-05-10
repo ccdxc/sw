@@ -30,23 +30,9 @@ intr_cfg_legacy_intx(void)
     pal_reg_wr32w(pa, w, NWORDS(w));
 }
 
-static void
-intr_cfg_coalesce_resolution(const int res)
-{
-    const uint64_t pa =
-        (INTR_BASE + CAP_INTR_CSR_CFG_INTR_COALESCE_BYTE_ADDRESS);
-
-    pal_reg_wr32(pa, res);
-}
-
 void
-intrpd_hwinit(void)
+intrpd_hwinit(const u_int32_t clock_freq)
 {
     intr_cfg_legacy_intx();
-    if (!pal_is_asic()) {
-        intr_cfg_coalesce_resolution(83);
-    } else {
-        /* set 3.0us resolution */
-        intr_coal_set_resolution(2500);
-    }
+    intrpd_coal_init(clock_freq);
 }

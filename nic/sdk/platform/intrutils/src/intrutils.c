@@ -503,7 +503,7 @@ intr_reset_dev(const int intrb, const int intrc, const int dmask)
  * One-time hardware initialization.
  */
 void
-intr_hwinit(void)
+intr_hwinit(const u_int32_t clock_freq)
 {
-    intrpd_hwinit();
+    intrpd_hwinit(clock_freq);
 }

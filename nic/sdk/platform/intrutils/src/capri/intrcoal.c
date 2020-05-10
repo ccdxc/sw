@@ -5,33 +5,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <unistd.h>
-#include <inttypes.h>
 
 #include "platform/pal/include/pal.h"
 #include "platform/intrutils/include/intrutils.h"
 #include "intrutilspd.h"
-
-#define INTR_BASE               ASIC_(ADDR_BASE_INTR_INTR_OFFSET)
-
-#define INTR_COALESCE_OFFSET    ASIC_(INTR_CSR_CFG_INTR_COALESCE_BYTE_OFFSET)
-#define INTR_COALESCE_BASE      (INTR_BASE + INTR_COALESCE_OFFSET)
-
-void
-intr_coal_set_resolution(const int ticks)
-{
-    const u_int64_t pa = INTR_COALESCE_BASE;
-
-    pal_reg_wr32(pa, ticks);
-}
-
-int
-intr_coal_get_resolution(void)
-{
-    const u_int64_t pa = INTR_COALESCE_BASE;
-
-    return pal_reg_rd32(pa);
-}
 
 /*
  * The driver wants to convert from microseconds units of interrupt
@@ -57,8 +36,9 @@ intr_coal_get_resolution(void)
  *
  *     Cpu clock rate is 833333333 MHz.
  *     One cpu clock cycle is 1/833333333s, or 1/833.333333us.
- *     For resolution R,   ticks = R * (1/833.333333).
- *     For resolution 3us, ticks = 3 * (1/833.333333) = 2500.
+ *     For resolution R,   ticks = R / (1/833.333333).
+ *     For resolution R,   ticks = R * 833.333333.
+ *     For resolution 3us, ticks = 3 * 833.333333 = 2500.
  *
  * ================
  * mul, div
@@ -73,10 +53,37 @@ intr_coal_get_resolution(void)
  * (some OS's don't support floating point math in kernel mode).
  * For R=1.5us, the ratio is 1/1.5, or 2/3 to allow for integer math.
  */
+
+#define INTR_BASE               ASIC_(ADDR_BASE_INTR_INTR_OFFSET)
+
+#define INTR_COALESCE_OFFSET    ASIC_(INTR_CSR_CFG_INTR_COALESCE_BYTE_OFFSET)
+#define INTR_COALESCE_BASE      (INTR_BASE + INTR_COALESCE_OFFSET)
+
+static int
+intr_coal_get_resolution_ticks(void)
+{
+    const u_int64_t pa = INTR_COALESCE_BASE;
+    return pal_reg_rd32(pa);
+}
+
+static void
+intr_coal_set_resolution_ticks(const uint32_t ticks)
+{
+    const u_int64_t pa = INTR_COALESCE_BASE;
+    pal_reg_wr32(pa, ticks);
+}
+
+void
+intr_coal_set_resolution_ns(const uint32_t clock_freq, const uint32_t ns)
+{
+    uint32_t ticks = (ns * (clock_freq / 1000000)) / 1000;
+    intr_coal_set_resolution_ticks(ticks);
+}
+
 int
 intr_coal_get_params(int *mul, int *div)
 {
-    const int res = intr_coal_get_resolution();
+    const int res = intr_coal_get_resolution_ticks();
     int r = 0;
 
     switch (res) {
@@ -91,14 +98,17 @@ intr_coal_get_params(int *mul, int *div)
             r = -1;
         }
         break;
+    case 625:  /* 1.5us at 416 MHz */
     case 1250: /* 1.5us */
         *mul = 2;
         *div = 3;
         break;
+    case 1251: /* 3us at 416 MHz */
     case 2500: /* 3us */
         *mul = 1;
         *div = 3;
         break;
+    case 4151: /* 10us at 416 MHz */
     case 8300: /* 10us */
         *mul = 1;
         *div = 10;
@@ -114,4 +124,20 @@ intr_coal_get_params(int *mul, int *div)
         break;
     }
     return r;
+}
+
+void
+intrpd_coal_init(const u_int32_t clock_freq)
+{
+    if (!pal_is_asic()) {
+        intr_coal_set_resolution_ticks(83);
+    } else {
+        /* set 3.0us resolution */
+        if (clock_freq == 416666666) {
+            /* use the low-order bit0=1 to distinguish 416 MHz */
+            intr_coal_set_resolution_ticks(1251);
+        } else {
+            intr_coal_set_resolution_ticks(2500);
+        }
+    }
 }
