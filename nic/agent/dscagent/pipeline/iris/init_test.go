@@ -43,6 +43,9 @@ var (
 // Implements InfraAPI that return errors for testing
 type badInfraAPI struct{}
 
+// MgmtIP is the global mgmt IP for tests
+var MgmtIP string
+
 func findMgmtIP(destIP string) (mgmtIP string, mgmtLink netlink.Link, mgmtIntf *net.Interface, err error) {
 	rts, err := netlink.RouteGet(net.ParseIP(destIP))
 	if err != nil {
@@ -102,7 +105,7 @@ func TestMain(m *testing.M) {
 		os.Exit(1)
 	}
 
-	_, mgmtLink, mgmtIntf, err := findMgmtIP("42.42.42.42")
+	ip, mgmtLink, mgmtIntf, err := findMgmtIP("42.42.42.42")
 	if err != nil {
 		log.Errorf("Failed to find Mgmt IP %v", err)
 		mockHal.Stop()
@@ -115,6 +118,7 @@ func TestMain(m *testing.M) {
 		mockHal.Stop()
 		os.Exit(1)
 	}
+	MgmtIP = ip
 	ArpClient = client
 	MgmtLink = mgmtLink
 	go ResolveWatch()
