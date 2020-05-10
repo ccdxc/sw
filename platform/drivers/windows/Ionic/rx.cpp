@@ -5,8 +5,8 @@ static bool ionic_rx_clean(struct queue *q,
                            struct desc_info *desc_info,
                            struct cq_info *cq_info,
                            void *cb_arg,
-                           void *packets_to_indicate,
-                           void *last_packet);
+                           PNET_BUFFER_LIST *packets_to_indicate,
+                           PNET_BUFFER_LIST *last_packet);
 
 static ULONG_PTR ndis_hash_type[16] = {
     0,
@@ -272,8 +272,25 @@ ionic_get_next_rxq_pkt(struct lif *lif)
 }
 
 void
-ionic_return_rxq_pkt(struct lif *lif, struct rxq_pkt *rxq_pkt)
+_ionic_return_rxq_pkt(struct lif *lif, struct rxq_pkt *rxq_pkt)
 {
+    PMDL mdl = NET_BUFFER_FIRST_MDL(rxq_pkt->packet);
+
+    // reset oob data per mbl in case it was used for rsc
+    NET_BUFFER_LIST_COALESCED_SEG_COUNT(rxq_pkt->parent_nbl) = 0;
+    NET_BUFFER_LIST_DUP_ACK_COUNT(rxq_pkt->parent_nbl) = 0;
+
+    // readjust mdl in case it was used for rsc
+    mdl->StartVa = (void *)((char *)mdl->StartVa - rxq_pkt->rsc_off);
+    mdl->ByteOffset -= rxq_pkt->rsc_off;
+    mdl->ByteCount -= rxq_pkt->rsc_off;
+    mdl->Next = NULL;
+
+    // reset the rsc info
+    rxq_pkt->rsc_off = 0;
+    rxq_pkt->rsc_last_mdl = NULL;
+    rxq_pkt->rsc_next = NULL;
+
 #ifdef DBG
 	LARGE_INTEGER start = {0,0};
 	
@@ -294,6 +311,22 @@ ionic_return_rxq_pkt(struct lif *lif, struct rxq_pkt *rxq_pkt)
 #endif
 
     return;
+}
+
+void
+ionic_return_rxq_pkt(struct lif *lif, struct rxq_pkt *rxq_pkt)
+{
+
+    while (rxq_pkt->rsc_next != NULL) {
+        struct rxq_pkt *rsc_pkt = rxq_pkt->rsc_next;
+
+        rxq_pkt->rsc_next = rsc_pkt->rsc_next;
+        rsc_pkt->rsc_next = NULL;
+
+        _ionic_return_rxq_pkt(lif, rsc_pkt);
+    }
+
+    _ionic_return_rxq_pkt(lif, rxq_pkt);
 }
 
 NDIS_STATUS
@@ -366,15 +399,419 @@ err_mdl_alloc_failed:
     return status;
 }
 
+enum ionic_rsc_result {
+    IONIC_RSC_MERGE,    // same flow, merged into prior packet
+    IONIC_RSC_REPLACE,  // same flow, not merged
+    IONIC_RSC_COLLIDE,  // same hash but not same flow
+    IONIC_RSC_IGNORE,   // not eligible for rsc
+};
+
+static enum ionic_rsc_result
+_ionic_do_rsc(struct qcq *qcq,
+             PNET_BUFFER_LIST nbl,
+             PNET_BUFFER_LIST last_nbl)
+{
+    struct dev_rx_ring_stats *rx_stats = qcq->rx_stats;
+    PNET_BUFFER nb = NET_BUFFER_LIST_FIRST_NB(nbl);
+    PNET_BUFFER last_nb = NET_BUFFER_LIST_FIRST_NB(last_nbl);
+    struct rxq_pkt *pkt = NULL, *last_pkt = NULL;
+    struct tcphdr *tcp = NULL, *last_tcp = NULL;
+    struct ipv4hdr *ipv4 = NULL, *last_ipv4 = NULL;
+    struct ipv6hdr *ipv6 = NULL, *last_ipv6 = NULL;
+    struct ethhdr_vlan *eth = NULL, *last_eth = NULL;
+    char *buf = NULL, *last_buf = NULL;
+    ULONG off = 0, eth_hlen = 0, ip_hlen = 0, tcp_hlen = 0;
+    ULONG shorten = 0, lengthen = 0;
+    PMDL mdl = NULL, last_mdl = NULL;
+
+    // likely same flow, hint to prefetch headers
+
+    mdl = NET_BUFFER_CURRENT_MDL(nb);
+    buf = (char*)MmGetSystemAddressForMdlSafe(mdl, NormalPagePriority);
+
+    PreFetchCacheLine(PF_TEMPORAL_LEVEL_1, buf);
+    PreFetchCacheLine(PF_TEMPORAL_LEVEL_1, buf + 64);
+
+    last_mdl = NET_BUFFER_CURRENT_MDL(last_nb);
+    last_buf = (char*)MmGetSystemAddressForMdlSafe(last_mdl, NormalPagePriority);
+
+    PreFetchCacheLine(PF_TEMPORAL_LEVEL_1, last_buf);
+    PreFetchCacheLine(PF_TEMPORAL_LEVEL_1, last_buf + 64);
+
+    // must be same vlan
+    if (NDIS_GET_NET_BUFFER_LIST_VLAN_ID(nbl) !=
+        NDIS_GET_NET_BUFFER_LIST_VLAN_ID(last_nbl)) {
+        DbgTrace((TRACE_COMPONENT_RSC, TRACE_LEVEL_VERBOSE,
+            "%s rsc not same vlan\n", __FUNCTION__));
+        return IONIC_RSC_COLLIDE;
+    }
+
+    // resolve and compare packet headers
+
+    eth = (struct ethhdr_vlan *)buf;
+    last_eth = (struct ethhdr_vlan*)last_buf;
+
+    // compare eth src and dest
+    if (memcmp(buf, last_buf, 12)) {
+        DbgTrace((TRACE_COMPONENT_RSC, TRACE_LEVEL_VERBOSE,
+            "%s rsc not same ether addr\n", __FUNCTION__));
+        return IONIC_RSC_COLLIDE;
+    }
+
+    // resolve ip headers
+    if (eth->h_proto == ETH_P_IPv4_LE && last_eth->h_proto == ETH_P_IPv4_LE) {
+        off += ETH_HLEN;
+        ipv4 = (struct ipv4hdr *)(buf + off);
+        last_ipv4 = (struct ipv4hdr *)(last_buf + off);
+    } else if (eth->h_proto == ETH_P_IPv6_LE && last_eth->h_proto == ETH_P_IPv6_LE) {
+        off += ETH_HLEN;
+        ipv6 = (struct ipv6hdr *)(buf + off);
+        last_ipv6 = (struct ipv6hdr*)(last_buf + off);
+    } else if (eth->h_proto == ETH_P_8021Q_LE && last_eth->h_proto == ETH_P_8021Q_LE &&
+               eth->vh_proto == ETH_P_IPv4_LE && eth->vh_proto == ETH_P_IPv4_LE) {
+        off += VLAN_ETH_HLEN;
+        ipv4 = (struct ipv4hdr*)(buf + off);
+        last_ipv4 = (struct ipv4hdr*)(last_buf + off);
+    } else if (eth->h_proto == ETH_P_8021Q_LE && last_eth->h_proto == ETH_P_8021Q_LE &&
+               eth->vh_proto == ETH_P_IPv6_LE && eth->vh_proto == ETH_P_IPv6_LE) {
+        off += VLAN_ETH_HLEN;
+        ipv6 = (struct ipv6hdr*)(buf + off);
+        last_ipv6 = (struct ipv6hdr*)(last_buf + off);
+    } else {
+        DbgTrace((TRACE_COMPONENT_RSC, TRACE_LEVEL_VERBOSE,
+            "%s rsc not iphdr %#lx %#lx\n", __FUNCTION__, eth->h_proto, last_eth->h_proto));
+        return IONIC_RSC_IGNORE;
+    }
+
+    eth_hlen = off;
+
+    // compare ip headers, resolve tcp headers
+    if (ipv4) {
+        ULONG ipv4_hlen = 4 * ipv4->ihl;
+        if (ipv4_hlen < 20) {
+            DbgTrace((TRACE_COMPONENT_RSC, TRACE_LEVEL_VERBOSE,
+                "%s rsc ipv4 invalid ihl %ul\n", __FUNCTION__, ipv4->ihl));
+            return IONIC_RSC_IGNORE;
+        }
+        // next is tcp
+        if (ipv4->protocol != IPPROTO_TCP || last_ipv4->protocol != IPPROTO_TCP) {
+            DbgTrace((TRACE_COMPONENT_RSC, TRACE_LEVEL_VERBOSE,
+                "%s rsc ipv4 not proto tcp\n", __FUNCTION__));
+            return IONIC_RSC_IGNORE;
+        }
+        // ver, ihl, dscp, ecn
+        if (memcmp(buf + off, last_buf + off, 2)) {
+            DbgTrace((TRACE_COMPONENT_RSC, TRACE_LEVEL_VERBOSE,
+                "%s rsc ipv4 not same ver, ihl, dscp, ecn\n", __FUNCTION__));
+            return IONIC_RSC_COLLIDE;
+        }
+        // src dest addr, options
+        if (memcmp(buf + off + 12, last_buf + off + 12, ipv4_hlen - 12)) {
+            DbgTrace((TRACE_COMPONENT_RSC, TRACE_LEVEL_VERBOSE,
+                "%s rsc ipv4 not same addr, options\n", __FUNCTION__));
+            return IONIC_RSC_COLLIDE;
+        }
+        // resolve tcp header
+        off += ipv4_hlen;
+        tcp = (struct tcphdr *)(buf + off);
+        last_tcp = (struct tcphdr*)(last_buf + off);
+    } else if (ipv6) {
+        // next header is tcp (not supporting ipv6 extension headers)
+        if (ipv6->nexthdr != IPPROTO_TCP || last_ipv6->nexthdr != IPPROTO_TCP) {
+            DbgTrace((TRACE_COMPONENT_RSC, TRACE_LEVEL_VERBOSE,
+                "%s rsc ipv6 not nexthdr tcp\n", __FUNCTION__));
+            return IONIC_RSC_IGNORE;
+        }
+        // ver, tc, flow
+        if (memcmp(buf + off, last_buf + off, 4)) {
+            DbgTrace((TRACE_COMPONENT_RSC, TRACE_LEVEL_VERBOSE,
+                "%s rsc ipv6 not same ver, tc, flow\n", __FUNCTION__));
+            return IONIC_RSC_COLLIDE;
+        }
+        // src dest addr, extension headers
+        if (memcmp(buf + off + 8, last_buf + off + 8, 32)) {
+            DbgTrace((TRACE_COMPONENT_RSC, TRACE_LEVEL_VERBOSE,
+                "%s rsc ipv6 not same addr\n", __FUNCTION__));
+            return IONIC_RSC_COLLIDE;
+        }
+        // resolve tcp header
+        off += 40;
+        tcp = (struct tcphdr*)(buf + off);
+        last_tcp = (struct tcphdr*)(last_buf + off);
+    } else {
+        DbgTrace((TRACE_COMPONENT_RSC, TRACE_LEVEL_VERBOSE,
+            "%s rsc not ipv4 or ipv6 BUG\n", __FUNCTION__));
+        return IONIC_RSC_IGNORE;
+    }
+
+    ip_hlen = off - eth_hlen;
+
+    // no options, nothing urgent
+    if (tcp->doff != 5 || last_tcp->doff != 5 ||
+        tcp->urg || tcp->urg_ptr || last_tcp->urg || last_tcp->urg_ptr) {
+        DbgTrace((TRACE_COMPONENT_RSC, TRACE_LEVEL_VERBOSE,
+            "%s rsc tcp options or urgent\n", __FUNCTION__));
+        return IONIC_RSC_IGNORE;
+    }
+
+    // tcp src dst ports
+    if (memcmp(buf + off, last_buf + off, 4)) {
+        DbgTrace((TRACE_COMPONENT_RSC, TRACE_LEVEL_VERBOSE,
+            "%s rsc tcp not same ports\n", __FUNCTION__));
+        return IONIC_RSC_COLLIDE;
+    }
+
+    off += 20;
+    tcp_hlen = 20;
+
+    // next in seq
+    if (ntohl(tcp->seq) != ntohl(last_tcp->seq) + NET_BUFFER_DATA_LENGTH(last_nb) - off) {
+        DbgTrace((TRACE_COMPONENT_RSC, TRACE_LEVEL_VERBOSE,
+            "%s rsc tcp not same seq\n", __FUNCTION__));
+        return IONIC_RSC_REPLACE;
+    }
+
+    // non-decreasing ack
+    if (ntohl(tcp->ack_seq) - ntohl(last_tcp->ack_seq) >= 0x80000000ul) {
+        DbgTrace((TRACE_COMPONENT_RSC, TRACE_LEVEL_VERBOSE,
+            "%s rsc tcp invalid ack\n", __FUNCTION__));
+        return IONIC_RSC_REPLACE;
+    }
+
+    // avoid overflowing ip length
+    if (NET_BUFFER_DATA_LENGTH(last_nb) + NET_BUFFER_DATA_LENGTH(nb) >= 0xffff) {
+        DbgTrace((TRACE_COMPONENT_RSC, TRACE_LEVEL_VERBOSE,
+            "%s rsc max packets already coalesced\n", __FUNCTION__));
+        return IONIC_RSC_REPLACE;
+    }
+
+    lengthen = NET_BUFFER_DATA_LENGTH(nb) - off;
+
+    // validate and update the IP length field
+    if (last_ipv4) {
+        ULONG ipv4_len = 0, last_ipv4_len = 0;
+
+        ipv4_len = ntohs(ipv4->tot_len);
+        if (NET_BUFFER_DATA_LENGTH(nb) - ipv4_len - eth_hlen > 64) {
+            DbgTrace((TRACE_COMPONENT_RSC, TRACE_LEVEL_VERBOSE,
+                "%s bogus nb ipv4 len %lu packet len %lu\n",
+                __FUNCTION__, ipv4_len, NET_BUFFER_DATA_LENGTH(nb)));
+            return IONIC_RSC_REPLACE;
+        }
+
+        last_ipv4_len = ntohs(last_ipv4->tot_len);
+        if (NET_BUFFER_DATA_LENGTH(last_nb) - last_ipv4_len - eth_hlen > 64) {
+            DbgTrace((TRACE_COMPONENT_RSC, TRACE_LEVEL_VERBOSE,
+                "%s bogus nb ipv4 len %lu packet len %lu\n",
+                __FUNCTION__, last_ipv4_len, NET_BUFFER_DATA_LENGTH(last_nb)));
+            return IONIC_RSC_REPLACE;
+        }
+
+        // truncate any padding in the first packet
+        shorten = NET_BUFFER_DATA_LENGTH(last_nb) - last_ipv4_len - eth_hlen;
+        DbgTrace((TRACE_COMPONENT_RSC, TRACE_LEVEL_VERBOSE,
+            "%s first packet pad length %lu ipv4 len %lu packet len %lu\n",
+            __FUNCTION__, shorten, last_ipv4_len, NET_BUFFER_DATA_LENGTH(last_nb)));
+
+        // update ip len with payload to be added
+        last_ipv4->tot_len = htons(last_ipv4_len + ipv4_len - ip_hlen - tcp_hlen);
+    }
+    else if (last_ipv6) {
+        ULONG ipv6_len = 0, last_ipv6_len = 0;
+
+        ipv6_len = ntohs(ipv6->payload_len);
+        if (NET_BUFFER_DATA_LENGTH(nb) - ipv6_len - ip_hlen - eth_hlen > 64) {
+            DbgTrace((TRACE_COMPONENT_RSC, TRACE_LEVEL_VERBOSE,
+                "%s bogus nb ipv6 len %lu packet len %lu\n",
+                __FUNCTION__, ipv6_len, NET_BUFFER_DATA_LENGTH(nb)));
+            return IONIC_RSC_REPLACE;
+        }
+
+        last_ipv6_len = ntohs(last_ipv6->payload_len);
+        if (NET_BUFFER_DATA_LENGTH(last_nb) - last_ipv6_len - ip_hlen - eth_hlen > 64) {
+            DbgTrace((TRACE_COMPONENT_RSC, TRACE_LEVEL_VERBOSE,
+                "%s bogus nb ipv6 len %lu packet len %lu\n",
+                __FUNCTION__, last_ipv6_len, NET_BUFFER_DATA_LENGTH(last_nb)));
+            return IONIC_RSC_REPLACE;
+        }
+
+        // truncate any padding in the first packet
+        shorten = NET_BUFFER_DATA_LENGTH(last_nb) - last_ipv6_len - ip_hlen - eth_hlen;
+        DbgTrace((TRACE_COMPONENT_RSC, TRACE_LEVEL_VERBOSE,
+            "%s first packet pad length %lu\n", __FUNCTION__, shorten));
+
+        // update ip len with payload to be added
+        last_ipv6->payload_len = htons(last_ipv6_len + ipv6_len - tcp_hlen);
+    }
+
+    // YES we will RSC these packets...
+
+    DbgTrace((TRACE_COMPONENT_RSC, TRACE_LEVEL_VERBOSE,
+        "%s rsc yes we will rsc\n", __FUNCTION__));
+
+    if (NET_BUFFER_LIST_COALESCED_SEG_COUNT(last_nbl) == 0) {
+        ++rx_stats->rsc_events;
+        ++rx_stats->rsc_packets;
+        ++NET_BUFFER_LIST_COALESCED_SEG_COUNT(last_nbl);
+    }
+    ++rx_stats->rsc_packets;
+    ++NET_BUFFER_LIST_COALESCED_SEG_COUNT(last_nbl);
+
+    if (tcp->ack == last_tcp->ack) {
+        ++NET_BUFFER_LIST_DUP_ACK_COUNT(last_nbl);
+    } else {
+        last_tcp->ack = tcp->ack;
+    }
+
+    pkt = *(struct rxq_pkt**)NET_BUFFER_MINIPORT_RESERVED(nb);
+    last_pkt = *(struct rxq_pkt**)NET_BUFFER_MINIPORT_RESERVED(last_nb);
+
+    // remember to return rsc'd pkts to the pool
+    pkt->rsc_next = last_pkt->rsc_next;
+    last_pkt->rsc_next = pkt;
+
+    // append to mdl chain
+    if (last_pkt->rsc_last_mdl) {
+        last_mdl = last_pkt->rsc_last_mdl;
+    }
+    last_pkt->rsc_last_mdl = mdl;
+    last_mdl->Next = mdl;
+
+    // Truncate first packet, append payload length
+    last_mdl->ByteCount -= shorten;
+    NET_BUFFER_DATA_LENGTH(last_nb) += lengthen - shorten;
+
+#ifdef IONIC_MDL_STRIP
+    // strip header from second packet by advancing start of mdl
+
+    DbgTrace((TRACE_COMPONENT_RSC, TRACE_LEVEL_VERBOSE,
+        "%s strip headers %u bytes from nb %u bytes\n",
+        __FUNCTION__, off, NET_BUFFER_DATA_LENGTH(nb)));
+
+    DbgTrace((TRACE_COMPONENT_RSC, TRACE_LEVEL_VERBOSE,
+        "%s mdl va %p offset %lu count %lu (before)\n",
+        __FUNCTION__, mdl->StartVa, mdl->ByteOffset, mdl->ByteCount));
+
+    // strip the header (not using MmAdvanceMdl)
+    mdl->StartVa = (void *)((char *)mdl->StartVa + off);
+    mdl->ByteOffset += off;
+    mdl->ByteCount -= off;
+    pkt->rsc_off = off;
+
+    DbgTrace((TRACE_COMPONENT_RSC, TRACE_LEVEL_VERBOSE,
+        "%s mdl va %p offset %lu count %lu (after)\n",
+        __FUNCTION__, mdl->StartVa, mdl->ByteOffset, mdl->ByteCount));
+#else
+    // copy end of first packet overwriting header of second packet
+
+    last_mdl->ByteCount -= off;
+    memcpy(mdl->StartVa, (char*)last_mdl->StartVa + last_mdl->ByteCount, off);
+
+    // scrub that part of the first packet, for pcap debugging
+    memset((char*)last_mdl->StartVa + last_mdl->ByteCount, 'A', off);
+#endif
+
+    return IONIC_RSC_MERGE;
+}
+
+static bool
+ionic_do_rsc(struct qcq *qcq, PNET_BUFFER_LIST nbl, u8 pkt_type_color)
+{
+    struct ionic* ionic = qcq->q.lif->ionic;
+    struct rsc_scratch *rsc = qcq->rsc;
+    NDIS_TCP_IP_CHECKSUM_NET_BUFFER_LIST_INFO csum_info = {};
+    ULONG rss_hash = NET_BUFFER_LIST_GET_HASH_VALUE(nbl);
+    ULONG flow_i = 0;
+    enum ionic_rsc_result result;
+
+    // to be eligible, must be ipv4 or ipv6 tcp
+    if ((pkt_type_color & PKT_TYPE_IPV4_TCP) == PKT_TYPE_IPV4_TCP) {
+        if (!ionic->rscv4_enabled) {
+            DbgTrace((TRACE_COMPONENT_RSC, TRACE_LEVEL_VERBOSE,
+                "%s not enabled rsc ipv4\n", __FUNCTION__));
+            return false;
+        }
+    }
+    else if ((pkt_type_color & PKT_TYPE_IPV6_TCP) == PKT_TYPE_IPV6_TCP) {
+        if (!ionic->rscv6_enabled) {
+            DbgTrace((TRACE_COMPONENT_RSC, TRACE_LEVEL_VERBOSE,
+                "%s not enabled rsc ipv6\n", __FUNCTION__));
+            return false;
+        }
+    }
+    else {
+        DbgTrace((TRACE_COMPONENT_RSC, TRACE_LEVEL_VERBOSE,
+            "%s not tcp\n", __FUNCTION__));
+        return false;
+    }
+
+    // to be eligible, must have csum offload valid
+    csum_info.Value = NET_BUFFER_LIST_INFO(nbl, TcpIpChecksumNetBufferListInfo);
+    if (!csum_info.Receive.TcpChecksumSucceeded) {
+        DbgTrace((TRACE_COMPONENT_RSC, TRACE_LEVEL_VERBOSE,
+            "%s not valid tcp csum offload\n", __FUNCTION__));
+        return false;
+    }
+
+    // find and merge a matching flow
+    for (flow_i = 0; flow_i < IONIC_MAX_RSC_FLOWS; ++flow_i) {
+        if (rss_hash != rsc->hash[flow_i] ||
+            rsc->packet[flow_i] == NULL) {
+            continue;
+        }
+
+        // same flow hash, likely same flow, try to merge
+        result = _ionic_do_rsc(qcq, nbl, rsc->packet[flow_i]);
+
+        if (result == IONIC_RSC_MERGE) {
+            DbgTrace((TRACE_COMPONENT_RSC, TRACE_LEVEL_VERBOSE,
+                      "%s packet merged into flow %lu\n",
+                      __FUNCTION__, flow_i));
+            return true;
+        }
+
+        if (result == IONIC_RSC_REPLACE) {
+            DbgTrace((TRACE_COMPONENT_RSC, TRACE_LEVEL_VERBOSE,
+                      "%s packet replaces flow %lu\n",
+                      __FUNCTION__, flow_i));
+            rsc->packet[flow_i] = nbl;
+            rsc->hash[flow_i] = rss_hash;
+            return false;
+        }
+
+        if (result == IONIC_RSC_IGNORE) {
+            DbgTrace((TRACE_COMPONENT_RSC, TRACE_LEVEL_VERBOSE,
+                "%s packet ignored for rsc\n", __FUNCTION__));
+            return false;
+        }
+
+        // if flow hash collides, keep searching
+    }
+
+    // if not found, evict/replace other entry (simple fifo policy)
+
+    flow_i = rsc->fifo_i;
+
+    DbgTrace((TRACE_COMPONENT_RSC, TRACE_LEVEL_VERBOSE,
+              "%s evict and replace flow %lu\n",
+              __FUNCTION__, flow_i));
+
+    rsc->packet[flow_i] = nbl;
+    rsc->hash[flow_i] = rss_hash;
+
+    rsc->fifo_i = (flow_i + 1) & (IONIC_MAX_RSC_FLOWS - 1);
+
+    return false;
+}
+
 static bool
 ionic_rx_clean(struct queue *q,
                struct desc_info *desc_info,
                struct cq_info *cq_info,
                void *cb_arg,
-               void *packets_to_indicate,
-               void *last_packet)
+               PNET_BUFFER_LIST *packets_to_indicate,
+               PNET_BUFFER_LIST *last_packet)
 {
-
     struct lif *lif = q->lif;
     struct ionic *ionic = lif->ionic;
     struct rxq_comp *comp = (struct rxq_comp *)cq_info->cq_desc;
@@ -386,6 +823,7 @@ ionic_rx_clean(struct queue *q,
     PMDL mdl;
     u8 rss_type = 0;
     u32 rss_hash = 0;
+    struct qcq *qcq = q_to_qcq(q);
     struct dev_rx_ring_stats *rx_stats = q_to_rx_dev_stats(q);
     ULONG comp_len = comp->len;
     ULONG comp_status = comp->status;
@@ -412,6 +850,8 @@ ionic_rx_clean(struct queue *q,
     NET_BUFFER_LIST_STATUS(parent_nbl) = NDIS_STATUS_SUCCESS;
     parent_nbl->SourceHandle = ionic->adapterhandle;
 
+    NET_BUFFER_LIST_NEXT_NBL(parent_nbl) = NULL;
+
     DbgTrace((TRACE_COMPONENT_IO, TRACE_LEVEL_VERBOSE,
               "%s RXQ Process Pkts adapter %p NB: %p NBL %p Len 0x%08lX Pad %s "
               "status 0x%08lX \n",
@@ -419,10 +859,7 @@ ionic_rx_clean(struct queue *q,
               comp_len < IONIC_MINIMUM_RX_PACKET_LEN ? "Yes" : "No",
               comp_status));
 
-    NET_BUFFER_LIST_NEXT_NBL(rxq_pkt->parent_nbl) = NULL;
-
     if (comp_status) {
-
         DbgTrace((TRACE_COMPONENT_IO, TRACE_LEVEL_ERROR,
                   "%s RXQ Packet Error adapter %p Queue %d Status 0x%0x\n",
                   __FUNCTION__, ionic, q->index, comp_status));
@@ -432,19 +869,7 @@ ionic_rx_clean(struct queue *q,
         goto cleanup;
     }
 
-    if (*((PNET_BUFFER_LIST *)packets_to_indicate) != NULL) {
-        NET_BUFFER_LIST_NEXT_NBL(*((PNET_BUFFER_LIST *)last_packet)) =
-            rxq_pkt->parent_nbl;
-    } else {
-        *((PNET_BUFFER_LIST *)packets_to_indicate) = rxq_pkt->parent_nbl;
-    }
-
-    *((PNET_BUFFER_LIST *)last_packet) = rxq_pkt->parent_nbl;
-    indicate_nbl = true;
-
-    // we're indicating this back to the OS so ref count the adapter
-    ref_request(ionic);
-
+#ifdef DBG
     for (u32 sg_index = 0; sg_index < rxq_pkt->sg_count; sg_index++) {
         DbgTrace((TRACE_COMPONENT_IO, TRACE_LEVEL_VERBOSE,
                     "%s Rxq packet %p sg%d PA %I64X\n", 
@@ -453,6 +878,7 @@ ionic_rx_clean(struct queue *q,
                     sg_index,
                     rxq_pkt->phys_addr[sg_index]));
     }
+#endif
 
     //
     // Check we meet the minimum size for the packet
@@ -537,7 +963,7 @@ ionic_rx_clean(struct queue *q,
 
     NdisAdjustMdlLength(mdl, comp_len);
 
-    NdisFlushBuffer(mdl, FALSE);
+    //NdisFlushBuffer(mdl, FALSE);
 
     csum_info.Value = 0;
 
@@ -656,6 +1082,20 @@ ionic_rx_clean(struct queue *q,
     }
     }
 
+    if (!ionic_do_rsc(qcq, rxq_pkt->parent_nbl, comp->pkt_type_color)) {
+        if (*packets_to_indicate == NULL) {
+            *packets_to_indicate = rxq_pkt->parent_nbl;
+            *last_packet = rxq_pkt->parent_nbl;
+            ref_request(ionic);
+        } else  {
+            NET_BUFFER_LIST_NEXT_NBL(*last_packet) = rxq_pkt->parent_nbl;
+            *last_packet = rxq_pkt->parent_nbl;
+            ref_request(ionic);
+        }
+
+        indicate_nbl = true;
+    }
+
 cleanup:
 
     return indicate_nbl;
@@ -689,7 +1129,7 @@ ionic_rx_service(struct cq *cq,
 
     *indicate_nbl =
         ionic_rx_clean(q, desc_info, cq_info, desc_info->cb_arg,
-                       (void *)packets_to_indicate, (void *)last_packet);
+                       packets_to_indicate, last_packet);
 
     desc_info->cb = NULL;
     desc_info->cb_arg = NULL;
@@ -699,12 +1139,21 @@ ionic_rx_service(struct cq *cq,
 
 static u32
 ionic_rx_walk_cq(struct cq *rxcq,
-                 u32 limit,
+                 u32 indicate_limit,
                  PNET_BUFFER_LIST *packets_to_indicate)
 {
+    struct qcq *qcq = cq_to_qcq(rxcq);
+    u32 indicate_count = 0;
+    u32 work_limit = indicate_limit * IONIC_MAX_RSC_FLOWS;
     u32 work_done = 0;
     PNET_BUFFER_LIST last_packet = NULL;
-    bool indicate_nbl = FALSE;
+    bool indicate_nbl = false;
+
+    // reset rsc_hash to nonzero (to avoid collisions with zero)
+    // and ensure there are no dangling packets in the table
+    memset(qcq->rsc->packet, 0, sizeof(qcq->rsc->packet));
+    memset(qcq->rsc->hash, 'A', sizeof(qcq->rsc->hash));
+    qcq->rsc->fifo_i = 0;
 
     while (ionic_rx_service(rxcq, rxcq->tail, packets_to_indicate, &last_packet,
                             &indicate_nbl)) {
@@ -712,11 +1161,17 @@ ionic_rx_walk_cq(struct cq *rxcq,
             rxcq->done_color = !rxcq->done_color;
         rxcq->tail = rxcq->tail->next;
 
-        if (indicate_nbl) {
-            if (++work_done >= limit)
-                break;
+        if (++work_done >= work_limit) {
+            break;
+        }
+
+        if (indicate_nbl && ++indicate_count >= indicate_limit) {
+            break;
         }
     }
+
+    // leave no dangling packets in the table
+    memset(qcq->rsc->packet, 0, sizeof(qcq->rsc->packet));
 
     return work_done;
 }
@@ -808,7 +1263,7 @@ ionic_rx_init(struct lif *lif, struct qcqst *qcqst)
         ring_doorbell =
             ((q->head->index + 1) & RX_RING_DOORBELL_STRIDE) == 0;
 
-        ionic_rxq_post(q, ring_doorbell, ionic_rx_clean, rxq_pkt->packet);
+        ionic_rxq_post(q, ring_doorbell, NULL, rxq_pkt->packet);
     }
 
     return ntStatus;
@@ -871,7 +1326,7 @@ ionic_rx_fill(struct qcq *qcq)
         ring_doorbell = ((q->head->index + 1) & RX_RING_DOORBELL_STRIDE) == 0;
 
         ASSERT(rxq_pkt->packet != NULL);
-        ionic_rxq_post(q, ring_doorbell, ionic_rx_clean, rxq_pkt->packet);
+        ionic_rxq_post(q, ring_doorbell, NULL, rxq_pkt->packet);
     }
 #ifdef DBG
     InterlockedAdd( (LONG *)&qcq->rx_stats->pool_packet_count,
@@ -922,13 +1377,17 @@ ionic_rx_napi(struct intr_msg *int_info,
     unsigned int qi = rxcq->bound_q->index;
     struct ionic_dev *idev = &lif->ionic->idev;
     u32 rx_work_done = 0;
-    u32 tx_work_done = 0;
     u32 flags = 0;
     PNET_BUFFER_LIST packets_to_indicate = NULL;
-
-	KeInsertQueueDpc(&lif->txqcqs[qi].qcq->tx_packet_dpc,
-		NULL,
-		NULL);
+#ifdef DBG
+	LARGE_INTEGER start_time;
+	LARGE_INTEGER end_time;
+#endif
+	//for( int indx = 0;indx < (int)lif->ntxqs; indx++) {
+		KeInsertQueueDpc(&lif->txqcqs[qi].qcq->tx_packet_dpc,
+			NULL,
+			NULL);
+	//}
 
     NdisDprAcquireSpinLock(&qcq->rx_ring_lock);
 
@@ -942,13 +1401,34 @@ ionic_rx_napi(struct intr_msg *int_info,
     }
 
     rx_work_done = ionic_rx_walk_cq(rxcq, budget, &packets_to_indicate);
+
+#ifdef DBG
+	start_time = KeQueryPerformanceCounter( NULL);
+	InterlockedAdd64( &qcq->dpc_walk_time,
+						(LONG64)(start_time.QuadPart - qcq->dpc_last_time.QuadPart));
+#endif
+
     if (rx_work_done) {
+#ifdef DBG
+		InterlockedAdd( (LONG *)&qcq->rx_stats->queue_len,
+						  rx_work_done);
+		InterlockedIncrement( (LONG *)&qcq->rx_stats->dpc_count);
+		if (rx_work_done > qcq->rx_stats->max_queue_len) {
+			qcq->rx_stats->max_queue_len = rx_work_done;
+		}
+#endif
+
         ionic_rx_fill(qcq);
+#ifdef DBG
+		end_time = KeQueryPerformanceCounter( NULL);
+		InterlockedAdd64( &qcq->dpc_fill_time,
+						(LONG64)(end_time.QuadPart - start_time.QuadPart));
+#endif
     }
 
     NdisDprReleaseSpinLock(&qcq->rx_ring_lock);
 
-    if (rx_work_done == 0 && tx_work_done == 0) {
+    if (rx_work_done == 0) {
 #ifdef DBG
         InterlockedIncrement64(&int_info->spurious_cnt);
 #endif
@@ -957,13 +1437,20 @@ ionic_rx_napi(struct intr_msg *int_info,
             "%s Found nothing to process on lif %d ******************\n",
             __FUNCTION__, lif->index));
     }
-
-	if (rx_work_done) {
+	else {
+#ifdef DBG
+		start_time = KeQueryPerformanceCounter( NULL);
+#endif
 		ionic_rq_indicate_bufs(lif, &lif->rxqcqs[qcq->q.index], qcq, rx_work_done,
 			packets_to_indicate);
+#ifdef DBG
+		end_time = KeQueryPerformanceCounter( NULL);
+		InterlockedAdd64( &qcq->dpc_indicate_time,
+						(LONG64)(end_time.QuadPart - start_time.QuadPart));
+#endif
 	}
 
-	if (rx_work_done < (u32)budget && tx_work_done < (u32)IONIC_TX_BUDGET_DEFAULT) {
+	if (rx_work_done < (u32)budget) {
 		flags |= IONIC_INTR_CRED_UNMASK;
 		receive_throttle_params->MoreNblsPending = FALSE;
 	}
@@ -971,11 +1458,16 @@ ionic_rx_napi(struct intr_msg *int_info,
 		receive_throttle_params->MoreNblsPending = TRUE;
 	}
 
-    if (rx_work_done || tx_work_done || flags) {
+    if (rx_work_done || flags) {
         flags |= IONIC_INTR_CRED_RESET_COALESCE;
-        ionic_intr_credits(idev->intr_ctrl, rxcq->bound_intr->index, rx_work_done + tx_work_done,
+        ionic_intr_credits(idev->intr_ctrl, rxcq->bound_intr->index, rx_work_done,
                            flags);
     }
+#ifdef DBG
+	end_time = KeQueryPerformanceCounter( NULL);
+	InterlockedAdd64( &qcq->dpc_total_time,
+						(LONG64)(end_time.QuadPart - qcq->dpc_end_time.QuadPart));
+#endif
 
     return;
 }

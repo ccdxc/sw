@@ -71,6 +71,7 @@ typedef struct _ADAPTER_CB {
 #define TRACE_COMPONENT_PENDING_LIST            0x00010000
 #define TRACE_COMPONENT_MEMORY                  0x00020000
 #define TRACE_COMPONENT_RSS_PROCESSING          0x00040000
+#define TRACE_COMPONENT_RSC 					0x00080000
 
 typedef struct _DEBUG_TRACE_CONFIG_CB
 {
@@ -90,17 +91,32 @@ typedef struct _DEBUG_TRACE_CONFIG_CB
 
 struct _PERF_MON_RX_QUEUE_STATS {
 
-    ULONG           rx_pool_count;
+	ULONG			queue_len;
+	ULONG			max_queue_len;
 
+	LONGLONG		dpc_total_time;
+	LONGLONG		dpc_latency;
+	LONGLONG		dpc_to_dpc_time;
+	LONGLONG		dpc_indicate_time;
+	LONGLONG		dpc_walk_time;
+	LONGLONG		dpc_fill_time;
+
+	ULONGLONG		dpc_rate;
 };
 
 struct _PERF_MON_TX_QUEUE_STATS {
 
-    ULONG           pending_nbl_count;
-    ULONG           pending_nb_count;
-
     ULONG           queue_len;
     ULONG           max_queue_len;
+
+	ULONG			nbl_count;
+	ULONG			nb_count;
+	ULONG			outstanding_nb_count;
+
+	LONGLONG		dpc_total_time;
+	LONGLONG		dpc_to_dpc;
+
+	ULONGLONG		dpc_rate;
 
 };
 

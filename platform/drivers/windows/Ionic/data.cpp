@@ -12,7 +12,9 @@ PDRIVER_OBJECT IonicDriverObject;
 
 NDIS_HANDLE IonicDriver = NULL;
 
-ULONG StateFlags = 0;
+ULONG	StateFlags = 0;
+
+ULONG	DriverFlags = 0;
 
 unsigned int devcmd_timeout = 30;
 
@@ -40,6 +42,14 @@ LIST_ENTRY memory_block_list;
 
 NDIS_SPIN_LOCK memory_block_lock;
 
+struct _PERF_MON_CB *ionic_perfmon_stats = NULL;
+
+ULONG ionic_stats_len = 0;
+
+NDIS_HANDLE perfmon_timer = NULL;
+
+LONG	perfmon_counter_cnt = 0;
+
 //
 // Trace variables
 //
@@ -63,6 +73,4 @@ ULONG TraceCounter = 0;
 ULONG TraceBufferLength = 0;
 
 PTraceLogMsg TraceMsgFnc = NULL;
-
-ULONG PerfMonInitialized = 0;
 };

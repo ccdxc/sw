@@ -3,6 +3,8 @@
 #pragma pack(push, 1)
 #pragma pack(pop)
 
+#include "defines.h"
+
 struct txq_nbl_list {
     PNET_BUFFER_LIST head;
     PNET_BUFFER_LIST tail;
@@ -32,6 +34,12 @@ struct rxq_pkt {
 	NDIS_NET_BUFFER_LIST_FILTERING_INFO	filter_info;
 
 	NET_BUFFER_SHARED_MEMORY	nb_shared_memory_info;
+
+	// RSC stuff
+
+	struct rxq_pkt*	rsc_next;
+	PMDL			rsc_last_mdl;
+	ULONG			rsc_off;
 
 	u64				phys_addr[1];
 };
@@ -252,11 +260,17 @@ struct cq {
 	bool done_color;
 };
 
-#define q_to_qcq(qu)     container_of(qu, struct qcq, q)
+#define q_to_qcq(_q)     container_of(_q, struct qcq, q)
+#define cq_to_qcq(_cq)     container_of(_cq, struct qcq, cq)
 
 #define q_to_tx_dev_stats(qu)    q_to_qcq(qu)->tx_stats
 #define q_to_rx_dev_stats(qu)    q_to_qcq(qu)->rx_stats
 
+struct rsc_scratch {
+	PNET_BUFFER_LIST	packet[IONIC_MAX_RSC_FLOWS];
+	ULONG			hash[IONIC_MAX_RSC_FLOWS];
+	ULONG			fifo_i;
+};
 
 struct qcq {
 	void *base;
@@ -288,15 +302,30 @@ struct qcq {
 
 	/* tx packet processing */
 	KDPC			tx_packet_dpc;
+
 #ifdef DBG
 	LONG outstanding_rx_count;
     LONG outstanding_tx_count;
+
+	LARGE_INTEGER dpc_start_time;
+	LARGE_INTEGER dpc_end_time;
+	LARGE_INTEGER dpc_last_time;
+	LONGLONG dpc_indicate_time;
+	LONGLONG dpc_to_dpc_total_time;
+	LONGLONG dpc_total_time;
+	LONGLONG dpc_latency;
+	LONGLONG dpc_walk_time;
+	LONGLONG dpc_fill_time;
+	LONG	 dpc_count;
+
 #endif
 
 	// cache aligned elements
 	CACHE_ALIGN LONG dpc_exec_cnt;
 
 	CACHE_ALIGN NDIS_SPIN_LOCK rx_ring_lock;
+
+	struct rsc_scratch	*rsc;
 
     CACHE_ALIGN NDIS_SPIN_LOCK  txq_nb_lock;
     LIST_ENTRY      txq_nb_list;
@@ -758,6 +787,9 @@ struct ionic {
 	ULONG			lsov2ipv6_state;
 	ULONG			lsov1_state;
 
+	BOOLEAN			rscv4_enabled;
+	BOOLEAN			rscv6_enabled;
+
     ULONG           rx_pool_factor;
 
 	/* Registry parameters specific to this interface */
@@ -789,20 +821,51 @@ struct _WORK_ITEM
 
 extern "C" {
 
-typedef struct _PERF_MON_COLLECTED_STATS {
-    // per-adapter stats
+typedef struct {
+    ULONG lif_count;
+} pensando_adapter_stats;
 
-
-    // per-lif stats
+typedef struct {
 	ULONG rx_pool_alloc_cnt;
 	ULONG rx_pool_free_cnt;
 	ULONG rx_pool_size;
 	ULONGLONG rx_pool_alloc_time;
 	ULONGLONG rx_pool_free_time;
+} pensando_adapter_lif_stats;
 
-} PERF_MON_COLLECTED_STATS;
+typedef struct {
+	ULONG	queue_len;
+	ULONG	max_queue_len;
+
+	ULONGLONG dpc_total_time;
+	ULONGLONG dpc_latency;
+	ULONGLONG dpc_to_dpc;
+	ULONGLONG dpc_indicate_time;
+	ULONGLONG dpc_walk_time;
+	ULONGLONG dpc_fill_time;
+
+	ULONGLONG dpc_rate;
+
+} pensando_adapter_lif_rxq_stats;
+
+typedef struct {
+	ULONG	queue_len;
+	ULONG	max_queue_len;
+
+	ULONG	nbl_count;
+	ULONG	nb_count;
+
+	ULONG	outstanding_nb_count;
+
+	ULONGLONG dpc_total_time;
+	ULONGLONG dpc_to_dpc;
+
+	ULONGLONG dpc_rate;
+
+} pensando_adapter_lif_txq_stats;
 
 };
+
 
 struct memory_track_cb {
 

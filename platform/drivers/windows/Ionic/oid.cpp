@@ -53,6 +53,7 @@ NDIS_OID ionic_oid_list[] = {
     // NDIS 6.x offload OIDs
     OID_TCP_OFFLOAD_PARAMETERS, OID_TCP_OFFLOAD_HARDWARE_CAPABILITIES,
     OID_TCP_OFFLOAD_CURRENT_CONFIG, OID_OFFLOAD_ENCAPSULATION,
+    OID_TCP_RSC_STATISTICS,
 
     // NDIS 6.x RSS OID
     OID_GEN_RECEIVE_SCALE_CAPABILITIES, OID_GEN_RECEIVE_SCALE_PARAMETERS,
@@ -871,6 +872,11 @@ GetQueryOidName(NDIS_OID Oid)
 
     case OID_OFFLOAD_ENCAPSULATION: {
         name = "OID_OFFLOAD_ENCAPSULATION";
+        break;
+    }
+
+    case OID_TCP_RSC_STATISTICS: {
+        name = "OID_TCP_RSC_STATISTICS";
         break;
     }
 
@@ -1814,6 +1820,7 @@ oid_query_information(struct ionic *ionic,
         NDIS_OFFLOAD ndol;
         NDIS_OFFLOAD_ENCAPSULATION oe;
         NDIS_INTERRUPT_MODERATION_PARAMETERS im;
+        NDIS_RSC_STATISTICS_INFO rsc;
     } var;
 
     NDIS_STATUS ntStatus = NDIS_STATUS_SUCCESS;
@@ -2268,6 +2275,30 @@ oid_query_information(struct ionic *ionic,
         break;
     }
 
+    case OID_TCP_RSC_STATISTICS: {
+        NdisZeroMemory(&var.rsc, sizeof(var.rsc));
+        var.rsc.Header.Type = NDIS_OBJECT_TYPE_DEFAULT;
+        var.rsc.Header.Revision = NDIS_RSC_STATISTICS_REVISION_1;
+        var.rsc.Header.Size = sizeof(var.rsc);
+
+        for (unsigned int i = 0; i < lif->nrxqs; ++i) {
+            struct qcq *qcq = lif->rxqcqs[i].qcq;
+
+            NdisAcquireSpinLock(&qcq->rx_ring_lock);
+
+            var.rsc.CoalescedPkts += qcq->rx_stats->rsc_packets;
+            var.rsc.CoalescedOctets += qcq->rx_stats->rsc_bytes;
+            var.rsc.CoalesceEvents += qcq->rx_stats->rsc_events;
+            var.rsc.Aborts += qcq->rx_stats->rsc_aborts;
+
+            NdisReleaseSpinLock(&qcq->rx_ring_lock);
+        }
+
+        buf_ptr = &var.rsc;
+        buf_len = sizeof(var.rsc);
+        break;
+    }
+
     case OID_GEN_INTERRUPT_MODERATION: {
         NdisZeroMemory(&var.im, sizeof(var.im));
         var.im.Header.Type = NDIS_OBJECT_TYPE_DEFAULT;
@@ -2401,6 +2432,7 @@ oid_query_information(struct ionic *ionic,
         }
     }
 
+    DbgTrace((TRACE_COMPONENT_OID, TRACE_LEVEL_VERBOSE, "%s ntStatus 0x%08lX\n", __FUNCTION__, ntStatus));
     return ntStatus;
 }
 

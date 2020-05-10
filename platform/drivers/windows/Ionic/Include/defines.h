@@ -161,11 +161,24 @@ NTSTATUS
 
 #define IONIC_1Q_TAG					0x0081
 
+// perfmon cateogry defines
+#define IONIC_STATS_ADAPTER				((PVOID)0x1000)
+#define IONIC_STATS_LIF					((PVOID)0x2000)
+#define IONIC_STATS_TXQ					((PVOID)0x3000)
+#define IONIC_STATS_RXQ					((PVOID)0x4000)
+
 //
 // State flags
 //
 
 #define IONIC_STATE_FLAG_TXRX_DIFF_CORE			0x00000001
+#define IONIC_STATE_TX_QUEUE_TO_PORT_ID			0x00000002
+
+//
+// Driver flags
+//
+
+#define IONIC_STATE_PERFMON_INITED				0x00000001
 
 //
 // Flow control options
@@ -196,6 +209,12 @@ NTSTATUS
 
 #define IONIC_RX_BUDGET_DEFAULT				128
 #define IONIC_TX_BUDGET_DEFAULT				128
+
+//
+// Receive Segment Coalescing
+//
+
+#define IONIC_MAX_RSC_FLOWS				8
 
 //
 // Max rx pool factor
@@ -339,7 +358,7 @@ NTSTATUS
 // Work items
 //
 
-#define IONIC_WORKITEM_FREE_QUEUE           0x00000001
+#define IONIC_WORKITEM_PERFMON				0x00000001
 
 #define WARN_ON_ONCE
 #define WARN_ON

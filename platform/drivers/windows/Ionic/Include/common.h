@@ -424,7 +424,7 @@ process_work_item(PVOID   WorkItemContext,
     NDIS_HANDLE  work_handle);
 
 NDIS_STATUS
-get_perfmon_stats(AdapterCB *cb, ULONG maxlen, struct _PERF_MON_CB **perfmon_stats, ULONG *len, ULONGLONG counter_mask);
+get_perfmon_stats(AdapterCB *cb, ULONG maxlen, struct _PERF_MON_CB **perfmon_stats, ULONG *len, ULONGLONG counter_mask, ULONGLONG last_call_time);
 
 void
 ref_request(struct ionic *ionic);
@@ -1359,6 +1359,11 @@ tx_packet_dpc_callback( _KDPC *Dpc,
 					    PVOID SystemArgument1,
 					    PVOID SystemArgument2);
 
+ULONG
+get_tx_queue_id(struct lif *lif,
+				PNET_BUFFER_LIST nbl,
+				PNET_BUFFER nb);
+
 //
 // vmq.cpp prototypes
 //
@@ -1437,5 +1442,11 @@ IonicAddTxQueueInstance(
     _In_ PUNICODE_STRING Name,
     _In_ ULONG InstanceId,
     _In_ struct _PERF_MON_TX_QUEUE_STATS *TxQueueStats);
+
+void
+ionic_perfmon_cb(void *SystemContext,
+                  void *FunctionContext,
+                  void *Context1,
+                  void *Context2);
 
 };

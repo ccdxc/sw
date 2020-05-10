@@ -291,6 +291,10 @@ DumpRxRingStats(const char *id, struct dev_rx_ring_stats *rx_stats)
     printf("\t\t\trx%s_csum_tcp:\t%I64u\n", id, rx_stats->csum_tcp);
     printf("\t\t\trx%s_csum_tcp_bad:\t%I64u\n", id, rx_stats->csum_tcp_bad);
     printf("\t\t\trx%s_vlan_stripped:\t%I64u\n", id, rx_stats->vlan_stripped);
+    printf("\t\t\trx%s_rsc_bytes:\t%I64u\n", id, rx_stats->rsc_bytes);
+    printf("\t\t\trx%s_rsc_packets:\t%I64u\n", id, rx_stats->rsc_packets);
+    printf("\t\t\trx%s_rsc_events:\t%I64u\n", id, rx_stats->rsc_events);
+    printf("\t\t\trx%s_rsc_aborts:\t%I64u\n", id, rx_stats->rsc_aborts);
 }
 
 DWORD
@@ -364,6 +368,10 @@ DumpDevStats(void *Stats)
                 rx_total.csum_tcp += dev_stats->lif_stats[ulLifCount].rx_ring[ulRxCnt].csum_tcp;
                 rx_total.csum_tcp_bad += dev_stats->lif_stats[ulLifCount].rx_ring[ulRxCnt].csum_tcp_bad;
                 rx_total.vlan_stripped += dev_stats->lif_stats[ulLifCount].rx_ring[ulRxCnt].vlan_stripped;
+                rx_total.rsc_bytes += dev_stats->lif_stats[ulLifCount].rx_ring[ulRxCnt].rsc_bytes;
+                rx_total.rsc_packets += dev_stats->lif_stats[ulLifCount].rx_ring[ulRxCnt].rsc_packets;
+                rx_total.rsc_events += dev_stats->lif_stats[ulLifCount].rx_ring[ulRxCnt].rsc_events;
+                rx_total.rsc_aborts += dev_stats->lif_stats[ulLifCount].rx_ring[ulRxCnt].rsc_aborts;
             }
             id[0] = 0;
             DumpRxRingStats(id, &rx_total);
@@ -697,9 +705,22 @@ DumpPerfStats(void *Stats, DWORD Size)
 
             for (rx_cnt = 0; rx_cnt < lif_stats->rx_queue_count; rx_cnt++) {
 
-                printf("\t\tRx: %d :Pool cnt: %d\n",
-                                rx_cnt,
-                                rx_stats->rx_pool_count);
+                printf("\t\tRx: %d queue len: %ld max queue len %ld\n",
+                       rx_cnt,
+                       rx_stats->queue_len,
+                       rx_stats->max_queue_len);
+
+                printf("\t\tdpc total time: %lld dpc latency %lld\n"
+                       "\t\tdpc to dpc time: %lld dpc indicate time %lld\n"
+                       "\t\tdpc walk time: %lld dpc fill time %lld\n"
+                       "\t\tdpc rate: %lld\n",
+                       rx_stats->dpc_total_time,
+                       rx_stats->dpc_latency,
+                       rx_stats->dpc_to_dpc_time,
+                       rx_stats->dpc_indicate_time,
+                       rx_stats->dpc_walk_time,
+                       rx_stats->dpc_fill_time,
+                       rx_stats->dpc_rate);
 
                 rx_stats = (struct _PERF_MON_RX_QUEUE_STATS *)((char *)rx_stats + sizeof( struct _PERF_MON_RX_QUEUE_STATS));
             }
@@ -710,14 +731,21 @@ DumpPerfStats(void *Stats, DWORD Size)
 
             for (tx_cnt = 0; tx_cnt < lif_stats->tx_queue_count; tx_cnt++) {
 
-                printf("\t\tTx: %d pending nbl: %d pending nb: %d\n",
-                                tx_cnt,
-                                tx_stats->pending_nbl_count,
-                                tx_stats->pending_nb_count);
+                printf("\t\tTx: %d queue len: %ld max queue len: %ld\n",
+                       tx_cnt,
+                       tx_stats->queue_len,
+                       tx_stats->max_queue_len);
 
-                printf("\t\tqueue len: %d max: %d\n",
-                                tx_stats->queue_len,
-                                tx_stats->max_queue_len);
+                printf("\t\tnbl count: %ld nb count: %ld out nb: %ld\n",
+                       tx_stats->nbl_count,
+                       tx_stats->nb_count,
+                       tx_stats->outstanding_nb_count);
+
+                printf("\t\tdpc total time: %lld dpc to dpc time: %lld\n"
+                       "\t\tdpc rate: %lld\n",
+                       tx_stats->dpc_total_time,
+                       tx_stats->dpc_to_dpc,
+                       tx_stats->dpc_rate);
 
                 tx_stats = (struct _PERF_MON_TX_QUEUE_STATS *)((char *)tx_stats + sizeof( struct _PERF_MON_TX_QUEUE_STATS));
             }

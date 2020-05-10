@@ -392,6 +392,20 @@ HKR, Ndi\Params\*RSS,                            type,                   0, "enu
 HKR, Ndi\Params\*RSS\Enum,                       "0",                    0, %Disabled%
 HKR, Ndi\Params\*RSS\Enum,                       "1",                    0, %Enabled%
 
+; *RscIPv4
+HKR, Ndi\Params\*RscIPv4,                        ParamDesc,              0, %RscIPv4%
+HKR, Ndi\Params\*RscIPv4,                        default,                0, "1"
+HKR, Ndi\Params\*RscIPv4,                        type,                   0, "enum"
+HKR, Ndi\Params\*RscIPv4\Enum,                   "0",                    0, %Disabled%
+HKR, Ndi\Params\*RscIPv4\Enum,                   "1",                    0, %Enabled%
+
+; *RscIPv6
+HKR, Ndi\Params\*RscIPv6,                        ParamDesc,              0, %RscIPv6%
+HKR, Ndi\Params\*RscIPv6,                        default,                0, "1"
+HKR, Ndi\Params\*RscIPv6,                        type,                   0, "enum"
+HKR, Ndi\Params\*RscIPv6\Enum,                   "0",                    0, %Disabled%
+HKR, Ndi\Params\*RscIPv6\Enum,                   "1",                    0, %Enabled%
+
 [Strings]
 ProviderString               = "Pensando Systems"
 ManufacturerName             = "Pensando Systems"
@@ -413,6 +427,8 @@ VMQ                          = "Virtual Machine Queues"
 VMQVlanFiltering             = "VMQ VLAN Filtering"
 SRIOV                        = "SR-IOV"
 RSS                          = "Receive Side Scaling"
+RscIPv4                      = "Recv Segment Coalescing (IPv4)"
+RscIPv6                      = "Recv Segment Coalescing (IPv6)"
 VlanId                       = "VLAN ID"
 
 NumRssQueues                 = "Maximum Number of RSS Queues"

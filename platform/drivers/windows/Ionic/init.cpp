@@ -43,6 +43,7 @@ DriverEntry(void* DriverObject, void* RegistryPath)
     NDIS_STATUS ntStatus = NDIS_STATUS_SUCCESS;
     NDIS_MINIPORT_DRIVER_CHARACTERISTICS stDriverChar;
     UNICODE_STRING *puniRegistry = (UNICODE_STRING *)RegistryPath;
+    NDIS_TIMER_CHARACTERISTICS stTimer;
 
     BOOLEAN bExit = FALSE;
 
@@ -140,8 +141,21 @@ DriverEntry(void* DriverObject, void* RegistryPath)
                                            &stDriverChar, &IonicDriver);
 
     // register the performance counter handler for this device instance
-    IonicRegisterPensando_Systems(IonicPerfCounterCallback, NULL);
-    PerfMonInitialized = 1;
+    IonicRegisterpensando_adapter(IonicPerfCounterCallback, IONIC_STATS_ADAPTER);
+    IonicRegisterpensando_adapter_lif(IonicPerfCounterCallback, IONIC_STATS_LIF);
+    IonicRegisterpensando_adapter_lif_rxq(IonicPerfCounterCallback, IONIC_STATS_RXQ);
+    IonicRegisterpensando_adapter_lif_txq(IonicPerfCounterCallback, IONIC_STATS_TXQ);
+	SetFlag( DriverFlags, IONIC_STATE_PERFMON_INITED);
+
+    stTimer.Header.Revision = NDIS_TIMER_CHARACTERISTICS_REVISION_1;
+    stTimer.Header.Size = NDIS_SIZEOF_TIMER_CHARACTERISTICS_REVISION_1;
+    stTimer.Header.Type = NDIS_OBJECT_TYPE_TIMER_CHARACTERISTICS;
+
+    stTimer.AllocationTag = IONIC_TIMER_TAG;
+    stTimer.TimerFunction = ionic_perfmon_cb;
+
+    NdisAllocateTimerObject(IonicDriver, &stTimer,
+                                     &perfmon_timer);
 
 cleanup:
 
@@ -182,10 +196,22 @@ DriverUnload(PDRIVER_OBJECT DriverObject)
         NdisMDeregisterMiniportDriver(IonicDriver);
     }
 
-    if (PerfMonInitialized) {
+    if (BooleanFlagOn( DriverFlags, IONIC_STATE_PERFMON_INITED)) {
         // unregister the performance counter handler for this device instance
-        IonicUnregisterPensando_Systems();
+        IonicUnregisterpensando_adapter();
+        IonicUnregisterpensando_adapter_lif();
+        IonicUnregisterpensando_adapter_lif_rxq();
+        IonicUnregisterpensando_adapter_lif_txq();
     }
+
+	if (perfmon_timer != NULL) {
+		NdisCancelTimerObject(perfmon_timer);
+		NdisFreeTimerObject(perfmon_timer);
+	}
+
+	if (ionic_perfmon_stats != NULL) {
+		NdisFreeMemoryWithTagPriority_internal(IonicDriver, ionic_perfmon_stats, IONIC_STATS_TAG);
+	}
 
     EvLogInformational("Ionic driver Ver:%s unload completed.", IonicVersionInfo.VerString);
 
@@ -240,6 +266,13 @@ InitializeEx(NDIS_HANDLE AdapterHandle,
 
 	if (status != STATUS_SUCCESS) {
 		IoPrint("%s Failed to retrieve NUMA node Error %08lX\n", __FUNCTION__, status);
+	}
+
+	if (KeGetCurrentNodeNumber() != adapter->numa_node) {
+		IoPrint("%s Running on different node than device %d-%d\n",
+						__FUNCTION__,
+						adapter->numa_node,
+						KeGetCurrentNodeNumber());
 	}
 
 	// Get the core count nearby to the device NUMA

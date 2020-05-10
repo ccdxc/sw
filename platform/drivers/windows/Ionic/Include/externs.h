@@ -50,8 +50,16 @@ extern ULONG            StateFlags;
 
 extern KEVENT           perfmon_event;
 
-extern ULONG            PerfMonInitialized;
-
 extern LIST_ENTRY       memory_block_list;
 
 extern NDIS_SPIN_LOCK   memory_block_lock;
+
+extern struct _PERF_MON_CB *ionic_perfmon_stats;
+
+extern ULONG			ionic_stats_len;
+
+extern NDIS_HANDLE		perfmon_timer;
+
+extern LONG				perfmon_counter_cnt;
+
+extern ULONG			DriverFlags;

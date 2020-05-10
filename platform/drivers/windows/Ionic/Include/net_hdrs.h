@@ -9,8 +9,13 @@
 #define ETH_HLEN 14
 #define ETH_ALEN 6
 #define ETH_P_IPv4 0x0800
+#define ETH_P_8021Q 0x8100
 #define ETH_P_IPv6 0x86dd
 #define ETH_P_ARP 0x0806
+
+#define ETH_P_IPv4_LE 0x0008
+#define ETH_P_8021Q_LE 0x0081
+#define ETH_P_IPv6_LE 0xdd86
 
 #define ETH_COMPLETE_HDR  14 // Eth hdr
 
@@ -79,9 +84,29 @@ struct ethhdr
         u16 h_proto;        /* packet type ID field */
 };
 
+/*
+ *      This is an Ethernet frame header with 8021q vlan tag.
+ */
+struct ethhdr_vlan
+{
+        u8 h_dest[6];       /* destination eth addr */
+        u8 h_source[6];     /* source ether addr    */
+        u16 h_proto;        /* packet type ID field */
+        u16 vh_tci;
+        u16 vh_proto;
+};
+
 #define ether_header ethhdr
 
 #define ethhdr_size		14
+
+/* UDP Header */
+struct udphdr {
+	u16		source;
+	u16		dest;
+	u16		length;
+	u16		csum;
+};
 
 /*
 *      This is TCP header.
@@ -108,6 +133,7 @@ struct tcphdr {
     u16   urg_ptr;
 };
 
+#define IPPROTO_UDP			0x11
 #define IPPROTO_TCP         6
 #define IPv6PROTO_HOPOPTS   0
 #define IPv6PROTO_DSTOPTS   60

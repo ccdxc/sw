@@ -487,6 +487,7 @@ ionic_msi_handler(PVOID miniport_interrupt_context,
     }
 #ifdef DBG
     InterlockedIncrement64(&int_tbl->isr_cnt);
+	int_tbl->qcq->dpc_start_time = KeQueryPerformanceCounter( NULL);
 #endif
 
 exit:
@@ -546,6 +547,19 @@ ionic_msi_dpc_handler(NDIS_HANDLE miniport_interrupt_context,
         }
 
     } else if (int_tbl->qcq->q.type == IONIC_QTYPE_RXQ) {
+#ifdef DBG
+
+		InterlockedIncrement( &int_tbl->qcq->dpc_count);
+		int_tbl->qcq->dpc_end_time = KeQueryPerformanceCounter( NULL);
+		InterlockedAdd64( &int_tbl->qcq->dpc_latency,
+						(LONG64)(int_tbl->qcq->dpc_end_time.QuadPart - int_tbl->qcq->dpc_start_time.QuadPart));
+
+		if( int_tbl->qcq->dpc_last_time.QuadPart != 0) {
+			InterlockedAdd64( &int_tbl->qcq->dpc_to_dpc_total_time,
+							(LONG64)(int_tbl->qcq->dpc_end_time.QuadPart - int_tbl->qcq->dpc_last_time.QuadPart));
+		}
+		int_tbl->qcq->dpc_last_time.QuadPart = int_tbl->qcq->dpc_end_time.QuadPart;
+#endif
 
         ionic_rx_napi(
             int_tbl, budget,
@@ -1000,6 +1014,9 @@ ionic_set_offload_hw_capabilities(struct ionic *ionic,
             NDIS_OFFLOAD_SUPPORTED;
     }
 
+    HardwareOffload->Rsc.IPv4.Enabled = TRUE;
+    HardwareOffload->Rsc.IPv6.Enabled = TRUE;
+
     return;
 }
 
@@ -1085,7 +1102,8 @@ ionic_set_offload_default_capabilities(struct ionic *ionic,
         DefaultOffload->LsoV1.IPv4.TcpOptions = NDIS_OFFLOAD_SUPPORTED;
     }
 
-    return;
+    DefaultOffload->Rsc.IPv4.Enabled = ionic->rscv4_enabled;
+    DefaultOffload->Rsc.IPv6.Enabled = ionic->rscv6_enabled;
 }
 
 NDIS_STATUS
@@ -1192,8 +1210,6 @@ oid_handle_offload_parameters(struct ionic *ionic,
     PNDIS_OFFLOAD_PARAMETERS pOffload = (PNDIS_OFFLOAD_PARAMETERS)info_buffer;
     NDIS_OFFLOAD offload_indication;
 
-    UNREFERENCED_PARAMETER(ionic);
-
     if (info_buffer_length < sizeof(NDIS_OFFLOAD_PARAMETERS)) {
         *bytes_needed = sizeof(NDIS_OFFLOAD_PARAMETERS);
         *bytes_read = 0;
@@ -1207,11 +1223,11 @@ oid_handle_offload_parameters(struct ionic *ionic,
     DbgTrace((TRACE_COMPONENT_OID, TRACE_LEVEL_VERBOSE,
               "%s Parameters IPV4CS %02lX TCPV4CS %02lX UDPV4CS %02lX LsoV1 "
               "%02lX IPsecV1 %02lX IPsecV2 %02lX IPsecV2IPv4 %02lX LSOV2IPV4 "
-              "%02lX LSOV2IPV6 %02lX\n",
+              "%02lX LSOV2IPV6 %02lX RscIPv4 %02lX RscIPv6 %02lX\n",
               __FUNCTION__, pOffload->IPv4Checksum, pOffload->TCPIPv4Checksum,
               pOffload->UDPIPv4Checksum, pOffload->LsoV1, pOffload->IPsecV1,
               pOffload->IPsecV2, pOffload->IPsecV2IPv4, pOffload->LsoV2IPv4,
-              pOffload->LsoV2IPv6));
+              pOffload->LsoV2IPv6, pOffload->RscIPv4, pOffload->RscIPv6));
 
     if (pOffload->IPv4Checksum == NDIS_OFFLOAD_PARAMETERS_TX_RX_ENABLED) {
         ionic->ipv4_rx_state = NDIS_OFFLOAD_SET_ON;
@@ -1318,19 +1334,48 @@ oid_handle_offload_parameters(struct ionic *ionic,
               ionic->udpv6_rx_state == NDIS_OFFLOAD_SET_OFF ? "No" : "Yes",
               ionic->udpv6_tx_state == NDIS_OFFLOAD_SET_OFF ? "No" : "Yes"));
 
-    ionic->lsov2ipv4_state = pOffload->LsoV2IPv4;
-    ionic->lsov2ipv6_state = pOffload->LsoV2IPv6;
-    ionic->lsov1_state = pOffload->LsoV1;
+    if (pOffload->LsoV2IPv4 != NDIS_OFFLOAD_PARAMETERS_NO_CHANGE) {
+        ionic->lsov2ipv4_state = pOffload->LsoV2IPv4;
+    }
+    if (pOffload->LsoV2IPv6 != NDIS_OFFLOAD_PARAMETERS_NO_CHANGE) {
+        ionic->lsov2ipv6_state = pOffload->LsoV2IPv6;
+    }
+    if (pOffload->LsoV1 != NDIS_OFFLOAD_PARAMETERS_NO_CHANGE) {
+        ionic->lsov1_state = pOffload->LsoV1;
+    }
 
     DbgTrace((
         TRACE_COMPONENT_OID, TRACE_LEVEL_VERBOSE,
         "\tLSO Offload V1 %s V2Ipv4 %s V2Ipv6 %s\n",
-        pOffload->LsoV1 == NDIS_OFFLOAD_PARAMETERS_LSOV2_DISABLED ? "No"
-                                                                  : "Yes",
-        pOffload->LsoV2IPv4 == NDIS_OFFLOAD_PARAMETERS_LSOV2_DISABLED ? "No"
-                                                                      : "Yes",
-        pOffload->LsoV2IPv6 == NDIS_OFFLOAD_PARAMETERS_LSOV2_DISABLED ? "No"
-                                                                      : "Yes"));
+        ionic->lsov1_state == NDIS_OFFLOAD_PARAMETERS_LSOV2_DISABLED ? "No" : "Yes",
+        ionic->lsov2ipv4_state == NDIS_OFFLOAD_PARAMETERS_LSOV2_DISABLED ? "No" : "Yes",
+        ionic->lsov2ipv6_state == NDIS_OFFLOAD_PARAMETERS_LSOV2_DISABLED ? "No" : "Yes"));
+
+    // XXX IONIC_OFFLOAD_PEARAMETERS_RSC
+    // ignoring the request to change RSC parameters
+    // continue to use the setting from device properties
+
+#ifdef IONIC_OFFLOAD_PARAMETERS_RSC
+    if (pOffload->RscIPv4 == NDIS_OFFLOAD_PARAMETERS_RSC_ENABLED) {
+        ionic->rscv4_enabled = TRUE;
+    }
+    else if (pOffload->RscIPv4 == NDIS_OFFLOAD_PARAMETERS_RSC_DISABLED) {
+        ionic->rscv4_enabled = FALSE;
+    }
+
+    if (pOffload->RscIPv6 == NDIS_OFFLOAD_PARAMETERS_RSC_ENABLED) {
+        ionic->rscv6_enabled = TRUE;
+    }
+    else if (pOffload->RscIPv6 == NDIS_OFFLOAD_PARAMETERS_RSC_DISABLED) {
+        ionic->rscv6_enabled = FALSE;
+    }
+#endif
+
+    DbgTrace((
+        TRACE_COMPONENT_OID, TRACE_LEVEL_VERBOSE,
+        "\tRSC Ipv4 %s Ipv6 %s\n",
+        ionic->rscv4_enabled ? "Yes" : "No",
+        ionic->rscv6_enabled ? "Yes" : "No"));
 
     ionic_set_offload_default_capabilities(ionic, &offload_indication);
 

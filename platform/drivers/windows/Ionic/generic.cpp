@@ -139,7 +139,6 @@ ReadRegParameters(struct ionic *Adapter)
         }
     }
 
-
     Adapter->tx_frag_pool_count = IONIC_TX_FRAG_DEFAULT;
 
     NdisInitUnicodeString(&uniKeyWord, ionic_registry[IONIC_REG_TXFRAG].name);
@@ -147,6 +146,9 @@ ReadRegParameters(struct ionic *Adapter)
 
     if (ntStatus == NDIS_STATUS_SUCCESS) {
         Adapter->tx_frag_pool_count = pParameters->ParameterData.IntegerData;
+		if( Adapter->tx_frag_pool_count > IONIC_TX_FRAG_MAX) {
+			Adapter->tx_frag_pool_count = IONIC_TX_FRAG_DEFAULT;
+		}
         Adapter->registry_config[IONIC_REG_TXFRAG].current_value = pParameters->ParameterData.IntegerData;
     }
 
@@ -423,10 +425,29 @@ ReadRegParameters(struct ionic *Adapter)
 		Adapter->registry_config[ IONIC_REG_UDPCSV6].current_value = pParameters->ParameterData.IntegerData;
     }
 
+    Adapter->rscv4_enabled = FALSE;
+    NdisInitUnicodeString(&uniKeyWord, ionic_registry[IONIC_REG_RSCV4].name);
+    NdisReadConfiguration(&ntStatus, &pParameters, hConfig, &uniKeyWord, NdisParameterInteger);
+    if (ntStatus == NDIS_STATUS_SUCCESS) {
+        if (pParameters->ParameterData.IntegerData != 0) {
+            Adapter->rscv4_enabled = TRUE;
+        }
+    }
+
+    Adapter->rscv6_enabled = FALSE;
+    NdisInitUnicodeString(&uniKeyWord, ionic_registry[IONIC_REG_RSCV6].name);
+    NdisReadConfiguration(&ntStatus, &pParameters, hConfig, &uniKeyWord, NdisParameterInteger);
+    if (ntStatus == NDIS_STATUS_SUCCESS) {
+        if (pParameters->ParameterData.IntegerData != 0) {
+            Adapter->rscv6_enabled = TRUE;
+        }
+    }
+
     DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
               "%s Offload support LSOv1 %s LSOv2Ipv4 %s LSOv2Ipv6 %s xsumipv4 "
               "tx %s rx %s xsumtcpv4 tx %s rx %s xsumtcpv6 tx %s rx %s "
-              "xsumudpv4 tx %s rx %s xsumudpv6 tx %s rx %s\n",
+              "xsumudpv4 tx %s rx %s xsumudpv6 tx %s rx %s "
+              "rscv4 %s rscv6 %s\n",
               __FUNCTION__,
               Adapter->lsov1_state == NDIS_OFFLOAD_PARAMETERS_LSOV1_ENABLED
                   ? "Yes"
@@ -446,7 +467,9 @@ ReadRegParameters(struct ionic *Adapter)
               Adapter->udpv4_rx_state == NDIS_OFFLOAD_SET_ON ? "Yes" : "No",
               Adapter->udpv4_tx_state == NDIS_OFFLOAD_SET_ON ? "Yes" : "No",
               Adapter->udpv6_rx_state == NDIS_OFFLOAD_SET_ON ? "Yes" : "No",
-              Adapter->udpv6_tx_state == NDIS_OFFLOAD_SET_ON ? "Yes" : "No"));
+              Adapter->udpv6_tx_state == NDIS_OFFLOAD_SET_ON ? "Yes" : "No",
+              Adapter->rscv4_enabled ? "Yes" : "No",
+              Adapter->rscv6_enabled ? "Yes" : "No"));
 
     NdisReadConfiguration(&ntStatus, &pParameters, hConfig,
                           &uniSriovPreferredKeyword, NdisParameterInteger);
@@ -2520,7 +2543,7 @@ queue_workitem(struct ionic *ionic,
     NDIS_HANDLE     work_handle = NULL;
     struct _WORK_ITEM  *work_item = NULL;
 
-    work_item = (struct _WORK_ITEM *)NdisAllocateMemoryWithTagPriority_internal( ionic->adapterhandle,
+    work_item = (struct _WORK_ITEM *)NdisAllocateMemoryWithTagPriority_internal( IonicDriver,
                                                                         sizeof( struct _WORK_ITEM),
                                                                         IONIC_WORK_ITEM_TAG,
                                                                         NormalPoolPriority);
@@ -2537,7 +2560,7 @@ queue_workitem(struct ionic *ionic,
                   __FUNCTION__,
                   work_item, sizeof( struct _WORK_ITEM)));
     
-    work_handle = NdisAllocateIoWorkItem( ionic->adapterhandle);
+    work_handle = NdisAllocateIoWorkItem( IonicDriver);
 
     if (work_handle == NULL) {
         status = NDIS_STATUS_RESOURCES;
@@ -2548,7 +2571,9 @@ queue_workitem(struct ionic *ionic,
     work_item->work_item_id = WorkItem;
     work_item->context = Context;
 
-    ref_request( ionic);
+	if( ionic != NULL) {
+	    ref_request( ionic);
+	}
 
     NdisQueueIoWorkItem( work_handle,
                          process_work_item,
@@ -2558,7 +2583,7 @@ cleanup:
 
     if (status != NDIS_STATUS_SUCCESS) {
         if (work_item != NULL) {
-            NdisFreeMemoryWithTagPriority_internal( ionic->adapterhandle,
+            NdisFreeMemoryWithTagPriority_internal( IonicDriver,
                                            work_item,
                                            IONIC_WORK_ITEM_TAG);
         }
@@ -2574,9 +2599,19 @@ process_work_item(PVOID   WorkItemContext,
    
     struct _WORK_ITEM  *work_item = ( struct _WORK_ITEM  *)WorkItemContext;
     struct ionic *ionic = work_item->ionic;
-    
+	static LARGE_INTEGER last_call = {0};
+	LARGE_INTEGER last_call_delta = {0};
+    LARGE_INTEGER current_call;
+
     switch (work_item->work_item_id) {
-    case 0: {
+    case IONIC_WORKITEM_PERFMON: {
+		
+		current_call = KeQueryPerformanceCounter(NULL);
+		if( last_call.QuadPart != 0) {
+			last_call_delta.QuadPart = current_call.QuadPart - last_call.QuadPart;
+		}
+		last_call = current_call;	
+		get_perfmon_stats(NULL, 0, &ionic_perfmon_stats, &ionic_stats_len, IONIC_PERF_MON_ALL_STATS, last_call_delta.QuadPart);
         break;
     }
 
@@ -2584,18 +2619,20 @@ process_work_item(PVOID   WorkItemContext,
         break;
     }
 
-    NdisFreeMemoryWithTagPriority_internal( ionic->adapterhandle,
+    NdisFreeMemoryWithTagPriority_internal( IonicDriver,
                                    work_item,
                                    IONIC_WORK_ITEM_TAG);
     NdisFreeIoWorkItem( work_handle);
 
-    deref_request( ionic, 1);
+	if( ionic != NULL) {
+	    deref_request( ionic, 1);
+	}
 
     return;
 }
 
 NDIS_STATUS
-get_perfmon_stats(AdapterCB *cb, ULONG maxlen, struct _PERF_MON_CB **perfmon_stats, ULONG *len, ULONGLONG counter_mask)
+get_perfmon_stats(AdapterCB *cb, ULONG maxlen, struct _PERF_MON_CB **perfmon_stats, ULONG *len, ULONGLONG counter_mask, ULONGLONG last_call_time)
 {
     NDIS_STATUS status = NDIS_STATUS_SUCCESS;
     NDIS_STRING AdapterNameString = {};
@@ -2618,6 +2655,12 @@ get_perfmon_stats(AdapterCB *cb, ULONG maxlen, struct _PERF_MON_CB **perfmon_sta
     PVOID *lut = NULL;
     ULONG lut_index;
     LARGE_INTEGER perf_frequ;
+	ULONGLONG last_call = 0;
+
+#ifdef DBG
+	LONG  dpc_count = 0;
+	LONG  entry_count = 0;
+#endif
 
     status = KeWaitForSingleObject(&perfmon_event,
                                    Executive,
@@ -2630,6 +2673,11 @@ get_perfmon_stats(AdapterCB *cb, ULONG maxlen, struct _PERF_MON_CB **perfmon_sta
     }
 
     KeQueryPerformanceCounter( &perf_frequ);
+
+	if (last_call_time != 0) {
+		last_call = last_call_time * 1000000;
+		last_call /= perf_frequ.QuadPart;
+	}
 
     buffer_len = sizeof( struct _PERF_MON_CB);
 
@@ -2702,15 +2750,28 @@ get_perfmon_stats(AdapterCB *cb, ULONG maxlen, struct _PERF_MON_CB **perfmon_sta
         }
     }
 
-    stats = (struct _PERF_MON_CB *)NdisAllocateMemoryWithTagPriority_internal( IonicDriver,
-                                                                      buffer_len + lut_len,
-                                                                      IONIC_STATS_TAG,
-                                                                      NormalPoolPriority);
+	if (*perfmon_stats != NULL && 
+		*perfmon_stats == ionic_perfmon_stats &&
+		*len < buffer_len + lut_len) {
+		NdisFreeMemoryWithTagPriority_internal(IonicDriver, ionic_perfmon_stats, IONIC_STATS_TAG);
+		ionic_perfmon_stats = NULL;
+		*perfmon_stats = NULL;
+	}
 
-    if (stats == NULL) {
-        KeSetEvent( &perfmon_event, 0, FALSE);
-        return NDIS_STATUS_RESOURCES;
-    }
+	if( *perfmon_stats == NULL) {
+		stats = (struct _PERF_MON_CB *)NdisAllocateMemoryWithTagPriority_internal( IonicDriver,
+																		  buffer_len + lut_len,
+																		  IONIC_STATS_TAG,
+																		  NormalPoolPriority);
+
+		if (stats == NULL) {
+			KeSetEvent( &perfmon_event, 0, FALSE);
+			return NDIS_STATUS_RESOURCES;
+		}
+	}
+	else {
+		stats = *perfmon_stats;
+	}
 
     DbgTrace((TRACE_COMPONENT_MEMORY, TRACE_LEVEL_VERBOSE,
                   "%s Allocated 0x%p len %08lX\n",
@@ -2782,27 +2843,23 @@ get_perfmon_stats(AdapterCB *cb, ULONG maxlen, struct _PERF_MON_CB **perfmon_sta
 
 				if( counter_mask != IONIC_PERF_MON_NO_STATS) {
 
-					if( counter_mask == IONIC_PERF_MON_ALL_STATS ||
-						(counter_mask & Rx_Pool_Alloc_Cnt_MASK) == Rx_Pool_Alloc_Cnt_MASK) {
+					if( counter_mask == IONIC_PERF_MON_ALL_STATS) {
 						lif_stats->rx_pool_alloc_cnt = InterlockedExchange( (LONG *)&lif->lif_stats->rx_pool_alloc_cnt,
 																			0);
 					}
 
-					if( counter_mask == IONIC_PERF_MON_ALL_STATS ||
-						(counter_mask & Rx_Pool_Free_Cnt_MASK) == Rx_Pool_Free_Cnt_MASK) {
+					if( counter_mask == IONIC_PERF_MON_ALL_STATS) {
 						lif_stats->rx_pool_free_cnt = InterlockedExchange( (LONG *)&lif->lif_stats->rx_pool_free_cnt,
 																		   0);
 					}
 
-					if( counter_mask == IONIC_PERF_MON_ALL_STATS ||
-						(counter_mask & Rx_Pool_Avail_Cnt_MASK) == Rx_Pool_Avail_Cnt_MASK) {
+					if( counter_mask == IONIC_PERF_MON_ALL_STATS) {
 #ifdef DBG
 						lif_stats->rx_pool_size = lif->rx_pkts_free_count;
 #endif
 					}
 
-					if( counter_mask == IONIC_PERF_MON_ALL_STATS ||
-						(counter_mask & Rx_Pool_Alloc_Time_MASK) == Rx_Pool_Alloc_Time_MASK) {
+					if( counter_mask == IONIC_PERF_MON_ALL_STATS) {
 						lif_stats->rx_pool_alloc_time = InterlockedExchange64( (LONG64 *)&lif->lif_stats->rx_pool_alloc_time,
 																		  0);
 						if( lif_stats->rx_pool_alloc_time != 0) {
@@ -2811,8 +2868,7 @@ get_perfmon_stats(AdapterCB *cb, ULONG maxlen, struct _PERF_MON_CB **perfmon_sta
 						}
 					}
 
-					if( counter_mask == IONIC_PERF_MON_ALL_STATS ||
-						(counter_mask & Rx_Pool_Free_Time_MASK) == Rx_Pool_Free_Time_MASK) {
+					if( counter_mask == IONIC_PERF_MON_ALL_STATS) {
 						lif_stats->rx_pool_free_time = InterlockedExchange64( (LONG64 *)&lif->lif_stats->rx_pool_free_time,
 																		  0);
 						if( lif_stats->rx_pool_free_time != 0) {
@@ -2833,15 +2889,93 @@ get_perfmon_stats(AdapterCB *cb, ULONG maxlen, struct _PERF_MON_CB **perfmon_sta
                     if (lif->rxqcqs[queue_cnt].qcq == NULL) {
                         continue;
                     }
-
+#ifdef DBG
 					if( counter_mask != IONIC_PERF_MON_NO_STATS) {
-						if( lif->rxqcqs[ queue_cnt].qcq->rx_stats->pool_sample_count != 0) {
-							rx_stats->rx_pool_count = InterlockedExchange( (LONG *)&lif->rxqcqs[ queue_cnt].qcq->rx_stats->pool_packet_count,
-																		   0);
-							rx_stats->rx_pool_count /= InterlockedExchange( (LONG *)&lif->rxqcqs[ queue_cnt].qcq->rx_stats->pool_sample_count,
-																		   0);
+					
+						dpc_count = InterlockedExchange( (LONG *)&lif->rxqcqs[ queue_cnt].qcq->dpc_count,
+														 0);
+						
+						rx_stats->max_queue_len = InterlockedExchange( (LONG *)&lif->rxqcqs[ queue_cnt].qcq->rx_stats->max_queue_len,
+																	   0);
+
+						entry_count = InterlockedExchange( (LONG *)&lif->rxqcqs[ queue_cnt].qcq->rx_stats->queue_len,
+															0);
+
+						if( dpc_count != 0) {	
+							rx_stats->queue_len = entry_count / dpc_count;													
+						}
+
+						rx_stats->dpc_total_time = InterlockedExchange64( (LONG64 *)&lif->rxqcqs[ queue_cnt].qcq->dpc_total_time,
+																		  0);
+						if( rx_stats->dpc_total_time != 0) {
+							rx_stats->dpc_total_time *= 1000000000;
+							rx_stats->dpc_total_time /= perf_frequ.QuadPart;
+
+							if( dpc_count != 0) {
+								rx_stats->dpc_total_time /= dpc_count;
+							}
+						}
+
+						rx_stats->dpc_latency = InterlockedExchange64( (LONG64 *)&lif->rxqcqs[ queue_cnt].qcq->dpc_latency,
+																		  0);
+						if( rx_stats->dpc_latency != 0) {
+							rx_stats->dpc_latency *= 1000000000;
+							rx_stats->dpc_latency /= perf_frequ.QuadPart;
+
+							if( dpc_count != 0) {
+								rx_stats->dpc_latency /= dpc_count;
+							}
+						}
+
+						rx_stats->dpc_to_dpc_time = InterlockedExchange64( (LONG64 *)&lif->rxqcqs[ queue_cnt].qcq->dpc_to_dpc_total_time,
+																		  0);
+						if( rx_stats->dpc_to_dpc_time != 0) {
+							rx_stats->dpc_to_dpc_time *= 1000000000;
+							rx_stats->dpc_to_dpc_time /= perf_frequ.QuadPart;
+
+							if( dpc_count != 0) {
+								rx_stats->dpc_to_dpc_time /= dpc_count;
+							}
+						}
+
+						rx_stats->dpc_indicate_time = InterlockedExchange64( (LONG64 *)&lif->rxqcqs[ queue_cnt].qcq->dpc_indicate_time,
+																		  0);
+						if( rx_stats->dpc_indicate_time != 0) {
+							rx_stats->dpc_indicate_time *= 1000000000;
+							rx_stats->dpc_indicate_time /= perf_frequ.QuadPart;
+
+							if( dpc_count != 0) {
+								rx_stats->dpc_indicate_time /= dpc_count;
+							}
+						}
+
+						rx_stats->dpc_walk_time = InterlockedExchange64( (LONG64 *)&lif->rxqcqs[ queue_cnt].qcq->dpc_walk_time,
+																		  0);
+						if( rx_stats->dpc_walk_time != 0) {
+							rx_stats->dpc_walk_time *= 1000000000;
+							rx_stats->dpc_walk_time /= perf_frequ.QuadPart;
+
+							if( dpc_count != 0) {
+								rx_stats->dpc_walk_time /= dpc_count;
+							}
+						}
+
+						rx_stats->dpc_fill_time = InterlockedExchange64( (LONG64 *)&lif->rxqcqs[ queue_cnt].qcq->dpc_fill_time,
+																		  0);
+						if( rx_stats->dpc_fill_time != 0) {
+							rx_stats->dpc_fill_time *= 1000000000;
+							rx_stats->dpc_fill_time /= perf_frequ.QuadPart;
+
+							if( dpc_count != 0) {
+								rx_stats->dpc_fill_time /= dpc_count;
+							}
+						}
+
+						if( last_call != 0) {
+							rx_stats->dpc_rate = (ULONGLONG)((ULONGLONG)dpc_count * (ULONGLONG)1000000)/last_call;
 						}
 					}
+#endif
 
                     rx_stats = (struct _PERF_MON_RX_QUEUE_STATS *)((char *)rx_stats + sizeof( struct _PERF_MON_RX_QUEUE_STATS));
                 }
@@ -2858,18 +2992,57 @@ get_perfmon_stats(AdapterCB *cb, ULONG maxlen, struct _PERF_MON_CB **perfmon_sta
                         continue;
                     }
 
+#ifdef DBG
 					if( counter_mask != IONIC_PERF_MON_NO_STATS) {
+					
+						dpc_count = InterlockedExchange( (LONG *)&lif->txqcqs[ queue_cnt].qcq->dpc_count,
+														  0);
+					
 						tx_stats->max_queue_len = lif->txqcqs[ queue_cnt].qcq->tx_stats->descriptor_max;
 						lif->txqcqs[ queue_cnt].qcq->tx_stats->descriptor_max = 0;
-
+					
 						if( lif->txqcqs[ queue_cnt].qcq->tx_stats->descriptor_sample != 0) {
 							tx_stats->queue_len = InterlockedExchange( (LONG *)&lif->txqcqs[ queue_cnt].qcq->tx_stats->descriptor_count,
 																		 0) /
 													InterlockedExchange( (LONG *)&lif->txqcqs[ queue_cnt].qcq->tx_stats->descriptor_sample,
 																		 0);
 						}
-					}
 
+						tx_stats->nbl_count = InterlockedExchange( (LONG *)&lif->txqcqs[ queue_cnt].qcq->tx_stats->nbl_count,
+																		   0);
+
+						tx_stats->nb_count = InterlockedExchange( (LONG *)&lif->txqcqs[ queue_cnt].qcq->tx_stats->nb_count,
+																		   0);
+
+						tx_stats->outstanding_nb_count = lif->txqcqs[ queue_cnt].qcq->outstanding_tx_count;
+
+						tx_stats->dpc_total_time = InterlockedExchange64( (LONG64 *)&lif->txqcqs[ queue_cnt].qcq->dpc_total_time,
+																		  0);
+						if( tx_stats->dpc_total_time != 0) {
+							tx_stats->dpc_total_time *= 1000000000;
+							tx_stats->dpc_total_time /= perf_frequ.QuadPart;
+
+							if( dpc_count != 0) {
+								tx_stats->dpc_total_time /= dpc_count;
+							}
+						}
+
+						tx_stats->dpc_to_dpc = InterlockedExchange64( (LONG64 *)&lif->txqcqs[ queue_cnt].qcq->dpc_to_dpc_total_time,
+																		  0);
+						if( tx_stats->dpc_to_dpc != 0) {
+							tx_stats->dpc_to_dpc *= 1000000000;
+							tx_stats->dpc_to_dpc /= perf_frequ.QuadPart;
+
+							if( dpc_count != 0) {
+								tx_stats->dpc_to_dpc /= dpc_count;
+							}
+						}
+
+						if( last_call != 0) {
+							tx_stats->dpc_rate = (ULONGLONG)((ULONGLONG)dpc_count * (ULONGLONG)1000000)/last_call;
+						}
+					}
+#endif
                     tx_stats = (struct _PERF_MON_TX_QUEUE_STATS *)((char *)tx_stats + sizeof( struct _PERF_MON_TX_QUEUE_STATS));
                 }
 

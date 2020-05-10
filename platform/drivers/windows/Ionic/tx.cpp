@@ -713,15 +713,15 @@ ionic_enqueue_txq_lso_pkt(struct qcq *qcq,
     }
 
     // DumpDesc( desc, start, done);
+#ifdef DBG
+    InterlockedIncrement(&qcq->outstanding_tx_count);
+#endif
 
     if (done) {
         ionic_q_post(q, true, ionic_txq_complete_pkt, packet);
     } else {
         ionic_q_post(q, false, ionic_txq_complete_pkt, packet);
     }
-#ifdef DBG
-    InterlockedIncrement(&qcq->outstanding_tx_count);
-#endif
     return;
 }
 
@@ -778,10 +778,11 @@ ionic_enqueue_txq_pkt(struct qcq *qcq,
         elem->len = 0;
     }
 
-    ionic_q_post(q, true, ionic_txq_complete_pkt, packet);
 #ifdef DBG
     InterlockedIncrement(&qcq->outstanding_tx_count);
 #endif
+
+    ionic_q_post(q, true, ionic_txq_complete_pkt, packet);
 
     return;
 }
@@ -1568,8 +1569,6 @@ ionic_send_packets(NDIS_HANDLE adapter_context,
 
     for (nbl = pnetlist; nbl; nbl = next_nbl) {
        
-        ULONG_PTR hash_val = (ULONG_PTR)NET_BUFFER_LIST_INFO( nbl, NetBufferListHashValue);
-
 		status = validate_nbl( ionic,
 							   nbl);
 
@@ -1605,8 +1604,6 @@ ionic_send_packets(NDIS_HANDLE adapter_context,
 			nbl_private = (struct txq_nbl_private *)NET_BUFFER_LIST_MINIPORT_RESERVED( nbl);
 			nbl_private->nb_processed_cnt = 0;
 
-			tx_queue = hash_val % lif->ntxqs;
-
 			next_nbl = NET_BUFFER_LIST_NEXT_NBL(nbl);
 			NET_BUFFER_LIST_NEXT_NBL(nbl) = NULL;
 
@@ -1617,6 +1614,8 @@ ionic_send_packets(NDIS_HANDLE adapter_context,
 				lif_id = NET_BUFFER_LIST_RECEIVE_QUEUE_ID(nbl);
 				lif = ionic->vm_queue[lif_id].lif;
 			}
+
+			tx_queue = get_tx_queue_id( lif, nbl, NET_BUFFER_LIST_FIRST_NB(nbl));
 
 			qcq = lif->txqcqs[tx_queue].qcq;
 
@@ -2175,6 +2174,9 @@ tx_packet_dpc_callback( _KDPC *Dpc,
 {
 
 	struct qcq *qcq = (struct qcq *)DeferredContext;
+#ifdef DBG
+	LARGE_INTEGER start_time;
+#endif
 
 	UNREFERENCED_PARAMETER(SystemArgument1);
 	UNREFERENCED_PARAMETER(SystemArgument2);
@@ -2182,6 +2184,15 @@ tx_packet_dpc_callback( _KDPC *Dpc,
 	// In the event our targeting of the DPC failed, or we are changing the affinity for the DPC,
 	// check there is only 1 instance running
 	if (InterlockedIncrement(&qcq->dpc_exec_cnt) == 1) {
+#ifdef DBG
+		InterlockedIncrement( &qcq->dpc_count);
+		start_time = KeQueryPerformanceCounter( NULL);
+		if( qcq->dpc_last_time.QuadPart != 0) {
+			InterlockedAdd64( &qcq->dpc_to_dpc_total_time,
+							  (LONG64)(start_time.QuadPart - qcq->dpc_last_time.QuadPart));
+		}
+		qcq->dpc_last_time = start_time;
+#endif
 
 		ionic_service_nbl_requests( qcq->q.lif->ionic, qcq, false);
 
@@ -2195,6 +2206,12 @@ tx_packet_dpc_callback( _KDPC *Dpc,
 					NULL,
 					NULL);
 		}
+#ifdef DBG
+		qcq->dpc_end_time = KeQueryPerformanceCounter( NULL);
+		InterlockedAdd64( &qcq->dpc_total_time,
+						  (LONG64)(qcq->dpc_end_time.QuadPart - start_time.QuadPart));
+#endif
+
 	}
 	else {
 		IoPrint("%s Running in parallel\n", __FUNCTION__);
@@ -2203,4 +2220,119 @@ tx_packet_dpc_callback( _KDPC *Dpc,
 	InterlockedDecrement( &qcq->dpc_exec_cnt);
 
 	return;
+}
+
+ULONG
+get_tx_queue_id(struct lif *lif,
+	PNET_BUFFER_LIST nbl,
+	PNET_BUFFER nb)
+{
+
+	ULONG queue_id = 0;
+	ULONG_PTR hash_val = 0;
+	ULONG packet_len = 0;
+	ULONG data_offset = 0;
+	void *hdr_buffer = NULL;
+	ULONG buffer_len = 0;
+	struct ethhdr *ethr_hdr = NULL;
+	USHORT ethr_proto = 0;
+	struct ipv4hdr *ipv4_hdr = NULL;
+	void *first_hdr = NULL;
+	struct tcphdr *tcp_hdr = NULL;
+	struct udphdr *udp_hdr = NULL;
+	struct ipv6hdr *ipv6_hdr = NULL;
+
+	if (BooleanFlagOn(StateFlags, IONIC_STATE_TX_QUEUE_TO_PORT_ID)) {
+
+		packet_len = NET_BUFFER_DATA_LENGTH(nb);
+
+		data_offset = (UINT)NET_BUFFER_CURRENT_MDL_OFFSET(nb);
+
+		hdr_buffer = MmGetSystemAddressForMdlSafe(nb->CurrentMdl, NormalPagePriority);
+
+		if (hdr_buffer == NULL ||
+			nb->CurrentMdl->ByteCount <= data_offset) {
+			goto exit;
+		}
+
+		buffer_len = nb->CurrentMdl->ByteCount - data_offset;
+
+	    hdr_buffer = (void *)((char *)hdr_buffer + data_offset);
+
+		if (buffer_len <= sizeof(struct ethhdr)) {
+			goto exit;
+		}
+
+		ethr_hdr = (struct ethhdr *)hdr_buffer;
+
+		if( is_1q_hdr_present( hdr_buffer)) {
+			ethr_proto = *((USHORT *)((char *)hdr_buffer + sizeof(struct ethhdr)));
+			first_hdr = (void *)((char *)hdr_buffer + sizeof(struct ethhdr) + sizeof( USHORT));
+		}
+		else {
+			ethr_proto = ethr_hdr->h_proto;
+			first_hdr = (void *)((char *)hdr_buffer + sizeof(struct ethhdr));
+		}
+
+		buffer_len -= sizeof(struct ethhdr);
+
+		switch( ethr_proto) {
+
+			case 0x0008: { // IPv4
+
+				ipv4_hdr = (struct ipv4hdr *)first_hdr;
+
+				if( ipv4_hdr->protocol == IPPROTO_TCP) {
+					if( buffer_len >= (ipv4_hdr->ihl * sizeof( ULONG)) + sizeof( struct tcphdr)) {
+						tcp_hdr = (struct tcphdr *)((char *)ipv4_hdr + (ipv4_hdr->ihl * sizeof( ULONG)));
+						queue_id = _byteswap_ushort(tcp_hdr->dest) & 0xFF;
+					}
+				}
+				else if( ipv4_hdr->protocol == IPPROTO_UDP) {
+					if( buffer_len >= (ipv4_hdr->ihl * sizeof( ULONG)) + sizeof( struct udphdr)) {
+						udp_hdr = (struct udphdr *)((char *)ipv4_hdr + (ipv4_hdr->ihl * sizeof( ULONG)));
+						queue_id = _byteswap_ushort(udp_hdr->dest) & 0xFF;
+					}
+				}
+
+				queue_id = queue_id % lif->ntxqs;
+				
+				break;
+			}
+
+			case 0xDD86: { // IPv6
+
+				ipv6_hdr = (struct ipv6hdr *)first_hdr;
+
+				if( ipv6_hdr->nexthdr == IPPROTO_TCP) {
+					if( buffer_len >= sizeof( struct ipv6hdr) + sizeof( struct tcphdr)) {
+						tcp_hdr = (struct tcphdr *)((char *)ipv6_hdr + sizeof( struct ipv6hdr));
+						queue_id = _byteswap_ushort(tcp_hdr->dest) & 0xFF;
+					}
+				}
+				else if( ipv6_hdr->nexthdr == IPPROTO_UDP) {
+					if( buffer_len >= sizeof( struct ipv6hdr) + sizeof( struct udphdr)) {
+						udp_hdr = (struct udphdr *)((char *)ipv6_hdr + sizeof( struct ipv6hdr));
+						queue_id = _byteswap_ushort(udp_hdr->dest) & 0xFF;
+					}
+				}
+
+				queue_id = queue_id % lif->ntxqs;
+				
+				break;
+			}
+
+			default: {
+				break;
+			}
+		}
+	}
+	else {
+		hash_val = (ULONG_PTR)NET_BUFFER_LIST_INFO( nbl, NetBufferListHashValue);
+		queue_id = hash_val % lif->ntxqs;
+	}
+
+exit:
+
+	return queue_id;
 }

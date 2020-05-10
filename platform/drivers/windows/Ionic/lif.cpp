@@ -760,7 +760,7 @@ ionic_qcq_alloc(struct lif *lif,
 								 tx_packet_dpc_callback,
 								 (void *)newqcq);
 		KeSetImportanceDpc( &newqcq->tx_packet_dpc,
-							MediumImportance);
+							MediumHighImportance);
 	}
 
     *qcq = newqcq;
@@ -857,6 +857,12 @@ ionic_qcq_free(struct lif *lif, struct qcq *qcq)
 	NdisFreeSpinLock(&qcq->txq_nb_lock);
 	NdisFreeSpinLock(&qcq->txq_nbl_lock);
 	NdisFreeSpinLock(&qcq->rx_ring_lock);
+
+    if (qcq->rsc != NULL) {
+        NdisFreeMemoryWithTagPriority_internal(lif->ionic->adapterhandle,
+                                               qcq->rsc,
+                                               IONIC_QCQ_TAG);
+    }
 
     NdisFreeMemoryWithTagPriority_internal(lif->ionic->adapterhandle, qcq,
                                   IONIC_QCQ_TAG);
@@ -1923,6 +1929,20 @@ ionic_txrx_alloc(struct lif *lif,
             goto err_out_free_rxqcqs;
         }
 
+        lif->rxqcqs[i].qcq->rsc = (struct rsc_scratch *)
+            NdisAllocateMemoryWithTagPriority_internal(
+                    lif->ionic->adapterhandle,
+                    sizeof(*lif->rxqcqs[i].qcq->rsc),
+                    IONIC_QCQ_TAG, NormalPoolPriority);
+
+        if (lif->rxqcqs[i].qcq->rsc == NULL) {
+            DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
+                      "%s Ionic %p Failed to alloc rsc scratch\n",
+                      __FUNCTION__, ionic));
+            status = NDIS_STATUS_RESOURCES;
+            goto err_out_free_rxqcqs;
+        }
+
         lif->rxqcqs[i].qcq->rx_stats = lif->rxqcqs[i].rx_stats;
 
 		/* If enabled, set the coalescing timer */	
@@ -2160,6 +2180,10 @@ ionic_stop(struct ionic *ionic)
     struct lif *lif = ionic->master_lif;
     BOOLEAN set_event = FALSE;
 
+	if (perfmon_timer != NULL) {
+		NdisCancelTimerObject( perfmon_timer);
+	}
+
     // Sync behind any perfmon events coming in
     status = KeWaitForSingleObject(&perfmon_event,
                                   Executive,
@@ -2236,7 +2260,7 @@ ionic_lif_open(struct lif *lif,
 	status = ionic_alloc_rxq_pool( lif);
     if (status != NDIS_STATUS_SUCCESS) {
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
-                  "%s ionic_txrx_alloc() Failed status %08lX\n", __FUNCTION__,
+                  "%s ionic_alloc_rxq_pool() Failed status %08lX\n", __FUNCTION__,
                   status));
         return status;
     }
