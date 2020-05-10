@@ -512,6 +512,7 @@ jobd/dol/apulu/rfc_ingress: ${JOBD_PREREQS}
 	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_negative_2 --sub ipv4_ingress_negative_2
 	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_empty --sub ipv4_ingress_empty
 	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_negative_no_match --sub ipv4_ingress_no_match
+	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_any_deny --sub ipv4_ingress_overlap_2
 
 .PHONY: jobd/dol/apulu/rfc_egress
 jobd/dol/apulu/rfc_egress: ${JOBD_PREREQS}

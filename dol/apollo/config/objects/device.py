@@ -113,6 +113,10 @@ class DeviceObject(base.ConfigObjectBase):
         spec.LearningEn = self.LearningEnabled
         spec.LearnAgeTimeout = self.LearnAgeTimeout
         spec.OverlayRoutingEn = self.OverlayRoutingEn
+        if self.PolicyAnyDeny == True:
+            spec.FwPolicyXposnScheme = types_pb2.FW_POLICY_XPOSN_ANY_DENY
+        else :
+            spec.FwPolicyXposnScheme = types_pb2.FW_POLICY_XPOSN_GLOBAL_PRIORITY
         return
 
     def ValidateSpec(self, spec):
