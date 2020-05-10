@@ -3,7 +3,7 @@
   <Product Id="*" Name="Pensando Ionic Driver" Language="1033" Version="$(env.IONIC_VERSION_MAJOR).$(env.IONIC_VERSION_MINOR).$(env.IONIC_VERSION_SP).$(env.IONIC_VERSION_BUILD)" Manufacturer="Pensando Systems" UpgradeCode="a13e47d8-4da5-4249-8a4d-d060deaeb27f">
     <Package Id="*" Keywords="Installer" Comments="Copyright (c) Pensando Systems All rights reserved." Description="Pensando Ionic NDIS miniport driver" InstallerVersion="200" Languages="1033" Compressed="yes" InstallScope="perMachine" />
 
-    <MajorUpgrade Schedule="afterInstallValidate" AllowDowngrades="no" DowngradeErrorMessage="A newer version of Pensando Ionic Driver is already installed." AllowSameVersionUpgrades="no" />
+    <MajorUpgrade Schedule="afterInstallValidate" AllowDowngrades="no" DowngradeErrorMessage="A newer version of Pensando Ionic Driver is already installed." AllowSameVersionUpgrades="yes" />
 
     <Media Id="1" Cabinet="PensandoIonicMiniport.cab" EmbedCab="yes" />
         <Feature Id="Complete" Title="Ionic Driver Complete Package" Description="Pensando Ionic Driver and Tools Installation Package" Display="expand" Level="1" ConfigurableDirectory="INSTALLDIR" AllowAdvertise="no" Absent="disallow">
