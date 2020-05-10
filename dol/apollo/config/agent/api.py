@@ -1,4 +1,5 @@
 #! /usr/bin/python3
+import inspect
 import os
 import pdb
 import grpc
@@ -7,7 +8,7 @@ import requests
 import time
 import urllib3
 
-import oper_pb2_grpc as oper_pb2_grpc
+import opersvc_pb2_grpc as oper_pb2_grpc
 import batch_pb2_grpc as batch_pb2_grpc
 import device_pb2_grpc as device_pb2_grpc
 import vpc_pb2_grpc as vpc_pb2_grpc
@@ -50,6 +51,7 @@ import cp_route_pb2 as cp_route_pb2
 import evpn_pb2 as evpn_pb2
 import policer_pb2 as policer_pb2
 
+import infra.common.defs as defs
 from infra.common.glopts  import GlobalOptions
 from infra.common.logging import logger
 
@@ -59,6 +61,12 @@ MAX_MSG_LEN = 1024 * 1024 * 100
 # RPC Timeout - 20mins
 MAX_GRPC_WAIT = 1200
 MAX_BATCH_SIZE = 64
+
+class AgentPorts(enum.IntEnum):
+    NONE = 0
+    DSCAGENTREST = 8888
+    PDSAGENT = 11357
+    OPERD = 11359
 
 class ApiOps(enum.IntEnum):
     NONE = 0
@@ -102,10 +110,14 @@ class ObjectTypes(enum.IntEnum):
     BGP_EVPN_IP_VRF = 27
     BGP_EVPN_IP_VRF_RT = 28
     STATIC_ROUTE = 29
-    OPER = 30
-    SECURITY_PROFILE = 31
-    DHCP_PROXY = 32
-    MAX = 33
+    SECURITY_PROFILE = 30
+    DHCP_PROXY = 31
+    MAX = 32
+
+class OperdObjectTypes(enum.IntEnum):
+    NONE = 0
+    TECHSUPPORT = 1
+    MAX = 2
 
 class ClientModule:
     def __init__(self, module, msg_prefix):
@@ -135,7 +147,7 @@ class ClientModule:
 
 class ClientRESTModule:
     def __init__(self, ip, uri):
-        self.url = "https://" + ip + ":8888" + uri
+        self.url = f"https://{ip}:{AgentPorts.DSCAGENTREST.value}{uri}"
         return
 
     def Create(self, objs):
@@ -278,238 +290,285 @@ class RetryOnFailureInterceptors(grpc.UnaryUnaryClientInterceptor,
         # Intercepts a stream-unary invocation asynchronously
         return self.__intercept_rpc(continuation, client_call_details, request_iterator)
 
-class ApolloAgentClientRequest:
-    def __init__(self, stub, req,):
-        self.__stub = stub
+class AgentClientBase:
+    rpcInterceptors = (RetryOnFailureInterceptors(),)
+
+    def __init__(self, name, objTypes, ip = None):
+        self.Name = name
+        self.Channel = None
+        self.Stubs = [None] * objTypes.MAX
+        self.MsgReqs = [None] * objTypes.MAX
+        self.IPAddr = self.GetAgentIP(ip)
+        self.Port = self.GetAgentPort()
+        self.Endpoint = f"{self.IPAddr}:{self.Port}"
+        self.CreateMsgReqTable()
+        self.CreateChannel()
+        if not self.Connect():
+            assert (0), f"Failed to connect to {self.Name} at {self.Endpoint}"
+        self.CreateStubs()
         return
 
-class ApolloAgentClient:
-    rpcinterceptors = (RetryOnFailureInterceptors(),)
+    def __unimplemented(self):
+        UnimplementedError = f"'{inspect.stack()[1].function}' method is NOT "\
+                             f"implemented by class: {self.__class__}"
+        logger.error(UnimplementedError)
+        assert (0), UnimplementedError
 
-    def __init__(self, ip = None):
-        self.__channel = None
-        self.__stubs = [None] * ObjectTypes.MAX
-        self.__msgreqs = [None] * ObjectTypes.MAX
-        self.__restreqs = [None] * ObjectTypes.MAX
-        if ip == None:
-            self.agentip = self.__get_agent_ip()
-        else:
-            self.agentip = ip
-        self.agentport = self.__get_agent_port()
-        self.endpoint = f"{self.agentip}:{self.agentport}"
-        self.__create_msgreq_table()
-        self.__create_channel()
-        if not self.__connect():
-            assert (0), f"Failed to connect to {self.endpoint}"
-        self.__create_stubs()
-        if GlobalOptions.netagent:
-            self.__create_restreq_table()
-        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-        return
+    def GetAgentPort(self):
+        self.__unimplemented()
 
-    def __get_agent_port(self):
-        try:
-            port = os.environ['AGENT_GRPC_PORT']
-        except:
-            port = '11357'
-        return port;
-
-    def __get_agent_ip(self):
+    def GetAgentIP(self, agentip):
+        if agentip: return agentip
         try:
             agentip = os.environ['AGENT_GRPC_IP']
         except:
             agentip = 'localhost'
         return agentip
 
-    def __create_channel(self):
-        logger.info(f"Creating grpc channel to {self.endpoint}")
+    def CreateChannel(self):
+        logger.info(f"Creating grpc channel to {self.Name} at {self.Endpoint}")
         channel = grpc.insecure_channel(
-                self.endpoint,
+                self.Endpoint,
                 options=[
                         ('grpc.max_receive_message_length', MAX_MSG_LEN),
                         ('grpc.max_send_message_length', MAX_MSG_LEN),
                 ]
         )
-        self.__channel = grpc.intercept_channel(channel, *ApolloAgentClient.rpcinterceptors)
+        self.Channel = grpc.intercept_channel(channel, *AgentClientBase.rpcInterceptors)
 
-    def __connect(self):
+    def Connect(self):
         if GlobalOptions.dryrun: return True
-        logger.info("Waiting for Agent to be ready ...")
+        logger.info(f"Waiting for {self.Name} at {self.Endpoint} to be ready ...")
         try:
-            grpc.channel_ready_future(self.__channel).result(MAX_CONNECT_TIMEOUT)
+            grpc.channel_ready_future(self.Channel).result(MAX_CONNECT_TIMEOUT)
         except:
-            logger.error(f"Error establishing grpc connection to {self.endpoint}")
+            logger.error(f"Error establishing grpc connection to {self.Name} at {self.Endpoint}")
             return False
-        logger.info(f"Established grpc connection to Agent {self.endpoint}")
+        logger.info(f"Established grpc connection to {self.Name} at {self.Endpoint}")
         return True
 
-    def __create_stubs(self):
-        if GlobalOptions.dryrun: return
-        self.__stubs[ObjectTypes.OPER] = ClientStub(oper_pb2_grpc.OperSvcStub,
-                                                    self.__channel, 'Oper')
-        self.__stubs[ObjectTypes.BATCH] = ClientStub(batch_pb2_grpc.BatchSvcStub,
-                                                     self.__channel, 'Batch')
-        self.__stubs[ObjectTypes.DEVICE] = ClientStub(device_pb2_grpc.DeviceSvcStub,
-                                                      self.__channel, 'Device')
-        self.__stubs[ObjectTypes.INTERFACE] = ClientStub(interface_pb2_grpc.IfSvcStub,
-                                                      self.__channel, 'Interface')
-        self.__stubs[ObjectTypes.VPC] = ClientStub(vpc_pb2_grpc.VPCSvcStub,
-                                                   self.__channel, 'VPC')
-        self.__stubs[ObjectTypes.SUBNET] = ClientStub(subnet_pb2_grpc.SubnetSvcStub,
-                                                      self.__channel, 'Subnet')
-        self.__stubs[ObjectTypes.TUNNEL] = ClientStub(tunnel_pb2_grpc.TunnelSvcStub,
-                                                      self.__channel, 'Tunnel')
-        self.__stubs[ObjectTypes.VNIC] = ClientStub(vnic_pb2_grpc.VnicSvcStub,
-                                                      self.__channel, 'Vnic')
-        self.__stubs[ObjectTypes.LMAPPING] = ClientStub(mapping_pb2_grpc.MappingSvcStub,
-                                                      self.__channel, 'Mapping')
-        self.__stubs[ObjectTypes.RMAPPING] = ClientStub(mapping_pb2_grpc.MappingSvcStub,
-                                                      self.__channel, 'Mapping')
-        self.__stubs[ObjectTypes.ROUTE] = ClientStub(route_pb2_grpc.RouteSvcStub,
-                                                      self.__channel, 'RouteTable')
-        self.__stubs[ObjectTypes.POLICY] = ClientStub(policy_pb2_grpc.SecurityPolicySvcStub,
-                                                      self.__channel, 'SecurityPolicy')
-        self.__stubs[ObjectTypes.SECURITY_PROFILE] = ClientStub(policy_pb2_grpc.SecurityPolicySvcStub,
-                                                      self.__channel, 'SecurityProfile')
-        self.__stubs[ObjectTypes.MIRROR] = ClientStub(mirror_pb2_grpc.MirrorSvcStub,
-                                                      self.__channel, 'MirrorSession')
-        self.__stubs[ObjectTypes.NEXTHOP] = ClientStub(nh_pb2_grpc.NhSvcStub,
-                                                      self.__channel, 'Nexthop')
-        self.__stubs[ObjectTypes.NEXTHOPGROUP] = ClientStub(nh_pb2_grpc.NhSvcStub,
-                                                      self.__channel, 'NhGroup')
-        self.__stubs[ObjectTypes.SVCMAPPING] = ClientStub(service_pb2_grpc.SvcStub,
-                                                      self.__channel, 'SvcMapping')
-        self.__stubs[ObjectTypes.TAG] = ClientStub(tags_pb2_grpc.TagSvcStub,
-                                                      self.__channel, 'Tag')
-        self.__stubs[ObjectTypes.METER] = ClientStub(meter_pb2_grpc.MeterSvcStub,
-                                                      self.__channel, 'Meter')
-        self.__stubs[ObjectTypes.DHCP_RELAY] = ClientStub(dhcp_pb2_grpc.DHCPSvcStub,
-                                                      self.__channel, 'DHCPPolicy')
-        self.__stubs[ObjectTypes.DHCP_PROXY] = ClientStub(dhcp_pb2_grpc.DHCPSvcStub,
-                                                      self.__channel, 'DHCPPolicy')
-        self.__stubs[ObjectTypes.NAT] = ClientStub(nat_pb2_grpc.NatSvcStub,
-                                                      self.__channel, 'NatPortBlock')
-        self.__stubs[ObjectTypes.POLICER] = ClientStub(policer_pb2_grpc.PolicerSvcStub,
-                                                      self.__channel, 'Policer')
-        self.__stubs[ObjectTypes.BGP] = ClientStub(bgp_pb2_grpc.BGPSvcStub,
-                                                   self.__channel, 'BGP')
-        self.__stubs[ObjectTypes.BGP_PEER] = ClientStub(bgp_pb2_grpc.BGPSvcStub,
-                                                        self.__channel, 'BGPPeer')
-        self.__stubs[ObjectTypes.BGP_PEER_AF] = ClientStub(bgp_pb2_grpc.BGPSvcStub,
-                                                           self.__channel, 'BGPPeerAf')
-        self.__stubs[ObjectTypes.BGP_EVPN_EVI] = ClientStub(evpn_pb2_grpc.EvpnSvcStub,
-                                                    self.__channel, 'EvpnEvi')
-        self.__stubs[ObjectTypes.BGP_EVPN_EVI_RT] = ClientStub(evpn_pb2_grpc.EvpnSvcStub,
-                                                    self.__channel, 'EvpnEviRt')
-        self.__stubs[ObjectTypes.BGP_EVPN_IP_VRF] = ClientStub(evpn_pb2_grpc.EvpnSvcStub,
-                                                    self.__channel, 'EvpnIpVrf')
-        self.__stubs[ObjectTypes.BGP_EVPN_IP_VRF_RT] = ClientStub(evpn_pb2_grpc.EvpnSvcStub,
-                                                    self.__channel, 'EvpnIpVrfRt')
-        self.__stubs[ObjectTypes.STATIC_ROUTE] = ClientStub(cp_route_pb2_grpc.CPRouteSvcStub,
-                                                        self.__channel, 'CPStaticRoute')
-        return
+    def CreateStubs(self):
+        self.__unimplemented()
 
-    def __create_msgreq_table(self):
-        self.__msgreqs[ObjectTypes.DEVICE] = ClientModule(device_pb2, 'Device')
-        self.__msgreqs[ObjectTypes.INTERFACE] = ClientModule(interface_pb2, 'Interface')
-        self.__msgreqs[ObjectTypes.LMAPPING] = ClientModule(mapping_pb2, 'Mapping')
-        self.__msgreqs[ObjectTypes.RMAPPING] = ClientModule(mapping_pb2, 'Mapping')
-        self.__msgreqs[ObjectTypes.METER] = ClientModule(meter_pb2, 'Meter')
-        self.__msgreqs[ObjectTypes.MIRROR] = ClientModule(mirror_pb2, 'MirrorSession')
-        self.__msgreqs[ObjectTypes.NEXTHOP] = ClientModule(nh_pb2, 'Nexthop')
-        self.__msgreqs[ObjectTypes.NEXTHOPGROUP] = ClientModule(nh_pb2, 'NhGroup')
-        self.__msgreqs[ObjectTypes.ROUTE] = ClientModule(route_pb2, 'RouteTable')
-        self.__msgreqs[ObjectTypes.POLICY] = ClientModule(policy_pb2, 'SecurityPolicy')
-        self.__msgreqs[ObjectTypes.SECURITY_PROFILE] = ClientModule(policy_pb2, 'SecurityProfile')
-        self.__msgreqs[ObjectTypes.SUBNET] = ClientModule(subnet_pb2, 'Subnet')
-        self.__msgreqs[ObjectTypes.TAG] = ClientModule(tags_pb2, 'Tag')
-        self.__msgreqs[ObjectTypes.TUNNEL] = ClientModule(tunnel_pb2, 'Tunnel')
-        self.__msgreqs[ObjectTypes.VPC] = ClientModule(vpc_pb2, 'VPC')
-        self.__msgreqs[ObjectTypes.VNIC] = ClientModule(vnic_pb2, 'Vnic')
-        self.__msgreqs[ObjectTypes.DHCP_RELAY] = ClientModule(dhcp_pb2, 'DHCPPolicy')
-        self.__msgreqs[ObjectTypes.DHCP_PROXY] = ClientModule(dhcp_pb2, 'DHCPPolicy')
-        self.__msgreqs[ObjectTypes.NAT] = ClientModule(nat_pb2, 'NatPortBlock')
-        self.__msgreqs[ObjectTypes.POLICER] = ClientModule(policer_pb2, 'Policer')
-        self.__msgreqs[ObjectTypes.BGP] = ClientModule(bgp_pb2, 'BGP')
-        self.__msgreqs[ObjectTypes.BGP_PEER] = ClientModule(bgp_pb2, 'BGPPeer')
-        self.__msgreqs[ObjectTypes.BGP_PEER_AF] = ClientModule(bgp_pb2, 'BGPPeerAf')
-        self.__msgreqs[ObjectTypes.BGP_EVPN_EVI] = ClientModule(evpn_pb2, 'EvpnEvi')
-        self.__msgreqs[ObjectTypes.BGP_EVPN_EVI_RT] = ClientModule(evpn_pb2, 'EvpnEviRt')
-        self.__msgreqs[ObjectTypes.BGP_EVPN_IP_VRF] = ClientModule(evpn_pb2, 'EvpnIpVrf')
-        self.__msgreqs[ObjectTypes.BGP_EVPN_IP_VRF_RT] = ClientModule(evpn_pb2, 'EvpnIpVrfRt')
-        self.__msgreqs[ObjectTypes.STATIC_ROUTE] = ClientModule(cp_route_pb2, 'CPStaticRoute')
-        return
-
-    def __create_restreq_table(self):
-        self.__restreqs[ObjectTypes.VPC] = ClientRESTModule(self.agentip, "/api/vrfs/")
-        self.__restreqs[ObjectTypes.ROUTE] = ClientRESTModule(self.agentip, "/api/route-tables/")
-        self.__restreqs[ObjectTypes.SUBNET] = ClientRESTModule(self.agentip, "/api/networks/")
-        self.__restreqs[ObjectTypes.BGP] = ClientRESTModule(self.agentip, "/api/routingconfigs/")
-        self.__restreqs[ObjectTypes.INTERFACE] = ClientRESTModule(self.agentip, "/api/interfaces/")
-        self.__restreqs[ObjectTypes.POLICY] = ClientRESTModule(self.agentip, "/api/security/policies/")
-        self.__restreqs[ObjectTypes.DHCP_RELAY] = ClientRESTModule(self.agentip, "/api/ipam-policies/")
-        return
+    def CreateMsgReqTable(self):
+        self.__unimplemented()
 
     def GetGRPCMsgReq(self, objtype, op):
-        return self.__msgreqs[objtype].MsgReq(op)
+        return self.MsgReqs[objtype].MsgReq(op)
 
     def Create(self, objtype, objs):
-        if GlobalOptions.netagent:
-            if not self.__restreqs[objtype]:
-                return # unsupported object
-            return self.__restreqs[objtype].Create(objs)
         if GlobalOptions.dryrun: return True
-        return self.__stubs[objtype].Rpc(ApiOps.CREATE, objs)
+        return self.Stubs[objtype].Rpc(ApiOps.CREATE, objs)
 
     def Delete(self, objtype, objs):
-        if GlobalOptions.netagent:
-            if not self.__restreqs[objtype]:
-                return # unsupported object
-            return self.__restreqs[objtype].Delete(objs)
         if GlobalOptions.dryrun: return True
-        return self.__stubs[objtype].Rpc(ApiOps.DELETE, objs)
+        return self.Stubs[objtype].Rpc(ApiOps.DELETE, objs)
 
     def Update(self, objtype, objs):
-        if GlobalOptions.netagent:
-            if not self.__restreqs[objtype]:
-                return # unsupported object
-            return self.__restreqs[objtype].Update(objs)
         if GlobalOptions.dryrun: return True
-        return self.__stubs[objtype].Rpc(ApiOps.UPDATE, objs)
-
-    def GetGrpc(self, objtype, objs):
-        if GlobalOptions.dryrun: return
-        return self.__stubs[objtype].Rpc(ApiOps.GET, objs)
-
-    def GetHttp(self, objtype):
-        if GlobalOptions.dryrun: return None
-        if not self.__restreqs[objtype]:
-            return None # unsupported object
-        return self.__restreqs[objtype].Get()
+        return self.Stubs[objtype].Rpc(ApiOps.UPDATE, objs)
 
     def Get(self, objtype, objs):
-        #if GlobalOptions.netagent:
-            #return self.GetHttp(objtype)
-        # default to grpc for now
-        return self.GetGrpc(objtype, objs)
+        if GlobalOptions.dryrun: return
+        return self.Stubs[objtype].Rpc(ApiOps.GET, objs)
 
     def Request(self, objtype, rpcname, objs):
         if GlobalOptions.dryrun: return
-        return self.__stubs[objtype].DoRpc(rpcname, objs)
+        return self.Stubs[objtype].DoRpc(rpcname, objs)
+
+class OperdClient(AgentClientBase):
+    def __init__(self, ip = None):
+        super().__init__('operd', OperdObjectTypes, ip)
+        return
+
+    def GetAgentPort(self):
+        try:
+            port = os.environ['OPERD_GRPC_PORT']
+        except:
+            port = f'{AgentPorts.OPERD.value}'
+        return port;
+
+    def CreateStubs(self):
+        if GlobalOptions.dryrun: return
+        self.Stubs[OperdObjectTypes.TECHSUPPORT] = ClientStub(oper_pb2_grpc.OperSvcStub,
+                                                              self.Channel, 'Oper')
+        return
+
+    def CreateMsgReqTable(self):
+        return
+
+class PdsAgentClient(AgentClientBase):
+    def __init__(self, ip = None):
+        super().__init__('agent', ObjectTypes, ip)
+        # TODO: split netagent client
+        if GlobalOptions.netagent:
+            self.RestReqs = [None] * ObjectTypes.MAX
+            self.__create_restreq_table()
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        return
+
+    def GetAgentPort(self):
+        try:
+            port = os.environ['AGENT_GRPC_PORT']
+        except:
+            port = f'{AgentPorts.PDSAGENT.value}'
+        return port;
+
+    def CreateStubs(self):
+        if GlobalOptions.dryrun: return
+        self.Stubs[ObjectTypes.BATCH] = ClientStub(batch_pb2_grpc.BatchSvcStub,
+                                                     self.Channel, 'Batch')
+        self.Stubs[ObjectTypes.DEVICE] = ClientStub(device_pb2_grpc.DeviceSvcStub,
+                                                      self.Channel, 'Device')
+        self.Stubs[ObjectTypes.INTERFACE] = ClientStub(interface_pb2_grpc.IfSvcStub,
+                                                      self.Channel, 'Interface')
+        self.Stubs[ObjectTypes.VPC] = ClientStub(vpc_pb2_grpc.VPCSvcStub,
+                                                   self.Channel, 'VPC')
+        self.Stubs[ObjectTypes.SUBNET] = ClientStub(subnet_pb2_grpc.SubnetSvcStub,
+                                                      self.Channel, 'Subnet')
+        self.Stubs[ObjectTypes.TUNNEL] = ClientStub(tunnel_pb2_grpc.TunnelSvcStub,
+                                                      self.Channel, 'Tunnel')
+        self.Stubs[ObjectTypes.VNIC] = ClientStub(vnic_pb2_grpc.VnicSvcStub,
+                                                      self.Channel, 'Vnic')
+        self.Stubs[ObjectTypes.LMAPPING] = ClientStub(mapping_pb2_grpc.MappingSvcStub,
+                                                      self.Channel, 'Mapping')
+        self.Stubs[ObjectTypes.RMAPPING] = ClientStub(mapping_pb2_grpc.MappingSvcStub,
+                                                      self.Channel, 'Mapping')
+        self.Stubs[ObjectTypes.ROUTE] = ClientStub(route_pb2_grpc.RouteSvcStub,
+                                                      self.Channel, 'RouteTable')
+        self.Stubs[ObjectTypes.POLICY] = ClientStub(policy_pb2_grpc.SecurityPolicySvcStub,
+                                                      self.Channel, 'SecurityPolicy')
+        self.Stubs[ObjectTypes.SECURITY_PROFILE] = ClientStub(policy_pb2_grpc.SecurityPolicySvcStub,
+                                                      self.Channel, 'SecurityProfile')
+        self.Stubs[ObjectTypes.MIRROR] = ClientStub(mirror_pb2_grpc.MirrorSvcStub,
+                                                      self.Channel, 'MirrorSession')
+        self.Stubs[ObjectTypes.NEXTHOP] = ClientStub(nh_pb2_grpc.NhSvcStub,
+                                                      self.Channel, 'Nexthop')
+        self.Stubs[ObjectTypes.NEXTHOPGROUP] = ClientStub(nh_pb2_grpc.NhSvcStub,
+                                                      self.Channel, 'NhGroup')
+        self.Stubs[ObjectTypes.SVCMAPPING] = ClientStub(service_pb2_grpc.SvcStub,
+                                                      self.Channel, 'SvcMapping')
+        self.Stubs[ObjectTypes.TAG] = ClientStub(tags_pb2_grpc.TagSvcStub,
+                                                      self.Channel, 'Tag')
+        self.Stubs[ObjectTypes.METER] = ClientStub(meter_pb2_grpc.MeterSvcStub,
+                                                      self.Channel, 'Meter')
+        self.Stubs[ObjectTypes.DHCP_RELAY] = ClientStub(dhcp_pb2_grpc.DHCPSvcStub,
+                                                      self.Channel, 'DHCPPolicy')
+        self.Stubs[ObjectTypes.DHCP_PROXY] = ClientStub(dhcp_pb2_grpc.DHCPSvcStub,
+                                                      self.Channel, 'DHCPPolicy')
+        self.Stubs[ObjectTypes.NAT] = ClientStub(nat_pb2_grpc.NatSvcStub,
+                                                      self.Channel, 'NatPortBlock')
+        self.Stubs[ObjectTypes.POLICER] = ClientStub(policer_pb2_grpc.PolicerSvcStub,
+                                                      self.Channel, 'Policer')
+        self.Stubs[ObjectTypes.BGP] = ClientStub(bgp_pb2_grpc.BGPSvcStub,
+                                                   self.Channel, 'BGP')
+        self.Stubs[ObjectTypes.BGP_PEER] = ClientStub(bgp_pb2_grpc.BGPSvcStub,
+                                                        self.Channel, 'BGPPeer')
+        self.Stubs[ObjectTypes.BGP_PEER_AF] = ClientStub(bgp_pb2_grpc.BGPSvcStub,
+                                                           self.Channel, 'BGPPeerAf')
+        self.Stubs[ObjectTypes.BGP_EVPN_EVI] = ClientStub(evpn_pb2_grpc.EvpnSvcStub,
+                                                    self.Channel, 'EvpnEvi')
+        self.Stubs[ObjectTypes.BGP_EVPN_EVI_RT] = ClientStub(evpn_pb2_grpc.EvpnSvcStub,
+                                                    self.Channel, 'EvpnEviRt')
+        self.Stubs[ObjectTypes.BGP_EVPN_IP_VRF] = ClientStub(evpn_pb2_grpc.EvpnSvcStub,
+                                                    self.Channel, 'EvpnIpVrf')
+        self.Stubs[ObjectTypes.BGP_EVPN_IP_VRF_RT] = ClientStub(evpn_pb2_grpc.EvpnSvcStub,
+                                                    self.Channel, 'EvpnIpVrfRt')
+        self.Stubs[ObjectTypes.STATIC_ROUTE] = ClientStub(cp_route_pb2_grpc.CPRouteSvcStub,
+                                                        self.Channel, 'CPStaticRoute')
+        return
+
+    def CreateMsgReqTable(self):
+        self.MsgReqs[ObjectTypes.DEVICE] = ClientModule(device_pb2, 'Device')
+        self.MsgReqs[ObjectTypes.INTERFACE] = ClientModule(interface_pb2, 'Interface')
+        self.MsgReqs[ObjectTypes.LMAPPING] = ClientModule(mapping_pb2, 'Mapping')
+        self.MsgReqs[ObjectTypes.RMAPPING] = ClientModule(mapping_pb2, 'Mapping')
+        self.MsgReqs[ObjectTypes.METER] = ClientModule(meter_pb2, 'Meter')
+        self.MsgReqs[ObjectTypes.MIRROR] = ClientModule(mirror_pb2, 'MirrorSession')
+        self.MsgReqs[ObjectTypes.NEXTHOP] = ClientModule(nh_pb2, 'Nexthop')
+        self.MsgReqs[ObjectTypes.NEXTHOPGROUP] = ClientModule(nh_pb2, 'NhGroup')
+        self.MsgReqs[ObjectTypes.ROUTE] = ClientModule(route_pb2, 'RouteTable')
+        self.MsgReqs[ObjectTypes.POLICY] = ClientModule(policy_pb2, 'SecurityPolicy')
+        self.MsgReqs[ObjectTypes.SECURITY_PROFILE] = ClientModule(policy_pb2, 'SecurityProfile')
+        self.MsgReqs[ObjectTypes.SUBNET] = ClientModule(subnet_pb2, 'Subnet')
+        self.MsgReqs[ObjectTypes.TAG] = ClientModule(tags_pb2, 'Tag')
+        self.MsgReqs[ObjectTypes.TUNNEL] = ClientModule(tunnel_pb2, 'Tunnel')
+        self.MsgReqs[ObjectTypes.VPC] = ClientModule(vpc_pb2, 'VPC')
+        self.MsgReqs[ObjectTypes.VNIC] = ClientModule(vnic_pb2, 'Vnic')
+        self.MsgReqs[ObjectTypes.DHCP_RELAY] = ClientModule(dhcp_pb2, 'DHCPPolicy')
+        self.MsgReqs[ObjectTypes.DHCP_PROXY] = ClientModule(dhcp_pb2, 'DHCPPolicy')
+        self.MsgReqs[ObjectTypes.NAT] = ClientModule(nat_pb2, 'NatPortBlock')
+        self.MsgReqs[ObjectTypes.POLICER] = ClientModule(policer_pb2, 'Policer')
+        self.MsgReqs[ObjectTypes.BGP] = ClientModule(bgp_pb2, 'BGP')
+        self.MsgReqs[ObjectTypes.BGP_PEER] = ClientModule(bgp_pb2, 'BGPPeer')
+        self.MsgReqs[ObjectTypes.BGP_PEER_AF] = ClientModule(bgp_pb2, 'BGPPeerAf')
+        self.MsgReqs[ObjectTypes.BGP_EVPN_EVI] = ClientModule(evpn_pb2, 'EvpnEvi')
+        self.MsgReqs[ObjectTypes.BGP_EVPN_EVI_RT] = ClientModule(evpn_pb2, 'EvpnEviRt')
+        self.MsgReqs[ObjectTypes.BGP_EVPN_IP_VRF] = ClientModule(evpn_pb2, 'EvpnIpVrf')
+        self.MsgReqs[ObjectTypes.BGP_EVPN_IP_VRF_RT] = ClientModule(evpn_pb2, 'EvpnIpVrfRt')
+        self.MsgReqs[ObjectTypes.STATIC_ROUTE] = ClientModule(cp_route_pb2, 'CPStaticRoute')
+        return
+
+    def __create_restreq_table(self):
+        self.RestReqs[ObjectTypes.VPC] = ClientRESTModule(self.IPAddr, "/api/vrfs/")
+        self.RestReqs[ObjectTypes.ROUTE] = ClientRESTModule(self.IPAddr, "/api/route-tables/")
+        self.RestReqs[ObjectTypes.SUBNET] = ClientRESTModule(self.IPAddr, "/api/networks/")
+        self.RestReqs[ObjectTypes.BGP] = ClientRESTModule(self.IPAddr, "/api/routingconfigs/")
+        self.RestReqs[ObjectTypes.INTERFACE] = ClientRESTModule(self.IPAddr, "/api/interfaces/")
+        self.RestReqs[ObjectTypes.POLICY] = ClientRESTModule(self.IPAddr, "/api/security/policies/")
+        self.RestReqs[ObjectTypes.DHCP_RELAY] = ClientRESTModule(self.IPAddr, "/api/ipam-policies/")
+        return
+
+    def Create(self, objtype, objs):
+        if GlobalOptions.netagent:
+            if not self.RestReqs[objtype]:
+                return # unsupported object
+            return self.RestReqs[objtype].Create(objs)
+        return super().Create(objtype, objs)
+
+    def Delete(self, objtype, objs):
+        if GlobalOptions.netagent:
+            if not self.RestReqs[objtype]:
+                return # unsupported object
+            return self.RestReqs[objtype].Delete(objs)
+        return super().Delete(objtype, objs)
+
+    def Update(self, objtype, objs):
+        if GlobalOptions.netagent:
+            if not self.RestReqs[objtype]:
+                return # unsupported object
+            return self.RestReqs[objtype].Update(objs)
+        return super().Update(objtype, objs)
+
+    def GetHttp(self, objtype):
+        if GlobalOptions.dryrun: return None
+        if not GlobalOptions.netagent: return None
+        if not self.RestReqs[objtype]:
+            return None # unsupported object
+        return self.RestReqs[objtype].Get()
+
+    def GetRestURL(self):
+        if not GlobalOptions.netagent: return None
+        return f"https://{self.IPAddr}:{AgentPorts.DSCAGENTREST.value}"
 
     def Start(self, objtype, obj):
         if GlobalOptions.dryrun: return
-        return self.__stubs[objtype].Rpc(ApiOps.START, [ obj ])
+        return self.Stubs[objtype].Rpc(ApiOps.START, [obj])
 
     def Abort(self, objtype, obj):
         if GlobalOptions.dryrun: return
-        return self.__stubs[objtype].Rpc(ApiOps.ABORT, [ obj ])
+        return self.Stubs[objtype].Rpc(ApiOps.ABORT, [obj])
 
     def Commit(self, objtype, obj):
         if GlobalOptions.dryrun: return
-        return self.__stubs[objtype].Rpc(ApiOps.COMMIT, [ obj ])
+        return self.Stubs[objtype].Rpc(ApiOps.COMMIT, [obj])
 
 client = dict()
+operdclient = dict()
 def Init(node, ip=None):
     global client
-    client[node] = ApolloAgentClient(ip)
+    global operdclient
+    client[node] = PdsAgentClient(ip)
+    if defs.TEST_TYPE != "DOL":
+        # instantiate operdClient only for IOTA
+        operdclient[node] = OperdClient(ip)

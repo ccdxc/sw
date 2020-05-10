@@ -276,7 +276,8 @@ class RuleObject:
         }
         AppIdx += 1
         logger.info("PostData: %s"%json.dumps(appspec))
-        url=f"https://{api.client[node].agentip}:8888/api/apps/"
+        # TODO: Fix netagent client APIs
+        url=f"{api.client[node].GetRestURL()}/api/apps/"
         logger.info(f"Obj:{appname} Posting to {url}")
         if not utils.IsDryRun():
             requests.post(url, json.dumps(appspec), verify=False)

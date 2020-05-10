@@ -73,7 +73,6 @@ def __initialize_object_info():
     ObjectInfo[APIObjTypes.BGP_EVPN_EVI_RT.name.lower()] = EvpnEviRtClient
     ObjectInfo[APIObjTypes.BGP_EVPN_IP_VRF.name.lower()] = EvpnIpVrfClient
     ObjectInfo[APIObjTypes.BGP_EVPN_IP_VRF_RT.name.lower()] = EvpnIpVrfRtClient
-    ObjectInfo[APIObjTypes.OPER.name.lower()] = OperClient
     return
 
 def __validate_object_config(node, client):

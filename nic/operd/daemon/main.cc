@@ -370,7 +370,7 @@ main (int argc, const char *argv[])
     std::map<uint8_t, decoder_fn> decoders;
     std::string config;
 
-    signal(SIGCHLD, sigchld_handler);
+    //signal(SIGCHLD, sigchld_handler);
 
     // Don't buffer stdout and stderr, so we read it in
     // sysmgr log files immediatelly

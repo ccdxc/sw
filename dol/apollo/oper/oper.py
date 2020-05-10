@@ -9,7 +9,7 @@ import apollo.config.agent.api as api
 import apollo.config.utils as utils
 import apollo.config.objects.base as base
 
-import oper_pb2 as oper_pb2
+import opersvc_pb2 as oper_pb2
 
 class TechSupportStatus(base.StatusObjectBase):
     def __init__(self):
@@ -25,9 +25,9 @@ class TechSupportStatus(base.StatusObjectBase):
 
 class TechSupportObject(base.ConfigObjectBase):
     def __init__(self, node):
-        super().__init__(api.ObjectTypes.OPER, node)
+        super().__init__(api.OperdObjectTypes.TECHSUPPORT, node)
         self.SetSingleton(True)
-        self.GID("TechSupport")
+        self.GID(f"TechSupport-{self.Node}")
         ############## PUBLIC ATTRIBUTES OF TechSupport OBJECT #################
         self.SkipCores = False
         ############## PRIVATE ATTRIBUTES OF TechSupport OBJECT ################
@@ -36,7 +36,7 @@ class TechSupportObject(base.ConfigObjectBase):
         return
 
     def __repr__(self):
-        return "TechSupport"
+        return self.GID
 
     def Show(self):
         logger.info(f"Oper Object: {self}")
@@ -68,12 +68,12 @@ class TechSupportObject(base.ConfigObjectBase):
 
     def Collect(self):
         msg = self.GetGrpcTechSupportCollectMessage()
-        resp = api.client[self.Node].Request(self.ObjType, 'TechSupportCollect', [msg])
+        resp = api.operdclient[self.Node].Request(self.ObjType, 'TechSupportCollect', [msg])
         return self.ValidateResponse(resp)
 
 class OperObjectsClient(base.ConfigClientBase):
     def __init__(self):
-        super().__init__(api.ObjectTypes.OPER, Resmgr.MAX_OPER)
+        super().__init__(api.OperdObjectTypes.TECHSUPPORT, Resmgr.MAX_OPER)
         self.TechSupportObjs = dict()
 
     def IsReadSupported(self):

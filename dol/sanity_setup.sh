@@ -25,7 +25,7 @@ function setup () {
 
 function build () {
     # build only the minimum targets required for dryrun
-    make -C /sw/nic PIPELINE=${TEST_PIPELINE} pds.proto
+    make -C /sw/nic PIPELINE=${TEST_PIPELINE} pds.proto operdgen.proto
 }
 
 function ErrorCheckNExit () {

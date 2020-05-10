@@ -622,7 +622,7 @@ class InterfaceObjectClient(base.ConfigClientBase):
         return None
 
     def UpdateHostInterfaces(self, node, subnets):
-        if GlobalOptions.dryrun:
+        if utils.IsDryRun() or not utils.IsNetAgentMode():
             return
         resp = api.client[node].GetHttp(api.ObjectTypes.INTERFACE)
         if not resp:

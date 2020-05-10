@@ -2,7 +2,7 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET       = operdgen.proto
-MODULE_PIPELINE     = apulu
+MODULE_PIPELINE     = apollo apulu artemis
 MODULE_PREREQS      = gogo.proto
 MODULE_GEN_TYPES    = PY CC
 MODULE_INCS         = ${MODULE_DIR} \
