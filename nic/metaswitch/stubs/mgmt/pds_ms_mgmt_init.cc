@@ -114,12 +114,20 @@ nbase_init ()
     pds_ms_reg_pre_get_bgppeerspec_amb_bgp_peer(bgp_peer_pre_get);
     pds_ms_reg_pre_set_evpnevispec_amb_evpn_evi(evpn_evi_pre_set);
     pds_ms_reg_pre_get_evpnevispec_amb_evpn_evi(evpn_evi_pre_get);
+    pds_ms_reg_post_get_evpnevispec_amb_evpn_evi(evpn_evi_post_get);
+    pds_ms_reg_post_getall_evpnevispec_amb_evpn_evi(evpn_evi_post_getall);
     pds_ms_reg_pre_set_evpnevirtspec_amb_evpn_evi_rt(evpn_evi_rt_pre_set);
     pds_ms_reg_pre_get_evpnevirtspec_amb_evpn_evi_rt(evpn_evi_rt_pre_get);
+    pds_ms_reg_post_get_evpnevirtspec_amb_evpn_evi_rt(evpn_evi_rt_post_get);
+    pds_ms_reg_post_getall_evpnevirtspec_amb_evpn_evi_rt(evpn_evi_rt_post_getall);
     pds_ms_reg_pre_set_evpnipvrfspec_amb_evpn_ip_vrf(evpn_ip_vrf_pre_set);
     pds_ms_reg_pre_get_evpnipvrfspec_amb_evpn_ip_vrf(evpn_ip_vrf_pre_get);
+    pds_ms_reg_post_get_evpnipvrfspec_amb_evpn_ip_vrf(evpn_ip_vrf_post_get);
+    pds_ms_reg_post_getall_evpnipvrfspec_amb_evpn_ip_vrf(evpn_ip_vrf_post_getall);
     pds_ms_reg_pre_set_evpnipvrfrtspec_amb_evpn_ip_vrf_rt(evpn_ip_vrf_rt_pre_set);
     pds_ms_reg_pre_get_evpnipvrfrtspec_amb_evpn_ip_vrf_rt(evpn_ip_vrf_rt_pre_get);
+    pds_ms_reg_post_get_evpnipvrfrtspec_amb_evpn_ip_vrf_rt(evpn_ip_vrf_rt_post_get);
+    pds_ms_reg_post_getall_evpnipvrfrtspec_amb_evpn_ip_vrf_rt(evpn_ip_vrf_rt_post_getall);
     pds_ms_reg_pre_set_bgppeerafspec_amb_bgp_peer_afi_safi(bgp_peer_afi_safi_pre_set);
     pds_ms_reg_pre_get_bgppeerafspec_amb_bgp_peer_afi_safi(bgp_peer_afi_safi_pre_get);
     pds_ms_reg_pre_fill_get_bgppeerafspec_amb_bgp_peer_afi_safi(

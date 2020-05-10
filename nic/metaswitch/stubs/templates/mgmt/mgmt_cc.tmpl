@@ -522,7 +522,7 @@
                     // !!! {{.Name}} field is not in table {{$mib}} !!!
           {{else}}
             {{$fieldOpt := (getPdsaFieldOpt . $cam $struct)}}
-            {{if and (not (eq $fieldOpt.Name "")) (not $fieldOpt.IsInternalField)}}
+            {{if and (not (eq $fieldOpt.Name "")) }}
                     // {{.Type}} {{.GetTypeName}} {{$fieldOpt.Name}} {{$fieldOpt.CppDataType}} {{.GetLabel}}
               {{if (eq $fieldOpt.GetFieldFn "")}}
                 {{$castFn := getPdsaCastGetFunc .Type $fieldOpt.CppDataType $fieldOpt}}
@@ -585,9 +585,6 @@
                 {{else}}
                     {{$fieldOpt.GetFieldFn}}(ent, v_{{$struct | ToLower}});
                 {{end}}
-              {{end}}
-              {{if ($fieldOpt.IsInternalField)}}
-                    // skipping internal field {{$fieldOpt.Field}}
               {{end}}
             {{end}}
           {{end}}

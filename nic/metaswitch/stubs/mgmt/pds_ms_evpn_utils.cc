@@ -47,6 +47,7 @@ evpn_evi_pre_get (EvpnEviSpec &req, EvpnEviGetResponse* resp, NBB_VOID* kh)
                      .append(uuid.str()), SDK_RET_INVALID_ARG);
     }
 }
+
 NBB_VOID
 evpn_evi_rt_pre_get (EvpnEviRtSpec &req, EvpnEviRtGetResponse* resp,
                      NBB_VOID* kh)
@@ -85,7 +86,176 @@ evpn_evi_rt_pre_get (EvpnEviRtSpec &req, EvpnEviRtGetResponse* resp,
     }
 }
 
-NBB_VOID 
+pds_obj_key_t
+evpn_evi_get_subnet_spec_key_from_evi (ms_bd_id_t bd_id)
+{
+    auto state_ctxt = state_t::thread_context();
+    auto subnet_obj = state_ctxt.state()->subnet_store().get(bd_id);
+    if (subnet_obj == nullptr) {
+        PDS_TRACE_ERR("Subnet store get failed to map get"
+                      "to UUID for eviid %d", bd_id);
+        throw Error (std::string("Subnet store get failed"
+                     "to map get to UUID for eviid"),
+                     SDK_RET_ENTRY_NOT_FOUND);
+    }
+    return subnet_obj->spec().key;
+}
+
+NBB_VOID
+evpn_evi_post_get_common (EvpnEviGetResponse* resp)
+{
+    // evpn is not support on RR
+    if (mgmt_state_t::thread_context().state()->rr_mode()) {
+        return;
+    }
+
+    // no need to do anything if get failed
+    if (resp->apistatus() != types::ApiStatus::API_STATUS_OK) {
+        return;
+    }
+
+    for (int i = 0; i < resp->response_size(); i++) {
+        // get subnet UUID for each response
+        auto res = resp->mutable_response(i);
+        auto spec = res->mutable_spec();
+        auto key = evpn_evi_get_subnet_spec_key_from_evi (spec->eviid());
+        spec->set_subnetid(key.id, PDS_MAX_KEY_LEN);
+    }
+}
+
+NBB_VOID
+evpn_evi_post_get (EvpnEviSpec &req, EvpnEviGetResponse* resp, NBB_VOID* kh)
+{
+    return evpn_evi_post_get_common(resp);
+}
+
+NBB_VOID
+evpn_evi_post_getall (EvpnEviGetResponse* resp)
+{
+    return evpn_evi_post_get_common(resp);
+}
+
+NBB_VOID
+evpn_evi_rt_post_get_common (EvpnEviRtGetResponse* resp)
+{
+    // evpn is not support on RR
+    if (mgmt_state_t::thread_context().state()->rr_mode()) {
+        return;
+    }
+
+    // no need to do anything if get failed
+    if (resp->apistatus() != types::ApiStatus::API_STATUS_OK) {
+        return;
+    }
+
+    for (int i = 0; i < resp->response_size(); i++) {
+        auto res = resp->mutable_response(i);
+        auto spec = res->mutable_spec();
+        auto key = evpn_evi_get_subnet_spec_key_from_evi (spec->eviid());
+        spec->set_subnetid(key.id, PDS_MAX_KEY_LEN);
+    }
+}
+
+NBB_VOID
+evpn_evi_rt_post_get (EvpnEviRtSpec &req, EvpnEviRtGetResponse* resp,
+                      NBB_VOID* kh)
+{
+    return evpn_evi_rt_post_get_common(resp);
+}
+
+NBB_VOID
+evpn_evi_rt_post_getall (EvpnEviRtGetResponse* resp)
+{
+    return evpn_evi_rt_post_get_common(resp);
+}
+
+pds_obj_key_t
+evpn_evi_get_vpc_spec_key_from_vrfname (std::string vrf_name)
+{
+    ms_vrf_id_t vrf_id = vrfname_2_vrfid((NBB_BYTE *)vrf_name.c_str(), vrf_name.length());
+    auto state_ctxt = state_t::thread_context();
+    auto vpc_obj = state_ctxt.state()->vpc_store().get(vrf_id);
+    if (vpc_obj == nullptr) {
+        PDS_TRACE_ERR("VPC store get failed to map get"
+                      "to UUID for Vrf Id (%s) %d", vrf_name.c_str(), vrf_id);
+        throw Error (std::string("VPC store get failed"
+                     "to map get to UUID for Vrf Id"),
+                     SDK_RET_ENTRY_NOT_FOUND);
+    }
+    return vpc_obj->spec().key;
+}
+
+NBB_VOID
+evpn_ip_vrf_post_get_common (EvpnIpVrfGetResponse *resp)
+{
+    // evpn is not support on RR
+    if (mgmt_state_t::thread_context().state()->rr_mode()) {
+        return;
+    }
+
+    // no need to do anything if get failed
+    if (resp->apistatus() != types::ApiStatus::API_STATUS_OK) {
+        return;
+    }
+
+    for (int i = 0; i < resp->response_size(); i++) {
+        // get subnet UUID for each response
+        auto res = resp->mutable_response(i);
+        auto spec = res->mutable_spec();
+        auto key = evpn_evi_get_vpc_spec_key_from_vrfname (spec->vrfname());
+        spec->set_vpcid(key.id, PDS_MAX_KEY_LEN);
+    }
+}
+
+NBB_VOID
+evpn_ip_vrf_post_get (EvpnIpVrfSpec &req, EvpnIpVrfGetResponse *resp,
+                     NBB_VOID* kh)
+{
+    return evpn_ip_vrf_post_get_common (resp);
+}
+
+NBB_VOID
+evpn_ip_vrf_post_getall (EvpnIpVrfGetResponse *resp)
+{
+    return evpn_ip_vrf_post_get_common (resp);
+}
+
+NBB_VOID
+evpn_ip_vrf_rt_post_get_common (EvpnIpVrfRtGetResponse *resp)
+{
+    // evpn is not support on RR
+    if (mgmt_state_t::thread_context().state()->rr_mode()) {
+        return;
+    }
+
+    // no need to do anything if get failed
+    if (resp->apistatus() != types::ApiStatus::API_STATUS_OK) {
+        return;
+    }
+
+    for (int i = 0; i < resp->response_size(); i++) {
+        // get subnet UUID for each response
+        auto res = resp->mutable_response(i);
+        auto spec = res->mutable_spec();
+        auto key = evpn_evi_get_vpc_spec_key_from_vrfname (spec->vrfname());
+        spec->set_vpcid(key.id, PDS_MAX_KEY_LEN);
+    }
+}
+
+NBB_VOID
+evpn_ip_vrf_rt_post_get (EvpnIpVrfRtSpec &req, EvpnIpVrfRtGetResponse *resp,
+                         NBB_VOID* kh)
+{
+    return evpn_ip_vrf_rt_post_get_common (resp);
+}
+
+NBB_VOID
+evpn_ip_vrf_rt_post_getall (EvpnIpVrfRtGetResponse *resp)
+{
+    return evpn_ip_vrf_rt_post_get_common (resp);
+}
+
+NBB_VOID
 evpn_ip_vrf_pre_get (EvpnIpVrfSpec &req, EvpnIpVrfGetResponse *resp,
                      NBB_VOID* kh)
 {

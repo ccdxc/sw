@@ -35,6 +35,7 @@ public:
     void set_properties (const properties_t& prop) {prop_ = prop;}
     properties_t& properties(void) {return prop_;}
     const properties_t& properties(void) const {return prop_;}
+    const pds_vpc_spec_t& spec(void) const {return prop_.vpc_spec;}
     ms_vrf_id_t key(void) const {return prop_.vrf_id; }
     void update_store(state_t* state, bool op_delete) override;
     void print_debug_str(void) override {};

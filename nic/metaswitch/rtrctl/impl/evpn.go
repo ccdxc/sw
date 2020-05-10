@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 
+	uuid "github.com/satori/go.uuid"
 	"github.com/spf13/cobra"
 
 	pegasusClient "github.com/pensando/sw/nic/apollo/agent/gen/pds"
@@ -104,15 +105,14 @@ func init() {
 }
 
 const (
-	evpnIPVrfFmt    = `%-10s %-16v %-16s`
+	evpnIPVrfFmt    = `%-40s %-16v %-16s`
 	evpnIPVrfHdr    = "VPC Id,VNI,RD"
 	evpnIPVrfDetStr = `EVPN IP VRF details
-------------------------------------
-Id              : %s
+--------------------------------------------------------------
 VPC Id          : %s
 VRF VNI         : %d
 VRF RD          : %s
-------------------------------------
+--------------------------------------------------------------
 `
 )
 
@@ -146,10 +146,11 @@ func evpnVrfStatusShowCmdHandler(cmd *cobra.Command, args []string) error {
 		if doJSON {
 			ipVrfs = append(ipVrfs, ipVrf)
 		} else {
+			vpcIDStr := uuid.FromBytesOrNil(ipVrf.Spec.GetVPCId()).String()
 			if doDetail {
-				fmt.Printf(evpnIPVrfDetStr, ipVrf.Spec.Id, ipVrf.Spec.VPCId, ipVrf.Spec.VNI, ipVrf.Spec.RD)
+				fmt.Printf(evpnIPVrfDetStr, vpcIDStr, ipVrf.Spec.VNI, ipVrf.Spec.RD)
 			} else {
-				fmt.Printf(evpnIPVrfFmt, ipVrf.Spec.VPCId, ipVrf.Spec.VNI, ipVrf.Spec.RD)
+				fmt.Printf(evpnIPVrfFmt, vpcIDStr, ipVrf.Spec.VNI, ipVrf.Spec.RD)
 				fmt.Printf("\n")
 			}
 		}
@@ -162,7 +163,7 @@ func evpnVrfStatusShowCmdHandler(cmd *cobra.Command, args []string) error {
 }
 
 const (
-	evpnIPVrfRtFmt    = `%-10s %-16s`
+	evpnIPVrfRtFmt    = `%-40s %-48s`
 	evpnIPVrfRtHdr    = "VPC Id, RT"
 	evpnIPVrfRtDetStr = `EVPN IP VRF RT details
 --------------------------------------------------------------
@@ -203,10 +204,11 @@ func evpnVrfRtStatusShowCmdHandler(cmd *cobra.Command, args []string) error {
 		if doJSON {
 			ipVrfRts = append(ipVrfRts, ipVrfRt)
 		} else {
+			vpcIDStr := uuid.FromBytesOrNil(ipVrfRt.Spec.GetVPCId()).String()
 			if doDetail {
-				fmt.Printf(evpnIPVrfRtDetStr, ipVrfRt.Spec.VPCId, ipVrfRt.Spec.RT, ipVrfRt.Spec.RTType)
+				fmt.Printf(evpnIPVrfRtDetStr, vpcIDStr, ipVrfRt.Spec.RT, ipVrfRt.Spec.RTType)
 			} else {
-				fmt.Printf(evpnIPVrfRtFmt, ipVrfRt.Spec.VPCId, ipVrfRt.Spec.RT)
+				fmt.Printf(evpnIPVrfRtFmt, vpcIDStr, ipVrfRt.Spec.RT)
 				fmt.Printf("\n")
 			}
 		}
@@ -219,18 +221,17 @@ func evpnVrfRtStatusShowCmdHandler(cmd *cobra.Command, args []string) error {
 }
 
 const (
-	evpnEviFmt    = `%-10s %-16s %-16s`
+	evpnEviFmt    = `%-40s %-16s %-16s`
 	evpnEviHdr    = "Subnet Id,RD,Status"
 	evpnEviDetStr = `EVPN EVI details
-------------------------------------
-Id              : %s
+--------------------------------------------------------------
 Subnet Id       : %s
 Auto RD         : %d
 RD              : %s
 Auto RT         : %d
 RT-Type         : %s
 Status          : %s
-------------------------------------
+--------------------------------------------------------------
 `
 )
 
@@ -264,11 +265,12 @@ func evpnEviStatusShowCmdHandler(cmd *cobra.Command, args []string) error {
 		if doJSON {
 			evis = append(evis, evi)
 		} else {
+			subnetIDStr := uuid.FromBytesOrNil(evi.Spec.GetSubnetId()).String()
 			if doDetail {
-				fmt.Printf(evpnEviDetStr, evi.Spec.Id, evi.Spec.SubnetId, evi.Spec.AutoRD,
+				fmt.Printf(evpnEviDetStr, subnetIDStr, evi.Spec.AutoRD,
 					evi.Status.RD, evi.Spec.AutoRT, evi.Spec.RTType, evi.Status.Status)
 			} else {
-				fmt.Printf(evpnEviFmt, evi.Spec.SubnetId, evi.Status.RD, evi.Status.Status)
+				fmt.Printf(evpnEviFmt, subnetIDStr, evi.Status.RD, evi.Status.Status)
 				fmt.Printf("\n")
 			}
 		}
@@ -281,15 +283,14 @@ func evpnEviStatusShowCmdHandler(cmd *cobra.Command, args []string) error {
 }
 
 const (
-	evpnEviRtFmt    = `%-10s %-16s`
+	evpnEviRtFmt    = `%-40s %-48s`
 	evpnEviRtHdr    = "Subnet Id, RT"
 	evpnEviRtDetStr = `EVPN EVI RT details
-------------------------------------
-Id              : %s
+--------------------------------------------------------------
 Subnet Id       : %s
 RT              : %s
 RT-Type         : %s
-------------------------------------
+--------------------------------------------------------------
 `
 )
 
@@ -323,11 +324,12 @@ func evpnEviRtStatusShowCmdHandler(cmd *cobra.Command, args []string) error {
 		if doJSON {
 			eviRts = append(eviRts, eviRt)
 		} else {
+			subnetIDStr := uuid.FromBytesOrNil(eviRt.Spec.GetSubnetId()).String()
 			if doDetail {
-				fmt.Printf(evpnEviRtDetStr, eviRt.Spec.Id, eviRt.Spec.SubnetId,
+				fmt.Printf(evpnEviRtDetStr, subnetIDStr,
 					eviRt.Spec.RT, eviRt.Spec.RTType)
 			} else {
-				fmt.Printf(evpnEviRtFmt, eviRt.Spec.SubnetId, eviRt.Spec.RT)
+				fmt.Printf(evpnEviRtFmt, subnetIDStr, eviRt.Spec.RT)
 				fmt.Printf("\n")
 			}
 		}

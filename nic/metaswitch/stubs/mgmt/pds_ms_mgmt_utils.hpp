@@ -217,11 +217,20 @@ NBB_VOID evpn_evi_rt_pre_set (EvpnEviRtSpec  &req,
                               bool           op_update=false);
 NBB_VOID evpn_evi_rt_pre_get (EvpnEviRtSpec &req, EvpnEviRtGetResponse* resp,
                               NBB_VOID* kh);
+NBB_VOID evpn_evi_post_getall (EvpnEviGetResponse* resp);
+NBB_VOID evpn_evi_post_get (EvpnEviSpec &req, EvpnEviGetResponse* resp,
+                            NBB_VOID* kh);
+NBB_VOID evpn_evi_rt_post_getall (EvpnEviRtGetResponse* resp);
+NBB_VOID evpn_evi_rt_post_get (EvpnEviRtSpec &req, EvpnEviRtGetResponse* resp,
+                               NBB_VOID* kh);
 NBB_VOID evpn_ip_vrf_pre_set (EvpnIpVrfSpec  &req,
                               NBB_LONG       row_status,
                               NBB_ULONG      test_correlator,
                               NBB_VOID*      kh,
                               bool           op_update=false);
+NBB_VOID evpn_ip_vrf_post_getall (EvpnIpVrfGetResponse *resp);
+NBB_VOID evpn_ip_vrf_post_get (EvpnIpVrfSpec &req, EvpnIpVrfGetResponse *resp,
+                               NBB_VOID* kh);
 NBB_VOID evpn_ip_vrf_pre_get (EvpnIpVrfSpec &req, EvpnIpVrfGetResponse *resp,
                               NBB_VOID* kh);
 NBB_VOID evpn_ip_vrf_rt_pre_set (EvpnIpVrfRtSpec  &req,
@@ -231,6 +240,9 @@ NBB_VOID evpn_ip_vrf_rt_pre_set (EvpnIpVrfRtSpec  &req,
                                  bool           op_update=false);
 NBB_VOID evpn_ip_vrf_rt_pre_get (EvpnIpVrfRtSpec &req, EvpnIpVrfRtGetResponse *resp,
                                  NBB_VOID *kh);
+NBB_VOID evpn_ip_vrf_rt_post_getall (EvpnIpVrfRtGetResponse *resp);
+NBB_VOID evpn_ip_vrf_rt_post_get (EvpnIpVrfRtSpec &req, EvpnIpVrfRtGetResponse *resp,
+                                  NBB_VOID *kh);
 NBB_VOID evpn_evi_get_fill_func (EvpnEviSpec&    req,
                                  NBB_ULONG*       oid);
 NBB_VOID evpn_evi_status_get_fill_func (EvpnEviSpec& req,
