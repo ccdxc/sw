@@ -43,6 +43,27 @@ def __add_secondary_ip_to_workloads(workloads=[]):
 
     return api.types.status.SUCCESS
 
+def __add_iptables_to_workloads(workloads=[]):
+    if not api.IsSimulation():
+        req = api.Trigger_CreateAllParallelCommandsRequest()
+    else:
+        req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
+
+    workloads = workloads if workloads else api.GetWorkloads()
+    for wl in workloads:
+        api.Trigger_AddCommand(req, wl.node_name, wl.workload_name,
+                "iptables -A INPUT -p tcp -i %s --src %s -j DROP" % (wl.interface, wl.ip_prefix))
+        api.Logger.info(f"iptables -A INPUT -p tcp -i {wl.interface} --src {wl.ip_prefix} -j DROP")
+        api.Trigger_AddCommand(req, wl.node_name, wl.workload_name,
+                "iptables -A INPUT -p tcp -i %s --dst %s -j DROP" % (wl.interface, wl.ip_prefix))
+        api.Logger.info(f"iptables -A INPUT -p tcp -i {wl.interface} --dst {wl.ip_prefix} -j DROP")
+
+    resp = api.Trigger(req)
+    if resp is None:
+        return api.types.status.FAILURE
+
+    return api.types.status.SUCCESS
+
 def _add_exposed_ports(wl_msg):
     if  wl_msg.workload_type != topo_svc.WORKLOAD_TYPE_CONTAINER:
         return
@@ -191,6 +212,8 @@ def Main(args):
         redirect_port = False
     __add_workloads(redirect_port)
     __add_secondary_ip_to_workloads()
+    if redirect_port:
+        __add_iptables_to_workloads()
     __publish_workloads()
     return api.types.status.SUCCESS
 

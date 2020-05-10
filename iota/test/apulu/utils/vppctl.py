@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 # vppctl utils
 import iota.harness.api as api
+import re
 
 __CMDBASE  = '/nic/bin/vppctl'
 __CMDSEP  = ' '
@@ -8,6 +9,7 @@ __CMDSEP  = ' '
 __CMDTYPE_ERR = 'errors'
 __CMDTYPE_SHOW  = 'show'
 __CMDTYPE_CLEAR = 'clear'
+__CMD_FLOW_STAT = 'flow statistics'
 
 vpp_path = 'PATH=$PATH:/nic/bin/; LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/nic/lib/vpp_plugins/:/nic/lib/; export PATH; export LD_LIBRARY_PATH; '
 
@@ -47,6 +49,29 @@ def ParseShowCommand(node_name, type, args=None):
         ret = api.types.status.FAILURE
 
     return ret, resp
+
+def GetVppV4FlowStatistics(node_name, counter, args=None):
+    d = {}
+    ret = api.types.status.SUCCESS
+    if api.GlobalOptions.dryrun:
+        return api.types.status.SUCCESS, None
+    res, resp = ExecuteVPPctlShowCommand(node_name, __CMD_FLOW_STAT, args)
+    if res != True:
+        api.Logger.error(f"Failed to execute show {type} at node {node_name} : {resp}")
+        ret = api.types.status.FAILURE
+        return ret, resp
+    output_lines = resp.splitlines()
+    for line in output_lines:
+        m = re.match("Tbl_lvl", line)
+        if m:
+            break
+        strings=line.split(', ')
+        for string in strings:
+            if len(string.split(' ')) == 2:
+                key, val = string.split(' ')
+                d[key] = val
+    
+    return ret, d[counter]
 
 def ParseClearCommand(node_name, type, args=None):
     if api.GlobalOptions.dryrun:

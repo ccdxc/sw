@@ -291,6 +291,128 @@ class TRexIotaWrapper(ASTFClient):
         return api.types.status.SUCCESS
 
     @staticmethod
+    def validateCloudTcpStats(client, server, cps, duration, client_hw_ins,
+                                server_hw_ins, tolerance=0.0):
+        # dump stats
+        TRexIotaWrapper.show_tcp_stats(client, server)
+        tolerance *= 1.0
+        api.Logger.info("Tolerance : %s"%tolerance)
+
+        totalNumOfConn = cps * duration
+        connattempt = client.get('tcps_connattempt', 0)
+        clientConnDrop = client.get('tcps_conndrops', 0)
+
+        if int(connattempt) > client_hw_ins:
+            api.Logger.error("Flow inserts on client-DSC (%d) is less than connects attempted:%d"%
+                             (client_hw_ins, int(connattempt)))
+            return api.types.status.FAILURE
+
+        if int(connattempt) > server_hw_ins:
+            api.Logger.error("Flow inserts on server-DSC (%d) is less than connects attempted:%d"%
+                             (server_hw_ins, int(connattempt)))
+            return api.types.status.FAILURE
+
+        if abs(totalNumOfConn - connattempt) >= totalNumOfConn * 0.05:
+            api.Logger.error("TCP connection attempted are out of expectation, expeted: %s, found: %s"%
+                             (totalNumOfConn, connattempt))
+            return api.types.status.FAILURE
+
+        # Check connection drops on client side, if there any drops make sure they are below
+        # tolerance level
+        if clientConnDrop != 0 :
+            dropPercent = ((clientConnDrop * 100.0) / connattempt)
+            if dropPercent > tolerance:
+                api.Logger.error("Drop validation failed. drop: %s, tolerance: %s "%
+                                 (dropPercent, tolerance))
+                return api.types.status.FAILURE
+            else:
+                api.Logger.info("Allowing conn drop: %s (%s) on client. tolerance: %s"%
+                                (clientConnDrop, dropPercent, tolerance))
+                return api.types.status.SUCCESS
+
+        if client.get('tcps_drops', 0) != 0 or server.get('tcps_drops', 0) != 0:
+            api.Logger.error("Packet DROP check failed client drop: %s, sever drop: %s"%
+                             (client.get('tcps_drops', 0), server.get('tcps_drops', 0)))
+            return api.types.status.FAILURE
+        elif client.get('tcps_connects', 0) > client.get('tcps_closed', 0):
+            api.Logger.error("TCP connection check failed on client, tcp_connects: %s, tcp_closed: %s"%
+                             (client.get('tcps_connects', 0), server.get('tcps_closed', 0)))
+            return api.types.status.FAILURE
+        elif client.get('tcps_connattempt', 0) != client.get('tcps_closed', 0):
+            api.Logger.error("TCP connection check failed on client, tcps_connattempt: %s, tcp_closed: %s"%
+                             (client.get('tcps_connattempt', 0), server.get('tcps_closed', 0)))
+            return api.types.status.FAILURE
+        elif not server.get('tcps_accepts',0) == server.get('tcps_connects', 0) == server.get('tcps_closed', 0):
+            api.Logger.error("TCP connection check failed on server, tcps_accepts: %s, "
+                             "tcps_connects: %s, tcp_closed: %s"%
+                             (server.get('tcps_accepts', 0),
+                              server.get('tcps_connects', 0),
+                              server.get('tcps_closed', 0)))
+            return api.types.status.FAILURE
+        elif client.get('tcps_connattempt', 0) != server.get('tcps_accepts',0):
+            api.Logger.error("TCP connection mismatch on server and client, tcps_connattempt: %s, "
+                             "tcps_accepts: %s"%
+                             (client.get('tcps_connattempt', 0),
+                              server.get('tcps_accepts', 0)))
+            return api.types.status.FAILURE
+
+        api.Logger.info("Validated the TCP stats successfully")
+        return api.types.status.SUCCESS
+
+    @staticmethod
+    def validateCloudUdpStats(client, server, cps, duration, client_hw_ins, 
+                                server_hw_ins, tolerance=0.0):
+        # dump stats
+        TRexIotaWrapper.show_udp_stats(client, server)
+        tolerance *= 1.0
+        api.Logger.info("Tolerance : %s"%tolerance)
+
+        totalNumOfConn = cps * duration
+        connattempt = client.get('udps_connects', 0)
+        serverAccepts = server.get('udps_accepts',0)
+        clientConnects = client.get('udps_connects', 0)
+
+        if int(connattempt) > client_hw_ins:
+            api.Logger.error("Flow inserts on client-DSC (%d) is less than connects attempted:%d"%
+                             (client_hw_ins, int(connattempt)))
+            return api.types.status.FAILURE
+
+        if int(serverAccepts) > server_hw_ins:
+            api.Logger.error("Flow inserts on server-DSC (%d) is less than connects attempted:%d"%
+                             (server_hw_ins, int(serverAccepts)))
+            return api.types.status.FAILURE
+
+        if abs(totalNumOfConn - connattempt) >= (totalNumOfConn * 0.15):
+            api.Logger.error("UDP connection attempted are out of expectation, expected: %s, found: %s"%
+                             (totalNumOfConn, connattempt))
+
+        if serverAccepts != clientConnects :
+            if abs(serverAccepts - clientConnects) > (clientConnects * (tolerance/100)):
+                api.Logger.error("Drop connection validation failed, (server)udps_accepts: %s, "
+                                 "(client)udp_connects: %s, tolerance: %s"%
+                                 (serverAccepts, clientConnects, tolerance))
+                return api.types.status.FAILURE
+            else:
+                api.Logger.info("Drop connection validation pass, (server)udps_accepts: %s, "
+                                 "(client)udp_connects: %s, tolerance: %s"%
+                                 (serverAccepts, clientConnects, tolerance))
+                return api.types.status.SUCCESS
+
+        if client.get('udps_connects', 0) > client.get('udps_closed', 0):
+            api.Logger.error("UDP connection check failed on client, udps_connects: %s, udps_closed: %s"%
+                             (client.get('udps_connects', 0), server.get('udps_closed', 0)))
+            return api.types.status.FAILURE
+        elif server.get('udps_accepts',0) >  server.get('udps_closed', 0):
+            api.Logger.error("UDP connection check failed on server, udps_accepts: %s, "
+                             "udp_closed: %s"%
+                             (server.get('udps_accepts', 0),
+                              server.get('udps_closed', 0)))
+            return api.types.status.FAILURE
+
+        api.Logger.info("Validated the UDP stats successfully")
+        return api.types.status.SUCCESS
+
+    @staticmethod
     def show_tcp_stats(client, server):
         template = """
         tcps_connattempt: connections initiated

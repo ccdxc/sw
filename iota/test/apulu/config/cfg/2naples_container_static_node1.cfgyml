@@ -28,12 +28,6 @@ uplink:
 security_profile:
     - id        : 1
 
-security_profile:
-    id        : 1
-    tcpidletimeout : 5000
-    udpidletimeout : 5000
-    icmpidletimeout : 5000
-
 vpc:
     - id         : 100
       stack      : ipv4 # dual, ipv4 , ipv6
