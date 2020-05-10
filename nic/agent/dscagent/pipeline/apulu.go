@@ -30,6 +30,7 @@ import (
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	halapi "github.com/pensando/sw/nic/apollo/agent/gen/pds"
 	msapi "github.com/pensando/sw/nic/apollo/agent/gen/pds"
+	operdapi "github.com/pensando/sw/nic/operd/daemon/gen/operd"
 	"github.com/pensando/sw/venice/utils/events"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -53,6 +54,7 @@ type ApuluAPI struct {
 	RoutingClient           msapi.BGPSvcClient
 	EvpnClient              msapi.EvpnSvcClient
 	CPRouteSvcClient        msapi.CPRouteSvcClient
+	OperSvcClient           operdapi.OperSvcClient
 	LocalInterfaces         map[string]string
 }
 
@@ -61,6 +63,12 @@ func NewPipelineAPI(infraAPI types.InfraAPI) (*ApuluAPI, error) {
 	conn, err := utils.CreateNewGRPCClient("PDS_GRPC_PORT", types.PDSGRPCDefaultPort)
 	if err != nil {
 		log.Errorf("Failed to create GRPC Connection to HAL. Err: %v", err)
+		return nil, err
+	}
+
+	operdconn, err := utils.CreateNewGRPCClient("OPERD_GRPC_PORT", types.OperdGRPCDefaultPort)
+	if err != nil {
+		log.Errorf("Failed to create GRPC Connection to Operd. Err: %v", err)
 		return nil, err
 	}
 
@@ -80,6 +88,7 @@ func NewPipelineAPI(infraAPI types.InfraAPI) (*ApuluAPI, error) {
 		EvpnClient:              msapi.NewEvpnSvcClient(conn),
 		MirrorClient:            halapi.NewMirrorSvcClient(conn),
 		OperClient:              halapi.NewOperSvcClient(conn),
+		OperSvcClient:           operdapi.NewOperSvcClient(operdconn),
 		LocalInterfaces:         make(map[string]string),
 	}
 
@@ -1376,7 +1385,7 @@ func (a *ApuluAPI) HandleRouteTable(oper types.Operation, routetableObj netproto
 func (a *ApuluAPI) HandleTechSupport(obj tsproto.TechSupportRequest) (string, error) {
 	a.Lock()
 	defer a.Unlock()
-	return apulu.HandleTechSupport(a.OperClient, obj.Spec.SkipCores, obj.Spec.InstanceID)
+	return apulu.HandleTechSupport(a.OperSvcClient, obj.Spec.SkipCores, obj.Spec.InstanceID)
 }
 
 // HandleTechSupport unimplemented

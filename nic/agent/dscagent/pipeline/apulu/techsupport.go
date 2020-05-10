@@ -12,13 +12,13 @@ import (
 
 	"github.com/pensando/sw/nic/agent/dscagent/pipeline/apulu/utils"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
-	halapi "github.com/pensando/sw/nic/apollo/agent/gen/pds"
+	operdapi "github.com/pensando/sw/nic/operd/daemon/gen/operd"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
-func HandleTechSupport(client halapi.OperSvcClient, skipCores bool, instanceID string) (string, error) {
-	techSupportReq := &halapi.TechSupportRequest{
-		Request: &halapi.TechSupportSpec{
+func HandleTechSupport(client operdapi.OperSvcClient, skipCores bool, instanceID string) (string, error) {
+	techSupportReq := &operdapi.TechSupportRequest{
+		Request: &operdapi.TechSupportSpec{
 			SkipCores: skipCores,
 		},
 	}

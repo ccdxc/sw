@@ -151,6 +151,9 @@ const (
 	// PDSGRPCDefaultPort is the default port for PDSAgent. This is used for Cloud Pipeline
 	PDSGRPCDefaultPort = "11357"
 
+	// OperdGRPCDefaultPort is the default port for Operd. used for Cloud Pipeline
+	OperdGRPCDefaultPort = "11359"
+
 	// HalGRPCWaitTimeout is the timeout for which agent will wait for HAL to be up
 	HalGRPCWaitTimeout = time.Minute * 10
 

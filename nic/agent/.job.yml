@@ -13,7 +13,7 @@ targets:
     sub-area:
     feature:
   agent-apulu:
-    commands: [ "sh", "-c", "cd $GOPATH/src/github.com/pensando/sw && make ws-tools && make pull-assets && make -C nic/agent/dscagent/types/apuluproto && make -C nic/apollo/agent/protos && go build -o /tmp/netagent -tags apulu github.com/pensando/sw/nic/agent/cmd/netagent && rm -f /tmp/netagent && VENICE_DEV=1 go test -v -tags apulu -timeout 10m -p 1 ./nic/agent/dscagent/pipeline/apulu/..." ]
+    commands: [ "sh", "-c", "cd $GOPATH/src/github.com/pensando/sw && make ws-tools && make pull-assets && make -C nic/agent/dscagent/types/apuluproto && make -C nic/apollo/agent/protos && make -C nic/operd/protos && go build -o /tmp/netagent -tags apulu github.com/pensando/sw/nic/agent/cmd/netagent && rm -f /tmp/netagent && VENICE_DEV=1 go test -v -tags apulu -timeout 10m -p 1 ./nic/agent/dscagent/pipeline/apulu/..." ]
     owners: ["email:abhi@pensando.io"]
     area:
     sub-area:
