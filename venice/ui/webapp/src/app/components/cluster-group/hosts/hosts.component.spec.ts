@@ -34,8 +34,10 @@ import { WorkloadWorkload } from '@sdk/v1/models/generated/workload';
 
 
 describe('HostsComponent', () => {
-  let component: HostsComponent;
+  let componentCloud: HostsComponent;
   let fixture: ComponentFixture<HostsComponent>;
+  let componentEnterprise: HostsComponent;
+
   const host1 = {
     'kind': 'Host',
     'api-version': 'v1',
@@ -265,11 +267,13 @@ describe('HostsComponent', () => {
   beforeEach(() => {
     Utility.getInstance().clearAllVeniceObjectCacheData(); // prevent using cached data.
     fixture = TestBed.createComponent(HostsComponent);
-    component = fixture.componentInstance;
+    componentCloud = fixture.componentInstance;
+    componentEnterprise = fixture.componentInstance;
   });
 
-  it('should populate table', () => {
+  it('should populate cloud table', () => {
     TestingUtility.setAllPermissions();
+    TestingUtility.setCloudMode();
     const serviceCluster = TestBed.get(ClusterService);
     const serviceWorkload = TestBed.get(WorkloadService);
 
@@ -300,14 +304,66 @@ describe('HostsComponent', () => {
     const tableBody = fixture.debugElement.query(By.css('.ui-table-scrollable-body tbody'));
     expect(tableBody).toBeTruthy();
 
-    TestingUtility.verifyTable([new ClusterHost(host2), new ClusterHost(host1)], component.cols, tableBody, {
+    TestingUtility.verifyTable([new ClusterHost(host2), new ClusterHost(host1)], componentCloud.cols, tableBody, {
       'spec.dscs': (fieldElem: DebugElement, rowData: any, rowIndex: number) => {
         expect(fieldElem.nativeElement.textContent).toContain(
-          component.processSmartNics(rowData)[0]['text']
+          componentCloud.processSmartNics(rowData)[0]['text']
         );  // only works if we for one entry case
       },
       'workloads': (fieldElem: DebugElement, rowData: any, rowIndex: number) => {
-        const workloads = component.getHostWorkloads(rowData);
+        const workloads = componentCloud.getHostWorkloads(rowData);
+        expect(workloads.length).toBeGreaterThanOrEqual(0);
+        if (workloads.length > 0) {
+          expect(fieldElem.nativeElement.textContent).toContain(
+            workloads[0].meta.name
+          );
+        } else {
+          expect(fieldElem.nativeElement.textContent.length).toEqual(0);
+        }
+      }
+    }, '', true);  // should not have delete icon as hosts have associated workloads
+  });
+  it('should populate enterprise table', () => {
+    TestingUtility.setAllPermissions();
+    TestingUtility.setEnterpriseMode();
+    const serviceCluster = TestBed.get(ClusterService);
+    const serviceWorkload = TestBed.get(WorkloadService);
+
+    spyOn(serviceCluster, 'ListHostCache').and.returnValue(
+      TestingUtility.createDataCacheSubject([
+        new ClusterHost(host1), new ClusterHost(host2)
+      ])
+    );
+
+    spyOn(serviceCluster, 'ListDistributedServiceCardCache').and.returnValue(
+      TestingUtility.createDataCacheSubject([
+        new ClusterDistributedServiceCard( naple1)
+      ])
+    );
+
+    spyOn(serviceWorkload, 'ListWorkloadCache').and.returnValue(
+      TestingUtility.createDataCacheSubject([
+        new WorkloadWorkload (workload1), new WorkloadWorkload (workload2)
+      ])
+    );
+
+    fixture.detectChanges();
+
+    // check table header
+    const title = fixture.debugElement.query(By.css('.tableheader-title'));
+    expect(title.nativeElement.textContent).toContain('Hosts (2)');
+    // check table contents
+    const tableBody = fixture.debugElement.query(By.css('.ui-table-scrollable-body tbody'));
+    expect(tableBody).toBeTruthy();
+
+    TestingUtility.verifyTable([new ClusterHost(host2), new ClusterHost(host1)], componentEnterprise.cols, tableBody, {
+      'spec.dscs': (fieldElem: DebugElement, rowData: any, rowIndex: number) => {
+        expect(fieldElem.nativeElement.textContent).toContain(
+          componentEnterprise.processSmartNics(rowData)[0]['text']
+        );  // only works if we for one entry case
+      },
+      'workloads': (fieldElem: DebugElement, rowData: any, rowIndex: number) => {
+        const workloads = componentEnterprise.getHostWorkloads(rowData);
         expect(workloads.length).toBeGreaterThanOrEqual(0);
         if (workloads.length > 0) {
           expect(fieldElem.nativeElement.textContent).toContain(
@@ -328,8 +384,46 @@ describe('HostsComponent', () => {
    *  3. subject.complete
    *  4. test....
    */
-  it('should have correct router links', () => {
+  it('should have correct router links for cloud', () => {
     TestingUtility.setAllPermissions();
+    TestingUtility.setCloudMode();
+    const serviceCluster = TestBed.get(ClusterService);
+    const serviceWorkload = TestBed.get(WorkloadService);
+
+    spyOn(serviceCluster, 'ListHostCache').and.returnValue(
+      TestingUtility.createDataCacheSubject([
+        new ClusterHost(host1), new ClusterHost(host2)
+      ])
+    );
+
+    spyOn(serviceCluster, 'ListDistributedServiceCardCache').and.returnValue(
+      TestingUtility.createDataCacheSubject([
+        new ClusterDistributedServiceCard( naple1)
+      ])
+    );
+
+    spyOn(serviceWorkload, 'ListWorkloadCache').and.returnValue(
+      TestingUtility.createDataCacheSubject([
+        new WorkloadWorkload (workload1), new WorkloadWorkload (workload2)
+      ])
+    );
+
+    fixture.detectChanges();
+
+    // find DebugElements with an attached RouterLinkStubDirective
+    const linkDes = fixture.debugElement
+      .queryAll(By.directive(RouterLinkStubDirective));
+    // get attached link directive instances
+    // using each DebugElement's injector
+    const routerLinks = linkDes.map(de => de.injector.get(RouterLinkStubDirective));
+    expect(routerLinks.length).toBe(2, 'Should have 2 routerLinks');
+    expect(routerLinks[0].linkParams).toBe('/cluster/dscs/00ae.cd00.1142');
+    expect(routerLinks[1].linkParams).toBe('/cluster/dscs/0242.c0a8.1c02');
+  });
+
+  it('should have correct router links for enterprise', () => {
+    TestingUtility.setAllPermissions();
+    TestingUtility.setEnterpriseMode();
     const serviceCluster = TestBed.get(ClusterService);
     const serviceWorkload = TestBed.get(WorkloadService);
 
@@ -367,7 +461,6 @@ describe('HostsComponent', () => {
   });
 
 
-
   describe('RBAC', () => {
     beforeEach(() => {
       const serviceCluster = TestBed.get(ClusterService);
@@ -393,7 +486,7 @@ describe('HostsComponent', () => {
       );
     });
 
-    it('naples read permission', () => {
+    it('naples read permission for cloud mode', () => {
       TestingUtility.addPermissions(
         [UIRolePermissions.clusterdistributedservicecard_read]
       );
@@ -406,7 +499,30 @@ describe('HostsComponent', () => {
       expect(routerLinks.length).toBe(2, 'Should have 2 routerLinks');
     });
 
-    it('no permission', () => {
+    it('no permission  - cloud mode', () => {
+      fixture.detectChanges();
+      const linkDes = fixture.debugElement
+        .queryAll(By.directive(RouterLinkStubDirective));
+      // get attached link directive instances
+      // using each DebugElement's injector
+      const routerLinks = linkDes.map(de => de.injector.get(RouterLinkStubDirective));
+      expect(routerLinks.length).toBe(0, 'Should have no routerLinks');
+    });
+
+    it('naples read permission for enterprise mode', () => {
+      TestingUtility.addPermissions(
+        [UIRolePermissions.clusterdistributedservicecard_read]
+      );
+      fixture.detectChanges();
+      const linkDes = fixture.debugElement
+        .queryAll(By.directive(RouterLinkStubDirective));
+      // get attached link directive instances
+      // using each DebugElement's injector
+      const routerLinks = linkDes.map(de => de.injector.get(RouterLinkStubDirective));
+      expect(routerLinks.length).toBe(2, 'Should have 2 routerLinks');
+    });
+
+    it('no permission  - enterprise mode', () => {
       fixture.detectChanges();
       const linkDes = fixture.debugElement
         .queryAll(By.directive(RouterLinkStubDirective));
@@ -417,5 +533,4 @@ describe('HostsComponent', () => {
     });
 
   });
-
 });

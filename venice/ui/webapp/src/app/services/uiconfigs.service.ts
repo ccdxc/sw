@@ -16,7 +16,6 @@ type derivedFeaturesFn = (configJson: UIConfig, licenseObj: IClusterLicense) => 
 
 export enum UIFeatures {
   // Config json features
-  fwlogs = 'fwlogs',
   workloadWidgets = 'workloadWidgets',
   showDebugMetrics = 'showDebugMetrics',
   troubleshooting = 'troubleshooting',
@@ -159,9 +158,6 @@ export class UIConfigsService implements OnDestroy {
       ],
     },
     'monitoring/fwlogs': {
-      requiredFeatures: [
-        Features.fwlogs,
-      ],
       requiredPerm: [
        UIRolePermissions.fwlog_read,
       ],

@@ -92,6 +92,7 @@ export class TestingUtility {
 
   public static setFeatures(features: UIFeatures[]) {
     const serviceAny = TestBed.get(UIConfigsService) as any;
+    serviceAny.configFile = {};
     features.forEach((f) => {
       serviceAny.features[f] = true;
     });

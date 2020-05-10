@@ -33,6 +33,8 @@
         </div>
       </form>
     </div>
-    <div *ngIf="errorMessage" class="alert alert-danger login-error">{{ errorMessage }}</div>
+    <div class="login-error-parent">
+      <div [style.visibility]="errorMessage ? 'visible' : 'hidden'"
+           class="alert alert-danger login-error">{{ errorMessage }}</div>
+    </div>
   </div>
-</div>

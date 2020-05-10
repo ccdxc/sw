@@ -170,6 +170,7 @@
                 <div>ASIC Frequency:</div>
               </div>
               <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row"
+                   *featureGuard="'enterprise'"
                    fxLayoutAlign="start center">
                 <div>DSC Profile:</div>
                 <mat-icon matTooltip="Edit DSC Profile" class="global-table-action-icon"
@@ -223,6 +224,7 @@
                 </div>
               </div>
               <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center"
+                   *featureGuard="'enterprise'"
                    class="naplesdetail-node-value">
                 <div class="naplesdetail-panel-auto-admit-nics">
                   <a [routerLink]="['/cluster/dscprofiles']"
@@ -245,7 +247,7 @@
             </div>
           </div>
           -->
-          <div fxFlex="none" fxLayout="row">
+          <div fxFlex="none" fxLayout="row" *featureGuard="'enterprise'">
             <!-- Field titles -->
             <div fxFlex="none" fxLayout="column" fxLayoutAlign="start start">
               <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row"

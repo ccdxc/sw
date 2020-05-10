@@ -122,10 +122,10 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
       return (opts.data._ui.processedWorkloads) ? opts.data._ui.processedWorkloads.map(wkld => wkld.meta.name).join(', ') : '';
     },
     'status.conditions': (opts): string => {
-      return  Utility.getNaplesConditionObject(opts.data).condition.toLowerCase();
+      return Utility.getNaplesConditionObject(opts.data).condition.toLowerCase();
     },
     'meta.labels': (opts): string => {
-      return  this.formatLabels(opts.data.meta.labels);
+      return this.formatLabels(opts.data.meta.labels);
     }
   };
 
@@ -239,12 +239,19 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
   setDefaultToolbar(): void {
   }
 
+  filterColumns() {
+    this.cols = this.cols.filter((col: TableCol) => {
+      return !((this.uiconfigsService.isFeatureEnabled('cloud') && (col.field === 'workloads' || col.field === 'spec.dscprofile')));
+    });
+  }
+
   /**
    * 2020-02-15
    * We use data-cache strategy.
    * getDSCTotalCount() -> will invoke watchAll()
    */
   postNgInit() {
+    this.filterColumns(); //  If backend is a Venice-for-cloud, we want to exclude some columns
     this.buildAdvSearchCols();
     this.provideCustomOptions();
     this.getTop10CardsDSCAndActiveSessions();
@@ -468,13 +475,15 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
     this.advSearchCols = this.cols.filter((col: TableCol) => {
       return (col.field !== 'workloads');
     });
-    this.advSearchCols.push(
-      {
-        field: 'workloads', header: 'Workloads', localSearch: true, kind: 'Workload',
-        filterfunction: this.searchWorkloads,
-        advancedSearchOperator: SearchUtil.stringOperators
-      }
-    );
+    if (!this.uiconfigsService.isFeatureEnabled('cloud')) {
+      this.advSearchCols.push(
+        {
+          field: 'workloads', header: 'Workloads', localSearch: true, kind: 'Workload',
+          filterfunction: this.searchWorkloads,
+          advancedSearchOperator: SearchUtil.stringOperators
+        }
+      );
+    }
   }
 
   /**
@@ -583,7 +592,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
    * We verify there is at least one DSC admitted.
    */
   isAtleastOneDSCAdmitted(): boolean {
-    const admittedDSCs  =  this.dataObjects.find((dsc: ClusterDistributedServiceCard) =>  dsc.status['admission-phase'] === ClusterDistributedServiceCardStatus_admission_phase.admitted );
+    const admittedDSCs = this.dataObjects.find((dsc: ClusterDistributedServiceCard) => dsc.status['admission-phase'] === ClusterDistributedServiceCardStatus_admission_phase.admitted);
     return (!!admittedDSCs);
   }
 
@@ -1058,23 +1067,22 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
     this.onForkJoinSuccess();
   }
 
-  private setSavebuttonState(flag: boolean ) {
+  private setSavebuttonState(flag: boolean) {
     this.saveDSCProfileOperationDone = flag;
     this.saveLabelsOperationDone = flag;
   }
 
   onBulkEditFailure(error: Error, veniceObjects: any[], stagingBulkEditAction: IStagingBulkEditAction, successMsg: string, failureMsg: string, ) {
-     // A DSC used to have "InsertionFWProfile" profile. If user change it to "default" profile. Sever will reject, we restore data here
-     this.setSavebuttonState(true);
-     this.dataObjects = Utility.getLodash().cloneDeepWith(this.dataObjectsBackUp);
+    // A DSC used to have "InsertionFWProfile" profile. If user change it to "default" profile. Sever will reject, we restore data here
+    this.setSavebuttonState(true);
+    this.dataObjects = Utility.getLodash().cloneDeepWith(this.dataObjectsBackUp);
   }
 
 
   // The save emitter from labeleditor returns the updated objects here.
   // We use forkjoin to update all the naples.
   handleEditSave(updatedNaples: ClusterDistributedServiceCard[]) {
-    // this.updateDSCLabelsWithForkjoin(updatedNaples);
-    this.updateDSCLabelsWithBulkEdit(updatedNaples);  // USE this for bulkedit when backend is ready
+     this.updateDSCLabelsWithBulkEdit(updatedNaples);  // USE this for bulkedit when backend is ready
   }
 
   handleEditCancel($event) {

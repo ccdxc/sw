@@ -15,7 +15,9 @@
   background-image: url("/assets/images/venice/venice-pictures-wallpapers-7.jpg");
   background-size: cover;
   background-repeat: no-repeat;
-  display: table;
+  display: flex;
+  align-items: center;
+  overflow: auto;
   /** define animation */
   // -webkit-animation: login-background-animation 350s infinite;
   // -moz-animation: login-background-animation 350s infinite;
@@ -159,11 +161,6 @@
 //   }
 // }
 
-.container.login-container {
-  display: table-cell;
-  vertical-align: middle;
-}
-
 .login-center-div {
   width: 600px;
   opacity: 0.8;
@@ -246,9 +243,27 @@
   letter-spacing: normal;
   text-align: center;
   margin: auto;
-  margin-top: 20px;
+  margin-top: 80px;
   left: 0%;
   right: 0%;
+}
+
+@media (max-height: 700px) {
+  .login-outter-div {
+    align-items: initial;
+  }
+
+  .container.login-container {
+    padding-top: 35px;
+  }
+
+  .login-error {
+    margin-top: 35px;
+  }
+
+  .login-error-parent {
+    height: 120px;
+  }
 }
 
 .login-progress {

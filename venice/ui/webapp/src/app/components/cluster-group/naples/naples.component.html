@@ -102,10 +102,13 @@
                            [nameKey]="'spec.id'">
           </app-labeleditor>
           <!-- DSC PROFILE EDITOR -->
-          <mat-icon class="naples-add-label-button"
-                    *ngIf="this.tableContainer.selectedDataObjects.length>0"
-                    [matTooltip]="'Assign DSC profile to selected DSC'"
-                    (click)="assignDSCProfile()">book</mat-icon>
+          <ng-container *featureGuard="'enterprise'">
+            <mat-icon class="naples-add-label-button"
+                      *ngIf="this.tableContainer.selectedDataObjects.length>0"
+                      [matTooltip]="'Assign DSC profile to selected DSC'"
+                      (click)="assignDSCProfile()">book</mat-icon>
+          </ng-container>
+
           <app-dscprofilesetter [inEditMode]="inProfileAssigningMode"
                                 [selections]="dscprofileOptions"
                                 (saveEmitter)="handleSetDSCProfileSave($event)"

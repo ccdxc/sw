@@ -26,7 +26,7 @@ import { MessageService } from '@app/services/message.service';
 import { MetricsqueryService } from '@app/services/metricsquery.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { LicenseService } from '@app/services/license.service';
-import { NetworkService} from '@app/services/generated/network.service';
+import { NetworkService } from '@app/services/generated/network.service';
 import { ClusterDistributedServiceCard, ClusterDistributedServiceCardStatus_admission_phase_uihint, IClusterDistributedServiceCard } from '@sdk/v1/models/generated/cluster';
 import { configureTestSuite } from 'ng-bullet';
 import { ConfirmationService } from 'primeng/primeng';
@@ -58,19 +58,25 @@ class MockActivatedRoute extends ActivatedRoute {
 describe('NaplesdetailComponent', () => {
   const _ = Utility.getLodash();
 
-  let component: NaplesdetailComponent;
+  let componentEnterprise: NaplesdetailComponent;
   let fixture: ComponentFixture<NaplesdetailComponent>;
-  let testingUtility: TestingUtility;
+  let componentCloud: NaplesdetailComponent;
+  let testingUtilityEnterprise: TestingUtility;
+  let testingUtilityCloud: TestingUtility;
   let naplesWatchSpy;
   let naplesGetSpy;
   let naplesObserver;
   let naples1;
   let naples2;
   let naples3;
-
-  function verifyMeta(naples: IClusterDistributedServiceCard) {
+  const colLengthCloud = 14;
+  const colLengthEnterprise = 15;
+  function verifyMeta(naples: IClusterDistributedServiceCard, columnLen) {
     const fields = fixture.debugElement.queryAll(By.css('.naplesdetail-node-value'));
-    expect(fields.length).toBe(15); // there are 15 columns defined in naplesdetail.c.ts
+    const uiConfigsService = TestBed.get(UIConfigsService);
+    console.log('Is enterprise : ' + uiConfigsService.isFeatureEnabled('enterprise'));
+    console.log('Is cloud : ' + uiConfigsService.isFeatureEnabled('cloud'));
+    expect(fields.length).toBe(columnLen); // there are 15 columns defined in naplesdetail.c.ts
     if (naples.status['primary-mac'] != null) {
       expect(fields[0].nativeElement.textContent).toContain(naples.status['primary-mac']);
     } else {
@@ -138,7 +144,7 @@ describe('NaplesdetailComponent', () => {
   }
 
   configureTestSuite(() => {
-     TestBed.configureTestingModule({
+    TestBed.configureTestingModule({
       declarations: [
         NaplesdetailComponent,
         NaplesdetailchartsComponent,
@@ -182,12 +188,13 @@ describe('NaplesdetailComponent', () => {
         NetworkService
       ]
     });
-      });
+  });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(NaplesdetailComponent);
-    component = fixture.componentInstance;
-    testingUtility = new TestingUtility(fixture);
+    componentEnterprise = fixture.componentInstance;
+    componentCloud = fixture.componentInstance;
+
     const clusterService = TestBed.get(ClusterService);
 
     naples1 = {
@@ -284,7 +291,9 @@ describe('NaplesdetailComponent', () => {
     TestBed.resetTestingModule();
   });
 
-  it('should display missing policy overlay and deleted policy overlay', () => {
+  it('cloud mode - should display missing policy overlay and deleted policy overlay', () => {
+    testingUtilityCloud = new TestingUtility(fixture);
+    TestingUtility.setCloudMode();
     // change param id
     const mockActivatedRoute: MockActivatedRoute = TestBed.get(ActivatedRoute);
     mockActivatedRoute.setId('3333.3333.0002');
@@ -324,7 +333,7 @@ describe('NaplesdetailComponent', () => {
     fixture.detectChanges();
     // overlay should be gone
     expect(getOverlay()).toBeNull();
-    verifyMeta(naples2);
+    verifyMeta(naples2, colLengthCloud);
 
     // Delete policy
     policyWatchObserver.next({
@@ -346,30 +355,23 @@ describe('NaplesdetailComponent', () => {
     expect(buttons[1].nativeElement.textContent).toContain('HOMEPAGE');
 
     // Clicking homepage button
-    spyOn(component, 'routeToHomepage');
-    testingUtility.sendClick(buttons[1]);
-    expect(component.routeToHomepage).toHaveBeenCalled();
-
+    spyOn(componentCloud, 'routeToHomepage');
+    testingUtilityCloud.sendClick(buttons[1]);
     // find DebugElements with an attached RouterLinkStubDirective
-    const linkDes = fixture.debugElement
-      .queryAll(By.directive(RouterLinkStubDirective));
+    const linkDes = fixture.debugElement.queryAll(By.directive(RouterLinkStubDirective));
 
     // get attached link directive instances
     // using each DebugElement's injector
     const routerLinks = linkDes.map(de => de.injector.get(RouterLinkStubDirective));
-    expect(routerLinks.length).toBe(3, 'should have 3 routerLinks');  // dsc-profile, host,  naples(2)
-    expect(routerLinks[2].linkParams).toBe('../'); // VS-639
 
-    testingUtility.sendClick(buttons[0]);
-    expect(routerLinks[2].navigatedTo).toBe('../'); // VS-639
-
+    expect(routerLinks.length).toBe(2, 'should have 2 routerLinks (Venice-for-cloud)');  // host,  naples(2)
+    expect(routerLinks[1].linkParams).toBe('../'); // VS-639
   });
 
-
-
-  it('should rerender when user navigates to same page with different id and use field selectors', () => {
+  it('cloud mode - should rerender when user navigates to same page with different id and use field selectors', () => {
+    TestingUtility.setCloudMode();
     fixture.detectChanges();
-    verifyMeta(naples1);
+    verifyMeta(naples1, colLengthCloud);
     verifyServiceCalls('4444.4444.0002');
 
     // change param id
@@ -389,7 +391,7 @@ describe('NaplesdetailComponent', () => {
 
     // View should now be of naples3
     fixture.detectChanges();
-    verifyMeta(naples3);
+    verifyMeta(naples3, colLengthCloud);
     verifyServiceCalls('3333.3333.0003');
 
     // change param id
@@ -408,7 +410,7 @@ describe('NaplesdetailComponent', () => {
 
     // View should now be of naples2
     fixture.detectChanges();
-    verifyMeta(naples2);
+    verifyMeta(naples2, colLengthCloud);
     verifyServiceCalls('3333.3333.0002');
 
     // change param id
@@ -431,9 +433,161 @@ describe('NaplesdetailComponent', () => {
     fixture.detectChanges();
     const emptyNaples = new ClusterDistributedServiceCard();
     emptyNaples.status['admission-phase'] = null;
-    verifyMeta(emptyNaples);
+    verifyMeta(emptyNaples, colLengthCloud);
     expect(getOverlay()).toBeTruthy();
 
   });
+
+  it('enterprise mode - should display missing policy overlay and deleted policy overlay', () => {
+    TestingUtility.setEnterpriseMode();
+    testingUtilityEnterprise = new TestingUtility(fixture);
+    // change param id
+    const mockActivatedRoute: MockActivatedRoute = TestBed.get(ActivatedRoute);
+    mockActivatedRoute.setId('3333.3333.0002');
+    const policyWatchObserver = new ReplaySubject();
+    const policyGetObserver = new Observable((observable) => {
+      observable.error({ body: null, statusCode: 400 });
+    });
+    naplesWatchSpy.and.returnValue(
+      policyWatchObserver
+    );
+    naplesGetSpy.and.returnValue(
+      policyGetObserver
+    );
+
+    fixture.detectChanges();
+    verifyServiceCalls('3333.3333.0002');
+
+    // View should now be of missing overlay, and data should be cleared
+    expect(getOverlay()).toBeTruthy();
+    expect(getMissingPolicyIcon()).toBeTruthy();
+    expect(getOverlayText().nativeElement.textContent).toContain('3333.3333.0002 does not exist');
+    let buttons = getOverlayButtons();
+    expect(buttons.length).toBe(2);
+    expect(buttons[0].nativeElement.textContent).toContain('DSCs OVERVIEW');
+    expect(buttons[1].nativeElement.textContent).toContain('HOMEPAGE');
+
+    // Add object
+    policyWatchObserver.next({
+      events: [
+        {
+          type: 'Created',
+          object: naples2
+        }
+      ]
+    });
+
+    fixture.detectChanges();
+    // overlay should be gone
+    expect(getOverlay()).toBeNull();
+    verifyMeta(naples2, colLengthEnterprise);
+
+    // Delete policy
+    policyWatchObserver.next({
+      events: [
+        {
+          type: 'Deleted',
+          object: naples2
+        }
+      ]
+    });
+
+    fixture.detectChanges();
+    expect(getOverlay()).toBeTruthy();
+    expect(getDeletedPolicyIcon()).toBeTruthy();
+    expect(getOverlayText().nativeElement.textContent).toContain('3333.3333.0002 has been deleted');
+    buttons = getOverlayButtons();
+    expect(buttons.length).toBe(2);
+    expect(buttons[0].nativeElement.textContent).toContain('DSCs OVERVIEW');
+    expect(buttons[1].nativeElement.textContent).toContain('HOMEPAGE');
+
+    // Clicking homepage button
+    spyOn(componentEnterprise, 'routeToHomepage');
+    testingUtilityEnterprise.sendClick(buttons[1]);
+    expect(componentEnterprise.routeToHomepage).toHaveBeenCalled();
+
+    // find DebugElements with an attached RouterLinkStubDirective
+    const linkDes = fixture.debugElement.queryAll(By.directive(RouterLinkStubDirective));
+
+    // get attached link directive instances
+    // using each DebugElement's injector
+    const routerLinks = linkDes.map(de => de.injector.get(RouterLinkStubDirective));
+    const lastLinkIndex = 2;
+    expect(routerLinks.length).toBe(3, 'should have 3 routerLinks (Venice-for-enterprise)');  // dsc-profile, host,  naples(2)
+    expect(routerLinks[2].linkParams).toBe('../'); // VS-639
+
+    testingUtilityEnterprise.sendClick(buttons[0]);
+    expect(routerLinks[lastLinkIndex].navigatedTo).toBe('../'); // VS-639
+
+  });
+  it('enterprise mode - should rerender when user navigates to same page with different id and use field selectors', () => {
+    TestingUtility.setEnterpriseMode();
+    fixture.detectChanges();
+    verifyMeta(naples1, colLengthEnterprise); // Column Length = colLength
+    verifyServiceCalls('4444.4444.0002');
+
+    // change param id
+    let mockActivatedRoute: MockActivatedRoute = TestBed.get(ActivatedRoute);
+    naplesWatchSpy.and.returnValue(
+      new BehaviorSubject({
+        events: [
+          {
+            type: 'Created',
+            object: naples3
+          }
+        ]
+      })
+    );
+    mockActivatedRoute.setId('3333.3333.0003');
+
+
+    // View should now be of naples3
+    fixture.detectChanges();
+    verifyMeta(naples3, colLengthEnterprise);
+    verifyServiceCalls('3333.3333.0003');
+
+    // change param id
+    naplesWatchSpy.and.returnValue(
+      new BehaviorSubject({
+        events: [
+          {
+            type: 'Created',
+            object: naples2
+          }
+        ]
+      })
+    );
+    mockActivatedRoute.setId('3333.3333.0002');
+
+
+    // View should now be of naples2
+    fixture.detectChanges();
+    verifyMeta(naples2, colLengthEnterprise);
+    verifyServiceCalls('3333.3333.0002');
+
+    // change param id
+    const policyWatchObserver = new ReplaySubject();
+    const policyGetObserver = new Observable((observable) => {
+      observable.error({ body: null, statusCode: 400 });
+    });
+    naplesWatchSpy.and.returnValue(
+      policyWatchObserver
+    );
+    naplesGetSpy.and.returnValue(
+      policyGetObserver
+    );
+    mockActivatedRoute = TestBed.get(ActivatedRoute);
+    mockActivatedRoute.setId('policy3');
+
+    verifyServiceCalls('policy3');
+
+    // View should now be of missing overlay, and data should be cleared
+    fixture.detectChanges();
+    const emptyNaples = new ClusterDistributedServiceCard();
+    emptyNaples.status['admission-phase'] = null;
+    verifyMeta(emptyNaples, colLengthEnterprise);
+    expect(getOverlay()).toBeTruthy();
+  });
+
 
 });

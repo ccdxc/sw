@@ -172,12 +172,6 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
     }
   }
 
-
-
-
-
-
-
   getHostWorkloads(host: ClusterHost): WorkloadWorkload[] {
     if (this.hostWorkloadsTuple[host.meta.name]) {
       return this.hostWorkloadsTuple[host.meta.name].workloads;
@@ -186,17 +180,25 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
     }
   }
 
+  filterColumns () {
+    this.cols = this.cols.filter((col: TableCol) => {
+      return !(this.uiconfigsService.isFeatureEnabled('cloud') &&  col.field === 'workloads');
+    });
+  }
+
   buildAdvSearchCols() {
     this.advSearchCols = this.cols.filter((col: TableCol) => {
       return (col.field !== 'spec.dscs' && col.field !== 'workloads');
     });
-    this.advSearchCols.push(
-      {
-        field: 'Workload', header: 'Workloads', localSearch: true, kind: 'Workload',
-        filterfunction: this.searchWorkloads,
-        advancedSearchOperator: SearchUtil.stringOperators
-      }
-    );
+    if (!this.uiconfigsService.isFeatureEnabled('cloud')) {
+      this.advSearchCols.push(
+        {
+          field: 'Workload', header: 'Workloads', localSearch: true, kind: 'Workload',
+          filterfunction: this.searchWorkloads,
+          advancedSearchOperator: SearchUtil.stringOperators
+        }
+      );
+    }
     this.advSearchCols.push(
       {
         field: 'DSC', header: 'DSCs', localSearch: true, kind: 'DistributedServiceCard',
@@ -229,12 +231,12 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
   /**
    * Find the DSC and compute whether DSC is admitted
    */
-  isAdmitted(specValue: ClusterDistributedServiceCardID , statusValue: string): boolean {
+  isAdmitted(specValue: ClusterDistributedServiceCardID, statusValue: string): boolean {
     let dsc: ClusterDistributedServiceCard = ObjectsRelationsUtility.getDSCByMACaddress(this.naplesList, statusValue);
     if (!dsc) {
       dsc = ObjectsRelationsUtility.getDSCById(this.naplesList, specValue.id);
     }
-    return ( dsc && dsc.spec.admit === true && dsc.status['admission-phase'] && dsc.status['admission-phase'].toLowerCase() === 'admitted');
+    return (dsc && dsc.spec.admit === true && dsc.status['admission-phase'] && dsc.status['admission-phase'].toLowerCase() === 'admitted');
   }
 
   displayColumn(rowData, col): any {
@@ -257,34 +259,35 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
     for (let i = 0; values && statusValues && i < values.length; i++) {
       const value = values[i];
       const statusValue = statusValues[i];
-        if (value.hasOwnProperty('id') && value['id']) {
-          dscInfos.push({
-            text: value['id'],
-            mac: this.nameToMacMap[value['id']] || '',
-            admitted: this.isAdmitted(value, statusValue)
-          });
-        } else if (value.hasOwnProperty('mac-address') && value['mac-address']) {
-          let text = this.macToNameMap[value['mac-address']];
-          if (text == null) {
-            text = value['mac-address'];
-          }
-          dscInfos.push({
-            text: text,
-            mac: value['mac-address'],
-            admitted: this.isAdmitted(value, statusValue)
-          });
-        } else {
-          dscInfos.push( {
-            text: 'N/A',
-            mac: '',
-            admitted: this.isAdmitted(value, statusValue)
-          });
+      if (value.hasOwnProperty('id') && value['id']) {
+        dscInfos.push({
+          text: value['id'],
+          mac: this.nameToMacMap[value['id']] || '',
+          admitted: this.isAdmitted(value, statusValue)
+        });
+      } else if (value.hasOwnProperty('mac-address') && value['mac-address']) {
+        let text = this.macToNameMap[value['mac-address']];
+        if (text == null) {
+          text = value['mac-address'];
         }
+        dscInfos.push({
+          text: text,
+          mac: value['mac-address'],
+          admitted: this.isAdmitted(value, statusValue)
+        });
+      } else {
+        dscInfos.push({
+          text: 'N/A',
+          mac: '',
+          admitted: this.isAdmitted(value, statusValue)
+        });
+      }
     }
     return dscInfos;
   }
 
   postNgInit() {
+    this.filterColumns(); // If backend is a Venice-for-cloud, we want to exclude some columns
     this.buildAdvSearchCols();
     this.getRecords();
   }
