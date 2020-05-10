@@ -406,6 +406,7 @@ ionic_lif_alloc(struct ionic *ionic, unsigned int index)
     lif->index = index;
     lif->ntxq_descs = ionic->ntx_buffers;
     lif->nrxq_descs = ionic->nrx_buffers;
+    lif->rx_mode = RX_MODE_F_UNICAST | RX_MODE_F_MULTICAST | RX_MODE_F_BROADCAST;
 
     lif->lif_stats = &ionic->port_stats.lif_stats[lif->index];
 
@@ -2210,11 +2211,10 @@ ionic_txrx_init(struct lif *lif)
     if (is_master_lif(lif))
         ionic_lif_rss_init(lif);
 
-    status = ionic_set_rx_mode(lif, RX_MODE_F_UNICAST | RX_MODE_F_MULTICAST |
-                                        RX_MODE_F_BROADCAST);
+    status = ionic_lif_rx_mode(lif, lif->rx_mode);
     if (status != NDIS_STATUS_SUCCESS) {
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
-                  "%s ionic_set_rx_mode() Failed status %08lX\n", __FUNCTION__,
+                  "%s ionic_lif_rx_mode() Failed status %08lX\n", __FUNCTION__,
                   status));
         goto err_out;
     }
