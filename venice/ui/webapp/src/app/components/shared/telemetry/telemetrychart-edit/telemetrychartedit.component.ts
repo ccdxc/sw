@@ -168,7 +168,7 @@ export class TelemetrycharteditComponent extends BaseComponent implements OnInit
         } else {
           res = this.getCardFieldDataForDSC(res);
         }
-        res = Utility.getLodash().cloneDeep(res);
+        res = [...res];
       }
     }
     return res;

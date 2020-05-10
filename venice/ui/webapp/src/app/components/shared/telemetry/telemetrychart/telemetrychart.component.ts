@@ -16,7 +16,6 @@ import { TimeRange } from '@app/components/shared/timerange/utility';
 import { UIChartComponent } from '@app/components/shared/primeng-chart/chart';
 import { FieldSelectorTransform } from '../transforms/fieldselector.transform';
 import { FieldValueTransform, ValueMap, QueryMap } from '../transforms/fieldvalue.transform';
-import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { ClusterDistributedServiceCard, ClusterNode } from '@sdk/v1/models/generated/cluster';
 import { ClusterService } from '@app/services/generated/cluster.service';
 import { ITelemetry_queryMetricsQuerySpec, Telemetry_queryMetricsQuerySpec_function } from '@sdk/v1/models/generated/telemetry_query';
@@ -24,13 +23,11 @@ import { LabelSelectorTransform } from '../transforms/labelselector.transform';
 import { AuthService } from '@app/services/generated/auth.service';
 import { TelemetryPref, GraphConfig, DataTransformConfig } from '@app/models/frontend/shared/userpreference.interface';
 import * as moment from 'moment';
-import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { GraphTitleTransform } from '../transforms/graphtitle.transform';
 import { GroupByTimeTransform } from '../transforms/groupbytime.transform';
 import { RoundCountersTransform } from '../transforms/roundcounters.transform';
 import { debounceTime } from 'rxjs/operators';
-import { DerivativeTransform } from '../transforms/derivative.transform';
 import { NetworkService } from '@app/services/generated/network.service';
 import { NetworkNetworkInterface } from '@sdk/v1/models/generated/network';
 
@@ -136,9 +133,6 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
   networkInterfacesTypeMap: {[key: string]: NetworkNetworkInterface[]} = {};
   naples: ReadonlyArray<ClusterDistributedServiceCard> = [];
   nodes: ReadonlyArray<ClusterNode> = [];
-  // Used for processing the stream events
-  naplesEventUtility: HttpEventUtility<ClusterDistributedServiceCard>;
-  nodeEventUtility: HttpEventUtility<ClusterNode>;
 
   macAddrToName: { [key: string]: string; } = {};
   nameToMacAddr: { [key: string]: string; } = {};
@@ -315,25 +309,27 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
 
 
   getNodes() {
-    this.nodeEventUtility = new HttpEventUtility<ClusterNode>(ClusterNode);
-    this.nodes = this.nodeEventUtility.array;
-    const subscription = this.clusterService.WatchNode().subscribe(
-      response => {
-        this.nodeEventUtility.processEvents(response);
+    const nodeSubscription = this.clusterService.ListNodeCache().subscribe(
+      (response) => {
+        if (response.connIsErrorState) {
+          return;
+        }
+        this.nodes = response.data;
         this.labelMap['Node'] = Utility.getLabels(this.nodes as any[]);
         this.getMetrics();
       },
-      this.controllerService.webSocketErrorHandler('Failed to get PSM nodes')
+      this._controllerService.webSocketErrorHandler('Failed to get nodes')
     );
-    this.subscriptions.push(subscription);
+    this.subscriptions.push(nodeSubscription);
   }
 
   getNaples() {
-    this.naplesEventUtility = new HttpEventUtility<ClusterDistributedServiceCard>(ClusterDistributedServiceCard);
-    this.naples = this.naplesEventUtility.array as ReadonlyArray<ClusterDistributedServiceCard>;
-    const subscription = this.clusterService.WatchDistributedServiceCard().subscribe(
-      response => {
-        this.naplesEventUtility.processEvents(response);
+    const dscSubscription = this.clusterService.ListDistributedServiceCardCache().subscribe(
+      (response) => {
+        if (response.connIsErrorState) {
+          return;
+        }
+        this.naples = response.data as ClusterDistributedServiceCard[];
         this.labelMap['DistributedServiceCard'] = Utility.getLabels(this.naples as any[]);
         // mac-address to name map
         this.macAddrToName = {};
@@ -346,9 +342,9 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
         }
         this.getMetrics();
       },
-      this.controllerService.webSocketErrorHandler('Failed to get labels')
+      this.controllerService.webSocketErrorHandler('Failed to get DSCs')
     );
-    this.subscriptions.push(subscription);
+    this.subscriptions.push(dscSubscription);
   }
 
   getNetworkInterfaces() {

@@ -112,9 +112,6 @@ describe('NaplesdetailComponent', () => {
   function verifyServiceCalls(naplesName) {
     expect(naplesWatchSpy).toHaveBeenCalled();
     const calledObj = naplesWatchSpy.calls.mostRecent().args;
-    if (calledObj && calledObj.length > 0) {
-      expect(_.isEqual({ 'field-selector': 'meta.name=' + naplesName }, calledObj[0])).toBeTruthy('Incorrect selector for ' + naplesName);
-    }
 
     expect(naplesGetSpy).toHaveBeenCalled();
     expect(naplesGetSpy).toHaveBeenCalledWith(naplesName + ':');
