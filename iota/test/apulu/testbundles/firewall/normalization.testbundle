@@ -1,0 +1,15 @@
+meta:
+    name    : normalization
+    os      : [ linux ]
+    nicmode : classic
+    nics    : [ pensando ]
+
+testcases:
+    -   name    : ICMPv6_normalization
+        stress  : True
+        disable : False
+        ignore  : False    
+        testcase: testcases.security.icmpv6_norm
+        args    :
+            type: remote_only
+            pkt_type: ["ICMPv6-NS", "ICMPv6-NA", "ICMPv6-RS", "ICMPv6-RA"]
