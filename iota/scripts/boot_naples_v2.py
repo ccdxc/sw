@@ -608,21 +608,27 @@ class NaplesManagement(EntityManagement):
             raise Exception(msg)
 
 
-    def IsOOBUP(self):
-        for _ in range(5):
-            output = self.RunCommandOnConsoleWithOutput("ip link | grep " + GlobalOptions.mgmt_intf)
-            ifconfig_regexp='state (.+?) mode'
-            x = re.findall(ifconfig_regexp, output)
-            if len(x) > 0:
-                if x[0] == "UP":
-                    return True
-                if x[0] == "DOWN":
-                    return False
-            else:
-                print("Not able to read oob link state")
-        return False
+    def IsOOBAvailable(self):
+        if hasattr(self.nic_spec, 'OobandLink') and self.nic_spec.OobandLink == False:
+            print("Naples: OobandLink not available")
+            return False
+        return True
+        #for _ in range(6):
+        #    output = self.RunCommandOnConsoleWithOutput("ip link | grep " + GlobalOptions.mgmt_intf)
+        #    ifconfig_regexp='state (.+?) mode'
+        #    x = re.findall(ifconfig_regexp, output)
+        #    if len(x) > 0:
+        #        if x[0] == "UP":
+        #            return True
+        #        if x[0] == "DOWN":
+        #            return False
+        #    else:
+        #        print("Not able to read oob link state")
+        #return False
 
     def ReadExternalIP(self):
+        if not self.IsOOBAvailable():
+            return
         self.__run_dhclient()
         for _ in range(5):
             output = self.RunCommandOnConsoleWithOutput("ifconfig " + GlobalOptions.mgmt_intf)
@@ -654,6 +660,10 @@ class NaplesManagement(EntityManagement):
 
 
     def __read_mac(self):
+        if hasattr(self.nic_spec, 'OobandLink') and self.nic_spec.OobandLink == False:
+            print("Naples: OobandLink not available")
+            return
+
         for _ in range(10):
             output = self.RunCommandOnConsoleWithOutput("ip link | grep oob_mnic0 -A 1 | grep ether")
             mac_regexp = '(?:[0-9a-fA-F]:?){12}'
@@ -829,7 +839,7 @@ class HostManagement(EntityManagement):
     def Init(self, driver_pkg = None, cleanup = True, gold_fw = False):
         self.WaitForSsh()
         os.system("date")
-        nodeinit_args = " --own_ip " + self.GetPrimaryIntNicMgmtIpNext() + " --trg_ip " + self.GetPrimaryIntNicMgmtIp()
+        nodeinit_args = " --own_ip " + self.GetPrimaryIntNicMgmtIpNext() + " --trg_ip " + self.GetPrimaryIntNicMgmtIp() + " --mode " + GlobalOptions.mode
 
         if GlobalOptions.skip_driver_install:
             nodeinit_args += " --skip-install"
@@ -870,16 +880,16 @@ class HostManagement(EntityManagement):
             #Run with not mgmt first
             if gold_fw or not GlobalOptions.no_mgmt:
                 print('running nodeinit.sh with args: {0}'.format(nodeinit_args))
-                self.RunSshCmd("sudo %s/nodeinit.sh --no-mgmt --image %s" % (HOST_NAPLES_DIR, os.path.basename(driver_pkg)))
+                self.RunSshCmd("sudo %s/nodeinit.sh --no-mgmt --image %s --mode %s" % (HOST_NAPLES_DIR, os.path.basename(driver_pkg), GlobalOptions.mode))
                 #mgmtIPCmd = "sudo python5  %s/pen_nics.py --mac-hint %s --intf-type int-mnic --op mnic-ip --os %s" % (HOST_NAPLES_DIR, self.naples.mac_addr, self.__host_os)
                 #output, errout = self.RunSshCmdWithOutput(mgmtIPCmd)
                 #print("Command output ", output)
                 #mnic_ip = ipaddress.ip_address(output.split("\n")[0])
                 #own_ip = str(mnic_ip + 1)
                 #nodeinit_args = " --own_ip " + own_ip + " --trg_ip " + str(mnic_ip)
-                nodeinit_args = " --own_ip " + self.GetPrimaryIntNicMgmtIpNext() + " --trg_ip " + self.GetPrimaryIntNicMgmtIp()
+                nodeinit_args = " --own_ip " + self.GetPrimaryIntNicMgmtIpNext() + " --trg_ip " + self.GetPrimaryIntNicMgmtIp() + " --mode " + GlobalOptions.mode
             else:
-                nodeinit_args += " --no-mgmt" + " --image " + os.path.basename(driver_pkg)
+                nodeinit_args += " --no-mgmt" + " --image " + os.path.basename(driver_pkg) + " --mode " + GlobalOptions.mode
             print('running nodeinit.sh with args: {0}'.format(nodeinit_args))
             self.RunSshCmd("sudo %s/nodeinit.sh %s" % (HOST_NAPLES_DIR, nodeinit_args))
         return
@@ -1498,7 +1508,7 @@ class PenOrchestrator:
             
             # Case 1: Main firmware upgrade.
             #naples.InitForUpgrade(goldfw = True)
-            if naples_inst.IsSSHUP():
+            if naples_inst.IsOOBAvailable() and naples_inst.IsSSHUP():
                 #OOb is present and up install right away,
                 print("installing and running tests with firmware {0} without checking goldfw".format(self.__fw_images.image))
                 try:

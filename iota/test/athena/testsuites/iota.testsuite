@@ -1,6 +1,6 @@
 meta:
-    name        : networking
-    description : Athena Base Testsuite
+    name        : iota
+    description : Athena IOTA Integration
     mode        : hardware
     cfgmode     : netagent
     nicmode     : bitw
@@ -17,7 +17,7 @@ image_manifest:
 setup:
     topology: test/athena/topologies/classic_2baremetal_2Naples/classic_baremetal.topology
     config  :
-        - step  : config.athena_app_config
+        - step : config.athena_app_config
 
 common:
     verifs:
@@ -33,7 +33,7 @@ common:
 
 testbundles:
     precheckin:
-        - sample.testbundle
+        - iota.testbundle
 
     sanity:
         # Relative paths from iota/test/athena/testbundles/

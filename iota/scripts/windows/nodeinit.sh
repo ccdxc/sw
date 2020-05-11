@@ -7,7 +7,7 @@ cp /naples/drivers-windows.zip /mnt/c/Windows/temp
 cat << "EOF" > /mnt/c/Windows/temp/$filename
 $ownIP="169.254.XX.2"
 $trgIP="169.254.XX.1"
-
+$naples_mode="classic"
 $loop=$true
 
 
@@ -25,6 +25,7 @@ while($args.Count -gt 0 -and $loop -eq $true) {
 			'--own_ip' {$ownIP=$args[$arg+1]; $skipIteration=$true}
 			'--trg_ip' {$trgIP=$args[$arg+1]; $skipIteration=$true}
                         '--image' {$driverImg=$args[$arg+1]; $skipIteration=$true}
+                        '--mode' {$naples_mode=$args[$arg+1]; $skipIteration=$true}
 			default {echo "Unknown parameter passed:"+$args[$arg]; exit 1}
 		}
 	}

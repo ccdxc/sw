@@ -3,6 +3,7 @@ set -e
 
 own_ip="169.254.0.2"
 trg_ip="169.254.0.1"
+naples_mode="classic"
 
 DEFAULT_IONIC_DRIVER_PATH=/naples/*/sys/modules/ionic/ionic.ko
 while [[ "$#" > 0 ]]; do
@@ -15,6 +16,7 @@ while [[ "$#" > 0 ]]; do
         --no-mgmt) no_mgmt=1;;
         --trg_ip) trg_ip=$2; shift;;
         --image) driver_img=$2; shift;;
+        --mode) naples_mode=$2; shift;;
         *) echo "Unknown parameter passed: $1"; exit 10;;
     esac; shift;
 done
@@ -42,10 +44,13 @@ function init_host() {
         ifs+=" $ifn"
     done
 
-    for i in $ifs
-    do
-        ifconfig $i up
-    done
+    if [[ "$naples_mode" != "bitw" ]] ;
+    then
+        for i in $ifs
+        do
+            ifconfig $i up
+        done
+    fi
     fw_version=`sysctl dev.ionic.0.fw_version | awk '{ print $2 }'`
 }
 
@@ -91,7 +96,8 @@ function setup_legacy_mgmt_ip() {
     echo "Internal mgmt interface $intmgmt detected at $bdf." 
     # dhcp_disable 
     ifconfig $intmgmt $own_ip/24
-    ifconfig $intmgmt 
+    ifconfig $intmgmt up
+    ifconfig $intmgmt
     if [ -n "$no_mgmt" ]; then 
         echo "Skip ping test of internal mgmt interface on host" 
         exit 0 

@@ -837,7 +837,7 @@ class Node(object):
         return
 
     def GetStartUpScript(self):
-        if self.IsNaplesHw():
+        if self.IsNaplesHw() or self.IsNaplesHwWithBumpInTheWire():
             return api.HOST_NAPLES_DIR + "/" + "nodeinit.sh"
         return None
 

@@ -1,0 +1,14 @@
+meta:
+    name    : iota
+    os      : [ linux, freebsd, windows ]
+    nics    : [ pensando ]
+    targetcount : 10
+
+testcases:
+    -   name    : naples_cmdexec_test
+        testcase: testcases.iota.naples_cmdexec
+        enable  : True
+
+    -   name    : node_reboot_test
+        testcase: testcases.iota.node_reboot
+        enable  : False

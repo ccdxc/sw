@@ -4,7 +4,7 @@ set -x
 
 own_ip="169.254.XX.2"
 trg_ip="169.254.XX.1"
-
+naples_mode="classic"
 DEFAULT_IONIC_DRIVER_PATH=/naples/*/drivers/eth/ionic/ionic.ko
 
 while [[ "$#" > 0 ]]; do
@@ -17,6 +17,7 @@ while [[ "$#" > 0 ]]; do
         --own_ip) own_ip=$2; shift;;
         --trg_ip) trg_ip=$2; shift;;
         --image) driver_img=$2; shift;;
+        --mode) naples_mode=$2; shift;;
         *) echo "Unknown parameter passed: $1"; exit 10;;
     esac; shift;
 done
@@ -62,10 +63,14 @@ function init_host() {
             fw_version=`ethtool -i $n  | grep firmware-version | awk  '{ print $2 }'`
         fi
     done
-    for i in $ifs
-    do
-        ifconfig $i up
-    done
+
+    if [[ "$naples_mode" != "bitw" ]] ;
+    then
+        for i in $ifs
+        do
+            ifconfig $i up
+        done
+    fi
 }
 
 dhcp_disable() {
@@ -109,6 +114,7 @@ function setup_legacy_mgmt_ip() {
     echo "Internal mgmt interface $intmgmt detected at $bdf." 
     dhcp_disable 
     ifconfig $intmgmt $own_ip/24 
+    ifconfig $intmgmt up
     ifconfig $intmgmt
     if [ -n "$no_mgmt" ]; then 
         echo "Skip ping test of internal mgmt interface on host" 
@@ -124,13 +130,13 @@ function setup_legacy_mgmt_ip() {
 function setup_pci_mgmt_ip() {
     num_nic=`echo $ifs | wc -w`
     num_mgmt=`echo $mgmt_ifs | wc -w`
-    num_mgmt_expected=`expr $num_nic / 3`
 
-    if [[ $num_mgmt -ne $num_mgmt_expected ]]; then
-        echo "ERROR: Internal mgmt interface is required."
-        echo "Should have $num_mgmt_expected but see $num_mgmt"
-        exit 13
-    fi
+    #num_mgmt_expected=`expr $num_nic / 3`
+    #if [[ $num_mgmt -ne $num_mgmt_expected ]]; then
+    #    echo "ERROR: Internal mgmt interface is required."
+    #    echo "Should have $num_mgmt_expected but see $num_mgmt"
+    #    exit 13
+    #fi
 
     # override possible command line setting
     # with default settings if multiple NICs
@@ -148,7 +154,12 @@ function setup_pci_mgmt_ip() {
             mnic_ip=`echo $trg_ip | sed -e s/XX/$s_dec/`
 
             ifconfig $intmgmt $mgmt_ip/24
+            ifconfig $intmgmt up
             ifconfig $intmgmt
+            if [[ "$naples_mode" == "bitw" ]] ;
+            then
+                ethtool -K $intmgmt tx off rx off
+            fi
             if [ -n "$no_mgmt" ]; then
                 echo "Skip ping test of internal mgmt interface on host"
                 exit 0
@@ -225,7 +236,10 @@ else
 
         init_host
 
-        dhcp_disable
+        if [[ "$naples_mode" != "bitw" ]] ;
+        then
+            dhcp_disable
+        fi
 
         if [ -n "$no_mgmt" ]; then
             echo "Internal mgmt interface is not required."

@@ -1404,6 +1404,16 @@ func (thirdParty *thirdPartyDataNode) Init(in *iota.Node) (resp *iota.Node, err 
 //Init initalize node type
 func (bitwNaples *naplesBitwHwNode) Init(in *iota.Node) (resp *iota.Node, err error) {
 
+	if in.StartupScript != "" {
+		_, stdout, err := Utils.Run(strings.Split(in.StartupScript, " --mode bitw "), 0, false, true, nil)
+		if err != nil {
+			msg := fmt.Sprintf("Start up script failed %v up err : %v", err, stdout)
+			bitwNaples.logger.Error(msg)
+			// Don't return error as start up would have been completed before.
+			//return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}, err
+		}
+	}
+
 	bitwNaples.init(in)
 	bitwNaples.iotaNode.name = in.GetName()
 
