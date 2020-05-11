@@ -67,6 +67,10 @@ public:
     /// \return SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t pipeline_init(void) override;
 
+    /// \brief  init routine to initialize the pipeline for read access
+    /// \return SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t pipeline_soft_init(void) override;
+
     /// \brief     generic API to write to rxdma tables
     /// \param[in] addr        memory address to write the data to
     /// \param[in] tableid     table id
