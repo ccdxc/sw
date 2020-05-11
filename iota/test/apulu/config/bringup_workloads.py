@@ -88,28 +88,29 @@ def __add_workloads(redirect_port):
         # Make the workload_name unique across nodes by appending node-name
         wl_msg.workload_name = ep.name + ep.node_name
         wl_msg.node_name = ep.node_name
+        intf = wl_msg.interfaces.add()
         if not ep.vnic.DhcpEnabled:
-            wl_msg.ip_prefix = ep.ip_addresses[0]
-            wl_msg.sec_ip_prefix.extend(ep.ip_addresses[1:])
+            intf.ip_prefix = ep.ip_addresses[0]
+            intf.sec_ip_prefix.extend(ep.ip_addresses[1:])
         # wl_msg.ipv6_prefix = ep.ip_addresses[1]
-        wl_msg.mac_address = ep.macaddr
+        intf.mac_address = ep.macaddr
         if ep.vlan != 0:
-            wl_msg.interface_type = topo_svc.INTERFACE_TYPE_VSS
+            intf.interface_type = topo_svc.INTERFACE_TYPE_VSS
         else:
-            wl_msg.interface_type = topo_svc.INTERFACE_TYPE_NONE
-        wl_msg.encap_vlan = ep.vlan
+            intf.interface_type = topo_svc.INTERFACE_TYPE_NONE
+        intf.encap_vlan = ep.vlan
         interface = ep.interface
-        if interface != None: wl_msg.interface = interface
-        wl_msg.parent_interface = wl_msg.interface
+        if interface != None: intf.interface = interface
+        intf.parent_interface = intf.interface
         wl_msg.workload_type = api.GetWorkloadTypeForNode(wl_msg.node_name)
         wl_msg.workload_image = api.GetWorkloadImageForNode(wl_msg.node_name)
         wl_msg.mgmt_ip = api.GetMgmtIPAddress(wl_msg.node_name)
         if redirect_port:
             _add_exposed_ports(wl_msg)
         api.Logger.info(f"Workload {wl_msg.workload_name} "
-                        f"Node {wl_msg.node_name} Intf {wl_msg.interface} Parent-Intf {wl_msg.parent_interface} "
-                        f"IP {wl_msg.ip_prefix} MAC {wl_msg.mac_address} "
-                        f"VLAN {wl_msg.encap_vlan}")
+                        f"Node {wl_msg.node_name} Intf {intf.interface} Parent-Intf {intf.parent_interface} "
+                        f"IP {intf.ip_prefix} MAC {intf.mac_address} "
+                        f"VLAN {intf.encap_vlan}")
     if len(req.workloads):
         api.Logger.info("Adding %d Workloads" % len(req.workloads))
         resp = api.AddWorkloads(req, skip_bringup=api.IsConfigOnly())
