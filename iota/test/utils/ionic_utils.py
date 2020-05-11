@@ -282,9 +282,9 @@ def winHalIntfName(node, intf):
     # Pensando -> Pen~
     # First interface missing "#"
     if winName.find('#') == -1:
-        halName = re.sub("Pensando.*Adapter", "Pen~ces Adapter", winName)
+        halName = re.sub("Pensando.*Card", "Pen~ces Adapter", winName)
     else:
-        halName = re.sub("Pensando.*Adapter", "Pen~ Adapter", winName)
+        halName = re.sub("Pensando.*Card", "Pen~ Adapter", winName)
     api.Logger.info("(Win Name): Linux: %s -> Windows name: %s -> Hal name: %s" % (intf, winName, halName))
     return halName
                 
