@@ -8220,11 +8220,15 @@ func TestWatcherWithMirrorCreateUpdateWithDirection(t *testing.T) {
 	AssertOk(t, err, "Error creating mirror session ")
 
 	AssertEventually(t, func() (bool, interface{}) {
-		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
-		if err == nil {
-			return true, nil
+		ms, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err != nil {
+			return false, nil
 		}
-		return false, nil
+
+		if ms.intfMirrorSession.obj.Spec.MirrorDirection != netproto.MirrorDir_INGRESS {
+			return false, nil
+		}
+		return true, nil
 	}, "Mirror session not found", "1ms", "1s")
 
 	for _, intf := range intfs {

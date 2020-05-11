@@ -728,7 +728,7 @@ func (smm *SmMirrorSessionInterface) updateInterfaceMirror(ms *MirrorSessionStat
 		if ms.MirrorSession.MirrorSession.Spec.Interfaces != nil && nmirror.Spec.Interfaces != nil {
 			if ms.MirrorSession.MirrorSession.Spec.Interfaces.Direction != nmirror.Spec.Interfaces.Direction {
 				updateReqd = true
-				ms.intfMirrorSession.obj.Spec.MirrorDirection = getNetProtoDirection(ms.MirrorSession.MirrorSession.Spec.Interfaces.Direction)
+				ms.intfMirrorSession.obj.Spec.MirrorDirection = getNetProtoDirection(nmirror.Spec.Interfaces.Direction)
 			}
 		}
 
