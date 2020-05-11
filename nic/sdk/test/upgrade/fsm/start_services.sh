@@ -10,9 +10,17 @@ elif [ $# == 5 ]; then
     SVC_ID=$3
     ERR_CODE=$4
     ERR_STAG=$5
+elif [ $# == 6 ]; then
+    TEST_BIN_DIR=$1
+    SVC=$2
+    SVC_ID=$3
+    ERR_CODE=$4
+    ERR_STAG=$5
+    DELAY=$6
 else
     echo "usage : fsm_test <bin_dir> <svc> <id>"
     echo "usage : fsm_test <bin_dir> <svc> <id> <erro_code> <error_stage>"
+    echo "usage : fsm_test <bin_dir> <svc> <id> <erro_code> <error_stage> <time_delay>"
     exit 1
 fi
 
@@ -45,6 +53,8 @@ if [ $# == 3 ];then
     CMD="${TEST_BIN_DIR}/${TEST_BIN_NAME} -s ${SVC} -i ${SVC_ID}"
 elif [ $# == 5 ];then
     CMD="${TEST_BIN_DIR}/${TEST_BIN_NAME} -s ${SVC} -i ${SVC_ID} -e ${ERR_CODE} -f ${ERR_STAG}"
+elif [ $# == 6 ];then
+    CMD="${TEST_BIN_DIR}/${TEST_BIN_NAME} -s ${SVC} -i ${SVC_ID} -e ${ERR_CODE} -f ${ERR_STAG} -t ${DELAY}"
 else
     echo "Something Wrong !"
 fi

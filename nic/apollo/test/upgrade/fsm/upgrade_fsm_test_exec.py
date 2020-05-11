@@ -350,15 +350,21 @@ class ExecutePdsUpgradeFsmTest(object):
         return ret
 
     def __start_fsm_test__(self, svc_name, svc_id, err_code=None,
-                           fsm_stage=None):
+                           fsm_stage=None, time_delay=None):
         command = self.fsm_test_service
         command += " " + os.path.join(self.BUILD_DIR, "bin")
         command += " " + svc_name
         command += " " + svc_id
+
+        # usage: error + fsm_stage
+        # usage: error + fsm_stage + time_delay
         if err_code is not None:
             command += " " + err_code
             command += " " + fsm_stage
-        command += " 2>&1 | tee fsm_test_{0}.log > /dev/null".format(svc_name)
+            if time_delay is not None:
+                command +=  " " + time_delay
+
+        command +=  " 2>&1 | tee fsm_test_{0}.log > /dev/null".format(svc_name)
         ret = execute(cmd=command, return_check=True, is_background=True)
 
     def __match_log__(self, log_file, logs_to_match):
@@ -384,11 +390,15 @@ class ExecutePdsUpgradeFsmTest(object):
         fsm_stage = self.__get_data_by_key_walk__(
             self.test_svc_rsp_stage_fmt.format(test_id, svc),
             default=None)
+        time_delay = self.__get_data_by_key_walk__(
+            self.test_svc_rsp_time_delay_fmt.format(test_id, svc),
+            default=None)
 
         if err_code is None:
             fsm_stage = None
 
-        self.__start_fsm_test__(svc_name, svc_id, err_code, fsm_stage)
+        self.__start_fsm_test__(svc_name, svc_id, err_code, fsm_stage,
+                                time_delay)
 
     def __inject_pre_hook_failure__(self, pre_hook, pre_hook_stage):
         try:
@@ -553,6 +563,7 @@ class ExecutePdsUpgradeFsmTest(object):
         self.test_pre_hook_script_fmt = "{0}.pre_hook.script"
         self.test_post_hook_stage_fmt = "{0}.post_hook.stage"
         self.test_post_hook_script_fmt = "{0}.post_hook.script"
+        self.test_svc_rsp_time_delay_fmt = "{0}.svc.{1}.rsp_time_delay"
 
         self.test_expected_result_fmt = "{0}.expected_result"
         self.test_exp_api_return_fmt = "{0}.expected_result.api_return_code"
