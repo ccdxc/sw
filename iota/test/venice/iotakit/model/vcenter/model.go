@@ -386,6 +386,14 @@ func (sm *VcenterSysModel) modifyConfig() error {
 			Name:      orch.Name,
 			Namespace: orch.DC,
 		})
+
+		for i := range cfgObjects.Workloads {
+			for j := range cfgObjects.Workloads[i].Spec.Interfaces {
+				if cfgObjects.Workloads[i].Spec.Interfaces[j].ExternalVlan == nw.Spec.VlanID {
+					cfgObjects.Workloads[i].Spec.Interfaces[j].Network = getVcenterNetworkName(nw)
+				}
+			}
+		}
 	}
 
 	return nil
@@ -396,9 +404,10 @@ func (sm *VcenterSysModel) InitConfig(scale, scaleData bool) error {
 	skipSetup := os.Getenv("SKIP_SETUP")
 	skipConfig := os.Getenv("SKIP_CONFIG")
 	cfgParams := &base.ConfigParams{
-		Scale:      scale,
-		Regenerate: skipSetup == "",
-		Vlans:      sm.Tb.AllocatedVlans(),
+		Scale:                         scale,
+		Regenerate:                    skipSetup == "",
+		Vlans:                         sm.Tb.AllocatedVlans(),
+		NumberOfInterfacesPerWorkload: 2,
 	}
 	for _, naples := range sm.NaplesNodes {
 		dscs := []*cluster.DistributedServiceCard{}

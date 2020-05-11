@@ -60,6 +60,18 @@ var scaleCfgenParams = &Cfgen{
 						MACAddress:   "{{mac}}",
 						IpAddresses:  []string{"{{ipv4:22.x.x.0}}"},
 					},
+					workload.WorkloadIntfSpec{
+						ExternalVlan: 998,
+						MicroSegVlan: 998,
+						MACAddress:   "{{mac}}",
+						IpAddresses:  []string{"{{ipv4:22.x.x.0}}"},
+					},
+					workload.WorkloadIntfSpec{
+						ExternalVlan: 998,
+						MicroSegVlan: 998,
+						MACAddress:   "{{mac}}",
+						IpAddresses:  []string{"{{ipv4:22.x.x.0}}"},
+					},
 				},
 			},
 		},

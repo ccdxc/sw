@@ -120,9 +120,6 @@ const (
 
 	EsxDataVMUsername            = "vm"
 	EsxDataVMPassword            = "vm"
-	EsxDataVMInterface           = "eth1"
-	EsxDataVMInterfaceExtra1     = "eth2"
-	EsxDataVMInterfaceExtra2     = "eth3"
 	EsxCtrlVMMgmtInterface       = "eth0"
 	EsxCtrlVMNaplesMgmtInterface = "eth1"
 	EsxDefaultNetwork            = "iota-def-network"
@@ -256,4 +253,6 @@ var (
 	EsxControlVMNetworks = []string{"VM Network", EsxDefaultNetwork, EsxDefaultNetwork, EsxDefaultNetwork}
 
 	EsxDataVMNetworks = []string{"VM Network", EsxDefaultNetwork, EsxDefaultNetwork, EsxDefaultNetwork}
+
+	EsxDataVMInterfaces = []string{"eth1", "eth2", "eth3"}
 )

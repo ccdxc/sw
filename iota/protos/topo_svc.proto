@@ -468,6 +468,52 @@ message ExposedPorts {
     string  Proto   = 2;
 }
 
+message Interface {
+   
+    // IPAddress of the workload. Represent this as a CIDR block. 10.0.0.1/16 will be
+    // interpreted as 10.0.0.1 is the IP of the workload container and it belongs to a /16 subnet.
+    string ip_prefix                        = 1;
+
+    string ipv6_prefix                      = 2;
+
+    // MAC Address of the workload
+    string mac_address                      = 3;
+
+    // Interface to which workload needs to be attached.
+    string interface                        = 4;
+
+    // Parent Interface for classic workload
+    string parent_interface                 = 5;
+
+    InterfaceType interface_type            = 6;
+
+    // Interface to which workload needs to be attached.
+    uint32 pinned_port                      = 7;
+
+    // uplink vlan for the traffic going outside node.
+    uint32 uplink_vlan                      = 8;
+
+    // Secondary IPv4 addresses
+    repeated string sec_ip_prefix           = 9;
+
+    // Secondary IPv6 addresses
+    repeated string sec_ipv6_prefix         = 10;
+
+    // Data VLAN for the workload
+    uint32 encap_vlan                       = 11;
+
+    // Data VLAN for the workload
+    uint32 secondary_encap_vlan             = 12;
+
+        //If interface type is DVS
+     DvsInfo  dvs                           = 13;
+
+     string   switch_name                   = 14;
+    
+     string   network_name                  = 15;
+        
+}
+
 message Workload {
     // Workload Identifier
     string workload_name                    = 1;
@@ -481,61 +527,20 @@ message Workload {
     // Node on which this needs to be spun up
     string node_name                        = 4;
 
-    // Data VLAN for the workload
-    uint32 encap_vlan                       = 5;
-
-    // Data VLAN for the workload
-    uint32 secondary_encap_vlan             = 6;
-   
-    // IPAddress of the workload. Represent this as a CIDR block. 10.0.0.1/16 will be
-    // interpreted as 10.0.0.1 is the IP of the workload container and it belongs to a /16 subnet.
-    string ip_prefix                        = 7;
-
-    string ipv6_prefix                      = 8;
-
-    // MAC Address of the workload
-    string mac_address                      = 9;
-
-    // Interface to which workload needs to be attached.
-    string interface                        = 10;
-
-    // Parent Interface for classic workload
-    string parent_interface                 = 11;
-
-    InterfaceType interface_type            = 12;
-
-    // Interface to which workload needs to be attached.
-    uint32 pinned_port                      = 13;
-
-    // uplink vlan for the traffic going outside node.
-    uint32 uplink_vlan                      = 14;
-
     // Workload Status
-    IotaAPIResponse workload_status         = 15;
+    IotaAPIResponse workload_status         = 5;
 
-    // Secondary IPv4 addresses
-    repeated string sec_ip_prefix           = 16;
+    repeated Interface interfaces           = 6;
 
-    // Secondary IPv6 addresses
-    repeated string sec_ipv6_prefix         = 17;
-
-    // number of CPUs to be dedicated.
-    uint32 cpus                             = 18;
+    uint32 cpus                             = 7;
 
     // Memory allocated
-    uint32 memory                           = 19;
+    uint32 memory                           = 8;
 
     // Management IP of the workload if VM
-    string mgmt_ip                          = 21;
+    string mgmt_ip                          = 9;
 
-    //If interface type is DVS
-    DvsInfo  dvs                            = 22;
-
-    string   switch_name                    = 23;
-   
-    string   network_name                   = 24;
-    
-    repeated ExposedPorts exposed_ports     = 25;
+    repeated ExposedPorts exposed_ports     = 10;
 }
 
 enum TriggerOp {

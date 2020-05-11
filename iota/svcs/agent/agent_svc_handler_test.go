@@ -373,14 +373,15 @@ func TestAgentService_Workload_Add_Delete(t *testing.T) {
 
 	workload.WorkloadName = "test-workload"
 	workload.NodeName = "naples"
-	workload.ParentInterface = "test"
-	workload.MacAddress = "aa:bb:cc:dd:ee:ff"
-	workload.EncapVlan = 500
-	workload.PinnedPort = 1
-	workload.UplinkVlan = 100
+	workload.Interfaces = append(workload.Interfaces, &iota.Interface{ParentInterface: "test",
+		MacAddress: "aa:bb:cc:dd:ee:ff",
+		EncapVlan:  500,
+		PinnedPort: 1,
+		UplinkVlan: 100,
+		IpPrefix:   "1.1.1.1/24",
+	})
 	workload.WorkloadImage = IotaWorkloadImage
 	workload.WorkloadType = iota.WorkloadType_WORKLOAD_TYPE_CONTAINER
-	workload.IpPrefix = "1.1.1.1/24"
 	hntapCfgTempFile = "test/hntap-cfg.json"
 	//Workload.WorkloadDir = "/tmp"
 
@@ -412,8 +413,8 @@ func TestAgentService_Workload_Add_Delete(t *testing.T) {
 	}
 
 	TestUtils.Assert(t, workloadResp.GetWorkloads()[0].GetWorkloadStatus().ApiStatus == iota.APIResponseType_API_STATUS_OK, "Add workload failed!")
-	TestUtils.Assert(t, workloadResp.GetWorkloads()[0].GetInterface() == workload.ParentInterface+"_500", "Interface match")
-	TestUtils.Assert(t, workloadResp.GetWorkloads()[0].GetMacAddress() == workload.MacAddress, "Mac match")
+	TestUtils.Assert(t, workloadResp.GetWorkloads()[0].Interfaces[0].GetInterface() == workload.Interfaces[0].ParentInterface+"_500", "Interface match")
+	TestUtils.Assert(t, workloadResp.GetWorkloads()[0].Interfaces[0].GetMacAddress() == workload.Interfaces[0].MacAddress, "Mac match")
 
 	//Try to add again.
 	workloadResp, err = agentClient.AddWorkloads(context.Background(), workloadMsg)
@@ -451,12 +452,15 @@ func TestAgentService_Workload_Trigger(t *testing.T) {
 
 	workload.WorkloadName = "test-workload"
 	workload.NodeName = naplesSimName
-	workload.ParentInterface = "test"
-	workload.MacAddress = "aa:bb:cc:dd:ee:ff"
-	workload.EncapVlan = 500
-	workload.PinnedPort = 1
-	workload.UplinkVlan = 100
-	workload.IpPrefix = "1.1.1.1/24"
+
+	workload.Interfaces = append(workload.Interfaces, &iota.Interface{ParentInterface: "test",
+		MacAddress: "aa:bb:cc:dd:ee:ff",
+		EncapVlan:  500,
+		PinnedPort: 1,
+		UplinkVlan: 100,
+		IpPrefix:   "1.1.1.1/24",
+	})
+
 	workload.WorkloadImage = IotaWorkloadImage
 	workload.WorkloadType = iota.WorkloadType_WORKLOAD_TYPE_CONTAINER
 
@@ -653,12 +657,15 @@ func TestAgentService_Mellanox_Workload_Add_Delete(t *testing.T) {
 
 	workload.WorkloadName = "test-workload"
 	workload.NodeName = "naples"
-	workload.ParentInterface = "test"
-	workload.MacAddress = "aa:bb:cc:dd:ee:ff"
-	workload.EncapVlan = 500
-	workload.PinnedPort = 1
-	workload.UplinkVlan = 100
-	workload.IpPrefix = "1.1.1.1/24"
+
+	workload.Interfaces = append(workload.Interfaces, &iota.Interface{ParentInterface: "test",
+		MacAddress: "aa:bb:cc:dd:ee:ff",
+		EncapVlan:  500,
+		PinnedPort: 1,
+		UplinkVlan: 100,
+		IpPrefix:   "1.1.1.1/24",
+	})
+
 	hntapCfgTempFile = "test/hntap-cfg.json"
 	//Workload.WorkloadDir = "/tmp"
 	workload.WorkloadImage = IotaWorkloadImage
@@ -748,12 +755,15 @@ func TestAgentService_Naples_Hw_Workload_Add_Delete(t *testing.T) {
 
 	workload.WorkloadName = "test-workload"
 	workload.NodeName = "naples"
-	workload.ParentInterface = "test"
-	workload.MacAddress = "aa:bb:cc:dd:ee:ff"
-	workload.EncapVlan = 500
-	workload.PinnedPort = 1
-	workload.UplinkVlan = 100
-	workload.IpPrefix = "1.1.1.1/24"
+
+	workload.Interfaces = append(workload.Interfaces, &iota.Interface{ParentInterface: "test",
+		MacAddress: "aa:bb:cc:dd:ee:ff",
+		EncapVlan:  500,
+		PinnedPort: 1,
+		UplinkVlan: 100,
+		IpPrefix:   "1.1.1.1/24",
+	})
+
 	hntapCfgTempFile = "test/hntap-cfg.json"
 	workload.WorkloadImage = IotaWorkloadImage
 	workload.WorkloadType = iota.WorkloadType_WORKLOAD_TYPE_CONTAINER
@@ -825,12 +835,15 @@ func TestAgentService_Naples_Hw_baremetal_Workload_Add_Delete(t *testing.T) {
 
 	workload.WorkloadName = ""
 	workload.NodeName = "naples"
-	workload.ParentInterface = "test"
-	workload.MacAddress = "aa:bb:cc:dd:ee:ff"
-	workload.EncapVlan = 500
-	workload.PinnedPort = 1
-	workload.UplinkVlan = 100
-	workload.IpPrefix = "1.1.1.1/24"
+
+	workload.Interfaces = append(workload.Interfaces, &iota.Interface{ParentInterface: "test",
+		MacAddress: "aa:bb:cc:dd:ee:ff",
+		EncapVlan:  500,
+		PinnedPort: 1,
+		UplinkVlan: 100,
+		IpPrefix:   "1.1.1.1/24",
+	})
+
 	hntapCfgTempFile = "test/hntap-cfg.json"
 	workload.WorkloadImage = IotaWorkloadImage
 	workload.WorkloadType = iota.WorkloadType_WORKLOAD_TYPE_BARE_METAL
@@ -901,12 +914,15 @@ func TestAgentService_baremetal_Workload_Trigger(t *testing.T) {
 
 	workload.WorkloadName = ""
 	workload.NodeName = "naples"
-	workload.ParentInterface = "test"
-	workload.MacAddress = "aa:bb:cc:dd:ee:ff"
-	workload.EncapVlan = 500
-	workload.PinnedPort = 1
-	workload.UplinkVlan = 100
-	workload.IpPrefix = "1.1.1.1/24"
+
+	workload.Interfaces = append(workload.Interfaces, &iota.Interface{ParentInterface: "test",
+		MacAddress: "aa:bb:cc:dd:ee:ff",
+		EncapVlan:  500,
+		PinnedPort: 1,
+		UplinkVlan: 100,
+		IpPrefix:   "1.1.1.1/24",
+	})
+
 	workload.WorkloadImage = IotaWorkloadImage
 	workload.WorkloadType = iota.WorkloadType_WORKLOAD_TYPE_BARE_METAL
 
@@ -1124,14 +1140,17 @@ func TestAgentService_Node_Naples_Add_Save_with_workloads(t *testing.T) {
 
 	workload.WorkloadName = "test-workload"
 	workload.NodeName = "naples"
-	workload.ParentInterface = "test"
-	workload.MacAddress = "aa:bb:cc:dd:ee:ff"
-	workload.EncapVlan = 500
-	workload.PinnedPort = 1
-	workload.UplinkVlan = 100
+
+	workload.Interfaces = append(workload.Interfaces, &iota.Interface{ParentInterface: "test",
+		MacAddress: "aa:bb:cc:dd:ee:ff",
+		EncapVlan:  500,
+		PinnedPort: 1,
+		UplinkVlan: 100,
+		IpPrefix:   "1.1.1.1/24",
+	})
+
 	workload.WorkloadImage = IotaWorkloadImage
 	workload.WorkloadType = iota.WorkloadType_WORKLOAD_TYPE_CONTAINER
-	workload.IpPrefix = "1.1.1.1/24"
 	hntapCfgTempFile = "test/hntap-cfg.json"
 
 	iotaNode := &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES_SIM, Name: "naples"}

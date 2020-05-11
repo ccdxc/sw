@@ -250,10 +250,19 @@ func (vm *vmESXWorkload) BringUp(args ...string) error {
 	cmd = []string{"sysctl", "-w", "net.ipv4.neigh.default.gc_thresh3=4096"}
 	vm.RunCommand(cmd, "", 0, 0, false, true)
 
+	for _, intf := range constants.EsxDataVMInterfaces {
+		if err := Utils.DisableDhcpOnInterfaceRemote(vm.sshHandle, intf); err != nil {
+			return errors.Wrap(err, "Disabling DHCP on interface failed")
+		}
+	}
+
 	return vm.startVMAgent()
 }
 
 func (vm *vmESXWorkload) AddInterface(spec InterfaceSpec) (string, error) {
+
+	host := vm.host
+	vm.vm, _ = host.NewVM(vm.vmName)
 
 	vsspec := vmware.VswitchSpec{Name: vm.Switch()}
 
@@ -268,45 +277,35 @@ func (vm *vmESXWorkload) AddInterface(spec InterfaceSpec) (string, error) {
 		return "", errors.Wrap(err, "Error in Reconfiguring Def network")
 	}
 
-	if err := Utils.DisableDhcpOnInterfaceRemote(vm.sshHandle, constants.EsxDataVMInterface); err != nil {
-		return "", errors.Wrap(err, "Disabling DHCP on interface failed")
-	}
-
-	if err := Utils.DisableDhcpOnInterfaceRemote(vm.sshHandle, constants.EsxDataVMInterfaceExtra1); err != nil {
-		return "", errors.Wrap(err, "Disabling DHCP on extra interface failed")
-	}
-	if err := Utils.DisableDhcpOnInterfaceRemote(vm.sshHandle, constants.EsxDataVMInterfaceExtra2); err != nil {
-		return "", errors.Wrap(err, "Disabling DHCP on extra interface failed")
-	}
 	if spec.Mac != "" {
 		var setMacAddrCmd []string
 		//setMacAddrCmd = []string{"ifconfig", intfToAttach, "ether", macAddress}
-		setMacAddrCmd = []string{"ifconfig", constants.EsxDataVMInterface, "hw", "ether", spec.Mac}
+		setMacAddrCmd = []string{"ifconfig", constants.EsxDataVMInterfaces[spec.Index], "hw", "ether", spec.Mac}
 		if ctx, _, err := vm.RunCommand(setMacAddrCmd, "", 0, 0, false, true); ctx.ExitCode != 0 {
 			return "", errors.Wrap(err, ctx.Stdout)
 		}
 	}
 
 	if spec.IPV4Address != "" {
-		cmd := []string{"ifconfig", constants.EsxDataVMInterface, spec.IPV4Address}
+		cmd := []string{"ifconfig", constants.EsxDataVMInterfaces[spec.Index], spec.IPV4Address}
 		if ctx, _, err := vm.RunCommand(cmd, "", 0, 0, false, true); ctx.ExitCode != 0 {
 			return "", errors.Wrap(err, ctx.Stdout)
 		}
 	}
 
 	if spec.IPV6Address != "" {
-		cmd := []string{"ifconfig", constants.EsxDataVMInterface, "inet6", "add", spec.IPV6Address}
+		cmd := []string{"ifconfig", constants.EsxDataVMInterfaces[spec.Index], "inet6", "add", spec.IPV6Address}
 		if ctx, _, err := vm.RunCommand(cmd, "", 0, 0, false, true); ctx.ExitCode != 0 {
 			return "", errors.Wrap(err, ctx.Stdout)
 		}
 	}
 
-	cmd := []string{"sudo", "sysctl", "-w", "net.ipv4.neigh." + constants.EsxDataVMInterface + ".retrans_time_ms=" + strconv.Itoa(arpTimeout)}
+	cmd := []string{"sudo", "sysctl", "-w", "net.ipv4.neigh." + constants.EsxDataVMInterfaces[spec.Index] + ".retrans_time_ms=" + strconv.Itoa(arpTimeout)}
 	if ctx, _, err := vm.RunCommand(cmd, "", 0, 0, false, true); ctx.ExitCode != 0 {
 		return "", errors.Wrap(err, "ARP retrans timeout set failed")
 	}
 
-	return constants.EsxDataVMInterface, nil
+	return constants.EsxDataVMInterfaces[spec.Index], nil
 }
 
 func (vm *vmESXWorkloadBase) MoveInterface(name string) error {
@@ -477,12 +476,21 @@ func (vm *vmVcenterWorkload) BringUp(args ...string) error {
 	cmd = []string{"sysctl", "-w", "net.ipv4.neigh.default.gc_thresh3=4096"}
 	vm.RunCommand(cmd, "", 0, 0, false, true)
 
+	for _, intf := range constants.EsxDataVMInterfaces {
+		if err := Utils.DisableDhcpOnInterfaceRemote(vm.sshHandle, intf); err != nil {
+			return errors.Wrap(err, "Disabling DHCP on interface failed")
+		}
+	}
+
 	return vm.startVMAgent()
 }
 
 func (vm *vmVcenterWorkload) AddInterface(spec InterfaceSpec) (string, error) {
 	var pgName string
 	var err error
+
+	host := vm.vhost
+	vm.vm, _ = host.NewVM(vm.vmName)
 
 	//vsname := constants.VcenterDCDvs
 	vsname := spec.Switch
@@ -549,45 +557,36 @@ func (vm *vmVcenterWorkload) AddInterface(spec InterfaceSpec) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if err := Utils.DisableDhcpOnInterfaceRemote(vm.sshHandle, constants.EsxDataVMInterface); err != nil {
-		return "", errors.Wrap(err, "Disabling DHCP on interface failed")
-	}
 
-	if err := Utils.DisableDhcpOnInterfaceRemote(vm.sshHandle, constants.EsxDataVMInterfaceExtra1); err != nil {
-		return "", errors.Wrap(err, "Disabling DHCP on extra interface failed")
-	}
-	if err := Utils.DisableDhcpOnInterfaceRemote(vm.sshHandle, constants.EsxDataVMInterfaceExtra2); err != nil {
-		return "", errors.Wrap(err, "Disabling DHCP on extra interface failed")
-	}
 	if spec.Mac != "" {
 		var setMacAddrCmd []string
 		//setMacAddrCmd = []string{"ifconfig", intfToAttach, "ether", macAddress}
-		setMacAddrCmd = []string{"ifconfig", constants.EsxDataVMInterface, "hw", "ether", spec.Mac}
+		setMacAddrCmd = []string{"ifconfig", constants.EsxDataVMInterfaces[spec.Index], "hw", "ether", spec.Mac}
 		if ctx, _, err := vm.RunCommand(setMacAddrCmd, "", 0, 0, false, true); ctx.ExitCode != 0 {
 			return "", errors.Wrap(err, ctx.Stdout)
 		}
 	}
 
 	if spec.IPV4Address != "" {
-		cmd := []string{"ifconfig", constants.EsxDataVMInterface, spec.IPV4Address}
+		cmd := []string{"ifconfig", constants.EsxDataVMInterfaces[spec.Index], spec.IPV4Address}
 		if ctx, _, err := vm.RunCommand(cmd, "", 0, 0, false, true); ctx.ExitCode != 0 {
 			return "", errors.Wrap(err, ctx.Stdout)
 		}
 	}
 
 	if spec.IPV6Address != "" {
-		cmd := []string{"ifconfig", constants.EsxDataVMInterface, "inet6", "add", spec.IPV6Address}
+		cmd := []string{"ifconfig", constants.EsxDataVMInterfaces[spec.Index], "inet6", "add", spec.IPV6Address}
 		if ctx, _, err := vm.RunCommand(cmd, "", 0, 0, false, true); ctx.ExitCode != 0 {
 			return "", errors.Wrap(err, ctx.Stdout)
 		}
 	}
 
-	cmd := []string{"sudo", "sysctl", "-w", "net.ipv4.neigh." + constants.EsxDataVMInterface + ".retrans_time_ms=" + strconv.Itoa(arpTimeout)}
+	cmd := []string{"sudo", "sysctl", "-w", "net.ipv4.neigh." + constants.EsxDataVMInterfaces[spec.Index] + ".retrans_time_ms=" + strconv.Itoa(arpTimeout)}
 	if ctx, _, err := vm.RunCommand(cmd, "", 0, 0, false, true); ctx.ExitCode != 0 {
 		return "", errors.Wrap(err, "ARP retrans timeout set failed")
 	}
 
-	return constants.EsxDataVMInterface, nil
+	return constants.EsxDataVMInterfaces[spec.Index], nil
 }
 
 // InitSSHConfig establishes the SSH Config required for remote logging in of the nodes

@@ -121,14 +121,15 @@ type CfgObjects struct {
 
 //ConfigParams contoller
 type ConfigParams struct {
-	Dscs              [][]*cluster.DistributedServiceCard
-	VeniceNodes       []*cluster.Node
-	FakeDscs          []*cluster.DistributedServiceCard
-	ThirdPartyDscs    []*cluster.DistributedServiceCard
-	NaplesLoopBackIPs map[string]string
-	Vlans             []uint32
-	Scale             bool
-	Regenerate        bool
+	Dscs                          [][]*cluster.DistributedServiceCard
+	VeniceNodes                   []*cluster.Node
+	FakeDscs                      []*cluster.DistributedServiceCard
+	ThirdPartyDscs                []*cluster.DistributedServiceCard
+	NaplesLoopBackIPs             map[string]string
+	Vlans                         []uint32
+	Scale                         bool
+	Regenerate                    bool
+	NumberOfInterfacesPerWorkload int
 }
 
 // WorkloadPair is a pair of workloads
@@ -196,12 +197,14 @@ func (gs *EntBaseCfg) PopulateConfig(params *ConfigParams) error {
 		cfg.NetworkSecurityPolicyParams.NumIPPairsPerRule = 4
 		cfg.NetworkSecurityPolicyParams.NumAppsPerRules = 2 //1 rule added by gen
 		cfg.WorkloadParams.WorkloadsPerHost = 32
+		cfg.WorkloadParams.InterfacesPerWorkload = params.NumberOfInterfacesPerWorkload
 		cfg.AppParams.NumApps = 1200
 	} else {
 		cfg.NetworkSecurityPolicyParams.NumRulesPerPolicy = 10
 		cfg.NetworkSecurityPolicyParams.NumIPPairsPerRule = 4
 		cfg.NetworkSecurityPolicyParams.NumAppsPerRules = 3
 		cfg.WorkloadParams.WorkloadsPerHost = 16
+		cfg.WorkloadParams.InterfacesPerWorkload = params.NumberOfInterfacesPerWorkload
 		cfg.AppParams.NumApps = 4
 	}
 
@@ -344,10 +347,12 @@ func (gs *EntBaseCfg) PopulateConfig(params *ConfigParams) error {
 		}
 		if len(tbVlans) != 0 {
 			for _, o := range cfg.ConfigItems.Workloads {
-				if wireVlan, ok := nwMap[o.Spec.Interfaces[0].ExternalVlan]; ok {
-					o.Spec.Interfaces[0].ExternalVlan = wireVlan
-				} else {
-					return fmt.Errorf("No testbed vlan found for external vlan %v", o.Spec.Interfaces[0].ExternalVlan)
+				for index := range o.Spec.Interfaces {
+					if wireVlan, ok := nwMap[o.Spec.Interfaces[index].ExternalVlan]; ok {
+						o.Spec.Interfaces[index].ExternalVlan = wireVlan
+					} else {
+						return fmt.Errorf("No testbed vlan found for external vlan %v", o.Spec.Interfaces[0].ExternalVlan)
+					}
 				}
 
 			}
@@ -875,14 +880,14 @@ func (gs *EntBaseCfg) IsConfigPushComplete() (bool, error) {
 		return false, err
 	}
 
-	workloads, err := rClient.ListWorkload()
+	/*workloads, err := rClient.ListWorkload()
 	if err != nil {
 		return false, err
 	}
 	if configStatus.KindObjects.Endpoint != len(workloads) {
 		log.Infof("Endpoints not synced with NPM yet. %v %v", configStatus.KindObjects.Endpoint, len(workloads))
 		return false, nil
-	}
+	}*/
 
 	policies, err := rClient.ListNetworkSecurityPolicy()
 	if err != nil {

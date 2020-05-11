@@ -129,10 +129,12 @@ func getWorkload(nodeFile string, nodeName string, workloadName string) (*iota.W
 
 		workloadData := workloads[workloadName].(map[string]interface{})
 		return &iota.Workload{NodeName: nodeName, WorkloadName: workloadName,
-			EncapVlan: uint32(workloadData["encap-vlan"].(float64)), Interface: workloadData["interface"].(string),
-			IpPrefix: workloadData["ip-address"].(string), MacAddress: workloadData["mac-address"].(string),
-			UplinkVlan: uint32(workloadData["uplink-vlan"].(float64)),
-			PinnedPort: uint32(workloadData["pinned-port"].(float64))}, nil
+			Interfaces: []*iota.Interface{
+				&iota.Interface{EncapVlan: uint32(workloadData["encap-vlan"].(float64)), Interface: workloadData["interface"].(string),
+					IpPrefix: workloadData["ip-address"].(string), MacAddress: workloadData["mac-address"].(string),
+					UplinkVlan: uint32(workloadData["uplink-vlan"].(float64)),
+					PinnedPort: uint32(workloadData["pinned-port"].(float64))},
+			}}, nil
 	}
 
 	return nil, errors.New("Node type workload add not supported")

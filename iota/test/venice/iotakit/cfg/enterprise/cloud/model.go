@@ -95,6 +95,7 @@ func (cl *CloudCfg) PopulateConfig(params *base.ConfigParams) error {
 		cl.Cfg.NumUnderlayRoutingConfigs = 1 // Same as other AS number
 		cl.Cfg.NumUnderlayNeighbors = 1      //TOR AS nubr
 	}
+	cl.Cfg.InterfacesPerWorkload = params.NumberOfInterfacesPerWorkload
 
 	cl.Cfg.NetworkSecurityPolicyParams.NumRulesPerPolicy = 10
 	cl.Cfg.NetworkSecurityPolicyParams.NumIPPairsPerRule = 4

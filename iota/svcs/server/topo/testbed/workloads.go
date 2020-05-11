@@ -69,57 +69,59 @@ var workloadTypeMap = map[iota.WorkloadType]string{
 
 func (n *TestNode) configureWorkload(wload workload.Workload, in *iota.Workload) (*iota.Workload, error) {
 
-	var intf string
+	for index, intf := range in.Interfaces {
 
-	spec := workload.InterfaceSpec{
-		IntfType:      in.GetInterfaceType().String(),
-		Parent:        in.GetParentInterface(),
-		Name:          in.GetInterface(),
-		Mac:           in.GetMacAddress(),
-		IPV4Address:   in.GetIpPrefix(),
-		IPV6Address:   in.GetIpv6Prefix(),
-		PrimaryVlan:   int(in.GetEncapVlan()),
-		SecondaryVlan: int(in.GetSecondaryEncapVlan()),
-		Switch:        in.GetSwitchName(),
-		NetworkName:   in.GetNetworkName(),
-	}
+		spec := workload.InterfaceSpec{
+			IntfType:      intf.GetInterfaceType().String(),
+			Parent:        intf.GetParentInterface(),
+			Name:          intf.GetInterface(),
+			Mac:           intf.GetMacAddress(),
+			IPV4Address:   intf.GetIpPrefix(),
+			IPV6Address:   intf.GetIpv6Prefix(),
+			PrimaryVlan:   int(intf.GetEncapVlan()),
+			SecondaryVlan: int(intf.GetSecondaryEncapVlan()),
+			Switch:        intf.GetSwitchName(),
+			NetworkName:   intf.GetNetworkName(),
+			Index:         index,
+		}
 
-	if spec.IntfType == iota.InterfaceType_INTERFACE_TYPE_DVS_PVLAN.String() {
-		spec.NetworkName = constants.EsxDataNWPrefix + strconv.Itoa(spec.PrimaryVlan)
-		//Update the network name if trying to create a pvlan
-		in.NetworkName = spec.NetworkName
-	}
-	attachedIntf, err := wload.AddInterface(spec)
-	if err != nil {
-		msg := fmt.Sprintf("Error in Interface attachment %s : %s", in.GetWorkloadName(), err.Error())
-		n.logger.Error(msg)
-		resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}
-		return resp, err
-	}
-	intf = attachedIntf
+		if spec.IntfType == iota.InterfaceType_INTERFACE_TYPE_DVS_PVLAN.String() {
+			spec.NetworkName = constants.EsxDataNWPrefix + strconv.Itoa(spec.PrimaryVlan)
+			//Update the network name if trying to create a pvlan
+			in.Interfaces[index].NetworkName = spec.NetworkName
+		}
+		attachedIntf, err := wload.AddInterface(spec)
+		if err != nil {
+			msg := fmt.Sprintf("Error in Interface attachment %s : %s", in.GetWorkloadName(), err.Error())
+			n.logger.Error(msg)
+			resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}
+			return resp, err
+		}
 
-	err = wload.AddSecondaryIpv4Addresses(intf, in.GetSecIpPrefix())
-	if err != nil {
-		msg := fmt.Sprintf("Error Adding Secondary IPv4 addresses %s : %s", in.GetWorkloadName(), err.Error())
-		resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}
-		return resp, err
-	}
+		err = wload.AddSecondaryIpv4Addresses(attachedIntf, intf.GetSecIpPrefix())
+		if err != nil {
+			msg := fmt.Sprintf("Error Adding Secondary IPv4 addresses %s : %s", in.GetWorkloadName(), err.Error())
+			resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}
+			return resp, err
+		}
 
-	err = wload.AddSecondaryIpv6Addresses(intf, in.GetSecIpv6Prefix())
-	if err != nil {
-		msg := fmt.Sprintf("Error Adding Secondary IPv6 addresses %s : %s", in.GetWorkloadName(), err.Error())
-		resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}
-		return resp, err
-	}
+		err = wload.AddSecondaryIpv6Addresses(attachedIntf, intf.GetSecIpv6Prefix())
+		if err != nil {
+			msg := fmt.Sprintf("Error Adding Secondary IPv6 addresses %s : %s", in.GetWorkloadName(), err.Error())
+			resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}
+			return resp, err
+		}
 
-	/* For SRIOV case, move the parent interface inside the workload so that it is not shared */
-	if in.GetInterfaceType() == iota.InterfaceType_INTERFACE_TYPE_SRIOV {
-		wload.MoveInterface(in.GetInterface())
-	}
+		/* For SRIOV case, move the parent interface inside the workload so that it is not shared */
+		if intf.GetInterfaceType() == iota.InterfaceType_INTERFACE_TYPE_SRIOV {
+			wload.MoveInterface(intf.GetInterface())
+		}
 
+		in.Interfaces[index].Interface = attachedIntf
+
+	}
 	resp := *in
 	resp.WorkloadStatus = apiSuccess
-	resp.Interface = intf
 	return &resp, nil
 }
 
@@ -191,14 +193,17 @@ func (n *TestNode) AddWorkloadsLocal(in *iota.WorkloadMsg) (*iota.WorkloadMsg, e
 			return resp
 		}
 
-		if err := iotaWload.workload.SendArpProbe(strings.Split(in.GetIpPrefix(), "/")[0], constants.EsxDataVMInterface,
-			0); err != nil {
-			msg := fmt.Sprintf("Error in sending arp probe : %s", err.Error())
-			n.logger.Error(msg)
-			resp = &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}
-			n.workloadMap.Delete(in.GetWorkloadName())
-			iotaWload.workload.TearDown()
-			return resp
+		for _, intf := range resp.Interfaces {
+
+			if err := iotaWload.workload.SendArpProbe(strings.Split(intf.GetIpPrefix(), "/")[0], intf.Interface,
+				0); err != nil {
+				msg := fmt.Sprintf("Error in sending arp probe : %s", err.Error())
+				n.logger.Error(msg)
+				resp = &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}
+				n.workloadMap.Delete(in.GetWorkloadName())
+				iotaWload.workload.TearDown()
+				return resp
+			}
 		}
 
 		iotaWload.workloadMsg = in

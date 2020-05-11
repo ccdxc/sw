@@ -72,6 +72,7 @@ type InterfaceSpec struct {
 	NetworkName   string
 	PrimaryVlan   int
 	SecondaryVlan int
+	Index         int
 }
 
 //Workload interface

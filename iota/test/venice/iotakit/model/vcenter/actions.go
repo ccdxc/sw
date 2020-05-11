@@ -156,9 +156,9 @@ func (sm *VcenterSysModel) VerifyWorkloadStatus(wc *objects.WorkloadCollection) 
 			return fmt.Errorf("Invalid node uuid %v for endpoint on workload %v", ep.Status.NodeUUID, wr.VeniceWorkload.Name)
 		}
 
-		if wr.GetIotaWorkload().EncapVlan != ep.Status.MicroSegmentVlan {
+		if wr.GetIotaWorkload().Interfaces[0].EncapVlan != ep.Status.MicroSegmentVlan {
 			return fmt.Errorf("Micosegment vlan does not match for workload %v, Exoected %v, actual %v",
-				ep.Status.NodeUUID, wr.GetIotaWorkload().EncapVlan, ep.Status.MicroSegmentVlan)
+				ep.Status.NodeUUID, wr.GetIotaWorkload().Interfaces[0].EncapVlan, ep.Status.MicroSegmentVlan)
 		}
 
 		//TODO, add more stuff for endpoint status.

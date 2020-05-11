@@ -13,9 +13,9 @@ import (
 func TestCfgenPolicyGen(t *testing.T) {
 	cfg := DefaultCfgenParams
 	cfg.NetworkSecurityPolicyParams.NumPolicies = 1
-	cfg.NetworkSecurityPolicyParams.NumRulesPerPolicy = 50000
-	cfg.WorkloadParams.WorkloadsPerHost = 200
-	cfg.AppParams.NumApps = 10000
+	cfg.NetworkSecurityPolicyParams.NumRulesPerPolicy = 5
+	cfg.WorkloadParams.WorkloadsPerHost = 4
+	cfg.AppParams.NumApps = 1
 	cfg.NumDNSAlgs = 10
 	cfg.NumRoutingConfigs = 2
 	cfg.NumUnderlayRoutingConfigs = 2
@@ -25,6 +25,7 @@ func TestCfgenPolicyGen(t *testing.T) {
 	cfg.NumOfVRFsPerTenant = 2
 	cfg.NumOfSubnetsPerVpc = 2
 	cfg.NumOfIPAMPsPerTenant = 1
+	cfg.WorkloadParams.InterfacesPerWorkload = 2
 
 	// create smartnic macs from a template
 	smartnics := []*cluster.DistributedServiceCard{}
@@ -50,7 +51,7 @@ func TestCfgenPolicyGen(t *testing.T) {
 			smartnics = append(smartnics, tSmartNIC)
 		}
 	}
-	cfg.Smartnics = smartnics
+	cfg.Smartnics = [][]*cluster.DistributedServiceCard{smartnics}
 
 	// generate the configuration now
 	cfg.Do()

@@ -86,11 +86,11 @@ func (w *Workload) GetMgmtIP() string {
 }
 
 func (w *Workload) SetIpPrefix(ipPrefix string) {
-	w.iotaWorkload.IpPrefix = ipPrefix
+	w.iotaWorkload.Interfaces[0].IpPrefix = ipPrefix
 }
 
 func (w *Workload) GetIP() string {
-	return strings.Split(w.iotaWorkload.IpPrefix, "/")[0]
+	return strings.Split(w.iotaWorkload.Interfaces[0].IpPrefix, "/")[0]
 }
 
 func (w *Workload) GetIotaWorkload() *iota.Workload {
@@ -98,11 +98,11 @@ func (w *Workload) GetIotaWorkload() *iota.Workload {
 }
 
 func (w *Workload) SetInterface(intf string) {
-	w.iotaWorkload.Interface = intf
+	w.iotaWorkload.Interfaces[0].Interface = intf
 }
 
 func (w *Workload) SetParentInterface(intf string) {
-	w.iotaWorkload.ParentInterface = intf
+	w.iotaWorkload.Interfaces[0].ParentInterface = intf
 }
 
 func (w *Workload) SetIotaWorkload(wl *iota.Workload) {
@@ -115,20 +115,20 @@ func (w *Workload) SetIotaNodeName(name string) {
 }
 
 func (w *Workload) GetInterface() string {
-	return w.iotaWorkload.Interface
+	return w.iotaWorkload.Interfaces[0].Interface
 }
 
 func (w *Workload) GetGatewayIP() string {
-	ip := strings.Split(w.iotaWorkload.IpPrefix, "/")[0]
+	ip := strings.Split(w.iotaWorkload.Interfaces[0].IpPrefix, "/")[0]
 	ipAddrBytes := strings.Split(ip, ".")
 	return fmt.Sprintf("%s.%s.%s.1", ipAddrBytes[0], ipAddrBytes[1], ipAddrBytes[2])
 }
 
 func (w *Workload) GetNetworkName() string {
-	return w.iotaWorkload.NetworkName
+	return w.iotaWorkload.Interfaces[0].NetworkName
 }
 
-func NewWorkload(host *Host, w *workload.Workload, wtype iota.WorkloadType, wimage string, switchName, nwName string) *Workload {
+func NewWorkload(host *Host, w *workload.Workload, wtype iota.WorkloadType, wimage string, switchName string, subnets []*Network) *Workload {
 
 	convertMac := func(s string) string {
 		mac := strings.Replace(s, ".", "", -1)
@@ -145,25 +145,44 @@ func NewWorkload(host *Host, w *workload.Workload, wtype iota.WorkloadType, wima
 
 	// create iota workload object
 	iotaWorkload := iota.Workload{
-		WorkloadType:    wtype,
-		WorkloadName:    w.GetName(),
-		NodeName:        host.iotaNode.Name,
-		WorkloadImage:   wimage,
-		EncapVlan:       w.Spec.Interfaces[0].MicroSegVlan,
-		MacAddress:      convertMac(w.Spec.Interfaces[0].MACAddress),
-		Interface:       "lif100", // ugly hack here: iota agent creates interfaces like lif100. matching that behavior
-		ParentInterface: "lif100", // ugly hack here: iota agent creates interfaces like lif100. matching that behavior
-		InterfaceType:   iota.InterfaceType_INTERFACE_TYPE_VSS,
-		PinnedPort:      1, // another hack: always pinning to first uplink
-		UplinkVlan:      w.Spec.Interfaces[0].ExternalVlan,
-		NetworkName:     nwName,
-		SwitchName:      switchName,
+		WorkloadType:  wtype,
+		WorkloadName:  w.GetName(),
+		NodeName:      host.iotaNode.Name,
+		WorkloadImage: wimage,
 	}
 
-	if w.Spec.Interfaces[0].IpAddresses[0] != "" {
-		iotaWorkload.IpPrefix = w.Spec.Interfaces[0].IpAddresses[0] + "/24" //Assuming it is /24 for now
+	for _, intf := range w.Spec.Interfaces {
+
+		nwName := ""
+		if subnets != nil {
+			for _, subnet := range subnets {
+				if subnet.VeniceNetwork.Spec.VlanID == intf.ExternalVlan {
+					nwName = intf.Network
+					break
+				}
+			}
+			if nwName == "" {
+				log.Errorf("Error find network for intf %v", intf)
+				return nil
+			}
+		}
+		iotaWorkload.Interfaces = append(iotaWorkload.Interfaces, &iota.Interface{
+			EncapVlan:       intf.MicroSegVlan,
+			MacAddress:      convertMac(intf.MACAddress),
+			Interface:       "lif100", // ugly hack here: iota agent creates interfaces like lif100. matching that behavior
+			ParentInterface: "lif100", // ugly hack here: iota agent creates interfaces like lif100. matching that behavior
+			InterfaceType:   iota.InterfaceType_INTERFACE_TYPE_VSS,
+			UplinkVlan:      intf.ExternalVlan,
+			SwitchName:      switchName,
+			NetworkName:     intf.Network,
+		})
 	}
 
+	for index := range w.Spec.Interfaces {
+		if w.Spec.Interfaces[index].IpAddresses[0] != "" {
+			iotaWorkload.Interfaces[index].IpPrefix = w.Spec.Interfaces[index].IpAddresses[0] + "/24" //Assuming it is /24 for now
+		}
+	}
 	return &Workload{
 		iotaWorkload:   &iotaWorkload,
 		VeniceWorkload: w,
@@ -228,8 +247,8 @@ func (wpc *WorkloadPairCollection) WithinNetwork() *WorkloadPairCollection {
 	newCollection := WorkloadPairCollection{}
 
 	for _, pair := range wpc.Pairs {
-		if pair.First.iotaWorkload.UplinkVlan == pair.Second.iotaWorkload.UplinkVlan ||
-			(pair.First.iotaWorkload.NetworkName != "" && pair.First.iotaWorkload.NetworkName == pair.Second.iotaWorkload.NetworkName) {
+		if pair.First.iotaWorkload.Interfaces[0].UplinkVlan == pair.Second.iotaWorkload.Interfaces[0].UplinkVlan ||
+			(pair.First.iotaWorkload.Interfaces[0].NetworkName != "" && pair.First.iotaWorkload.Interfaces[0].NetworkName == pair.Second.iotaWorkload.Interfaces[0].NetworkName) {
 			newCollection.Pairs = append(newCollection.Pairs, pair)
 		}
 	}
@@ -242,13 +261,13 @@ func (wpc *WorkloadPairCollection) AcrossNetwork(workload *Workload) *WorkloadPa
 	if wpc.HasError() {
 		return wpc
 	}
-	newCollection := WorkloadPairCollection {}
+	newCollection := WorkloadPairCollection{}
 
 	for _, pair := range wpc.Pairs {
-		if pair.First.iotaWorkload.NetworkName == workload.iotaWorkload.NetworkName &&
-		pair.First.iotaWorkload.UplinkVlan == workload.iotaWorkload.UplinkVlan &&
-		pair.Second.iotaWorkload.NetworkName != workload.iotaWorkload.NetworkName {
-			newCollection.Pairs =  append(newCollection.Pairs, pair)
+		if pair.First.iotaWorkload.Interfaces[0].NetworkName == workload.iotaWorkload.Interfaces[0].NetworkName &&
+			pair.First.iotaWorkload.Interfaces[0].UplinkVlan == workload.iotaWorkload.Interfaces[0].UplinkVlan &&
+			pair.Second.iotaWorkload.Interfaces[0].NetworkName != workload.iotaWorkload.Interfaces[0].NetworkName {
+			newCollection.Pairs = append(newCollection.Pairs, pair)
 		}
 	}
 	return &newCollection
@@ -262,8 +281,8 @@ func (wpc *WorkloadPairCollection) OnNetwork(network *Network) *WorkloadPairColl
 	newCollection := WorkloadPairCollection{}
 
 	for _, pair := range wpc.Pairs {
-		if pair.First.iotaWorkload.NetworkName == network.VeniceNetwork.Name &&
-			pair.Second.iotaWorkload.NetworkName == network.VeniceNetwork.Name {
+		if pair.First.iotaWorkload.Interfaces[0].NetworkName == network.VeniceNetwork.Name &&
+			pair.Second.iotaWorkload.Interfaces[0].NetworkName == network.VeniceNetwork.Name {
 			newCollection.Pairs = append(newCollection.Pairs, pair)
 		}
 	}
@@ -435,10 +454,10 @@ func (wpc *WorkloadPairCollection) policyHelper(policyCollection *NetworkSecurit
 		cache, ok := actionCache[action]
 		if ok {
 			for _, ippair := range cache {
-				if ((ippair.dip == "any") || ippair.dip == strings.Split(pair.First.iotaWorkload.GetIpPrefix(), "/")[0]) &&
-					((ippair.sip == "any") || ippair.sip == strings.Split(pair.Second.iotaWorkload.GetIpPrefix(), "/")[0]) &&
+				if ((ippair.dip == "any") || ippair.dip == strings.Split(pair.First.iotaWorkload.Interfaces[0].GetIpPrefix(), "/")[0]) &&
+					((ippair.sip == "any") || ippair.sip == strings.Split(pair.Second.iotaWorkload.Interfaces[0].GetIpPrefix(), "/")[0]) &&
 					ippair.proto == proto &&
-					pair.First.iotaWorkload.UplinkVlan == pair.Second.iotaWorkload.UplinkVlan {
+					pair.First.iotaWorkload.Interfaces[0].UplinkVlan == pair.Second.iotaWorkload.Interfaces[0].UplinkVlan {
 					pair.Ports = getPortsFromRange(ippair.ports)
 					pair.Proto = ippair.proto
 					newCollection.Pairs = append(newCollection.Pairs, pair)
@@ -586,7 +605,7 @@ func (wc *WorkloadCollection) AllocateHostInterfaces(tb *testbed.TestBed) error 
 
 	for _, wrk := range Workloads {
 		hostAlloc, _ := hostIntfMap[wrk.iotaWorkload.NodeName+wrk.GetNaplesUUID()]
-		wrk.iotaWorkload.ParentInterface = hostAlloc.intfs[hostAlloc.curIndex%len(hostAlloc.intfs)]
+		wrk.iotaWorkload.Interfaces[0].ParentInterface = hostAlloc.intfs[hostAlloc.curIndex%len(hostAlloc.intfs)]
 		//log.Infof("Alloc host intf %v %v", wrk.iotaWorkload.WorkloadName, wrk.iotaWorkload.ParentInterface)
 		hostAlloc.curIndex++
 	}
@@ -626,7 +645,7 @@ func (wc *WorkloadCollection) Bringup(tb *testbed.TestBed) error {
 		for _, gwrk := range appResp.Workloads {
 			if gwrk.WorkloadName == wrk.iotaWorkload.WorkloadName {
 				wrk.iotaWorkload.MgmtIp = gwrk.MgmtIp
-				wrk.iotaWorkload.Interface = gwrk.GetInterface()
+				wrk.iotaWorkload.Interfaces[0].Interface = gwrk.Interfaces[0].GetInterface()
 			}
 		}
 	}
@@ -732,7 +751,7 @@ func (wc *WorkloadCollection) LocalPairsWithinNetwork() *WorkloadPairCollection 
 	for i, wf := range wc.Workloads {
 		for j, ws := range wc.Workloads {
 			if i != j && wf.iotaWorkload.NodeName == ws.iotaWorkload.NodeName &&
-				wf.iotaWorkload.UplinkVlan == ws.iotaWorkload.UplinkVlan {
+				wf.iotaWorkload.Interfaces[0].UplinkVlan == ws.iotaWorkload.Interfaces[0].UplinkVlan {
 				pair := WorkloadPair{
 					First:  wf,
 					Second: ws,
@@ -753,7 +772,7 @@ func (wc *WorkloadCollection) RemotePairsWithinNetwork() *WorkloadPairCollection
 	for i, wf := range wc.Workloads {
 		for j, ws := range wc.Workloads {
 			if i != j && wf.iotaWorkload.NodeName != ws.iotaWorkload.NodeName &&
-				wf.iotaWorkload.UplinkVlan == ws.iotaWorkload.UplinkVlan {
+				wf.iotaWorkload.Interfaces[0].UplinkVlan == ws.iotaWorkload.Interfaces[0].UplinkVlan {
 				pair := WorkloadPair{
 					First:  wf,
 					Second: ws,

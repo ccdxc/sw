@@ -784,6 +784,7 @@ func getThirdPartyNic(name, mac string) *cluster.DistributedServiceCard {
 
 func (sm *SysModel) modifyConfig() error {
 
+	log.Infof("Modifying config as per model spec")
 	cfgObjects := sm.GetCfgObjects()
 
 	if os.Getenv("DYNAMIC_IP") != "" {
@@ -805,6 +806,12 @@ func (sm *SysModel) modifyConfig() error {
 		log.Infof("IPAM %v's DHCPServer: %v\n", ipam.Name, ipam.Spec.DHCPRelay.Servers[0].IPAddress)
 	}
 
+	//For base model, network not set
+	for i := range cfgObjects.Workloads {
+		for j := range cfgObjects.Workloads[i].Spec.Interfaces {
+			cfgObjects.Workloads[i].Spec.Interfaces[j].Network = ""
+		}
+	}
 	return nil
 }
 
@@ -813,9 +820,10 @@ func (sm *SysModel) InitConfig(scale, scaleData bool) error {
 	skipSetup := os.Getenv("SKIP_SETUP")
 	skipConfig := os.Getenv("SKIP_CONFIG")
 	cfgParams := &base.ConfigParams{
-		Scale:      scale,
-		Regenerate: skipSetup == "",
-		Vlans:      sm.Tb.AllocatedVlans(),
+		Scale:                         scale,
+		Regenerate:                    skipSetup == "",
+		Vlans:                         sm.Tb.AllocatedVlans(),
+		NumberOfInterfacesPerWorkload: 1,
 	}
 	cfgParams.NaplesLoopBackIPs = make(map[string]string)
 	for _, naples := range sm.NaplesNodes {

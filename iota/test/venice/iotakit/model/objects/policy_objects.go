@@ -37,7 +37,7 @@ func NewNetworkSecurityPolicyCollection(policy *NetworkSecurityPolicy, client ob
 	}
 }
 
-func (spc *NetworkSecurityPolicyCollection) Add (nspc *NetworkSecurityPolicyCollection) {
+func (spc *NetworkSecurityPolicyCollection) Add(nspc *NetworkSecurityPolicyCollection) {
 	if spc == nil || nspc == nil {
 		return
 	}
@@ -49,7 +49,6 @@ func (spc *NetworkSecurityPolicyCollection) Add (nspc *NetworkSecurityPolicyColl
 	}
 	nspc.Policies = nil
 }
-
 
 // Delete deletes all policies in the collection
 func (spc *NetworkSecurityPolicyCollection) Delete() error {
@@ -100,8 +99,8 @@ func (spc *NetworkSecurityPolicyCollection) AddRulesForWorkloadPairs(wpc *Worklo
 
 	// walk each workload pair
 	for _, wpair := range wpc.Pairs {
-		fromIP := strings.Split(wpair.Second.iotaWorkload.IpPrefix, "/")[0]
-		toIP := strings.Split(wpair.First.iotaWorkload.IpPrefix, "/")[0]
+		fromIP := strings.Split(wpair.Second.iotaWorkload.Interfaces[0].IpPrefix, "/")[0]
+		toIP := strings.Split(wpair.First.iotaWorkload.Interfaces[0].IpPrefix, "/")[0]
 		nspc := spc.AddRule(fromIP, toIP, port, action)
 		if nspc.err != nil {
 			return nspc
@@ -124,8 +123,8 @@ func (spc *NetworkSecurityPolicyCollection) AddAlgRulesForWorkloadPairs(wpc *Wor
 
 	// walk each workload pair
 	for _, wpair := range wpc.Pairs {
-		fromIP := strings.Split(wpair.Second.iotaWorkload.IpPrefix, "/")[0]
-		toIP := strings.Split(wpair.First.iotaWorkload.IpPrefix, "/")[0]
+		fromIP := strings.Split(wpair.Second.iotaWorkload.Interfaces[0].IpPrefix, "/")[0]
+		toIP := strings.Split(wpair.First.iotaWorkload.Interfaces[0].IpPrefix, "/")[0]
 		// build the rule
 		rule := security.SGRule{
 			Action:          action,
@@ -145,10 +144,10 @@ func (spc *NetworkSecurityPolicyCollection) AddAlgRulesForWorkloadPairs(wpc *Wor
 // AddRuleForWorkloadCombo adds rule combinations
 func (spc *NetworkSecurityPolicyCollection) AddRuleForWorkloadCombo(wpc *WorkloadPairCollection, fromIP, toIP, proto, port, action string) *NetworkSecurityPolicyCollection {
 	for _, wpair := range wpc.Pairs {
-		firstIP := strings.Split(wpair.First.iotaWorkload.IpPrefix, "/")[0]
-		secondIP := strings.Split(wpair.Second.iotaWorkload.IpPrefix, "/")[0]
-		firstSubnet := wpair.First.iotaWorkload.IpPrefix
-		secondSubnet := wpair.Second.iotaWorkload.IpPrefix
+		firstIP := strings.Split(wpair.First.iotaWorkload.Interfaces[0].IpPrefix, "/")[0]
+		secondIP := strings.Split(wpair.Second.iotaWorkload.Interfaces[0].IpPrefix, "/")[0]
+		firstSubnet := wpair.First.iotaWorkload.Interfaces[0].IpPrefix
+		secondSubnet := wpair.Second.iotaWorkload.Interfaces[0].IpPrefix
 		// build the rule
 		rule := security.SGRule{
 			Action: action,

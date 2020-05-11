@@ -41,33 +41,34 @@ class Workload:
             self.workload_type = msg.workload_type
             self.workload_image = msg.workload_image
             self.node_name = msg.node_name
-            self.encap_vlan = msg.encap_vlan
-            self.ip_prefix = msg.ip_prefix
-            self.ip_address = msg.ip_prefix.split('/')[0]
+            self.encap_vlan = msg.interfaces[0].encap_vlan
+            self.ip_prefix = msg.interfaces[0].ip_prefix
+            self.ip_address = msg.interfaces[0].ip_prefix.split('/')[0]
             self.sec_ip_prefixes = []
             self.sec_ip_addresses = []
-            for secip in msg.sec_ip_prefix:
+            for secip in msg.interfaces[0].sec_ip_prefix:
                 self.sec_ip_prefixes.append(secip)
                 self.sec_ip_addresses.append(secip.split('/')[0])
 
-            self.ipv6_prefix = msg.ipv6_prefix
-            self.ipv6_address = msg.ipv6_prefix.split('/')[0]
+            self.ipv6_prefix = msg.interfaces[0].ipv6_prefix
+            self.ipv6_address = msg.interfaces[0].ipv6_prefix.split('/')[0]
             self.sec_ipv6_prefixes = []
             self.sec_ipv6_addresses = []
-            for secip in msg.sec_ipv6_prefix:
+            for secip in msg.interfaces[0].sec_ipv6_prefix:
                 self.sec_ipv6_prefixes.append(secip)
                 self.sec_ipv6_addresses.append(secip.split('/')[0])
 
-            self.mac_address = msg.mac_address
-            self.interface = msg.interface
-            self.parent_interface = msg.parent_interface
-            self.interface_type = msg.interface_type
-            self.pinned_port = msg.pinned_port
-            self.uplink_vlan = msg.uplink_vlan
+            self.mac_address = msg.interfaces[0].mac_address
+            self.interface = msg.interfaces[0].interface
+            self.interfaces = msg.interfaces
+            self.parent_interface = msg.interfaces[0].parent_interface
+            self.interface_type = msg.interfaces[0].interface_type
+            self.pinned_port = msg.interfaces[0].pinned_port
+            self.uplink_vlan = msg.interfaces[0].uplink_vlan
             self.cpus = msg.cpus
             self.memory = msg.memory
             self.mgmt_ip = msg.mgmt_ip
-            self.network_name = msg.network_name
+            self.network_name = msg.interfaces[0].network_name
             #Logger.info("Workload %s Mgmt IP %s" % (self.workload_name, self.mgmt_ip))
             self.exposed_tcp_ports = []
             self.exposed_udp_ports = []

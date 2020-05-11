@@ -215,7 +215,7 @@ func (sm *SysModel) SetupWorkloadsOnHost(h *objects.Host) (*objects.WorkloadColl
 			return nil, err
 		}
 
-		sm.WorkloadsObjs[wload.wload.Name] = objects.NewWorkload(h, wload.wload, info.WorkloadType, info.WorkloadImage, "", "")
+		sm.WorkloadsObjs[wload.wload.Name] = objects.NewWorkload(h, wload.wload, info.WorkloadType, info.WorkloadImage, "", nil)
 		sm.WorkloadsObjs[wload.wload.Name].SetNaplesUUID(wload.uuid)
 		wc.Workloads = append(wc.Workloads, sm.WorkloadsObjs[wload.wload.Name])
 	}

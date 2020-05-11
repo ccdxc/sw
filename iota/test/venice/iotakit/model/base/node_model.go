@@ -160,9 +160,8 @@ func (sm *SysModel) BringUpNewWorkloads(hc *objects.HostCollection, snc *objects
 		return wc
 	}
 	//Now add the workload info to IOTA
-	subnets := snc.Subnets()
 	for i, wload := range newWloads {
-		for _, subnet := range subnets {
+		for _, subnet := range snc.Subnets() {
 			if subnet.VeniceNetwork.Spec.VlanID == wload.wload.Spec.Interfaces[0].ExternalVlan {
 				os := hosts[i].Naples.GetTestNode().GetNodeOs()
 				info, ok := sm.Tb.Topo.WkldInfo[os]
@@ -173,7 +172,13 @@ func (sm *SysModel) BringUpNewWorkloads(hc *objects.HostCollection, snc *objects
 					return wc
 				}
 				sm.WorkloadsObjs[wload.wload.Name] = objects.NewWorkload(hosts[i], wload.wload, info.WorkloadType,
-					info.WorkloadImage, sm.Tb.GetSwitch(), subnet.Name)
+					info.WorkloadImage, sm.Tb.GetSwitch(), nil)
+				if sm.WorkloadsObjs[wload.wload.Name] == nil {
+					err := fmt.Errorf("Error adding workload %v", wload.wload.Name)
+					log.Errorf("%v", err.Error())
+					wc.SetError(err)
+					return wc
+				}
 				sm.WorkloadsObjs[wload.wload.Name].SetNaplesUUID(wload.uuid)
 				wc.Workloads = append(wc.Workloads, sm.WorkloadsObjs[wload.wload.Name])
 			}

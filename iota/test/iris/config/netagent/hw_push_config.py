@@ -117,31 +117,32 @@ def __add_config_worklads(req, target_node = None):
         wl_msg = req.workloads.add()
         wl_msg.workload_name = ep.meta.name
         wl_msg.node_name = node_name
-        wl_msg.ip_prefix = __prepare_ip_address_str_for_endpoint(ep)
+        intf = wl_msg.interfaces.add()
+        intf.ip_prefix = __prepare_ip_address_str_for_endpoint(ep)
         #wl_msg.ipv6_prefix = __prepare_ipv6_address_str_for_endpoint(ep)
-        wl_msg.mac_address = ep.spec.mac_address
-        wl_msg.pinned_port = 1
-        wl_msg.interface_type = topo_svc.INTERFACE_TYPE_VSS
+        intf.mac_address = ep.spec.mac_address
+        intf.pinned_port = 1
+        intf.interface_type = topo_svc.INTERFACE_TYPE_VSS
 
         encap_vlan = getattr(ep.spec, 'useg_vlan', None)
         host_if = None
         if api.GetNicMode() == 'hostpin':
             host_if = api.AllocateHostInterfaceForNode(wl_msg.node_name)
-            wl_msg.uplink_vlan = __get_l2segment_vlan_for_endpoint(ep)
+            intf.uplink_vlan = __get_l2segment_vlan_for_endpoint(ep)
             if api.GetNicType(wl_msg.node_name) in ['pensando', 'naples']:
-                wl_msg.encap_vlan = encap_vlan if encap_vlan else wl_msg.uplink_vlan
+                intf.encap_vlan = encap_vlan if encap_vlan else wl_msg.uplink_vlan
             else:
-                wl_msg.encap_vlan = wl_msg.uplink_vlan
+                intf.encap_vlan = wl_msg.uplink_vlan
         elif api.GetNicMode() == 'hostpin_dvs':
             host_if = api.AllocateHostInterfaceForNode(wl_msg.node_name)
-            wl_msg.interface_type = topo_svc.INTERFACE_TYPE_DVS_PVLAN
-            wl_msg.switch_name = api.GetVCenterDVSName()
-            wl_msg.uplink_vlan = __get_l2segment_vlan_for_endpoint(ep)
+            intf.interface_type = topo_svc.INTERFACE_TYPE_DVS_PVLAN
+            intf.switch_name = api.GetVCenterDVSName()
+            intf.uplink_vlan = __get_l2segment_vlan_for_endpoint(ep)
             if api.GetNicType(wl_msg.node_name) in ['pensando', 'naples']:
-                wl_msg.encap_vlan = ep.spec.primary_vlan
-                wl_msg.secondary_encap_vlan = ep.spec.secondary_vlan
+                intf.encap_vlan = ep.spec.primary_vlan
+                intf.secondary_encap_vlan = ep.spec.secondary_vlan
             else:
-                wl_msg.encap_vlan = wl_msg.uplink_vlan
+                intf.encap_vlan = intf.uplink_vlan
 
         elif api.GetNicMode() == 'classic':
             global classic_vlan_map
@@ -153,20 +154,20 @@ def __add_config_worklads(req, target_node = None):
             host_if, wire_vlan = node_vlan.AllocateHostIntfWireVlan(encap_vlan)
             if not node_vlan.IsNativeVlan(wire_vlan):
                 #Set encap vlan if its non native.
-                wl_msg.encap_vlan = wire_vlan
-                wl_msg.uplink_vlan = wire_vlan
+                intf.encap_vlan = wire_vlan
+                intf.uplink_vlan = wire_vlan
 
         elif api.GetNicMode() == 'unified':
             host_if = api.AllocateHostInterfaceForNode(wl_msg.node_name)
-            wl_msg.ipv6_prefix = __prepare_ipv6_address_str_for_endpoint(ep)
-            wl_msg.uplink_vlan = __get_l2segment_vlan_for_endpoint(ep)
-            wl_msg.encap_vlan = wl_msg.uplink_vlan
+            intf.ipv6_prefix = __prepare_ipv6_address_str_for_endpoint(ep)
+            intf.uplink_vlan = __get_l2segment_vlan_for_endpoint(ep)
+            intf.encap_vlan = intf.uplink_vlan
 
         else:
             assert(0)
 
-        wl_msg.interface = host_if
-        wl_msg.parent_interface = host_if
+        intf.interface = host_if
+        intf.parent_interface = host_if
 
         wl_msg.workload_type = api.GetWorkloadTypeForNode(wl_msg.node_name)
         wl_msg.workload_image = api.GetWorkloadImageForNode(wl_msg.node_name)
@@ -280,19 +281,20 @@ def __add_config_classic_workloads(req, target_node = None):
                 vlan = 0
                 node_intf = node_ifs[wl.node][int(intf.replace('host_if', '')) - 1]
                 wl_msg = req.workloads.add()
+                intf = wl_msg.interfaces.add()
                 ip4_addr_str = str(ipv4_allocator.Alloc())
                 ip6_addr_str = str(ipv6_allocator.Alloc())
-                wl_msg.ip_prefix = ip4_addr_str + "/" + str(nw_spec.ipv4.prefix_length)
-                wl_msg.ipv6_prefix = ip6_addr_str + "/" + str(nw_spec.ipv6.prefix_length)
-                wl_msg.mac_address = classic_mac_allocator.Alloc().get()
-                wl_msg.encap_vlan = vlan
-                wl_msg.uplink_vlan = wl_msg.encap_vlan
+                intf.ip_prefix = ip4_addr_str + "/" + str(nw_spec.ipv4.prefix_length)
+                intf.ipv6_prefix = ip6_addr_str + "/" + str(nw_spec.ipv6.prefix_length)
+                intf.mac_address = classic_mac_allocator.Alloc().get()
+                intf.encap_vlan = vlan
+                intf.uplink_vlan = wl_msg.encap_vlan
                 wl_msg.workload_name = wl.node + "_" + node_intf + "_subif_" + str(vlan)
                 wl_msg.node_name = wl.node
-                wl_msg.pinned_port = 1
-                wl_msg.interface_type = topo_svc.INTERFACE_TYPE_VSS
-                wl_msg.interface = node_intf
-                wl_msg.parent_interface = node_intf
+                intf.pinned_port = 1
+                intf.interface_type = topo_svc.INTERFACE_TYPE_VSS
+                intf.interface = node_intf
+                intf.parent_interface = node_intf
                 wl_msg.workload_type = api.GetWorkloadTypeForNode(wl.node)
                 wl_msg.workload_image = api.GetWorkloadImageForNode(wl.node)
                 wl_msg.mgmt_ip = api.GetMgmtIPAddress(wl_msg.node_name)
@@ -348,24 +350,25 @@ def __add_config_classic_workloads(req, target_node = None):
                 vlan = vlans[i]
                 node_intf = node_ifs[wl.node][int(intf.replace('host_if', '')) - 1]
                 wl_msg = req.workloads.add()
+                intf = wl_msg.interfaces.add()
                 ip4_addr_str = str(ipv4_allocator.Alloc())
                 ip6_addr_str = str(ipv6_allocator.Alloc())
-                wl_msg.ip_prefix = ip4_addr_str + "/" + str(nw_spec.ipv4.prefix_length)
-                wl_msg.ipv6_prefix = ip6_addr_str + "/" + str(nw_spec.ipv6.prefix_length)
-                wl_msg.mac_address = classic_mac_allocator.Alloc().get()
-                wl_msg.encap_vlan = vlan
-                wl_msg.uplink_vlan = wl_msg.encap_vlan
+                intf.ip_prefix = ip4_addr_str + "/" + str(nw_spec.ipv4.prefix_length)
+                intf.ipv6_prefix = ip6_addr_str + "/" + str(nw_spec.ipv6.prefix_length)
+                intf.mac_address = classic_mac_allocator.Alloc().get()
+                intf.encap_vlan = vlan
+                intf.uplink_vlan = wl_msg.encap_vlan
                 wl_msg.node_name = wl.node
-                wl_msg.pinned_port = 1
-                wl_msg.interface_type = topo_svc.INTERFACE_TYPE_VSS
+                intf.pinned_port = 1
+                intf.interface_type = topo_svc.INTERFACE_TYPE_VSS
                 if api.GetWorkloadTypeForNode(wl.node) == topo_svc.WorkloadType.Value('WORKLOAD_TYPE_BARE_METAL'):
-                    wl_msg.interface = node_intf + "_" + str(vlan)
+                    intf.interface = node_intf + "_" + str(vlan)
                     wl_msg.workload_name = wl.node + "_" + node_intf + "_subif_" + str(vlan)
                 else:
-                    wl_msg.interface = node_intf + "_mv%d" % (i+1)
+                    intf.interface = node_intf + "_mv%d" % (i+1)
                     wl_msg.workload_name = wl.node + "_" + node_intf + "_mv%d" % (i+1)
                 #wl_msg.interface = node_intf
-                wl_msg.parent_interface = node_intf
+                intf.parent_interface = node_intf
                 wl_msg.workload_type = api.GetWorkloadTypeForNode(wl.node)
                 wl_msg.workload_image = api.GetWorkloadImageForNode(wl.node)
                 wl_msg.mgmt_ip = api.GetMgmtIPAddress(wl_msg.node_name)
@@ -541,13 +544,14 @@ def AddNaplesWorkloads(target_node=None):
             api.Logger.debug("Skipping add workload for node %s" % wl.node_name)
             continue
         wl_msg = req.workloads.add()
+        intf = wl_msg.interfaces.add()
         wl_msg.workload_name = wl.workload_name
-        wl_msg.node_name = wl.node_name
-        wl_msg.ip_prefix = wl.ip_address + "/" + '24'
+        intf.node_name = wl.node_name
+        intf.ip_prefix = wl.ip_address + "/" + '24'
         #wl_msg.ipv6_prefix = __prepare_ipv6_address_str_for_endpoint(ep)
-        wl_msg.interface = wl.interface
-        wl_msg.parent_interface = wl.interface
-        wl_msg.interface_type = topo_svc.INTERFACE_TYPE_VSS
+        intf.interface = wl.interface
+        intf.parent_interface = wl.interface
+        intf.interface_type = topo_svc.INTERFACE_TYPE_VSS
         wl_msg.workload_type  = topo_svc.WorkloadType.Value('WORKLOAD_TYPE_BARE_METAL')
     if len(req.workloads):
         resp = api.AddWorkloads(req, skip_store=True)
@@ -579,17 +583,18 @@ def __readd_classic_workloads(target_node = None):
             api.Logger.debug("Skipping add classic workload for node %s" % wl.node_name)
             continue
         wl_msg = req.workloads.add()
-        wl_msg.ip_prefix = wl.ip_prefix
-        wl_msg.ipv6_prefix = wl.ipv6_prefix
-        wl_msg.mac_address = wl.mac_address
-        wl_msg.encap_vlan = wl.encap_vlan
-        wl_msg.uplink_vlan = wl.uplink_vlan
+        intf = wl_msg.interfaces.add()
+        intf.ip_prefix = wl.ip_prefix
+        intf.ipv6_prefix = wl.ipv6_prefix
+        intf.mac_address = wl.mac_address
+        intf.encap_vlan = wl.encap_vlan
+        intf.uplink_vlan = wl.uplink_vlan
         wl_msg.workload_name = wl.workload_name
         wl_msg.node_name = wl.node_name
-        wl_msg.pinned_port = wl.pinned_port
-        wl_msg.interface_type = wl.interface_type
-        wl_msg.interface = wl.parent_interface
-        wl_msg.parent_interface = wl.parent_interface
+        intf.pinned_port = wl.pinned_port
+        intf.interface_type = wl.interface_type
+        intf.interface = wl.parent_interface
+        intf.parent_interface = wl.parent_interface
         wl_msg.workload_type = wl.workload_type
         wl_msg.workload_image = wl.workload_image
         wl_msg.mgmt_ip = api.GetMgmtIPAddress(wl_msg.node_name)

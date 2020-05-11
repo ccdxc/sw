@@ -254,7 +254,7 @@ func (sm *SysModel) SetupWorkloadsOnHost(h *objects.Host) (*objects.WorkloadColl
 					return nil, err
 				}
 
-				sm.WorkloadsObjs[wload.Name] = objects.NewWorkload(h, wload, info.WorkloadType, info.WorkloadImage, "", nws[index].Name)
+				sm.WorkloadsObjs[wload.Name] = objects.NewWorkload(h, wload, info.WorkloadType, info.WorkloadImage, "", nil)
 				sm.WorkloadsObjs[wload.Name].SetParentInterface(hostIntfs[index])
 				//Cloud supports only single naples
 				sm.WorkloadsObjs[wload.Name].SetNaplesUUID(h.VeniceHost.Spec.DSCs[0].MACAddress)

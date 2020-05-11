@@ -170,14 +170,16 @@ func (node *esxHwNode) AddWorkloads(in *iota.WorkloadMsg) (*iota.WorkloadMsg, er
 			return resp
 		}
 
-		if err := iotaWload.workload.SendArpProbe(strings.Split(in.GetIpPrefix(), "/")[0], Common.EsxDataVMInterface,
-			0); err != nil {
-			msg := fmt.Sprintf("Error in sending arp probe : %s", err.Error())
-			node.logger.Error(msg)
-			resp = &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}
-			node.entityMap.Delete(in.GetWorkloadName())
-			iotaWload.workload.TearDown()
-			return resp
+		for _, intf := range resp.Interfaces {
+			if err := iotaWload.workload.SendArpProbe(strings.Split(intf.GetIpPrefix(), "/")[0], intf.Interface,
+				0); err != nil {
+				msg := fmt.Sprintf("Error in sending arp probe : %s", err.Error())
+				node.logger.Error(msg)
+				resp = &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}
+				node.entityMap.Delete(in.GetWorkloadName())
+				iotaWload.workload.TearDown()
+				return resp
+			}
 		}
 
 		iotaWload.workloadMsg = in

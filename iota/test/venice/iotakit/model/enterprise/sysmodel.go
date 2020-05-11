@@ -273,7 +273,7 @@ func (sm *SysModel) GetWorkloadsForScale(hosts []*objects.Host, policyCollection
 		}
 
 		for _, w := range wloads {
-			sm.WorkloadsObjs[w.Name] = objects.NewWorkload(host, w, info.WorkloadType, info.WorkloadImage, "", "")
+			sm.WorkloadsObjs[w.Name] = objects.NewWorkload(host, w, info.WorkloadType, info.WorkloadImage, "", nil)
 			newCollection.Workloads = append(newCollection.Workloads, sm.WorkloadsObjs[w.Name])
 		}
 	}
@@ -333,7 +333,7 @@ func (sm *SysModel) SetupWorkloadsOnHost(h *objects.Host) (*objects.WorkloadColl
 	}
 
 	for _, wload := range wloadsToCreate {
-		sm.WorkloadsObjs[wload.Name] = objects.NewWorkload(h, wload, info.WorkloadType, info.WorkloadImage, "", "")
+		sm.WorkloadsObjs[wload.Name] = objects.NewWorkload(h, wload, info.WorkloadType, info.WorkloadImage, "", nil)
 		wc.Workloads = append(wc.Workloads, sm.WorkloadsObjs[wload.Name])
 		//Enterprise supports only single naples
 		sm.WorkloadsObjs[wload.Name].SetNaplesUUID(h.VeniceHost.Spec.DSCs[0].MACAddress)
@@ -378,7 +378,7 @@ func (sm *SysModel) BringupWorkloads() error {
 			for _, gwrk := range getResp.Workloads {
 				if gwrk.WorkloadName == wrk.Name() {
 					wrk.SetMgmtIP(gwrk.MgmtIp)
-					wrk.SetInterface(gwrk.GetInterface())
+					wrk.SetInterface(gwrk.Interfaces[0].GetInterface())
 					found = true
 				}
 			}

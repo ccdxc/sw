@@ -168,6 +168,9 @@ func (vm *VM) ReconfigureNetwork(currNW string, newNW string, maxReconfigs int) 
 						fmt.Println("Skipping as network already connected ", currNW)
 						continue
 					}
+				default:
+					continue
+
 				}
 
 			case *types.VirtualEthernetCardNetworkBackingInfo:

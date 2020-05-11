@@ -55,7 +55,7 @@ func (msc *MirrorSessionCollection) AddCollector(wc *WorkloadCollection, transpo
 	collector := monitoring.MirrorCollector{
 		Type: monitoring.PacketCollectorType_ERSPAN_TYPE_3.String(),
 		ExportCfg: &monitoring.MirrorExportConfig{
-			Destination: strings.Split(wc.Workloads[wlnum].iotaWorkload.IpPrefix, "/")[0],
+			Destination: strings.Split(wc.Workloads[wlnum].iotaWorkload.Interfaces[0].IpPrefix, "/")[0],
 		},
 	}
 

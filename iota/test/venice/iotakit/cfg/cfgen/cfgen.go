@@ -41,9 +41,10 @@ type HostParams struct {
 
 // WorkloadParams workload attributes
 type WorkloadParams struct {
-	WorkloadsPerHost   int // specifies number of workloads to be created per host
-	WorkloadsPerTenant int // specifies number of workloads to be created per tenant
-	WorkloadTemplate   *workload.Workload
+	WorkloadsPerHost      int // specifies number of workloads to be created per host
+	WorkloadsPerTenant    int // specifies number of workloads to be created per tenant
+	InterfacesPerWorkload int // specifies number of workloads to be created per tenant
+	WorkloadTemplate      *workload.Workload
 }
 
 // WPair workload pairs
@@ -387,13 +388,18 @@ func (cfgen *Cfgen) genWorkloads() []*workload.Workload {
 			tWorkload.ObjectMeta.Name = fmt.Sprintf("workload-%s-w%d", w.Spec.HostName, jj)
 
 			// fix up the workload IP with that of a network it belongs to
-			network := cfgen.ConfigItems.Networks[netIdx]
-			tWorkload.Spec.Interfaces[0].IpAddresses[0] = nIters[netIdx].ipSub(subnets[netIdx])
-			tWorkload.Spec.Interfaces[0].MicroSegVlan = (uint32)(jj + 1)
-			tWorkload.Spec.Interfaces[0].ExternalVlan = network.Spec.VlanID
-			// Both network and ExternalVlan cannot be specified at the same time
-			// tWorkload.Spec.Interfaces[0].Network = network.Name
+			currNet := netIdx
+			for kk := 0; kk < cfgen.WorkloadParams.InterfacesPerWorkload; kk++ {
+				network := cfgen.ConfigItems.Networks[currNet]
+				tWorkload.Spec.Interfaces[kk].IpAddresses[0] = nIters[netIdx].ipSub(subnets[currNet])
+				tWorkload.Spec.Interfaces[kk].MicroSegVlan = (uint32)(jj + cfgen.WorkloadParams.InterfacesPerWorkload + kk + 1)
+				tWorkload.Spec.Interfaces[kk].ExternalVlan = network.Spec.VlanID
+				// Both network and ExternalVlan cannot be specified at the same time
+				tWorkload.Spec.Interfaces[kk].Network = network.Name
+				currNet = (currNet + 1) % maxNetworks
+			}
 			netIdx = (netIdx + 1) % maxNetworks
+			tWorkload.Spec.Interfaces = tWorkload.Spec.Interfaces[:cfgen.WorkloadParams.InterfacesPerWorkload]
 
 			workloads = append(workloads, tWorkload)
 		}
@@ -425,6 +431,7 @@ func (cfgen *Cfgen) genTenantWorkloads() []*workload.Workload {
 				tWorkload.ObjectMeta.Name = fmt.Sprintf("workload-%s-%d-%d-w%d", w.Spec.HostName, tenID, netIdx, ii)
 				tWorkload.Spec.Interfaces[0].IpAddresses[0] = nIters[netIdx].ipSub(subnets[netIdx])
 				tWorkload.Spec.Interfaces[0].Network = cfgen.ConfigItems.Subnets[netIdx].Name
+				tWorkload.Spec.Interfaces = tWorkload.Spec.Interfaces[:cfgen.WorkloadParams.InterfacesPerWorkload]
 				workloads = append(workloads, tWorkload)
 			}
 			break
