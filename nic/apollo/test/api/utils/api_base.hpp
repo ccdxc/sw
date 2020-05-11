@@ -107,7 +107,7 @@ read(_api_str##_feeder& feeder) {                                            \
     feeder.key_build(&key);                                                  \
     info = new (pds_##_api_str##_info_t);                                    \
     memset(info, 0, sizeof(pds_##_api_str##_info_t));                        \
-    feeder.spec_alloc(&info->spec);                                           \
+    feeder.spec_alloc(&info->spec);                                          \
     if ((rv = pds_##_api_str##_read(&key, info)) != SDK_RET_OK)              \
         return rv;                                                           \
                                                                              \
@@ -120,6 +120,35 @@ read(_api_str##_feeder& feeder) {                                            \
     delete(info);                                                            \
     return rv;                                                               \
 }
+
+
+/// \brief Invokes the PDS read api for route test object
+/// Also it compares the config values with values read from hardware
+/// only if current method is read
+/// We need to special handle for route object as route spec has a key
+/// which is not generic
+#define API_ROUTE_READ(_api_str)                                             \
+inline sdk_ret_t                                                             \
+read(_api_str##_feeder& feeder) {                                            \
+    sdk_ret_t rv;                                                            \
+    pds_route_key_t key;                                                     \
+    pds_##_api_str##_info_t *info;                                           \
+    memset(&key, 0, sizeof(key));                                            \
+    feeder.key_build(&key);                                                  \
+    info = new (pds_##_api_str##_info_t);                                    \
+    memset(info, 0, sizeof(pds_##_api_str##_info_t));                        \
+    if ((rv = pds_##_api_str##_read(&key, info)) != SDK_RET_OK)              \
+        return rv;                                                           \
+    if (feeder.stash()) {                                                    \
+        feeder.vec.push_back(info);                                          \
+        return rv;                                                           \
+    }                                                                        \
+    rv = api_info_compare<_api_str##_feeder, pds_##_api_str##_info_t>(       \
+        feeder, info);                                                       \
+    delete(info);                                                            \
+    return rv;                                                               \
+}
+
 
 /// \brief invokes the PDS read apis for test objects
 /// also it compares the config values with values previously
@@ -178,6 +207,19 @@ update(pds_batch_ctxt_t bctxt, _api_str##_feeder& feeder) {                  \
 inline sdk_ret_t                                                             \
 del(pds_batch_ctxt_t bctxt, _api_str##_feeder& feeder) {                     \
     pds_obj_key_t key;                                                       \
+                                                                             \
+    memset(&key, 0, sizeof(key));                                            \
+    feeder.key_build(&key);                                                  \
+    return (pds_##_api_str##_delete(&key, bctxt));                           \
+}
+
+/// \brief Invokes the PDS delete apis for route test object
+/// We need to special handle for route object as route spec has a key
+/// which is not generic
+#define API_ROUTE_DELETE(_api_str)                                           \
+inline sdk_ret_t                                                             \
+del(pds_batch_ctxt_t bctxt, _api_str##_feeder& feeder) {                     \
+    pds_route_key_t key;                                                     \
                                                                              \
     memset(&key, 0, sizeof(key));                                            \
     feeder.key_build(&key);                                                  \

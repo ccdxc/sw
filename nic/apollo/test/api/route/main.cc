@@ -19,6 +19,7 @@
 #include "nic/apollo/test/api/utils/if.hpp"
 #include "nic/apollo/test/api/utils/nexthop.hpp"
 #include "nic/apollo/test/api/utils/nexthop_group.hpp"
+#include "nic/apollo/test/api/utils/workflow.hpp"
 
 namespace test {
 namespace api {
@@ -77,7 +78,7 @@ static uint32_t k_route_table_id = 1;
 //----------------------------------------------------------------------------
 // Route test cases implementation
 //----------------------------------------------------------------------------
-
+#if 0
 static void
 route_spec_fill (pds_route_spec_t *route_spec, uint32_t route_id,
                  ip_prefix_t *ip_pfx)
@@ -90,7 +91,7 @@ route_spec_fill (pds_route_spec_t *route_spec, uint32_t route_id,
     route_spec->attrs.nh_type = PDS_NH_TYPE_OVERLAY;
     route_spec->attrs.tep = int2pdsobjkey(base_tep_id);
 }
-
+#endif
 static void
 route_table_setup (pds_batch_ctxt_t bctxt, std::string base_pfx)
 {
@@ -110,7 +111,7 @@ route_table_teardown (pds_batch_ctxt_t bctxt)
                    k_num_route_tables, k_route_table_id);
     many_delete(bctxt, rt_feeder);
 }
-
+#if 0
 static void
 route_table_add_routes (pds_batch_ctxt_t bctxt, std::string base_pfx)
 {
@@ -223,11 +224,122 @@ route_table_update_route_verify (std::string base_pfx)
                        &ip_pfx, sizeof(ip_prefix_t)) == 0);
     SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE, info.spec.route_info);
 }
-
+#endif
 /// \defgroup ROUTE_TESTS Route tests
 /// @{
+/// \brief Route table WF_B1
+/// \ref WF_B1
+TEST_F(route_test, route_workflow_b1) {
+    pds_batch_ctxt_t bctxt;
+    route_feeder feeder;
+
+    // setup a route-table
+    bctxt = batch_start();
+    route_table_setup(bctxt, k_base_v4_pfx);
+    batch_commit(bctxt);
+
+    // create one route
+    feeder.init(k_base_v4_pfx_2, 1, 100, k_route_table_id,
+                  PDS_NH_TYPE_OVERLAY, PDS_NAT_TYPE_NONE,
+                  false);
+    workflow_b1<route_feeder>(feeder);
+
+    // create multiple routes
+    feeder.init(k_base_v4_pfx_3, 50, 100, k_route_table_id,
+                  PDS_NH_TYPE_OVERLAY, PDS_NAT_TYPE_NONE,
+                  false);
+    workflow_b1<route_feeder>(feeder);
+
+    // teadown the route-table
+    bctxt = batch_start();
+    route_table_teardown(bctxt);
+    batch_commit(bctxt);
+}
+/// \brief Route table WF_B2
+/// \ref WF_B2
+TEST_F(route_test, route_workflow_b2) {
+    pds_batch_ctxt_t bctxt;
+    route_feeder feeder_1;
+    route_feeder feeder_2;
+
+    bctxt = batch_start();
+    route_table_setup(bctxt, k_base_v4_pfx);
+    batch_commit(bctxt);
+
+    // create one route
+    feeder_1.init(k_base_v4_pfx_2, 1, 100, k_route_table_id,
+                  PDS_NH_TYPE_OVERLAY, PDS_NAT_TYPE_NONE,
+                  false);
+    // update the route
+    feeder_2.init(k_base_v4_pfx_3, 1, 100, k_route_table_id,
+                  PDS_NH_TYPE_OVERLAY, PDS_NAT_TYPE_NONE,
+                  false);
+    workflow_b2<route_feeder>(feeder_1, feeder_2);
+
+    // create multiple routes
+    feeder_1.init(k_base_v4_pfx_2, 50, 100, k_route_table_id,
+                  PDS_NH_TYPE_OVERLAY, PDS_NAT_TYPE_NONE,
+                  false);
+    feeder_2.init(k_base_v4_pfx_3, 50, 100, k_route_table_id,
+                                    PDS_NH_TYPE_OVERLAY, PDS_NAT_TYPE_NONE,
+                                                      false);
+    workflow_b2<route_feeder>(feeder_1, feeder_2);
+
+    bctxt = batch_start();
+    route_table_teardown(bctxt);
+    batch_commit(bctxt);
+}
+/// \brief Route WF_1
+/// \ref WF_1
+TEST_F(route_test, route_workflow_1) {
+    pds_batch_ctxt_t bctxt;
+    route_feeder feeder;
+
+    bctxt = batch_start();
+    route_table_setup(bctxt, k_base_v4_pfx);
+    batch_commit(bctxt);
+
+    // create one route
+    feeder.init(k_base_v4_pfx_2, 1, 100, k_route_table_id,
+                PDS_NH_TYPE_OVERLAY, PDS_NAT_TYPE_NONE,
+                false);
+    workflow_1<route_feeder>(feeder);
+
+    // create multiple routes
+    feeder.init(k_base_v4_pfx_3, 50, 100, k_route_table_id,
+                  PDS_NH_TYPE_OVERLAY, PDS_NAT_TYPE_NONE,
+                  false);
+    workflow_1<route_feeder>(feeder);
+    bctxt = batch_start();
+    route_table_teardown(bctxt);
+    batch_commit(bctxt);
+}
+/// \brief Route WF_2
+///// \ref WF_2
+TEST_F(route_test, route_workflow_2) {
+    pds_batch_ctxt_t bctxt;
+    route_feeder feeder;
+
+    bctxt = batch_start();
+    route_table_setup(bctxt, k_base_v4_pfx);
+    batch_commit(bctxt);
+
+    feeder.init(k_base_v4_pfx_2, 1, 100, k_route_table_id,
+                  PDS_NH_TYPE_OVERLAY, PDS_NAT_TYPE_NONE,
+                  false);
+    workflow_2<route_feeder>(feeder);
+
+    feeder.init(k_base_v4_pfx_3, 50, 100, k_route_table_id,
+                  PDS_NH_TYPE_OVERLAY, PDS_NAT_TYPE_NONE,
+                  false);
+    workflow_2<route_feeder>(feeder);
+    bctxt = batch_start();
+    route_table_teardown(bctxt);
+    batch_commit(bctxt);
+}
 
 /// do route table and individual route(s) add in separate batches
+#if 0
 TEST_F(route_test, route_add_1) {
     pds_batch_ctxt_t bctxt;
 
@@ -245,7 +357,6 @@ TEST_F(route_test, route_add_1) {
     route_table_teardown(bctxt);
     batch_commit(bctxt);
 }
-
 /// do route table and individual route(s) add in same batch
 TEST_F(route_test, route_add_2) {
     pds_batch_ctxt_t bctxt;
@@ -340,7 +451,7 @@ TEST_F(route_test, route_upd_2) {
     route_table_teardown(bctxt);
     batch_commit(bctxt);
 }
-
+#endif
 /// @}
 
 }    // namespace api

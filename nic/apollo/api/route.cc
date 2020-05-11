@@ -461,6 +461,7 @@ route::read(pds_route_info_t *info) {
     uint32_t num_routes;
     route_info_t *route_info;
     pds_route_table_info_t route_table_info;
+    bool found = false;
 
     memset(&route_table_info, 0, sizeof(route_table_info));
     // get number of routes
@@ -505,6 +506,7 @@ route::read(pds_route_info_t *info) {
             memcpy(&info->spec.key, &key_, sizeof(key_));
             memcpy(&info->spec.attrs, &route_info->routes[i].attrs,
                    sizeof(info->spec.attrs));
+            found = true;
             break;
         }
         // continue the search
@@ -515,6 +517,9 @@ end:
     if (route_table_info.spec.route_info) {
          SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
                   route_table_info.spec.route_info);
+    }
+    if (found == false) {
+        return SDK_RET_ENTRY_NOT_FOUND;
     }
     return ret;
 }

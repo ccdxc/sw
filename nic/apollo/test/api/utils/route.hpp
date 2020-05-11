@@ -17,6 +17,7 @@ namespace api {
 
 //TODO: setting to 5 for now, MAX fails
 #define NUM_ROUTE_TABLES 5
+#define MAX_ROUTE_PRIORITY 1024
 
 // Enumerate route_table attributes
 enum route_table_attrs {
@@ -165,6 +166,118 @@ void sample_route_table_teardown(
     pds_batch_ctxt_t bctxt, uint32_t id=1,
     uint32_t num_route_tables=NUM_ROUTE_TABLES);
 
+// Route test feeder class
+class route_feeder : public feeder {
+public:
+    pds_route_spec_t spec;
+    std::string base_route_pfx_str;
+    route_feeder() {};
+    route_feeder(const route_feeder& feeder) {
+        pds_obj_key_t route_id = feeder.spec.key.route_id;
+        pds_obj_key_t route_table_id = feeder.spec.key.route_table_id;
+        init(feeder.base_route_pfx_str, feeder.num_obj,
+             pdsobjkey2int(route_id),
+             pdsobjkey2int(route_table_id),
+             feeder.spec.attrs.nh_type, feeder.spec.attrs.nat.src_nat_type,
+             feeder.spec.attrs.meter);
+    }
+    ~route_feeder() {};
+
+    // Initialize feeder with the base set of values
+    void init(std::string base_route_pfx_str,
+              uint32_t num_routes = 1,
+              uint32_t route_id = 1,
+              uint32_t route_table_id = 1,
+              uint8_t nh_type = PDS_NH_TYPE_OVERLAY,
+              uint8_t src_nat_type = PDS_NAT_TYPE_NONE,
+              bool meter = false);
+    // Iterate helper routines
+    void iter_next(int width = 1);
+    // Build routines
+    void key_build(pds_route_key_t *key) const;
+    void spec_build(pds_route_spec_t *spec) const;
+    // Compare routines
+    bool key_compare(const pds_route_key_t *key) const;
+    bool spec_compare(const pds_route_spec_t *spec) const;
+    bool status_compare(const pds_route_status_t *status1,
+                        const pds_route_status_t *status2) const;
+};
+// Dump prototypes
+inline std::ostream&
+operator<<(std::ostream& os, const pds_route_spec_t *spec) {
+    os << " route id: " << spec->key.route_id.str()
+    << " route table id: " << spec->key.route_table_id.str()
+    << " pfx: " << ippfx2str(&spec->attrs.prefix)
+    << " class priority: " << spec->attrs.class_priority
+    << " priority: " << spec->attrs.priority
+    << " nh type: " << spec->attrs.nh_type;
+    switch (spec->attrs.nh_type) {
+    case PDS_NH_TYPE_OVERLAY:
+        os << " TEP: " << spec->attrs.tep.str();
+        break;
+    case PDS_NH_TYPE_OVERLAY_ECMP:
+        os << " nh group: " << spec->attrs.nh_group.str();
+        break;
+    case PDS_NH_TYPE_PEER_VPC:
+        os << " vpc: " << spec->attrs.vpc.str();
+        break;
+    case PDS_NH_TYPE_IP:
+        os << " NH: " << spec->attrs.nh.str();
+        break;
+    case PDS_NH_TYPE_VNIC:
+        os << " vnic: " << spec->attrs.vnic.str();
+        break;
+    default:
+        break;
+    }
+    os << " src nat type: " << spec->attrs.nat.src_nat_type;
+    os << " dst nat ip: " << ipaddr2str(&spec->attrs.nat.dst_nat_ip);
+    os << " meter: " << (spec->attrs.meter ? "true" : "false");
+    os << std::endl;
+
+    return os;
+}
+
+inline std::ostream&
+operator<<(std::ostream& os, const pds_route_status_t *status) {
+    os << "  ";
+    return os;
+}
+
+inline std::ostream&
+operator<<(std::ostream& os, const pds_route_stats_t *stats) {
+    os << "  ";
+    return os;
+}
+
+inline std::ostream&
+operator<<(std::ostream& os, const pds_route_info_t *obj) {
+    os << " Route info =>"
+       << &obj->spec
+       << &obj->status
+       << &obj->stats
+       << std::endl;
+    return os;
+}
+
+inline std::ostream&
+operator<<(std::ostream& os, const route_feeder& obj) {
+    os << " Route feeder => "
+       << &obj.spec
+       << std::endl;
+    return os;
+}
+
+// CRUD prototypes
+API_CREATE(route);
+API_ROUTE_READ(route);
+API_UPDATE(route);
+API_ROUTE_DELETE(route);
+
+// Route CRUD helper functions
+void create_route_spec (ip_prefix_t route_pfx, uint8_t nh_type,
+                        uint8_t src_nat_type, bool meter,
+                        pds_route_spec_t *spec);
 }    // namespace api
 }    // namespace test
 

@@ -542,6 +542,7 @@ policy_rule::read(pds_policy_rule_info_t *info) {
     uint32_t num_rules;
     rule_info_t *rule_info;
     pds_policy_info_t policy_info;
+    bool found = false;
 
     memset(&policy_info, 0, sizeof(policy_info));
     // get number of rules
@@ -584,6 +585,7 @@ policy_rule::read(pds_policy_rule_info_t *info) {
             memcpy(&info->spec.key, &key_, sizeof(key_));
             memcpy(&info->spec.attrs, &rule_info->rules[i].attrs,
                    sizeof(info->spec.attrs));
+            found = true;
             break;
         }
         // continue the search
@@ -594,6 +596,9 @@ end:
     if (policy_info.spec.rule_info) {
          SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, policy_info.spec.rule_info);
          policy_info.spec.rule_info = NULL;
+    }
+    if (found == false) {
+        return SDK_RET_ENTRY_NOT_FOUND;
     }
     return ret;
 }

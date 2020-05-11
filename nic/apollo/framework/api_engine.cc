@@ -547,7 +547,7 @@ api_engine::add_deps_(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 api_engine::obj_dependency_computation_stage_(void)
 {
-    sdk_ret_t ret;
+    sdk_ret_t ret = SDK_RET_OK;
     api_base *api_obj;
     api_obj_ctxt_t *obj_ctxt;
 
@@ -560,7 +560,11 @@ api_engine::obj_dependency_computation_stage_(void)
          it != batch_ctxt_.dol.end(); ++it) {
         api_obj = *it;
         obj_ctxt = batch_ctxt_.dom[*it];
-        ret = add_deps_(api_obj, obj_ctxt);
+        // Add dependency to the parent object only when the child object's
+        // api operation is not none
+        if (obj_ctxt->api_op != API_OP_NONE) {
+            ret = add_deps_(api_obj, obj_ctxt);
+        }
         if (unlikely(ret != SDK_RET_OK)) {
             PDS_API_OBJ_DEP_UPDATE_COUNTER_INC(err, 1);
             goto error;
