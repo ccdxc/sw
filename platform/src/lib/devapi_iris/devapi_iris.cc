@@ -436,7 +436,8 @@ devapi_iris::lif_get_max_filters(uint32_t *ucast_filters,
 }
 
 sdk_ret_t
-devapi_iris::eth_dev_admin_status_update(uint32_t lif_id)
+devapi_iris::eth_dev_admin_status_update(uint32_t lif_id,
+                                         lif_state_t state)
 {
     return SDK_RET_OK;
 }

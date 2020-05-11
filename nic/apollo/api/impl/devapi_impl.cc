@@ -277,7 +277,8 @@ devapi_impl::lif_get_max_filters(uint32_t *ucast_filters,
 }
 
 sdk_ret_t
-devapi_impl::eth_dev_admin_status_update(uint32_t lif_id) {
+devapi_impl::eth_dev_admin_status_update(uint32_t lif_id,
+                                         lif_state_t state) {
     PDS_TRACE_WARN("Not implemented");
     return SDK_RET_OK;
 }

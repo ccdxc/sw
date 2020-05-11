@@ -2184,6 +2184,7 @@ EthLif::_CmdSetAttr(void *req, void *req_data, void *resp, void *resp_data)
         eth_qstate_cfg_t eth;
     } cfg = {0};
     uint64_t addr, off;
+    eth_lif_state state;
     asic_db_addr_t db_addr = { 0 };
     sdk_ret_t ret;
 
@@ -2252,7 +2253,9 @@ EthLif::_CmdSetAttr(void *req, void *req_data, void *resp, void *resp_data)
         if (cmd->state == IONIC_LIF_DISABLE)
             ev_sleep(RXDMA_LIF_QUIESCE_WAIT_S);
 
-        ret = dev_api->eth_dev_admin_status_update(hal_lif_info_.lif_id);
+        state = cmd->state ? LIF_STATE_UP : LIF_STATE_DOWN;
+        ret = dev_api->eth_dev_admin_status_update(hal_lif_info_.lif_id,
+                                    (lif_state_t)ConvertEthLifStateToLifState(state));
         if (ret != SDK_RET_OK) {
             NIC_LOG_ERR("{}: Failed to eth state in controller", hal_lif_info_.name);
         }
@@ -2433,6 +2436,7 @@ EthLif::_CmdQControl(void *req, void *req_data, void *resp, void *resp_data)
     status_code_t st = IONIC_RC_SUCCESS;
     sdk_ret_t ret;
     int64_t addr, off;
+    eth_lif_state state;
     struct ionic_q_control_cmd *cmd = (struct ionic_q_control_cmd *)req;
     // q_enable_comp *comp = (q_enable_comp *)resp;
     union {
@@ -2482,7 +2486,9 @@ EthLif::_CmdQControl(void *req, void *req_data, void *resp, void *resp_data)
         if (cmd->oper == IONIC_Q_DISABLE)
             ev_sleep(RXDMA_Q_QUIESCE_WAIT_S);
 
-        ret = dev_api->eth_dev_admin_status_update(hal_lif_info_.lif_id);
+        state = cmd->oper ? LIF_STATE_UP : LIF_STATE_DOWN;
+        ret = dev_api->eth_dev_admin_status_update(hal_lif_info_.lif_id,
+                                    (lif_state_t)ConvertEthLifStateToLifState(state));
         if (ret != SDK_RET_OK) {
             NIC_LOG_ERR("{}: Failed to eth state in controller", hal_lif_info_.name);
         }
