@@ -29,6 +29,39 @@ class VnicStatus(base.StatusObjectBase):
     def __init__(self):
         super().__init__(api.ObjectTypes.VNIC)
 
+class VnicStats(base.StatsObjectBase):
+    def __init__(self):
+        super().__init__(api.ObjectTypes.VNIC)
+
+    def Update(self, stats):
+        self.TxBytes = stats.TxBytes
+        self.TxPackets = stats.TxPackets
+        self.RxBytes = stats.RxBytes
+        self.RxPackets = stats.RxPackets
+        self.ActiveSessions = stats.ActiveSessions
+        return
+
+    def __eq__(self, other):
+        ret = True
+        if self.TxBytes != other.TxBytes:
+            ret = False
+        if self.TxPackets != other.TxPackets:
+            ret = False
+        if self.RxBytes != other.RxBytes:
+            ret = False
+        if self.RxPackets != other.RxPackets:
+            ret = False
+        return ret
+
+    def increment(self, sz, tx=True):
+        if tx:
+            self.TxPackets += 1
+            self.TxBytes += sz
+        else:
+            self.RxPackets += 1
+            self.RxBytes += sz
+        return;
+
 class VnicObject(base.ConfigObjectBase):
     def __init__(self, node, parent, spec, rxmirror, txmirror):
         super().__init__(api.ObjectTypes.VNIC, node)
@@ -85,6 +118,7 @@ class VnicObject(base.ConfigObjectBase):
         self.EgV4SecurityPolicyIds = []
         self.EgV6SecurityPolicyIds = []
         self.Status = VnicStatus()
+        self.Stats = VnicStats()
         policerid = getattr(spec, 'rxpolicer', 0)
         self.RxPolicer = PolicerClient.GetPolicerObject(node, policerid)
         policerid = getattr(spec, 'txpolicer', 0)
@@ -155,6 +189,7 @@ class VnicObject(base.ConfigObjectBase):
         if self.ServiceIPs:
             logger.info(f"- Service IPs:{self.ServiceIPs}")
         self.Status.Show()
+        self.Stats.Show()
         return
 
     def IsFilterMatch(self, selectors):

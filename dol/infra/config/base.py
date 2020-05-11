@@ -33,6 +33,11 @@ class StatusObjectBase(objects.FrameworkObject):
         super().__init__()
         return
 
+class StatsObjectBase(objects.FrameworkObject):
+    def __init__(self):
+        super().__init__()
+        return
+
 class ConfigObjectBase(objects.FrameworkObject):
     def __init__(self):
         super().__init__()

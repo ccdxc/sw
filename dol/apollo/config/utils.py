@@ -399,6 +399,8 @@ def ValidateRead(obj, resps, expApiStatus = types_pb2.API_STATUS_OK):
                     if ValidateObject(obj, response):
                         if hasattr(obj, 'Status'):
                             obj.Status.Update(response.Status)
+                        if hasattr(obj, 'Stats'):
+                            obj.Stats.Update(response.Stats)
                     else:
                         logger.info(f"ValidateRead failed for {obj} on {obj.Node}, received resp {resp} & expected status {expApiStatus}")
                         return False
@@ -981,6 +983,23 @@ def DumpObject(obj):
         DumpObject(parentObj)
     logger.info(" === Selected %s === " % (obj.ObjType.name))
     obj.Show()
+    return
+
+def ReadObjectStats(cfgObj, obj):
+    parentObj = getattr(cfgObj, 'Parent', None)
+    if parentObj:
+        ReadObjectStats(parentObj, obj)
+    cfgObj.Read()
+    if hasattr(cfgObj, 'Stats'):
+        obj.statscache[cfgObj.GID()] = cfgObj.Stats
+    return
+
+def ReadTestcaseStats(obj):
+    tcAttrs = [ 'route', 'tunnel', 'policy', 'localmapping', 'remotemapping']
+    obj.statscache = {}
+    for attr in tcAttrs:
+        cfgObj = getattr(obj, attr, None)
+        if cfgObj: ReadObjectStats(cfgObj, obj)
     return
 
 def DumpTestcaseConfig(obj):

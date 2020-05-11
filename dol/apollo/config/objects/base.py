@@ -35,6 +35,35 @@ class StatusObjectBase(base.StatusObjectBase):
     def Update(self, status):
         self.HwId = status.HwId
 
+class StatsObjectBase(base.StatsObjectBase):
+    def __init__(self, objtype):
+        super().__init__()
+        self.ObjType = objtype
+        return
+
+    def __repr__(self):
+        return f"{self.ObjType.name} Stats"
+
+    def Show(self):
+        logger.info(f"  - {self}")
+        for stat in dir(self):
+            if callable(getattr(self, stat)):
+                continue
+            if stat.startswith("_"):
+                continue;
+            if stat == "ObjType":
+                continue
+            if hasattr(self, stat):
+                logger.info("      %s: %d" % (stat, getattr(self, stat)))
+            else:
+                logger.info(f"      {stat}")
+        return
+
+    def Update(self, stats):
+        logger.error("Method not implemented by class: %s" % self.__class__)
+        assert(0)
+        return False
+
 class ConfigObjectBase(base.ConfigObjectBase):
     def __init__(self, objtype, node):
         super().__init__()
