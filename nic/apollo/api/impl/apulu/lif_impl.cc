@@ -71,6 +71,7 @@ lif_impl::lif_impl(pds_lif_spec_t *spec) {
     vnic_hw_id_ = 0xFFFF;
     tx_sched_offset_ = INVALID_INDEXER_INDEX;
     state_ = sdk::types::LIF_STATE_NONE;
+    admin_state_ = sdk::types::LIF_STATE_NONE;
     init_done_ = false;
     ht_ctxt_.reset();
     id_ht_ctxt_.reset();
@@ -125,12 +126,29 @@ lif_impl::set_name(const char *name) {
     if ((type_ == sdk::platform::LIF_TYPE_HOST_MGMT) ||
         (type_ == sdk::platform::LIF_TYPE_HOST)) {
         memcpy(name_, name, SDK_MAX_NAME_LEN);
+        // notify lif update
+        event.event_id = PDS_EVENT_ID_LIF_UPDATE;
+        pds_lif_to_lif_spec(&event.lif_info.spec, this);
+        pds_lif_to_lif_status(&event.lif_info.status, this);
+        g_pds_state.event_notify(&event);
     }
-    // notify lif update
-    event.event_id = PDS_EVENT_ID_LIF_UPDATE;
-    pds_lif_to_lif_spec(&event.lif_info.spec, this);
-    pds_lif_to_lif_status(&event.lif_info.status, this);
-    g_pds_state.event_notify(&event);
+}
+
+void
+lif_impl::set_admin_state(lif_state_t state) {
+    pds_event_t event;
+
+    // udpate the admin state
+    admin_state_ = state;
+
+    // and notify lif update
+    if ((type_ == sdk::platform::LIF_TYPE_HOST_MGMT) ||
+        (type_ == sdk::platform::LIF_TYPE_HOST)) {
+        event.event_id = PDS_EVENT_ID_LIF_UPDATE;
+        pds_lif_to_lif_spec(&event.lif_info.spec, this);
+        pds_lif_to_lif_status(&event.lif_info.status, this);
+        g_pds_state.event_notify(&event);
+    }
 }
 
 #define nacl_redirect_action    action_u.nacl_nacl_redirect

@@ -278,6 +278,7 @@ pds_lif_api_status_to_proto (pds::LifStatus *proto_status,
 {
     proto_status->set_name(api_status->name);
     proto_status->set_ifindex(api_status->ifindex);
+    proto_status->set_adminstate(pds_admin_state_to_proto_admin_state(api_status->admin_state));
     proto_status->set_status(pds_admin_state_to_proto_admin_state(api_status->state));
     return SDK_RET_OK;
 }

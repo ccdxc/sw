@@ -40,6 +40,8 @@ typedef struct pds_lif_status_s {
     pds_ifindex_t  ifindex;
     ///< name of the lif (as seen on host)
     char           name[SDK_MAX_NAME_LEN];
+    ///< admin state of the lif
+    pds_if_state_t admin_state;
     ///< operational status of the lif
     pds_if_state_t state;
 } __PACK__ pds_lif_status_t;

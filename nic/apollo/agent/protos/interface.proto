@@ -339,11 +339,13 @@ message LifSpec {
 
 message LifStatus {
   // encoded ifindex of this lif
-  uint32   IfIndex = 1;
+  uint32   IfIndex    = 1;
   // name of this lif (as seen on the host)
-  string   Name    = 2;
+  string   Name       = 2;
+  // admin state of the lif (reflects PF/VF status on the host/VM)
+  IfStatus AdminState = 3;
   // operational status of this lif
-  IfStatus Status  = 3;
+  IfStatus Status     = 4;
 }
 
 message LifStats {

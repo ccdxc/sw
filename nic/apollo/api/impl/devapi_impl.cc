@@ -230,7 +230,6 @@ devapi_impl::lif_upd_state(uint32_t lif_id, lif_state_t state) {
         PDS_TRACE_ERR("Lif %u not found", lif_id);
         return sdk::SDK_RET_ENTRY_NOT_FOUND;
     }
-
     lif->set_state(state);
 
     // notify rest of the system
@@ -277,9 +276,16 @@ devapi_impl::lif_get_max_filters(uint32_t *ucast_filters,
 }
 
 sdk_ret_t
-devapi_impl::eth_dev_admin_status_update(uint32_t lif_id,
-                                         lif_state_t state) {
-    PDS_TRACE_WARN("Not implemented");
+devapi_impl::eth_dev_admin_status_update(uint32_t lif_id, lif_state_t state) {
+    lif_impl *lif;
+
+    // lookup lif and update the admin state
+    lif = lif_impl_db()->find((pds_lif_id_t *)&lif_id);
+    if (unlikely(lif == NULL)) {
+        PDS_TRACE_ERR("Lif %u not found", lif_id);
+        return sdk::SDK_RET_ENTRY_NOT_FOUND;
+    }
+    lif->set_admin_state(state);
     return SDK_RET_OK;
 }
 

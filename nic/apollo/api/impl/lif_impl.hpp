@@ -108,6 +108,7 @@ public:
     const char *name(void) const { return name_; }
 
     /// \brief     set/update the state of the lif
+    /// \param[in] state    operational state to update the lif with
     void set_state(lif_state_t state) {
         state_ = state;
     }
@@ -115,6 +116,14 @@ public:
     /// \brief     return the operational state of the lif
     /// \return    operational state of the lif
     lif_state_t state(void) const { return state_; }
+
+    /// \brief     set/update the admin state of the lif
+    /// \param[in] state    admin state to update the lif with
+    void set_admin_state(lif_state_t state);
+
+    /// \brief     return the admin state of the lif
+    /// \return    admin state of the lif
+    lif_state_t admin_state(void) const { return admin_state_; }
 
     /// \brief     set/update the mac address of the lif
     /// \param[in] mac    mac address of the device corresponding to this lif
@@ -213,6 +222,7 @@ private:
     pds_ifindex_t    ifindex_;        ///< ifindex of this lif
     uint32_t         nh_idx_;         ///< nexthop idx of this lif
     uint16_t         vnic_hw_id_;     ///< vnic hw id
+    lif_state_t      admin_state_;    ///< admin state
     lif_state_t      state_;          ///< operational state
     bool             init_done_;      ///< TRUE if lif init is done
     ht_ctxt_t        ht_ctxt_;        ///< hash table context
