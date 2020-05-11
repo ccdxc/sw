@@ -62,7 +62,7 @@ def getTunables(tc):
     tunables['cps'] = int(tc.iterators.cps)
 
     if tc.iterators.proto == 'tcp':
-        tunables['pcap_file'] = "http_gzip.pcap"
+        tunables['pcap_file'] = "http_gzip.cap"
     elif tc.iterators.proto == 'udp':
         tunables['pcap_file'] = "chargen-udp.pcap" #"sip_0.pcap"
     else:
@@ -93,9 +93,11 @@ def Setup(tc):
         tc.serverHandle = TRexIotaWrapper(server, role="server", gw=client.ip_address)
         tc.clientHandle = TRexIotaWrapper(client, role="client", gw=server.ip_address)
 
+        api.Logger.info("connect trex...")
         tc.serverHandle.connect()
         tc.clientHandle.connect()
 
+        api.Logger.info("reset connection...")
         tc.serverHandle.reset()
         tc.clientHandle.reset()
 
@@ -230,10 +232,10 @@ def cleanup(tc):
     try:
 
         if tc.clientHandle:
-            api.Logger.info("disconnect client(%s) "
-                        %( tc.clientHandle.workload.workload_name))
+            #api.Logger.info("disconnect client(%s) "
+            #            %( tc.clientHandle.workload.workload_name))
 
-            tc.clientHandle.disconnect()
+            #tc.clientHandle.disconnect()
             api.Logger.info("cleanup client(%s) "
                         %( tc.clientHandle.workload.workload_name))
 
@@ -244,10 +246,10 @@ def cleanup(tc):
             tc.clientHandle = None
 
         if tc.serverHandle:
-            api.Logger.info("disconnect server(%s) "
-                        %( tc.serverHandle.workload.workload_name))
+            #api.Logger.info("disconnect server(%s) "
+            #            %( tc.serverHandle.workload.workload_name))
 
-            tc.serverHandle.disconnect()
+            #tc.serverHandle.disconnect()
             api.Logger.info("cleanup server(%s) "
                         %( tc.serverHandle.workload.workload_name))
 
@@ -263,5 +265,6 @@ def Teardown(tc):
     flowutils.clearFlowTable(tc.workload_pairs)
     __clearVPPEntity("flow statistics")
     __clearVPPEntity("flow entries")
+    cleanup(tc)
     api.Logger.info("Teardown done")
     return api.types.status.SUCCESS
