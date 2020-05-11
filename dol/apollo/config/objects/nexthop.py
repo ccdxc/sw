@@ -166,9 +166,6 @@ class NexthopObject(base.ConfigObjectBase):
         self.FillSpec(spec)
         return
 
-    def Read(self, spec=None):
-        return True
-
     def ValidateSpec(self, spec):
         if spec.Id != self.GetKey():
             return False
@@ -379,14 +376,12 @@ class NexthopObjectClient(base.ConfigClientBase):
         grpcmsg = nh_pb2.NexthopGetRequest()
         return grpcmsg
 
-    def IsReadSupported(self):
-        return False
-
     def ReadObjects(self, node):
         if utils.IsPipelineApulu():
             cfgObjects = self.__underlay_objs[node].values()
         else:
             cfgObjects = self.Objects(node)
+        logger.info(f"Reading {len(cfgObjects)} NEXTHOP objects in {node}")
         result = list(map(lambda x: x.Read(), cfgObjects))
         if not all(result):
             logger.critical(f"Reading {len(cfgObjects)} {self.ObjType.name} Objects FAILED in {node}")

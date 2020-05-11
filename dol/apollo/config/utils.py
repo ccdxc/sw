@@ -388,8 +388,13 @@ def ValidateRead(obj, resps, expApiStatus = types_pb2.API_STATUS_OK):
     if IsDryRun(): return True
     for resp in resps:
         if ValidateGrpcResponse(resp, expApiStatus):
+            # resp is API_STATUS_OK then ValidateObject
+            # otherwise pass
             if ValidateGrpcResponse(resp):
                 readresponse = GetAttrFromResponse(obj, resp, 'Response')
+                if len(readresponse) == 0:
+                    logger.info(f"ValidateRead failed for {obj} on {obj.Node}, received empty response")
+                    return False
                 for response in readresponse:
                     if ValidateObject(obj, response):
                         if hasattr(obj, 'Status'):
