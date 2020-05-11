@@ -7524,7 +7524,7 @@
       "properties": {
         "protocol": {
           "type": "string",
-          "description": "protocol is ip (v4/v6) protocol name/number; names can be: tcp, udp, igmp, icmp, gre, esp, etc."
+          "description": "protocol is ip (v4/v6) protocol name/number; names can be: tcp, udp, icmp."
         },
         "ports": {
           "type": "string",

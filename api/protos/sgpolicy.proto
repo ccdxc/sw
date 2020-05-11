@@ -17,7 +17,7 @@ import "tenant.proto";
 // ----------------------------- NetworkSecurityPolicy Object -----------------------------
 
 message ProtoPort {
-    // protocol is ip (v4/v6) protocol name/number; names can be: tcp, udp, igmp, icmp, gre, esp, etc.
+    // protocol is ip (v4/v6) protocol name/number; names can be: tcp, udp, icmp
     string Protocol = 1 [(gogoproto.jsontag) = "protocol,omitempty"];
 
     // TCP or UDP port number(s): comma separate port numbers, or dash separate port range

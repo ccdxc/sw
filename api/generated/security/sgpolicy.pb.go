@@ -210,7 +210,7 @@ func (m *PropagationStatus) GetPendingNaples() []string {
 
 //
 type ProtoPort struct {
-	// protocol is ip (v4/v6) protocol name/number; names can be: tcp, udp, igmp, icmp, gre, esp, etc.
+	// protocol is ip (v4/v6) protocol name/number; names can be: tcp, udp, icmp
 	Protocol string `protobuf:"bytes,1,opt,name=Protocol,json=protocol,omitempty,proto3" json:"protocol,omitempty"`
 	// TCP or UDP port number(s): comma separate port numbers, or dash separate port range
 	Ports string `protobuf:"bytes,2,opt,name=Ports,json=ports, omitempty,proto3" json:"ports, omitempty"`

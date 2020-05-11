@@ -18,13 +18,13 @@ export interface ISecurityProtoPort {
 export class SecurityProtoPort extends BaseModel implements ISecurityProtoPort {
     /** Field for holding arbitrary ui state */
     '_ui': any = {};
-    /** Protocol is ip (v4/v6) protocol name/number; names can be: tcp, udp, igmp, icmp, gre, esp, etc. */
+    /** Protocol is ip (v4/v6) protocol name/number; names can be: tcp, udp, icmp. */
     'protocol': string = null;
     /** TCP or UDP port number(s): comma separate port numbers, or dash separate port range. */
     'ports': string = null;
     public static propInfo: { [prop in keyof ISecurityProtoPort]: PropInfoItem } = {
         'protocol': {
-            description:  `Protocol is ip (v4/v6) protocol name/number; names can be: tcp, udp, igmp, icmp, gre, esp, etc.`,
+            description:  `Protocol is ip (v4/v6) protocol name/number; names can be: tcp, udp, icmp.`,
             required: false,
             type: 'string'
         },
