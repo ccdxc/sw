@@ -1162,9 +1162,12 @@ func (sm *SysModel) BeforeSuiteDidRun(setupSummary *types.SetupSummary) {
 }
 
 func (sm *SysModel) SpecWillRun(specSummary *types.SpecSummary) {
+	var testcaseDescr string
 	bundleName := specSummary.ComponentTexts[1]
 	groupName := specSummary.ComponentTexts[2]
-	testcaseDescr := specSummary.ComponentTexts[3]
+	if len(specSummary.ComponentTexts) > 3 {
+		testcaseDescr = specSummary.ComponentTexts[3]
+	}
 	if !specSummary.Skipped() {
 		fmt.Printf("%sRunning Test :%v:%v:%v%s\n", boldStyle, color.GreenString(bundleName), groupName, testcaseDescr, defaultStyle)
 	}
@@ -1180,9 +1183,13 @@ func (sm *SysModel) SpecWillRun(specSummary *types.SpecSummary) {
 }
 
 func (sm *SysModel) SpecDidComplete(specSummary *types.SpecSummary) {
+	var testcaseDescr string
 	bundleName := specSummary.ComponentTexts[1]
 	groupName := specSummary.ComponentTexts[2]
-	testcaseDescr := specSummary.ComponentTexts[3]
+
+	if len(specSummary.ComponentTexts) > 3 {
+		testcaseDescr = specSummary.ComponentTexts[3]
+	}
 
 	tcDir := modelLogsDir + "/" + "'" + bundleName + "'" + "/" + "'" + groupName + "'" + "/" + "'" + testcaseDescr + "'"
 	if !specSummary.Skipped() {

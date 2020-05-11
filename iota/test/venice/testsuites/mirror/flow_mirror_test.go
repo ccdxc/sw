@@ -7,7 +7,10 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"strings"
 	"time"
+
+	"github.com/pensando/sw/api/generated/monitoring"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -183,6 +186,97 @@ var _ = Describe("Flow mirror tests", func() {
 
 		})
 	})
+
+	It("Verify ERSPAN type3 strip-vlan-hdr", func() {
+		if ts.tb.HasNaplesSim() {
+			Skip("Disabling on naples sim till traffic issue is debugged")
+		}
+
+		veniceCollector := ts.model.VeniceNodes().Leader()
+		// add permit rules for workload pairs
+		workloadPairs := ts.model.WorkloadPairs().WithinNetwork().Any(1)
+		msc := ts.model.NewMirrorSession("test-mirror").AddRulesForWorkloadPairs(workloadPairs, "icmp")
+		msc.AddVeniceCollectorWithOptions(veniceCollector, "udp/4545", 0,
+			monitoring.PacketCollectorType_ERSPAN_TYPE_3, true)
+		Expect(msc.Commit()).Should(Succeed())
+
+		halCommand := fmt.Sprintf("/nic/bin/halctl show mirror | grep -w %v | grep -w TYPE_3 | grep -w VS",
+			msc.Sessions[0].VeniceMirrorSess.Spec.Collectors[0].ExportCfg.Destination)
+		fmt.Printf("running command: %v \n", halCommand)
+
+		Eventually(func() error {
+			return ts.model.ForEachNaples(func(nc *objects.NaplesCollection) error {
+				out, err := ts.model.RunNaplesCommand(nc, halCommand)
+				if err != nil {
+					return err
+				}
+
+				fmt.Printf("received %+v \n", out)
+
+				for _, o := range out {
+					s := strings.Fields(o)
+					for _, f := range s {
+						if strings.Contains(f,
+							msc.Sessions[0].VeniceMirrorSess.Spec.Collectors[0].ExportCfg.Destination) {
+							return nil
+						}
+					}
+				}
+				return fmt.Errorf("failed to find collector")
+			})
+		}).Should(Succeed())
+
+		// Clear collectors
+		msc.ClearCollectors()
+		// Delete the Mirror session
+		Expect(msc.Delete()).Should(Succeed())
+	})
+
+	It("Verify ERSPAN type2 strip-vlan-hdr", func() {
+		if ts.tb.HasNaplesSim() {
+			Skip("Disabling on naples sim till traffic issue is debugged")
+		}
+
+		veniceCollector := ts.model.VeniceNodes().Leader()
+		// add permit rules for workload pairs
+		workloadPairs := ts.model.WorkloadPairs().WithinNetwork().Any(1)
+		msc := ts.model.NewMirrorSession("test-mirror").AddRulesForWorkloadPairs(workloadPairs, "icmp")
+		msc.AddVeniceCollectorWithOptions(veniceCollector, "udp/4545", 0,
+			monitoring.PacketCollectorType_ERSPAN_TYPE_2, false)
+		Expect(msc.Commit()).Should(Succeed())
+
+		halCommand := fmt.Sprintf("/nic/bin/halctl show mirror | grep -w %v | grep -w TYPE_2 | grep -vw VS",
+			msc.Sessions[0].VeniceMirrorSess.Spec.Collectors[0].ExportCfg.Destination)
+		fmt.Printf("running command: %v \n", halCommand)
+
+		Eventually(func() error {
+			return ts.model.ForEachNaples(func(nc *objects.NaplesCollection) error {
+				out, err := ts.model.RunNaplesCommand(nc, halCommand)
+				if err != nil {
+					return err
+				}
+
+				fmt.Printf("received %+v \n", out)
+
+				for _, o := range out {
+					s := strings.Fields(o)
+					for _, f := range s {
+						if strings.Contains(f,
+							msc.Sessions[0].VeniceMirrorSess.Spec.Collectors[0].ExportCfg.Destination) {
+							return nil
+						}
+					}
+				}
+				return fmt.Errorf("failed to find collector")
+			})
+		}).Should(Succeed())
+
+		// Clear collectors
+		msc.ClearCollectors()
+		// Delete the Mirror session
+		Expect(msc.Delete()).Should(Succeed())
+	})
+
 	Context("Flow Mirror tests : scale", func() {
 		It("Mirror packets to collector and check TCPDUMP at scale", func() {
 			if ts.tb.HasNaplesSim() {

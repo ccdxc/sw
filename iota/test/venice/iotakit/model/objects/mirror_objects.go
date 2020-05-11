@@ -68,11 +68,19 @@ func (msc *MirrorSessionCollection) AddCollector(wc *WorkloadCollection, transpo
 
 // AddVeniceCollector adds venice collector
 func (msc *MirrorSessionCollection) AddVeniceCollector(vnc *VeniceNodeCollection, transport string, wlnum int) *MirrorSessionCollection {
+	return msc.AddVeniceCollectorWithOptions(vnc, transport, wlnum,
+		monitoring.PacketCollectorType_ERSPAN_TYPE_3, false)
+}
+
+// AddVeniceCollectorWithOptions adds venice collector with type/vlan-hdr options
+func (msc *MirrorSessionCollection) AddVeniceCollectorWithOptions(vnc *VeniceNodeCollection, transport string,
+	wlnum int, ctype monitoring.PacketCollectorType, stripVlanHdr bool) *MirrorSessionCollection {
 	if msc.HasError() {
 		return msc
 	}
 	collector := monitoring.MirrorCollector{
-		Type: monitoring.PacketCollectorType_ERSPAN_TYPE_3.String(),
+		Type:         ctype.String(),
+		StripVlanHdr: stripVlanHdr,
 		ExportCfg: &monitoring.MirrorExportConfig{
 			Destination: strings.Split(vnc.Nodes[0].iotaNode.IpAddress, "/")[0],
 		},
