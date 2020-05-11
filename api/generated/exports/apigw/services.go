@@ -31,6 +31,8 @@ import (
 	_ "github.com/pensando/sw/api/generated/orchestration/gateway"
 	// blank import to pull in rollout service into api gateway
 	_ "github.com/pensando/sw/api/generated/rollout/gateway"
+	// blank import to pull in routing service into api gateway
+	_ "github.com/pensando/sw/api/generated/routing/gateway"
 	// blank import to pull in search service into api gateway
 	_ "github.com/pensando/sw/api/generated/search/gateway"
 	// blank import to pull in security service into api gateway

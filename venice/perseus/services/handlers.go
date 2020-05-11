@@ -2,18 +2,29 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"net"
+	goruntime "runtime"
 	"sync"
+	"time"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	cmd "github.com/pensando/sw/api/generated/cluster"
+	diagapi "github.com/pensando/sw/api/generated/diagnostics"
 	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/api/generated/routing"
 	pdstypes "github.com/pensando/sw/nic/apollo/agent/gen/pds"
+	msTypes "github.com/pensando/sw/nic/metaswitch/gen/agent"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/perseus/env"
 	"github.com/pensando/sw/venice/perseus/types"
+	"github.com/pensando/sw/venice/utils/diagnostics"
+	diagsvc "github.com/pensando/sw/venice/utils/diagnostics/service"
+	"github.com/pensando/sw/venice/utils/k8s"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
 type snicT struct {
@@ -33,9 +44,15 @@ type ServiceHandlers struct {
 	pegasusClient  pdstypes.BGPSvcClient
 	ifClient       pdstypes.IfSvcClient
 	routeSvc       pdstypes.CPRouteSvcClient
+	pegasusMon     msTypes.EpochSvcClient
 	apiclient      apiclient.Services
 	snicMap        map[string]*snicT
 	naplesTemplate *network.BGPNeighbor
+	ctx            context.Context
+	cancelFn       context.CancelFunc
+	monitorPort    net.Listener
+	stallMonitor   bool
+	grpcSvc        *rpckit.RPCServer
 }
 
 // NewServiceHandlers returns a Service Handler
@@ -51,11 +68,123 @@ func NewServiceHandlers() *ServiceHandlers {
 	m.pegasusURL = globals.Localhost + ":" + globals.PegasusGRPCPort
 	m.connectToPegasus()
 	m.setupLBIf()
+
+	grpcSvc, err := rpckit.NewRPCServer(globals.Perseus, ":"+globals.PerseusGRPCPort)
+	if err != nil {
+		log.Fatalf("could not start the the GRPC server (%s)", err)
+	}
+	m.grpcSvc = grpcSvc
+	routing.RegisterRoutingV1Server(grpcSvc.GrpcServer, &m)
+	m.ctx, m.cancelFn = context.WithCancel(context.Background())
+	grpcSvc.Start()
+	m.registerDebugHandlers()
+
+	var doneWg sync.WaitGroup
+	doneWg.Add(1)
+	go func() {
+		doneWg.Done()
+		<-m.ctx.Done()
+		m.monitorPort.Close()
+		log.Errorf("Closing monitor port due to failure")
+	}()
+	doneWg.Add(1)
+	go m.monitor(&doneWg)
+	doneWg.Wait()
+
 	return &m
 }
 
 // CfgAsn is the ASN for the RR config
 var CfgAsn uint32
+
+const (
+	maxInitialFail = 30
+	maxRunningfail = 3
+)
+
+func (m *ServiceHandlers) monitor(wg *sync.WaitGroup) {
+	wg.Done()
+	initial := true
+	failCount := 0
+	var epoch uint32
+	var err error
+
+	log.Infof("waiting for %d seconds before enabling monitor", maxRunningfail*3)
+	time.Sleep(maxRunningfail * time.Second * 3)
+	log.Infof("starting monitor")
+	m.monitorPort, err = net.Listen("tcp", "127.0.0.1:"+globals.PerseusMonitorPort)
+	if err != nil {
+		log.Fatalf("could not start listener on monitor por (%s)", err)
+	}
+	go func() {
+		for {
+			_, err := m.monitorPort.Accept()
+			if err != nil {
+				log.Errorf("failed to connect (%s)", err)
+				if m.ctx.Err() != nil {
+					log.Errorf("monitor port is closed, exiting (%s)", m.ctx.Err())
+				}
+			}
+
+		}
+	}()
+	ticker := time.Tick(time.Second)
+	for {
+		select {
+		case <-ticker:
+			if m.stallMonitor {
+				log.Infof("got monitor stall exiting")
+				m.cancelFn()
+				return
+			}
+			if initial && (failCount > maxInitialFail) || !initial && (failCount > maxRunningfail) {
+				log.Errorf("failed to get epoch from pegasus initial[%v] Count[%d]", initial, failCount)
+				m.cancelFn()
+				return
+			}
+			epResp, err := m.pegasusMon.EpochGet(m.ctx, &msTypes.EpochGetRequest{})
+			if err != nil {
+				failCount++
+				log.Errorf("Epoch get failed (%s)", err)
+				continue
+			}
+			if epResp.ApiStatus != pdstypes.ApiStatus_API_STATUS_OK {
+				failCount++
+				log.Errorf("Epoch get failed (%s)(%v)", err, epResp.ApiStatus)
+				continue
+			}
+			failCount = 0
+			if initial {
+				epoch = epResp.Epoch
+				initial = false
+			} else {
+				if epoch != epResp.Epoch {
+					log.Errorf("Epoch from pegasus has changed [%v]->[%v]", epoch, epResp.Epoch)
+					m.cancelFn()
+					return
+				}
+			}
+		}
+	}
+}
+
+func (m *ServiceHandlers) registerDebugHandlers() {
+	diagSvc := diagsvc.GetDiagnosticsService(globals.APIServer, k8s.GetNodeName(), diagapi.ModuleStatus_Venice, log.GetDefaultInstance())
+	if err := diagSvc.RegisterHandler("Debug", diagapi.DiagnosticsRequest_Stats.String(), diagsvc.NewExpVarHandler(globals.APIServer, k8s.GetNodeName(), diagapi.ModuleStatus_Venice, log.GetDefaultInstance())); err != nil {
+		log.ErrorLog("method", "registerDebugHandlers", "msg", "failed to register expvar handler", "err", err)
+	}
+
+	diagSvc.RegisterCustomAction("mon-stall", func(action string, params map[string]string) (interface{}, error) {
+		m.stallMonitor = !m.stallMonitor
+		return fmt.Sprintf("stall monitor [%v]", m.stallMonitor), nil
+	})
+	diagSvc.RegisterCustomAction("stack-trace", func(action string, params map[string]string) (interface{}, error) {
+		buf := make([]byte, 1<<20)
+		blen := goruntime.Stack(buf, true)
+		return fmt.Sprintf("=== goroutine dump ====\n %s \n=== END ===", buf[:blen]), nil
+	})
+	diagnostics.RegisterService(m.grpcSvc.GrpcServer, diagSvc)
+}
 
 func (m *ServiceHandlers) configurePeers() {
 	for _, nic := range m.snicMap {
@@ -267,4 +396,46 @@ func (m *ServiceHandlers) HandleNetworkInterfaceEvent(et kvstore.WatchEventType,
 		log.Fatalf("unexpected event received")
 	}
 	return
+}
+
+type monitorSvc struct{}
+
+// AutoAddNeighbor creates Neighbor object
+func (m *ServiceHandlers) AutoAddNeighbor(context.Context, *routing.Neighbor) (*routing.Neighbor, error) {
+	return nil, fmt.Errorf("not implemented")
+}
+
+// AutoDeleteNeighbor deletes Neighbor object
+func (m *ServiceHandlers) AutoDeleteNeighbor(context.Context, *routing.Neighbor) (*routing.Neighbor, error) {
+	return nil, fmt.Errorf("not implemented")
+}
+
+// AutoGetNeighbor get Neighbor object
+func (m *ServiceHandlers) AutoGetNeighbor(context.Context, *routing.Neighbor) (*routing.Neighbor, error) {
+	return nil, fmt.Errorf("not implemented")
+}
+
+// AutoLabelNeighbor applies labels Neighbor object
+func (m *ServiceHandlers) AutoLabelNeighbor(context.Context, *api.Label) (*routing.Neighbor, error) {
+	return nil, fmt.Errorf("not implemented")
+}
+
+// AutoListNeighbor lists Neighbor objects
+func (m *ServiceHandlers) AutoListNeighbor(context.Context, *api.ListWatchOptions) (*routing.NeighborList, error) {
+	return nil, fmt.Errorf("not implemented")
+}
+
+// AutoUpdateNeighbor updates Neighbor object
+func (m *ServiceHandlers) AutoUpdateNeighbor(context.Context, *routing.Neighbor) (*routing.Neighbor, error) {
+	return nil, fmt.Errorf("not implemented")
+}
+
+// AutoWatchNeighbor watches Neighbor objects. Supports WebSockets or HTTP long poll
+func (m *ServiceHandlers) AutoWatchNeighbor(*api.ListWatchOptions, routing.RoutingV1_AutoWatchNeighborServer) error {
+	return fmt.Errorf("not implemented")
+}
+
+// AutoWatchSvcRoutingV1 is a service watcher
+func (m *ServiceHandlers) AutoWatchSvcRoutingV1(*api.ListWatchOptions, routing.RoutingV1_AutoWatchSvcRoutingV1Server) error {
+	return fmt.Errorf("not implemented")
 }

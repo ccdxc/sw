@@ -15,6 +15,7 @@
 | [objstore](/swagger/objstore) | Objstore API reference |
 | [orchestration](/swagger/orchestration) | Orchestration API reference |
 | [rollout](/swagger/rollout) | Configure and manage rollout feature to upgrade/downgrade software for the cluster |
+| [routing](/swagger/routing) | Routing API reference |
 | [search](/swagger/search) | Powerful search API to search configuration policies, events etc. |
 | [security](/swagger/security) | Configure and manage security features like Security Groups, Rules, Certificates etc. |
 | [staging](/swagger/staging) | APIS to stage configuration and commit in transactions |

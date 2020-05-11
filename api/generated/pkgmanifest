@@ -12,6 +12,7 @@ true network ipam.proto lb.proto network.proto networkinterface.proto route.prot
 true objstore objstore.proto svc_objstore.proto 
 true orchestration orchestration.proto svc_orchestration.proto 
 true rollout rollout.proto svc_rollout.proto 
+true routing routing.proto svc_routing.proto 
 true search search.proto svc_search.proto 
 true security app.proto fwprofile.proto networkencryption.proto securitygroup.proto sgpolicy.proto svc_security.proto x509.proto 
 true staging staging.proto svc_staging.proto 

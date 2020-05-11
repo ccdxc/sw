@@ -145,6 +145,7 @@ func TestMain(m *testing.M) {
 			"events",
 			"audit",
 			"fwlog",
+			"routing",
 		},
 		Auditor:            auditmgr.WithAuditors(auditmgr.NewLogAuditor(context.TODO(), l)),
 		ModuleWatcher:      diagmock.GetModuleWatcher(),

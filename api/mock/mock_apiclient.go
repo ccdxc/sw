@@ -18,6 +18,7 @@ import (
 	objstore "github.com/pensando/sw/api/generated/objstore"
 	orchestration "github.com/pensando/sw/api/generated/orchestration"
 	rollout "github.com/pensando/sw/api/generated/rollout"
+	routing "github.com/pensando/sw/api/generated/routing"
 	security "github.com/pensando/sw/api/generated/security"
 	staging "github.com/pensando/sw/api/generated/staging"
 	workload "github.com/pensando/sw/api/generated/workload"
@@ -164,6 +165,18 @@ func (m *MockServices) RolloutV1() rollout.RolloutV1Interface {
 // RolloutV1 indicates an expected call of RolloutV1
 func (mr *MockServicesMockRecorder) RolloutV1() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RolloutV1", reflect.TypeOf((*MockServices)(nil).RolloutV1))
+}
+
+// RoutingV1 mocks base method
+func (m *MockServices) RoutingV1() routing.RoutingV1Interface {
+	ret := m.ctrl.Call(m, "RoutingV1")
+	ret0, _ := ret[0].(routing.RoutingV1Interface)
+	return ret0
+}
+
+// RoutingV1 indicates an expected call of RoutingV1
+func (mr *MockServicesMockRecorder) RoutingV1() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RoutingV1", reflect.TypeOf((*MockServices)(nil).RoutingV1))
 }
 
 // SecurityV1 mocks base method

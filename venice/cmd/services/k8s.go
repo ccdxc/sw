@@ -4,12 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	pkgErrors "github.com/pkg/errors"
-	v1 "k8s.io/api/core/v1"
+	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -17,7 +18,7 @@ import (
 	k8sclient "k8s.io/client-go/kubernetes"
 
 	batchv1 "k8s.io/api/batch/v1"
-	v1beta1 "k8s.io/api/batch/v1beta1"
+	"k8s.io/api/batch/v1beta1"
 	clientTypes "k8s.io/api/extensions/v1beta1"
 	rbac "k8s.io/api/rbac/v1beta1"
 
@@ -457,6 +458,33 @@ func makeContainers(module *protos.Module, volumeMounts []v1.VolumeMount) []v1.C
 			} else if sm.ReadinessProbe.Handler.Exec != nil {
 				container.ReadinessProbe.Handler.Exec = &v1.ExecAction{
 					Command: sm.ReadinessProbe.Handler.Exec.Command,
+				}
+			}
+		}
+
+		if sm.LivenessProbe != nil {
+			container.LivenessProbe = &v1.Probe{
+				Handler:             v1.Handler{},
+				InitialDelaySeconds: sm.LivenessProbe.InitialDelaySeconds,
+				PeriodSeconds:       sm.LivenessProbe.PeriodSeconds,
+			}
+			if sm.LivenessProbe.Handler.TCPProbe != nil {
+				port, _ := strconv.ParseInt(sm.LivenessProbe.Handler.TCPProbe.Port, 10, 32)
+				container.LivenessProbe.Handler.TCPSocket = &v1.TCPSocketAction{
+					Host: "127.0.0.1",
+					Port: intstr.IntOrString{
+						IntVal: int32(port),
+					},
+				}
+			}
+			if sm.LivenessProbe.Handler.HTTPGet != nil {
+				container.LivenessProbe.Handler.HTTPGet = &v1.HTTPGetAction{
+					Host: "127.0.0.1",
+					Path: sm.LivenessProbe.Handler.HTTPGet.Path,
+					Port: intstr.IntOrString{
+						IntVal: sm.LivenessProbe.Handler.HTTPGet.Port,
+					},
+					Scheme: v1.URIScheme(strings.ToUpper(sm.LivenessProbe.Handler.HTTPGet.Scheme)),
 				}
 			}
 		}

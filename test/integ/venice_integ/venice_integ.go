@@ -993,7 +993,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *check.C) {
 		it.startEventsAndSearch()
 		it.disabledServices = []string{"objstore"}
 	} else {
-		it.disabledServices = []string{"search", "events", "objstore", "audit"}
+		it.disabledServices = []string{"search", "events", "objstore", "audit", "routing"}
 	}
 
 	// start API gateway

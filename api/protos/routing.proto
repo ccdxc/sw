@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package routing;
+
+
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/pensando/sw/api/meta.proto";
+
+import "route.proto";
+
+message NeighborStatus {
+    enum State {
+        Idle            = 0;
+        Connect         = 1;
+        Active          = 2;
+        OpenSent        = 3;
+        OpenConfirmed   = 4;
+        Established     = 5;
+    }
+    string Status = 1 [(gogoproto.jsontag) = "status", (venice.check) = "StrEnum(NeighborStatus.State)"];
+}
+
+message Neighbor {
+    api.TypeMeta T      = 1  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta O    = 2  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,inline"];
+    option (venice.objectPrefix) = {Collection: "neighbors"};
+
+    network.BGPNeighbor Spec    = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec"];
+    NeighborStatus Status       = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status"];
+}

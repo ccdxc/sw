@@ -13,6 +13,7 @@
 | [Objstore](generated/apiref/objstore/index.html) | Objstore API reference |
 | [Orchestration](generated/apiref/orchestration/index.html) | Orchestration API reference |
 | [Rollout](generated/apiref/rollout/index.html) | Configure and manage rollout feature to upgrade/downgrade software for the cluster |
+| [Routing](generated/apiref/routing/index.html) | Routing API reference |
 | [Search](generated/apiref/search/index.html) | Powerful search API to search configuration policies, events etc. |
 | [Security](generated/apiref/security/index.html) | Configure and manage security features like Security Groups, Rules, Certificates etc. |
 | [Staging](generated/apiref/staging/index.html) | APIS to stage configuration and commit in transactions |

@@ -708,12 +708,36 @@ var k8sModules = map[string]protos.Module{
 							Port: 8001,
 						},
 					},
+					LivenessProbe: &protos.ModuleSpec_Submodule_Probe{
+						Handler: &protos.ModuleSpec_Submodule_Handler{
+							TCPProbe: &protos.ModuleSpec_Submodule_TCPSocketAction{
+								Port: globals.PerseusMonitorPort,
+							},
+						},
+						InitialDelaySeconds: 30,
+						PeriodSeconds:       2,
+					},
 				},
 				{
 					Name:    globals.Perseus,
 					Image:   globals.Perseus,
 					EnvVars: map[string]string{},
 					Args:    []string{"-resolver-urls", "$RESOLVER_URLS"},
+					Services: []protos.ModuleSpec_Submodule_Service{
+						{
+							Name: globals.Perseus,
+							Port: runtime.MustUint32(globals.PerseusGRPCPort),
+						},
+					},
+					LivenessProbe: &protos.ModuleSpec_Submodule_Probe{
+						Handler: &protos.ModuleSpec_Submodule_Handler{
+							TCPProbe: &protos.ModuleSpec_Submodule_TCPSocketAction{
+								Port: globals.PerseusMonitorPort,
+							},
+						},
+						InitialDelaySeconds: 30,
+						PeriodSeconds:       2,
+					},
 				},
 			},
 			Volumes: []protos.ModuleSpec_Volume{

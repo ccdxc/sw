@@ -26,6 +26,7 @@ var supportedVeniceModules = map[string]bool{
 	globals.Tpm:       true,
 	globals.APIServer: true,
 	globals.OrchHub:   true,
+	globals.Perseus:   true,
 }
 
 // list of support naples modules for diagnostics

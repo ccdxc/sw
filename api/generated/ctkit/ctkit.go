@@ -196,6 +196,7 @@ type Controller interface {
 	Orchestrator() OrchestratorAPI                       // return Orchestrator API interface
 	Rollout() RolloutAPI                                 // return Rollout API interface
 	RolloutAction() RolloutActionAPI                     // return RolloutAction API interface
+	Neighbor() NeighborAPI                               // return Neighbor API interface
 	SecurityGroup() SecurityGroupAPI                     // return SecurityGroup API interface
 	NetworkSecurityPolicy() NetworkSecurityPolicyAPI     // return NetworkSecurityPolicy API interface
 	App() AppAPI                                         // return App API interface
@@ -553,6 +554,9 @@ func (ct *ctrlerCtx) FindObject(kind string, ometa *api.ObjectMeta) (runtime.Obj
 	case "RolloutAction":
 		obj := rolloutactionAPI{}
 		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "Neighbor":
+		obj := neighborAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
 	case "SecurityGroup":
 		obj := securitygroupAPI{}
 		key = obj.getFullKey(ometa.Tenant, ometa.Name)
@@ -733,6 +737,9 @@ func (ct *ctrlerCtx) IsPending(kind string, ometa *api.ObjectMeta) (bool, error)
 		key = obj.getFullKey(ometa.Tenant, ometa.Name)
 	case "RolloutAction":
 		obj := rolloutactionAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "Neighbor":
+		obj := neighborAPI{}
 		key = obj.getFullKey(ometa.Tenant, ometa.Name)
 	case "SecurityGroup":
 		obj := securitygroupAPI{}

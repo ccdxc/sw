@@ -379,7 +379,7 @@ func TestEventsRESTEndpoints(t *testing.T) {
 
 	// API gateway
 	apiGw, apiGwAddr, err := testutils.StartAPIGateway(":0", false,
-		map[string]string{}, []string{"telemetry_query", "objstore", "tokenauth"}, []string{}, ti.mockResolver, ti.logger)
+		map[string]string{}, []string{"telemetry_query", "objstore", "tokenauth", "routing"}, []string{}, ti.mockResolver, ti.logger)
 	AssertOk(t, err, "failed to start API gateway")
 	defer apiGw.Stop()
 
@@ -864,7 +864,7 @@ func TestEventsAlertEngine(t *testing.T) {
 
 	// API gateway
 	apiGw, apiGwAddr, err := testutils.StartAPIGateway(":0", false,
-		map[string]string{}, []string{"telemetry_query", "objstore", "tokenauth"}, []string{}, ti.mockResolver, ti.logger)
+		map[string]string{}, []string{"telemetry_query", "objstore", "tokenauth", "routing"}, []string{}, ti.mockResolver, ti.logger)
 	AssertOk(t, err, "failed to start API gateway, err: %v", err)
 	defer apiGw.Stop()
 
@@ -1253,7 +1253,7 @@ func TestEventsAlertEngineWithAPIServerShutdown(t *testing.T) {
 
 	// API gateway
 	apiGw, _, err := testutils.StartAPIGateway(":0", false,
-		map[string]string{}, []string{"telemetry_query", "objstore", "tokenauth"}, []string{}, ti.mockResolver, ti.logger)
+		map[string]string{}, []string{"telemetry_query", "objstore", "tokenauth", "routing"}, []string{}, ti.mockResolver, ti.logger)
 	AssertOk(t, err, "failed to start API gateway, err: %v", err)
 	defer apiGw.Stop()
 
@@ -2645,7 +2645,7 @@ func TestGarbageCollectAlerts(t *testing.T) {
 
 	// API gateway
 	apiGw, apiGwAddr, err := testutils.StartAPIGateway(":0", false,
-		map[string]string{}, []string{"telemetry_query", "objstore", "tokenauth"}, []string{},
+		map[string]string{}, []string{"telemetry_query", "objstore", "tokenauth", "routing"}, []string{},
 		ti.mockResolver, ti.logger)
 	AssertOk(t, err, "failed to start API gateway, err: %v", err)
 	defer apiGw.Stop()

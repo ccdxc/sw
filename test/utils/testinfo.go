@@ -176,7 +176,7 @@ func (t *TestInfo) StartAPIGateway() error {
 	var err error
 	t.APIGw, t.APIGwAddr, err = StartAPIGatewayWithAuditor(":0", false,
 		map[string]string{},
-		[]string{"telemetry_query", "objstore", "tokenauth"},
+		[]string{"telemetry_query", "objstore", "tokenauth", "routing"},
 		[]string{}, t.Rslvr, t.Logger, auditmgr.WithAuditors(elasticAuditor, syslogAuditor))
 	if err != nil {
 		return err

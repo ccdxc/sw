@@ -80,6 +80,14 @@ message ModuleSpec {
             string Scheme             = 3;
         }
 
+        // TCPSocketAction describes an action based on TCP Socket requests.
+        message TCPSocketAction {
+            // Host address to probe is always to (localhost/127.0.0.1) for now.
+
+            // Port on the Host to probe.
+            string Port = 1;
+        }
+
         // ExecAction describes a "run in container" action.
         message ExecAction  {
             // Command is the command line to execute inside the container, the working directory for the
@@ -97,6 +105,8 @@ message ModuleSpec {
             ExecAction Exec          = 1;
             // HTTPGet specifies the http request to perform.
             HTTPGetAction HTTPGet    = 2;
+            // TCPSocketProbe specifies the TCP connect probe.
+            TCPSocketAction TCPProbe = 3;
         }
 
         // Probe defines the attributes of a readiness/liveness of this container
@@ -113,6 +123,9 @@ message ModuleSpec {
 
         // EnvVars specify the environment variables for this submodule.
         map<string, string> EnvVars = 7;
+
+        // LivenessProbe specifies the parameters for the periodic probe for container liveness
+        Probe LivenessProbe = 8;
     }
 
     // Submodules contains the list of submodules for this module.

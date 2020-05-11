@@ -32,6 +32,8 @@ import (
 	_ "github.com/pensando/sw/api/generated/orchestration/grpc/server"
 	// blank import to pull in rollout service into api server
 	_ "github.com/pensando/sw/api/generated/rollout/grpc/server"
+	// blank import to pull in routing service into api server
+	_ "github.com/pensando/sw/api/generated/routing/grpc/server"
 	// blank import to pull in search service into api server
 	_ "github.com/pensando/sw/api/generated/search/grpc/server"
 	// blank import to pull in security service into api server

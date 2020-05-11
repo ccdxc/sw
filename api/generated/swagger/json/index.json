@@ -47,6 +47,10 @@
       "description": "Configure and manage rollout feature to upgrade/downgrade software for the cluster",
       "path": "/swagger/rollout"
     },
+    "routing": {
+      "description": "Routing API reference",
+      "path": "/swagger/routing"
+    },
     "search": {
       "description": "Powerful search API to search configuration policies, events etc.",
       "path": "/swagger/search"

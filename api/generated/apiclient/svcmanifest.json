@@ -814,6 +814,30 @@
       "svc_rollout.proto"
     ]
   },
+  "routing": {
+    "Svcs": {
+      "RoutingV1": {
+        "Version": "v1",
+        "Messages": [
+          "Neighbor"
+        ],
+        "Properties": {
+          "Neighbor": {
+            "Scopes": [
+              "cluster"
+            ],
+            "RestMethods": [
+              "list"
+            ],
+            "URI": "/configs/v1/neighbors"
+          }
+        }
+      }
+    },
+    "Files": [
+      "svc_routing.proto"
+    ]
+  },
   "security": {
     "Svcs": {
       "SecurityV1": {

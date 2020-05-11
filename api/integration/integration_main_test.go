@@ -199,6 +199,7 @@ func TestMain(m *testing.M) {
 			"objstore",
 			"tokenauth",
 			"fwlog",
+			"routing",
 		},
 		Auditor:            auditmgr.WithAuditors(auditmgr.NewLogAuditor(context.TODO(), l)),
 		ModuleWatcher:      diagmock.GetModuleWatcher(),

@@ -18,6 +18,7 @@ import (
 	"github.com/pensando/sw/api/generated/network"
 	pdstypes "github.com/pensando/sw/nic/apollo/agent/gen/pds"
 	"github.com/pensando/sw/nic/metaswitch/clientutils"
+	msTypes "github.com/pensando/sw/nic/metaswitch/gen/agent"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/perseus/env"
 	"github.com/pensando/sw/venice/utils/balancer"
@@ -99,6 +100,7 @@ func (m *ServiceHandlers) connectToPegasus() {
 			continue
 		}
 		m.pegasusClient = pdstypes.NewBGPSvcClient(conn)
+		m.pegasusMon = msTypes.NewEpochSvcClient(conn)
 		break
 	}
 }

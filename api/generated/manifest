@@ -27,6 +27,7 @@ objstore.proto objstore true
 orchestration.proto orchestration true
 rollout.proto rollout true
 route.proto network true
+routing.proto routing true
 search.proto search true
 securitygroup.proto security true
 service.proto network true
@@ -46,6 +47,7 @@ svc_network.proto network true
 svc_objstore.proto objstore false
 svc_orchestration.proto orchestration true
 svc_rollout.proto rollout true
+svc_routing.proto routing false
 svc_search.proto search false
 svc_security.proto security true
 svc_staging.proto staging true

@@ -25,6 +25,7 @@
 | License | /configs/cluster/v1/licenses |
 | MirrorSession | /configs/monitoring/v1/MirrorSession |
 | Module | /configs/diagnostics/v1/modules |
+| Neighbor | /configs/v1/neighbors |
 | Network | /configs/network/v1/networks |
 | NetworkInterface | /configs/network/v1/networkinterfaces |
 | NetworkSecurityPolicy | /configs/security/v1/networksecuritypolicies |
