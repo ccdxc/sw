@@ -24,6 +24,7 @@ lif_info:
     phvwr           p.p4i_i2e_skip_stats_update, k.arm_to_p4i_skip_stats_update
     phvwr           p.p4i_to_arm_sw_meta, k.arm_to_p4i_sw_meta
     phvwr           p.vnic_metadata_vrmac, d.lif_info_d.vrmac
+    phvwr           p.p4i_i2e_src_lif, k.arm_to_p4i_lif
     phvwr.e         p.p4i_i2e_nexthop_type, d.lif_info_d.pinned_nexthop_type
     phvwr.f         p.p4i_i2e_nexthop_id, d.lif_info_d.pinned_nexthop_id
 

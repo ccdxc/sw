@@ -537,6 +537,16 @@ apulu_impl::table_init_(void) {
     addr -= ((uint64_t)1 << 31);
     sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_SESSION, addr);
 
+    // program lif stats table base address as table constant
+    // of ingress and egress drop stats table
+    addr = api::g_pds_state.mempartition()->start_addr(
+                                        MEM_REGION_LIF_STATS_NAME);
+    SDK_ASSERT(addr != INVALID_MEM_ADDRESS);
+    // subtract 2G (saves ASM instructions)
+    addr -= ((uint64_t)1 << 31);
+    sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_P4I_DROP_STATS, addr);
+    sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_P4E_DROP_STATS, addr);
+
     // program default priority of the mappings
     sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_MAPPING,
                        PDS_IMPL_DEFAULT_MAPPING_PRIORITY);

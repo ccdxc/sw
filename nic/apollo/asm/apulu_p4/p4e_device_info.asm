@@ -12,6 +12,9 @@ struct phv_                 p;
 .assert(offsetof(p, tcp_option_eol_valid) - offsetof(p, tcp_option_generic_valid) == 4)
 
 p4e_device_info:
+    add             r1, (LIF_STATS_TX_UCAST_BYTES_OFFSET / 64), \
+                        k.p4e_i2e_src_lif, 4
+    phvwr           p.control_metadata_lif_tx_stats_id, r1
     bbeq            k.ethernet_1_dstAddr[40], 0, p4e_device_info_unicast
     phvwr           p.{tcp_option_eol_valid...tcp_option_generic_valid}, 0
 

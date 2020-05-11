@@ -84,6 +84,7 @@ header_type control_metadata_t {
         tcp_option_mss_valid    : 1;
         is_local                : 1;
         is_local_to_local       : 1;
+        lif_tx_stats_id         : 16;
     }
 }
 
@@ -180,7 +181,7 @@ header_type offset_metadata_t {
 
 header_type capri_gso_csum_phv_loc_t {
     fields {
-        gso_checksum            : 16;
+        gso_checksum        : 16;
     }
 }
 

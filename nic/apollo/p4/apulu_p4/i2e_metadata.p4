@@ -17,10 +17,10 @@ header_type apulu_i2e_metadata_t {
         mapping_bypass      : 1;
         update_checksum     : 1;
         copp_policer_id     : 10;
-        pad0                : 3;
         priority            : 5;
+        src_lif             : 11;
         mirror_session      : 8;
-        pad1                : 5;
+        pad0                : 5;
         skip_stats_update   : 1;
         tx_policer_id       : 10;
     }

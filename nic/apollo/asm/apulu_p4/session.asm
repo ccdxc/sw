@@ -22,6 +22,7 @@ session_info:
     // r7 : packet length
     sub             r7, k.capri_p4_intrinsic_frame_size, k.offset_metadata_l2_1
     phvwr           p.capri_p4_intrinsic_packet_len, r7
+    phvwr           p.meter_metadata_meter_len, r7
     phvwr           p.control_metadata_rx_packet, k.p4e_i2e_rx_packet
     bcf             [c1],session_info_error
     phvwr           p.control_metadata_update_checksum, \
@@ -39,7 +40,6 @@ session_info:
     seq             c1, k.p4e_i2e_rx_packet, TRUE
     add.c1          r1, r1, (METER_TABLE_SIZE >> 1)
     phvwr           p.meter_metadata_meter_id, r1
-    phvwr           p.meter_metadata_meter_len, k.capri_p4_intrinsic_packet_len
 
 session_info_common:
     bbeq            k.p4e_i2e_rx_packet, FALSE, session_tx

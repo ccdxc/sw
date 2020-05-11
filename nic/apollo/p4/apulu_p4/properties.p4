@@ -20,6 +20,8 @@ action lif_info(direction, lif_type, vnic_id, bd_id, vpc_id, vrmac,
     modify_field(p4i_i2e.nexthop_id, pinned_nexthop_id);
     modify_field(control_metadata.learn_enabled, learn_enabled);
     modify_field(vnic_metadata.vrmac, vrmac);
+    // copy key (capri_intrinsic.lif or arm_to_p4i.lif) to p4i_i2e.src_lif
+    // this is done is ASM
 }
 
 @pragma stage 0

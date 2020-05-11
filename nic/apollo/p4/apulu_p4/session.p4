@@ -4,8 +4,10 @@
 action session_info(tx_rewrite_flags, tx_xlate_id, tx_xlate_id2,
                     rx_rewrite_flags, rx_xlate_id, rx_xlate_id2,
                     meter_id, timestamp, session_tracking_en, drop) {
-    subtract(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.frame_size,
+    subtract(scratch_metadata.packet_len, capri_p4_intrinsic.frame_size,
              offset_metadata.l2_1);
+    modify_field(capri_p4_intrinsic.packet_len, scratch_metadata.packet_len);
+    modify_field(meter_metadata.meter_len, scratch_metadata.packet_len);
     modify_field(control_metadata.rx_packet, p4e_i2e.rx_packet);
     modify_field(control_metadata.update_checksum, p4e_i2e.update_checksum);
     if (p4e_i2e.copp_policer_id != 0) {
@@ -30,7 +32,7 @@ action session_info(tx_rewrite_flags, tx_xlate_id, tx_xlate_id2,
                          scratch_metadata.session_stats_addr +
                          (p4e_i2e.session_id * 8 * 4));
             modify_field(scratch_metadata.in_bytes,
-                         capri_p4_intrinsic.packet_len);
+                         scratch_metadata.packet_len);
 
             if ((meter_id != 0) and (p4e_i2e.meter_enabled == TRUE)) {
                 modify_field(meter_metadata.meter_enabled, TRUE);
@@ -42,8 +44,6 @@ action session_info(tx_rewrite_flags, tx_xlate_id, tx_xlate_id2,
                     modify_field(meter_metadata.meter_id,
                                  scratch_metadata.meter_id);
                 }
-                modify_field(meter_metadata.meter_len,
-                             capri_p4_intrinsic.packet_len);
             }
         }
     }
