@@ -21,15 +21,18 @@
 #include <ftl_wrapper.h>
 #include "pdsa_hdlr.h"
 
-#define MAX_FLOWS_PER_FRAME                (VLIB_FRAME_SIZE * 2)
-#define PDS_FLOW_SESSION_POOL_COUNT_MAX    VLIB_FRAME_SIZE
-#define DISPLAY_BUF_SIZE                   (1*1024*1024)
-#define PDS_FLOW_TIMER_TICK                0.1
-#define PDS_FLOW_SEC_TO_TIMER_TICK(X)      (X * 10)
-#define PDS_FLOW_STATS_PUBLISH_INTERVAL    (60)
-#define PDS_FLOW_DEFAULT_MONITOR_INTERVAL  (300)
-#define TCP_KEEP_ALIVE_RETRY_COUNT_MAX      3
-#define TCP_KEEP_ALIVE_TIMEOUT              1 // in seconds
+#define MAX_FLOWS_PER_FRAME                     (VLIB_FRAME_SIZE * 2)
+#define PDS_FLOW_SESSION_POOL_COUNT_MAX         VLIB_FRAME_SIZE
+// hold max supported rx queue size in deltion pool, change this value if
+// we support more buffers per RX queue
+#define PDS_FLOW_DEL_SESSION_POOL_COUNT_MAX     32768
+#define DISPLAY_BUF_SIZE                        (1*1024*1024)
+#define PDS_FLOW_TIMER_TICK                     0.1
+#define PDS_FLOW_SEC_TO_TIMER_TICK(X)           (X * 10)
+#define PDS_FLOW_STATS_PUBLISH_INTERVAL         (60)
+#define PDS_FLOW_DEFAULT_MONITOR_INTERVAL       (300)
+#define TCP_KEEP_ALIVE_RETRY_COUNT_MAX          3
+#define TCP_KEEP_ALIVE_TIMEOUT                  1 // in seconds
 
 #define foreach_flow_classify_next                                  \
         _(IP4_FLOW_PROG, "pds-ip4-flow-program" )                   \
@@ -62,6 +65,7 @@
         _(TCP_PKT, "TCP packets")                                   \
         _(TCP_PKT_NO_SES, "TCP packets with invalid session id")    \
         _(SES_NOT_FOUND, "Packets with invalid session id")         \
+        _(DEFUNCT_RFLOW, "Defunct rflow")                           \
 
 #define foreach_flow_prog_next                                      \
         _(FWD_FLOW, "pds-fwd-flow" )                                \
@@ -74,6 +78,7 @@
         _(FLOW_FAILED, "Flow programming failed")                   \
         _(FLOW_DELETE_FAILED, "Flow delete failed")                 \
         _(SESSION_ID_ALLOC_FAILED, "Session ID alloc failed")       \
+        _(SESSION_ID_INVALID, "Invalid Session ID")                 \
 
 #define foreach_fwd_flow_next                                       \
         _(INTF_OUT, "interface-tx" )                                \
@@ -95,7 +100,6 @@
 
 #define foreach_flow_age_setup_next                                 \
         _(FWD_FLOW, "pds-fwd-flow" )                                \
-        _(SEND_PACKET, "pds-vnic-l2-rewrite" )                      \
         _(DROP, "pds-error-drop")                                   \
 
 #define foreach_flow_age_setup_counter                              \
@@ -104,6 +108,7 @@
         _(RST, "RST packet processed" )                             \
         _(ACK, "ACK packet processed")                              \
         _(OTHER, "Other packet processed")                          \
+        _(SESSION_INVALID, "Session Invalid")                       \
 
 typedef enum
 {
@@ -270,8 +275,10 @@ typedef CLIB_PACKED(struct pds_flow_hw_ctx_s {
 }) pds_flow_hw_ctx_t;
 
 typedef struct pds_flow_session_id_thr_local_pool_s {
-    int16_t         pool_count;
-    u32             session_ids[PDS_FLOW_SESSION_POOL_COUNT_MAX];
+    i16     session_count;
+    u32     session_ids[PDS_FLOW_SESSION_POOL_COUNT_MAX];
+    i32     del_session_count;
+    u32     del_session_ids[PDS_FLOW_DEL_SESSION_POOL_COUNT_MAX];
 } pds_flow_session_id_thr_local_pool_t;
 
 typedef struct pds_flow_rewrite_flags_s {
@@ -403,15 +410,19 @@ always_inline void pds_session_id_alloc2(u32 *ses_id0, u32 *ses_id1)
     uint16_t        refill_count;
     pds_flow_hw_ctx_t *ctx;
 
-    if (PREDICT_TRUE(thr_local_pool->pool_count >= 1)) {
-        *ses_id1 = thr_local_pool->session_ids[thr_local_pool->pool_count - 1];
-        *ses_id0 = thr_local_pool->session_ids[thr_local_pool->pool_count];
-        thr_local_pool->pool_count -= 2;
+    if (PREDICT_TRUE(thr_local_pool->session_count >= 1)) {
+        *ses_id1 = thr_local_pool->session_ids[thr_local_pool->session_count - 1];
+        *ses_id0 = thr_local_pool->session_ids[thr_local_pool->session_count];
+        ctx = pool_elt_at_index(fm->session_index_pool, (*ses_id0 - 1));
+        ctx->is_in_use = 1;
+        ctx = pool_elt_at_index(fm->session_index_pool, (*ses_id1 - 1));
+        ctx->is_in_use = 1;
+        thr_local_pool->session_count -= 2;
         return;
     }
     /* refill pool */
     refill_count = PDS_FLOW_SESSION_POOL_COUNT_MAX;
-    if (thr_local_pool->pool_count == 0) {
+    if (thr_local_pool->session_count == 0) {
         refill_count--;;
     }
     pds_flow_prog_lock();
@@ -419,18 +430,22 @@ always_inline void pds_session_id_alloc2(u32 *ses_id0, u32 *ses_id1)
         if (PREDICT_FALSE(fm->max_sessions <= pool_elts(fm->session_index_pool))) {
             break;
         }
-        thr_local_pool->pool_count++;
+        thr_local_pool->session_count++;
         pool_get(fm->session_index_pool, ctx);
         pds_flow_hw_ctx_init(ctx);
-        thr_local_pool->session_ids[thr_local_pool->pool_count] =
+        thr_local_pool->session_ids[thr_local_pool->session_count] =
              ctx - fm->session_index_pool + 1;
         refill_count--;
     }
     pds_flow_prog_unlock();
-    if (PREDICT_TRUE(thr_local_pool->pool_count >= 1)) {
-        *ses_id1 = thr_local_pool->session_ids[thr_local_pool->pool_count - 1];
-        *ses_id0 = thr_local_pool->session_ids[thr_local_pool->pool_count];
-        thr_local_pool->pool_count -= 2;
+    if (PREDICT_TRUE(thr_local_pool->session_count >= 1)) {
+        *ses_id1 = thr_local_pool->session_ids[thr_local_pool->session_count - 1];
+        *ses_id0 = thr_local_pool->session_ids[thr_local_pool->session_count];
+        ctx = pool_elt_at_index(fm->session_index_pool, (*ses_id0 - 1));
+        ctx->is_in_use = 1;
+        ctx = pool_elt_at_index(fm->session_index_pool, (*ses_id1 - 1));
+        ctx->is_in_use = 1;
+        thr_local_pool->session_count -= 2;
         return;
     }
     return;
@@ -445,9 +460,11 @@ always_inline u32 pds_session_id_alloc(void)
     pds_flow_hw_ctx_t *ctx;
     uint32_t        ret = 0;
 
-    if (PREDICT_TRUE(thr_local_pool->pool_count >= 0)) {
-        ret = thr_local_pool->session_ids[thr_local_pool->pool_count];
-        thr_local_pool->pool_count--;
+    if (PREDICT_TRUE(thr_local_pool->session_count >= 0)) {
+        ret = thr_local_pool->session_ids[thr_local_pool->session_count];
+        ctx = pool_elt_at_index(fm->session_index_pool, (ret - 1));
+        ctx->is_in_use = 1;
+        thr_local_pool->session_count--;
         return ret;
     }
     /* refill pool */
@@ -457,17 +474,19 @@ always_inline u32 pds_session_id_alloc(void)
         if (PREDICT_FALSE(fm->max_sessions <= pool_elts(fm->session_index_pool))) {
             break;
         }
-        thr_local_pool->pool_count++;
+        thr_local_pool->session_count++;
         pool_get(fm->session_index_pool, ctx);
         pds_flow_hw_ctx_init(ctx);
-        thr_local_pool->session_ids[thr_local_pool->pool_count] =
+        thr_local_pool->session_ids[thr_local_pool->session_count] =
             ctx - fm->session_index_pool + 1;
         refill_count--;
     }
     pds_flow_prog_unlock();
-    if (PREDICT_TRUE(thr_local_pool->pool_count >= 0)) {
-        ret = thr_local_pool->session_ids[thr_local_pool->pool_count];
-        thr_local_pool->pool_count--;
+    if (PREDICT_TRUE(thr_local_pool->session_count >= 0)) {
+        ret = thr_local_pool->session_ids[thr_local_pool->session_count];
+        ctx = pool_elt_at_index(fm->session_index_pool, (ret - 1));
+        ctx->is_in_use = 1;
+        thr_local_pool->session_count--;
         return ret;
     }
     return 0; //0 means invalid
@@ -476,24 +495,26 @@ always_inline u32 pds_session_id_alloc(void)
 always_inline void pds_session_id_dealloc(u32 ses_id)
 {
     pds_flow_main_t *fm = &pds_flow_main;
-
-    pds_flow_prog_lock();
-    pool_put_index(fm->session_index_pool, (ses_id - 1));
-    pds_flow_prog_unlock();
-    return;
-}
-
-always_inline pds_flow_hw_ctx_t * pds_flow_validate_get_hw_ctx (u32 ses_id)
-{
-    pds_flow_main_t *fm = &pds_flow_main;
+    pds_flow_session_id_thr_local_pool_t *thr_local_pool =
+           &fm->session_id_thr_local_pool[vlib_get_thread_index()];
     pds_flow_hw_ctx_t *ctx;
 
-    if (PREDICT_FALSE(pool_is_free_index(fm->session_index_pool,
-                                         (ses_id - 1)))) {
-        return NULL;
+    // this means we can't buffer sessions anymore. free existing sessions
+    if (PREDICT_FALSE(thr_local_pool->del_session_count >=
+                      PDS_FLOW_DEL_SESSION_POOL_COUNT_MAX)) {
+        pds_flow_prog_lock();
+        for (int i = 0; i < PDS_FLOW_DEL_SESSION_POOL_COUNT_MAX; i++) {
+            pool_put_index(fm->session_index_pool,
+                           (thr_local_pool->del_session_ids[i] - 1));
+        }
+        thr_local_pool->del_session_count = 0;
+        pds_flow_prog_unlock();
     }
     ctx = pool_elt_at_index(fm->session_index_pool, (ses_id - 1));
-    return ctx;
+    ctx->is_in_use = 0;
+    thr_local_pool->del_session_ids[thr_local_pool->del_session_count++] =
+            ses_id;
+    return;
 }
 
 always_inline pds_flow_hw_ctx_t * pds_flow_get_hw_ctx (u32 ses_id)
@@ -501,16 +522,33 @@ always_inline pds_flow_hw_ctx_t * pds_flow_get_hw_ctx (u32 ses_id)
     pds_flow_main_t *fm = &pds_flow_main;
     pds_flow_hw_ctx_t *ctx;
 
+    if (PREDICT_FALSE((ses_id == 0) ||
+        pool_is_free_index(fm->session_index_pool, (ses_id - 1)))) {
+        return false;
+    }
     ctx = pool_elt_at_index(fm->session_index_pool, (ses_id - 1));
+    if (PREDICT_FALSE(ctx->is_in_use == 0)) {
+        return NULL;
+    }
     return ctx;
+}
+
+always_inline bool pds_flow_ses_id_valid (u32 ses_id)
+{
+    if (PREDICT_FALSE(NULL == pds_flow_get_hw_ctx(ses_id))) {
+        return false;
+    }
+    return true;
 }
 
 always_inline pds_flow_hw_ctx_t * pds_flow_get_hw_ctx_lock (u32 ses_id)
 {
-    pds_flow_main_t *fm = &pds_flow_main;
     pds_flow_hw_ctx_t *ctx;
 
-    ctx = pool_elt_at_index(fm->session_index_pool, (ses_id - 1));
+    ctx = pds_flow_get_hw_ctx(ses_id);
+    if (PREDICT_FALSE(NULL == ctx)) {
+        return NULL;
+    }
     while (clib_atomic_test_and_set(&ctx->lock));
     return ctx;
 }
@@ -598,7 +636,8 @@ always_inline void pds_session_id_flush(void)
     fm->session_index_pool = NULL;
     pool_init_fixed(fm->session_index_pool, fm->max_sessions);
     for (u32 i = 0; i < vec_len(fm->session_id_thr_local_pool); i++) {
-        fm->session_id_thr_local_pool[i].pool_count = -1;
+        fm->session_id_thr_local_pool[i].session_count = -1;
+        fm->session_id_thr_local_pool[i].del_session_count = 0;
     }
     pds_flow_prog_unlock();
     return;

@@ -108,6 +108,11 @@ pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
     pds_flow_hw_ctx_t *ctx;
     bool ses_track_en;
 
+    ctx = pds_flow_get_hw_ctx(session_id);
+    if (PREDICT_FALSE(!ctx)) {
+        next[0] = SESSION_PROG_NEXT_DROP;
+        return;
+    }
     //clib_memset(&actiondata, 0, sizeof(actiondata));
     if (pds_is_flow_napt_en(b)) {
         actiondata.tx_xlate_id =
@@ -139,7 +144,6 @@ pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
         actiondata.rx_xlate_id2 =
             vnet_buffer2(b)->pds_nat_data.xlate_idx2 + 1;
     }
-    ctx = pds_flow_get_hw_ctx(session_id);
     rewrite_flags = vec_elt_at_index(fm->rewrite_flags,
                                      ctx->packet_type);
     session_tx_rewrite_flags = rewrite_flags->tx_rewrite;
@@ -182,8 +186,8 @@ pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
         }
         return;
     }
-    next[0] = pds_flow_age_supported() ? SESSION_PROG_NEXT_AGE_FLOW :
-              SESSION_PROG_NEXT_FWD_FLOW;
+    next[0] = (pds_flow_age_supported() && !pds_is_flow_defunct(b)) ?
+              SESSION_PROG_NEXT_AGE_FLOW : SESSION_PROG_NEXT_FWD_FLOW;
     vlib_buffer_advance(b, pds_session_get_advance_offset());
 }
 
@@ -322,14 +326,14 @@ pds_flow_add_tx_hdrs_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1)
 
     ses_id0 = vnet_buffer(b0)->pds_flow_data.ses_id;
     ses0 = pds_flow_get_hw_ctx(ses_id0);
-    if (ses0->ingress_bd) {
+    if (ses0 && ses0->ingress_bd) {
         tx0->flow_lkp_id_override = 1;
         tx0->flow_lkp_id =
             clib_host_to_net_u16(ses0->ingress_bd);
     }
     ses_id1 = vnet_buffer(b1)->pds_flow_data.ses_id;
     ses1 = pds_flow_get_hw_ctx(ses_id1);
-    if (ses1->ingress_bd) {
+    if (ses1 && ses1->ingress_bd) {
         tx1->flow_lkp_id_override = 1;
         tx1->flow_lkp_id =
             clib_host_to_net_u16(ses1->ingress_bd);
@@ -361,7 +365,7 @@ pds_flow_add_tx_hdrs_x1 (vlib_buffer_t *b0)
     tx0->lif_sbit8_ebit10 = lif >> 0x8;
     ses_id = vnet_buffer(b0)->pds_flow_data.ses_id;
     ses = pds_flow_get_hw_ctx(ses_id);
-    if (ses->ingress_bd) {
+    if (ses && ses->ingress_bd) {
         tx0->flow_lkp_id_override = 1;
         tx0->flow_lkp_id =
             clib_host_to_net_u16(ses->ingress_bd);
@@ -824,8 +828,16 @@ pds_flow_classify_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
     vnet_buffer2(p)->pds_nat_data.vpc_id = hdr->vpc_id;
     vnet_buffer2(p)->pds_nat_data.vnic_id = hdr->vnic_id;
 
+    // drop rflow defunct packets
+    // ideally these should be dropped in p4, extra check here
+    if (PREDICT_FALSE(hdr->defunct_flow && hdr->flow_role)) {
+        *next = FLOW_CLASSIFY_NEXT_DROP;
+        counter[FLOW_CLASSIFY_COUNTER_DEFUNCT_RFLOW] += 1;
+        return;
+    }
+
     if (PREDICT_FALSE(pds_is_flow_session_present(p))) {
-        ctx = pds_flow_validate_get_hw_ctx(
+        ctx = pds_flow_get_hw_ctx(
               vnet_buffer(p)->pds_flow_data.ses_id);
         if (PREDICT_FALSE(!ctx || !ctx->is_in_use)) {
             *next = FLOW_CLASSIFY_NEXT_DROP;
@@ -853,7 +865,7 @@ pds_flow_classify_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
     }
 
     // If it's a TCP SYN packet, it should always go to FLOW_PROG node
-    if (PREDICT_TRUE(!hdr->defunct_flow) && hdr->tcp_flags &&
+    if (!hdr->defunct_flow && hdr->tcp_flags &&
         !(hdr->tcp_flags & TCP_FLAG_SYN)) {
         // IF flow ageing is not supported or session is not present, all other TCP
         // packets can be dropped
@@ -918,10 +930,8 @@ pds_flow_classify_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
 
 always_inline void
 pds_flow_handle_l2l (vlib_buffer_t *p0, u8 flow_exists,
-                     u8 *miss_hit, u32 ses_id)
+                     u8 *miss_hit, pds_flow_hw_ctx_t   *ses)
 {
-    pds_flow_hw_ctx_t   *ses = pds_flow_get_hw_ctx(ses_id);
-
     if (flow_exists) {
         *miss_hit = 0;
     } else {

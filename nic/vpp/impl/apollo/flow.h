@@ -295,7 +295,7 @@ pds_flow_classify_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
 
 always_inline void
 pds_flow_handle_l2l (vlib_buffer_t *p0, u8 flow_exists,
-                     u8 *miss_hit, u32 ses_id)
+                     u8 *miss_hit, pds_flow_hw_ctx_t *ses)
 {
     return;
 }

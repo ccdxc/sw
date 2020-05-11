@@ -750,6 +750,10 @@ pds_flow_session_info_show (vlib_main_t *vm, u32 ses_id, u8 detail)
     pds_session_get_info(ses_id, &session_info);
     pds_session_track_get_info(ses_id, &session_track_info);
     session = pds_flow_get_hw_ctx(ses_id);
+    if (!session) {
+        vlib_cli_output(vm, "Session doesn't exists!");
+        return;
+    }
 
     vlib_cli_output(vm, "Session Info\n");
     vlib_cli_output(vm, "------------\n");

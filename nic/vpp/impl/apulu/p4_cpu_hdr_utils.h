@@ -41,6 +41,14 @@
 #define VPP_CPU_FLAGS_FLOW_RESPONDER  BIT(6)
 #define VPP_CPU_FLAGS_NAT_SVC_MAP     BIT(7)
 #define VPP_CPU_FLAGS_RX_VLAN_ENCAP   BIT(8)
+#define VPP_CPU_FLAGS_FLOW_DEFUNCT    BIT(9)
+
+always_inline bool
+pds_is_flow_defunct (vlib_buffer_t *p0)
+{
+    return BIT_ISSET(vnet_buffer(p0)->pds_flow_data.flags,
+                     VPP_CPU_FLAGS_FLOW_DEFUNCT);
+}
 
 always_inline bool
 pds_is_flow_rx_vlan (vlib_buffer_t *p0)
@@ -116,14 +124,21 @@ pds_get_cpu_flags_from_hdr (p4_rx_cpu_hdr_t *hdr)
 {
     u16 flags = 0;
 
-    if (hdr->rx_packet)
+    if (hdr->rx_packet) {
         BIT_SET(flags, VPP_CPU_FLAGS_RX_PKT);
-    if ((!hdr->rx_packet) && hdr->is_local)
+    }
+    if ((!hdr->rx_packet) && hdr->is_local) {
         BIT_SET(flags, VPP_CPU_FLAGS_FLOW_L2L);
-    if (hdr->flow_role)
+    }
+    if (hdr->flow_role) {
         BIT_SET(flags, VPP_CPU_FLAGS_FLOW_RESPONDER);
-    if (0 != hdr->session_id)
+    }
+    if (0 != hdr->session_id) {
         BIT_SET(flags, VPP_CPU_FLAGS_FLOW_SES_EXIST);
+    }
+    if (hdr->defunct_flow) {
+        BIT_SET(flags, VPP_CPU_FLAGS_FLOW_DEFUNCT);
+    }
     return flags;
 }
 
