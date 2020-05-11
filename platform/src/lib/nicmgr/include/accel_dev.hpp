@@ -25,21 +25,23 @@
 #include "elb_top_csr_defines.h"
 #include "elb_wa_csr_define.h"
 #include "elb_ms_csr_define.h"
-#include "nic/hal/pd/elba/elba_cpdc.hpp"
-#include "nic/hal/pd/elba/elba_barco_crypto.hpp"
-#include "nic/hal/pd/elba/elba_barco_rings.hpp"
+#include "elb_soc_c_hdr.h"
+/* TBD-ELBA-REBASE: use capri for DOL bring-up */
+#include "capri_cpdc.hpp"
+#include "nic/sdk/platform/capri/capri_barco_crypto.hpp"
+#include "nic/sdk/platform/capri/capri_barco_rings.hpp"
+#include "nic/sdk/asic/cmn/asic_hbm.hpp"
 
-// Temporarily using CHIPID since VER is not yet exported from model
-#define HW_CHIP_VER_CSR                 (ELB_ADDR_BASE_MS_MS_OFFSET + \
-                                         ELB_MS_CSR_STA_TAP_CHIPID_BYTE_ADDRESS)
-// Temporarily set ASIC type/rev to 0 since VER is not yet exported from model
-#define HW_ASIC_TYPE_GET(ver)           ((ver) & 0)
-#define HW_ASIC_REV_GET(ver)            ((ver) & 0)
-#define CPDC_INT_ERR_LOG_MASK           ELBA_CPDC_INT_ERR_LOG_MASK
-#define CPDC_INT_ECC_LOG_MASK           ELBA_CPDC_INT_ECC_LOG_MASK
-#define CPDC_AXI_ERR_W0_LOG_MASK        ELBA_CPDC_AXI_ERR_W0_LOG_MASK
-#define CPDC_AXI_ERR_W1_LOG_MASK        ELBA_CPDC_AXI_ERR_W1_LOG_MASK
-#define CRYPTO_SYM_ERR_UNRECOV_MASK     ELBA_BARCO_SYM_ERR_UNRECOV_MASK
+#define HW_CHIP_VER_CSR                 (ELB_ADDR_BASE_MS_SOC_OFFSET + \
+                                         ELB_SOC_CSR_STA_VER_BYTE_ADDRESS)
+#define HW_ASIC_TYPE_GET(ver)           ELB_SOC_CSR_STA_VER_CHIP_TYPE_GET(ver)
+#define HW_ASIC_REV_GET(ver)            ELB_SOC_CSR_STA_VER_CHIP_VERSION_GET(ver)
+/* TBD-ELBA-REBASE: use capri for DOL bring-up */
+#define CPDC_INT_ERR_LOG_MASK           CAPRI_CPDC_INT_ERR_LOG_MASK
+#define CPDC_INT_ECC_LOG_MASK           CAPRI_CPDC_INT_ECC_LOG_MASK
+#define CPDC_AXI_ERR_W0_LOG_MASK        CAPRI_CPDC_AXI_ERR_W0_LOG_MASK
+#define CPDC_AXI_ERR_W1_LOG_MASK        CAPRI_CPDC_AXI_ERR_W1_LOG_MASK
+#define CRYPTO_SYM_ERR_UNRECOV_MASK     CAPRI_BARCO_SYM_ERR_UNRECOV_MASK
 #else
 #include "cap_top_csr_defines.h"
 #include "cap_pics_c_hdr.h"

@@ -12,11 +12,6 @@
 #include <string>
 #include <sys/time.h>
 
-#include "cap_top_csr_defines.h"
-#include "cap_pics_c_hdr.h"
-#include "cap_wa_c_hdr.h"
-#include "cap_ms_c_hdr.h"
-
 #include "nic/sdk/platform/misc/include/misc.h"
 #include "nic/sdk/platform/intrutils/include/intrutils.h"
 #include "nic/sdk/platform/fru/fru.hpp"

@@ -9,4 +9,7 @@ MODULE_INCS     := ${MODULE_SRC_DIR}/../include \
 MODULE_SRCS     := $(shell find ${MODULE_SRC_DIR} -type f -name '*.cc' \
                    ! -name 'ftl*' \
                    ! -name '*apollo*')
+ifeq ($(ASIC),elba)
+MODULE_FLAGS     := -DELBA
+endif
 include ${MKDEFS}/post.mk

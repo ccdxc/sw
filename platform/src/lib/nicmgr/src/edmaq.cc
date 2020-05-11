@@ -5,10 +5,6 @@
 #include "edmaq.hpp"
 #include "logger.hpp"
 
-#include "cap_top_csr_defines.h"
-#include "cap_pics_c_hdr.h"
-#include "cap_wa_c_hdr.h"
-
 #include "nic/sdk/asic/pd/pd.hpp"
 #include "nic/sdk/asic/cmn/asic_common.hpp"
 

@@ -11,11 +11,6 @@
 #include <sstream>
 #include <sys/param.h>
 
-#include "cap_ms_c_hdr.h"
-#include "cap_pics_c_hdr.h"
-#include "cap_top_csr_defines.h"
-#include "cap_wa_c_hdr.h"
-
 #include "nic/include/edmaq.h"
 #include "nic/p4/common/defines.h"
 
@@ -515,8 +510,13 @@ Eth::DevcmdRegMemReserve() {
 
 void
 Eth::DevcmdRegInit(void) {
+#ifdef ELBA
+    const uint32_t sta_ver =
+        READ_REG32(ELB_ADDR_BASE_MS_SOC_OFFSET + ELB_SOC_CSR_STA_VER_BYTE_ADDRESS);
+#else
     const uint32_t sta_ver =
         READ_REG32(CAP_ADDR_BASE_MS_MS_OFFSET + CAP_MS_CSR_STA_VER_BYTE_ADDRESS);
+#endif
 
     // Init Device registers
     regs->info.signature = IONIC_DEV_INFO_SIGNATURE;

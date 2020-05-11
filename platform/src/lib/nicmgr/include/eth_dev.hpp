@@ -23,6 +23,13 @@
 #include "eth_lif.hpp"
 #include "pd_client.hpp"
 
+#ifdef ELBA
+#include "elb_top_csr_defines.h"
+#include "elb_soc_c_hdr.h"
+#else
+#include "cap_top_csr_defines.h"
+#include "cap_ms_c_hdr.h"
+#endif
 namespace pt = boost::property_tree;
 
 // Doorbell address

@@ -11,18 +11,6 @@
 #include <sstream>
 #include <sys/param.h>
 
-#include "cap_pics_c_hdr.h"
-#include "cap_top_csr_defines.h"
-#include "cap_wa_c_hdr.h"
-namespace pr
-{
-#include "cap_pr_c_hdr.h"
-}
-namespace psp
-{
-#include "cap_psp_c_hdr.h"
-}
-
 #include "nic/include/edmaq.h"
 #include "nic/p4/common/defines.h"
 #include "nic/sdk/lib/thread/thread.hpp"
@@ -45,13 +33,11 @@ namespace psp
 #include "pd_client.hpp"
 #include "rdma_dev.hpp"
 
-using namespace sdk::platform::capri;
 using namespace sdk::platform::utils;
 
 #define HOST_ADDR(lif, addr) ((1ULL << 63) | (lif << 52) | (addr))
 
 sdk::lib::indexer *EthLif::fltr_allocator = sdk::lib::indexer::factory(4096);
-
 
 const char *
 EthLif::lif_state_to_str(enum eth_lif_state state)
