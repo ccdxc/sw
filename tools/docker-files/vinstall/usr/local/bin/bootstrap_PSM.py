@@ -294,7 +294,7 @@ DEFAULT_LOG_FILE_PATH = "/var/log/pensando/pen-bootstrap-psm.log"
 ERROR_STATUS = 1
 # Parse tha command line argument
 parser = argparse.ArgumentParser()
-parser.add_argument("PSM_IP", nargs="+", help="List of PSM IPs")
+parser.add_argument("PSM_IP", nargs="+", help="List of space-separated PSM IPs (eg: 1.1.1.1 1.1.1.2 1.1.1.3")
 parser.add_argument("-clustername", help="PSM cluster name (Default=cluster)", default="cluster", type=str)
 parser.add_argument("-password", help="PSM gui password (Default=Pensando0$)", default="Pensando0$", type=str)
 parser.add_argument("-domain", help="Domain name for admin user", default="pensando.io", type=str)
