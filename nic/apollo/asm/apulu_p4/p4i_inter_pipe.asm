@@ -9,9 +9,13 @@ struct phv_                 p;
 %%
 
 p4i_inter_pipe:
-    seq             c1, k.control_metadata_flow_done, FALSE
-    seq.!c1         c1, k.control_metadata_local_mapping_done, FALSE
-    bcf             [c1], ingress_recirc
+    seq             c1, k.control_metadata_local_mapping_done, FALSE
+    seq             c2, k.control_metadata_flow_done, FALSE
+    seq             c3, k.ingress_recirc_defunct_flow, FALSE
+    seq             c4, k.control_metadata_is_local_to_local, TRUE
+    seq.!c4         c4, k.p4i_i2e_flow_role, TCP_FLOW_INITIATOR
+    andcf           c2, [c3|c4]
+    bcf             [c1|c2], ingress_recirc
     seq             c1, k.control_metadata_redirect_to_arm, TRUE
     bcf             [c1], ingress_to_rxdma
     seq             c1, k.control_metadata_tunneled_packet, TRUE

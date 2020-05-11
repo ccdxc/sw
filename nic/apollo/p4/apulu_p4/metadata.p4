@@ -83,6 +83,7 @@ header_type control_metadata_t {
         tcp_option_ws_valid     : 1;
         tcp_option_mss_valid    : 1;
         is_local                : 1;
+        is_local_to_local       : 1;
     }
 }
 
@@ -149,7 +150,7 @@ header_type scratch_metadata_t {
         key_type            : 2;
         binding_id          : 16;
         meter_id            : 10;
-        priority            : 6;
+        priority            : 5;
 
         // policer
         policer_valid       : 1;

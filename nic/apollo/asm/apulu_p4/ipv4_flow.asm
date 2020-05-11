@@ -54,6 +54,8 @@ label_flow_hit:
     phvwr.!c1       p.p4i_i2e_priority, d.ipv4_flow_hash_d.priority
     phvwr.!c1       p.p4i_i2e_nexthop_id, d.ipv4_flow_hash_d.nexthop_id
 label_flow_hit_nexthop_done:
+    phvwr           p.control_metadata_is_local_to_local, \
+                        d.ipv4_flow_hash_d.is_local_to_local
     phvwr           p.p4i_i2e_session_id, d.ipv4_flow_hash_d.session_index
     seq             c2, k.arm_to_p4i_valid, FALSE
     smneb.c2        c2, k.tcp_flags, (TCP_FLAG_FIN|TCP_FLAG_RST), 0
