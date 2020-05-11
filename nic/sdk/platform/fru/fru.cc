@@ -82,6 +82,14 @@ static void gettime(const string key, uint8_t *board_date)
     output.put(key, to_string(mantime));
 }
 
+// trim from end (in place)
+static inline void rtrim(string &s)
+{
+    s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) {
+        return !std::isspace(ch);
+    }).base(), s.end());
+}
+
 static uint32_t store_field(const string key, uint8_t *fru_data,
                             uint32_t remaining_len)
 {
@@ -103,6 +111,10 @@ static uint32_t store_field(const string key, uint8_t *fru_data,
     if (FIELD_ENCODING(fru_data[0]) == ASCII_FIELD_ENCODING) {
         string str((char *)&fru_data[1], len);
         str.erase(std::find(str.begin(), str.end(), '\0'), str.end());
+        if (key == BOARD_PARTNUM_KEY ||
+            key == BOARD_PRODUCTNAME_KEY) {
+            rtrim(str);
+        }
         output.put(key, str);
     } else {
         output.put(key, "");
