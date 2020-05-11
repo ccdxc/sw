@@ -12,6 +12,7 @@
 #include "nic/hal/src/utils/if_utils.hpp"
 #include "nic/hal/plugins/cfg/nw/endpoint.hpp"
 #include "nic/hal/plugins/sfw/alg_utils/alg_db.hpp"
+#include "nic/include/fte.hpp"
 
 namespace hal {
 
@@ -489,6 +490,9 @@ static hal_ret_t
 validate_nwsec_create (SecurityProfileSpec& spec, SecurityProfileResponse *rsp)
 {
     hal_ret_t       ret = HAL_RET_OK;
+    // All FTE instances have same max session limit,
+    // so get from one FTE instance.
+    uint64_t max_session_limit = fte::get_fte_max_sessions(0);
 
     // key-handle field must be set
     if (!spec.has_key_or_handle()) {
@@ -502,6 +506,17 @@ validate_nwsec_create (SecurityProfileSpec& spec, SecurityProfileResponse *rsp)
             SecurityProfileKeyHandle::kProfileId) {
         HAL_TRACE_ERR("nwsec id not set in request");
         ret = HAL_RET_NWSEC_ID_INVALID;
+        goto end;
+    }
+
+    if ((spec.tcp_half_open_session_limit() > max_session_limit) ||
+        (spec.udp_active_session_limit() > max_session_limit) ||
+        (spec.icmp_active_session_limit() > max_session_limit) ||
+        (spec.other_active_session_limit() > max_session_limit)) {
+        HAL_TRACE_ERR("Configured protocol active session limit is "
+                      "higher than system max session limit: {}",
+                      max_session_limit);
+        ret =  HAL_RET_INVALID_ARG;
         goto end;
     }
 
@@ -883,13 +898,29 @@ hal_ret_t
 validate_nwsec_update (SecurityProfileSpec & spec, SecurityProfileResponse *rsp)
 {
     hal_ret_t   ret = HAL_RET_OK;
+    // All FTE instances have same max session limit,
+    // so get from one FTE instance.
+    uint64_t max_session_limit = fte::get_fte_max_sessions(0);
 
     // key-handle field must be set
     if (!spec.has_key_or_handle()) {
         HAL_TRACE_ERR("spec has no key or handle");
         ret =  HAL_RET_INVALID_ARG;
+        goto end;
     }
 
+    if ((spec.tcp_half_open_session_limit() > max_session_limit) ||
+        (spec.udp_active_session_limit() > max_session_limit) ||
+        (spec.icmp_active_session_limit() > max_session_limit) ||
+        (spec.other_active_session_limit() > max_session_limit)) {
+        HAL_TRACE_ERR("Configured protocol active session limit is "
+                      "higher than system max session limit: {}",
+                      max_session_limit);
+        ret =  HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+end:
     return ret;
 }
 

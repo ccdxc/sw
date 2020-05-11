@@ -98,6 +98,16 @@
    "Desc": "DSC is healthy"
   },
   {
+   "Name": "DSC_MAX_SESSION_LIMIT_APPROACH",
+   "Severity": "warn",
+   "Desc": "DSC Max Session Limit approaching"
+  },
+  {
+   "Name": "DSC_MAX_SESSION_LIMIT_REACHED",
+   "Severity": "critical",
+   "Desc": "DSC Max Session Limit reached"
+  },
+  {
    "Name": "DSC_REJECTED",
    "Severity": "warn",
    "Desc": "DSC admission request was rejected"

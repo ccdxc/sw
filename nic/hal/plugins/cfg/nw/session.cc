@@ -2438,8 +2438,71 @@ update_session_thresh_reset_status(session_t *session,
     }
 }
 
+
+// check for system max session limits/threshold reach state and raise event
+inline void
+check_and_generate_sys_max_sess_limit_event (session_t *session)
+{
+    bool                         send_flag = false;
+    bool                         low_threshold_reset = 0;
+    bool                         high_threshold_reset = 0;
+    uint32_t                     tot_active_session = 0;
+    eventtypes::EventTypes       sys_max_sess_limit_event;
+    uint64_t                     max_session_limit = 0;
+
+    max_session_limit = fte::get_fte_max_sessions(session->fte_id);
+
+    if (!max_session_limit) {
+        // DSC max session limit not configured, return
+        return;
+    }
+
+    tot_active_session =
+        HAL_SESSION_STATS_PTR(session->fte_id)->total_active_sessions;
+    low_threshold_reset =
+        g_session_limit_stats_trckr->sys_max_sess_limit_low_thresh_reset;
+    high_threshold_reset =
+        g_session_limit_stats_trckr->sys_max_sess_limit_high_thresh_reset;
+
+    if (tot_active_session <
+        ((max_session_limit/100)*SESS_LIMIT_LOWER_THRESHOLD)) {
+        // count fell below low threshold
+        g_session_limit_stats_trckr->sys_max_sess_limit_low_thresh_reset = 1;
+        return;
+    }
+    if (!high_threshold_reset && (tot_active_session <
+        ((max_session_limit/100)*SESS_LIMIT_UPPER_THRESHOLD))) {
+        // count fell below high threshold
+        high_threshold_reset = 1;
+    }
+
+    if (high_threshold_reset && (tot_active_session >= max_session_limit)) {
+        // max limit reached, raise limit reached event
+        high_threshold_reset = 0;
+        sys_max_sess_limit_event = eventtypes::DSC_MAX_SESSION_LIMIT_REACHED;
+        send_flag = true;
+    } else if (low_threshold_reset &&
+               (tot_active_session >=
+                ((max_session_limit/100)*SESS_LIMIT_UPPER_THRESHOLD))) {
+        // approach threshold reached, raise limit approach event
+        low_threshold_reset = 0;
+        sys_max_sess_limit_event = eventtypes::DSC_MAX_SESSION_LIMIT_APPROACH;
+        send_flag = true;
+    }
+
+    g_session_limit_stats_trckr->sys_max_sess_limit_low_thresh_reset =
+        low_threshold_reset;
+    g_session_limit_stats_trckr->sys_max_sess_limit_high_thresh_reset =
+        high_threshold_reset;
+    if (send_flag) {
+        // Raise delphi event of type sys_max_sess_limit_event.
+        hal_session_event_notify(sys_max_sess_limit_event, max_session_limit);
+    }
+}
+
+
 // check for flood protection limits/threshold reach state and raise event
-void
+inline void
 check_and_generate_session_limit_event (session_t *session)
 {
     bool                         send_flag = false;
@@ -2538,7 +2601,7 @@ check_and_generate_session_limit_event (session_t *session)
 
     if (send_flag) {
         // Raise delphi event of type session_limit_event.
-        hal_session_event_notify(session_limit_event);
+        hal_session_event_notify(session_limit_event, session_limit);
     }
 }
 
@@ -2585,6 +2648,8 @@ update_global_session_stats (session_t *session, bool decr=false)
         // Check and raise session limit approach/reached event
         check_and_generate_session_limit_event(session);
     }
+
+    check_and_generate_sys_max_sess_limit_event(session);
 }
 
 hal_ret_t

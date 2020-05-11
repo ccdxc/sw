@@ -566,6 +566,8 @@ typedef struct session_limit_stats_tracker_ {
     uint8_t     other_sess_limit_high_thresh_reset:1;          // Other session count fell below high threshold
     uint8_t     tcp_half_open_sess_limit_low_thresh_reset:1;   // TCP half-open session count fell below low threshold
     uint8_t     tcp_half_open_sess_limit_high_thresh_reset:1;  // TCP half-open session count fell below high threshold
+    uint8_t     sys_max_sess_limit_low_thresh_reset:1;         // System max session count fell below low threshold
+    uint8_t     sys_max_sess_limit_high_thresh_reset:1;        // System max session count fell below high threshold
 } __PACK__ session_limit_stats_tracker_t;
 
 typedef struct session_get_ {

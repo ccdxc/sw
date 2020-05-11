@@ -510,6 +510,20 @@ func init() {
 		Desc:       "OTHER Session Limit reached",
 		SuppressMM: false}
 
+	eventTypes[DSC_MAX_SESSION_LIMIT_APPROACH] = &EventTypeAttributes{
+		EType:      DSC_MAX_SESSION_LIMIT_APPROACH.String(),
+		Severity:   "warn",
+		Category:   "cluster",
+		Desc:       "DSC Max Session Limit approaching",
+		SuppressMM: false}
+
+	eventTypes[DSC_MAX_SESSION_LIMIT_REACHED] = &EventTypeAttributes{
+		EType:      DSC_MAX_SESSION_LIMIT_REACHED.String(),
+		Severity:   "critical",
+		Category:   "cluster",
+		Desc:       "DSC Max Session Limit reached",
+		SuppressMM: false}
+
 	eventTypes[ORCH_CONNECTION_ERROR] = &EventTypeAttributes{
 		EType:      ORCH_CONNECTION_ERROR.String(),
 		Severity:   "critical",

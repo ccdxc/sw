@@ -279,10 +279,10 @@ func init() {
 	secProfDebugCmd.Flags().Uint32Var(&tcpHalfcloseTimeout, "tcp-halfclose-timeout", 120, "TCP Half close timeout when FIN is received on one direction in range 0-172800 (0 means no timeout)")
 	secProfDebugCmd.Flags().StringVar(&ipNormalization, "ip-normalization", "off", "Turn IP Normalization on/off")
 	secProfDebugCmd.Flags().StringVar(&tcpNormalization, "tcp-normalization", "off", "Turn TCP Normalization on/off")
-	secProfDebugCmd.Flags().Uint32Var(&tcpHalfOpenSessionLimit, "tcp-half-open-session-limit", 0, "TCP half open session limit in range 0-128000 (0 means no limit)")
-	secProfDebugCmd.Flags().Uint32Var(&udpActiveSessionLimit, "udp-active-session-limit", 0, "UDP active session limit in range 0-128000 (0 means no limit)")
-	secProfDebugCmd.Flags().Uint32Var(&icmpActiveSessionLimit, "icmp-active-session-limit", 0, "ICMP active session limit in range 0-128000 (0 means no limit)")
-	secProfDebugCmd.Flags().Uint32Var(&otherActiveSessionLimit, "other-active-session-limit", 0, "Other active session limit in range 0-128000 (0 means no limit)")
+	secProfDebugCmd.Flags().Uint32Var(&tcpHalfOpenSessionLimit, "tcp-half-open-session-limit", 0, "TCP half open session limit (0 means no limit)")
+	secProfDebugCmd.Flags().Uint32Var(&udpActiveSessionLimit, "udp-active-session-limit", 0, "UDP active session limit (0 means no limit)")
+	secProfDebugCmd.Flags().Uint32Var(&icmpActiveSessionLimit, "icmp-active-session-limit", 0, "ICMP active session limit (0 means no limit)")
+	secProfDebugCmd.Flags().Uint32Var(&otherActiveSessionLimit, "other-active-session-limit", 0, "Other active session limit (0 means no limit)")
 	secProfDebugCmd.MarkFlagRequired("id")
 
 	tcpProxyDebugCmd.Flags().Uint32Var(&tcpProxyMss, "mss", 9216, "TCP Maximum Segment Size in range 68-10000")
@@ -1219,31 +1219,15 @@ func fwSecProfDebugCmdHandler(cmd *cobra.Command, args []string) {
 			secProf.TcpHalfClosedTimeout = tcpHalfcloseTimeout
 		}
 		if cmd.Flags().Changed("tcp-half-open-session-limit") {
-			if isSessLimitValid("TCP-HALF-OPEN-SESS-LIMIT", tcpHalfOpenSessionLimit) != true {
-				fmt.Printf("Invalid argument\n")
-				return
-			}
 			secProf.TcpHalfOpenSessionLimit = tcpHalfOpenSessionLimit
 		}
 		if cmd.Flags().Changed("udp-active-session-limit") {
-			if isSessLimitValid("UDP-ACTIVE-SESS-LIMIT", udpActiveSessionLimit) != true {
-				fmt.Printf("Invalid argument\n")
-				return
-			}
 			secProf.UdpActiveSessionLimit = udpActiveSessionLimit
 		}
 		if cmd.Flags().Changed("icmp-active-session-limit") {
-			if isSessLimitValid("ICMP-ACTIVE-SESS-LIMIT", icmpActiveSessionLimit) != true {
-				fmt.Printf("Invalid argument\n")
-				return
-			}
 			secProf.IcmpActiveSessionLimit = icmpActiveSessionLimit
 		}
 		if cmd.Flags().Changed("other-active-session-limit") {
-			if isSessLimitValid("OTHER-ACTIVE-SESS-LIMIT", otherActiveSessionLimit) != true {
-				fmt.Printf("Invalid argument\n")
-				return
-			}
 			secProf.OtherActiveSessionLimit = otherActiveSessionLimit
 		}
 
@@ -1353,18 +1337,6 @@ func isTimeoutValid(str string, val uint32) bool {
 		}
 	case "ICMP-IDLE":
 		if val > 172800 {
-			return false
-		}
-	}
-
-	return true
-}
-
-func isSessLimitValid(str string, val uint32) bool {
-	switch str {
-	case "TCP-HALF-OPEN-SESS-LIMIT", "UDP-ACTIVE-SESS-LIMIT",
-		"ICMP-ACTIVE-SESS-LIMIT", "OTHER-ACTIVE-SESS-LIMIT":
-		if val > 128000 {
 			return false
 		}
 	}

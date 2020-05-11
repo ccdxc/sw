@@ -29,6 +29,8 @@ export const categoryToEventType: { [cat: string]: string[] } = {
     'DSC_DEADMITTED',
     'DSC_DECOMMISSIONED',
     'DSC_HEALTHY',
+    'DSC_MAX_SESSION_LIMIT_APPROACH',
+    'DSC_MAX_SESSION_LIMIT_REACHED',
     'DSC_REJECTED',
     'DSC_UNHEALTHY',
     'DSC_UNREACHABLE',
@@ -201,6 +203,16 @@ export const eventTypes: { [name: string]: EventType } = {
       "Name": "DSC_HEALTHY",
       "Severity": EventsEvent_severity.info,
       "Desc": "DSC is healthy",
+  },
+  'DSC_MAX_SESSION_LIMIT_APPROACH' : {
+      "Name": "DSC_MAX_SESSION_LIMIT_APPROACH",
+      "Severity": EventsEvent_severity.warn,
+      "Desc": "DSC Max Session Limit approaching",
+  },
+  'DSC_MAX_SESSION_LIMIT_REACHED' : {
+      "Name": "DSC_MAX_SESSION_LIMIT_REACHED",
+      "Severity": EventsEvent_severity.critical,
+      "Desc": "DSC Max Session Limit reached",
   },
   'DSC_REJECTED' : {
       "Name": "DSC_REJECTED",

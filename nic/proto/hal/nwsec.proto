@@ -239,10 +239,10 @@ message SecurityProfileSpec {
   bool                         multicast_src_drop                 = 97 [(gogoproto.moretags) = "venice:default=true"];
 
   // Flood protection knobs
-  uint32                       tcp_half_open_session_limit        = 98 [(gogoproto.moretags) = "range:0-128000, venice:default=0"];
-  uint32                       udp_active_session_limit           = 99 [(gogoproto.moretags) = "range:0-128000, venice:default=0"];
-  uint32                       icmp_active_session_limit          = 100 [(gogoproto.moretags) = "range:0-128000, venice:default=0"];
-  uint32                       other_active_session_limit         = 101 [(gogoproto.moretags) = "range:0-128000, venice:default=0"];
+  uint32                       tcp_half_open_session_limit        = 98 [(gogoproto.moretags) = "venice:default=0"];
+  uint32                       udp_active_session_limit           = 99 [(gogoproto.moretags) = "venice:default=0"];
+  uint32                       icmp_active_session_limit          = 100 [(gogoproto.moretags) = "venice:default=0"];
+  uint32                       other_active_session_limit         = 101 [(gogoproto.moretags) = "venice:default=0"];
 
   // Firewall knobs
   bool                         policy_enforce_en                  = 102 [(gogoproto.moretags) = "venice:default=true"];;

@@ -65,6 +65,7 @@ public:
     void update_tx_stats(uint16_t pktcount);
     void set_bypass_fte(bool bypass_fte) { bypass_fte_ = bypass_fte; }
     void set_fte_max_sessions(uint64_t max_sessions) { max_sessions_ = max_sessions; }
+    uint64_t get_fte_max_sessions(void) const { return max_sessions_; }
     void incr_freed_tx_stats(void);
     void compute_cps();
     uint16_t softq_stats_get();
@@ -1192,6 +1193,18 @@ set_fte_max_sessions (uint8_t fte_id, uint64_t max_sessions)
 
 done:
     return;
+}
+
+uint64_t
+get_fte_max_sessions (uint8_t fte_id)
+{
+    uint64_t max_sessions = 0;
+
+    if (!fte_disabled_ && (g_inst_list[fte_id] != NULL)) {
+        max_sessions = g_inst_list[fte_id]->get_fte_max_sessions();
+    }
+
+    return max_sessions;
 }
 
 void

@@ -1,6 +1,7 @@
 //-----------------------------------------------------------------------------
 // {C} Copyright 2020 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
+#include <string>
 #include "nic/include/base.hpp"
 #include "nic/hal/hal_trace.hpp"
 #include "nic/include/hal.hpp"
@@ -35,33 +36,39 @@ hal_events_recorder_get(void)
     return g_hal_evt_recorder;
 }
 
-void hal_session_event_notify(eventtypes::EventTypes event_id)
+void hal_session_event_notify(eventtypes::EventTypes event_id, uint64_t session_limit)
 {
-    const char *descr = NULL;
+    std::string descr;
     switch (event_id) {
     case (eventtypes::TCP_HALF_OPEN_SESSION_LIMIT_APPROACH):
-        descr = "TCP half-open session limit approaching";
+        descr = "TCP half-open session limit approaching: " + std::to_string(session_limit);
         break;
     case (eventtypes::TCP_HALF_OPEN_SESSION_LIMIT_REACHED):
-        descr = "TCP half-open session limit reached";
+        descr = "TCP half-open session limit reached: " + std::to_string(session_limit);
         break;
     case (eventtypes::UDP_ACTIVE_SESSION_LIMIT_APPROACH):
-        descr = "UDP active session limit approaching";
+        descr = "UDP active session limit approaching: " + std::to_string(session_limit);
         break;
     case (eventtypes::UDP_ACTIVE_SESSION_LIMIT_REACHED):
-        descr = "UDP active session limit reached";
+        descr = "UDP active session limit reached: " + std::to_string(session_limit);
         break;
     case (eventtypes::ICMP_ACTIVE_SESSION_LIMIT_APPROACH):
-        descr = "ICMP active session limit approaching";
+        descr = "ICMP active session limit approaching: " + std::to_string(session_limit);
         break;
     case (eventtypes::ICMP_ACTIVE_SESSION_LIMIT_REACHED):
-        descr = "ICMP active session limit reached";
+        descr = "ICMP active session limit reached: " + std::to_string(session_limit);
         break;
     case (eventtypes::OTHER_ACTIVE_SESSION_LIMIT_APPROACH):
-        descr = "UDP active session limit approaching";
+        descr = "UDP active session limit approaching: " + std::to_string(session_limit);
         break;
     case (eventtypes::OTHER_ACTIVE_SESSION_LIMIT_REACHED):
-        descr = "Other active session limit reached";
+        descr = "Other active session limit reached: " + std::to_string(session_limit);
+        break;
+    case (eventtypes::DSC_MAX_SESSION_LIMIT_APPROACH):
+        descr = "DSC Max session limit approaching: " + std::to_string(session_limit);
+        break;
+    case (eventtypes::DSC_MAX_SESSION_LIMIT_REACHED):
+        descr = "DSC Max session limit reached: " + std::to_string(session_limit);
         break;
     default:
         HAL_TRACE_ERR("Unsupported HAL event");
@@ -69,7 +76,7 @@ void hal_session_event_notify(eventtypes::EventTypes event_id)
     }
 
     if (hal_events_recorder_get()) {
-        hal_events_recorder_get()->event(event_id, descr);
+        hal_events_recorder_get()->event(event_id, descr.c_str());
         HAL_TRACE_VERBOSE("Session limit event raised: {}", descr);
     }
     return;

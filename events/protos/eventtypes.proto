@@ -348,6 +348,15 @@ enum EventTypes {
     OTHER_ACTIVE_SESSION_LIMIT_REACHED        = 908 [(category) = Cluster,
                                                      (severity) = CRITICAL,
                                                      (desc)     = "OTHER Session Limit reached"];
+
+    DSC_MAX_SESSION_LIMIT_APPROACH            = 909 [(category) = Cluster,
+                                                     (severity) = WARN,
+                                                     (desc)     = "DSC Max Session Limit approaching"];
+
+    DSC_MAX_SESSION_LIMIT_REACHED             = 910 [(category) = Cluster,
+                                                     (severity) = CRITICAL,
+                                                     (desc)     = "DSC Max Session Limit reached"];
+
     // ------------------------- Orchestration events ------------------------- //
     ORCH_CONNECTION_ERROR                  = 1001 [(category) = Orchestration,
                                            (severity) = CRITICAL,
