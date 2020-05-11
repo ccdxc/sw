@@ -28,11 +28,11 @@ resp_tx_rqcb0_write_back_process:
     CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_tx_stats_process, r0)
 
     bbeq       CAPRI_KEY_FIELD(IN_TO_S_P, flush_rq), 1, error_disable_qp_and_drop
+    CAPRI_SET_TABLE_1_VALID(0) // BD slot
 
     // are we in a state to process received packets ?
-    slt             c1, d.state, QP_STATE_RTR       //BD Slot
+    slt             c1, d.state, QP_STATE_RTR
     bcf             [c1], drop_phv
-    CAPRI_SET_TABLE_1_VALID(0) // BD slot
 
 add_headers_common:
     // prior to adding any DMA commands to ship headers, check if it is UD service.
