@@ -391,6 +391,10 @@ sfw_exec(ctx_t& ctx)
 
         flow_update_t flowupd = {type: FLOWUPD_SFW_INFO};
         flowupd.sfw_info.skip_sfw_reval = 0;
+        if ((sfw_info->alg_proto != nwsec::APP_SVC_NONE) &&
+            (sfw_info->alg_proto != nwsec::APP_SVC_ANY)) {
+            flowupd.sfw_info.sfw_is_alg = 1;
+        }
         flowupd.sfw_info.sfw_rule_id = match_rslt.rule_id;
         flowupd.sfw_info.sfw_action = (uint8_t)match_rslt.sfw_action;
         ret = ctx.update_flow(flowupd);

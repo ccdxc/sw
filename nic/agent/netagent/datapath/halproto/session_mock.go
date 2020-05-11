@@ -187,6 +187,64 @@ func (mr *MockisFlowKey_FlowKeyMockRecorder) Size() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Size", reflect.TypeOf((*MockisFlowKey_FlowKey)(nil).Size))
 }
 
+// MockisRPCALGInfo_AlgInfo is a mock of isRPCALGInfo_AlgInfo interface
+type MockisRPCALGInfo_AlgInfo struct {
+	ctrl     *gomock.Controller
+	recorder *MockisRPCALGInfo_AlgInfoMockRecorder
+}
+
+// MockisRPCALGInfo_AlgInfoMockRecorder is the mock recorder for MockisRPCALGInfo_AlgInfo
+type MockisRPCALGInfo_AlgInfoMockRecorder struct {
+	mock *MockisRPCALGInfo_AlgInfo
+}
+
+// NewMockisRPCALGInfo_AlgInfo creates a new mock instance
+func NewMockisRPCALGInfo_AlgInfo(ctrl *gomock.Controller) *MockisRPCALGInfo_AlgInfo {
+	mock := &MockisRPCALGInfo_AlgInfo{ctrl: ctrl}
+	mock.recorder = &MockisRPCALGInfo_AlgInfoMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (m *MockisRPCALGInfo_AlgInfo) EXPECT() *MockisRPCALGInfo_AlgInfoMockRecorder {
+	return m.recorder
+}
+
+// isRPCALGInfo_AlgInfo mocks base method
+func (m *MockisRPCALGInfo_AlgInfo) isRPCALGInfo_AlgInfo() {
+	m.ctrl.Call(m, "isRPCALGInfo_AlgInfo")
+}
+
+// isRPCALGInfo_AlgInfo indicates an expected call of isRPCALGInfo_AlgInfo
+func (mr *MockisRPCALGInfo_AlgInfoMockRecorder) isRPCALGInfo_AlgInfo() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "isRPCALGInfo_AlgInfo", reflect.TypeOf((*MockisRPCALGInfo_AlgInfo)(nil).isRPCALGInfo_AlgInfo))
+}
+
+// MarshalTo mocks base method
+func (m *MockisRPCALGInfo_AlgInfo) MarshalTo(arg0 []byte) (int, error) {
+	ret := m.ctrl.Call(m, "MarshalTo", arg0)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MarshalTo indicates an expected call of MarshalTo
+func (mr *MockisRPCALGInfo_AlgInfoMockRecorder) MarshalTo(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MarshalTo", reflect.TypeOf((*MockisRPCALGInfo_AlgInfo)(nil).MarshalTo), arg0)
+}
+
+// Size mocks base method
+func (m *MockisRPCALGInfo_AlgInfo) Size() int {
+	ret := m.ctrl.Call(m, "Size")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// Size indicates an expected call of Size
+func (mr *MockisRPCALGInfo_AlgInfoMockRecorder) Size() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Size", reflect.TypeOf((*MockisRPCALGInfo_AlgInfo)(nil).Size))
+}
+
 // MockisSessionStatus_AlgInfo is a mock of isSessionStatus_AlgInfo interface
 type MockisSessionStatus_AlgInfo struct {
 	ctrl     *gomock.Controller

@@ -595,6 +595,7 @@ ctx_t::update_flow_table()
         }
         if (iflow->valid_sfw_info()) {
             session_cfg.skip_sfw_reval = (iflow->sfw_info().skip_sfw_reval&0x1);
+            session_cfg.sfw_is_alg = (iflow->sfw_info().sfw_is_alg&0x1);
             session_cfg.sfw_rule_id = iflow->sfw_info().sfw_rule_id;
             session_cfg.sfw_action = (iflow->sfw_info().sfw_action&0x7);
         }
@@ -615,7 +616,7 @@ ctx_t::update_flow_table()
                         "is_proxy_en={} is_proxy_mcast={} export_en={} export_id1={} "
                         "export_id2={} export_id3={} export_id4={} conn_track_en={} "
                         "session_idle_timeout={} smac={} dmac={} l2seg_id={}, skip_sfw_reval={} "
-                        "sfw_rule_id={}, sfw_action={}, sync={}",
+                        "sfw_rule_id={}, sfw_action={}, sync={} sfw_is_alg={}",
                         stage, iflow_cfg.key, iflow_attrs.lkp_inst, key_.lkpvrf,
                         iflow_cfg.action, iflow_attrs.mac_sa_rewrite,
                         iflow_attrs.mac_da_rewrite, iflow_attrs.ttl_dec, iflow_attrs.mcast_en,
@@ -633,7 +634,7 @@ ctx_t::update_flow_table()
                         ether_ntoa((struct ether_addr*)&iflow_cfg.l2_info.smac),
                         ether_ntoa((struct ether_addr*)&iflow_cfg.l2_info.dmac),
                         iflow_cfg.l2_info.l2seg_id, session_cfg.skip_sfw_reval, session_cfg.sfw_rule_id,
-                        session_cfg.sfw_action, session_cfg.syncing_session);
+                        session_cfg.sfw_action, session_cfg.syncing_session, session_cfg.sfw_is_alg);
         }
     }
 

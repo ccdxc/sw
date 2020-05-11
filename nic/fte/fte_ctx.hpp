@@ -291,6 +291,7 @@ std::ostream& operator<<(std::ostream& os, const aging_info_t& val);
 
 typedef struct sfw_flow_info_s {
     uint8_t   skip_sfw_reval;
+    uint8_t   sfw_is_alg;
     uint8_t   sfw_action;
     uint64_t  sfw_rule_id;
 } sfw_flow_info_t;

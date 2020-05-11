@@ -672,6 +672,7 @@ static void msrpc_completion_hdlr (fte::ctx_t& ctx, bool status) {
         }
     } else {
         l4_sess->sess_hdl = ctx.session()->hal_handle;
+
         if (l4_sess->isCtrl == true) {  /* Control session */
             if (ctx.key().proto == IP_PROTO_UDP) {
                 // Connection-Less MSRPC
@@ -716,6 +717,47 @@ static void msrpc_completion_hdlr (fte::ctx_t& ctx, bool status) {
     }
 }
 
+void
+alg_msrpc_sync_session_proc(fte::ctx_t &ctx, l4_alg_status_t *l4_sess)
+{
+    RPCALGInfo   rpc_req = ctx.sess_status()->rpc_info();
+
+    // If any TCP Buff alread exits, free them up and repopulate from the sync
+    if (l4_sess->tcpbuf[DIR_IFLOW]) {
+        l4_sess->tcpbuf[DIR_IFLOW]->free();
+        l4_sess->tcpbuf[DIR_IFLOW] = NULL;
+    }
+    if (l4_sess->tcpbuf[DIR_RFLOW]) {
+        l4_sess->tcpbuf[DIR_RFLOW]->free();
+        l4_sess->tcpbuf[DIR_RFLOW] = NULL;
+    }
+
+    if (rpc_req.has_iflow_tcp_buf()) {
+        // Setup TCP buffer for IFLOW
+        l4_sess->tcpbuf[DIR_IFLOW] = alg_utils::tcp_buffer_t::factory(rpc_req.iflow_tcp_buf(), NULL,
+                                                                      parse_msrpc_cn_control_flow,
+                                                                      g_rpc_tcp_buffer_slabs);
+    }
+    if (rpc_req.has_rflow_tcp_buf()) {
+        l4_sess->tcpbuf[DIR_RFLOW] = alg_utils::tcp_buffer_t::factory(rpc_req.rflow_tcp_buf(), NULL,
+                                                                      parse_msrpc_cn_control_flow,
+                                                                      g_rpc_tcp_buffer_slabs);
+    }
+
+    rpc_ctrl_session_info_from_proto(l4_sess, rpc_req);
+
+    for (int i = 0; i < rpc_req.expected_flows().flow_size(); i++) {
+        insert_rpc_expflow_from_proto(ctx, l4_sess, process_msrpc_data_flow,
+                                      rpc_req.expected_flows().flow(i).flow_key(),
+                                      rpc_req.expected_flows().flow(i).idle_timeout());
+
+    }
+    for (int i = 0; i < rpc_req.created_sessions().active_session_size(); i++) {
+        insert_rpc_expflow_from_proto(ctx, l4_sess, process_msrpc_data_flow,
+                                      rpc_req.created_sessions().active_session(i), 0);
+
+    }
+}
 size_t process_msrpc_data_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
     fte::ctx_t      *ctx = (fte::ctx_t *)ctxt;
     l4_alg_status_t *exp_flow = (l4_alg_status_t *)alg_status(
@@ -733,6 +775,9 @@ size_t process_msrpc_data_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
     SDK_ASSERT_RETURN((ret == HAL_RET_OK), ret);
     l4_sess->alg = nwsec::APP_SVC_MSFT_RPC;
     l4_sess->isCtrl = FALSE;
+    // This is done for vMotion syncing - When session is synced for data session
+    // this data session will be exported as Expected flow to the peer node.
+    SET_EXP_FLOW_KEY(l4_sess->entry.key, ctx->key());
 
     // Register completion handler and session state
     ctx->register_completion_handler(msrpc_completion_hdlr);
@@ -1058,6 +1103,11 @@ hal_ret_t alg_msrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
             //Register feature session state
             ctx.register_feature_session_state(&l4_sess->fte_feature_state);
 
+            if (ctx.sync_session_request()) {
+                alg_msrpc_sync_session_proc(ctx, l4_sess);
+                ctx.register_completion_handler(msrpc_completion_hdlr);
+                return ret;
+            }
             /*
              * For connection-less MSRPC, the requested call
              * is with the PDU_REQ packet. The response from the
@@ -1098,6 +1148,32 @@ hal_ret_t alg_msrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
             flowupd.mcast_info.mcast_ptr = P4_NW_MCAST_INDEX_FLOW_REL_COPY;
             flowupd.mcast_info.proxy_mcast_ptr = 0;
             ret = ctx.update_flow(flowupd);
+        }
+    } else if (ctx.sync_session_request() && (ctx.role() == hal::FLOW_ROLE_INITIATOR)) {
+        HAL_TRACE_DEBUG("Ctrl:{}, Exist:{}", l4_sess->isCtrl, ctx.existing_session());
+        if (l4_sess->isCtrl == true) {
+            alg_msrpc_sync_session_proc(ctx, l4_sess);
+        } else { // Data Session
+            if (!ctx.existing_session()) { 
+                // New data session
+                process_msrpc_data_flow(&ctx, NULL, 0);
+            } else {
+                flow_update_t  flowupd = {type: FLOWUPD_SFW_INFO};
+                flowupd.sfw_info.skip_sfw_reval = 1;
+                flowupd.sfw_info.sfw_is_alg     = 1;
+                flowupd.sfw_info.sfw_rule_id    = ctx.session()->sfw_rule_id;
+                flowupd.sfw_info.sfw_action     = (uint8_t)nwsec::SECURITY_RULE_ACTION_ALLOW;
+                ctx.update_flow(flowupd);
+
+                flow_update_t  flowupd_a = {type: FLOWUPD_ACTION};
+                flowupd_a.action         = session::FLOW_ACTION_ALLOW;
+                ctx.update_flow(flowupd_a);
+
+                ctx.flow_log()->sfw_action        = nwsec::SECURITY_RULE_ACTION_ALLOW;
+                ctx.flow_log()->rule_id           = ctx.session()->sfw_rule_id;
+                ctx.flow_log()->alg               = nwsec::APP_SVC_MSFT_RPC;
+                ctx.flow_log()->parent_session_id = l4_sess->sess_hdl;
+            }
         }
     } else if (l4_sess && l4_sess->info && (ctx.role() == hal::FLOW_ROLE_INITIATOR)) {
         uint8_t *pkt = ctx.pkt();

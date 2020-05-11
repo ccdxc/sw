@@ -135,7 +135,7 @@ alg_ftp_sync_session_proc (fte::ctx_t &ctx, l4_alg_status_t *l4_sess)
     }
 
     for (int i = 0; i < alg_req.expected_flows().flow_size(); i++) {
-        add_expected_flow_from_proto(ctx, l4_sess, alg_req.expected_flows().flow(i));
+        add_expected_flow_from_proto(ctx, l4_sess, alg_req.expected_flows().flow(i).flow_key());
     }
     // Add the active sessions also as an expected flow (in the control session), so that
     // when the data session sync is given to the new node, the expected flow will be
@@ -566,6 +566,7 @@ hal_ret_t expected_flow_handler(fte::ctx_t &ctx, expected_flow_t *wentry) {
 
     flow_update_t flowupd = {type: FLOWUPD_SFW_INFO};
     flowupd.sfw_info.skip_sfw_reval = 1;
+    flowupd.sfw_info.sfw_is_alg     = 1;
     flowupd.sfw_info.sfw_rule_id = entry->rule_id;
     flowupd.sfw_info.sfw_action = (uint8_t)nwsec::SECURITY_RULE_ACTION_ALLOW;
     ret = ctx.update_flow(flowupd);
@@ -665,7 +666,7 @@ add_expected_flow_from_proto(fte::ctx_t &ctx, l4_alg_status_t *l4_sess,
     exp_flow->entry.handler = expected_flow_handler;
     exp_flow->isCtrl        = false;
     exp_flow->alg           = l4_sess->alg;
-    exp_flow->rule_id       = (ctx.session())?ctx.session()->sfw_rule_id:0;
+    exp_flow->rule_id       = ctx.flow_log()->rule_id;
     exp_flow->idle_timeout  = l4_sess->idle_timeout;
 
     HAL_TRACE_DEBUG("Adding expected flow with key: {}", key);
@@ -813,6 +814,7 @@ static void ftp_completion_hdlr (fte::ctx_t& ctx, bool status) {
         }
     } else if (l4_sess) {
         l4_sess->sess_hdl = ctx.session()->hal_handle;
+
         if (l4_sess->isCtrl == false) {
             /*
              * Data session flow has been installed sucessfully
@@ -897,10 +899,29 @@ fte::pipeline_action_t alg_ftp_exec(fte::ctx_t &ctx) {
             ftp_info = (ftp_info_t *)l4_sess->info;
 
             if (ctx.sync_session_request()) {
-                alg_ftp_sync_session_proc(ctx, l4_sess);
+                if (l4_sess->isCtrl == true) {
+                    alg_ftp_sync_session_proc(ctx, l4_sess);
+                } else { // Data session
+                    if (!ctx.existing_session()) {
+                        ctx.register_completion_handler(ftp_completion_hdlr);
+                    } else {
+                        // Data session update
+                        flow_update_t flowupd = {type: FLOWUPD_SFW_INFO};
+                        flowupd.sfw_info.skip_sfw_reval = 1;
+                        flowupd.sfw_info.sfw_is_alg     = 1;
+                        flowupd.sfw_info.sfw_rule_id    = ctx.session()->sfw_rule_id;
+                        flowupd.sfw_info.sfw_action     = (uint8_t)nwsec::SECURITY_RULE_ACTION_ALLOW;
+                        ctx.update_flow(flowupd);
 
-                if (!ctx.existing_session()) {
-                    ctx.register_completion_handler(ftp_completion_hdlr);
+                        flow_update_t flowupd_a         = {type: FLOWUPD_ACTION};
+                        flowupd_a.action                = session::FLOW_ACTION_ALLOW;
+                        ctx.update_flow(flowupd_a);
+
+                        ctx.flow_log()->sfw_action        = nwsec::SECURITY_RULE_ACTION_ALLOW;
+                        ctx.flow_log()->rule_id           = ctx.session()->sfw_rule_id;
+                        ctx.flow_log()->alg               = nwsec::APP_SVC_FTP;
+                        ctx.flow_log()->parent_session_id = l4_sess->sess_hdl;
+                    }
                 }
                 return fte::PIPELINE_CONTINUE;
             }

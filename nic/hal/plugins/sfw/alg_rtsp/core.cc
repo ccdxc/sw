@@ -60,6 +60,39 @@ static inline uint32_t get_num_exp_flows(alg_utils::app_session_t *app_sess) {
     return num_exp_flow;
 }
 
+static inline void
+dump_control_sessions_to_proto (alg_utils::app_session_t *app_sess, RTSPCtrlSessions *ctrl_sessions,
+                                uint32_t *num_data_sessions, uint32_t *num_exp_flows)
+{
+    dllist_ctxt_t   *lentry = NULL, *next = NULL;
+
+    dllist_for_each_safe(lentry, next, &app_sess->app_sess_lentry)
+    {
+        RTSPCtrlSessInfo         *sess      = ctrl_sessions->add_session();
+        alg_utils::app_session_t *rtsp_sess = dllist_entry(lentry, alg_utils::app_session_t,
+                                                           app_sess_lentry);
+        rtsp_session_t *rtsp_sess_info      = (rtsp_session_t *)rtsp_sess->oper;
+
+        sess->set_vrf_id(rtsp_sess_info->sess_key.vrf_id);
+        if (rtsp_sess_info->sess_key.ip.af == IP_AF_IPV6) {
+            sess->mutable_server_ip()->set_ip_af(types::IP_AF_INET6);
+            sess->mutable_server_ip()->set_v6_addr(&rtsp_sess_info->sess_key.ip.addr.v6_addr,
+                                                   IP6_ADDR8_LEN);
+        } else {
+            sess->mutable_server_ip()->set_ip_af(types::IP_AF_INET);
+            sess->mutable_server_ip()->set_v4_addr(rtsp_sess_info->sess_key.ip.addr.v4_addr);
+        }
+        sess->set_server_port(rtsp_sess_info->sess_key.port);
+        sess->set_session_id(rtsp_sess_info->sess_key.id);
+
+        g_rtsp_state->active_data_sessions_to_proto_buf(rtsp_sess, sess->mutable_created_sessions());
+        g_rtsp_state->expected_flows_to_proto_buf(rtsp_sess, sess->mutable_expected_flows());
+
+        (*num_data_sessions) += dllist_count(&rtsp_sess->l4_sess_lhead);
+        (*num_exp_flows)     += dllist_count(&rtsp_sess->exp_flow_lhead);
+    }
+}
+
 /*
  * APP Session get handler
  */
@@ -67,6 +100,7 @@ fte::pipeline_action_t alg_rtsp_session_get_cb(fte::ctx_t &ctx) {
     fte::feature_session_state_t  *alg_state = NULL;
     SessionGetResponse            *sess_resp = ctx.sess_get_resp();
     alg_utils::l4_alg_status_t    *l4_sess = NULL;
+    uint32_t                      num_data_sess = 0, num_exp_flows = 0;
 
     if (!ctx.sess_get_resp() || ctx.role() != hal::FLOW_ROLE_INITIATOR)
         return fte::PIPELINE_CONTINUE;
@@ -82,21 +116,99 @@ fte::pipeline_action_t alg_rtsp_session_get_cb(fte::ctx_t &ctx) {
     sess_resp->mutable_status()->set_alg(nwsec::APP_SVC_RTSP);
 
     rtsp_session_t   *ctrl_sess = (rtsp_session_t *)l4_sess->info;
+    auto             rtsp_info  = sess_resp->mutable_status()->mutable_rtsp_info();
+
     if (l4_sess->isCtrl == true) {
-        sess_resp->mutable_status()->mutable_rtsp_info()->\
-                                set_iscontrol(true);
-        sess_resp->mutable_status()->mutable_rtsp_info()->\
-                  set_parse_errors((ctrl_sess)?ctrl_sess->parse_errors:0);
-        sess_resp->mutable_status()->mutable_rtsp_info()->\
-                 set_num_data_sess(get_num_data_sessions(l4_sess->app_session));
-        sess_resp->mutable_status()->mutable_rtsp_info()->\
-                 set_num_exp_flows(get_num_exp_flows(l4_sess->app_session));
-        sess_resp->mutable_status()->mutable_rtsp_info()->\
-                 set_num_rtsp_sessions(dllist_count(&l4_sess->app_session->app_sess_lentry));
+        rtsp_info->set_iscontrol(true);
+        rtsp_info->set_parse_errors((ctrl_sess) ? ctrl_sess->parse_errors : 0);
+
+        if (l4_sess->tcpbuf[DIR_IFLOW]) {
+            l4_sess->tcpbuf[DIR_IFLOW]->tcp_buff_to_proto(rtsp_info->mutable_iflow_tcp_buf());
+        }
+        if (l4_sess->tcpbuf[DIR_RFLOW]) {
+            l4_sess->tcpbuf[DIR_RFLOW]->tcp_buff_to_proto(rtsp_info->mutable_rflow_tcp_buf());
+        }
+        dump_control_sessions_to_proto(l4_sess->app_session, rtsp_info->mutable_ctrl_sessions(),
+                                       &num_data_sess, &num_exp_flows);
+
+        rtsp_info->set_num_data_sess(num_data_sess);
+        rtsp_info->set_num_exp_flows(num_exp_flows);
+        rtsp_info->set_num_rtsp_sessions(dllist_count(&l4_sess->app_session->app_sess_lentry));
     } else {
-        sess_resp->mutable_status()->mutable_rtsp_info()->\
-                               set_iscontrol(false);
+        rtsp_info->set_iscontrol(false);
     }
+
+    return fte::PIPELINE_CONTINUE;
+}
+
+static inline void
+add_control_sessions_from_proto (fte::ctx_t &ctx, alg_utils::l4_alg_status_t *l4_sess, 
+                                 const RTSPCtrlSessions &ctrl_sessions)
+{
+    for (int s = 0; s < ctrl_sessions.session_size(); s++)
+    {
+        const RTSPCtrlSessInfo   &ctrl_sess = ctrl_sessions.session(s);
+        rtsp_session_key_t        sess_key;
+        alg_utils::app_session_t *app_sess = NULL;
+
+        memset(&sess_key, 0, sizeof(rtsp_session_key_t));
+
+        sess_key.vrf_id = ctrl_sess.vrf_id();
+        if (ctrl_sess.server_ip().ip_af() == types::IP_AF_INET6) {
+            memcpy(&sess_key.ip.addr.v6_addr, ctrl_sess.server_ip().v6_addr().c_str(), IP6_ADDR8_LEN);
+            sess_key.ip.af = IP_AF_IPV6;
+        } else {
+            sess_key.ip.addr.v4_addr = ctrl_sess.server_ip().v4_addr();
+            sess_key.ip.af           = IP_AF_IPV4;
+        }
+        sess_key.port   = ctrl_sess.server_port();
+        memcpy(sess_key.id, ctrl_sess.session_id().c_str(), sizeof(sess_key.id));
+
+        // Lookup/create session
+        app_sess = get_rtsp_session(sess_key, l4_sess->app_session);
+
+        for (int i = 0; i < ctrl_sess.expected_flows().flow_size(); i++) {
+            add_expected_flow_from_proto(ctx, app_sess, l4_sess->idle_timeout,
+                                         ctrl_sess.expected_flows().flow(i).flow_key());
+        }
+        // Add the active sessions also as an expected flow (in the control session), so that
+        // when the data session sync is given to the new node, the expected flow will be
+        // converted to the active flow 
+        for (int i = 0; i < ctrl_sess.created_sessions().active_session_size(); i++) {
+            add_expected_flow_from_proto(ctx, app_sess, l4_sess->idle_timeout,
+                                         ctrl_sess.created_sessions().active_session(i));
+        }
+    }
+}
+
+fte::pipeline_action_t
+alg_rtsp_sync_session_proc (fte::ctx_t &ctx, alg_utils::l4_alg_status_t *l4_sess)
+{
+    RTSPALGInfo       alg_req    = ctx.sess_status()->rtsp_info();
+
+    // If any TCP Buff alread exits, free them up and repopulate from the sync
+    if (l4_sess->tcpbuf[DIR_IFLOW]) {
+        l4_sess->tcpbuf[DIR_IFLOW]->free();
+        l4_sess->tcpbuf[DIR_IFLOW] = NULL;
+    }
+    if (l4_sess->tcpbuf[DIR_RFLOW]) {
+        l4_sess->tcpbuf[DIR_RFLOW]->free();
+        l4_sess->tcpbuf[DIR_RFLOW] = NULL;
+    }
+
+    if (alg_req.has_iflow_tcp_buf()) {
+        // Setup TCP buffer for IFLOW
+        l4_sess->tcpbuf[DIR_IFLOW] = alg_utils::tcp_buffer_t::factory(alg_req.iflow_tcp_buf(),
+                                                                      NULL, process_control_message,
+                                                                      g_rtsp_tcp_buffer_slabs);
+    }
+    if (alg_req.has_rflow_tcp_buf()) {
+        l4_sess->tcpbuf[DIR_RFLOW] = alg_utils::tcp_buffer_t::factory(alg_req.rflow_tcp_buf(),
+                                                                      NULL, process_control_message,
+                                                                      g_rtsp_tcp_buffer_slabs);
+    }
+
+    add_control_sessions_from_proto(ctx, l4_sess, alg_req.ctrl_sessions());
 
     return fte::PIPELINE_CONTINUE;
 }
@@ -236,6 +348,7 @@ expected_flow_handler(fte::ctx_t &ctx, alg_utils::expected_flow_t *entry)
 
     flow_update_t flowupd = {type: FLOWUPD_SFW_INFO};
     flowupd.sfw_info.skip_sfw_reval = 1;
+    flowupd.sfw_info.sfw_is_alg     = 1;
     flowupd.sfw_info.sfw_rule_id = exp_flow->rule_id;
     flowupd.sfw_info.sfw_action = (uint8_t)nwsec::SECURITY_RULE_ACTION_ALLOW;
     ret = ctx.update_flow(flowupd);
@@ -298,12 +411,47 @@ add_expected_flows(fte::ctx_t &ctx, alg_utils::app_session_t *app_sess,
     return HAL_RET_OK;
 }
 
+void
+add_expected_flow_from_proto(fte::ctx_t &ctx, alg_utils::app_session_t *app_sess,
+                             uint32_t idle_timeout, const FlowGateKey &proto_key)
+{
+    alg_utils::l4_alg_status_t   *exp_flow = NULL;
+    rtsp_session_t               *rtsp_sess = (rtsp_session_t *)app_sess->oper;
+    hal::flow_key_t              key;
+    alg_utils::expected_flow_t   expected_flow;
+
+    memset(&expected_flow, 0, sizeof(alg_utils::expected_flow_t));
+    memset(&key, 0, sizeof(hal::flow_key_t));
+
+    flow_gate_key_from_proto(&expected_flow, proto_key);
+
+    key             = ctx.key();
+    key.sip.v4_addr = expected_flow.key.sip;
+    key.dip.v4_addr = expected_flow.key.dip;
+    key.proto       = (types::IPProtocol)expected_flow.key.proto;
+    key.sport       = expected_flow.key.sport;
+    key.dport       = expected_flow.key.dport;
+
+    // Look for whether entry already exists, if exists just overwrite with values
+    g_rtsp_state->alloc_and_insert_exp_flow(app_sess, key, &exp_flow, false, 0, true);
+    SDK_ASSERT(exp_flow != NULL);
+
+    exp_flow->entry.handler = expected_flow_handler;
+    exp_flow->isCtrl        = false;
+    exp_flow->alg           = nwsec::APP_SVC_RTSP;
+    exp_flow->info          = rtsp_sess;
+    exp_flow->sess_hdl      = HAL_HANDLE_INVALID;
+    exp_flow->rule_id       = ctx.flow_log()->rule_id;
+    exp_flow->idle_timeout  = idle_timeout;
+
+    HAL_TRACE_DEBUG("Adding expected flow with key: {}", key);
+}
+
 /*
  * Returns app_session of the specified key (creates if it doesn't exist)
  */
-static inline alg_utils::app_session_t *
-get_rtsp_session(const rtsp_session_key_t &key,
-                alg_utils::app_session_t *ctrl_app_sess)
+alg_utils::app_session_t *
+get_rtsp_session(const rtsp_session_key_t &key, alg_utils::app_session_t *ctrl_app_sess)
 {
     dllist_ctxt_t   *lentry, *next;
 
@@ -478,6 +626,7 @@ static void rtsp_completion_hdlr (fte::ctx_t& ctx, bool status) {
         }
     } else if (l4_sess != NULL) {
         l4_sess->sess_hdl = ctx.session()->hal_handle;
+
         HAL_TRACE_DEBUG("RTSP Completion handler iscontrol session: {}", l4_sess->isCtrl);
         if (l4_sess->isCtrl == true) {
             if (!l4_sess->tcpbuf[DIR_RFLOW] && ctx.is_flow_swapped() &&
@@ -543,16 +692,18 @@ rtsp_new_control_session(fte::ctx_t &ctx)
         sfw_info = sfw::sfw_feature_state(ctx);
         l4_sess->idle_timeout = sfw_info->idle_timeout;
 
-        if ((ctx.cpu_rxhdr()->tcp_flags & (TCP_FLAG_SYN)) == TCP_FLAG_SYN) {
-            //Setup TCP buffer for IFLOW
-            l4_sess->tcpbuf[DIR_IFLOW] = alg_utils::tcp_buffer_t::factory(
-                                      htonl(ctx.cpu_rxhdr()->tcp_seq_num)+1,
-                                      NULL, process_control_message, g_rtsp_tcp_buffer_slabs);
+        if (ctx.sync_session_request()) {
+            alg_rtsp_sync_session_proc(ctx, l4_sess);
+        } else {
+            if ((ctx.cpu_rxhdr()->tcp_flags & (TCP_FLAG_SYN)) == TCP_FLAG_SYN) {
+                //Setup TCP buffer for IFLOW
+                l4_sess->tcpbuf[DIR_IFLOW] = alg_utils::tcp_buffer_t::factory(
+                        htonl(ctx.cpu_rxhdr()->tcp_seq_num)+1,
+                        NULL, process_control_message, g_rtsp_tcp_buffer_slabs);
+            }
         }
 
-        /*
-         * Register Feature session state & completion handler
-         */
+        // Register Feature session state & completion handler
         ctx.register_completion_handler(rtsp_completion_hdlr);
         ctx.register_feature_session_state(&l4_sess->fte_feature_state);
     }
@@ -575,7 +726,8 @@ fte::pipeline_action_t alg_rtsp_exec(fte::ctx_t &ctx)
 
     sfw::sfw_info_t *sfw_info;
 
-    if (hal::g_hal_state->is_flow_aware() || ctx.protobuf_request()) {
+    if ((hal::g_hal_state->is_flow_aware()) ||
+        (ctx.protobuf_request() && !ctx.sync_session_request())) {
         return fte::PIPELINE_CONTINUE;
     }
 

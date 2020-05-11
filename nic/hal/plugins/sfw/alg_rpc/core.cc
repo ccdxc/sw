@@ -30,6 +30,161 @@ void incr_num_exp_flows(rpc_info_t *info) {
     SDK_ATOMIC_INC_UINT32(&info->num_exp_flows, 1);
 }
 
+void
+insert_rpc_expflow_from_proto(fte::ctx_t &ctx, l4_alg_status_t *l4_sess, rpc_cb_t cb,
+                              const FlowGateKey &flow_key, uint32_t idle_timeout)
+{
+    hal::flow_key_t    key      = ctx.key();
+    rpc_info_t        *exp_flow_info = NULL;
+    l4_alg_status_t   *exp_flow = NULL;
+    hal_ret_t          ret      = HAL_RET_OK;
+    expected_flow_t    expected_flow;
+
+    flow_gate_key_from_proto(&expected_flow, flow_key);
+
+    /*
+     * Reason we mask out the direction is that EPM query could be made by one client and other
+     * client could be using this pinhole to reach the server. If Naples is used for firewall,
+     * the clients could be from outside or inside
+     */
+    memset(&key.sip, 0, sizeof(ipvx_addr_t));
+    key.sport       = 0;
+    key.proto       = (types::IPProtocol) expected_flow.key.proto;
+    key.dport       = expected_flow.key.dport;
+    key.dip.v4_addr = expected_flow.key.dip;
+
+    if (!idle_timeout) {
+        ret = g_rpc_state->alloc_and_insert_exp_flow(l4_sess->app_session, key, &exp_flow, false,
+                                                     0, true);
+    } else {
+        ret = g_rpc_state->alloc_and_insert_exp_flow(l4_sess->app_session, key, &exp_flow, true,
+                                                      idle_timeout, true);
+    }
+
+    SDK_ASSERT((ret == HAL_RET_OK || ret == HAL_RET_ENTRY_EXISTS));
+
+    if (ret == HAL_RET_OK) {
+        exp_flow->entry.handler = expected_flow_handler;
+        exp_flow->alg           = l4_sess->alg;
+        exp_flow->idle_timeout  = idle_timeout;
+        exp_flow->rule_id       = ctx.flow_log()->rule_id;
+        exp_flow->info          = g_rpc_state->alg_info_slab()->alloc();
+        SDK_ASSERT(exp_flow->info != NULL);
+
+        exp_flow_info           = (rpc_info_t *)exp_flow->info;
+        exp_flow_info->skip_sfw = true;
+        exp_flow_info->vers     = ((rpc_info_t *)exp_flow->info)->vers;
+        exp_flow_info->callback = cb;
+
+        incr_num_exp_flows((rpc_info_t *)l4_sess->info);
+    }
+    HAL_TRACE_DEBUG("Inserting RPC entry with key: {} ret: {}", key, ret);
+}
+
+void
+rpc_ctrl_session_info_from_proto(l4_alg_status_t *l4_sess, const RPCALGInfo &rpc_alg_info)
+{
+    rpc_info_t *info = ((rpc_info_t *)l4_sess->info);
+
+    if (rpc_alg_info.pkt().size()) {
+        info->pkt_len = rpc_alg_info.pkt().size();
+        memcpy(info->pkt, rpc_alg_info.pkt().c_str(), rpc_alg_info.pkt().size());
+    }
+    info->payload_offset  = rpc_alg_info.payload_offset();
+    info->rpc_frag_cont   = rpc_alg_info.rpc_frag_cont();
+
+    if (rpc_alg_info.ip().ip_af() == types::IP_AF_INET6) {
+        memcpy(&info->ip.v6_addr, rpc_alg_info.ip().v6_addr().c_str(), IP6_ADDR8_LEN);
+        info->addr_family = IP_PROTO_IPV6;
+    } else {
+        info->ip.v4_addr  = rpc_alg_info.ip().v4_addr();
+        info->addr_family = IP_PROTO_IPV4;
+    }
+
+    info->prot     = rpc_alg_info.prot();
+    info->dport    = rpc_alg_info.dport();
+    info->vers     = rpc_alg_info.vers();
+    info->pkt_type = rpc_alg_info.pkt_type();
+
+    if (l4_sess->alg == nwsec::APP_SVC_MSFT_RPC) {
+        info->data_rep       = rpc_alg_info.ms_rpc_info().data_rep();
+        info->call_id        = rpc_alg_info.ms_rpc_info().call_id();
+        memcpy(info->act_id, rpc_alg_info.ms_rpc_info().act_id().c_str(), 16); 
+        memcpy(info->uuid, rpc_alg_info.ms_rpc_info().uuid().c_str(), UUID_SZ); 
+        info->msrpc_64bit    = rpc_alg_info.ms_rpc_info().msrpc_64bit();
+        memcpy(info->msrpc_ctxt_id, rpc_alg_info.ms_rpc_info().msrpc_ctxt_id().c_str(), 256); 
+        info->num_msrpc_ctxt = rpc_alg_info.ms_rpc_info().num_msrpc_ctxt();
+    } else {
+        info->xid            = rpc_alg_info.sun_rpc_info().xid();
+        info->prog_num       = rpc_alg_info.sun_rpc_info().prog_num();
+        info->rpcvers        = rpc_alg_info.sun_rpc_info().rpcvers();
+    }
+}
+
+void
+rpc_ctrl_session_info_to_proto(l4_alg_status_t *l4_sess, RPCALGInfo *rpc_alg_info)
+{
+    rpc_info_t *info = ((rpc_info_t *)l4_sess->info);
+
+    if (!info) {
+        return;
+    }
+
+    rpc_alg_info->set_parse_error(info->parse_errors);
+    rpc_alg_info->set_num_data_sess(info->data_sess);
+    rpc_alg_info->set_maxpkt_size_exceeded(info->maxpkt_sz_exceeded);
+    rpc_alg_info->set_num_exp_flows(info->num_exp_flows);
+
+    if (info->pkt_len && info->pkt) {
+        rpc_alg_info->set_pkt(info->pkt, info->pkt_len);
+    }
+    rpc_alg_info->set_payload_offset(info->payload_offset);
+    rpc_alg_info->set_rpc_frag_cont(info->rpc_frag_cont);
+
+    if (info->addr_family == IP_PROTO_IPV6) {
+        rpc_alg_info->mutable_ip()->set_ip_af(types::IP_AF_INET6);
+        rpc_alg_info->mutable_ip()->set_v6_addr(&info->ip.v6_addr, IP6_ADDR8_LEN);
+    } else {
+        rpc_alg_info->mutable_ip()->set_ip_af(types::IP_AF_INET);
+        rpc_alg_info->mutable_ip()->set_v4_addr(info->ip.v4_addr);
+    }
+    rpc_alg_info->set_prot(info->prot);
+    rpc_alg_info->set_dport(info->dport);
+    rpc_alg_info->set_vers(info->vers);
+    rpc_alg_info->set_pkt_type(info->pkt_type);
+
+    if (l4_sess->alg == nwsec::APP_SVC_MSFT_RPC) {
+        MSRPCInfo *msrpc_info = rpc_alg_info->mutable_ms_rpc_info();
+
+        msrpc_info->set_data_rep(info->data_rep);
+        msrpc_info->set_call_id(info->call_id);
+        msrpc_info->set_act_id(info->act_id, 16);
+        msrpc_info->set_uuid(info->uuid, UUID_SZ);
+        msrpc_info->set_msrpc_64bit(info->msrpc_64bit);
+        msrpc_info->set_msrpc_ctxt_id(info->msrpc_ctxt_id, 256);
+        msrpc_info->set_num_msrpc_ctxt(info->num_msrpc_ctxt);
+    } else {
+        SUNRPCInfo *sunrpc_info = rpc_alg_info->mutable_sun_rpc_info();
+
+        sunrpc_info->set_xid(info->xid);
+        sunrpc_info->set_prog_num(info->prog_num);
+        sunrpc_info->set_rpcvers(info->rpcvers);
+    }
+
+    if (l4_sess->tcpbuf[DIR_IFLOW]) {
+        l4_sess->tcpbuf[DIR_IFLOW]->tcp_buff_to_proto(rpc_alg_info->mutable_iflow_tcp_buf());
+    }
+    if (l4_sess->tcpbuf[DIR_RFLOW]) {
+        l4_sess->tcpbuf[DIR_RFLOW]->tcp_buff_to_proto(rpc_alg_info->mutable_rflow_tcp_buf());
+    }
+
+    g_rpc_state->expected_flows_to_proto_buf(l4_sess->app_session,
+                                             rpc_alg_info->mutable_expected_flows());
+
+    g_rpc_state->active_data_sessions_to_proto_buf(l4_sess->app_session,
+                                                   rpc_alg_info->mutable_created_sessions());
+}
+
 /*
  * APP Session get handler
  */
@@ -37,6 +192,7 @@ fte::pipeline_action_t alg_rpc_session_get_cb(fte::ctx_t &ctx) {
     fte::feature_session_state_t  *alg_state = NULL;
     SessionGetResponse            *sess_resp = ctx.sess_get_resp();
     l4_alg_status_t               *l4_sess =  NULL;
+    RPCALGInfo                    *rpc_alg_info = NULL;
 
     if (!ctx.sess_get_resp() || ctx.role() != hal::FLOW_ROLE_INITIATOR)
         return fte::PIPELINE_CONTINUE;
@@ -50,25 +206,15 @@ fte::pipeline_action_t alg_rpc_session_get_cb(fte::ctx_t &ctx) {
         l4_sess->alg != nwsec::APP_SVC_MSFT_RPC))
         return fte::PIPELINE_CONTINUE;
 
+    rpc_alg_info = sess_resp->mutable_status()->mutable_rpc_info();
+
     sess_resp->mutable_status()->set_alg(l4_sess->alg);
 
     if (l4_sess->isCtrl == true) {
-        rpc_info_t *info = ((rpc_info_t *)l4_sess->info);
-        if (info) {
-            sess_resp->mutable_status()->mutable_rpc_info()->\
-                                 set_parse_error(info->parse_errors);
-            sess_resp->mutable_status()->mutable_rpc_info()->\
-                                 set_num_data_sess(info->data_sess);
-            sess_resp->mutable_status()->mutable_rpc_info()->\
-                    set_maxpkt_size_exceeded(info->maxpkt_sz_exceeded);
-            sess_resp->mutable_status()->mutable_rpc_info()->\
-                                 set_num_exp_flows(info->num_exp_flows);
-        }
-        sess_resp->mutable_status()->mutable_rpc_info()->\
-                                set_iscontrol(true);
+        rpc_alg_info->set_iscontrol(true);
+        rpc_ctrl_session_info_to_proto(l4_sess, rpc_alg_info);
     } else {
-        sess_resp->mutable_status()->mutable_rpc_info()->\
-                                set_iscontrol(false);
+        rpc_alg_info->set_iscontrol(false);
     }
 
     return fte::PIPELINE_CONTINUE;
@@ -266,6 +412,7 @@ hal_ret_t expected_flow_handler(fte::ctx_t &ctx, expected_flow_t *wentry) {
 
     flow_update_t flowupd = {type: FLOWUPD_SFW_INFO};
     flowupd.sfw_info.skip_sfw_reval = 1;
+    flowupd.sfw_info.sfw_is_alg     = 1;
     flowupd.sfw_info.sfw_rule_id = entry->rule_id;
     flowupd.sfw_info.sfw_action = (uint8_t)nwsec::SECURITY_RULE_ACTION_ALLOW;
     ret = ctx.update_flow(flowupd);
@@ -363,7 +510,8 @@ fte::pipeline_action_t alg_rpc_exec(fte::ctx_t &ctx) {
     sfw_info_t                   *sfw_info = sfw::sfw_feature_state(ctx);
     l4_alg_status_t              *l4_sess = NULL;
 
-    if (hal::g_hal_state->is_flow_aware() || ctx.protobuf_request()) {
+    if ((hal::g_hal_state->is_flow_aware()) ||
+        (ctx.protobuf_request() && !ctx.sync_session_request())) {
         return fte::PIPELINE_CONTINUE;
     }
 

@@ -165,6 +165,7 @@ hal_ret_t expected_flow_handler(fte::ctx_t &ctx, expected_flow_t *wentry) {
 
     flow_update_t flowupd = {type: FLOWUPD_SFW_INFO};
     flowupd.sfw_info.skip_sfw_reval = 1;
+    flowupd.sfw_info.sfw_is_alg     = 1;
     flowupd.sfw_info.sfw_rule_id = entry->rule_id;
     flowupd.sfw_info.sfw_action = (uint8_t)nwsec::SECURITY_RULE_ACTION_ALLOW;
     ret = ctx.update_flow(flowupd);
@@ -200,6 +201,7 @@ static void tftp_completion_hdlr (fte::ctx_t& ctx, bool status) {
     } else {
         HAL_TRACE_DEBUG("In TFTP Completion handler ctrl");
         l4_sess->sess_hdl = ctx.session()->hal_handle;
+
         if (l4_sess->isCtrl == true) { /* Control session */
             // Set the responder flow key & mark sport as 0
             key = ctx.get_key(hal::FLOW_ROLE_RESPONDER);
@@ -364,13 +366,11 @@ fte::pipeline_action_t alg_tftp_exec(fte::ctx_t &ctx) {
     if ((hal::g_hal_state->is_flow_aware()) ||
         (ctx.protobuf_request() && !ctx.sync_session_request()) ||
         (ctx.role() == hal::FLOW_ROLE_RESPONDER)) {
-        HAL_TRACE_DEBUG("ALG Flow:{} Proto:{} Sync:{}, Role:{}", hal::g_hal_state->is_flow_aware(),
-                        ctx.protobuf_request(), ctx.sync_session_request(), ctx.role());
+        HAL_TRACE_VERBOSE("ALG Flow:{} Proto:{} Sync:{}, Role:{}", hal::g_hal_state->is_flow_aware(),
+                          ctx.protobuf_request(), ctx.sync_session_request(), ctx.role());
         return fte::PIPELINE_CONTINUE;
     }
     alg_state = ctx.feature_session_state();
-    HAL_TRACE_DEBUG("ALG Proto:{} Existing:{} State:{:p}", sfw_info->alg_proto,
-                    ctx.existing_session(), (void *)alg_state);
     if (sfw_info->alg_proto == nwsec::APP_SVC_TFTP &&
         (!ctx.existing_session())) {
         HAL_TRACE_DEBUG("Alg Proto TFTP is set");

@@ -671,6 +671,9 @@ endpoint_add_to_db (ep_t *ep, vrf_t *vrf)
         }
     }
 
+    // Add EP to session DBs
+    ep_add_to_sessions(ep);
+
 end:
     return ret;
 }
@@ -1256,24 +1259,25 @@ ep_get_session_info (ep_t *ep, SessionGetResponseMsg *rsp, uint64_t ts)
             session_t *session  = hal::find_session_by_handle(entry->handle_id);
             if (session && !session->aging_enqueued) {
                 // If timestamp is provided, then this request is part of TERM SYNC
-                // In case of term sync - Provide term sync only if all the following conditions
-                // met
-                //    * Connection tracking enabled session
-                //    * Session was earlier synced as part of Sync
-                //    * Session got modified after earlier sync
                 if (ts) {
-                    if ((!session->conn_track_en) ||
-                        (!session->sync_sent) ||
-                        (!session_modified_after_timestamp(session, ts))) {
-                        session->sync_sent = false;
-                        continue;
+                    // Dont send sync if TimeStamp is not modified, for any type of session.
+                    // For ALG sessions, irrespective of whatever type it is, sync it as long as
+                    // TS is modified
+                    if ((!session_modified_after_timestamp(session, ts)) &&
+                        (!session->sfw_is_alg)) {
+                        if (!session->conn_track_en) {
+                            // If its UDP session, no term sync send
+                            continue;
+                        } else {
+                            // Its a TCP session, if earlier SYNC was not sent, then don't send
+                            if (!session->sync_sent) {
+                                continue;
+                            }
+                        }
                     }
-                } else {
-                    session->sync_sent = true;
                 }
                 hal::system_get_fill_rsp(session, rsp->add_response());
-            } else {
-                HAL_TRACE_ERR("No session found for session hdl: {}", entry->handle_id);
+                session->sync_sent = true;
             }
         }
     }
@@ -2380,11 +2384,16 @@ ep_session_delete_cb(void *timer, uint32_t timer_id, void *ctxt)
 
         if (session) {
             // If the session is referenced by another local EP (as SEP or DEP) dont delete
-            if (((session->sep_handle == args->ep_handle) &&
-                 (session->dep_handle != HAL_HANDLE_INVALID)) || 
-                ((session->dep_handle == args->ep_handle) &&
-                 (session->sep_handle != HAL_HANDLE_INVALID))) {
-                del = false;
+            if (session->sep_handle == args->ep_handle) {
+                if (session->dep_handle != HAL_HANDLE_INVALID) {
+                    session->sep_handle = HAL_HANDLE_INVALID;
+                    del = false;
+                }
+            } else if (session->dep_handle == args->ep_handle) {
+                if (session->sep_handle != HAL_HANDLE_INVALID) {
+                    session->sep_handle = HAL_HANDLE_INVALID;
+                    del = false;
+                }
             }
             HAL_TRACE_VERBOSE("ep delete: Ep:{} Sess:{} Sep:{} Dep:{} Del:{}", args->ep_handle,
                                entry->handle_id, session->sep_handle, session->dep_handle, del);
@@ -2403,7 +2412,6 @@ ep_session_delete_cb(void *timer, uint32_t timer_id, void *ctxt)
         dllist_del(&entry->dllist_ctxt);
         g_hal_state->hal_handle_id_list_entry_slab()->free(entry);
     }
-
     HAL_FREE(HAL_MEM_ALLOC_EP_SESS_DELETE_CTXT, args);
     return;
 }
@@ -2817,7 +2825,7 @@ ep_print_ips (ep_t *ep)
 // Adds session into EP
 //-----------------------------------------------------------------------------
 hal_ret_t
-ep_add_session (ep_t *ep, session_t *session)
+ep_add_session (ep_t *ep, session_t *session, bool ep_create)
 {
     hal_ret_t                   ret = HAL_RET_OK;
     hal_handle_id_list_entry_t  *entry = NULL;
@@ -2837,7 +2845,23 @@ ep_add_session (ep_t *ep, session_t *session)
     entry->handle_id = session->hal_handle;
 
     ep_lock(ep, __FILENAME__, __LINE__, __func__);
-    sdk::lib::dllist_add_tail(&ep->session_list_head[session->fte_id], &entry->dllist_ctxt);
+    if (ep_create) {
+        hal_handle_id_list_entry_t *curr_entry; 
+        dllist_ctxt_t              *curr      = NULL;
+        dllist_ctxt_t              *ins_after = &ep->session_list_head[session->fte_id];
+
+        dllist_for_each(curr, &ep->session_list_head[session->fte_id]) {
+            curr_entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
+            if (session->hal_handle <= curr_entry->handle_id) {
+                break;
+            }
+            ins_after = curr;
+        }
+        dllist_add_between(ins_after, ins_after->next, &entry->dllist_ctxt);
+
+    } else {
+        sdk::lib::dllist_add_tail(&ep->session_list_head[session->fte_id], &entry->dllist_ctxt);
+    }
 
     if (session->sep_handle == ep->hal_handle) {
         session->sep_sess_list_entry_ctxt = &entry->dllist_ctxt;
@@ -3384,14 +3408,7 @@ endpoint_migration_done_src_host (ep_t *ep, session_t *session, MigrationState m
         if ((session->dep_handle != HAL_HANDLE_INVALID) &&
             (session->iflow->config.dir == FLOW_DIR_FROM_DMA)) {
             HAL_TRACE_VERBOSE("Update iFlow Dir:{} ", session->iflow->config.dir);
-            g_hal_state->session_hal_iflow_ht()->\
-                                 remove_entry(session, &session->hal_iflow_ht_ctxt);
-            session->hal_iflow_ht_ctxt.reset();
-
             session->iflow->config.dir = FLOW_DIR_FROM_UPLINK;
-
-            g_hal_state->session_hal_iflow_ht()->\
-                                 insert(session, &session->hal_iflow_ht_ctxt);
         }
     } else if (session->rflow) {
         // 1) If the session is not referenced by another local EP (as SEP), because anyhow this 
@@ -3400,14 +3417,7 @@ endpoint_migration_done_src_host (ep_t *ep, session_t *session, MigrationState m
         if ((session->sep_handle != HAL_HANDLE_INVALID) &&
             (session->rflow->config.dir == FLOW_DIR_FROM_DMA)) {
             HAL_TRACE_VERBOSE("Update rFlow Dir:{} ", session->rflow->config.dir);
-            g_hal_state->session_hal_rflow_ht()->\
-                                 remove_entry(session, &session->hal_rflow_ht_ctxt);
-            session->hal_rflow_ht_ctxt.reset();
-
             session->rflow->config.dir = FLOW_DIR_FROM_UPLINK;
-
-            g_hal_state->session_hal_rflow_ht()->\
-                                 insert(session, &session->hal_rflow_ht_ctxt);
         }
     }
 }
@@ -3426,26 +3436,12 @@ endpoint_migration_done_dst_host (ep_t *ep, session_t *session, MigrationState m
         if (session->sep_handle == ep->hal_handle) {
             if (session->iflow->config.dir == FLOW_DIR_FROM_UPLINK) {
                 HAL_TRACE_VERBOSE("Update iFlow Dir:{} ", session->iflow->config.dir);
-                g_hal_state->session_hal_iflow_ht()->\
-                                     remove_entry(session, &session->hal_iflow_ht_ctxt);
-                session->hal_iflow_ht_ctxt.reset();
-
                 session->iflow->config.dir = FLOW_DIR_FROM_DMA;
-
-                g_hal_state->session_hal_iflow_ht()->\
-                                     insert(session, &session->hal_iflow_ht_ctxt);
             }
         } else if (session->rflow) {
             if (session->iflow->config.dir == FLOW_DIR_FROM_UPLINK) {
                 HAL_TRACE_VERBOSE("Update rFlow Dir:{} ", session->rflow->config.dir);
-                g_hal_state->session_hal_rflow_ht()->\
-                    remove_entry(session, &session->hal_rflow_ht_ctxt);
-                session->hal_rflow_ht_ctxt.reset();
-
                 session->rflow->config.dir = FLOW_DIR_FROM_DMA;
-
-                g_hal_state->session_hal_rflow_ht()->\
-                                     insert(session, &session->hal_rflow_ht_ctxt);
             }
         }
     }

@@ -15,6 +15,10 @@
 
 namespace alg_utils = hal::plugins::alg_utils;
 
+using session::RTSPALGInfo;
+using session::RTSPCtrlSessInfo;
+using session::RTSPCtrlSessions;
+
 namespace hal {
 namespace plugins {
 namespace alg_rtsp {
@@ -62,6 +66,12 @@ fte::pipeline_action_t alg_rtsp_session_get_cb (fte::ctx_t &ctx);
 size_t process_control_message (void *ctxt, uint8_t *payload, size_t pkt_len);
 void rtsp_app_sess_cleanup_hdlr (alg_utils::app_session_t *app_sess);
 void rtsp_info_cleanup_hdlr (alg_utils::l4_alg_status_t *l4_sess);
+void
+add_expected_flow_from_proto(fte::ctx_t &ctx, alg_utils::app_session_t *app_sess,
+                             uint32_t idle_timeout, const FlowGateKey &proto_key);
+
+alg_utils::app_session_t *
+get_rtsp_session(const rtsp_session_key_t &key, alg_utils::app_session_t *ctrl_app_sess);
 
 hal_ret_t alg_rtsp_init(hal_cfg_t *hal_cfg);
 void alg_rtsp_exit();

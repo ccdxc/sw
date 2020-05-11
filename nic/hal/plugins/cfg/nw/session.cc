@@ -425,31 +425,11 @@ add_session_to_db (ep_t *sep, ep_t *dep, session_t *session)
 
     if (sep) {
         session->sep_handle = sep->hal_handle;
-        ep_add_session(sep, session);
+        ep_add_session(sep, session, false);
     }
     if (dep) {
         session->dep_handle = dep->hal_handle;
-        ep_add_session(dep, session);
-    }
-
-    return HAL_RET_OK;
-}
-
-//------------------------------------------------------------------------------
-// insert this session in all meta data structures
-//------------------------------------------------------------------------------
-static inline hal_ret_t
-updt_session_to_db (ep_t *sep, ep_t *dep, session_t *session)
-{
-    HAL_TRACE_VERBOSE("sep:{:p} dep:{:p} sess_sep_hdl:{} sess_dep_hdl:{}",
-                      (void *)sep, (void *)dep, session->sep_handle, session->dep_handle);
-    if ((sep) && (session->sep_handle == HAL_HANDLE_INVALID)) {
-        session->sep_handle = sep->hal_handle;
-        ep_add_session(sep, session);
-    }
-    if ((dep) && (session->dep_handle == HAL_HANDLE_INVALID)) {
-        session->dep_handle = dep->hal_handle;
-        ep_add_session(dep, session);
+        ep_add_session(dep, session, false);
     }
 
     return HAL_RET_OK;
@@ -459,7 +439,7 @@ updt_session_to_db (ep_t *sep, ep_t *dep, session_t *session)
 // insert this session in all meta data structures
 //------------------------------------------------------------------------------
 hal_ret_t
-updt_ep_to_session_db (ep_t *sep, ep_t *dep, session_t *session)
+updt_ep_to_session_db (ep_t *sep, ep_t *dep, session_t *session, bool ep_create)
 {
     HAL_TRACE_VERBOSE("sep_hdl:{} dep_hdl:{} sess_sep_hdl:{} sess_dep_hdl:{}",
                       (sep ? sep->hal_handle : 0), (dep ? dep->hal_handle : 0),
@@ -467,12 +447,43 @@ updt_ep_to_session_db (ep_t *sep, ep_t *dep, session_t *session)
 
     if ((sep) && (session->sep_handle == HAL_HANDLE_INVALID)) {
         session->sep_handle = sep->hal_handle;
-        ep_add_session(sep, session);
+        ep_add_session(sep, session, ep_create);
     }
     if ((dep) && (session->dep_handle == HAL_HANDLE_INVALID)) {
         session->dep_handle = dep->hal_handle;
-        ep_add_session(dep, session);
+        ep_add_session(dep, session, ep_create);
     }
+    return HAL_RET_OK;
+}
+
+void
+ep_add_to_session_db (ep_t *ep, session_t *session)
+{
+    if (session->sep_handle && session->dep_handle) {
+        // Both the sep & dep handle of this session is already populated. Nothing to be done
+        return;
+    }
+
+    if ((session->sep_handle == HAL_HANDLE_INVALID) &&
+        (!memcmp(ep->l2_key.mac_addr, session->iflow->config.l2_info.smac, ETH_ADDR_LEN))) {
+        updt_ep_to_session_db(ep, NULL, session, true);
+    } else if ((session->dep_handle == HAL_HANDLE_INVALID) &&
+               (!memcmp(ep->l2_key.mac_addr, session->iflow->config.l2_info.dmac, ETH_ADDR_LEN))) {
+        updt_ep_to_session_db(NULL, ep, session, true);
+    }
+}
+
+hal_ret_t
+ep_add_to_sessions (ep_t *ep)
+{
+    auto walk_func = [](void *entry, void *ctxt) {
+        hal::session_t  *session = (session_t *)entry;
+        ep_add_to_session_db((ep_t *)ctxt, session);
+        return false;
+    };
+
+    g_hal_state->session_hal_handle_ht()->walk_safe(walk_func, (void *)ep);
+
     return HAL_RET_OK;
 }
 
@@ -2656,6 +2667,7 @@ session_create (const session_args_t *args, hal_handle_t *session_handle,
     session->syncing_session = args->session->syncing_session;
     session->idle_timeout = args->session->idle_timeout;
     session->skip_sfw_reval = args->session->skip_sfw_reval;
+    session->sfw_is_alg = args->session->sfw_is_alg;
     session->sfw_rule_id = args->session->sfw_rule_id;
     session->sfw_action = args->session->sfw_action;
     session->aging_enqueued = 0;
@@ -2811,7 +2823,7 @@ session_update(const session_args_t *args, session_t *session)
         session->syncing_session = args->session->syncing_session;
 
     // Update this session to our db
-    updt_session_to_db(args->sep, args->dep, session);
+    updt_ep_to_session_db(args->sep, args->dep, session, false);
     return ret;
 }
 

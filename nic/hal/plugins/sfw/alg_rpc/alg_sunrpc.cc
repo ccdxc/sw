@@ -324,11 +324,54 @@ static void sunrpc_completion_hdlr (fte::ctx_t& ctx, bool status) {
         }
     } else if (l4_sess) {
         l4_sess->sess_hdl = ctx.session()->hal_handle;
+
         if (l4_sess->isCtrl == false) {
             l4_alg_status_t  *ctrl_sess =  g_rpc_state->get_ctrl_l4sess(\
                                                  l4_sess->app_session);
             incr_data_sess((rpc_info_t *)ctrl_sess->info);
         }
+    }
+}
+
+void
+alg_sunrpc_sync_session_proc(fte::ctx_t &ctx, l4_alg_status_t *l4_sess)
+{
+    RPCALGInfo   rpc_req = ctx.sess_status()->rpc_info();
+
+    // If any TCP Buff alread exits, free them up and repopulate from the sync
+    if (l4_sess->tcpbuf[DIR_IFLOW]) {
+        l4_sess->tcpbuf[DIR_IFLOW]->free();
+        l4_sess->tcpbuf[DIR_IFLOW] = NULL;
+    }
+    if (l4_sess->tcpbuf[DIR_RFLOW]) {
+        l4_sess->tcpbuf[DIR_RFLOW]->free();
+        l4_sess->tcpbuf[DIR_RFLOW] = NULL;
+    }
+
+    if (rpc_req.has_iflow_tcp_buf()) {
+        // Setup TCP buffer for IFLOW
+        l4_sess->tcpbuf[DIR_IFLOW] = alg_utils::tcp_buffer_t::factory(rpc_req.iflow_tcp_buf(), NULL,
+                                                                      parse_sunrpc_control_flow,
+                                                                      g_rpc_tcp_buffer_slabs);
+    }
+    if (rpc_req.has_rflow_tcp_buf()) {
+        l4_sess->tcpbuf[DIR_RFLOW] = alg_utils::tcp_buffer_t::factory(rpc_req.rflow_tcp_buf(), NULL,
+                                                                      parse_sunrpc_control_flow,
+                                                                      g_rpc_tcp_buffer_slabs);
+    }
+
+    rpc_ctrl_session_info_from_proto(l4_sess, rpc_req);
+
+    for (int i = 0; i < rpc_req.expected_flows().flow_size(); i++) {
+        insert_rpc_expflow_from_proto(ctx, l4_sess, process_sunrpc_data_flow,
+                                      rpc_req.expected_flows().flow(i).flow_key(),
+                                      rpc_req.expected_flows().flow(i).idle_timeout());
+
+    }
+    for (int i = 0; i < rpc_req.created_sessions().active_session_size(); i++) {
+        insert_rpc_expflow_from_proto(ctx, l4_sess, process_sunrpc_data_flow,
+                                      rpc_req.created_sessions().active_session(i), 0);
+
     }
 }
 
@@ -350,6 +393,9 @@ size_t process_sunrpc_data_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
     SDK_ASSERT_RETURN((ret == HAL_RET_OK), ret);
     l4_sess->alg = nwsec::APP_SVC_SUN_RPC;
     l4_sess->isCtrl = FALSE;
+    // This is done for vMotion syncing - When session is synced for data session
+    // this data session will be exported as Expected flow to the peer node.
+    SET_EXP_FLOW_KEY(l4_sess->entry.key, ctx->key());
 
     // Register completion handler and session state
     ctx->register_completion_handler(sunrpc_completion_hdlr);
@@ -683,11 +729,13 @@ hal_ret_t alg_sunrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
     fte::flow_update_t    flowupd;
     rpc_info_t           *rpc_info = NULL;
     app_session_t        *app_sess = NULL;
-    uint32_t              payload_offset = 0;
     uint8_t               rc = 0;
+    uint32_t              payload_offset = ((!ctx.sync_session_request()) ?
+                                             ctx.cpu_rxhdr()->payload_offset : 0);
 
-    HAL_TRACE_DEBUG("In alg_sunrpc_exec {:p}", (void *)l4_sess);
-    payload_offset = ctx.cpu_rxhdr()->payload_offset;
+    HAL_TRACE_DEBUG("In alg_sunrpc_exec {:p} info {:p} role {}", (void *)l4_sess,
+                    (l4_sess ? l4_sess->info : NULL), ctx.role());
+
     if (sfw_info->alg_proto == nwsec::APP_SVC_SUN_RPC &&
         (!ctx.existing_session())) {
         if (ctx.role() == hal::FLOW_ROLE_INITIATOR) {
@@ -710,34 +758,38 @@ hal_ret_t alg_sunrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
             ctx.register_completion_handler(sunrpc_completion_hdlr);
             ctx.register_feature_session_state(&l4_sess->fte_feature_state);
 
-            /*
-             * Connectionless SUNRPC would have the portmapper query
-             * in the first packet so start parsing.
-             */
-            if (ctx.key().proto == IP_PROTO_UDP) {
-                uint8_t *pkt = ctx.pkt();
-                rc  = parse_sunrpc_control_flow(&ctx, &pkt[payload_offset],
-                                            (ctx.pkt_len()-payload_offset));
-                if (!rc) {
-                    HAL_TRACE_ERR("SUN RPC ALG parse for UDP frame failed");
-                    return HAL_RET_ERR;
-                }
-                rpc_info->skip_sfw = true;
+            if (ctx.sync_session_request()) {
+                alg_sunrpc_sync_session_proc(ctx, l4_sess);
             } else {
-                flowupd.type = fte::FLOWUPD_MCAST_COPY;
-                flowupd.mcast_info.mcast_en = 1;
-                flowupd.mcast_info.mcast_ptr = P4_NW_MCAST_INDEX_FLOW_REL_COPY;
-                flowupd.mcast_info.proxy_mcast_ptr = 0;
-                ret = ctx.update_flow(flowupd);
+                /*
+                 * Connectionless SUNRPC would have the portmapper query
+                 * in the first packet so start parsing.
+                 */
+                if (ctx.key().proto == IP_PROTO_UDP) {
+                    uint8_t *pkt = ctx.pkt();
+                    rc  = parse_sunrpc_control_flow(&ctx, &pkt[payload_offset],
+                                                    (ctx.pkt_len()-payload_offset));
+                    if (!rc) {
+                        HAL_TRACE_ERR("SUN RPC ALG parse for UDP frame failed");
+                        return HAL_RET_ERR;
+                    }
+                    rpc_info->skip_sfw = true;
+                } else {
+                    flowupd.type = fte::FLOWUPD_MCAST_COPY;
+                    flowupd.mcast_info.mcast_en = 1;
+                    flowupd.mcast_info.mcast_ptr = P4_NW_MCAST_INDEX_FLOW_REL_COPY;
+                    flowupd.mcast_info.proxy_mcast_ptr = 0;
+                    ret = ctx.update_flow(flowupd);
 
-                HAL_TRACE_DEBUG("TCP flags: {}", ctx.cpu_rxhdr()->tcp_flags);
-                if ((ctx.cpu_rxhdr()->tcp_flags & (TCP_FLAG_SYN)) == TCP_FLAG_SYN) {
-                    HAL_TRACE_DEBUG("Setting up buffer for Iflow");
-                    // Setup TCP buffer for IFLOW
-                    l4_sess->tcpbuf[DIR_IFLOW] = tcp_buffer_t::factory(
-                                               htonl(ctx.cpu_rxhdr()->tcp_seq_num)+1,
-                                               NULL, parse_sunrpc_control_flow,
-                                               g_rpc_tcp_buffer_slabs);
+                    HAL_TRACE_DEBUG("TCP flags: {}", ctx.cpu_rxhdr()->tcp_flags);
+                    if ((ctx.cpu_rxhdr()->tcp_flags & (TCP_FLAG_SYN)) == TCP_FLAG_SYN) {
+                        HAL_TRACE_DEBUG("Setting up buffer for Iflow");
+                        // Setup TCP buffer for IFLOW
+                        l4_sess->tcpbuf[DIR_IFLOW] = tcp_buffer_t::factory(
+                                                             htonl(ctx.cpu_rxhdr()->tcp_seq_num)+1,
+                                                             NULL, parse_sunrpc_control_flow,
+                                                             g_rpc_tcp_buffer_slabs);
+                    }
                 }
             }
         } else { /* Responder flow */
@@ -746,6 +798,32 @@ hal_ret_t alg_sunrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
            flowupd.mcast_info.mcast_ptr = P4_NW_MCAST_INDEX_FLOW_REL_COPY;
            flowupd.mcast_info.proxy_mcast_ptr = 0;
            ret = ctx.update_flow(flowupd);
+        }
+    } else if (ctx.sync_session_request() && (ctx.role() == hal::FLOW_ROLE_INITIATOR)) {
+        HAL_TRACE_DEBUG("Ctrl:{}, Exist:{}", l4_sess->isCtrl, ctx.existing_session());
+        if (l4_sess->isCtrl == true) {
+            alg_sunrpc_sync_session_proc(ctx, l4_sess);
+        } else { // Data Session
+            if (!ctx.existing_session()) { 
+                // New data session
+                process_sunrpc_data_flow(&ctx, NULL, 0);
+            } else {
+                flow_update_t  flowupd = {type: FLOWUPD_SFW_INFO};
+                flowupd.sfw_info.skip_sfw_reval = 1;
+                flowupd.sfw_info.sfw_is_alg     = 1;
+                flowupd.sfw_info.sfw_rule_id    = ctx.session()->sfw_rule_id;
+                flowupd.sfw_info.sfw_action     = (uint8_t)nwsec::SECURITY_RULE_ACTION_ALLOW;
+                ctx.update_flow(flowupd);
+
+                flow_update_t  flowupd_a = {type: FLOWUPD_ACTION};
+                flowupd_a.action         = session::FLOW_ACTION_ALLOW;
+                ctx.update_flow(flowupd_a);
+
+                ctx.flow_log()->sfw_action        = nwsec::SECURITY_RULE_ACTION_ALLOW;
+                ctx.flow_log()->rule_id           = ctx.session()->sfw_rule_id;
+                ctx.flow_log()->alg               = nwsec::APP_SVC_SUN_RPC;
+                ctx.flow_log()->parent_session_id = l4_sess->sess_hdl;
+            }
         }
     } else if (l4_sess && l4_sess->info && (ctx.role() == hal::FLOW_ROLE_INITIATOR)) {
         rpc_info = (rpc_info_t *)l4_sess->info;
@@ -763,8 +841,7 @@ hal_ret_t alg_sunrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
              * would lead to opening up pinholes for FTP data sessions.
              */
             uint8_t buff = ctx.is_flow_swapped()?1:0;
-            if (ctx.payload_len() &&
-                (l4_sess->tcpbuf[0] && l4_sess->tcpbuf[1]))
+            if (ctx.payload_len() && (l4_sess->tcpbuf[0] && l4_sess->tcpbuf[1]))
                 l4_sess->tcpbuf[buff]->insert_segment(ctx, rpc_info->callback);
         } else {
             /*

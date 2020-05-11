@@ -257,8 +257,13 @@ message ALGStatus {
   bool                      iscontrol       = 6;
 }
 
+message EXPECTEDFlow {
+  nwsec.FlowGateKey flow_key       = 1; 
+  uint32            idle_timeout   = 2;
+}
+
 message EXPECTEDFlows {
-  repeated nwsec.FlowGateKey flow   = 1; 
+  repeated EXPECTEDFlow flow       = 1; 
 }
 
 message ACTIVESessions {
@@ -289,6 +294,22 @@ message TFTPALGInfo {
   uint32               tftpop           = 4; // TFTP Operation received
 }
 
+message SUNRPCInfo {
+    uint32            xid = 1;
+    uint32            prog_num = 2;
+    uint32            rpcvers = 3;
+}
+
+message MSRPCInfo {
+    uint32            data_rep = 1;
+    uint32            call_id = 2;
+    bytes             act_id = 3;
+    bytes             uuid = 4;
+    uint32            msrpc_64bit = 5;
+    bytes             msrpc_ctxt_id = 6;
+    uint32            num_msrpc_ctxt = 7;
+}
+
 // RPCInfo captures the operational status of SUNRPC/MSFT RPC ALG session
 message RPCALGInfo {
   bool                 iscontrol            = 1; // Is this flow control/data TFTP flow
@@ -296,6 +317,22 @@ message RPCALGInfo {
   uint32               num_data_sess        = 3; // Number of active data sessions associated with this control session
   uint32               num_exp_flows        = 4; // Number of expected flows opened by this session
   uint32               maxpkt_size_exceeded = 5; // Number of packets that exceeded maximum packet size while L7 reassembly 
+  bytes                pkt                  = 6;
+  uint32               payload_offset       = 7;
+  uint32               rpc_frag_cont        = 8;
+  types.IPAddress      ip                   = 9;
+  uint32               prot                 = 10;
+  uint32               dport                = 11;
+  uint32               vers                 = 12;
+  uint32               pkt_type             = 13;
+  oneof alg_info {
+      SUNRPCInfo       sun_rpc_info         = 14;
+      MSRPCInfo        ms_rpc_info          = 15;
+  }
+  TCPBuffer            iflow_tcp_buf        = 16;
+  TCPBuffer            rflow_tcp_buf        = 17;
+  EXPECTEDFlows        expected_flows       = 18; 
+  ACTIVESessions       created_sessions     = 19; 
 } 
 
 // SIPInfo captures the operational status of SIP ALG session
@@ -322,6 +359,19 @@ message FTPALGInfo {
   ACTIVESessions       created_sessions  = 9; 
 }
 
+message RTSPCtrlSessInfo {
+  fixed64              vrf_id            = 1; // Key: Vrf Id
+  types.IPAddress      server_ip         = 2; // Key: Server IP
+  uint32               server_port       = 3; // Key: Server Control Port
+  bytes                session_id        = 4; // Key: Session ID
+  EXPECTEDFlows        expected_flows    = 5; 
+  ACTIVESessions       created_sessions  = 6; 
+}
+
+message RTSPCtrlSessions {
+  repeated RTSPCtrlSessInfo session      = 1;
+}
+
 // RTSPALGInfo captures the operational status of RTSP ALG session
 message RTSPALGInfo {
   bool                 iscontrol         = 1; // Is this flow control/data RTSP flow
@@ -330,6 +380,9 @@ message RTSPALGInfo {
   uint32               num_data_sess     = 4; // Number of active data sessions associated with this control session
   uint32               num_exp_flows     = 5; // Number of expected flows opened by this session
   uint32               num_rtsp_sessions = 6; // Number of RTSP app sessions
+  TCPBuffer            iflow_tcp_buf     = 7;
+  TCPBuffer            rflow_tcp_buf     = 8;
+  RTSPCtrlSessions     ctrl_sessions     = 9;
 }
 
 // DNSALGInfo captures the operational status of DNS ALG session

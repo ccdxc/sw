@@ -51,7 +51,7 @@ bool is_ep_classic (const ep_t *ep);
 nwsec_profile_t *ep_get_pi_nwsec(ep_t *pi_ep);
 
 // Adding sessions to EPs
-hal_ret_t ep_add_session (ep_t *ep, session_t *session);
+hal_ret_t ep_add_session (ep_t *ep, session_t *session, bool ep_create);
 hal_ret_t ep_del_session (ep_t *ep, session_t *session);
 
 } // namespace hal

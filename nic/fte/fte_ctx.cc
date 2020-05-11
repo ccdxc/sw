@@ -939,6 +939,7 @@ std::ostream& operator<<(std::ostream& os, const aging_info_t& val)
 std::ostream& operator<<(std::ostream& os, const sfw_flow_info_t& val)
 {
     os << "{ sfw_rule_id=" << (uint64_t)val.sfw_rule_id;
+    os << " ,sfw_is_alg="  << val.sfw_is_alg;
     os << " ,sfw_action="  << val.sfw_action;
     os << " ,skip_sfw_reval=" << val.skip_sfw_reval;
     return os << "}";

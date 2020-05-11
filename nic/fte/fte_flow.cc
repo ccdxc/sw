@@ -701,6 +701,7 @@ void flow_t::from_config(const hal::flow_cfg_t &flow_cfg,
         sfw_info_.sfw_rule_id = session->sfw_rule_id;
         sfw_info_.sfw_action = session->sfw_action;
         sfw_info_.skip_sfw_reval = session->skip_sfw_reval;
+        sfw_info_.sfw_is_alg = session->sfw_is_alg;
     }
 
     // Header rewrite

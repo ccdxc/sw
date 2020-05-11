@@ -455,6 +455,7 @@ typedef struct session_cfg_s {
     uint8_t             tcp_sack_perm_option:1;
     uint8_t             conn_track_en:1;          // enable connection tracking
     uint8_t             skip_sfw_reval:1;         // skip firewall reval
+    uint8_t             sfw_is_alg:1;             // Its ALG session
     uint8_t             sfw_action:3;             // sfw action
     uint8_t             syncing_session:1;        // Session in midst of syncing by vMotion
 
@@ -498,6 +499,7 @@ struct session_s {
     uint16_t            fte_id:4;                 // FTE that created this session
     uint16_t            conn_track_en:1;          // enable connection tracking
     uint16_t            skip_sfw_reval:1;         // do not reeval session
+    uint16_t            sfw_is_alg:1;             // ALG Session
     uint16_t            sfw_action:3;             // sfw action to log
     uint16_t            deleting:1;               // is session queued up for deletion 
     uint16_t            aging_enqueued:1;         // is session aging action taken already
@@ -634,7 +636,8 @@ void incr_global_session_icmp_error_stats (uint8_t fte_id);
 hal_ret_t session_handle_upgrade (void);
 hal_ret_t session_flow_hash_get(FlowHashGetRequest& req,
                                 FlowHashGetResponseMsg *rsp);
-hal_ret_t updt_ep_to_session_db (ep_t *sep, ep_t *dep, session_t *session);
+hal_ret_t updt_ep_to_session_db (ep_t *sep, ep_t *dep, session_t *session, bool ep_create);
+hal_ret_t ep_add_to_sessions (ep_t *ep);
 void enqueue_flow_telemetry_state_to_age_list (flow_t *flow_p);
 bool session_modified_after_timestamp (session_t *session, uint64_t ts);
 hal_ret_t session_delete_all(void);

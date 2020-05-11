@@ -644,7 +644,8 @@ alg_state::expected_flows_to_proto_buf(app_session_t *app_sess, EXPECTEDFlows *e
         l4_alg_status_t *alg_status = dllist_entry(lentry, l4_alg_status_t, exp_flow_lentry);
         if (alg_status) {
             auto exp_flow_resp = exp_flows->add_flow();
-            flow_gate_key_to_proto(&alg_status->entry, exp_flow_resp);
+            flow_gate_key_to_proto(&alg_status->entry, exp_flow_resp->mutable_flow_key());
+            exp_flow_resp->set_idle_timeout(alg_status->idle_timeout);
         }
     }
     SDK_SPINLOCK_UNLOCK(&app_sess->slock);

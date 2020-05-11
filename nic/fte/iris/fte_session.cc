@@ -88,7 +88,7 @@ sync_session_in_fte (fte_session_args_t *sess_args)
                        feature_state, num_features);
         if (ret == HAL_RET_ENTRY_EXISTS) {
             HAL_TRACE_DEBUG("fte: local session exists");
-            updt_ep_to_session_db(ctx.sep(), ctx.dep(), ctx.session());
+            updt_ep_to_session_db(ctx.sep(), ctx.dep(), ctx.session(), false);
             continue;
         } else if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("fte: failied to init context, ret={}", ret);

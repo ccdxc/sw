@@ -422,13 +422,15 @@ fte::pipeline_action_t alg_dns_exec (fte::ctx_t &ctx)
     fte::feature_session_state_t    *alg_state = NULL;
     fte::flow_update_t               flowupd;
 
-    sfw_info = sfw::sfw_feature_state(ctx);
-    if (hal::g_hal_state->is_flow_aware() || ctx.protobuf_request()) {
+    if ((hal::g_hal_state->is_flow_aware()) ||
+        (ctx.protobuf_request() && !ctx.sync_session_request())) {
         return fte::PIPELINE_CONTINUE;
     }
+    sfw_info = sfw::sfw_feature_state(ctx);
 
     alg_state = ctx.feature_session_state();
-    if (alg_state != NULL && ctx.role() != hal::FLOW_ROLE_RESPONDER) {
+    if (alg_state != NULL && ctx.role() != hal::FLOW_ROLE_RESPONDER &&
+        !ctx.sync_session_request()) {
         /* Session already exists - DNS response packet */
         l4_sess = (l4_alg_status_t *)alg_status(alg_state);
         if (!l4_sess) {
@@ -439,7 +441,7 @@ fte::pipeline_action_t alg_dns_exec (fte::ctx_t &ctx)
             HAL_TRACE_DEBUG("DNS ALG - L4 session type is NOT DNS");
             return fte::PIPELINE_CONTINUE;
         }
-        HAL_TRACE_DEBUG("DNS ALG - Session exists");
+        HAL_TRACE_DEBUG("DNS ALG - Session exists Role:{}", ctx.role());
         dns_info = (dns_info_t *)l4_sess->info;
         SDK_ASSERT(dns_info);
 
@@ -465,8 +467,16 @@ fte::pipeline_action_t alg_dns_exec (fte::ctx_t &ctx)
         }
     } else if (sfw_info->alg_proto == nwsec::APP_SVC_DNS) {
         if (ctx.role() == hal::FLOW_ROLE_INITIATOR) {
-            /* Parse DNS packet and get dns id */
-            ret = parse_dns_packet(ctx, &dnsid);
+            if (!ctx.sync_session_request()) {
+                /* Parse DNS packet and get dns id */
+                ret = parse_dns_packet(ctx, &dnsid);
+            } else {
+                if (ctx.sess_status()->has_dns_info()) {
+                    dnsid = ctx.sess_status()->dns_info().dns_id();
+                } else {
+                    ret = HAL_RET_INVALID_ARG;
+                }
+            }
             if (ret == HAL_RET_NOT_SUPPORTED) {
                 ctx.set_drop();
                 HAL_TRACE_ERR("Dropping DNS ALG packet");

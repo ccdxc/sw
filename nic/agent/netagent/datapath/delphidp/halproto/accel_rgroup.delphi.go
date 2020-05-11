@@ -1286,14 +1286,19 @@ It has these top-level messages:
 	SessionRequestMsg
 	FlowStatus
 	ALGStatus
+	EXPECTEDFlow
 	EXPECTEDFlows
 	ACTIVESessions
 	TCPSegment
 	TCPBuffer
 	TFTPALGInfo
+	SUNRPCInfo
+	MSRPCInfo
 	RPCALGInfo
 	SIPALGInfo
 	FTPALGInfo
+	RTSPCtrlSessInfo
+	RTSPCtrlSessions
 	RTSPALGInfo
 	DNSALGInfo
 	SessionStatus
