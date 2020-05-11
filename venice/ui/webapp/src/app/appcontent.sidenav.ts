@@ -67,7 +67,6 @@ export const sideNavMenu: SideNavItem[] = [
           cssClass: 'app-l-side-nav-cluster-networkinterfaces'
         },
         roleGuard: UIRolePermissions.networknetworkinterface_read,
-        featureGuard: Features.enterprise,
         link: ['/cluster/', 'networkinterfaces']
       },
       {
