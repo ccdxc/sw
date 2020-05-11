@@ -103,7 +103,7 @@ func (sm *SysModel) VerifyVeniceStatus() error {
 	}
 
 	// check health of citadel
-	err = sm.CheckCitadelServiceStatus()
+	err = sm.CheckCitadelServiceStatus(cl.Status.Leader)
 	if err != nil {
 		log.Errorf("Checking venice citadel status failed : %v", err)
 		return err

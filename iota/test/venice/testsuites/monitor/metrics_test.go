@@ -107,7 +107,7 @@ func checkMetricsFields() {
 	if !ts.tb.HasNaplesHW() {
 		Skip("No naples hw detected, skip checking metrics")
 	}
-	tms := time.Now().UTC().Add(time.Second * -30).Format(time.RFC3339)
+	tms := time.Now().UTC().Add(time.Second * -60).Format(time.RFC3339)
 
 	// get node collection and init telemetry client
 	vnc := ts.model.VeniceNodes()
@@ -138,7 +138,7 @@ func checkMetricsFields() {
 				}
 				return nil
 			})
-		}).Should(Succeed())
+		}, time.Duration(10)*time.Minute, time.Duration(30)*time.Second).Should(Succeed())
 	}
 }
 
@@ -197,7 +197,7 @@ func checkClusterMetrics() {
 		}
 
 		return nil
-	}, time.Duration(5)*time.Minute, time.Duration(1)*time.Minute).Should(Succeed())
+	}, time.Duration(10)*time.Minute, time.Duration(30)*time.Second).Should(Succeed())
 }
 
 func checkCQMetricsFields() {
@@ -239,7 +239,7 @@ func checkCQMetricsFields() {
 					}
 					return nil
 				})
-			}, time.Duration(5)*time.Minute, time.Duration(1)*time.Minute).Should(Succeed())
+			}, time.Duration(10)*time.Minute, time.Duration(30)*time.Second).Should(Succeed())
 		}
 	}
 }

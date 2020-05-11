@@ -650,10 +650,45 @@ func (sm *SysModel) SetupVeniceNodes() error {
 }
 
 //CheckCitadelServiceStatus check citadel status
-func (sm *SysModel) CheckCitadelServiceStatus() error {
-
-	// walk all venice nodes
+func (sm *SysModel) CheckCitadelServiceStatus(leaderNode string) error {
+	// check citadel pods ready or not
 	trig := sm.Tb.NewTrigger()
+	cNodes := []string{}
+	for _, vn := range sm.VeniceNodeMap {
+		cNodes = append(cNodes, fmt.Sprintf("%q", vn.IP()))
+	}
+	hostSelector := "select([.status.hostIP]|inside([" + strings.Join(cNodes, ",") + "]))"
+
+	citadelNotReadyResp := ""
+	for _, node := range sm.VeniceNodeMap {
+		if node.IP() == leaderNode {
+			entity := node.Name() + "_venice"
+			trig.AddCommand(`/pensando/iota/bin/kubectl get pods -a --all-namespaces -o json  | /usr/local/bin/jq-linux64 -r '.items[] | `+hostSelector+
+				`| select(.status.phase != "Running" or ([ .status.conditions[] | select(.type == "Ready" and .status == "False") ] | length ) == 1 ) | .metadata.namespace + "/" + .metadata.name' `,
+				entity, node.Name())
+
+			// trigger commands
+			triggerResp, err := trig.Run()
+			if err != nil {
+				log.Errorf("Failed to get k8s service status Err: %v", err)
+				return err
+			}
+			for _, cmdResp := range triggerResp {
+				if cmdResp.ExitCode != 0 {
+					return fmt.Errorf("Venice trigger %v failed. code %v, Out: %v, StdErr: %v", cmdResp.Command, cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
+				}
+				if strings.Contains(cmdResp.Stdout, "citadel") {
+					citadelNotReadyResp += cmdResp.Stdout + " "
+				}
+			}
+		}
+	}
+	if citadelNotReadyResp != "" {
+		return fmt.Errorf("Some pods including pen-citadel are not ready. Detected pods are: %v", citadelNotReadyResp)
+	}
+
+	// try to query on each node
+	trig = sm.Tb.NewTrigger()
 	for _, node := range sm.VeniceNodeMap {
 		entity := node.Name() + "_venice"
 		trig.AddCommand(fmt.Sprintf(`curl  http://localhost:7086/query --data-urlencode "db=default" --data-urlencode "q=SELECT * FROM Node LIMIT 100" `),
