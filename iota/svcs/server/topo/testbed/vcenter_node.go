@@ -15,6 +15,7 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh"
+	"golang.org/x/sync/errgroup"
 	//"golang.org/x/sync/errgroup"
 )
 
@@ -81,6 +82,42 @@ func (n *VcenterNode) cleanUpVcenter() error {
 	return nil
 }
 
+func (n *VcenterNode) deployWorkloadTemplates() error {
+
+	images := n.Node.GetVcenterConfig().WorkloadImages
+	for _, image := range images {
+		err := imageRep.DownloadImage(image)
+		if err != nil {
+			return err
+		}
+	}
+
+	pool, _ := errgroup.WithContext(context.Background())
+	for _, node := range n.managedNodes {
+
+		node := node
+		pool.Go(func() error {
+			for _, image := range images {
+				imageDir, _ := imageRep.GetImageDir(image)
+				tName := templateName(node.GetNodeInfo().IPAddress, image)
+				_, err := n.dc.DeployVM(n.ClusterName, node.GetNodeInfo().IPAddress, tName,
+					4, 4, constants.EsxDataVMNetworks, imageDir)
+				if err != nil {
+					return errors.Wrap(err, "Deploy VM failed")
+				}
+				imageRep.SetImageTemplate(node.GetNodeInfo().IPAddress, image, tName)
+			}
+			return nil
+		})
+	}
+
+	err := pool.Wait()
+	if err != nil {
+		log.Errorf("Error deploying templates.")
+		return errors.Wrap(err, "Error deploying templates.")
+	}
+	return nil
+}
 func (n *VcenterNode) initVcenter() error {
 
 	if err := n.cleanUpVcenter(); err != nil {
@@ -199,6 +236,12 @@ func (n *VcenterNode) initVcenter() error {
 	err = dc.AddDvs(dvsSpec)
 	if err != nil {
 		log.Errorf("TOPO SVC | InitTestbed  | Error add DVS with host spec %v", err.Error())
+		return err
+	}
+
+	err = n.deployWorkloadTemplates()
+	if err != nil {
+		log.Errorf("TOPO SVC | InitTestbed  | Failed to deploy VM templates %v", err.Error())
 		return err
 	}
 

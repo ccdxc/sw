@@ -646,16 +646,19 @@ class NaplesManagement(EntityManagement):
     #if oob is not available read internal IP
     def ReadInternalIP(self):
         for _ in range(5):
-            output = self.RunCommandOnConsoleWithOutput("ifconfig int_mnic0")
-            ifconfig_regexp = "addr:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"
-            x = re.findall(ifconfig_regexp, output)
-            if len(x) > 0:
-                self.ipaddr = x[0]
-                print("Read internal IP {0}".format(self.ipaddr))
-                self.SSHPassInit()
-                return
-            else:
-                print("Did not Read Internal IP  {0}".format(self.ipaddr))
+            try:
+                output = self.RunCommandOnConsoleWithOutput("ifconfig int_mnic0")
+                ifconfig_regexp = "addr:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"
+                x = re.findall(ifconfig_regexp, output)
+                if len(x) > 0:
+                    self.ipaddr = x[0]
+                    print("Read internal IP {0}".format(self.ipaddr))
+                    self.SSHPassInit()
+                    return
+                else:
+                    print("Did not Read Internal IP  {0}".format(self.ipaddr))
+            except:
+                    print("Did not Read Internal IP  {0}".format(self.ipaddr))
         raise Exception("Not able read internal IP")
 
 

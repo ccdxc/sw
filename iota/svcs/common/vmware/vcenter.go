@@ -541,6 +541,9 @@ func (dc *DataCenter) DeployVM(clusterName string, hostname string,
 		return nil, errors.Wrapf(err, "Data store find failed")
 	}
 
+	if dc.vc.VMExists(name) {
+		return dc.vc.BootVM(name)
+	}
 	return dc.vc.DeployVMOnDataStore(ds, hostRef.hs, name, ncpus, memory, networks, ovfDir)
 }
 
@@ -1837,3 +1840,38 @@ func (dc *DataCenter) SetVlanOverride(dvsName string, vmName string, accessVlan,
 	}
 	return nil
 }
+
+/*
+func (dc *DataCenter) CloneVM(name string, templateVM *VM) error {
+
+	hs, err := templateVM.vm.HostSystem(dc.vc.Entity.Ctx())
+	if err != nil {
+		return errors.Wrap(err, "Get resource pool failed")
+	}
+
+	rp, err := hs.ResourcePool(vm.entity.Ctx())
+	if err != nil {
+		return errors.Wrap(err, "Get resource pool failed")
+	}
+
+	ref := rp.Reference()
+
+	spec := types.VirtualMachineCloneSpec{
+		Location: types.VirtualMachineRelocateSpec{
+			Pool: &ref,
+		},
+	}
+
+	folders, err := dc.ref.Folders(vm.entity.Ctx())
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	task, err := vm.vm.Clone(vm.entity.Ctx(), folders.VmFolder, name, spec)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return task.Wait(vm.entity.Ctx())
+}
+*/

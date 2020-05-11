@@ -871,6 +871,12 @@ func (tb *TestBed) setupVcenterNode(node *TestNode) error {
 		node.VcenterConfig.DcName = uid + "-iota-dc"
 		node.VcenterConfig.ClusterName = uid + "-iota-cluster"
 		node.VcenterConfig.DistributedSwitch = "#Pen-DVS-" + node.VcenterConfig.DcName
+
+		info, ok := tb.Topo.WkldInfo["esx"]
+		if !ok {
+			return fmt.Errorf("Vcenter node but ESX workload not found")
+		}
+		node.VcenterConfig.WorkloadImages = []string{info.WorkloadImage}
 		tb.switchName = node.VcenterConfig.DistributedSwitch
 		tb.dcName = node.VcenterConfig.DcName
 		tb.clusterName = node.VcenterConfig.ClusterName

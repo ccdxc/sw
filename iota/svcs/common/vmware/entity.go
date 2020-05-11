@@ -98,6 +98,8 @@ type EntityIntf interface {
 	VMExists(name string) bool
 	DeployVM(clusterName string, hostname string,
 		name string, ncpus uint, memory uint, networks []string, ovfDir string) (*VMInfo, error)
+	CloneVM(clusterName string, hostname string,
+		name string, newName string, ncpus uint, memory uint) (*VMInfo, error)
 	BootVM(name string) (*VMInfo, error)
 	FindDvsPortGroup(name string, mcriteria DvsPGMatchCriteria) (string, error)
 	AddPortGroupToDvs(name string, pairs []DvsPortGroup) error
@@ -603,8 +605,8 @@ func (entity *Entity) cloneVMOnHost(host *object.HostSystem, name string, newNam
 func (dc *DataCenter) CloneVM(clusterName string, hostname string,
 	name string, newName string, ncpus uint, memory uint) (*VMInfo, error) {
 
-	dc.getClientWithRLock()
-	defer dc.releaseClientRLock()
+	//dc.getClientWithRLock()
+	//defer dc.releaseClientRLock()
 	hostRef, err := dc.findHost(clusterName, hostname)
 	if err != nil {
 		return nil, err

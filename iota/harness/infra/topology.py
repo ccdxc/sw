@@ -729,6 +729,8 @@ class Node(object):
             msg.vcenter_config.dc_name = store.GetTestbed().GetVCenterDataCenterName()
             msg.vcenter_config.cluster_name = store.GetTestbed().GetVCenterClusterName()
             msg.vcenter_config.distributed_switch = store.GetTestbed().GetVCenterDVSName()
+            for image in self.__topo.GetWorkloadImages():
+                msg.vcenter_config.workload_images.append(image)
             #msg.vcenter_config.enable_vmotion_over_mgmt = True
 
         elif self.Role() == topo_pb2.PERSONALITY_VENICE:
@@ -1336,6 +1338,13 @@ class Topology(object):
 
     def GetWorkloadTypeForNode(self, node_name):
         return self.__nodes[node_name].WorkloadType()
+
+    def GetWorkloadImages(self):
+        images = set()
+        for n in self.__nodes.values():
+            if n.IsWorkloadNode():
+                images.add(n.WorkloadImage())
+        return list(images)
 
     def GetWorkloadImageForNode(self, node_name):
         return self.__nodes[node_name].WorkloadImage()

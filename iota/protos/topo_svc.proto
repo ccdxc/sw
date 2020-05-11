@@ -210,6 +210,8 @@ message VcenterConfig {
     uint32 pvlan_end                     = 6;
 
     bool   enable_vmotion_over_mgmt      = 7;
+
+    repeated string workload_images      = 8;
 }
 
 

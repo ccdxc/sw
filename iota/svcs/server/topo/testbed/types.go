@@ -64,7 +64,8 @@ type VcenterNode struct {
 
 type imageRepository struct {
 	sync.Mutex
-	imagesMap map[string]string
+	imagesMap   map[string]string
+	templateMap map[string]string
 }
 
 func (i *imageRepository) GetImageDir(name string) (string, error) {
@@ -75,6 +76,34 @@ func (i *imageRepository) GetImageDir(name string) (string, error) {
 	}
 
 	return "", errors.New("Image not found")
+}
+
+func templateName(host, image string) string {
+	return templateSubString() + "-" + host + "-" + image
+}
+
+func templateSubString() string {
+	return "template"
+}
+
+func (i *imageRepository) GetImageTemplate(host, workloadImage string) (string, error) {
+	i.Lock()
+	defer i.Unlock()
+
+	if img, ok := i.templateMap[templateName(host, workloadImage)]; ok {
+		return img, nil
+	}
+
+	return "", errors.New("template Image not found")
+}
+
+func (i *imageRepository) SetImageTemplate(host, workloadImage, template string) error {
+	i.Lock()
+	defer i.Unlock()
+
+	i.templateMap[templateName(host, workloadImage)] = template
+
+	return nil
 }
 
 func (i *imageRepository) downloadDataVMImage(image string) (string, error) {
@@ -225,6 +254,7 @@ func (n *TestNode) IsOrchesratorNode() bool {
 func init() {
 
 	logger = log.New()
-	imageRep = imageRepository{imagesMap: make(map[string]string)}
+	imageRep = imageRepository{imagesMap: make(map[string]string),
+		templateMap: make(map[string]string)}
 
 }

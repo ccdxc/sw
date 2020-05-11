@@ -343,6 +343,7 @@ dependencies:
     - reference: iota/test/standalone/precheckin/esx
     - reference: iota/test/standalone/precheckin/linux
     - reference: iota/test/venice
+    - reference: iota/test/venice/vcenter
   iota/test/apollo:
     - reference: iota/test/standalone/sanity/apulu-sdn-pds-precheckin
   iota/test/apulu:

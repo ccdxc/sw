@@ -394,14 +394,13 @@ func (vm *vmESXWorkloadBase) TearDown() {
 }
 
 func (vm *vmVcenterWorkload) BringUp(args ...string) error {
-	var dataVMDir string
 	var clusterName string
 	var hostName string
 	var vmInfo *vmware.VMInfo
 	var err error
 
 	vm.vmName = args[0]
-	dataVMDir = args[1]
+	template := args[1]
 	clusterName = args[2]
 	hostName = args[3]
 	vm.agentBinaryPath = args[4]
@@ -426,8 +425,7 @@ func (vm *vmVcenterWorkload) BringUp(args ...string) error {
 	host.DestoryVM(vm.vmName)
 	if !host.VMExists(vm.vmName) {
 		vm.logger.Infof("Deploying VM on cluster %v, host %v", clusterName, hostName)
-		vmInfo, err = host.DeployVM(clusterName, hostName, vm.vmName, cpu, memory,
-			constants.EsxDataVMNetworks, dataVMDir)
+		vmInfo, err = host.CloneVM(clusterName, hostName, template, vm.vmName, cpu, memory)
 		if err != nil {
 			return errors.Wrap(err, "Deploy VM failed")
 		}

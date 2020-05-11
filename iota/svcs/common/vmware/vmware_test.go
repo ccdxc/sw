@@ -158,7 +158,7 @@ func Test_vcenter_dissocaitate(t *testing.T) {
 
 func Test_vcenter_find_host(t *testing.T) {
 
-	//	TestUtils.Assert(t, false, "Ds not created")
+	//TestUtils.Assert(t, false, "Ds not created")
 
 	ctx, _ := context.WithCancel(context.Background())
 	vc, err := NewVcenter(ctx, "barun-vc.pensando.io", "administrator@pensando.io", "N0isystem$",
@@ -175,6 +175,10 @@ func Test_vcenter_find_host(t *testing.T) {
 	c, ok := dc.clusters["sudhiaithal-iota-cluster"]
 	TestUtils.Assert(t, ok, "successfuly setup cluster")
 	TestUtils.Assert(t, len(c.hosts) == 2, "successfuly setup cluster")
+
+	vm, err2 := dc.NewVM("node1-ep1")
+	TestUtils.Assert(t, err2 == nil, "VM FOUND")
+	TestUtils.Assert(t, vm != nil, "VM FOND")
 
 	//dvs, err := dc.findDvs("#Pen-DVS-ptprabu-iota-dc")
 	//TestUtils.Assert(t, err == nil, "successfuly found dvs")
@@ -198,7 +202,12 @@ func Test_vcenter_find_host(t *testing.T) {
 			Portgroup:     pgName,
 			EnableVmotion: true})
 		fmt.Printf("ERror %v", err)
-		TestUtils.Assert(t, err == nil, "Added")
+		TestUtils.Assert(t, err == nil, "Added") */
+
+	nvm, err := dc.CloneVM("ptprabu-iota-cluster", "192.168.68.172", "node1-ep3", "temp-vm", 4, 4)
+	//fmt.Printf("Error %v", err.Error())
+	TestUtils.Assert(t, err == nil, "VM Clone failed")
+	TestUtils.Assert(t, nvm != nil, "VM FOND")
 
 		TestUtils.Assert(t, false, "Ds not created") */
 

@@ -49,6 +49,10 @@ func (n *TestNode) ctrlVMName() string {
 	return constants.EsxControlVMNamePrefix + n.info.IPAddress
 }
 
+func (n *TestNode) isTemplateVM(vm string) bool {
+	return strings.Contains(vm, templateSubString())
+}
+
 func (n *TestNode) cleanupEsxNode(cfg *ssh.ClientConfig) error {
 	log.Infof("Cleaning up esx node %v", n.GetNodeInfo().IPAddress)
 	host, err := vmware.NewHost(context.Background(), n.GetNodeInfo().IPAddress, n.GetNodeInfo().Username, n.GetNodeInfo().Password)
@@ -72,6 +76,11 @@ func (n *TestNode) cleanupEsxNode(cfg *ssh.ClientConfig) error {
 
 	for _, vm := range vms {
 		if vm == nil {
+			continue
+		}
+
+		//Ignore template VMs
+		if n.isTemplateVM(vm.Name()) {
 			continue
 		}
 		if vm.Name() == n.ctrlVMName() {
@@ -290,14 +299,14 @@ func (n *TestNode) InitNode(reboot, restoreAgentFiles bool, c *ssh.ClientConfig,
 		log.Errorf("TOPO SVC | InitTestBed | Failed to Nic conf file: %v, to TestNode: %v, at IPAddress: %v", constants.NicFinderScript, n.Node.Name, n.Node.IpAddress)
 		return err
 	}
- 
-        if restoreAgentFiles {
-	    log.Infof("TOPO SVC | InitTestBed | Upload IOTA Agent SavedState on TestNode: %v, IPAddress: %v", n.Node.Name, n.Node.IpAddress)
-            // Copy Agent state gob files to the remote node
-            if err := n.CopyTo(c, constants.DstIotaDBDir, n.SavedDBGobFiles()); err != nil {
-                    log.Errorf("TOPO SVC | InitTestBed | Failed to copy common artifacts, to TestNode: %v, at IPAddress: %v", n.Node.Name, n.Node.IpAddress)
-            }
-        }
+
+	if restoreAgentFiles {
+		log.Infof("TOPO SVC | InitTestBed | Upload IOTA Agent SavedState on TestNode: %v, IPAddress: %v", n.Node.Name, n.Node.IpAddress)
+		// Copy Agent state gob files to the remote node
+		if err := n.CopyTo(c, constants.DstIotaDBDir, n.SavedDBGobFiles()); err != nil {
+			log.Errorf("TOPO SVC | InitTestBed | Failed to copy common artifacts, to TestNode: %v, at IPAddress: %v", n.Node.Name, n.Node.IpAddress)
+		}
+	}
 
 	log.Infof("TOPO SVC | InitTestBed | Starting IOTA Agent on TestNode: %v, IPAddress: %v", n.GetNodeInfo().Name, n.GetNodeInfo().IPAddress)
 	sudoAgtCmd := fmt.Sprintf("sudo %s", constants.DstIotaAgentBinary)
