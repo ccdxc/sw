@@ -65,6 +65,162 @@
                 "upgrade": ["fail", ""]
             }
         }
+    },
+
+    "test_case_3" : {
+        "description" : "Testing with pre hook script failure injection in compatcheck (Discovery event)",
+        "svc" : {
+            "svc1" : {
+                "ipc_id" : "51"
+            },
+            "svc2" : {
+                "ipc_id" : "52"
+            }
+        },
+
+        "pre_hook" : {
+            "script" : "test_script_failure.sh",
+            "stage" : "compatcheck"
+        },
+
+        "expected_result" : {
+            "api_return_code" : "1",
+            "log": {
+                "fsm_svc_svc1": ["", ""],
+                "fsm_svc_svc2": ["", ""],
+                "upgrade": ["", ""]
+            }
+        }
+    },
+
+
+    "test_case_4" : {
+        "description" : "Testing with post hook script failure injection in compatcheck (Discovery event)",
+        "svc" : {
+            "svc1" : {
+                "ipc_id" : "51"
+            },
+            "svc2" : {
+                "ipc_id" : "52"
+            }
+        },
+
+        "post_hook" : {
+            "script" : "test_script_failure.sh",
+            "stage" : "compatcheck"
+        },
+
+        "expected_result" : {
+            "api_return_code" : "1",
+            "log": {
+                "fsm_svc_svc1": ["", ""],
+                "fsm_svc_svc2": ["", ""],
+                "upgrade": ["", ""]
+            }
+        }
+    },
+
+    "test_case_5" : {
+        "description" : "Testing with pre hook script failure injection in start (Serial Event)",
+        "svc" : {
+            "svc1" : {
+                "ipc_id" : "51"
+            },
+            "svc2" : {
+                "ipc_id" : "52"
+            }
+        },
+
+        "pre_hook" : {
+            "script" : "test_script_failure.sh",
+            "stage" : "start"
+        },
+
+        "expected_result" : {
+            "api_return_code" : "1",
+            "log": {
+                "fsm_svc_svc1": ["", ""],
+                "fsm_svc_svc2": ["", ""],
+                "upgrade": ["", ""]
+            }
+        }
+    },
+
+    "test_case_6" : {
+        "description" : "Testing with post hook script failure injection in start (Serial Event)",
+        "svc" : {
+            "svc1" : {
+                "ipc_id" : "51"
+            },
+            "svc2" : {
+                "ipc_id" : "52"
+            }
+        },
+
+        "post_hook" : {
+            "script" : "test_script_failure.sh",
+            "stage" : "start"
+        },
+
+        "expected_result" : {
+            "api_return_code" : "1",
+            "log": {
+                "fsm_svc_svc1": ["", ""],
+                "fsm_svc_svc2": ["", ""],
+                "upgrade": ["", ""]
+            }
+        }
+    },
+
+    "test_case_7" : {
+        "description" : "Testing with pre hook script failure injection in backup (Parallel Event)",
+        "svc" : {
+            "svc1" : {
+                "ipc_id" : "51"
+            },
+            "svc2" : {
+                "ipc_id" : "52"
+            }
+        },
+
+        "pre_hook" : {
+            "script" : "test_script_failure.sh",
+            "stage" : "backup"
+        },
+
+        "expected_result" : {
+            "api_return_code" : "1",
+            "log": {
+                "fsm_svc_svc1": ["", ""],
+                "fsm_svc_svc2": ["", ""],
+                "upgrade": ["", ""]
+            }
+        }
+    },
+
+    "test_case_8" : {
+        "description" : "Testing with post hook script failure injection in backup (Parallel Event)",
+        "svc" : {
+            "svc1" : {
+                "ipc_id" : "51"
+            },
+            "svc2" : {
+                "ipc_id" : "52"
+            }
+        },
+
+        "post_hook" : {
+            "script" : "test_script_failure.sh",
+            "stage" : "backup"
+        },
+
+        "expected_result" : {
+            "api_return_code" : "1",
+            "log": {
+                "fsm_svc_svc1": ["", ""],
+                "fsm_svc_svc2": ["", ""],
+                "upgrade": ["", ""]
+            }
+        }
     }
 }
-

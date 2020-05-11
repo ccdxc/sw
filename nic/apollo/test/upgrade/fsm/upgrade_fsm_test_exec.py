@@ -115,8 +115,8 @@ def add_timestamp(caller):
         start_time = time.time()
         result = caller(**kwargs)
         end_time = time.time()
-       # Log("", "INFO", message(5).format(kwargs, end_time - start_time),
-       #    call_stack=False)
+        # Log("", "INFO", message(5).format(kwargs, end_time - start_time),
+        #    call_stack=False)
         return result
 
     return timed
@@ -143,7 +143,7 @@ def execute(**kwargs):
         cmd = "stdbuf -i0 -o0 -e0 " + cmd
         cmd += " &"
         os.system(cmd)
-        Log("", "INFO", message(4).format(cmd),call_stack=False)
+        Log("", "INFO", message(4).format(cmd), call_stack=False)
 
     else:
         cmd += " 2>&1 > /dev/null "
@@ -182,6 +182,8 @@ class ExecutePdsUpgradeFsmTest(object):
         self.fsm_test_service = ""
         self.pdsupgclient = "pdsupgclient"
         self.pdsupgmgr = "pdsupgmgr"
+        self.pdsupgmgr_json = "upgrade_graceful.json"
+        self.upgrade_gen_json = "graceful_test.json"
         self.setup_upgrade_gtests = ""
         self.setup_env_mock = ""
         self.logs_dir = ""
@@ -208,8 +210,12 @@ class ExecutePdsUpgradeFsmTest(object):
         self.BUILD_DIR = os.getenv("BUILD_DIR",
                                    "BUILD_DIR does not exist")
         self.PIPELINE = os.getenv("PIPELINE",
-                                   "PIPELINE does not exist")
+                                  "PIPELINE does not exist")
 
+        self.pdsupgmgr_json = os.path.join(self.PDSPKG_TOPDIR, "conf", "gen",
+                                           self.pdsupgmgr_json)
+        self.upgrade_gen_json = os.path.join(self.BUILD_DIR, "gen",
+                                           self.upgrade_gen_json)
         self.fsm_test_service = os.path.join(self.PDSPKG_TOPDIR, "sdk", "test",
                                              "upgrade", "fsm",
                                              "start_services.sh")
@@ -217,13 +223,14 @@ class ExecutePdsUpgradeFsmTest(object):
                                          self.PIPELINE, "capri", "bin",
                                          self.pdsupgclient)
         self.pdsupgmgr = os.path.join(self.PDSPKG_TOPDIR, "build", "x86_64",
-                                         self.PIPELINE, "capri", "bin",
-                                         self.pdsupgmgr)
-        self.setup_upgrade_gtests = os.path.join(self.PDSPKG_TOPDIR,"apollo",
-                                                 "test","tools",
+                                      self.PIPELINE, "capri", "bin",
+                                      self.pdsupgmgr)
+        self.setup_upgrade_gtests = os.path.join(self.PDSPKG_TOPDIR, "apollo",
+                                                 "test", "tools",
                                                  "setup_upgrade_gtests.sh")
 
-        self.setup_env_mock = os.path.join(self.PDSPKG_TOPDIR,"apollo","tools",
+        self.setup_env_mock = os.path.join(self.PDSPKG_TOPDIR, "apollo",
+                                           "tools",
                                            "setup_env_mock.sh")
         self.setup_env_mock += self.PIPELINE
 
@@ -233,7 +240,6 @@ class ExecutePdsUpgradeFsmTest(object):
         self.logs_dir = os.path.join("/tmp", "upgmgr_fsm_test")
         execute(cmd="rm -rf {0}".format(self.logs_dir), return_check=False)
         execute(cmd="mkdir -p {0}".format(self.logs_dir), return_check=False)
-
 
     def __get_data_by_key_walk__(self, key_path=None,
                                  default=None, check_values=False,
@@ -287,11 +293,11 @@ class ExecutePdsUpgradeFsmTest(object):
         return path
 
     def __backup_log__(self, dest):
-        copy="cp {0} {1}".format(self.fsm_logs, dest)
+        copy = "cp {0} {1}".format(self.fsm_logs, dest)
         execute(cmd=copy, return_check=False)
-        copy="cp {0} {1}".format(self.upgrade_log, dest)
+        copy = "cp {0} {1}".format(self.upgrade_log, dest)
         execute(cmd=copy, return_check=False)
-        copy="cp {0} {1}".format(self.pdsagent_log, dest)
+        copy = "cp {0} {1}".format(self.pdsagent_log, dest)
         execute(cmd=copy, return_check=False)
 
     def __generate_log__(self):
@@ -300,19 +306,23 @@ class ExecutePdsUpgradeFsmTest(object):
         execute(cmd=command, return_check=True)
 
     def __print_log__(self, log_file):
-        print ("*"*100)
-        print ("Dumping Log File {0}".format(log_file))
-        print ("*"*100)
+        print("*" * 100)
+        print("Dumping Log File {0}".format(log_file))
+        print("*" * 100)
         with open(log_file, "r") as f:
-            contents =f.read()
-            print (contents)
-        print ("*"*100)
-
+            contents = f.read()
+            print(contents)
+        print("*" * 100)
 
     def __setup__(self):
         command = "source {0}".format(self.setup_upgrade_gtests)
         command += " && upg_init"
         execute(cmd=command, return_check=True)
+
+        command = "source {0}".format(self.setup_upgrade_gtests)
+        command += " && upg_setup {0}".format(self.upgrade_gen_json)
+        execute(cmd=command, return_check=True)
+
         execute(cmd="rm -f /dev/shm/upgradelog", return_check=False)
         execute(cmd="rm -f {0}".format(self.fsm_logs), return_check=False)
         execute(cmd="rm -f {0}".format(self.upgrade_log), return_check=False)
@@ -332,8 +342,9 @@ class ExecutePdsUpgradeFsmTest(object):
 
     def __start_pds_upgrade__(self):
         Log("", "INFO", message(9).format(self.pdsupgmgr), call_stack=False)
-        command = self.pdsupgmgr + " -t {0}sdk/test/upgrade/fsm/scripts/".format(self.PDSPKG_TOPDIR)
-        command +=  " 2>&1 > /dev/null"
+        command = self.pdsupgmgr + " -t {0}sdk/test/upgrade/fsm/scripts/".format(
+            self.PDSPKG_TOPDIR)
+        command += " 2>&1 > /dev/null"
         ret = execute(cmd=command, return_check=True, is_background=True)
         ret = execute(cmd="sleep 3", return_check=True)
         return ret
@@ -347,7 +358,7 @@ class ExecutePdsUpgradeFsmTest(object):
         if err_code is not None:
             command += " " + err_code
             command += " " + fsm_stage
-        command +=  " 2>&1 | tee fsm_test_{0}.log > /dev/null".format(svc_name)
+        command += " 2>&1 | tee fsm_test_{0}.log > /dev/null".format(svc_name)
         ret = execute(cmd=command, return_check=True, is_background=True)
 
     def __match_log__(self, log_file, logs_to_match):
@@ -379,6 +390,45 @@ class ExecutePdsUpgradeFsmTest(object):
 
         self.__start_fsm_test__(svc_name, svc_id, err_code, fsm_stage)
 
+    def __inject_pre_hook_failure__(self, pre_hook, pre_hook_stage):
+        try:
+            with open(self.pdsupgmgr_json, 'r') as f:
+                upgrade_json = json.load(f)
+                upgrade_json['%s' % "upg_stages"]['%s' % pre_hook_stage]['%s' % "pre_hook"] = pre_hook
+
+            os.remove(self.pdsupgmgr_json)
+
+            with open(self.pdsupgmgr_json, 'w') as f:
+                json.dump(upgrade_json, f, indent=4)
+
+            Log("", "INFO", "  Pre hook script {0} injected in stage {1}".
+                format(pre_hook, pre_hook_stage))
+        except IOError as e:
+            frame_info = inspect.getframeinfo(inspect.currentframe())
+            file = str(frame_info.filename) + str(frame_info.lineno)
+            Log(file, "FATAL", "{0}".format(type(e).__name__),
+                call_stack=True)
+
+    def __inject_post_hook_failure__(self, post_hook, post_hook_stage):
+        try:
+            with open(self.pdsupgmgr_json, 'r') as f:
+                upgrade_json = json.load(f)
+                upgrade_json['%s' % "upg_stages"]['%s' % post_hook_stage][
+                    '%s' % "post_hook"] = post_hook
+
+            os.remove(self.pdsupgmgr_json)
+
+            with open(self.pdsupgmgr_json, 'w') as f:
+                json.dump(upgrade_json, f, indent=4)
+
+            Log("", "INFO", "  Post hook script {0} injected in stage {1}".
+                format(post_hook, post_hook_stage))
+        except IOError as e:
+            frame_info = inspect.getframeinfo(inspect.currentframe())
+            file = str(frame_info.filename) + str(frame_info.lineno)
+            Log(file, "FATAL", "{0}".format(type(e).__name__),
+                call_stack=True)
+
     def __execute_test__(self, test_id):
         desc = self.__get_data_by_key_walk__(
             self.test_desc_fmt.format(test_id))
@@ -386,6 +436,25 @@ class ExecutePdsUpgradeFsmTest(object):
             self.test_exp_api_return_fmt.format(test_id))
         services = list(self.__get_data_by_key_walk__(
             self.test_svc_name_fmt.format(test_id)).keys())
+
+        pre_hook = self.__get_data_by_key_walk__(
+            self.test_pre_hook_script_fmt.format(test_id), default=None)
+        post_hook = self.__get_data_by_key_walk__(
+            self.test_post_hook_script_fmt.format(test_id), default=None)
+
+        pre_hook_stage = self.__get_data_by_key_walk__(
+            self.test_pre_hook_stage_fmt.format(test_id), default=None)
+        post_hook_stage = self.__get_data_by_key_walk__(
+            self.test_post_hook_stage_fmt.format(test_id), default=None)
+
+        print("{0}:{1}:{2}:{3}".format(pre_hook, pre_hook_stage, post_hook,
+                                       post_hook_stage))
+
+        if pre_hook is not None and pre_hook_stage is not None:
+            self.__inject_pre_hook_failure__(pre_hook, pre_hook_stage)
+
+        if post_hook is not None and post_hook_stage is not None:
+            self.__inject_post_hook_failure__(post_hook, post_hook_stage)
 
         Log("", "INFO", message(11).format(test_id),
             call_stack=False)
@@ -419,13 +488,13 @@ class ExecutePdsUpgradeFsmTest(object):
             self.exit_status = 1
             self.number_of_fail = self.number_of_fail + 1
             path = self.__back_path__(test_id)
-            self.summary +=  message(18).format(path) + os.linesep
+            self.summary += message(18).format(path) + os.linesep
             self.__backup_log__(path)
             self.summary += message(13).format("FAILURE", test_id) + os.linesep
             Log("", "INFO", message(13).format("FAILURE", test_id),
                 call_stack=False)
 
-        print ("*"*100)
+        print("*" * 100)
 
         # log_files = list(self.__get_data_by_key_walk__(
         #     self.test_exp_log_file_fmt.format(test_id)))
@@ -460,8 +529,7 @@ class ExecutePdsUpgradeFsmTest(object):
                 self.__execute_test__(test_id)
                 os.system("sleep 5")
                 self.__cleanup__()
-                print ("-" * 100)
-
+                print("-" * 100)
 
         self.summary += "=" * 100 + os.linesep
         self.summary += message(15).format(self.number_of_test,
@@ -470,7 +538,7 @@ class ExecutePdsUpgradeFsmTest(object):
                                            self.exit_status) + os.linesep
 
         self.summary += "*" * 100 + os.linesep
-        self.summary = 10*os.linesep + self.summary
+        self.summary = 10 * os.linesep + self.summary
 
         print(self.summary)
 
@@ -481,6 +549,10 @@ class ExecutePdsUpgradeFsmTest(object):
         self.test_svc_ipc_id_fmt = "{0}.svc.{1}.ipc_id"
         self.test_svc_rsp_code_fmt = "{0}.svc.{1}.svc_rsp_code"
         self.test_svc_rsp_stage_fmt = "{0}.svc.{1}.svc_rsp_stage"
+        self.test_pre_hook_stage_fmt = "{0}.pre_hook.stage"
+        self.test_pre_hook_script_fmt = "{0}.pre_hook.script"
+        self.test_post_hook_stage_fmt = "{0}.post_hook.stage"
+        self.test_post_hook_script_fmt = "{0}.post_hook.script"
 
         self.test_expected_result_fmt = "{0}.expected_result"
         self.test_exp_api_return_fmt = "{0}.expected_result.api_return_code"
@@ -529,7 +601,6 @@ if __name__ == "__main__":
                         type=str,
                         default=None,
                         help='Test case name to execute')
-
 
     args = parser.parse_args()
 
