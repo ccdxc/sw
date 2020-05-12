@@ -53,3 +53,29 @@
   width: 100%;
   overflow-y: auto;
 }
+
+.pagebody-transparent {
+  &.pagebody-container {
+    background: none;
+    background-image: linear-gradient(rgba(103, 103, 99, 0.03), rgba(103, 103, 99, 0.12) 65%, rgba(103, 103, 99, 0.06) 100%);
+    border: none;
+    box-shadow: none;
+    margin-bottom: 0;
+  }
+
+  .pagebody-header {
+    background-color: rgba(255, 255, 255, 1);
+    border: 1px solid #cec5bd;
+  }
+
+  .mat-tab-group.mat-primary .mat-tab-label:focus,
+  .mat-tab-group.mat-primary .mat-tab-label-active {
+    background-color: transparent !important;
+    border-bottom-color: rgba(255, 250, 239, 0.5) !important;
+  }
+
+  .mat-tab-body-wrapper .tableviewedit-widget .ui-table-caption {
+    border: none;
+    box-shadow: none;
+  }
+}

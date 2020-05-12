@@ -17,6 +17,7 @@ export class PagebodyComponent implements OnInit, OnDestroy {
   @Input() header: String;
   @Input() icon: any;
   @Input() options: any;
+  @Input() transparent: boolean;
 
   constructor() {
   }

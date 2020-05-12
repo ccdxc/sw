@@ -7,9 +7,6 @@ $storage-color: #70bab4;
 .naplesdetail-interface-charts-container .naplesdetail-stats-container {
   min-width: 590px;
   height: 345px;
-  opacity: 1;
-  background-image: $backgroundGradient;
-  margin-bottom: 10px;
 
   .cpu-color {
     color: $cpu-color;
@@ -21,12 +18,6 @@ $storage-color: #70bab4;
 
   .storage-color {
     color: $storage-color;
-  }
-
-  .topbar {
-    width: 100%;
-    height: 1px;
-    background-image: $topbarGradient;
   }
 
   svg {
@@ -97,23 +88,18 @@ $storage-color: #70bab4;
   }
 
   .naplesdetail-stats-svg-table-container {
-    width: 590px;
-    margin: 0 auto;
+    width: 100%;
+  }
+
+  .naplesdetail-stats-svg-container {
+    width: 100%;
   }
 
   .naplesdetail-stats-table {
     width: 320px;
     height: 240px;
-    position: relative;
-    left: -30px;
-    opacity: 1;
-    background-image: linear-gradient(to bottom, #ffffff -26%, rgba(103, 103, 99, 0.3) 121%);
-
-    .naplesdetail-stats-line {
-      width: 320px;
-      height: 1px;
-      background-image: linear-gradient(to left, rgba(160, 160, 156, 1) 100%, rgba(103, 103, 99, 1) 47%);
-    }
+    margin-right: 10px;
+    background-image: url("/assets/images/misc/gray-gradient-bg.svg");
 
     .naplesdetail-stats-row {
       width: 320px;
@@ -171,13 +157,12 @@ $storage-color: #70bab4;
     .naplesdetail-stats-row.selectedrow {
       opacity: 1;
       cursor: default;
-      background-image: linear-gradient(to left, rgba(160, 160, 156, 0.5), rgba(103, 103, 99, 0.5));
+      background-image: linear-gradient(to left, rgba(160, 160, 156, 0) 40%, rgba(103, 103, 99, 0.3));
     }
   }
 
   .naplesdetail-stats-chart-container {
-    width: 590px;
-    margin: 0 auto;
+    width: 100%;
     position: relative;
     top: -50px;
 

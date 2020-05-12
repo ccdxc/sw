@@ -9,10 +9,6 @@
   min-width: 315px;
 }
 
-.naplesdetail-alertsevents-container {
-  min-height: 600px;
-}
-
 .naplesdetail-overlay {
   position: absolute;
   top: 0;
@@ -49,10 +45,11 @@
 
 .naplesdetail-node-table-container {
   margin: 10px;
-  padding: 5px 20px;
   min-width: 450px;
-  border: solid 2px #dddddd;
-  background-image: $backgroundGradient;
+}
+
+.naplesdetail-node-table-container-inset {
+  padding: 5px 20px;
 }
 
 .naplesdetail-node-fieldtitle {
@@ -113,8 +110,7 @@
 
 
 .naplesdetail-details {
-  margin-top: 10px;
-  padding-top: 10px;
+  margin: 10px 0;
 }
 
 .naplesdetail-details-title {
@@ -122,6 +118,7 @@
 }
 
 .naplesdetail-alertsevents-container {
+  height: 100%;
   min-height: 600px;
 }
 
@@ -151,50 +148,26 @@
 }
 
 .naplesdetail-interface-charts-container {
-  margin: 0px 10px;
+  margin: 10px;
 
   .naplesdetail-interface-container,
   .naplesdetail-interface-table-container {
     height: 345px;
     background-image: $backgroundGradient;
-
-    .topbar {
-      height: 1px;
-      background-image: $topbarGradient;
-    }
   }
 
   .naplesdetail-interface-container {
     width: 510px;
     padding-top: 20px;
 
-    .topbar {
-      position: relative;
-      top: -20px;
-      width: 510px;
-    }
   }
 
   .naplesdetail-interface-table-container {
     min-width: 1030px;
-    margin-bottom: 10px;
-
-    .topbar {
-      min-width: 1030px;
-      width: 100%;
-    }
-  }
-
-  .naplesdetail-charts-container-spacer {
-    display: none;
   }
 
   .lastupdateTime {
-    padding: 5px 0 0px 5px;
-    font-family: "Fira Sans Condensed";
-    font-size: 12px;
-    font-weight: normal;
-    color: #cccccc;
+    @include primary-font(12px, $mediumGray, 300);
   }
 }
 
@@ -202,8 +175,9 @@
   .naplesdetail-interface-charts-container {
     flex-flow: row !important;
   }
+}
 
-  .naplesdetail-interface-charts-container .naplesdetail-charts-container-spacer {
-    display: block;
-  }
+.naplesdetail-alertsevents-card,
+.naplesdetail-charts-card {
+  margin: 0 10px;
 }

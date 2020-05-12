@@ -10,6 +10,19 @@
     }
   }
 
+  .naplesdetail-interface-topology-image-container {
+    align-items: center;
+    display: flex;
+    height: 315px;
+    justify-content: center;
+
+    .naplesdetail-interface-topology-image {
+      align-items: center;
+      display: flex;
+      flex-direction: column;
+    }
+  }
+
   .naplesdetail-interface-topology-uplink {
     width: 35px;
     height: 53px;

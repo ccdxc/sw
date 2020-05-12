@@ -1,37 +1,40 @@
 <div fxFlex="grow" *ngIf="heroCards && heroCards.length > 0">
-  <div class="topbar"></div>
   <div fxLayout="column">
-    <span class="lastupdateTime">Last Updated: {{ lastUpdateTime | PrettyDate}}</span>
+    <div class="detail-card-header">
+      <span class="lastupdateTime">Last Updated: {{ lastUpdateTime | PrettyDate}}</span>
+    </div>
     <div class="naplesdetail-stats-svg-table-container" fxLayout="row">
-      <div fxFlex="300px">
-        <svg viewBox="0 0 300 300">
-          <path d="M 87.1727172824125 26.71152662041878 A 125 125 0 1 0 192.82728271758742 26.711526620418752"
-                class="basepath" />
-          <path d="M 97.73817382593 49.36922129633503 A 100 100 0 1 0 182.26182617406994 49.36922129633501"
-                class="basepath" />
-          <path d="M 108.3036303694475 72.02691597225127 A 75 75 0 1 0 171.69636963055245 72.02691597225126"
-                class="basepath" />
-          <text x="150" y="235"
-                [ngClass]="'labels' + ((selectedIndex === 0) ? ' cpuvalue' : '')">CPU</text>
-          <text x="136" y="258"
-                [ngClass]="'labels' + ((selectedIndex === 1) ? ' memoryvalue' : '')">MEMORY</text>
-          <text x="134" y="281"
-                [ngClass]="'labels' + ((selectedIndex === 2) ? ' storagevalue' : '')">STORAGE</text>
-          <text x="53%" y="60%" text-anchor="middle" [ngClass]="getTextClass() +'value value'">
-            {{ heroCards[selectedIndex].firstStat.numericValue }}
-          </text>
-          <text x="67%" y="60%" text-anchor="middle"
-                [ngClass]="getTextClass() +'percent percent'">%</text>
-          <path [attr.d]="calculateDbyPercentage(heroCards[0].firstStat.numericValue, 75)"
-                class="cpuvaluepath" />
-          <path [attr.d]="calculateDbyPercentage(heroCards[1].firstStat.numericValue, 100)"
-                class="memoryvaluepath" />
-          <path [attr.d]="calculateDbyPercentage(heroCards[2].firstStat.numericValue, 125)"
-                class="storagevaluepath" />
-        </svg>
+      <div fxLayoutAlign="center center" class="naplesdetail-stats-svg-container">
+        <div fxFlex="300px">
+          <svg viewBox="0 0 300 300">
+            <path d="M 87.1727172824125 26.71152662041878 A 125 125 0 1 0 192.82728271758742 26.711526620418752"
+                  class="basepath" />
+            <path d="M 97.73817382593 49.36922129633503 A 100 100 0 1 0 182.26182617406994 49.36922129633501"
+                  class="basepath" />
+            <path d="M 108.3036303694475 72.02691597225127 A 75 75 0 1 0 171.69636963055245 72.02691597225126"
+                  class="basepath" />
+            <text x="150" y="235"
+                  [ngClass]="'labels' + ((selectedIndex === 0) ? ' cpuvalue' : '')">CPU</text>
+            <text x="136" y="258"
+                  [ngClass]="'labels' + ((selectedIndex === 1) ? ' memoryvalue' : '')">MEMORY</text>
+            <text x="134" y="281"
+                  [ngClass]="'labels' + ((selectedIndex === 2) ? ' storagevalue' : '')">STORAGE</text>
+            <text x="53%" y="60%" text-anchor="middle" [ngClass]="getTextClass() +'value value'">
+              {{ heroCards[selectedIndex].firstStat.numericValue }}
+            </text>
+            <text x="67%" y="60%" text-anchor="middle"
+                  [ngClass]="getTextClass() +'percent percent'">%</text>
+            <path [attr.d]="calculateDbyPercentage(heroCards[0].firstStat.numericValue, 75)"
+                  class="cpuvaluepath" />
+            <path [attr.d]="calculateDbyPercentage(heroCards[1].firstStat.numericValue, 100)"
+                  class="memoryvaluepath" />
+            <path [attr.d]="calculateDbyPercentage(heroCards[2].firstStat.numericValue, 125)"
+                  class="storagevaluepath" />
+          </svg>
+        </div>
       </div>
       <div fxLayout="column" class="naplesdetail-stats-table">
-        <div class="naplesdetail-stats-line"></div>
+        <div class="detail-card-border"></div>
         <div fxLayout="row" (click)="selectRow($event, 0)"
              [ngClass]="{'naplesdetail-stats-row': true, 'selectedrow': selectedIndex === 0}">
           <div fxFlex="nogrow" fxLayout="column" class="naplesdetail-stats-col1">
@@ -48,7 +51,7 @@
             </div>
           </div>
         </div>
-        <div class="naplesdetail-stats-line"></div>
+        <div class="detail-card-border"></div>
         <div fxLayout="row" (click)="selectRow($event, 1)"
              [ngClass]="{'naplesdetail-stats-row': true, 'selectedrow': selectedIndex === 1}">
           <div fxFlex="nogrow" fxLayout="column" class="naplesdetail-stats-col1">
@@ -65,7 +68,7 @@
             </div>
           </div>
         </div>
-        <div class="naplesdetail-stats-line"></div>
+        <div class="detail-card-border"></div>
         <div fxLayout="row" (click)="selectRow($event, 2)"
              [ngClass]="{'naplesdetail-stats-row': true, 'selectedrow': selectedIndex === 2}">
           <div fxFlex="nogrow" fxLayout="column" class="naplesdetail-stats-col1">

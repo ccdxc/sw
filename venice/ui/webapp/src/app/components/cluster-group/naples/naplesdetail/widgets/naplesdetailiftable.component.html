@@ -1,7 +1,9 @@
 <div fxFlex="none" class="naplesdetail-interface-table" fxLayout="column"
      fxLayoutAlign="start flex-end">
-  <div class="naplesdetail-interface-table-collapseicon" title="collapse"
-       (click)="collapseInterfaceTable()"></div>
+  <div class="detail-card-header-actions">
+    <div class="naplesdetail-interface-table-collapseicon" title="collapse"
+         (click)="collapseInterfaceTable()"></div>
+  </div>
   <p-table [value]="interfaceStats">
     <ng-template pTemplate="header">
       <tr>

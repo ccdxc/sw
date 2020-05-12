@@ -1,10 +1,12 @@
 <div fxFlex="100%" fxLayout="column" fxLayoutAlign="start flex-end">
-  <div class="naplesdetail-interface-detail-openicon" title="expand"
-       (click)="expandInterfaceTable()"></div>
+  <div class="detail-card-header-actions">
+    <div class="naplesdetail-interface-detail-openicon" title="expand"
+         (click)="expandInterfaceTable()"></div>
+  </div>
   <div fxLayout="column" class="naplesdetail-interface-detail" *ngIf="getStats() as ifs">
-    <div class="naplesdetail-interface-detail-titlebar"></div>
+    <div class="detail-card-border"></div>
     <div class="naplesdetail-interface-detail-portName">{{ ifs.shortname }}</div>
-    <div class="naplesdetail-interface-detail-titlebar"></div>
+    <div class="detail-card-border"></div>
     <div fxFlex="20px"></div>
     <div fxLayout="row" class="naplesdetail-interface-detail-statsrow">
       <div class="naplesdetail-interface-detail-statsrow-label">Status</div>

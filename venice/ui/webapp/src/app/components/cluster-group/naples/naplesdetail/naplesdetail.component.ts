@@ -94,7 +94,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
       top: '9px',
       left: '8px'
     },
-    url: '/assets/images/icons/cluster/nodes/ico-node-black.svg'
+    url: '/assets/images/icons/cluster/naples/ico-dsc-black.svg'
   };
 
   cardColor = '#61b3a0';

@@ -1,4 +1,8 @@
-<div class="pagebody-container" fxLayout="column">
+<div [ngClass]="{
+                  'pagebody-container': true,
+                  'pagebody-transparent': transparent
+                }"
+     fxLayout="column">
   <div *ngIf="header" fxFlex="nogrow" fxLayout="row" class="pagebody-header">
     <div fxFlex="48px" class="pagebody-iconcontainer">
       <mat-icon fxFlex="30px" [ngStyle]="_iconStyles" *ngIf="icon.svgIcon" [svgIcon]="icon.svgIcon"
