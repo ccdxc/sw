@@ -16,7 +16,7 @@ handler(sdk::operd::log_ptr entry)
     bool result = alert.ParseFromArray(entry->data(), entry->data_length());
     assert(result == true);
 
-    printf("%s %s %s %s", alert.name().c_str(), alert.category().c_str(),
+    printf("%s %s %s %s\n", alert.name().c_str(), alert.category().c_str(),
            alert.description().c_str(), alert.message().c_str());
 }
 

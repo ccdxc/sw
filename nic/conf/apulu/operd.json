@@ -17,6 +17,15 @@
         "input": ["vpp"]
     },
     {
+        "name": "pen_oper",
+        "provider": "pensando.io",
+        "output": {
+            "type": "library",
+            "location": "/nic/lib/libpen_oper.so"
+        },
+        "input": ["alerts"]
+    },
+    {
         "output": {
             "type": "library",
             "location": "/nic/lib/libalerts_operd_con.so"

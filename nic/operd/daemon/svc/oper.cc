@@ -92,8 +92,7 @@ OperSvcImpl::TechSupportCollect(ServerContext *context,
     auto tscmd = get_techsupport_cmd(tsdir, tsfile, req->request().skipcores());
 
     rc = get_exit_status(system(tscmd.c_str()));
-    fprintf(stdout, "Techsupport request %s, rc %d\n", tsfile, rc);
-    // PDS_TRACE_DEBUG("Techsupport request {}, rc {}", tsfile, rc);
+    fprintf(stdout, "Techsupport request %s, rc %d\n", tsfile.c_str(), rc);
     if (rc != 0) {
         rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
     } else {

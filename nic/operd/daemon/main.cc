@@ -9,6 +9,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include "nic/sdk/include/sdk/base.hpp"
 #include "lib/operd/operd.hpp"
 #include "lib/operd/decoder.h"
 
@@ -31,10 +32,12 @@ public:
     ~library();
     void handle(sdk::operd::log_ptr entry) override;
 private:
+    bool load_symbol_(void *so_lib, const char *name, void **symbol);
     bool try_load_(void);
 private:
     std::string path_;
     void *dlhandle_;
+    sdk_ret_t (*init_)(void);
     void (*handler_)(sdk::operd::log_ptr entry);
 };
 typedef std::shared_ptr<library> library_ptr;
@@ -97,6 +100,20 @@ library::factory(std::string path) {
 }
 
 bool
+library::load_symbol_(void *so_lib, const char *name, void **symbol) {
+    const char *dlsym_error;
+
+    *symbol = dlsym(so_lib, name);
+    dlsym_error = dlerror();
+    if (dlsym_error) {
+        fprintf(stderr, "cannot load symbol %s, err %s\n", name, dlsym_error);
+        return false;
+    }
+
+    return true;
+}
+
+bool
 library::try_load_(void) {
     assert(this->handler_ == nullptr);
     assert(this->dlhandle_ == NULL);
@@ -114,12 +131,20 @@ library::try_load_(void) {
     }
 
     dlerror();
-    
-    *(void **) (&this->handler_) = dlsym(this->dlhandle_, "handler");
-    if (this->handler_ == NULL) {
-        fprintf(stderr, "%s\n", dlerror());
+
+    // initialize the plugin
+    if (load_symbol_(this->dlhandle_, "plugin_init", (void **)(&this->init_))) {
+        if (this->init_() == SDK_RET_OK) {
+            fprintf(stdout, "initialized plugin %s\n", this->path_.c_str());
+        } else {
+            fprintf(stderr, "Failed to init %s\n", this->path_.c_str());
+        }
+    }
+
+    if (!load_symbol_(this->dlhandle_, "handler", (void **)(&this->handler_))) {
         return false;
     }
+
     return true;
 }
 
@@ -382,7 +407,7 @@ main (int argc, const char *argv[])
                 argv[0]);
         exit(-1);
     }
-    
+
     config = argv[1];
     inputs = load_config(config);
 
