@@ -61,7 +61,6 @@ func NewInfraAPI(primaryDBPath, backupDBPath string) (*API, error) {
 	i.primaryDBPath = primaryDBPath
 	i.backupDBPath = backupDBPath
 
-	i.ifUpdCh = make(chan types.UpdateIfEvent, 100)
 	return &i, nil
 }
 
@@ -179,23 +178,4 @@ func (i *API) NotifyVeniceConnection() {
 	i.Lock()
 	defer i.Unlock()
 	i.config.IsConnectedToVenice = true
-}
-
-// UpdateIfChannel updates the intf update channel
-func (i *API) UpdateIfChannel(evt types.UpdateIfEvent) {
-	// If buffer if full do an inline drain
-	if len(i.ifUpdCh) == cap(i.ifUpdCh) {
-		select {
-		case ev := <-i.ifUpdCh:
-			log.Infof("Drain evt [%v] because buffer is full", ev)
-		default:
-		}
-	}
-	log.Infof("Length of buffer is %d", len(i.ifUpdCh))
-	i.ifUpdCh <- evt
-}
-
-// IfUpdateChannel returns the interface update channel
-func (i *API) IfUpdateChannel() chan types.UpdateIfEvent {
-	return i.ifUpdCh
 }

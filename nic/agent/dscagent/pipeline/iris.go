@@ -6,7 +6,6 @@ package pipeline
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net"
@@ -679,8 +678,8 @@ func (i *IrisAPI) HandleInterface(oper types.Operation, intf netproto.Interface)
 			return nil, nil
 		}
 
-		// Reuse ID from store
-		intf.Status.InterfaceID = existingInterface.Status.InterfaceID
+		// Reuse Status from store (Shallow copy)
+		intf.Status = existingInterface.Status
 	case types.Delete:
 		var existingInterface netproto.Interface
 		dat, err := i.InfraAPI.Read(intf.Kind, intf.GetKey())
@@ -1965,11 +1964,19 @@ func (i *IrisAPI) GetWatchOptions(ctx context.Context, kind string) (ret api.Lis
 
 // ############################################### Helper Methods  ###############################################
 func (i *IrisAPI) createHostInterface(uid string, spec *halapi.LifSpec, status *halapi.LifStatus) error {
+	var ifStatus string
 	// skip any internal lifs
 	if spec.GetType() != halapi.LifType_LIF_TYPE_HOST {
 		log.Infof("Skipping LIF_CREATE event for lif %v, type %v", uid, spec.GetType().String())
 		return nil
 	}
+
+	if status.GetLifStatus().String() == "IF_STATUS_UP" {
+		ifStatus = strings.ToLower(netproto.IFStatus_UP.String())
+	} else {
+		ifStatus = strings.ToLower(netproto.IFStatus_DOWN.String())
+	}
+
 	lifIndex := utils.GetLifIndex(status.HwLifId)
 	// form the interface name
 	ifName, err := utils.GetIfName(uid, lifIndex, spec.GetType().String())
@@ -1999,17 +2006,11 @@ func (i *IrisAPI) createHostInterface(uid string, spec *halapi.LifSpec, status *
 			IFHostStatus: netproto.InterfaceHostStatus{
 				HostIfName: spec.GetName(),
 			},
-			OperStatus: status.GetLifStatus().String(),
+			OperStatus: ifStatus,
 			DSCID:      i.InfraAPI.GetConfig().DSCID,
 		},
 	}
-	b, _ := json.MarshalIndent(l, "", "   ")
-	fmt.Println(string(b))
-	ifEvnt := types.UpdateIfEvent{
-		Oper: types.Create,
-		Intf: l,
-	}
-	i.InfraAPI.UpdateIfChannel(ifEvnt)
+
 	dat, _ := l.Marshal()
 	if err := i.InfraAPI.Store(l.Kind, l.GetKey(), dat); err != nil {
 		log.Error(errors.Wrapf(types.ErrBoltDBStoreCreate, "Lif: %s | Lif: %v", l.GetKey(), err))
@@ -2020,7 +2021,7 @@ func (i *IrisAPI) createHostInterface(uid string, spec *halapi.LifSpec, status *
 }
 
 func (i *IrisAPI) createUplinkInterface(uid string, spec *halapi.PortSpec, status *halapi.PortStatus) error {
-	var ifType string
+	var ifType, portStatus string
 	// form the interface name
 	ifName, err := utils.GetIfName(uid, status.GetIfIndex(), spec.GetPortType().String())
 	if err != nil {
@@ -2033,6 +2034,12 @@ func (i *IrisAPI) createUplinkInterface(uid string, spec *halapi.PortSpec, statu
 		ifType = netproto.InterfaceSpec_UPLINK_ETH.String()
 	} else if spec.GetPortType().String() == "PORT_TYPE_MGMT" {
 		ifType = netproto.InterfaceSpec_UPLINK_MGMT.String()
+	}
+
+	if status.GetLinkStatus().GetOperState().String() == "PORT_OPER_STATUS_UP" {
+		portStatus = strings.ToLower(netproto.IFStatus_UP.String())
+	} else {
+		portStatus = strings.ToLower(netproto.IFStatus_DOWN.String())
 	}
 
 	uplink := netproto.Interface{
@@ -2051,18 +2058,14 @@ func (i *IrisAPI) createUplinkInterface(uid string, spec *halapi.PortSpec, statu
 		},
 		Status: netproto.InterfaceStatus{
 			InterfaceID: utils.EthIfIndexToUplinkIfIndex(uint64(status.GetIfIndex())),
-			OperStatus:  status.GetLinkStatus().GetOperState().String(),
+			OperStatus:  portStatus,
 			IFUplinkStatus: netproto.InterfaceUplinkStatus{
 				PortID: spec.KeyOrHandle.GetPortId(),
 			},
 			DSCID: i.InfraAPI.GetConfig().DSCID,
 		},
 	}
-	ifEvnt := types.UpdateIfEvent{
-		Oper: types.Create,
-		Intf: uplink,
-	}
-	i.InfraAPI.UpdateIfChannel(ifEvnt)
+
 	dat, _ := uplink.Marshal()
 	if err := i.InfraAPI.Store(uplink.Kind, uplink.GetKey(), dat); err != nil {
 		log.Error(errors.Wrapf(types.ErrBoltDBStoreCreate, "Uplink: %s | Uplink: %v", uplink.GetKey(), err))

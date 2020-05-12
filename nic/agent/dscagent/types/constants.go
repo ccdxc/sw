@@ -298,6 +298,9 @@ const (
 var (
 	// ControllerWaitDelay is the duration during for which netagent waits to reconnect to the controllers
 	ControllerWaitDelay = time.Second * 30
+
+	// NetIfUpdateDelay is the duration NetIfWorker waits before sending out interface udpates to Venice
+	NetIfUpdateDelay = time.Second * 10
 )
 
 const (

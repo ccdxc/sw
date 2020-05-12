@@ -287,17 +287,25 @@ func (c *API) start(ctx context.Context, kinds []string) error {
 		c.nimbusClient = nimbusClient
 
 		watchExited := make(chan bool)
+		netIfExited := make(chan bool)
 		go func() {
 			c.watchObjects()
 			watchExited <- true
 		}()
 
+		netCtx, cancelNetIf := context.WithCancel(ctx)
 		// Start Interface update
 
-		go c.netIfWorker(ctx)
+		go func() {
+			c.netIfWorker(netCtx)
+			netIfExited <- true
+		}()
 
 		// TODO Watch for Mirror and NetflowSessions
 		<-watchExited
+		cancelNetIf()
+		<-netIfExited
+
 		c.closeConnections()
 		time.Sleep(types.ControllerWaitDelay)
 
@@ -576,80 +584,33 @@ func (c *API) netIfWorker(ctx context.Context) {
 
 	ifClient := netproto.NewInterfaceApiV1Client(c.npmClient.ClientConn)
 	var operUpd netproto.InterfaceApiV1_InterfaceOperUpdateClient
-	var err error
 	nctx, cancel := context.WithCancel(context.Background())
-	getUpdCl := func() netproto.InterfaceApiV1_InterfaceOperUpdateClient {
-		for {
-			if operUpd == nil {
-				operUpd, err = ifClient.InterfaceOperUpdate(context.TODO())
-				if err != nil {
-					log.Errorf("unable to start the Interface oper update stream (%s)", err)
-					operUpd = nil
-				} else {
-					return operUpd
-				}
-				time.Sleep(time.Second)
-			}
-		}
-	}
 
+	defer log.Info("Ending Netif worker")
 	for {
 		select {
-		case ev := <-c.InfraAPI.IfUpdateChannel():
-			log.Infof("Got event [%v]", ev)
-			// Set the DSC ID
-			ev.Intf.Status.DSCID = c.InfraAPI.GetConfig().DSCID
-			switch ev.Oper {
-			case types.Create:
-				// block till update succeeds
-				now := time.Now()
-				retries := 0
-				for {
-					resp, err := ifClient.CreateInterface(nctx, &ev.Intf)
-					if err != nil && !strings.Contains(err.Error(), "AlreadyExists") {
-						// NPM is down
-						if strings.Contains(err.Error(), "FailedPrecondition") {
-							time.Sleep(time.Minute)
-							continue
-						}
-						if time.Since(now) > time.Second*10 {
-							log.Errorf("create interface failed (%s)", err)
-							now = time.Now()
-						}
-						retries++
-						time.Sleep(time.Second)
-						continue
-					}
-					log.Infof("Created interface [%v](%d retries) [%v]", ev.Intf.Name, retries, resp)
-					break
-				}
-			case types.Update:
-				ifev := netproto.InterfaceEvent{
-					EventType: api.EventType_UpdateEvent,
-					Interface: ev.Intf,
-				}
-				log.Infof("Updating interface state [%v]", ifev)
-				if getUpdCl() != nil {
-					operUpd.Send(&ifev)
-				}
-
-			case types.Delete:
-				ifev := netproto.InterfaceEvent{
-					EventType: api.EventType_DeleteEvent,
-					Interface: ev.Intf,
-				}
-				log.Infof("Deleting interface state [%v]", ifev)
-				if getUpdCl() != nil {
-					operUpd.Send(&ifev)
-				}
-			}
 		case <-ctx.Done():
+			log.Info("Context done, exiting")
 			if operUpd != nil {
 				operUpd.CloseSend()
 			}
 			cancel()
 			return
+		default:
+			intfKind := netproto.Interface{
+				TypeMeta: api.TypeMeta{Kind: "Interface"},
+			}
+
+			interfaces, _ := c.PipelineAPI.HandleInterface(types.List, intfKind)
+			for _, intf := range interfaces {
+				intf.Status.DSCID = c.InfraAPI.GetConfig().DSCID
+				if resp, err := ifClient.CreateInterface(nctx, &intf); err != nil {
+					log.Errorf("create interface [%v] failed (%s)", resp, err)
+					break
+				}
+			}
 		}
+		time.Sleep(types.NetIfUpdateDelay)
 	}
 }
 

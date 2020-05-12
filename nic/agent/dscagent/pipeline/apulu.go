@@ -235,11 +235,11 @@ func (a *ApuluAPI) HandleVeniceCoordinates(dsc types.DistributedServiceCardStatu
 		log.Errorf("Init: Failed to create loopback interface: Err: %s", err)
 	}
 	// inject loopback so venice can be updated
-	ifEvnt := types.UpdateIfEvent{
-		Oper: types.Create,
-		Intf: lb,
+	dat, _ := lb.Marshal()
+	if err := a.InfraAPI.Store(lb.Kind, lb.GetKey(), dat); err != nil {
+		log.Error(errors.Wrapf(types.ErrBoltDBStoreCreate, "Uplink: %s | Uplink: %v", lb.GetKey(), err))
+		return
 	}
-	a.InfraAPI.UpdateIfChannel(ifEvnt)
 
 	// start event/alert policies watcher
 	a.StartAlertPoliciesWatch()
@@ -1703,11 +1703,6 @@ func (a *ApuluAPI) handleHostInterface(spec *halapi.LifSpec, status *halapi.LifS
 	}
 	log.Infof("Processing host interface [%+v]", i)
 	a.LocalInterfaces[i.Name] = i.UUID
-	ifEvnt := types.UpdateIfEvent{
-		Oper: types.Create,
-		Intf: i,
-	}
-	a.InfraAPI.UpdateIfChannel(ifEvnt)
 	dat, _ := i.Marshal()
 	if err := a.InfraAPI.Store(i.Kind, i.GetKey(), dat); err != nil {
 		log.Error(errors.Wrapf(types.ErrBoltDBStoreCreate, "Lif: %s | Lif: %v", i.GetKey(), err))
@@ -1787,11 +1782,6 @@ func (a *ApuluAPI) handleUplinkInterface(spec *halapi.PortSpec, status *halapi.P
 
 	log.Infof("Processing uplink interface [%+v]", i)
 	a.LocalInterfaces[i.Name] = i.UUID
-	ifEvnt := types.UpdateIfEvent{
-		Oper: types.Create,
-		Intf: i,
-	}
-	a.InfraAPI.UpdateIfChannel(ifEvnt)
 
 	dat, _ := i.Marshal()
 	if err := a.InfraAPI.Store(i.Kind, i.GetKey(), dat); err != nil {
@@ -1995,13 +1985,6 @@ func (a *ApuluAPI) HandleDSCL3Interface(obj types.DSCInterfaceIP) error {
 		// Update the uplink interface status
 		uplinkInterface.Status.IFUplinkStatus.IPAddress = obj.IPAddress
 		uplinkInterface.Status.IFUplinkStatus.GatewayIP = obj.GatewayIP
-		//TODO: this has to use to be converted to an update call
-		ifEvnt := types.UpdateIfEvent{
-			Oper: types.Create,
-			Intf: *uplinkInterface,
-		}
-
-		a.InfraAPI.UpdateIfChannel(ifEvnt)
 		dat, _ := uplinkInterface.Marshal()
 		if err := a.InfraAPI.Store(uplinkInterface.Kind, uplinkInterface.GetKey(), dat); err != nil {
 			log.Error(errors.Wrapf(types.ErrBoltDBStoreUpdate, "Port: %s | Port: %v", uplinkInterface.GetKey(), err))
