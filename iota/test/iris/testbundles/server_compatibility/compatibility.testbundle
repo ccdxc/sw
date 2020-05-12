@@ -58,3 +58,15 @@ testcases:
             type: host
             # 10% of the test cycle time spent on OS Reboot
             reboots: 50
+
+    -   name    : CheckPcieId
+        testcase: testcases.server.checkpcieid
+        disable : False
+        ignore  : True
+        stress  : True
+
+    -   name    : CheckPcieWidth
+        testcase: testcases.server.checkpciewidth
+        disable : False
+        ignore  : True
+        stress  : True
