@@ -8,7 +8,6 @@ testcases:
     -   name    : DHCP_Workload_Connectivity
         testcase: testcases.networking.dhcp_connectivity
         stress  : True
-        ignore  : True
         iterators :
             type    : nested
             ipaf    : [ ipv4 ]
@@ -21,7 +20,6 @@ testcases:
     -   name    : DHCP_Workload_Connectivity_Update
         testcase: testcases.networking.dhcp_connectivity
         stress  : True
-        ignore  : True
         iterators :
             type    : nested
             ipaf    : [ ipv4 ]
@@ -36,7 +34,6 @@ testcases:
     -   name    : DHCP_Workload_Connectivity_Update
         testcase: testcases.networking.dhcp_connectivity
         stress  : True
-        ignore  : True
         iterators :
             type    : nested
             ipaf    : [ ipv4 ]
@@ -51,7 +48,6 @@ testcases:
     -   name    : DHCP_Workload_Connectivity_Update
         testcase: testcases.networking.dhcp_connectivity
         stress  : True
-        ignore  : True
         iterators :
             type    : nested
             ipaf    : [ ipv4 ]
