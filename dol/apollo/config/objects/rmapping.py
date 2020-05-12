@@ -226,7 +226,7 @@ class RemoteMappingObjectClient(base.ConfigClientBase):
         rmap_obj = self.GetRMapObjByEpKey(node, ip_str, vpc_uuid)
         if rmap_obj == None:
             logger.error(f"rmap not found in client object store "
-                         "in {node} for key {vpc_uuid_str} {ip_str}")
+                         f"in {node} for key {vpc_uuid_str} {ip_str}")
             return False
 
         vpc_uuid_str = utils.List2UuidStr(vpc_uuid)
@@ -238,7 +238,7 @@ class RemoteMappingObjectClient(base.ConfigClientBase):
         ret, op = utils.RunPdsctlShowCmd(node, "mapping internal remote", args, False)
         if not ret:
             logger.error(f"show mapping internal remote failed for "
-                         "VPC id:{vpc_uuid_str} IP:{ip_str} MAC:{mac_str}")
+                         f"VPC id:{vpc_uuid_str} IP:{ip_str} MAC:{mac_str}")
             return False
 
         cmdop = op.split('\n')

@@ -141,16 +141,32 @@ def __validate_move_stats(home, new_home):
         ret = api.types.status.FAILURE
     return ret
 
+def __verify_move_stats(home, new_home, max_retry=4, interval=5):
+    retry = 0
+    while retry < max_retry:
+        misc_utils.Sleep(interval) # let metaswitch carry this to other side
+        learn_utils.DumpLearnData()
+        ret = __validate_move_stats(home, new_home)
+        if ret == api.types.status.SUCCESS:
+            break
+        else:
+            retry += 1
+            api.Logger.verbose(f"Retrying Move statistics validation - retry {retry}")
+
+    if retry == max_retry:
+        api.Logger.error("Failed to validate move statistics even after retries")
+        return api.types.status.FAILURE
+
+    return api.types.status.SUCCESS
+
 def Verify(tc):
 
     if tc.skip:
         return api.types.status.SUCCESS
 
-    misc_utils.Sleep(5) # let metaswitch carry this to other side
-    learn_utils.DumpLearnData()
-    ret = __validate_move_stats(tc.mv_ctx[tc.workload]['home'], tc.mv_ctx[tc.workload]['new_home'])
+    ret = __verify_move_stats(tc.mv_ctx[tc.workload]['home'], tc.mv_ctx[tc.workload]['new_home'])
     if ret != api.types.status.SUCCESS:
-        return api.types.status.FAILURE
+        return ret
 
     api.Logger.verbose("Move statistics are matching expectation on both nodes")
     # Validate with traffic after moving
@@ -173,11 +189,9 @@ def Teardown(tc):
                     f"with mac {mac}, ip prefixes {ip_prefix_list}")
     move_utils.MoveEpMACEntry(wl, subnet, mac, ip_prefix_list)
 
-    misc_utils.Sleep(5) # let metaswitch carry it to the other side
-    learn_utils.DumpLearnData()
-    ret = __validate_move_stats(new_home, home)
+    ret = __verify_move_stats(new_home, home)
     if ret != api.types.status.SUCCESS:
-        return api.types.status.FAILURE
+        return ret
 
     api.Logger.verbose("Move statistics are matching expectation on both nodes")
     # Validate with traffic after moving back

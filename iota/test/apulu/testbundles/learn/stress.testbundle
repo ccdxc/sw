@@ -7,7 +7,6 @@ meta:
 testcases:
     -   name    : Learn_Stress
         testcase: testcases.learn.stress
-        ignore  : True
         args:
             num_iterations: 5
             interval : 3

@@ -7,12 +7,11 @@ meta:
 testcases:
     -   name    : Local_To_Remote_Ip
         testcase: testcases.learn.local_to_remote_ip
-        ignore  : True
         stress  : True
+        disable : True
 
     -   name    : Local_To_Remote_Mac
         testcase: testcases.learn.local_to_remote_mac
-        ignore  : True
         stress  : True
         iterators :
             type     : nested

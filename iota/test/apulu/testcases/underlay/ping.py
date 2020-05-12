@@ -40,9 +40,9 @@ def Trigger(tc):
                 # Dont try to ping on the down interface
                 if tc.iterators.port_status == 'down':
                    if tc_intf == 'Switchport0' and bgppeer.Id == 1:
-                        continue
+                       continue
                    elif tc_intf == 'Switchport1' and bgppeer.Id == 2:
-                        continue
+                       continue
                 cmd_cookie = "%s --> %s" %\
                              (str(bgppeer.LocalAddr), str(bgppeer.PeerAddr))
                 api.Trigger_AddNaplesCommand(req, node, \
