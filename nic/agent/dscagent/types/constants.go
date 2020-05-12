@@ -305,7 +305,7 @@ var (
 
 const (
 	// DefaultTCPIdleTimeout captures idle TCP timeout
-	DefaultTCPIdleTimeout = 60
+	DefaultTCPIdleTimeout = 600
 
 	// DefaultUDPIdleTimeout captures idle UDP timeout
 	DefaultUDPIdleTimeout = 120
