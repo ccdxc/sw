@@ -66,6 +66,7 @@ def read_args():
     paddr=0
     afi=1
     safi=1
+    key=0
     opt = int (sys.argv[1])
     if args > 1:
         key = int(sys.argv[2])

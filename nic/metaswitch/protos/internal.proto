@@ -123,6 +123,26 @@ message BgpRouteMapSpec {
   uint32 OrfAssociation = 9 [(venice.pdsaFields) = {Field:"orf_assoc"}];
 }
 
+// spec to global reset
+message BGPGlobalResetSpec {
+  option (venice.pdsaSetGlobOpts) = {
+    OidLen: "AMB_BGP_RM_OID_LEN",
+    Mib:    "bgpRmEntTable",
+  };
+  types.AdminState State = 1 [(venice.pdsaFields) = {Field: "admin_status"}];
+  uint32           Index = 2 [(venice.pdsaFields) = {Field: "index", SetKeyOidIndex:"AMB_BGP_RM_INDEX_INDEX"}];
+}
+
+// spec to global route refresh
+message BGPGlobalRtRefreshSpec {
+  option (venice.pdsaSetGlobOpts) = {
+    OidLen: "AMB_BGP_RM_OID_LEN",
+    Mib:    "bgpRmEntTable",
+  };
+  uint32 Index       = 1 [(venice.pdsaFields) = {Field: "index", SetKeyOidIndex:"AMB_BGP_RM_INDEX_INDEX"}];
+  bool   RtRefreshIn = 2 [(venice.pdsaFields) = {Field: "config_rt_refresh"}];
+}
+
 // spec to hard reset BGP peer
 message BGPPeerResetSpec {
   option (venice.pdsaSetGlobOpts) = {

@@ -14,6 +14,74 @@ using namespace types;
 namespace pds_ms {
 
 ApiStatus
+bgp_global_hard_reset ()
+{
+    BGPGlobalResetSpec proto_req;
+
+    // populate global Reset spec
+    proto_req.set_index(PDS_MS_BGP_RM_ENT_INDEX);
+
+    // start CTM transaction to disable rm instance
+    PDS_MS_START_TXN(PDS_MS_CTM_GRPC_CORRELATOR);
+
+    // disable
+    proto_req.set_state(ADMIN_STATE_DISABLE);
+    pds_ms_set_bgpglobalresetspec_amb_bgp_rm_ent (proto_req, AMB_ROW_ACTIVE,
+                                                  PDS_MS_CTM_GRPC_CORRELATOR,
+                                                  false, false);
+
+    // end CTM transaction
+    PDS_MS_END_TXN(PDS_MS_CTM_GRPC_CORRELATOR);
+
+    // blocking on response from MS
+    auto ret = pds_ms::mgmt_state_t::ms_response_wait();
+    if (ret != API_STATUS_OK) {
+        PDS_TRACE_ERR ("Global reset: Failed to disable RM instance");
+        // disabling the peer failed
+        return ret;
+    }
+
+    // start CTM transaction to enable peer
+    PDS_MS_START_TXN(PDS_MS_CTM_GRPC_CORRELATOR);
+
+    // enable
+    proto_req.set_state(ADMIN_STATE_ENABLE);
+    pds_ms_set_bgpglobalresetspec_amb_bgp_rm_ent (proto_req, AMB_ROW_ACTIVE,
+                                                  PDS_MS_CTM_GRPC_CORRELATOR,
+                                                  false, false);
+
+    // end CTM transaction
+    PDS_MS_END_TXN(PDS_MS_CTM_GRPC_CORRELATOR);
+
+    // blocking on response from MS
+    return pds_ms::mgmt_state_t::ms_response_wait();
+}
+
+ApiStatus
+bgp_global_route_refresh(BGPClearRouteOptions options)
+{
+    BGPGlobalRtRefreshSpec proto_req;
+
+    // start CTM transaction
+    PDS_MS_START_TXN(PDS_MS_CTM_GRPC_CORRELATOR);
+
+    // populate global route refresh spec
+    proto_req.set_index(PDS_MS_BGP_RM_ENT_INDEX);
+    proto_req.set_rtrefreshin(true);
+
+    pds_ms_set_bgpglobalrtrefreshspec_amb_bgp_rm_ent(
+                                        proto_req,
+                                        AMB_ROW_ACTIVE,
+                                        PDS_MS_CTM_GRPC_CORRELATOR,
+                                        false, false);
+    // end CTM transaction
+    PDS_MS_END_TXN(PDS_MS_CTM_GRPC_CORRELATOR);
+
+    // blocking on response from MS
+    return pds_ms::mgmt_state_t::ms_response_wait();
+}
+
+ApiStatus
 bgp_peer_hard_reset (BGPPeerSpec& req)
 {
     BGPPeerResetSpec proto_req;
@@ -184,8 +252,14 @@ bgp_clear_route_action_func (const pds::BGPClearRouteRequest *req,
                                                           peeraf);
         ret = bgp_peeraf_route_refresh(peeraf, option);
     } else {
-        throw Error (std::string("Invalid Peer/PeerAF in BGP clear route "
-                     "request"), SDK_RET_INVALID_ARG);
+        if (option == BGP_CLEAR_ROUTE_HARD) {
+            ret = bgp_global_hard_reset();
+        } else if (option == BGP_CLEAR_ROUTE_REFRESH_IN) {
+            ret = bgp_global_route_refresh(option);
+        } else {
+            throw Error (std::string("Route refresh out/both connot be done on "
+                         "all Peers"), SDK_RET_INVALID_ARG);
+        }
     }
 
     return ret;

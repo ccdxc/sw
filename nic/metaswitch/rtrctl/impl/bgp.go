@@ -646,16 +646,24 @@ var (
 )
 
 func bgpClearCmdHandlerValidator(cmd *cobra.Command, args []string) (err error) {
-	if vldtor.IPAddr(laddr) != nil {
+	if (len(laddr) != 0 && len(paddr) == 0) || (len(laddr) == 0 && len(paddr) != 0) {
+		err = fmt.Errorf("local and peer addresses should be provided together")
+		return
+	}
+	if len(laddr) != 0 && vldtor.IPAddr(laddr) != nil {
 		err = fmt.Errorf("Invalid local address %v", laddr)
 		return
 	}
-	if vldtor.IPAddr(paddr) != nil {
+	if len(paddr) != 0 && vldtor.IPAddr(paddr) != nil {
 		err = fmt.Errorf("Invalid peer address %v", paddr)
 		return
 	}
 	if !(option == "hard" || option == "refresh_in" || option == "refresh_out" || option == "refresh_both") {
 		err = fmt.Errorf("Invalid option value passed %v. Option can be hard or refresh_in or refresh_out or refresh_both", option)
+		return
+	}
+	if len(laddr) == 0 && (len(afi) != 0 || len(safi) != 0) {
+		err = fmt.Errorf("AFI or SAFI cannot be provided without peer address")
 		return
 	}
 	if len(afi) != 0 && !(afi == "ipv4" || afi == "l2vpn") {
@@ -714,19 +722,9 @@ func bgpClearCmdHandler(cmd *cobra.Command, args []string) error {
 	case "evpn":
 		saf = types.BGPSafi_BGP_SAFI_EVPN
 	}
-	if af == types.BGPAfi_BGP_AFI_NONE {
+	if len(laddr) == 0 {
 		req := &types.BGPClearRouteRequest{
 			Option: opt,
-			PeerOrPeeraf: &types.BGPClearRouteRequest_Peer{
-				Peer: &types.BGPPeerKeyHandle{
-					IdOrKey: &types.BGPPeerKeyHandle_Key{
-						Key: &types.BGPPeerKey{
-							LocalAddr: lip,
-							PeerAddr:  pip,
-						},
-					},
-				},
-			},
 		}
 		respMsg, err := client.BGPClearRoute(context.Background(), req)
 		if err != nil {
@@ -738,28 +736,53 @@ func bgpClearCmdHandler(cmd *cobra.Command, args []string) error {
 			return errors.New("Operation failed with error")
 		}
 	} else {
-		req := &types.BGPClearRouteRequest{
-			Option: opt,
-			PeerOrPeeraf: &types.BGPClearRouteRequest_PeerAf{
-				PeerAf: &types.BGPPeerAfKeyHandle{
-					IdOrKey: &types.BGPPeerAfKeyHandle_Key{
-						Key: &types.BGPPeerAfKey{
-							LocalAddr: lip,
-							PeerAddr:  pip,
-							Afi:       af,
-							Safi:      saf,
+		if af == types.BGPAfi_BGP_AFI_NONE {
+			req := &types.BGPClearRouteRequest{
+				Option: opt,
+				PeerOrPeeraf: &types.BGPClearRouteRequest_Peer{
+					Peer: &types.BGPPeerKeyHandle{
+						IdOrKey: &types.BGPPeerKeyHandle_Key{
+							Key: &types.BGPPeerKey{
+								LocalAddr: lip,
+								PeerAddr:  pip,
+							},
 						},
 					},
 				},
-			},
-		}
-		respMsg, err := client.BGPClearRoute(context.Background(), req)
-		if err != nil {
-			return errors.New("BGP ClearRoute failed")
-		}
+			}
+			respMsg, err := client.BGPClearRoute(context.Background(), req)
+			if err != nil {
+				return errors.New("BGP ClearRoute failed")
+			}
 
-		if respMsg.ApiStatus != types.ApiStatus_API_STATUS_OK {
-			return errors.New("Operation failed with error")
+			if respMsg.ApiStatus != types.ApiStatus_API_STATUS_OK {
+				fmt.Println(respMsg.ApiStatus)
+				return errors.New("Operation failed with error")
+			}
+		} else {
+			req := &types.BGPClearRouteRequest{
+				Option: opt,
+				PeerOrPeeraf: &types.BGPClearRouteRequest_PeerAf{
+					PeerAf: &types.BGPPeerAfKeyHandle{
+						IdOrKey: &types.BGPPeerAfKeyHandle_Key{
+							Key: &types.BGPPeerAfKey{
+								LocalAddr: lip,
+								PeerAddr:  pip,
+								Afi:       af,
+								Safi:      saf,
+							},
+						},
+					},
+				},
+			}
+			respMsg, err := client.BGPClearRoute(context.Background(), req)
+			if err != nil {
+				return errors.New("BGP ClearRoute failed")
+			}
+
+			if respMsg.ApiStatus != types.ApiStatus_API_STATUS_OK {
+				return errors.New("Operation failed with error")
+			}
 		}
 	}
 	return nil
