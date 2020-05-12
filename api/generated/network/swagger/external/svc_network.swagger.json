@@ -1682,8 +1682,13 @@
             "type": "string"
           },
           {
-            "name": "rd.admin-value",
-            "description": "Administrator subfield of Value. Length depends on Type.",
+            "name": "admin-value.Format",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "admin-value.Value",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -3875,8 +3880,13 @@
             "type": "string"
           },
           {
-            "name": "rd.admin-value",
-            "description": "Administrator subfield of Value. Length depends on Type.",
+            "name": "admin-value.Format",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "admin-value.Value",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -4862,8 +4872,13 @@
             "type": "string"
           },
           {
-            "name": "rd.admin-value",
-            "description": "Administrator subfield of Value. Length depends on Type.",
+            "name": "admin-value.Format",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "admin-value.Value",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -4906,8 +4921,13 @@
             "type": "string"
           },
           {
-            "name": "rd.admin-value",
-            "description": "Administrator subfield of Value. Length depends on Type.",
+            "name": "admin-value.Format",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "admin-value.Value",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -5539,8 +5559,13 @@
             "type": "string"
           },
           {
-            "name": "rd.admin-value",
-            "description": "Administrator subfield of Value. Length depends on Type.",
+            "name": "admin-value.Format",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "admin-value.Value",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -5583,8 +5608,13 @@
             "type": "string"
           },
           {
-            "name": "rd.admin-value",
-            "description": "Administrator subfield of Value. Length depends on Type.",
+            "name": "admin-value.Format",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "admin-value.Value",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -7829,6 +7859,18 @@
       },
       "description": "ObjectRef contains identifying information about an object."
     },
+    "apiRDAdminValue": {
+      "type": "object",
+      "properties": {
+        "Format": {
+          "type": "string"
+        },
+        "Value": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
     "apiStatus": {
       "type": "object",
       "properties": {
@@ -9066,8 +9108,7 @@
           "description": "RD Type as in rfc4364."
         },
         "admin-value": {
-          "type": "integer",
-          "format": "int64",
+          "$ref": "#/definitions/apiRDAdminValue",
           "description": "Administrator subfield of Value. Length depends on Type."
         },
         "assigned-value": {

@@ -98,7 +98,7 @@ var typesMapRoute = map[string]*api.Struct{
 		Fields: map[string]api.Field{
 			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{ID: "type", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"AdminValue": api.Field{Name: "AdminValue", CLITag: api.CLIInfo{ID: "admin-value", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "admin-value", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
+			"AdminValue": api.Field{Name: "AdminValue", CLITag: api.CLIInfo{ID: "admin-value", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "admin-value", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.RDAdminValue"},
 
 			"AssignedValue": api.Field{Name: "AssignedValue", CLITag: api.CLIInfo{ID: "assigned-value", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "assigned-value", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
 		},

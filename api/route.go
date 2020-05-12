@@ -1,11 +1,20 @@
 package api
 
 import (
+	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"math"
+	"net"
 	"strconv"
 	"strings"
+)
+
+const (
+	// IPFormatRD specifies that RD admin value is in IP format
+	IPFormatRD = "IP"
+	// ASNFormatRD specifies that RD admin value is in ASN Format
+	ASNFormatRD = "ASN"
 )
 
 // UnmarshalJSON implements the json.Unmarshaller interface.
@@ -73,4 +82,62 @@ func (t *BgpAsn) MarshalJSON() ([]byte, error) {
 	dottedASN := strconv.Itoa(int(higherBytes)) + "." + strconv.Itoa(int(lowerBytes))
 
 	return json.Marshal(dottedASN)
+}
+
+// UnmarshalJSON implements the json.Unmarshaller interface.
+func (t *RDAdminValue) UnmarshalJSON(b []byte) error {
+	/* Route Distinguisher Admin Value by type
+	Type 0: 2 byte ASN
+	Type 1: 4 byte IP Address
+	Type 2: 4 byte ASN
+	*/
+	var ret uint32
+	var format string
+
+	var asn BgpAsn
+	err := json.Unmarshal(b, &asn)
+	if err == nil {
+		format = ASNFormatRD
+		ret = asn.ASNumber
+	} else {
+		var asStr string
+		err = json.Unmarshal(b, &asStr)
+		if err != nil {
+			return errors.New("Route Distinguisher Admin Value should be either an ASN or an ip address")
+		}
+		ip := net.ParseIP(asStr)
+		if ip != nil {
+			format = IPFormatRD
+			ret = ipToInt(ip)
+		} else {
+			return errors.New("Route Distinguisher Admin Value should be either an ASN or an ip address")
+		}
+	}
+
+	t.Format = format
+	t.Value = ret
+	return nil
+}
+
+// MarshalJSON implements the json.Marshaler interface.
+func (t *RDAdminValue) MarshalJSON() ([]byte, error) {
+	if t.Format == IPFormatRD {
+		ip := intToIP(t.Value)
+		return json.Marshal(ip.String())
+	}
+	// Else the format is ASN
+	return json.Marshal(&BgpAsn{ASNumber: t.Value})
+}
+
+func ipToInt(ip net.IP) uint32 {
+	if len(ip) == 16 {
+		return binary.BigEndian.Uint32(ip[12:16])
+	}
+	return binary.BigEndian.Uint32(ip)
+}
+
+func intToIP(nn uint32) net.IP {
+	ip := make(net.IP, 4)
+	binary.BigEndian.PutUint32(ip, nn)
+	return ip
 }

@@ -223,14 +223,58 @@ func (c *ConfigCache) Get(ctx context.Context, client apiclient.Services, kind s
 func (c *ConfigCache) Verify(tenant, kind, naples string, count int) error {
 	By(fmt.Sprintf("verifying [%v] on [%v]", kind, naples))
 	verifyRd := func(r1 *network.RDSpec, r2 *netproto.RDSpec) bool {
+		isSameRD := func(rd1 *network.RouteDistinguisher, rd2 *netproto.RouteDistinguisher) bool {
+			if rd1.Type != rd2.Type {
+				return false
+			}
+			if rd1.AdminValue.Value != rd2.AdminValue {
+				return false
+			}
+			if rd1.AssignedValue != rd2.AssignedValue {
+				return false
+			}
+			return true
+		}
 		if r1.AddressFamily != r2.AddressFamily {
 			return false
 		}
 		if len(r1.ImportRTs) != len(r2.ImportRTs) || len(r1.ExportRTs) != len(r2.ExportRTs) {
 			return false
 		}
-		if fmt.Sprintf("%v", r1) != fmt.Sprintf("%v", r2) {
+
+		if r1.RDAuto != r2.RDAuto {
 			return false
+		}
+
+		if r1.RD == nil && r2.RD != nil || r1.RD != nil && r2.RD == nil {
+			return false
+		}
+		if r1.RD != nil && r2.RD != nil && !isSameRD(r1.RD, r2.RD) {
+			return false
+		}
+		for _, r1ImportRT := range r1.ImportRTs {
+			found := false
+			for _, r2ImportRT := range r2.ImportRTs {
+				if isSameRD(r1ImportRT, r2ImportRT) {
+					found = true
+					break
+				}
+			}
+			if found == false {
+				return false
+			}
+		}
+		for _, r1ExportRT := range r1.ExportRTs {
+			found := false
+			for _, r2ExportRT := range r2.ExportRTs {
+				if isSameRD(r1ExportRT, r2ExportRT) {
+					found = true
+					break
+				}
+			}
+			if found == false {
+				return false
+			}
 		}
 		return true
 	}
@@ -681,14 +725,14 @@ var _ = Describe("Cloud E2E", func() {
 							ExportRTs: []*network.RouteDistinguisher{
 								{
 									Type:          network.RouteDistinguisher_Type2.String(),
-									AdminValue:    1000,
+									AdminValue:    api.RDAdminValue{Format: api.ASNFormatRD, Value: 1000},
 									AssignedValue: 1000,
 								},
 							},
 							ImportRTs: []*network.RouteDistinguisher{
 								{
 									Type:          network.RouteDistinguisher_Type2.String(),
-									AdminValue:    1000,
+									AdminValue:    api.RDAdminValue{Format: api.ASNFormatRD, Value: 1000},
 									AssignedValue: 1000,
 								},
 							},
@@ -710,14 +754,14 @@ var _ = Describe("Cloud E2E", func() {
 							ExportRTs: []*network.RouteDistinguisher{
 								{
 									Type:          network.RouteDistinguisher_Type2.String(),
-									AdminValue:    2000,
+									AdminValue:    api.RDAdminValue{Format: api.ASNFormatRD, Value: 2000},
 									AssignedValue: 2000,
 								},
 							},
 							ImportRTs: []*network.RouteDistinguisher{
 								{
 									Type:          network.RouteDistinguisher_Type2.String(),
-									AdminValue:    2000,
+									AdminValue:    api.RDAdminValue{Format: api.ASNFormatRD, Value: 2000},
 									AssignedValue: 2000,
 								},
 							},
@@ -753,14 +797,14 @@ var _ = Describe("Cloud E2E", func() {
 								ExportRTs: []*network.RouteDistinguisher{
 									{
 										Type:          network.RouteDistinguisher_Type2.String(),
-										AdminValue:    uint32(10000*i + j),
+										AdminValue:    api.RDAdminValue{Format: api.ASNFormatRD, Value: uint32(10000*i + j)},
 										AssignedValue: uint32(1000 + j),
 									},
 								},
 								ImportRTs: []*network.RouteDistinguisher{
 									{
 										Type:          network.RouteDistinguisher_Type2.String(),
-										AdminValue:    uint32(10000*i + j),
+										AdminValue:    api.RDAdminValue{Format: api.ASNFormatRD, Value: uint32(10000*i + j)},
 										AssignedValue: uint32(1000 + j),
 									},
 								},

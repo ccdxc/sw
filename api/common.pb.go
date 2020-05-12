@@ -24,6 +24,7 @@
 		ListWatchOptions
 		ObjectMeta
 		ObjectRef
+		RDAdminValue
 		Status
 		StatusResult
 		Timestamp

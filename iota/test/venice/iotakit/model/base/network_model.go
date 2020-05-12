@@ -56,14 +56,14 @@ func (sm *SysModel) NewNetwork(nwp *NetworkParams) *objects.NetworkCollection {
 					ExportRTs: []*network.RouteDistinguisher{
 						{
 							Type:          "type2",
-							AdminValue:    200,
+							AdminValue:    api.RDAdminValue{Format: api.ASNFormatRD, Value: 200},
 							AssignedValue: 100,
 						},
 					},
 					ImportRTs: []*network.RouteDistinguisher{
 						{
 							Type:          "type2",
-							AdminValue:    100,
+							AdminValue:    api.RDAdminValue{Format: api.ASNFormatRD, Value: 100},
 							AssignedValue: 100,
 						},
 					},

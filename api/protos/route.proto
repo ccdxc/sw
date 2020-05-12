@@ -25,7 +25,8 @@ message RouteDistinguisher {
     string Type             = 1 [(gogoproto.jsontag) = "type,omitempty", (venice.check) = "StrEnum(RouteDistinguisher.RDType)"];
 
     // Administrator subfield of Value. Length depends on Type.
-    uint32 AdminValue       = 2 [(gogoproto.jsontag) = "admin-value,omitempty"];
+    api.RDAdminValue AdminValue       = 2 [(gogoproto.nullable) = false,
+                                            (gogoproto.jsontag) = "admin-value,omitempty"];
 
     // Assigned subfield of Value. Length depends on Type.
     uint32 AssignedValue    = 3 [(gogoproto.jsontag) = "assigned-value,omitempty"];

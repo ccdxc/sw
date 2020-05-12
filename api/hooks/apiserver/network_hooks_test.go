@@ -175,7 +175,7 @@ func TestValidateHooks(t *testing.T) {
 	nw.Spec.VirtualRouter = "test"
 	rt := &network.RouteDistinguisher{}
 	rt.Type = network.RouteDistinguisher_Type0.String()
-	rt.AdminValue = math.MaxUint16 + 1
+	rt.AdminValue.Value = math.MaxUint16 + 1
 	nw.Spec.RouteImportExport.ExportRTs = []*network.RouteDistinguisher{rt}
 	errs = nh.validateNetworkConfig(nw, "v1", false, false)
 	Assert(t, len(errs) != 0, "Expecting to fail")

@@ -526,7 +526,7 @@ func normalizeVeniceForNA(obj *objects.NetworkCollection) map[string]netAgentSub
 		sn.spec.gw = s.VeniceNetwork.Spec.GetIPv4Gateway()
 		sn.spec.vni = s.VeniceNetwork.Spec.GetVxlanVNI()
 		//if this doesn't work use RDSpec.clone() and keep a copy
-		sn.spec.routeImportExport = s.VeniceNetwork.Spec.RouteImportExport.String()
+		sn.spec.routeImportExport = ConvertVeniceRdToNARd(s.VeniceNetwork.Spec.RouteImportExport).String()
 		sn.spec.ipamPolicy = s.VeniceNetwork.Spec.GetIPAMPolicy()
 
 		//log.Infof("Venice RD Spec : %s", sn.spec.routeImportExport)

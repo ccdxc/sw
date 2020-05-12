@@ -8,10 +8,11 @@ import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthVali
 import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 import { NetworkRouteDistinguisher_type,  } from './enums';
+import { ApiRDAdminValue, IApiRDAdminValue } from './api-rd-admin-value.model';
 
 export interface INetworkRouteDistinguisher {
     'type': NetworkRouteDistinguisher_type;
-    'admin-value'?: number;
+    'admin-value'?: IApiRDAdminValue;
     'assigned-value'?: number;
     '_ui'?: any;
 }
@@ -23,7 +24,7 @@ export class NetworkRouteDistinguisher extends BaseModel implements INetworkRout
     /** RD Type as in rfc4364. */
     'type': NetworkRouteDistinguisher_type = null;
     /** Administrator subfield of Value. Length depends on Type. */
-    'admin-value': number = null;
+    'admin-value': ApiRDAdminValue = null;
     /** Assigned subfield of Value. Length depends on Type. */
     'assigned-value': number = null;
     public static propInfo: { [prop in keyof INetworkRouteDistinguisher]: PropInfoItem } = {
@@ -37,7 +38,7 @@ export class NetworkRouteDistinguisher extends BaseModel implements INetworkRout
         'admin-value': {
             description:  `Administrator subfield of Value. Length depends on Type.`,
             required: false,
-            type: 'number'
+            type: 'object'
         },
         'assigned-value': {
             description:  `Assigned subfield of Value. Length depends on Type.`,
@@ -68,6 +69,7 @@ export class NetworkRouteDistinguisher extends BaseModel implements INetworkRout
     */
     constructor(values?: any, setDefaults:boolean = true) {
         super();
+        this['admin-value'] = new ApiRDAdminValue();
         this._inputValue = values;
         this.setValues(values, setDefaults);
     }
@@ -87,12 +89,10 @@ export class NetworkRouteDistinguisher extends BaseModel implements INetworkRout
         } else {
             this['type'] = null
         }
-        if (values && values['admin-value'] != null) {
-            this['admin-value'] = values['admin-value'];
-        } else if (fillDefaults && NetworkRouteDistinguisher.hasDefaultValue('admin-value')) {
-            this['admin-value'] = NetworkRouteDistinguisher.propInfo['admin-value'].default;
+        if (values) {
+            this['admin-value'].setValues(values['admin-value'], fillDefaults);
         } else {
-            this['admin-value'] = null
+            this['admin-value'].setValues(null, fillDefaults);
         }
         if (values && values['assigned-value'] != null) {
             this['assigned-value'] = values['assigned-value'];
@@ -109,8 +109,13 @@ export class NetworkRouteDistinguisher extends BaseModel implements INetworkRout
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'type': CustomFormControl(new FormControl(this['type'], [required, enumValidator(NetworkRouteDistinguisher_type), ]), NetworkRouteDistinguisher.propInfo['type']),
-                'admin-value': CustomFormControl(new FormControl(this['admin-value']), NetworkRouteDistinguisher.propInfo['admin-value']),
+                'admin-value': CustomFormGroup(this['admin-value'].$formGroup, NetworkRouteDistinguisher.propInfo['admin-value'].required),
                 'assigned-value': CustomFormControl(new FormControl(this['assigned-value']), NetworkRouteDistinguisher.propInfo['assigned-value']),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('admin-value') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('admin-value').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;
@@ -123,7 +128,7 @@ export class NetworkRouteDistinguisher extends BaseModel implements INetworkRout
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['type'].setValue(this['type']);
-            this._formGroup.controls['admin-value'].setValue(this['admin-value']);
+            this['admin-value'].setFormGroupValuesToBeModelValues();
             this._formGroup.controls['assigned-value'].setValue(this['assigned-value']);
         }
     }

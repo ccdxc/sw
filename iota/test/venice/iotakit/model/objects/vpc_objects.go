@@ -2,6 +2,7 @@ package objects
 
 import (
 	"fmt"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/iota/test/venice/iotakit/cfg/objClient"
@@ -44,19 +45,19 @@ func NewVPC(tenant string, name string, rmac string, vni uint32, ipam string,
 							ExportRTs: []*network.RouteDistinguisher{
 								{
 									Type:          "type2",
-									AdminValue:    200,
+									AdminValue:    api.RDAdminValue{Format: api.ASNFormatRD, Value: 200},
 									AssignedValue: 100,
 								},
 								{
 									Type:          "type2",
-									AdminValue:    200,
+									AdminValue:    api.RDAdminValue{Format: api.ASNFormatRD, Value: 200},
 									AssignedValue: 101,
 								},
 							},
 							ImportRTs: []*network.RouteDistinguisher{
 								{
 									Type:          "type2",
-									AdminValue:    100,
+									AdminValue:    api.RDAdminValue{Format: api.ASNFormatRD, Value: 100},
 									AssignedValue: 100,
 								},
 							},
@@ -164,12 +165,12 @@ func TenantVPCCollection(tenant string, client objClient.ObjClient, tb *testbed.
 	if len(vpcs) == 0 {
 		return nil, fmt.Errorf("No VPCs on tenant %s", tenant)
 	}
-	 vpcc := NewVPCCollection(client, tb)
+	vpcc := NewVPCCollection(client, tb)
 
 	for _, vrf := range vpcs {
 		if vrf.Spec.Type == "tenant" {
-			vpcc.Objs = append(vpcc.Objs,  &Vpc{Obj: vrf})
-			return vpcc, nil 
+			vpcc.Objs = append(vpcc.Objs, &Vpc{Obj: vrf})
+			return vpcc, nil
 		}
 	}
 

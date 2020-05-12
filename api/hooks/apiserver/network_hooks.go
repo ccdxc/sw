@@ -54,8 +54,11 @@ func (h *networkHooks) validateIPAMPolicyConfig(i interface{}, ver string, ignSt
 func validateImportExportRTs(rd *network.RouteDistinguisher, name string) (ret []error) {
 	switch strings.ToLower(rd.Type) {
 	case strings.ToLower(network.RouteDistinguisher_Type0.String()):
-		if rd.AdminValue > math.MaxUint16 {
+		if rd.AdminValue.Value > math.MaxUint16 {
 			ret = append(ret, fmt.Errorf("%s Route Target %s admin value cannot be greater than %d", name, network.RouteDistinguisher_Type0.String(), math.MaxUint16))
+		}
+		if rd.AdminValue.Format != api.ASNFormatRD {
+			ret = append(ret, fmt.Errorf("%s Route Target %s admin value should be an ASN", name, network.RouteDistinguisher_Type0.String()))
 		}
 	case strings.ToLower(network.RouteDistinguisher_Type1.String()):
 		if rd.AssignedValue > math.MaxUint16 {
@@ -64,6 +67,9 @@ func validateImportExportRTs(rd *network.RouteDistinguisher, name string) (ret [
 	case strings.ToLower(network.RouteDistinguisher_Type2.String()):
 		if rd.AssignedValue > math.MaxUint16 {
 			ret = append(ret, fmt.Errorf("%s Route Target %s assigned value cannot be greater than %d", name, network.RouteDistinguisher_Type2.String(), math.MaxUint16))
+		}
+		if rd.AdminValue.Format != api.ASNFormatRD {
+			ret = append(ret, fmt.Errorf("%s Route Target %s admin value should be an ASN", name, network.RouteDistinguisher_Type2.String()))
 		}
 	}
 	return

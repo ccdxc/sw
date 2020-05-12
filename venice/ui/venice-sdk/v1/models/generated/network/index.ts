@@ -11,6 +11,7 @@ export * from './api-list-meta.model';
 export * from './api-list-watch-options.model';
 export * from './api-object-meta.model';
 export * from './api-object-ref.model';
+export * from './api-rd-admin-value.model';
 export * from './api-status.model';
 export * from './api-status-result.model';
 export * from './api-timestamp.model';

@@ -239,19 +239,19 @@ var scaleCfgenParams = &Cfgen{
 					ImportRTs: []*network.RouteDistinguisher{
 						&network.RouteDistinguisher{
 							Type:          "type2",
-							AdminValue:    100,
+							AdminValue:    api.RDAdminValue{Format: api.ASNFormatRD, Value: 100},
 							AssignedValue: 100,
 						},
 					},
 					ExportRTs: []*network.RouteDistinguisher{
 						&network.RouteDistinguisher{
 							Type:          "type2",
-							AdminValue:    100,
+							AdminValue:    api.RDAdminValue{Format: api.ASNFormatRD, Value: 100},
 							AssignedValue: 100,
 						},
 						&network.RouteDistinguisher{
 							Type:          "type2",
-							AdminValue:    200,
+							AdminValue:    api.RDAdminValue{Format: api.ASNFormatRD, Value: 200},
 							AssignedValue: 101,
 						},
 					},
@@ -298,14 +298,14 @@ var scaleCfgenParams = &Cfgen{
 					RDAuto:        true,
 					ExportRTs: []*network.RouteDistinguisher{
 						&network.RouteDistinguisher{
-							AdminValue:    998,
+							AdminValue:    api.RDAdminValue{Format: api.ASNFormatRD, Value: 998},
 							Type:          "type2",
 							AssignedValue: 998,
 						},
 					},
 					ImportRTs: []*network.RouteDistinguisher{
 						&network.RouteDistinguisher{
-							AdminValue:    998,
+							AdminValue:    api.RDAdminValue{Format: api.ASNFormatRD, Value: 998},
 							Type:          "type2",
 							AssignedValue: 998,
 						},

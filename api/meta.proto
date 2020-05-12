@@ -191,3 +191,9 @@ enum EventType {
 message BgpAsn {
   uint32 ASNumber = 1;
 }
+
+message RDAdminValue{
+  string Format = 1;
+  uint32 Value = 2;
+}
+

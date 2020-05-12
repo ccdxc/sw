@@ -10,6 +10,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/iota/test/venice/iotakit/model/objects"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
@@ -413,6 +414,41 @@ type netAgentVpc struct {
 	}
 }
 
+func ConvertVeniceRdToNARd(rdSpec *network.RDSpec) *netproto.RDSpec {
+	// Note that this is needed because the venice proto for RDSpec
+	// and netagent proto for RDSpec are slightly different.
+	netAgentRDSpec := netproto.RDSpec{
+		AddressFamily: rdSpec.AddressFamily,
+		RDAuto:        rdSpec.RDAuto,
+	}
+
+	if rdSpec.RD != nil {
+		netAgentRDSpec.RD = &netproto.RouteDistinguisher{
+			Type:          rdSpec.RD.Type,
+			AdminValue:    rdSpec.RD.AdminValue.Value,
+			AssignedValue: rdSpec.RD.AssignedValue,
+		}
+	}
+	for _, exportRT := range rdSpec.ExportRTs {
+		netagentExportRT := netproto.RouteDistinguisher{
+			Type:          exportRT.Type,
+			AdminValue:    exportRT.AdminValue.Value,
+			AssignedValue: exportRT.AssignedValue,
+		}
+		netAgentRDSpec.ExportRTs = append(netAgentRDSpec.ExportRTs, &netagentExportRT)
+	}
+	for _, importRT := range rdSpec.ImportRTs {
+		netagentImportRT := netproto.RouteDistinguisher{
+			Type:          importRT.Type,
+			AdminValue:    importRT.AdminValue.Value,
+			AssignedValue: importRT.AssignedValue,
+		}
+		netAgentRDSpec.ImportRTs = append(netAgentRDSpec.ImportRTs, &netagentImportRT)
+	}
+
+	return &netAgentRDSpec
+}
+
 func normalizeVeniceVpcForNA(vpcs *objects.VpcObjCollection) map[string]netAgentVpc {
 	cfg := make(map[string]netAgentVpc)
 
@@ -426,7 +462,7 @@ func normalizeVeniceVpcForNA(vpcs *objects.VpcObjCollection) map[string]netAgent
 		data.spec.vni = v.Obj.Spec.GetVxLanVNI()
 		//if this doesn't work use RDSpec.clone() and keep a deep copy
 		//v.Obj.Spec.RouteImportExport.Clone()
-		data.spec.routeImportExport = v.Obj.Spec.RouteImportExport.String()
+		data.spec.routeImportExport = ConvertVeniceRdToNARd(v.Obj.Spec.RouteImportExport).String()
 		//log.Infof("Venice RD Spec : %s", data.spec.routeImportExport)
 		data.spec.ipamPolicy = v.Obj.Spec.GetDefaultIPAMPolicy()
 		cfg[data.meta.uuid] = data

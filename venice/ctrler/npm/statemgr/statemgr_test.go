@@ -136,10 +136,10 @@ func createNetwork(t *testing.T, stateMgr *Statemgr, tenant, net, subnet, gw str
 			RouteImportExport: &network.RDSpec{
 				AddressFamily: network.BGPAddressFamily_L2vpnEvpn.String(),
 				ExportRTs: []*network.RouteDistinguisher{
-					{Type: network.RouteDistinguisher_Type0.String(), AdminValue: 100, AssignedValue: 100},
+					{Type: network.RouteDistinguisher_Type0.String(), AdminValue: api.RDAdminValue{Format: api.ASNFormatRD, Value: 100}, AssignedValue: 100},
 				},
 				ImportRTs: []*network.RouteDistinguisher{
-					{Type: network.RouteDistinguisher_Type0.String(), AdminValue: 100, AssignedValue: 100},
+					{Type: network.RouteDistinguisher_Type0.String(), AdminValue: api.RDAdminValue{Format: api.ASNFormatRD, Value: 100}, AssignedValue: 100},
 				},
 			},
 		},
@@ -599,19 +599,19 @@ func createVirtualRouter(t *testing.T, stateMgr *Statemgr, tenant, virtualRouter
 					{
 						Type:          network.RouteDistinguisher_Type0.String(),
 						AssignedValue: 100,
-						AdminValue:    200,
+						AdminValue:    api.RDAdminValue{Format: api.ASNFormatRD, Value: 200},
 					},
 				},
 				ImportRTs: []*network.RouteDistinguisher{
 					{
 						Type:          network.RouteDistinguisher_Type0.String(),
 						AssignedValue: 200,
-						AdminValue:    300,
+						AdminValue:    api.RDAdminValue{Format: api.ASNFormatRD, Value: 300},
 					},
 					{
 						Type:          network.RouteDistinguisher_Type0.String(),
 						AssignedValue: 400,
-						AdminValue:    500,
+						AdminValue:    api.RDAdminValue{Format: api.ASNFormatRD, Value: 500},
 					},
 				},
 			},

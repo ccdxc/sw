@@ -15,7 +15,7 @@ func cloneRD(in *network.RouteDistinguisher) *netproto.RouteDistinguisher {
 	}
 	return &netproto.RouteDistinguisher{
 		Type:          in.Type,
-		AdminValue:    in.AdminValue,
+		AdminValue:    in.AdminValue.Value,
 		AssignedValue: in.AssignedValue,
 	}
 }

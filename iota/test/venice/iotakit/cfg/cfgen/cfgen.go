@@ -336,9 +336,9 @@ func (cfgen *Cfgen) genSubnets() []*network.Network {
 				//subnet.Spec.IPAMPolicy = ipams[ll%numOfipams].Name
 				configs = append(configs, subnet)
 				subnet.Spec.VxlanVNI = 8000100 + subnet.Spec.VxlanVNI
-				subnet.Spec.RouteImportExport.ExportRTs[0].AdminValue = 1000 + subnet.Spec.RouteImportExport.ExportRTs[0].AdminValue
+				subnet.Spec.RouteImportExport.ExportRTs[0].AdminValue.Value = 1000 + subnet.Spec.RouteImportExport.ExportRTs[0].AdminValue.Value
 				subnet.Spec.RouteImportExport.ExportRTs[0].AssignedValue = 1000 + subnet.Spec.RouteImportExport.ExportRTs[0].AssignedValue
-				subnet.Spec.RouteImportExport.ImportRTs[0].AdminValue = subnet.Spec.RouteImportExport.ExportRTs[0].AdminValue
+				subnet.Spec.RouteImportExport.ImportRTs[0].AdminValue.Value = subnet.Spec.RouteImportExport.ExportRTs[0].AdminValue.Value
 				subnet.Spec.RouteImportExport.ImportRTs[0].AssignedValue = subnet.Spec.RouteImportExport.ExportRTs[0].AssignedValue
 				ll++
 			}
