@@ -662,4 +662,16 @@ vmotion::vmotion_ep_inp_mac_vlan_pgm(ep_t *ep, bool create)
     return ret;
 }
 
+hal_ret_t
+vmotion::vmotion_ep_migration_if_update(ep_t *ep)
+{
+    hal_ret_t ret;
+
+    VMOTION_PD_LOCK
+    ret = endpoint_migration_if_update(ep);
+    VMOTION_PD_UNLOCK
+
+    return ret;
+}
+
 } // namespace hal

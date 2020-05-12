@@ -222,7 +222,7 @@ vmotion_src_host_fsm_def::proc_term_sync_req(fsm_state_ctx ctx, fsm_event_data d
     VMOTION_FLAG_SET_EP_QUIESCE_ADDED(vmn_ep);
 
     // Reset the enic interface to NULL in PD
-    if (endpoint_migration_if_update(ep) != HAL_RET_OK) {
+    if (vmn_ep->get_vmotion()->vmotion_ep_migration_if_update(ep) != HAL_RET_OK) {
         HAL_TRACE_ERR("Unable to update pd state for EP moved:  {}", ep_l2_key_to_str(ep));
     }
 
