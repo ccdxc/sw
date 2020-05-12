@@ -13,6 +13,7 @@ func init() {
 	macMetricsXlator := newMacMetricsTranslator()
 	tstr.Register("LifMetricsKey", &lifMetricsXlate{})
 	tstr.Register("MacMetricsKey", macMetricsXlator)
+	tstr.Register("MgmtMacMetricsKey", macMetricsXlator)
 }
 
 // delphi client

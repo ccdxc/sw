@@ -37,7 +37,7 @@ func (n *macMetricsXlate) KeyToMeta(key interface{}) *api.ObjectMeta {
 
 			for _, intf := range interfaces {
 				if intf.Spec.Type == "UPLINK_ETH" || intf.Spec.Type == "UPLINK_MGMT" {
-					if intf.Status.IFUplinkStatus.PortID == portID {
+					if intf.Status.InterfaceID == uint64(portID) {
 						n.portToInterfaceMap[portID] = intf.GetName()
 
 					}

@@ -7,6 +7,7 @@ import (
 
 	"github.com/pensando/sw/iota/test/venice/iotakit/model/objects"
 	"github.com/pensando/sw/metrics/genfields"
+	"github.com/pensando/sw/api/fields"
 	"github.com/pensando/sw/metrics/types"
 	cq "github.com/pensando/sw/venice/citadel/broker/continuous_query"
 	cmdtypes "github.com/pensando/sw/venice/cmd/types"
@@ -121,7 +122,7 @@ func checkMetricsFields() {
 
 		Eventually(func() error {
 			return ts.model.ForEachNaples(func(n *objects.NaplesCollection) error {
-				fields := genfields.GetFieldNamesFromKind(k)
+				flds := genfields.GetFieldNamesFromKind(k)
 				for _, name := range n.Names() {
 					By(fmt.Sprintf("checking %v in naples %v", k, name))
 
@@ -131,16 +132,63 @@ func checkMetricsFields() {
 						return err
 					}
 
-					err = validateResp(resp, fields, tms)
-					if err != nil {
+					if err := validateResp(resp, flds, tms); err != nil {
 						return err
 					}
+
+					if  err := checkIntfMetrics(vnc, k, name, tms); err != nil {
+						return err
+					}
+
 				}
 				return nil
 			})
 		}, time.Duration(10)*time.Minute, time.Duration(30)*time.Second).Should(Succeed())
 	}
 }
+
+func checkIntfMetrics(vnc *objects.VeniceNodeCollection, kind string, reporterID string, tms string) error{
+	// check interface stats
+	ifNames := map[string][]string {
+		"LifMetrics" : {"pf-69", "pf-70"},
+		"MacMetrics" : {"uplink-1-1", "uplink-1-2"},
+		"MgmtMacMetrics": {"mgmt-1-3"},
+	}
+
+	flds := genfields.GetFieldNamesFromKind(kind)
+
+	if ns, ok := ifNames[kind]; ok {
+		for _, n := range ns {
+			fmt.Printf("checking [%v] in %v with name: %v \n", kind, reporterID, n)
+			sel := fields.Selector{
+				Requirements: []*fields.Requirement{
+					{
+						Key:    "name",
+						Values: []string{reporterID + "-" + n},
+					},
+					{
+						Key:"reporterID",
+						Values:[]string{reporterID},
+					},
+				},
+			}
+
+			resp, err := vnc.QueryMetricsSelector(kind, tms, sel)
+			if err != nil {
+				fmt.Printf("query failed %v \n", err)
+				return err
+			}
+
+			err = validateResp(resp, flds, tms)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
 
 func checkClusterMetrics() {
 	if !ts.tb.HasNaplesHW() {
@@ -234,6 +282,10 @@ func checkCQMetricsFields() {
 						}
 						err = validateResp(resp, fields, tms)
 						if err != nil {
+							return err
+						}
+
+						if  err := checkIntfMetrics(vnc, cq, name, tms); err != nil {
 							return err
 						}
 					}
