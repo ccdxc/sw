@@ -90,6 +90,11 @@ control flow_lookup(inout cap_phv_intr_global_h intr_global,
 		POS_OVERFLOW_HASH_BIT | (bit<32>)metadata.scratch.flow_hint;
 	    } else {
 	      hdr.ingress_recirc_header.flow_done = TRUE;
+	      hdr.p4i_to_p4e_header.index = 0;
+	      hdr.p4i_to_p4e_header.index_type = 0;
+	      hdr.p4i_to_p4e_header.flow_miss = TRUE;
+              metadata.cntrl.flow_miss = TRUE;
+ 	      metadata.cntrl.index = 0;
 	    }
 
 	}

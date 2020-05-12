@@ -193,6 +193,10 @@ control key_init(inout cap_phv_intr_global_h intr_global,
 
       metadata.cntrl.flow_ohash_lkp = TRUE;
       metadata.cntrl.dnat_ohash_lkp = TRUE;
+    } else {
+      if(metadata.cntrl.skip_flow_lkp == TRUE) {
+          metadata.cntrl.flow_miss = TRUE;
+      }
     }
   }
 

@@ -11,8 +11,9 @@ control ingress_inter_pipe(inout cap_phv_intr_global_h capri_intrinsic,
 
 
    @name(".p4i_to_p4e") action p4i_to_p4e_a() {
-     if(hdr.ingress_recirc_header.flow_done != TRUE ||
-	hdr.ingress_recirc_header.dnat_done != TRUE) {
+     if((metadata.cntrl.from_arm == FALSE) &&
+        (hdr.ingress_recirc_header.flow_done != TRUE ||
+	hdr.ingress_recirc_header.dnat_done != TRUE)) {
          /* Recirc back to P4I */
        hdr.ingress_recirc_header.setValid();
        hdr.ingress_recirc_header.direction = metadata.cntrl.direction;
@@ -54,7 +55,8 @@ control egress_inter_pipe(inout cap_phv_intr_global_h capri_intrinsic,
 
   @name(".p4i_to_p4e_state") action p4i_to_p4e_state_a() {
     metadata.cntrl.direction = hdr.p4i_to_p4e_header.direction;
-    //    metadata.cntrl.flow_miss = hdr.p4i_to_p4e_header.flow_miss;
+    metadata.cntrl.flow_miss = metadata.cntrl.flow_miss |
+                               hdr.p4i_to_p4e_header.flow_miss;
      if(hdr.p4i_to_p4e_header.isValid()) {
        metadata.cntrl.update_checksum = hdr.p4i_to_p4e_header.update_checksum;
        if(hdr.p4i_to_p4e_header.flow_miss == FALSE) {
