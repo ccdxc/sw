@@ -18,8 +18,13 @@
 #include "internal.h"
 #include "capmem_dev.h"
 
+#ifdef ELBA
+#include "elb_top_csr_defines.h"
+#include "elb_soc_c_hdr.h"
+#else
 #include "cap_top_csr_defines.h"
 #include "cap_ms_c_hdr.h"
+#endif
 
 static pal_data_t pal_data;
 
@@ -80,7 +85,7 @@ physmem_map_init(pal_data_t *pd)
         free(r);
         return;
     }
-    
+
     /*
      * Save the dataplane memory ranges.
      */
@@ -154,8 +159,13 @@ int
 pal_get_env(void)
 {
 #ifdef __aarch64__
+#ifdef ELBA
+#define STA_VER \
+    (ELB_ADDR_BASE_MS_SOC_OFFSET + ELB_SOC_CSR_STA_VER_BYTE_ADDRESS)
+#else
 #define STA_VER \
     (CAP_ADDR_BASE_MS_MS_OFFSET + CAP_MS_CSR_STA_VER_BYTE_ADDRESS)
+#endif
 
     union {
         struct {

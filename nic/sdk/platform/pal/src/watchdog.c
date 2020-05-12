@@ -11,11 +11,20 @@
 #include <linux/watchdog.h>
 #include "pal.h"
 
+#ifdef ELBA
+#include "third-party/asic/elba/model/elb_top/elb_top_csr_defines.h"
+#include "third-party/asic/elba/model/elb_top/csr_defines/elb_soc_c_hdr.h"
+#define MS_CFG_WDT ELB_ADDR_BASE_MS_SOC_OFFSET + ELB_SOC_CSR_CFG_WDT_BYTE_ADDRESS
+#define ELB_SOC_CSR_CFG_WDT_PAUSE_LSB 8
+#define PEN_CFG_WDT_PAUSE_LSB ELB_SOC_CSR_CFG_WDT_PAUSE_LSB
+#else 
 #include "third-party/asic/capri/model/cap_top/cap_top_csr_defines.h"
 #include "third-party/asic/capri/model/cap_top/csr_defines/cap_ms_c_hdr.h"
-
 #define MS_CFG_WDT CAP_ADDR_BASE_MS_MS_OFFSET + CAP_MS_CSR_CFG_WDT_BYTE_ADDRESS
 #define CAP_MS_CSR_CFG_WDT_PAUSE_LSB 8
+#define PEN_CFG_WDT_PAUSE_LSB CAP_MS_CSR_CFG_WDT_PAUSE_LSB
+#endif
+
 #define HW_WATCHDOG_DEVICE "/dev/watchdog0"
 #define SW_WATCHDOG_DEVICE "/dev/watchdog1"
 #define HW_WATCHDOG_TIMEOUT 5
@@ -43,7 +52,7 @@ int pal_watchdog_init(pal_watchdog_action_t wdttype) {
         pal_mem_trace("Current value of the ms_cfg_reset reg is %d\n", data);
         //Clear bit 8. Pause bit for HW WDT.
         //Assume the WDT is always paused.
-        data = data & ~(1 << CAP_MS_CSR_CFG_WDT_PAUSE_LSB);
+        data = data & ~(1 << PEN_CFG_WDT_PAUSE_LSB);
         pal_reg_wr32(MS_CFG_WDT, data);
     }
 
@@ -116,7 +125,7 @@ int pal_watchdog_stop() {
         data = pal_reg_rd32(MS_CFG_WDT);
         pal_mem_trace("Current value of the ms_cfg_reset reg is %d\n", data);
         //Clear bit 8. Pause bit for HW WDT.
-        data = data | (1 << CAP_MS_CSR_CFG_WDT_PAUSE_LSB);
+        data = data | (1 << PEN_CFG_WDT_PAUSE_LSB);
         pal_reg_wr32(MS_CFG_WDT, data);
     } else if (gwdt == PANIC_WDT) {
         //Close the watchdog properly
