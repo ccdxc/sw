@@ -1,0 +1,90 @@
+{
+    "FileName": "stats.cc",
+    "Package": "api",
+    "Prefix": "flowstats",
+    "Pipeline": "apulu",
+    "Messages": [
+    {
+        "Name": "FlowStatsSummary",
+        "Description": "Session Summary",
+        "DisplayName": "Flow Stats Summary",
+        "Tags": [
+          "Level4"
+        ],
+        "Scope": "PerASIC",
+        "Fields": [
+            {
+                "Name": "TCP sessions over IPv4",
+                "DisplayName": "TCP sessions over IPv4",
+                "Description": "TCP sessions over IPv4",
+                "Units": "Count",
+                "BaseType": "Counter"
+            },
+            {
+                "Name": "UDP sessions over IPv4",
+                "DisplayName": "UDP sessions over IPv4",
+                "Description": "UDP sessions over IPv4",
+                "Units": "Count",
+                "BaseType": "Counter"
+            },
+            {
+                "Name": "ICMP sessions over IPv4",
+                "DisplayName": "ICMP sessions over IPv4",
+                "Description": "ICMP sessions over IPv4",
+                "Units": "Count",
+                "BaseType": "Counter"
+            },
+            {
+                "Name": "Other sessions over IPv4",
+                "DisplayName": "Other sessions over IPv4",
+                "Description": "Other sessions over IPv4",
+                "Units": "Count",
+                "BaseType": "Counter"
+            },
+            {
+                "Name": "TCP sessions over IPv6",
+                "DisplayName": "TCP sessions over IPv6",
+                "Description": "TCP sessions over IPv6",
+                "Units": "Count",
+                "BaseType": "Counter"
+            },
+            {
+                "Name": "UDP sessions over IPv6",
+                "DisplayName": "UDP sessions over IPv6",
+                "Description": "UDP sessions over IPv6",
+                "Units": "Count",
+                "BaseType": "Counter"
+            },
+            {
+                "Name": "ICMP sessions over IPv6",
+                "DisplayName": "ICMP sessions over IPv6",
+                "Description": "ICMP sessions over IPv6",
+                "Units": "Count",
+                "BaseType": "Counter"
+            },
+            {
+                "Name": "Other sessions over IPv6",
+                "DisplayName": "Other sessions over IPv6",
+                "Description": "Other sessions over IPv6",
+                "Units": "Count",
+                "BaseType": "Counter"
+            },
+            {
+                "Name": "L2 sessions",
+                "DisplayName": "L2 sessions",
+                "Description": "L2 sessions",
+                "Units": "Count",
+                "BaseType": "Counter"
+            },
+            {
+                "Name": "Session create errors",
+                "DisplayName": "Session create errors",
+                "Description": "Session create errors",
+                "Units": "Count",
+                "BaseType": "Counter"
+            }
+        ]
+    }
+    ]
+}
+

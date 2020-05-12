@@ -4,8 +4,10 @@ package apulu
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"io"
+	"strings"
 	"time"
 
 	"github.com/gogo/protobuf/proto"
@@ -21,18 +23,113 @@ import (
 )
 
 const (
-	metricsTablePort     = "MacMetrics"
-	metricsTableMgmtPort = "MgmtMacMetrics"
-	metricsTableHostIf   = "LifMetrics"
+	metricsTablePort            = "MacMetrics"
+	metricsTableMgmtPort        = "MgmtMacMetrics"
+	metricsTableHostIf          = "LifMetrics"
+	metricsFlowStatsSummary     = "FlowStatsSummary"
+	metricsTableMemory          = "MemoryMetrics"
+	metricsTablePower           = "PowerMetrics"
+	metricsTableASICTemperature = "AsicTemperatureMetrics"
+	metricsTablePortTemperature = "PortTemperatureMetrics"
 )
 
 var metricsTables = []string{
 	metricsTablePort,
 	metricsTableMgmtPort,
 	metricsTableHostIf,
+	metricsFlowStatsSummary,
+	metricsTableMemory,
+	metricsTablePower,
+	metricsTableASICTemperature,
+	metricsTablePortTemperature,
 }
 
 var tsdbObjs map[string]tsdb.Obj
+
+// GetMetricsKeyFromMac generates key of type []byte from mac address
+func GetMetricsKeyFromMac(objval int, mac string) []byte {
+	output := make([]byte, 10)
+	output[0] = byte(objval)
+	output[8] = 0x42
+	output[9] = 0x42
+	macBytes, err := hex.DecodeString(strings.ReplaceAll(mac, ".", ""))
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrMetricsSend, "%v - mac address decoding macbytes=%v | Err %v", mac, macBytes, err))
+		return output
+	}
+	output = append(output, macBytes...)
+	return output
+}
+
+func queryPDSMetrics(infraObj types.InfraAPI, metricsClient halapi.OperSvc_MetricsGetClient, metricName string, keyId int) (resp *halapi.MetricsGetResponse, err error) {
+	//construct metrics request object
+	metricsRequest := &halapi.MetricsGetRequest{}
+	metricsRequest.Key = GetMetricsKeyFromMac(keyId, infraObj.GetDscName())
+	metricsRequest.Name = metricName
+
+	//client supports bi-directional stream
+	err = metricsClient.Send(metricsRequest)
+
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrMetricsSend, "%v - Error querying metrics | Err %v", metricName, err))
+		return nil, err
+	}
+	// process the response
+	resp, err = metricsClient.Recv()
+
+	return resp, err
+}
+
+func validateMetricsResponse(tableName string, resp *halapi.MetricsGetResponse, err error) (isValidated bool) {
+	if err == io.EOF { //reached end of stream
+		log.Error(errors.Wrapf(types.ErrMetricsRecv, "%v - Metrics stream ended | Err %v", tableName, err))
+		return false
+	}
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrMetricsRecv, "%v - Error receiving metrics | Err %v", tableName, err))
+		return false
+	}
+	if resp.GetApiStatus() != halapi.ApiStatus_API_STATUS_OK {
+		log.Error(errors.Wrapf(types.ErrMetricsRecv, "%v - Metrics response failure, | Err %v", tableName, resp.GetApiStatus().String()))
+		return false
+	}
+	return true
+}
+
+func convertMetricsResponseToPoint(resp *halapi.MetricsGetResponse, tagName string) (points []*tsdb.Point) {
+	points = []*tsdb.Point{}
+	tags := map[string]string{"tenant": "", "name": tagName}
+	fields := make(map[string]interface{})
+	for _, row := range resp.Response {
+		for _, counter := range row.Counters {
+			fields[counter.Name] = counter.Value
+		}
+	}
+
+	points = append(points, &tsdb.Point{Tags: tags, Fields: fields})
+	return points
+}
+
+func exportPDSMetrics(resp *halapi.MetricsGetResponse, metricName string) {
+	// build the row to be added to tsdb
+	points := convertMetricsResponseToPoint(resp, metricName)
+	if err := tsdbObjs[metricName].Points(points, time.Now()); err != nil {
+		log.Errorf("%v - failed to store/export metrics %v", metricName, err)
+		return
+	}
+	//log.Errorf("%v - successfully exported metrics!", metricName)
+}
+
+func processMetrics(infraObj types.InfraAPI, metricsClient halapi.OperSvc_MetricsGetClient, metricName string, keyId int) {
+	resp, err := queryPDSMetrics(infraObj, metricsClient, metricName, keyId)
+
+	//validate the response
+	if isValidResponse := validateMetricsResponse(metricName, resp, err); !isValidResponse {
+		return
+	}
+
+	exportPDSMetrics(resp, metricName)
+}
 
 func queryInterfaceMetrics(infraAPI types.InfraAPI, stream halapi.OperSvc_MetricsGetClient) (err error) {
 	var (
@@ -97,21 +194,23 @@ func queryInterfaceMetrics(infraAPI types.InfraAPI, stream halapi.OperSvc_Metric
 		}
 
 		// build the row to be added to tsdb
-		points := []*tsdb.Point{}
-		tags := map[string]string{"tenant": "", "name": intf.Name}
-		fields := make(map[string]interface{})
-		for _, row := range resp.Response {
-			for _, counter := range row.Counters {
-				fields[counter.Name] = counter.Value
-			}
-		}
-
-		points = append(points, &tsdb.Point{Tags: tags, Fields: fields})
+		points := convertMetricsResponseToPoint(resp, intf.Name)
 		if err := tsdbObjs[metricsGetRequest.Name].Points(points, time.Now()); err != nil {
 			log.Errorf("failed to send metricd %v", err)
 		}
 	}
 	return nil
+}
+
+func queryFlowStatsSummaryMetrics(infraObj types.InfraAPI, metricsClient halapi.OperSvc_MetricsGetClient) {
+	processMetrics(infraObj, metricsClient, metricsFlowStatsSummary, 0)
+}
+
+func querySysmonMetrics(infraObj types.InfraAPI, metricsClient halapi.OperSvc_MetricsGetClient) {
+	sysmonMetricsTables := metricsTables[4:8]
+	for _, metricName := range sysmonMetricsTables {
+		processMetrics(infraObj, metricsClient, metricName, 0)
+	}
 }
 
 // HandleMetrics handles collecting and reporting of metrics
@@ -155,13 +254,15 @@ func HandleMetrics(infraAPI types.InfraAPI, client halapi.OperSvcClient) error {
 		for {
 			select {
 			case <-ticker.C:
-				log.Info("Querying Interface metrics")
+				log.Info("Querying metrics")
 				pdsAgentURL := fmt.Sprintf("127.0.0.1:%s", types.PDSGRPCDefaultPort)
 				if utils.IsHalUp(pdsAgentURL) == false {
 					// HAL is not up, skip querying
 					continue
 				}
 				queryInterfaceMetrics(infraAPI, stream)
+				queryFlowStatsSummaryMetrics(infraAPI, stream)
+				querySysmonMetrics(infraAPI, stream)
 			}
 		}
 	}(metricsStream)
