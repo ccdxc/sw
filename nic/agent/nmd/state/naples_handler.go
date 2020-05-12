@@ -184,6 +184,12 @@ func (n *NMD) UpdateNaplesConfig(cfg nmd.DistributedServiceCard) error {
 	log.Infof("NAPLES Update: Old: %s", string(oldCfg))
 	log.Infof("NAPLES Update: New: %s", string(newCfg))
 
+	if isRebootRequired(n.config, cfg) {
+		if err := rebootSWMCard(); err != nil {
+			log.Errorf("Failed to set reboot for SWM cards. Err : %v", err)
+		}
+	}
+
 	// Perform Mode Validations
 	switch cfg.Spec.Mode {
 	case nmd.MgmtMode_HOST.String():
@@ -1064,4 +1070,9 @@ func isDataplaneClassic() bool {
 
 	log.Info("Dataplane is in HOSTPIN mode")
 	return false
+}
+
+func isRebootRequired(oldCfg, newCfg nmd.DistributedServiceCard) bool {
+	// Here the element DSCProfile is actually the Device Profile which controls lif numbers
+	return oldCfg.Spec.DSCProfile != newCfg.Spec.DSCProfile
 }

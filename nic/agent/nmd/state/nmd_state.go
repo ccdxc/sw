@@ -1795,3 +1795,7 @@ func reconcileDSCProfile(p *nmd.DSCProfile) *nmd.DSCProfile {
 
 	return p
 }
+
+func rebootSWMCard() error {
+	return runCmd("touch /tmp/profile_change")
+}

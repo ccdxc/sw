@@ -227,6 +227,11 @@ func (n *NMD) issueNextPendingOp() {
 			go n.UpgFailed(&[]string{fmt.Sprintf("naplesHostDisruptiveUpgrade failed %s", err)})
 			return
 		}
+
+		if err := rebootSWMCard(); err != nil {
+			log.Errorf("Failed to set reboot for SWM cards. %v", err)
+		}
+
 		go n.UpgSuccessful()
 	case protos.DSCOp_DSCPreCheckForUpgOnNextHostReboot:
 		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
