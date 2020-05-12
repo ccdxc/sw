@@ -23,6 +23,11 @@ table vnic_tx_stats {
 /* Ingress drop stats                                                        */
 /*****************************************************************************/
 action p4i_drop_stats(drop_stats_pad, drop_stats_pkts) {
+    add_header(capri_p4_intrinsic);
+    remove_header(arm_to_p4i);
+    remove_header(p4plus_to_p4_vlan);
+    remove_header(p4plus_to_p4);
+    remove_header(capri_txdma_intrinsic);
     modify_field(scratch_metadata.drop_stats_pad, drop_stats_pad);
     modify_field(scratch_metadata.drop_stats_pkts, drop_stats_pkts);
 
