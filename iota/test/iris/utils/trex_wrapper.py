@@ -12,14 +12,14 @@ TRexDir = "/opt/trex/v2.65/"
 trex_cfg_template = os.path.join(os.path.dirname(__file__), "config/trex_cfg_template.yaml")
 
 class TRexIotaWrapper(ASTFClient):
-    def __init__(self, workload, role='client', gw='128.0.0.1', debug=False):
+    def __init__(self, workload, role='client', gw='128.0.0.1', debug=False, kill=1):
         self.role = role
         self.gw = gw
         self.workload = workload
         self._procHandle = None
         self._createTrexCfg()
-        self._killTrex()
-        self._startTrex(debug)
+        self._killTrex(kill)
+        self._startTrex(debug,kill)
         ASTFClient.__init__(self, server=workload.mgmt_ip)
 
     @property
@@ -114,7 +114,11 @@ class TRexIotaWrapper(ASTFClient):
         if cmd.exit_code:
             raise Exception("TRex configuration not found on %s"%
                             self.workload.workload_name)
-    def _killTrex(self):
+    def _killTrex(self, kill=1):
+        if not kill:
+            api.Logger.info("skipping kill of trex process")
+            return
+
         req = api.Trigger_CreateExecuteCommandsRequest()
         cmd = "pidof _t-rex-64 && sudo kill -9 `pidof _t-rex-64`"
 
@@ -133,7 +137,7 @@ class TRexIotaWrapper(ASTFClient):
         api.Logger.info("Killed TRex app on %s(%s)(%s)"%
                         (self.role, self.workload.workload_name, self.workload.mgmt_ip))
 
-    def _startTrex(self, debug=False):
+    def _startTrex(self, debug=False, kill=1):
         req = api.Trigger_CreateExecuteCommandsRequest()
         debug_cmd = " --rpc-log /home/vm/trex.log -v 10"
 
@@ -153,8 +157,12 @@ class TRexIotaWrapper(ASTFClient):
             api.PrintCommandResults(cmd)
 
         if cmd.exit_code:
-            raise Exception("Failed to start TRex app in role: '%s' on %s(%s)"%
-                            (self.role, self.workload.workload_name, self.workload.mgmt_ip))
+            if kill:
+                raise Exception("Failed to start TRex app in role: '%s' on %s(%s)"%
+                                (self.role, self.workload.workload_name, self.workload.mgmt_ip))
+            else:
+                api.Logger.info("Ignored failure to restart TRex app in role: '%s' on %s(%s)"%
+                                (self.role, self.workload.workload_name, self.workload.mgmt_ip))
 
         api.Logger.info("Started TRex app in role: '%s' on %s(%s)"%
                         (self.role, self.workload.workload_name, self.workload.mgmt_ip))

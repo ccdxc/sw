@@ -90,8 +90,8 @@ def Setup(tc):
                      server.mgmt_ip, client.workload_name,
                      client.ip_address, client.mgmt_ip))
     try:
-        tc.serverHandle = TRexIotaWrapper(server, role="server", gw=client.ip_address)
-        tc.clientHandle = TRexIotaWrapper(client, role="client", gw=server.ip_address)
+        tc.serverHandle = TRexIotaWrapper(server, role="server", gw=client.ip_address, kill=0)
+        tc.clientHandle = TRexIotaWrapper(client, role="client", gw=server.ip_address, kill=0)
 
         api.Logger.info("connect trex...")
         tc.serverHandle.connect()
@@ -232,10 +232,10 @@ def cleanup(tc):
     try:
 
         if tc.clientHandle:
-            #api.Logger.info("disconnect client(%s) "
-            #            %( tc.clientHandle.workload.workload_name))
+            api.Logger.info("disconnect client(%s) "
+                        %( tc.clientHandle.workload.workload_name))
 
-            #tc.clientHandle.disconnect()
+            tc.clientHandle.disconnect()
             api.Logger.info("cleanup client(%s) "
                         %( tc.clientHandle.workload.workload_name))
 
@@ -246,10 +246,10 @@ def cleanup(tc):
             tc.clientHandle = None
 
         if tc.serverHandle:
-            #api.Logger.info("disconnect server(%s) "
-            #            %( tc.serverHandle.workload.workload_name))
+            api.Logger.info("disconnect server(%s) "
+                        %( tc.serverHandle.workload.workload_name))
 
-            #tc.serverHandle.disconnect()
+            tc.serverHandle.disconnect()
             api.Logger.info("cleanup server(%s) "
                         %( tc.serverHandle.workload.workload_name))
 
@@ -265,6 +265,5 @@ def Teardown(tc):
     flowutils.clearFlowTable(tc.workload_pairs)
     __clearVPPEntity("flow statistics")
     __clearVPPEntity("flow entries")
-    cleanup(tc)
     api.Logger.info("Teardown done")
     return api.types.status.SUCCESS
