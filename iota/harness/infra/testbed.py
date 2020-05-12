@@ -197,11 +197,10 @@ class _Testbed:
             return path
         return GlobalOptions.topdir + '/' + path
 
-    def __prepare_SwitchMsg(self, msg, instance, setup_qos=True): 
+    def __prepare_SwitchMsg(self, msg, instance, switch_ips, setup_qos=True):
         if instance.Type != "bm":
             return
-        
-        switch_ips = {}
+
         if hasattr(instance, 'DataNetworks') and instance.DataNetworks != None: # for backward compatibility
             for nw in instance.DataNetworks:
                 switch_ctx = switch_ips.get(nw.SwitchIP, None)
@@ -314,7 +313,7 @@ class _Testbed:
             #If Vlan base not set, ask topo server to allocate.
             if not (getattr(self.__tbspec, "TestbedVlanBase", None) or GlobalOptions.skip_switch_init):
                 switch_ips = {}
-                self.__prepare_SwitchMsg(msg, instance, setup_qos=True)
+                self.__prepare_SwitchMsg(msg, instance, switch_ips, setup_qos=True)
                 if instance.Type == "bm":
                     #Testbed ID is the last one.
                     msg.testbed_id = getattr(instance, "ID", 0)
@@ -734,8 +733,9 @@ class _Testbed:
         #First Unset the Switch
         unsetMsg = topo_pb2.SwitchMsg()
         unsetMsg.op = topo_pb2.VLAN_CONFIG
+        switch_ips = {}
         for instance in self.__tbspec.Instances:
-            self.__prepare_SwitchMsg(setMsg, instance, setup_qos=False) 
+            self.__prepare_SwitchMsg(unsetMsg, instance, switch_ips, setup_qos=False)
             
         vlans = self.GetVlanRange()
         unsetMsg.vlan_config.unset = True
@@ -753,7 +753,7 @@ class _Testbed:
         setMsg.op = topo_pb2.CREATE_QOS_CONFIG
         switch_ips = {}
         for instance in self.__tbspec.Instances:
-            self.__prepare_SwitchMsg(setMsg, instance, setup_qos=True)
+            self.__prepare_SwitchMsg(setMsg, instance, switch_ips, setup_qos=True)
 
         resp = api.DoSwitchOperation(setMsg)
         if not api.IsApiResponseOk(resp):
@@ -767,7 +767,7 @@ class _Testbed:
         setMsg.op = topo_pb2.VLAN_CONFIG
         switch_ips = {}
         for instance in self.__tbspec.Instances:
-            self.__prepare_SwitchMsg(setMsg, instance, setup_qos=True)
+            self.__prepare_SwitchMsg(setMsg, instance, switch_ips, setup_qos=True)
 
         vlans = self.GetVlanRange()
         for ip, switch in switch_ips.items():
