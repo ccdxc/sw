@@ -661,6 +661,54 @@ private:
     /// \return     #SDK_RET_OK on success, failure status code on error
     sdk_ret_t fill_info_(upg_obj_info_t *upg_info, pds_mapping_info_t *minfo);
 
+    /// \brief      read mapping table
+    /// \param[in]  key         mapping key
+    /// \param[in]  subnet      subnet entry of the mapping
+    /// \param[in]  vpc         vpc entry of the mapping
+    /// \param[out] impl        mapping impl
+    /// \param[out] is_local    is mapping local
+    /// \return     #SDK_RET_OK on success, failure status code on error
+    static sdk_ret_t mapping_table_read_(pds_mapping_key_t *key,
+                                        subnet_entry *subnet,
+                                        vpc_entry *vpc,
+                                        mapping_impl *impl,
+                                        bool *is_local);
+
+    /// \brief      read local mapping table
+    /// \param[in]  key                 mapping key
+    /// \param[in]  vpc                 vpc entry of the mapping
+    /// \param[out] local_mapping_data  local mapping data read
+    /// \param[out] impl                mapping impl
+    /// \param[out] public_ip_valid     is public ip valid
+    /// \return     #SDK_RET_OK on success, failure status code on error
+    static sdk_ret_t local_mapping_table_read_(pds_mapping_key_t *key,
+                                               vpc_entry *vpc,
+                                               mapping_impl *impl,
+                                               bool *public_ip_valid,
+                                               local_mapping_appdata_t *local_mapping_data);
+
+    /// \brief      read mapping tags
+    /// \param[in]  key                 mapping key
+    /// \param[in]  vpc                 vpc entry of the mapping
+    /// \param[out] impl                mapping impl
+    /// \return     SDK_RET_OK on success, failure status code on error
+    static sdk_ret_t mapping_tags_read_(pds_mapping_key_t *key,
+                                        vpc_entry *vpc,
+                                        mapping_impl *impl);
+
+    /// \brief      read public mapping
+    /// \param[in]  key                         mapping key
+    /// \param[in]  vpc                         vpc entry of the mapping
+    /// \param[out] mapping                     mapping entry
+    /// \param[out] impl                        mapping impl
+    /// \param[out] local_mapping_data          local mapping data read
+    /// \return     SDK_RET_OK on success, failure status code on error
+    static sdk_ret_t public_mapping_read_(pds_mapping_key_t *key,
+                                          vpc_entry *vpc,
+                                          mapping_entry *mapping,
+                                          mapping_impl *impl,
+                                          local_mapping_appdata_t *local_mapping_data);
+
 private:
     uint32_t    vnic_hw_id_;
     uint32_t    vpc_hw_id_;

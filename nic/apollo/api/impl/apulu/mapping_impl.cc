@@ -90,37 +90,238 @@ mapping_impl::free(mapping_impl *impl) {
     return SDK_RET_OK;
 }
 
+sdk_ret_t
+mapping_impl::mapping_table_read_(pds_mapping_key_t *key,
+                                  subnet_entry *subnet,
+                                  vpc_entry *vpc,
+                                  mapping_impl *impl,
+                                  bool *is_local) {
+    sdk_ret_t ret;
+    mapping_swkey_t mapping_key;
+    mapping_appdata_t mapping_data;
+    sdk_table_api_params_t tparams;
+
+    if (subnet) {
+        PDS_IMPL_FILL_L2_MAPPING_SWKEY(&mapping_key,
+                                       ((subnet_impl *)subnet->impl())->hw_id(),
+                                       key->mac_addr);
+    } else if (vpc) {
+        PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key,
+                                       ((vpc_impl *)vpc->impl())->hw_id(),
+                                       &key->ip_addr);
+    }
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &mapping_key, NULL, &mapping_data,
+                                   0, handle_t::null());
+    ret = mapping_impl_db()->mapping_tbl()->get(&tparams);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+    if (tparams.handle == handle_t::null()) {
+        return SDK_RET_ERR;
+    }
+    impl->mapping_hdl_ = tparams.handle;
+    impl->subnet_hw_id_ = mapping_data.egress_bd_id;
+    if (mapping_data.nexthop_valid) {
+        impl->nexthop_type_ = mapping_data.nexthop_type;
+        impl->nexthop_id_ = mapping_data.nexthop_id;
+    } else {
+        impl->nexthop_id_ = PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID;
+    }
+    *is_local = (mapping_data.nexthop_type == NEXTHOP_TYPE_NEXTHOP);
+    return ret;
+}
+
+sdk_ret_t
+mapping_impl::local_mapping_table_read_(pds_mapping_key_t *key,
+                                        vpc_entry *vpc,
+                                        mapping_impl *impl,
+                                        bool *public_ip_valid,
+                                        local_mapping_appdata_t *local_mapping_data) {
+    sdk_ret_t ret;
+    sdk_table_api_params_t tparams;
+    local_mapping_swkey_t local_mapping_key;
+
+    PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_mapping_key,
+                                         ((vpc_impl *)vpc->impl())->hw_id(),
+                                         &key->ip_addr);
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &local_mapping_key, NULL,
+                                   local_mapping_data, 0,
+                                   handle_t::null());
+    ret = mapping_impl_db()->local_mapping_tbl()->get(&tparams);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+    if ((local_mapping_data->ip_type != MAPPING_TYPE_OVERLAY) ||
+        (tparams.handle == handle_t::null())) {
+        // this is either public IP or IP entry for some other purpose
+        return SDK_RET_ERR;
+    }
+    *public_ip_valid = (local_mapping_data->xlate_id !=
+                           PDS_IMPL_RSVD_NAT_HW_ID) ? true : false;
+    impl->local_mapping_overlay_ip_hdl_= tparams.handle;
+    impl->vnic_hw_id_ = local_mapping_data->vnic_id;
+    impl->rxdma_local_mapping_tag_idx_ = local_mapping_data->tag_idx;
+    return ret;
+}
+
+sdk_ret_t
+mapping_impl::mapping_tags_read_(pds_mapping_key_t *key,
+                                 vpc_entry *vpc,
+                                 mapping_impl *impl) {
+    sdk_ret_t ret;
+    sdk_table_api_params_t tparams;
+    rxdma_mapping_swkey_t rxdma_mapping_key;
+    mapping_tag_info_entry_t mapping_tag_data;
+    rxdma_mapping_appdata_t rxdma_mapping_data;
+
+    PDS_IMPL_FILL_RXDMA_IP_MAPPING_KEY(&rxdma_mapping_key,
+                                       ((vpc_impl *)vpc->impl())->hw_id(),
+                                       &key->ip_addr);
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &rxdma_mapping_key,
+                                   NULL, &rxdma_mapping_data,
+                                   0, handle_t::null());
+    ret = mapping_impl_db()->rxdma_mapping_tbl()->get(&tparams);
+    if (ret == SDK_RET_OK) {
+        if (rxdma_mapping_data.tag_idx != PDS_IMPL_RSVD_TAG_HW_ID) {
+            ret = mapping_tag_data.read(rxdma_mapping_data.tag_idx);
+            if (unlikely(ret != SDK_RET_OK)) {
+                PDS_TRACE_ERR("Failed to read MAPPING_TAG table "
+                              "at idx %u", rxdma_mapping_data.tag_idx);
+                goto err;
+            }
+            // retrieve the class id values
+            if (mapping_tag_data.classid0 !=
+                    PDS_IMPL_RSVD_MAPPING_CLASS_ID) {
+                impl->class_id_[0] = mapping_tag_data.classid0;
+                impl->num_class_id_++;
+            }
+            if (mapping_tag_data.classid1 !=
+                    PDS_IMPL_RSVD_MAPPING_CLASS_ID) {
+                impl->class_id_[1] = mapping_tag_data.classid1;
+                impl->num_class_id_++;
+            }
+            if (mapping_tag_data.classid2 !=
+                    PDS_IMPL_RSVD_MAPPING_CLASS_ID) {
+                impl->class_id_[2] = mapping_tag_data.classid2;
+                impl->num_class_id_++;
+            }
+            if (mapping_tag_data.classid3 !=
+                    PDS_IMPL_RSVD_MAPPING_CLASS_ID) {
+                impl->class_id_[3] = mapping_tag_data.classid3;
+                impl->num_class_id_++;
+            }
+            if (mapping_tag_data.classid4 !=
+                    PDS_IMPL_RSVD_MAPPING_CLASS_ID) {
+                impl->class_id_[4] = mapping_tag_data.classid4;
+                impl->num_class_id_++;
+            }
+        }
+        impl->rxdma_mapping_hdl_ = tparams.handle;
+        impl->rxdma_mapping_tag_idx_ = rxdma_mapping_data.tag_idx;
+    }
+    return SDK_RET_OK;
+
+err:
+    return ret;
+}
+
+sdk_ret_t
+mapping_impl::public_mapping_read_(pds_mapping_key_t *key,
+                                   vpc_entry *vpc,
+                                   mapping_entry *mapping,
+                                   mapping_impl *impl,
+                                   local_mapping_appdata_t *local_mapping_data) {
+    sdk_ret_t ret;
+    ip_addr_t public_ip;
+    mapping_swkey_t mapping_key;
+    nat_rewrite_entry_t nat_data;
+    sdk_table_api_params_t tparams;
+    rxdma_mapping_swkey_t rxdma_mapping_key;
+    local_mapping_swkey_t local_mapping_key;
+    mapping_appdata_t public_ip_mapping_data;
+    local_mapping_appdata_t pub_ip_local_mapping_data;
+    rxdma_mapping_appdata_t rxdma_mapping_data;
+
+    memset(&nat_data, 0, nat_data.entry_size());
+    ret = nat_data.read(local_mapping_data->xlate_id);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+
+    // read public IP from NAT data
+    P4_IPADDR_TO_IPADDR(nat_data.ip, public_ip, key->ip_addr.af);
+
+    // read local mapping for public IP to get it's xlate index
+    PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_mapping_key,
+                                         ((vpc_impl *)vpc->impl())->hw_id(),
+                                         &public_ip);
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &local_mapping_key, NULL,
+                                   &pub_ip_local_mapping_data, 0,
+                                   handle_t::null());
+    ret = mapping_impl_db()->local_mapping_tbl()->get(&tparams);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+    if (tparams.handle == handle_t::null()) {
+        return SDK_RET_ERR;
+    }
+    impl->local_mapping_public_ip_hdl_ = tparams.handle;
+
+    // read MAPPPING table entry for public IP
+    PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key,
+                                   ((vpc_impl *)vpc->impl())->hw_id(),
+                                   &public_ip);
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &mapping_key, NULL,
+                                   &public_ip_mapping_data, 0,
+                                   handle_t::null());
+    ret = mapping_impl_db()->mapping_tbl()->get(&tparams);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+    if (tparams.handle == handle_t::null()) {
+        return SDK_RET_ERR;
+    }
+    impl->mapping_public_ip_hdl_ = tparams.handle;
+
+    // read the rxdma MAPPING table entry of public IP if this mapping
+    // has tags configured
+    if (impl->num_class_id_) {
+        PDS_IMPL_FILL_RXDMA_IP_MAPPING_KEY(&rxdma_mapping_key,
+                                           ((vpc_impl *)vpc->impl())->hw_id(),
+                                           &public_ip);
+        PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &rxdma_mapping_key,
+                                       NULL, &rxdma_mapping_data,
+                                       0, handle_t::null());
+        ret = mapping_impl_db()->rxdma_mapping_tbl()->get(&tparams);
+        if (ret != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to read rxdma MAPPING table entry for "
+                          "public IP %s", ipaddr2str(&public_ip));
+            return ret;
+        }
+        if (tparams.handle == handle_t::null()) {
+            return SDK_RET_ERR;
+        }
+        impl->rxdma_mapping_public_ip_hdl_ = tparams.handle;
+    }
+    mapping->set_public_ip(&public_ip);
+    impl->to_public_ip_nat_idx_ = local_mapping_data->xlate_id;
+    impl->to_overlay_ip_nat_idx_ = pub_ip_local_mapping_data.xlate_id;
+    return SDK_RET_OK;
+}
+
 mapping_impl *
 mapping_impl::build(pds_mapping_key_t *key, mapping_entry *mapping) {
+    uint32_t tag;
     sdk_ret_t ret;
     bool is_local;
     vpc_entry *vpc;
     mapping_impl *impl;
-    ip_addr_t public_ip;
     subnet_entry *subnet;
     device_entry *device;
     pds_obj_key_t vpc_key;
-    p4pd_error_t p4pd_ret;
-    uint32_t num_class_id, tag;
-    mapping_swkey_t mapping_key;
-    nat_rewrite_entry_t nat_data;
     bool public_ip_valid = false;
-    sdk_table_api_params_t tparams;
-    mapping_appdata_t mapping_data, public_ip_mapping_data;
-    rxdma_mapping_swkey_t rxdma_mapping_key;
-    local_mapping_swkey_t local_mapping_key;
-    mapping_tag_info_entry_t mapping_tag_data;
-    local_mapping_appdata_t local_mapping_data;
-    rxdma_mapping_appdata_t rxdma_mapping_data;
     uint32_t class_id[PDS_MAX_TAGS_PER_MAPPING];
-    local_mapping_appdata_t pub_ip_local_mapping_data;
-    uint32_t rxdma_mapping_tag_idx = PDS_IMPL_RSVD_TAG_HW_ID;
-    handle_t mapping_hdl = handle_t::null();
-    handle_t rxdma_mapping_hdl = handle_t::null();
-    handle_t rxdma_mapping_public_ip_hdl = handle_t::null();
-    handle_t local_mapping_overlay_ip_hdl = handle_t::null();
-    handle_t local_mapping_public_ip_hdl = handle_t::null();
-    handle_t mapping_public_ip_hdl = handle_t::null();
+    local_mapping_appdata_t local_mapping_data;
 
     device = device_find();
     if (key->type == PDS_MAPPING_TYPE_L2) {
@@ -134,204 +335,75 @@ mapping_impl::build(pds_mapping_key_t *key, mapping_entry *mapping) {
             return NULL;
         }
     } else {
+        subnet = NULL;
         vpc = vpc_find(&key->vpc);
         if (unlikely(vpc == NULL)) {
             return NULL;
         }
     }
 
-    // read mapping table and infer if this is also a local mapping
-    if (key->type == PDS_MAPPING_TYPE_L2) {
-        PDS_IMPL_FILL_L2_MAPPING_SWKEY(&mapping_key,
-                                       ((subnet_impl *)subnet->impl())->hw_id(),
-                                       key->mac_addr);
-    } else {
-        PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key,
-                                       ((vpc_impl *)vpc->impl())->hw_id(),
-                                       &key->ip_addr);
-    }
-    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &mapping_key, NULL, &mapping_data,
-                                   0, handle_t::null());
-    ret = mapping_impl_db()->mapping_tbl()->get(&tparams);
-    if (ret != SDK_RET_OK) {
-        return NULL;
-    }
-    mapping_hdl = tparams.handle;
-    is_local = (mapping_data.nexthop_type == NEXTHOP_TYPE_NEXTHOP);
-
-    // read local mapping table, this also tells us if there are public
-    // IP mappings
-    if (is_local) {
-        PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_mapping_key,
-                                             ((vpc_impl *)vpc->impl())->hw_id(),
-                                             &key->ip_addr);
-        PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &local_mapping_key, NULL,
-                                       &local_mapping_data, 0,
-                                       handle_t::null());
-        ret = mapping_impl_db()->local_mapping_tbl()->get(&tparams);
-        if (ret != SDK_RET_OK) {
-            return NULL;
-        }
-        local_mapping_overlay_ip_hdl = tparams.handle;
-        if (local_mapping_data.ip_type != MAPPING_TYPE_OVERLAY) {
-            // this is either public IP or IP entry for some other purpose
-            return NULL;
-        }
-        public_ip_valid = (local_mapping_data.xlate_id !=
-                               PDS_IMPL_RSVD_NAT_HW_ID) ? true : false;
-    }
-
-    // it is possible that this overlay mapping has tags configured, read them
-    num_class_id = 0;
-    if (key->type == PDS_MAPPING_TYPE_L3) {
-        PDS_IMPL_FILL_RXDMA_IP_MAPPING_KEY(&rxdma_mapping_key,
-                                           ((vpc_impl *)vpc->impl())->hw_id(),
-                                           &key->ip_addr);
-        PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &rxdma_mapping_key,
-                                       NULL, &rxdma_mapping_data,
-                                       0, handle_t::null());
-        ret = mapping_impl_db()->rxdma_mapping_tbl()->get(&tparams);
-        if (ret == SDK_RET_OK) {
-            rxdma_mapping_hdl = tparams.handle;
-            rxdma_mapping_tag_idx = rxdma_mapping_data.tag_idx;
-            if (rxdma_mapping_tag_idx != PDS_IMPL_RSVD_TAG_HW_ID) {
-                ret = mapping_tag_data.read(rxdma_mapping_tag_idx);
-                if (unlikely(ret != SDK_RET_OK)) {
-                    PDS_TRACE_ERR("Failed to read MAPPING_TAG table "
-                                  "at idx %u", rxdma_mapping_tag_idx);
-                    return NULL;
-                }
-                // retrieve the class id values
-                if (mapping_tag_data.classid0 !=
-                        PDS_IMPL_RSVD_MAPPING_CLASS_ID) {
-                    class_id[0] = mapping_tag_data.classid0;
-                    num_class_id++;
-                }
-                if (mapping_tag_data.classid1 !=
-                        PDS_IMPL_RSVD_MAPPING_CLASS_ID) {
-                    class_id[1] = mapping_tag_data.classid1;
-                    num_class_id++;
-                }
-                if (mapping_tag_data.classid2 !=
-                        PDS_IMPL_RSVD_MAPPING_CLASS_ID) {
-                    class_id[2] = mapping_tag_data.classid2;
-                    num_class_id++;
-                }
-                if (mapping_tag_data.classid3 !=
-                        PDS_IMPL_RSVD_MAPPING_CLASS_ID) {
-                    class_id[3] = mapping_tag_data.classid3;
-                    num_class_id++;
-                }
-                if (mapping_tag_data.classid4 !=
-                        PDS_IMPL_RSVD_MAPPING_CLASS_ID) {
-                    class_id[4] = mapping_tag_data.classid4;
-                    num_class_id++;
-                }
-            }
-        }
-    }
-
-    // if public mapping exists, NAT table provides the public IP
-    if (public_ip_valid) {
-        memset(&nat_data, 0, nat_data.entry_size());
-        ret = nat_data.read(local_mapping_data.xlate_id);
-        if (ret != SDK_RET_OK) {
-            return NULL;
-        }
-
-        // read public IP from NAT data
-        P4_IPADDR_TO_IPADDR(nat_data.ip, public_ip, key->ip_addr.af);
-
-        // read local mapping for public IP to get it's xlate index
-        PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_mapping_key,
-                                             ((vpc_impl *)vpc->impl())->hw_id(),
-                                             &public_ip);
-        PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &local_mapping_key, NULL,
-                                       &pub_ip_local_mapping_data, 0,
-                                       handle_t::null());
-        ret = mapping_impl_db()->local_mapping_tbl()->get(&tparams);
-        if (ret != SDK_RET_OK) {
-            return NULL;
-        }
-        local_mapping_public_ip_hdl = tparams.handle;
-
-        // read MAPPPING table entry for public IP
-        PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key,
-                                       ((vpc_impl *)vpc->impl())->hw_id(),
-                                       &public_ip);
-        PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &mapping_key, NULL,
-                                       &public_ip_mapping_data, 0,
-                                       handle_t::null());
-        ret = mapping_impl_db()->mapping_tbl()->get(&tparams);
-        if (ret != SDK_RET_OK) {
-            return NULL;
-        }
-        mapping_public_ip_hdl = tparams.handle;
-
-        // read the rxdma MAPPING table entry of public IP if this mapping
-        // has tags configured
-        if (num_class_id) {
-            PDS_IMPL_FILL_RXDMA_IP_MAPPING_KEY(&rxdma_mapping_key,
-                                               ((vpc_impl *)vpc->impl())->hw_id(),
-                                               &public_ip);
-            PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &rxdma_mapping_key,
-                                           NULL, &rxdma_mapping_data,
-                                           0, handle_t::null());
-            ret = mapping_impl_db()->rxdma_mapping_tbl()->get(&tparams);
-            if (ret != SDK_RET_OK) {
-                PDS_TRACE_ERR("Failed to read rxdma MAPPING table entry for "
-                              "public IP %s", ipaddr2str(&public_ip));
-                return NULL;
-            }
-            rxdma_mapping_public_ip_hdl = tparams.handle;
-            // NOTE: we already read the class ids earlier
-        }
-    }
-
-    // all required tables are read, allocate impl object and build it
+    // allocate impl object and build it
     impl = mapping_impl_db()->alloc();
     if (unlikely(impl == NULL)) {
         return NULL;
     }
     new (impl) mapping_impl();
 
-    mapping->set_local(is_local);
+    // read mapping table and infer if this is also a local mapping
+    ret = mapping_table_read_(key, subnet, vpc, impl, &is_local);
+    if (ret != SDK_RET_OK) {
+        goto err;
+    }
+
+    // read local mapping table, this also tells us if there are public
+    // IP mappings
     if (is_local) {
-        impl->vnic_hw_id_ = local_mapping_data.vnic_id;
-    } else {
+        ret = local_mapping_table_read_(key, vpc,
+                                        impl, &public_ip_valid,
+                                        &local_mapping_data);
+        if (ret != SDK_RET_OK) {
+            goto err;
+        }
+    }
+
+    // it is possible that this overlay mapping has tags configured, read them
+    if (key->type == PDS_MAPPING_TYPE_L3) {
+        ret = mapping_tags_read_(key, vpc, impl);
+        if (ret != SDK_RET_OK) {
+            goto err;
+        }
+    }
+
+    // if public mapping exists, NAT table provides the public IP
+    if (public_ip_valid) {
+        ret = public_mapping_read_(key, vpc, mapping, impl,
+                                   &local_mapping_data);
+        if (ret != SDK_RET_OK) {
+            goto err;
+        }
+    }
+
+    mapping->set_local(is_local);
+    if (!is_local) {
         impl->vnic_hw_id_ = PDS_IMPL_RSVD_VNIC_HW_ID;
     }
     impl->vpc_hw_id_ = ((vpc_impl *)vpc->impl())->hw_id();
-    impl->subnet_hw_id_ = mapping_data.egress_bd_id;
-    if (mapping_data.nexthop_valid) {
-        impl->nexthop_type_ = mapping_data.nexthop_type;
-        impl->nexthop_id_ = mapping_data.nexthop_id;
-    } else {
-        impl->nexthop_id_ = PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID;
-    }
-    if (public_ip_valid) {
-        mapping->set_public_ip(&public_ip);
-        impl->to_public_ip_nat_idx_ = local_mapping_data.xlate_id;
-        impl->to_overlay_ip_nat_idx_ = pub_ip_local_mapping_data.xlate_id;
-        impl->rxdma_mapping_public_ip_hdl_ = rxdma_mapping_public_ip_hdl;
-    }
-    impl->mapping_hdl_ = mapping_hdl;
-    impl->local_mapping_overlay_ip_hdl_ = local_mapping_overlay_ip_hdl;
-    impl->local_mapping_public_ip_hdl_ = local_mapping_public_ip_hdl;
-    impl->mapping_public_ip_hdl_ = mapping_public_ip_hdl;
-    impl->rxdma_local_mapping_tag_idx_ = local_mapping_data.tag_idx;
-    impl->rxdma_mapping_tag_idx_ = rxdma_mapping_tag_idx;
-    impl->rxdma_mapping_hdl_ = rxdma_mapping_hdl;
-    impl->num_class_id_ = num_class_id;
-    mapping->set_num_tags(num_class_id);
-    for (uint8_t i = 0; i < num_class_id; i++) {
-        ret = ((vpc_impl *)vpc->impl())->find_tag(class_id[i], &tag, is_local);
+    mapping->set_num_tags(impl->num_class_id_);
+    for (uint8_t i = 0; i < impl->num_class_id_; i++) {
+        ret = ((vpc_impl *)vpc->impl())->find_tag(impl->class_id_[i], &tag, is_local);
         if (ret == SDK_RET_OK) {
             mapping->set_tag(i, tag);
         }
     }
-    memcpy(impl->class_id_, class_id, num_class_id * sizeof(class_id[0]));
+
     return impl;
+
+err:
+
+    if (impl) {
+        mapping_impl_db()->free(impl);
+    }
+    return NULL;
 }
 
 sdk_ret_t
