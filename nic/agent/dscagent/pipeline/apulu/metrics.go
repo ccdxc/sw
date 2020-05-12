@@ -261,7 +261,7 @@ func HandleMetrics(infraAPI types.InfraAPI, client halapi.OperSvcClient) error {
 					continue
 				}
 				queryInterfaceMetrics(infraAPI, stream)
-				queryFlowStatsSummaryMetrics(infraAPI, stream)
+				//queryFlowStatsSummaryMetrics(infraAPI, stream)
 				querySysmonMetrics(infraAPI, stream)
 			}
 		}
