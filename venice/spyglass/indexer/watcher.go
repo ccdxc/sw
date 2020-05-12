@@ -57,7 +57,7 @@ func (idr *Indexer) createWatchers() error {
 			}
 
 			// Objstore is handled separately below
-			if group == "objstore" || group == "bookstore" {
+			if group == "objstore" || group == "bookstore" || group == "routing" {
 				continue
 			}
 			// TODO: Remove hardcoded version
