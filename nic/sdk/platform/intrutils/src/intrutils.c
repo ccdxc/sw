@@ -21,14 +21,6 @@
 #define INTR_DRVCFG_BASE        (INTR_BASE + INTR_DRVCFG_OFFSET)
 #define INTR_DRVCFG_STRIDE      0x20
 
-#define INTR_PBA_CFG_OFFSET     ASIC_(INTR_CSR_DHS_INTR_PBA_CFG_BYTE_OFFSET)
-#define INTR_PBA_CFG_BASE       (INTR_BASE + INTR_PBA_CFG_OFFSET)
-#define INTR_PBA_CFG_STRIDE     0x4
-
-#define INTR_PBA_OFFSET         ASIC_(INTR_CSR_DHS_INTR_PBA_ARRAY_BYTE_OFFSET)
-#define INTR_PBA_BASE           (INTR_BASE + INTR_PBA_OFFSET)
-#define INTR_PBA_STRIDE         0x8
-
 #define INTR_ASSERT_OFFSET      ASIC_(INTR_CSR_DHS_INTR_ASSERT_BYTE_OFFSET)
 #define INTR_ASSERT_BASE        (INTR_BASE + INTR_ASSERT_OFFSET)
 #define INTR_ASSERT_STRIDE      0x4
@@ -105,35 +97,9 @@ intr_pba_size(const int intrc)
 }
 
 u_int64_t
-intr_pba_cfg_addr(const int lif)
-{
-    return INTR_PBA_CFG_BASE + (lif * INTR_PBA_CFG_STRIDE);
-}
-
-u_int64_t
 intr_state_addr(const int intr)
 {
     return INTR_STATE_BASE + (intr * INTR_STATE_STRIDE);
-}
-
-void
-intr_pba_cfg(const int lif, const int intrb, const size_t intrc)
-{
-    u_int64_t pa = intr_pba_cfg_addr(lif);
-    union {
-        struct {
-            u_int32_t start:12;
-            u_int32_t count:6;
-            u_int32_t ecc:6;
-            u_int32_t pad:8;
-        } __attribute__((packed));
-        u_int32_t w[1];
-    } __attribute__((packed)) v = {
-        .start = intrb,
-        .count = MIN(intrc, 64) - 1,
-    };
-
-    pal_reg_wr32(pa, v.w[0]);
 }
 
 void

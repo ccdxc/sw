@@ -43,7 +43,7 @@ vfe(V4) 5 vfs(V3) 4 prt_size(V2) 4 pagesz(V1) 12 qide(V7) 0 qids(V6) 0
 +----------------------------------------------------------------+
 vfe(V4) 2 vfs(V3) 3 prt_size(V2) 3 pagesz(V1) 12 qide(V7) 0 qids(V6) 0
 0   30   mem   r-l   8     0x0000011113000 0:02:00.0 0   0    0   
-    4    res   ----  8     0x0000011113000 0x0618c8000
+    4    res   ----  16    0x0000011113000 0x0618c8000
 
 idx  id typ rw p:bb:dd.f baraddr    size prts
 27   0  mem rw 0:02:00.0 0x11110000 4K   1   
