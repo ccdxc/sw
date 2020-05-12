@@ -150,7 +150,13 @@ struct ionic_dev {
 };
 
 struct ionic_cq_info {
-	void *cq_desc;
+	union {
+		void *cq_desc;
+		struct ionic_txq_comp *txcq;
+		struct ionic_rxq_comp *rxcq;
+		struct ionic_admin_comp *admincq;
+		struct ionic_notifyq_event *notifyq;
+	};
 	struct ionic_cq_info *next;
 	unsigned int index;
 	bool last;
@@ -164,51 +170,84 @@ typedef void (*ionic_desc_cb)(struct ionic_queue *q,
 			      struct ionic_desc_info *desc_info,
 			      struct ionic_cq_info *cq_info, void *cb_arg);
 
-struct ionic_page_info {
+
+#define IONIC_PAGE_ORDER			0
+#define IONIC_PAGE_SIZE				(PAGE_SIZE << IONIC_PAGE_ORDER)
+#define IONIC_PAGE_SPLIT_SZ			(PAGE_SIZE / 2)
+#define IONIC_PAGE_GFP_MASK			(GFP_ATOMIC | __GFP_NOWARN |\
+	__GFP_COMP | __GFP_MEMALLOC)
+
+struct ionic_buf_info {
 	struct page *page;
 	dma_addr_t dma_addr;
+	u32 page_offset;
+#if (IONIC_PAGE_ORDER > 0)
+	u32 pagecnt_bias;
+#endif
 };
 
 struct ionic_desc_info {
-	void *desc;
-	void *sg_desc;
+	union {
+		void *desc;
+		struct ionic_txq_desc *txq_desc;
+		struct ionic_rxq_desc *rxq_desc;
+		struct ionic_admin_cmd *adminq_desc;
+	};
+	union {
+		void *sg_desc;
+		struct ionic_txq_sg_desc *txq_sg_desc;
+		struct ionic_rxq_sg_desc *rxq_sgl_desc;
+	};
 	struct ionic_desc_info *next;
 	unsigned int index;
 	unsigned int left;
 	unsigned int npages;
 	unsigned int bytes;
+	struct ionic_buf_info bufs[IONIC_RX_MAX_SG_ELEMS + 1];
 	ionic_desc_cb cb;
 	void *cb_arg;
-	struct ionic_page_info pages[IONIC_RX_MAX_SG_ELEMS + 1];
 };
 
 #define IONIC_QUEUE_NAME_MAX_SZ		32
 
 struct ionic_queue {
+	struct device *dev;
 	struct ionic_lif *lif;
+	struct ionic_dev *idev;
 	struct ionic_desc_info *info;
-	struct ionic_desc_info *tail;
-	struct ionic_desc_info *head;
+	u64 dbval;
+	u16 head_idx;
+	u16 tail_idx;
 	unsigned int index;
 	unsigned int num_descs;
+	unsigned int max_sg_elems;
 	u64 dbell_count;
 	u64 stop;
 	u64 wake;
 	u64 drop;
-	struct ionic_dev *idev;
+	u64 depth;
+	u64 depth_max;
 	unsigned int type;
 	unsigned int hw_index;
 	unsigned int hw_type;
-	u64 dbval;
-	void *base;
-	void *sg_base;
+	union {
+		void *base;
+		struct ionic_txq_desc *txq;
+		struct ionic_rxq_desc *rxq;
+		struct ionic_admin_cmd *adminq;
+	};
+	union {
+		void *sg_base;
+		struct ionic_txq_sg_desc *txq_sgl;
+		struct ionic_rxq_sg_desc *rxq_sgl;
+	};
 	dma_addr_t base_pa;
 	dma_addr_t sg_base_pa;
 	unsigned int desc_size;
 	unsigned int sg_desc_size;
 	unsigned int pid;
 	char name[IONIC_QUEUE_NAME_MAX_SZ];
-};
+} ____cacheline_aligned_in_smp;
 
 #define IONIC_INTR_INDEX_NOT_ASSIGNED	-1
 #define IONIC_INTR_NAME_MAX_SZ		32
@@ -225,16 +264,16 @@ struct ionic_intr_info {
 struct ionic_cq {
 	struct ionic_lif *lif;
 	struct ionic_cq_info *info;
-	struct ionic_cq_info *tail;
 	struct ionic_queue *bound_q;
 	struct ionic_intr_info *bound_intr;
+	u16 tail_idx;
 	bool done_color;
 	unsigned int num_descs;
 	unsigned int desc_size;
 	u64 compl_count;
 	void *base;
 	dma_addr_t base_pa;
-};
+} ____cacheline_aligned_in_smp;
 
 struct ionic_eq_ring {
 	struct ionic_eq_comp *base;
@@ -269,12 +308,12 @@ static inline void ionic_intr_init(struct ionic_dev *idev,
 
 static inline unsigned int ionic_q_space_avail(struct ionic_queue *q)
 {
-	unsigned int avail = q->tail->index;
+	unsigned int avail = q->tail_idx;
 
-	if (q->head->index >= avail)
-		avail += q->head->left - 1;
+	if (q->head_idx >= avail)
+		avail += q->num_descs - q->head_idx - 1;
 	else
-		avail -= q->head->index + 1;
+		avail -= q->head_idx + 1;
 
 	return avail;
 }

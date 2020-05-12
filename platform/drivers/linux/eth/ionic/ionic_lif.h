@@ -333,13 +333,14 @@ int ionic_reset_queues(struct ionic_lif *lif, ionic_reset_cb cb, void *arg);
 
 struct ionic_lif *ionic_netdev_lif(struct net_device *netdev);
 
-static inline void debug_stats_txq_post(struct ionic_qcq *qcq,
-					struct ionic_txq_desc *desc, bool dbell)
+static inline void debug_stats_txq_post(struct ionic_qcq *qcq, bool dbell)
 {
+	struct ionic_queue *q = &qcq->q;
+	struct ionic_txq_desc *desc = &q->txq[q->head_idx];
 	u8 num_sg_elems = ((le64_to_cpu(desc->cmd) >> IONIC_TXQ_DESC_NSGE_SHIFT)
 						& IONIC_TXQ_DESC_NSGE_MASK);
 
-	qcq->q.dbell_count += dbell;
+	q->dbell_count += dbell;
 
 	if (num_sg_elems > (IONIC_MAX_NUM_SG_CNTR - 1))
 		num_sg_elems = IONIC_MAX_NUM_SG_CNTR - 1;
@@ -358,12 +359,20 @@ static inline void debug_stats_napi_poll(struct ionic_qcq *qcq,
 	qcq->napi_stats.work_done_cntr[work_done]++;
 }
 
+#ifdef IONIC_DEBUG_STATS
 #define DEBUG_STATS_CQE_CNT(cq)		((cq)->compl_count++)
 #define DEBUG_STATS_RX_BUFF_CNT(qcq)	((qcq)->stats->rx.buffers_posted++)
 #define DEBUG_STATS_INTR_REARM(intr)	((intr)->rearm_count++)
-#define DEBUG_STATS_TXQ_POST(qcq, txdesc, dbell) \
-	debug_stats_txq_post(qcq, txdesc, dbell)
+#define DEBUG_STATS_TXQ_POST(qcq, dbell) \
+	debug_stats_txq_post(qcq, dbell)
 #define DEBUG_STATS_NAPI_POLL(qcq, work_done) \
 	debug_stats_napi_poll(qcq, work_done)
+#else
+#define DEBUG_STATS_CQE_CNT(cq)
+#define DEBUG_STATS_RX_BUFF_CNT(qcq)
+#define DEBUG_STATS_INTR_REARM(intr)
+#define DEBUG_STATS_TXQ_POST(qcq, dbell)
+#define DEBUG_STATS_NAPI_POLL(qcq, work_done)
+#endif
 
 #endif /* _IONIC_LIF_H_ */

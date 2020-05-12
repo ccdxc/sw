@@ -264,7 +264,7 @@ static int ionic_qcq_enable(struct ionic_qcq *qcq)
 				 qcq->q.hw_type,
 				 IONIC_DBELL_RING_1 |
 				 IONIC_DBELL_QID(qcq->q.hw_index) |
-				 qcq->cq.tail->index);
+				 qcq->cq.tail_idx);
 	} else if (qcq->flags & IONIC_QCQ_F_INTR) {
 		irq_set_affinity_hint(qcq->intr.vector,
 				      &qcq->intr.affinity_mask);
@@ -473,6 +473,7 @@ static int ionic_qcq_alloc(struct ionic_lif *lif, unsigned int type,
 		goto err_out;
 	}
 
+	new->q.dev = dev;
 	new->flags = flags;
 
 	new->q.info = devm_kzalloc(dev, sizeof(*new->q.info) * num_descs,
@@ -484,6 +485,7 @@ static int ionic_qcq_alloc(struct ionic_lif *lif, unsigned int type,
 	}
 
 	new->q.type = type;
+	new->q.max_sg_elems = lif->qtype_info[type].max_sg_elems;
 
 	err = ionic_q_init(lif, idev, &new->q, index, name, num_descs,
 			   desc_size, sg_desc_size, pid);

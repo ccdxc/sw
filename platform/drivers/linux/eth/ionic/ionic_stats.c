@@ -184,6 +184,8 @@ static const struct ionic_stat_desc ionic_txq_stats_desc[] = {
 	IONIC_TX_Q_STAT_DESC(wake),
 	IONIC_TX_Q_STAT_DESC(drop),
 	IONIC_TX_Q_STAT_DESC(dbell_count),
+	IONIC_TX_Q_STAT_DESC(depth),
+	IONIC_TX_Q_STAT_DESC(depth_max)
 };
 
 static const struct ionic_stat_desc ionic_dbg_cq_stats_desc[] = {

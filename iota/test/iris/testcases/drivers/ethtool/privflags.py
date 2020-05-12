@@ -43,9 +43,13 @@ def __checkDebugStatsDefault(host, intf):
         api.Logger.error("Bad exit code %d on interface %s" % (cmd.exit_code, intf))
         api.Logger.info(cmd.stderr)
         return api.types.status.FAILURE
-    if "sw-dbg-stats: off" not in cmd.stdout:
+
+    if "sw-dbg-stats: on" in cmd.stdout:
         api.Logger.error("sw-dbg-stats on by default interface %s" % intf)
         return api.types.status.FAILURE
+    else if "sw-dbg-stats: off" not in cmd.stdout:
+        api.Logger.info("sw-dbg-stats not available on interface %s" % intf)
+        return api.types.status.UNAVAIL
 
     cmd = resp.commands[1]
     #api.PrintCommandResults(cmd)
@@ -154,6 +158,10 @@ def Trigger(tc):
 
     for i in intfs:
         ret = __checkDebugStatsDefault(hosts[0], i)
+        if ret == api.types.status.UNAVAIL:
+            ret = api.types.status.SUCCESS:
+            continue
+
         if ret == api.types.status.SUCCESS:
             ret = __checkDebugStatsOn(hosts[0], i)
         if ret == api.types.status.SUCCESS:
