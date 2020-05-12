@@ -65,8 +65,8 @@
     </ng-template>
     <ng-template pTemplate="body" let-rowData let-rowIndex="rowIndex">
       <tr (mouseleave)="resetHover(rowData)" (mouseover)="rowHover(rowData)"
-          [pSelectableRow]="rowData">
-        <td *ngIf="enableCheckbox" class="pentable-checkbox" [style.height]="rowHeight + 'px'">
+          [pSelectableRow]="rowData" [style.height]="rowHeight + 'px'">
+        <td *ngIf="enableCheckbox" class="pentable-checkbox">
           <p-tableCheckbox [value]="rowData"></p-tableCheckbox>
           <ng-container *ngTemplateOutlet="disabledMask; context: {$implicit: rowData}">
           </ng-container>
@@ -89,7 +89,8 @@
     </ng-template>
     <ng-template pTemplate="rowexpansion" let-rowData>
       <tr #expandRow>
-        <td [attr.colspan]="enableCheckbox ? selectedColumns.length + 1 : selectedColumns.length">
+        <td class="pentable-td-rowexpand"
+            [attr.colspan]="enableCheckbox ? selectedColumns.length + 1 : selectedColumns.length">
           <div [@slideInOut] (@slideInOut.done)="rowExpandAnimationComplete(rowData)"
                *ngIf="showRowExpand" class="pentable-rowexpand">
             <ng-container

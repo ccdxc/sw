@@ -1,11 +1,11 @@
-import { Component, OnInit, ViewEncapsulation, AfterViewInit, Input, ChangeDetectionStrategy, ChangeDetectorRef, ViewChild } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output, ViewEncapsulation } from '@angular/core';
 import { ControllerService } from '@app/services/controller.service';
 import { CreationForm } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { Animations } from '@app/animations';
-import { NetworkNetwork, INetworkNetwork, NetworkOrchestratorInfo, INetworkOrchestratorInfo } from '@sdk/v1/models/generated/network';
+import { NetworkNetwork, INetworkNetwork, NetworkOrchestratorInfo } from '@sdk/v1/models/generated/network';
 import { NetworkService } from '@app/services/generated/network.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
-import { FormArray, ValidatorFn, AbstractControl, FormGroup } from '@angular/forms';
+import { FormArray, ValidatorFn, FormGroup } from '@angular/forms';
 import { Utility } from '@app/common/Utility';
 import { OrchestrationOrchestrator } from '@sdk/v1/models/generated/orchestration';
 import { SelectItem } from 'primeng/api';
@@ -24,6 +24,8 @@ export class NewnetworkComponent extends CreationForm<INetworkNetwork, NetworkNe
   @Input() vcenterOptions: SelectItem[] = [];
   @Input() vcenters: ReadonlyArray<OrchestrationOrchestrator> = [];
   @Input() existingObjects: INetworkNetwork[] = [];
+
+  @Output() editFormClose: EventEmitter<any> = new EventEmitter<any>();
 
   datacenterNames: SelectItem[] = [];
 
@@ -202,6 +204,16 @@ export class NewnetworkComponent extends CreationForm<INetworkNetwork, NetworkNe
 
       this._controllerService.setToolbarData(currToolbar);
     }
+  }
+
+  editSaveObject() {
+    this.saveObject();
+    this.editFormClose.emit();
+  }
+
+  editCancelObject() {
+    this.cancelObject();
+    this.editFormClose.emit();
   }
 
   onVcenterChange(orchestrator: FormGroup) {

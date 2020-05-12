@@ -61,6 +61,10 @@ app-pentable,
 
   &:hover {
     display: table-row;
+
+    >td.pentable-td-rowexpand {
+      word-break: normal;
+    }
   }
 
   &:last-child {
@@ -75,6 +79,10 @@ app-pentable,
     position: absolute;
     right: 0;
     top: 5px;
+  }
+
+  td.pentable-td-rowexpand {
+    padding: 0;
   }
 }
 

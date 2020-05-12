@@ -1,6 +1,5 @@
-import { Component, OnInit, ViewEncapsulation, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation, ChangeDetectorRef, ViewChild } from '@angular/core';
 import { Animations } from '@app/animations';
-import { TablevieweditAbstract } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { IApiStatus, NetworkNetwork, INetworkNetwork, NetworkOrchestratorInfo } from '@sdk/v1/models/generated/network';
 import { CustomExportMap, TableCol } from '@app/components/shared/tableviewedit';
@@ -17,6 +16,8 @@ import { SelectItem } from 'primeng/api';
 import { WorkloadWorkload } from '@sdk/v1/models/generated/workload';
 import { WorkloadService } from '@app/services/generated/workload.service';
 import { NetworkWorkloadsTuple, ObjectsRelationsUtility } from '@app/common/ObjectsRelationsUtility';
+import { PentableComponent } from '@app/components/shared/pentable/pentable.component';
+import { DataComponent } from '@app/components/shared/datacomponent/datacomponent.component';
 
 interface NetworkUIModel {
   associatedWorkloads: WorkloadWorkload[];
@@ -30,7 +31,9 @@ interface NetworkUIModel {
   animations: [Animations]
 })
 
-export class NetworkComponent extends TablevieweditAbstract<INetworkNetwork, NetworkNetwork> implements OnInit {
+export class NetworkComponent extends DataComponent implements OnInit {
+
+  @ViewChild('networkTable') networkTable: PentableComponent;
 
   bodyicon: Icon = {
     margin: {
@@ -65,7 +68,7 @@ export class NetworkComponent extends TablevieweditAbstract<INetworkNetwork, Net
   workloadList: WorkloadWorkload[] = [];
 
   subscriptions: Subscription[] = [];
-  dataObjects: ReadonlyArray<NetworkNetwork>;
+  dataObjects: ReadonlyArray<NetworkNetwork> = [];
   networkEventUtility: HttpEventUtility<NetworkNetwork>;
 
   disableTableWhenRowExpanded: boolean = true;
@@ -88,18 +91,17 @@ export class NetworkComponent extends TablevieweditAbstract<INetworkNetwork, Net
     protected orchestrationService: OrchestrationService,
     protected workloadService: WorkloadService,
     protected controllerService: ControllerService) {
-    super(controllerService, cdr, uiconfigsService);
+    super(controllerService, uiconfigsService);
   }
 
   getNetworks() {
     const hostSubscription = this.networkService.ListNetworkCache().subscribe(
       (response) => {
-        this.tableLoading = false;
         if (response.connIsErrorState) {
           return;
         }
-        this.dataObjects = response.data;
-        this.buildVCenterWorkloadsMap();
+        this.dataObjects = this.buildVCenterWorkloadsMap(response.data);
+        this.tableLoading = false;
       },
       (error) => {
         this.tableLoading = false;
@@ -151,8 +153,8 @@ export class NetworkComponent extends TablevieweditAbstract<INetworkNetwork, Net
       buttons = [{
         cssClass: 'global-button-primary networks-button networks-button-ADD',
         text: 'ADD NETWORK',
-        computeClass: () => this.shouldEnableButtons ? '' : 'global-button-disabled',
-        callback: () => { this.createNewObject(); }
+        computeClass: () =>  !(this.networkTable.showRowExpand) ? '' : 'global-button-disabled',
+        callback: () => { this.networkTable.createNewObject(); }
       }];
     }
     this.controllerService.setToolbarData({
@@ -202,26 +204,57 @@ export class NetworkComponent extends TablevieweditAbstract<INetworkNetwork, Net
     return result;
   }
 
-  postNgInit() {
-    this.tableLoading = false;
+  ngOnInit() {
+    this.tableLoading = true;
+    this.setDefaultToolbar();
     this.getNetworks();
     this.getVcenterIntegrations();
     this.watchWorkloads();
   }
 
-  buildVCenterWorkloadsMap() {
-    if (this.dataObjects && this.dataObjects.length > 0 &&
-        this.workloadList && this.workloadList.length > 0) {
+  creationFormClose() {
+    this.networkTable.creationFormClose();
+  }
+
+  editFormClose(rowData) {
+    if (this.networkTable.showRowExpand) {
+      this.networkTable.toggleRow(rowData);
+    }
+  }
+
+  expandRowRequest(event, rowData) {
+    if (!this.networkTable.showRowExpand) {
+      this.networkTable.toggleRow(rowData, event);
+    }
+  }
+
+  onColumnSelectChange(event) {
+    this.networkTable.onColumnSelectChange(event);
+  }
+
+  onDeleteRecord(event, object) {
+    this.networkTable.onDeleteRecord(
+      event,
+      object,
+      this.generateDeleteConfirmMsg(object),
+      this.generateDeleteSuccessMsg(object),
+      this.deleteRecord.bind(this),
+      () => {
+        this.networkTable.selectedDataObjects = [];
+      }
+    );
+  }
+
+  buildVCenterWorkloadsMap(responseData: any = []) {
       const networkWorkloadsTuple: NetworkWorkloadsTuple =
-        ObjectsRelationsUtility.buildNetworkWorkloadsMap(this.workloadList, this.dataObjects);
-      this.dataObjects = this.dataObjects.map(network => {
+        ObjectsRelationsUtility.buildNetworkWorkloadsMap(this.workloadList || [], responseData);
+      return responseData.map(network => {
         const associatedWorkloads: WorkloadWorkload[] =
           networkWorkloadsTuple[network.meta.name] || [];
         const uiModel: NetworkUIModel = { associatedWorkloads };
         network._ui = uiModel;
         return network;
       });
-    }
   }
 
   deleteRecord(object: NetworkNetwork): Observable<{ body: INetworkNetwork | IApiStatus | Error; statusCode: number }> {
@@ -238,6 +271,14 @@ export class NetworkComponent extends TablevieweditAbstract<INetworkNetwork, Net
 
   getClassName(): string {
     return this.constructor.name;
+  }
+
+  getSelectedDataObjects(): any[] {
+    return this.networkTable.selectedDataObjects;
+  }
+
+  clearSelectedDataObjects() {
+    this.networkTable.selectedDataObjects = [];
   }
 }
 

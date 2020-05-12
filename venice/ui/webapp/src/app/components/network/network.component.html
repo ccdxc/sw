@@ -1,32 +1,28 @@
 <app-pagebody [icon]="bodyicon" header="Networks Overview">
   <div fxFlex class="networks-table-container">
-    <ng-container *ngTemplateOutlet="DataTable"></ng-container>
+    <app-pentable #networkTable
+                  [data]="dataObjects"
+                  [columns]="cols"
+                  [captionTemplate]="captionTemplate"
+                  [bodyTemplate]="bodyTemplate"
+                  [actionTemplate]="actionTemplate"
+                  [expandTemplate]="expandTemplate"
+                  [createTemplate]="createTemplate"
+                  [enableCheckbox]="false"
+                  [loading]="tableLoading"
+                  [numRows]="10"
+                  [rowHeight]="46"
+                  [exportFilename]="exportFilename"
+                  [exportMap]="exportMap">
+    </app-pentable>
   </div>
 </app-pagebody>
 
-<ng-template #DataTable>
-  <app-tableviewedit fxLayout="column" style="height: 100%;"
-                     [creatingMode]="creatingMode"
-                     [showRowExpand]="showRowExpand"
-                     [data]="dataObjects"
-                     [cols]="cols"
-                     [expandedRowData]="expandedRowData"
-                     [captionTemplate]="captionTemplate"
-                     [bodyTemplate]="bodyTemplate"
-                     [actionTemplate]="actionTemplate"
-                     [expandTemplate]="expandTemplate"
-                     [createTemplate]="createTemplate"
-                     [enableCheckbox]="false"
-                     [tableLoading]="tableLoading"
-                     (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)">
-  </app-tableviewedit>
-</ng-template>
-
 <!-- TABLE HEADER -->
 <ng-template #captionTemplate let-count="count">
-  <div fxFlex fxLayout="column">
-    <div fxLayout="row">
-      <app-tableheader fxFlex="auto" fxLayout="row" [tableMenuItems]="tableMenuItems"
+  <div class="network-table-caption">
+    <div>
+      <app-tableheader fxFlex="auto" fxLayout="row" [tableMenuItems]="networkTable.tableMenuItems"
                        title="Networks"
                        [total]="dataObjects.length" [icon]="headerIcon"
                        [enableColumnSelect]="true"
@@ -65,7 +61,8 @@
 
 <!-- TABLE ACTION -->
 <ng-template #actionTemplate let-rowData>
-  <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
+  <div class="global-column-action-icon-container" fxLayout="row"
+       fxLayoutGap="5px">
     <mat-icon matTooltip="Update Network"
               *roleGuard="'networknetwork_update'"
               class="global-table-action-icon"
@@ -81,7 +78,7 @@
 
 <ng-template #expandTemplate let-rowData let-columns="columns">
   <app-newnetwork [style.width]="'100%'" [objectData]="rowData" [isInline]="true"
-                  (formClose)="closeRowExpand()" fxFlex="none"
+                  (editFormClose)="editFormClose(rowData)" fxFlex="none"
                   [vcenters]="vcenters" [vcenterOptions]='vcenterOptions'>
   </app-newnetwork>
 </ng-template>

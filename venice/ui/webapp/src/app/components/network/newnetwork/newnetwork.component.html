@@ -1,7 +1,7 @@
 <div fxFlex="auto" fxLayout="column" class="new-network-container">
   <app-inlinebuttons class="new-network" *ngIf="isInline"
                      [saveButtonClass]="computeInlineButtonClass()" [saveTooltip]="getTooltip()"
-                     (saveFunc)="saveObject()" (cancelFunc)="cancelObject()">
+                     (saveFunc)="editSaveObject()" (cancelFunc)="editCancelObject()">
   </app-inlinebuttons>
   <div fxFlex="noshrink" fxLayout="column" fxLayoutAlign="start center"
        [class]="isInline? 'new-network-editform-inline' : ''">
