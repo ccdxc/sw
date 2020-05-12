@@ -3,6 +3,8 @@
 //
 //----------------------------------------------------------------------------
 
+#include <fcntl.h>
+#include <chrono>
 #include <iostream>
 #include <boost/foreach.hpp>
 #include <boost/property_tree/json_parser.hpp>
@@ -10,10 +12,13 @@
 
 #include "ts.hpp"
 
+using namespace chrono;
 using namespace std;
 
 namespace sdk {
 namespace ts {
+
+#define TASK_TIMEOUT  120 // 2mins timeout per task
 
 static inline int
 ts_get_exit_status (int rc)
@@ -144,9 +149,21 @@ techsupport::setup_(void) {
     add_log_collection_tasks_();
 }
 
+static void inline
+ts_set_task_non_blocking (FILE *fp)
+{
+    int flags;
+    int fd = fileno(fp);
+
+    flags = fcntl(fd, F_GETFL, 0);
+    flags |= O_NONBLOCK;
+    fcntl(fd, F_SETFL, flags);
+}
+
 int
 techsupport::execute_task_(const string& task) {
     char buffer[BUFFER_SIZE];
+    int time_elapsed;
 
     gzprintf(fsink_, "=== Task ===\n");
     // record the task being run
@@ -157,9 +174,26 @@ techsupport::execute_task_(const string& task) {
         return errno;
     }
 
+    ts_set_task_non_blocking(pipefp);
+    // start per task timer so that techsupport does not hang indefinitely
+    auto start = steady_clock::now();
     // record the task's output
     while (!feof(pipefp)) {
-        if (fgets(buffer, BUFFER_SIZE, pipefp) != NULL) {
+        errno = 0;
+        auto buf = fgets(buffer, BUFFER_SIZE, pipefp);
+        if (buf == NULL) {
+            if (errno == EWOULDBLOCK) {
+                // no data from task - check if we are past time
+                auto finish = steady_clock::now();
+                time_elapsed = duration_cast<seconds>(finish - start).count();
+                if (time_elapsed >= TASK_TIMEOUT) {
+                    // task timed out, record the same & return
+                    gzprintf(fsink_, "no response from %s for %u seconds\n",
+                             task.c_str(), time_elapsed);
+                    return EXIT_FAILURE;
+                }
+            }
+        } else {
             gzprintf(fsink_, "%s", buffer);
         }
     }
