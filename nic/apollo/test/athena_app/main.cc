@@ -692,7 +692,7 @@ main (int argc, char **argv)
         }
     }
 
-    if (hw() && fte_ath::g_athena_app_mode == ATHENA_APP_MODE_CPP) {
+    if (hw()) {
 
         /*
          * On HW, delay until all initializations are done in nicmgr thread before
