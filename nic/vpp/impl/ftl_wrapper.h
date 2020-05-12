@@ -18,6 +18,8 @@ typedef char* (*appdata2str_t)(void *data);
 typedef void (*session_update_cb) (uint32_t ses_id, uint32_t pindex, 
                                    uint32_t sindex, bool iflow, 
                                    bool move_complete);
+typedef int (*nat_flow_dealloc_cb) (uint32_t vpc_id, uint32_t dip, uint16_t dport,
+             uint8_t protocol, uint32_t sip, uint16_t sport);
 
 #ifdef __cplusplus
 
@@ -57,6 +59,8 @@ typedef struct v4_flow_info_s {
 // Prototypes
 
 void ftl_reg_session_update_cb(session_update_cb cb);
+
+void ftl_reg_nat_dealloc_cb(nat_flow_dealloc_cb cb);
 
 void set_skip_ftl_program(int val);
 
@@ -321,6 +325,10 @@ void ftll2_set_key(flow_entry *entry,
 int ftlv4_remove(ftlv4 *obj, v4_flow_entry *entry, uint32_t hash);
 
 int ftlv4_remove_cached_entry(ftlv4 *obj);
+
+void ftlv4_update_iflow_nat_session (ftlv4 *obj);
+void ftlv4_update_rflow_nat_session (ftlv4 *obj);
+int ftlv4_remove_nat_session(uint32_t vpc_id, ftlv4 *obj);
 
 int ftlv4_update_cached_entry(ftlv4 *obj);
 

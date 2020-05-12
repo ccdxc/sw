@@ -32,6 +32,7 @@ static sdk_table_api_stats_t g_api_stats;
 static sdk_table_stats_t g_table_stats;
 
 session_update_cb g_ses_cb;
+nat_flow_dealloc_cb g_nat_dealloc_cb;
 
 void
 set_skip_ftl_program (int val)
@@ -49,6 +50,12 @@ void
 ftl_reg_session_update_cb (session_update_cb cb)
 {
     g_ses_cb = cb;
+}
+
+void
+ftl_reg_nat_dealloc_cb (nat_flow_dealloc_cb cb)
+{
+    g_nat_dealloc_cb = cb;
 }
 
 void

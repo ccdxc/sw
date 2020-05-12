@@ -7,6 +7,7 @@
 #include <vnet/plugin/plugin.h>
 #include <vppinfra/clib.h>
 #include <nic/vpp/impl/nat.h>
+#include <nic/vpp/impl/ftl_wrapper.h>
 #include "nat_api.h"
 
 // TODO move to right place
@@ -191,6 +192,8 @@ nat_init(void)
     nat_main.nat_proto_map[NAT_PROTO_TCP] = IP_PROTOCOL_TCP;
     nat_main.nat_proto_map[NAT_PROTO_UDP] = IP_PROTOCOL_UDP;
     nat_main.nat_proto_map[NAT_PROTO_ICMP] = IP_PROTOCOL_ICMP;
+
+    ftl_reg_nat_dealloc_cb((nat_flow_dealloc_cb)nat_flow_dealloc);
 }
 
 //

@@ -76,6 +76,26 @@ pds_vnic_flow_log_en_get (u16 vnic_id, int *enable)
     return 0;
 }
 
+always_inline u32
+pds_vnic_vpc_id_get (u16 vnic_id)
+{
+    pds_impl_db_vnic_entry_t *vnic_info = NULL;
+    pds_impl_db_subnet_entry_t *subnet;
+
+    vnic_info = pds_impl_db_vnic_get(vnic_id);
+    if (PREDICT_FALSE(vnic_info == NULL)) {
+        return 0;
+    }
+    if (PREDICT_FALSE(vnic_info->subnet_hw_id) == 0) {
+        return 0;
+    }
+    subnet = pds_impl_db_subnet_get(vnic_info->subnet_hw_id);
+    if (PREDICT_FALSE(subnet == NULL)) {
+        return 0;
+    }
+    return subnet->vpc_id;
+}
+
 always_inline int
 pds_vnic_active_sessions_decrement (uint16_t vnic_id) {
     pds_impl_db_vnic_entry_t *vnic_info = NULL;

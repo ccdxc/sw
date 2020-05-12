@@ -21,9 +21,6 @@
 #include <nat.h>
 #include <pds_table.h>
 
-// TODO: Move to a common header in nat
-#define PDS_DYNAMIC_NAT_START_INDEX 1000
-
 using namespace sdk;
 using namespace sdk::table;
 using namespace sdk::platform;
@@ -31,10 +28,12 @@ using namespace sdk::platform;
 extern "C" {
 
 extern session_update_cb g_ses_cb;
+extern nat_flow_dealloc_cb g_nat_dealloc_cb;
 
 typedef struct ftlv4_cache_s {
     ipv4_flow_hash_entry_t ip4_flow[MAX_FLOW_ENTRIES_PER_BATCH];
     ipv4_flow_hash_entry_t ip4_last_read_flow;
+    ipv4_flow_hash_entry_t ip4_last_read_nat_session;
     uint32_t ip4_hash[MAX_FLOW_ENTRIES_PER_BATCH];
     flow_flags_t flags[MAX_FLOW_ENTRIES_PER_BATCH];
     uint16_t count;
@@ -174,6 +173,51 @@ int
 ftlv4_remove_cached_entry (ftlv4 *obj)
 {
     return ftlv4_remove(obj, &g_ip4_flow_cache.ip4_last_read_flow, 0);
+}
+
+void
+ftlv4_update_iflow_nat_session (ftlv4 *obj)
+{
+    ipv4_flow_hash_entry_t *v4entry = &g_ip4_flow_cache.ip4_last_read_flow;
+    ipv4_flow_hash_entry_t *v4natentry = &g_ip4_flow_cache.ip4_last_read_nat_session;
+    v4natentry->set_key_metadata_ipv4_dst(v4entry->get_key_metadata_ipv4_dst());
+    v4natentry->set_key_metadata_dport(v4entry->get_key_metadata_dport());
+    v4natentry->set_key_metadata_proto(v4entry->get_key_metadata_proto());
+    if (unlikely(v4entry->get_key_metadata_proto() == IP_PROTO_ICMP)) {
+        v4natentry->set_key_metadata_sport(v4entry->get_key_metadata_sport());
+        v4natentry->set_key_metadata_dport(0);
+    }
+}
+
+void
+ftlv4_update_rflow_nat_session (ftlv4 *obj)
+{
+    ipv4_flow_hash_entry_t *v4entry = &g_ip4_flow_cache.ip4_last_read_flow;
+    ipv4_flow_hash_entry_t *v4natentry = &g_ip4_flow_cache.ip4_last_read_nat_session;
+    v4natentry->set_key_metadata_ipv4_src(v4entry->get_key_metadata_ipv4_dst());
+    if (likely(v4entry->get_key_metadata_proto() != IP_PROTO_ICMP)) {
+        v4natentry->set_key_metadata_sport(v4entry->get_key_metadata_dport());
+    }
+}
+
+int
+ftlv4_remove_nat_session (uint32_t vpc_id, ftlv4 *obj)
+{
+    uint32_t sip, dip;
+    uint16_t sport, dport;
+    uint8_t proto;
+
+    ipv4_flow_hash_entry_t *v4entry = &g_ip4_flow_cache.ip4_last_read_nat_session;
+    sip = v4entry->get_key_metadata_ipv4_src();
+    dip = v4entry->get_key_metadata_ipv4_dst();
+    sport = v4entry->get_key_metadata_sport();
+    dport = v4entry->get_key_metadata_dport();
+    proto = v4entry->get_key_metadata_proto();
+    if (g_nat_dealloc_cb) {
+        return g_nat_dealloc_cb(vpc_id, dip, dport, proto, sip, sport);
+    }
+
+    return 0;
 }
 
 static inline sdk::sdk_ret_t

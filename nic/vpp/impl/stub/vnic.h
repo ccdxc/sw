@@ -35,6 +35,12 @@ pds_vnic_flow_log_en_get (u16 vnic_id, int *enable)
     return -1;
 }
 
+always_inline u32
+pds_vnic_vpc_id_get (u16 vnic_id)
+{
+    return -1;
+}
+
 always_inline int
 pds_vnic_active_sessions_decrement (uint16_t vnic_id) {
     return -1;

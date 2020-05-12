@@ -269,7 +269,7 @@ typedef CLIB_PACKED(struct pds_flow_hw_ctx_s {
     u8 packet_type : 5; // pds_flow_pkt_type
     u8 iflow_rx : 1; // true if iflow is towards the host
     u8 monitor_seen : 1; // 1 if monitor process has seen flow
-    u8 reserved : 1;
+    u8 nat : 1;
     u16 vnic_id : 7;
     u16 reserved_2 : 9;
 }) pds_flow_hw_ctx_t;
@@ -608,6 +608,12 @@ always_inline void pds_session_set_data(u32 ses_id, u32 i_pindex,
     data->vnic_id = vnic_id;
     data->iflow_rx = host_origin;
     data->packet_type = packet_type;
+    if (PREDICT_FALSE(data->packet_type == PDS_FLOW_L2N_OVERLAY_ROUTE_EN_NAT ||
+        data->packet_type == PDS_FLOW_L2N_OVERLAY_ROUTE_DIS_NAPT)) {
+        data->nat = 1;
+    } else {
+        data->nat = 0;
+    }
     //pds_flow_prog_unlock();
     return;
 }

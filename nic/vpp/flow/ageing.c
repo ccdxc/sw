@@ -631,6 +631,9 @@ pds_flow_delete_session (u32 ses_id)
             goto end;
         }
         pds_flow_hw_ctx_unlock(session);
+        if (PREDICT_FALSE(session->nat)) {
+            ftlv4_update_iflow_nat_session(table4);
+        }
         if (PREDICT_FALSE(ftlv4_remove_cached_entry(table4)) != 0) {
             return;
         }
@@ -641,8 +644,15 @@ pds_flow_delete_session (u32 ses_id)
             goto end;
         }
         pds_flow_hw_ctx_unlock(session);
+        if (PREDICT_FALSE(session->nat)) {
+            ftlv4_update_rflow_nat_session(table4);
+        }
         if (PREDICT_FALSE(ftlv4_remove_cached_entry(table4)) != 0) {
             return;
+        }
+        if (PREDICT_FALSE(session->nat)) {
+            u32 vpc_id = pds_vnic_vpc_id_get(session->vnic_id);
+            ftlv4_remove_nat_session(vpc_id, table4);
         }
     } else {
         ftl *table = (ftl *)pds_flow_get_table6_or_l2();
