@@ -335,7 +335,7 @@ devapi_impl::qos_class_set_global_pause_type(uint8_t pause_type) {
 
 sdk_ret_t
 devapi_impl::uplink_create(__UNUSED__ uint32_t uplink_ifidx,
-                           pds_ifindex_t ifidx, bool is_oob) {
+                           if_index_t ifidx, bool is_oob) {
     return SDK_RET_OK;
 }
 
@@ -369,7 +369,7 @@ devapi_impl::port_get_config_(sdk::linkmgr::port_args_t *port_args,
 }
 
 sdk_ret_t
-devapi_impl::port_get_config(pds_ifindex_t ifidx, port_config_t *config) {
+devapi_impl::port_get_config(if_index_t ifidx, port_config_t *config) {
     return api::port_get(&ifidx, devapi_impl::port_get_config_, config);
 }
 
@@ -398,7 +398,7 @@ devapi_impl::port_get_status_(sdk::linkmgr::port_args_t *port_args,
 }
 
 sdk_ret_t
-devapi_impl::port_get_status(pds_ifindex_t ifidx, port_status_t *status) {
+devapi_impl::port_get_status(if_index_t ifidx, port_status_t *status) {
     return api::port_get(&ifidx, devapi_impl::port_get_status_, status);
 }
 
@@ -442,7 +442,7 @@ devapi_impl::populate_port_args_(sdk::linkmgr::port_args_t *port_args,
 }
 
 sdk_ret_t
-devapi_impl::port_set_config(pds_ifindex_t ifidx, port_config_t *config) {
+devapi_impl::port_set_config(if_index_t ifidx, port_config_t *config) {
     if_entry *intf;
     sdk_ret_t ret;
     port_args_t port_args = { 0 };

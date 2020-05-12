@@ -32,7 +32,7 @@ public:
 
     // Initialize feeder with the base set of values
     void init(pds_obj_key_t key, std::string ip_pfx_str = k_if_ippfx,
-              pds_if_type_t type = PDS_IF_TYPE_L3, int num_ifs = 2);
+              if_type_t type = IF_TYPE_L3, int num_ifs = 2);
 
     // Iterate helper routines
     void iter_next(int width = 1);
@@ -54,7 +54,7 @@ operator<<(std::ostream& os, const pds_if_spec_t *spec) {
     os << &spec->key
        << " type: " << spec->type;
 
-    if (spec->type == PDS_IF_TYPE_L3) {
+    if (spec->type == IF_TYPE_L3) {
         os << " port: " << spec->l3_if_info.port.str()
            << " ip pfx: " << ippfx2str(&spec->l3_if_info.ip_prefix)
            << " mac addr: " << macaddr2str(spec->l3_if_info.mac_addr);

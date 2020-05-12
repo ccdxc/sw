@@ -24,7 +24,7 @@ public:
         pds_obj_key_t      vpc;
         pds_obj_key_t      subnet;
         pds_encap_t        fabric_encap;
-        pds_ifindex_t      host_ifindex = 0;
+        if_index_t         host_ifindex = 0;
         properties_t(ms_bd_id_t b, const pds_obj_key_t& k,
                      const pds_obj_key_t& s)
             : bd_id(b), vpc(k), subnet(s) {};

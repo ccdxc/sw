@@ -21,7 +21,7 @@ typedef struct pds_lif_spec_s {
     ///< name of the lif, if any
     char name[SDK_MAX_NAME_LEN];
     ///< if index of the pinned port/lif
-    pds_ifindex_t    pinned_ifidx;
+    if_index_t       pinned_ifidx;
     ///< type of lif
     lif_type_t       type;
     ///< vlan_strip_en is set to true if vlan needs to be stripped in datapath
@@ -37,7 +37,7 @@ typedef struct pds_lif_spec_s {
 /// \brief lif status
 typedef struct pds_lif_status_s {
     ///< encoded interface index of this lif
-    pds_ifindex_t  ifindex;
+    if_index_t     ifindex;
     ///< name of the lif (as seen on host)
     char           name[SDK_MAX_NAME_LEN];
     ///< admin state of the lif

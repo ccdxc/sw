@@ -71,7 +71,7 @@ if_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
     sdk_ret_t ret;
     pds_if_spec_t *spec = &obj_ctxt->api_params->if_spec;
 
-    if (spec->type != PDS_IF_TYPE_UPLINK) {
+    if (spec->type != IF_TYPE_UPLINK) {
         // nothing to reserve
         return SDK_RET_OK;
     }
@@ -103,7 +103,7 @@ sdk_ret_t
 if_impl::release_resources(api_base *api_obj) {
     if_entry *intf = (if_entry *)api_obj;
 
-    if (intf->type() != PDS_IF_TYPE_UPLINK) {
+    if (intf->type() != IF_TYPE_UPLINK) {
         return SDK_RET_OK;
     }
     if (hw_id_ != 0xFFFF) {
@@ -127,8 +127,8 @@ if_impl::activate_create_(pds_epoch_t epoch, if_entry *intf,
     PDS_TRACE_DEBUG("Activating if 0x%x, type %u, admin state %u",
                     spec->key.id, spec->type, spec->admin_state);
 
-    if (spec->type == PDS_IF_TYPE_UPLINK) {
-        PDS_TRACE_DEBUG("pds_ifindex_t: %x, logical_port:%u\n",
+    if (spec->type == IF_TYPE_UPLINK) {
+        PDS_TRACE_DEBUG("if_index_t: %x, logical_port:%u\n",
                 intf->ifindex(), sdk::lib::catalog::ifindex_to_logical_port(intf->ifindex()));
         // program the lif id in the TM
         tm_port =
@@ -160,14 +160,14 @@ if_impl::activate_update_(pds_epoch_t epoch, if_entry *intf,
     sdk_ret_t ret;
     pds_if_spec_t *spec = &obj_ctxt->api_params->if_spec;
 
-    if (spec->type == PDS_IF_TYPE_UPLINK) {
+    if (spec->type == IF_TYPE_UPLINK) {
         if (obj_ctxt->upd_bmap & PDS_IF_UPD_ADMIN_STATE) {
             // TODO: @akoradha, we need to bring port down here !!
             return SDK_RET_INVALID_OP;
         }
         return SDK_RET_OK;
     }
-    SDK_ASSERT_RETURN((spec->type == PDS_IF_TYPE_L3), SDK_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((spec->type == IF_TYPE_L3), SDK_RET_INVALID_ARG);
     return SDK_RET_OK;
 }
 
@@ -208,7 +208,7 @@ if_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
     spec = &if_info->spec;
     uint32_t port_num;
 
-    if (spec->type == PDS_IF_TYPE_UPLINK) {
+    if (spec->type == IF_TYPE_UPLINK) {
         if_info->status.uplink_status.lif_id = hw_id_;
     }
     return SDK_RET_OK;

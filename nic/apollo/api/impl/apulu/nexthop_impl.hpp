@@ -218,7 +218,7 @@ populate_underlay_nh_info_ (pds_nexthop_spec_t *spec,
                           spec->l3_if.str(), spec->key.str());
             return SDK_RET_INVALID_ARG;
         }
-        if (intf->type() != PDS_IF_TYPE_L3) {
+        if (intf->type() != IF_TYPE_L3) {
             PDS_TRACE_ERR("Unsupported interface %s type %u in nexthop %s",
                           intf->key().str(), intf->type(), spec->key.str());
             return SDK_RET_INVALID_ARG;

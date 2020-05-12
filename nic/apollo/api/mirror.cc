@@ -148,8 +148,8 @@ mirror_session::init_config(api_ctxt_t *api_ctxt) {
     case PDS_MIRROR_SESSION_TYPE_RSPAN:
         intf = if_find(&spec->rspan_spec.interface);
         if (intf) {
-            if ((intf->type() != PDS_IF_TYPE_ETH) &&
-                (intf->type() != PDS_IF_TYPE_UPLINK)) {
+            if ((intf->type() != IF_TYPE_ETH) &&
+                (intf->type() != IF_TYPE_UPLINK)) {
                 PDS_TRACE_ERR("Invalid interface type %u in RSPAN config %s, "
                               "only eth and uplink interfaces are supported",
                               spec->rspan_spec.interface.str(),

@@ -61,7 +61,7 @@ bool lif_walk_cb(void* obj, void* ctxt) {
 }
 
 std::string 
-pds_ifindex_to_ifname (uint32_t pds_ifindex, bool init)
+if_index_to_ifname (uint32_t pds_ifindex, bool init)
 {
     lif_walk_ctxt_t  ctxt;
     ctxt.pds_ifindex = pds_ifindex;
@@ -153,7 +153,7 @@ uint32_t pds_port_to_ms_ifindex_and_ifname (uint32_t port, std::string* ifname)
 {
     // Simulate an Ifindex that would come from NetAgent
     auto pds_ifindex = IFINDEX(IF_TYPE_UPLINK, 0, port, ETH_IF_DEFAULT_CHILD_PORT);
-    *ifname = pds_ifindex_to_ifname (pds_ifindex, true);
+    *ifname = if_index_to_ifname (pds_ifindex, true);
     // Convert to MS IfIndex
     return pds_to_ms_ifindex(pds_ifindex, IF_TYPE_ETH);
 }

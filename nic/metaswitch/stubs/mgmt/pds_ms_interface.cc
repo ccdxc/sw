@@ -110,7 +110,7 @@ process_interface_update (pds_if_spec_t *if_spec,
     bool ip_update = false;
     ip_prefix_t *intf_ip_prfx = NULL;
 
-    if (if_spec->type == PDS_IF_TYPE_L3) {
+    if (if_spec->type == IF_TYPE_L3) {
         // Create L3 interfaces
         LimInterfaceCfgSpec lim_if_spec;
         populate_lim_l3_intf_cfg_spec (lim_if_spec, ms_ifindex);
@@ -124,7 +124,7 @@ process_interface_update (pds_if_spec_t *if_spec,
                                     LIM_IF_TYPE_ETH, 
                                     api::objid_from_uuid(if_spec->l3_if_info.port));
         }
-    } else if (if_spec->type == PDS_IF_TYPE_LOOPBACK){
+    } else if (if_spec->type == IF_TYPE_LOOPBACK){
         // Otherwise, its always singleton loopback
         LimInterfaceSpec lim_swif_spec;
         lim_swif_spec.set_ifid(LOOPBACK_IF_ID); lim_swif_spec.set_iftype(LIM_IF_TYPE_LOOPBACK);
@@ -180,7 +180,7 @@ process_interface_update (pds_if_spec_t *if_spec,
 
     if (has_ip_addr) {
         PDS_TRACE_INFO("Setting IP address for interface");
-        if (if_spec->type == PDS_IF_TYPE_LOOPBACK){
+        if (if_spec->type == IF_TYPE_LOOPBACK){
             // we are maintaining only one entry for redistribute connected rule
             // so delete should be completed before adding the rule for update case
             lim_l3_if_addr_pre_set(lim_addr_spec, row_status,
@@ -241,7 +241,7 @@ l3_intf_create (const pds_if_spec_t* if_spec, ms_ifindex_t ms_ifindex,
     auto new_if_obj = new pds_ms::if_obj_t(ms_ifindex, *if_spec);
     auto& phy_port_prop = new_if_obj->phy_port_properties();
 
-    auto if_name = pds_ifindex_to_ifname(eth_ifindex);
+    auto if_name = if_index_to_ifname(eth_ifindex);
     PDS_TRACE_INFO("Fetching Linux Ifinfo for Ifname %s", if_name.c_str());
 #ifdef SIM
     if (!get_linux_intf_params(if_name.c_str(),
@@ -279,7 +279,7 @@ interface_create (pds_if_spec_t *spec, pds_batch_ctxt_t bctxt)
         mgmt_uuid_guard_t uuid_guard;
 
         // Get PDS to MS IfIndex
-        if (spec->type == PDS_IF_TYPE_L3) {
+        if (spec->type == IF_TYPE_L3) {
            auto eth_ifindex = api::objid_from_uuid(spec->l3_if_info.port);
 
             ms_ifindex = pds_to_ms_ifindex(eth_ifindex, IF_TYPE_ETH);
@@ -292,7 +292,7 @@ interface_create (pds_if_spec_t *spec, pds_batch_ctxt_t bctxt)
             interface_uuid_alloc(spec->key, ms_ifindex, eth_ifindex,
                                  spec->l3_if_info.ip_prefix);
 
-        } else if (spec->type == PDS_IF_TYPE_LOOPBACK) {
+        } else if (spec->type == IF_TYPE_LOOPBACK) {
             ms_ifindex = pds_to_ms_ifindex(LOOPBACK_IF_ID, IF_TYPE_LOOPBACK);
             PDS_TRACE_INFO("Loopback Intf Create:: UUID %s to MS[0x%X]]",
                             spec->key.str(),  ms_ifindex);
@@ -346,7 +346,7 @@ interface_delete (pds_obj_key_t* key, pds_batch_ctxt_t bctxt)
         auto ms_ifindex = ifinfo.ms_ifindex;
         // For delete if_spec needs to be populated with type alone
         pds_if_spec_t if_spec = {0};
-        if_spec.type = PDS_IF_TYPE_LOOPBACK;
+        if_spec.type = IF_TYPE_LOOPBACK;
         ret_status = process_interface_update(&if_spec, ms_ifindex,
                                               AMB_ROW_DESTROY);
         if (ret_status != types::ApiStatus::API_STATUS_OK) {
@@ -406,7 +406,7 @@ interface_update (pds_if_spec_t *spec, pds_batch_ctxt_t bctxt)
         auto ms_ifindex = ifinfo.ms_ifindex;
         bool ip_change = false;
 
-        if (spec->type == PDS_IF_TYPE_L3) {
+        if (spec->type == IF_TYPE_L3) {
             ip_change = chk_and_upd_l3_spec_(ms_ifindex, spec);
         }
 

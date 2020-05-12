@@ -19,8 +19,8 @@ pds_obj_key_t k_l3_if_key = int2pdsobjkey(0x70000001);
 #define l3_info spec_feeder.l3_if_info
 void
 if_feeder::init(pds_obj_key_t key, std::string ip_pfx_str,
-                pds_if_type_t type, int num_ifs) {
-    pds_ifindex_t eth_ifindex;
+                if_type_t type, int num_ifs) {
+    if_index_t eth_ifindex;
     memset(&this->spec_feeder, 0, sizeof(pds_if_spec_t));
 
     memset(&spec_feeder, 0, sizeof(spec_feeder));
@@ -28,7 +28,7 @@ if_feeder::init(pds_obj_key_t key, std::string ip_pfx_str,
     spec_feeder.type = type;
     spec_feeder.admin_state = PDS_IF_STATE_UP;
 
-    if (type == PDS_IF_TYPE_L3) {
+    if (type == IF_TYPE_L3) {
         spec_feeder.key = key;
         l3_info.vpc = int2pdsobjkey(1);
         str2ipv4pfx((char *)ip_pfx_str.c_str(), &l3_info.ip_prefix);
@@ -47,10 +47,10 @@ if_feeder::init(pds_obj_key_t key, std::string ip_pfx_str,
 void
 if_feeder::iter_next(int width) {
     ip_addr_t ipaddr = {0};
-    pds_ifindex_t eth_ifindex;
+    if_index_t eth_ifindex;
 
     spec_feeder.key = int2pdsobjkey(pdsobjkey2int(spec_feeder.key) + width);
-    if (spec_feeder.type == PDS_IF_TYPE_L3) {
+    if (spec_feeder.type == IF_TYPE_L3) {
         ip_prefix_ip_next(&l3_info.ip_prefix, &ipaddr);
         memcpy(&l3_info.ip_prefix.addr, &ipaddr, sizeof(ip_addr_t));
         MAC_UINT64_TO_ADDR(l3_info.mac_addr,

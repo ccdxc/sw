@@ -18,9 +18,9 @@ void phy_port_ips_feeder_t::trigger_create(void) {
     // Form spec based on input
     pds_if_spec_t spec = {0};
     spec.key = pds_ms::msidx2pdsobjkey(l3_if);
-    spec.type = PDS_IF_TYPE_L3;
+    spec.type = IF_TYPE_L3;
     spec.admin_state = admin_state ? PDS_IF_STATE_UP:PDS_IF_STATE_DOWN;
-    pds_ifindex_t eth_ifindex = ETH_IFINDEX(ETH_IF_DEFAULT_SLOT, phy_port,
+    if_index_t eth_ifindex = ETH_IFINDEX(ETH_IF_DEFAULT_SLOT, phy_port,
                               ETH_IF_DEFAULT_CHILD_PORT);
     spec.l3_if_info.port = api::uuid_from_objid(eth_ifindex);
     spec.l3_if_info.encap.type = PDS_ENCAP_TYPE_NONE;

@@ -65,7 +65,7 @@ port_temperature_metrics_update (system_temperature_t *temperature)
     uint64_t port_temp_metrics[
         port_temp_metrics_type_t::PORT_TEMP_METRICS_TYPE_MAX] = { 0 };
     uint32_t num_phy_ports;
-    pds_ifindex_t ifindex;
+    if_index_t ifindex;
 
     num_phy_ports = g_pds_state.catalogue()->num_fp_ports();
     for (uint32_t phy_port = 1; phy_port <= num_phy_ports; phy_port++) {

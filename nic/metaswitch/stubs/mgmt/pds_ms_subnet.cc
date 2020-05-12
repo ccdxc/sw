@@ -117,7 +117,7 @@ populate_lim_swif_cfg_spec (LimInterfaceCfgSpec& req,
 
 static void
 populate_lim_soft_if_spec (LimInterfaceSpec& req,
-                           pds_ifindex_t     host_ifindex)
+                           if_index_t        host_ifindex)
 {
     req.set_ifid (LIF_IFINDEX_TO_LIF_ID(host_ifindex));
     req.set_iftype (LIM_IF_TYPE_LIF);

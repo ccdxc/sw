@@ -106,7 +106,7 @@ create_uplinks (void)
 {
     sdk_ret_t        ret;
     pds_if_spec_t    spec = { 0 };
-    pds_ifindex_t    ifindex, eth_ifindex;
+    if_index_t       ifindex, eth_ifindex;
 
     PDS_TRACE_DEBUG("Creating uplinks ...");
     for (uint32_t port = 1;
@@ -115,7 +115,7 @@ create_uplinks (void)
                                   port, ETH_IF_DEFAULT_CHILD_PORT);
         ifindex = ETH_IFINDEX_TO_UPLINK_IFINDEX(eth_ifindex);
         spec.key = uuid_from_objid(ifindex);
-        spec.type = PDS_IF_TYPE_UPLINK;
+        spec.type = IF_TYPE_UPLINK;
         spec.admin_state = PDS_IF_STATE_UP;
         spec.uplink_info.port = uuid_from_objid(eth_ifindex);
         PDS_TRACE_DEBUG("Creating uplink %s", spec.key.str());

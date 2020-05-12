@@ -107,7 +107,7 @@ static void create_intf_proto_grpc (bool lo=false, bool second=false) {
 
     if (lo) {
         pds_if.key = pds_ms::msidx2pdsobjkey(k_lo_if_id);
-        pds_if.type = PDS_IF_TYPE_LOOPBACK;
+        pds_if.type = ::IF_TYPE_LOOPBACK;
         pds_if.loopback_if_info.ip_prefix.addr.af = IP_AF_IPV4;
         pds_if.loopback_if_info.ip_prefix.addr.addr.v4_addr = g_test_conf_.local_lo_ip_addr;
         pds_if.loopback_if_info.ip_prefix.len = 32;
@@ -121,7 +121,7 @@ static void create_intf_proto_grpc (bool lo=false, bool second=false) {
             pds_if.l3_if_info.ip_prefix.addr.addr.v4_addr = g_test_conf_.local_ip_addr;
             pds_if.l3_if_info.port = test::uuid_from_objid(g_test_conf_.eth_if_index);
         }
-        pds_if.type = PDS_IF_TYPE_L3;
+        pds_if.type = ::IF_TYPE_L3;
         pds_if.admin_state = PDS_IF_STATE_UP;
         pds_if.l3_if_info.vpc = pds_ms::msidx2pdsobjkey(k_underlay_vpc_id);
         pds_if.l3_if_info.ip_prefix.addr.af = IP_AF_IPV4;

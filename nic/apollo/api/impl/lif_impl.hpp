@@ -75,7 +75,7 @@ public:
 
     /// \brief     ifindex this lif is pinned to
     /// \return    pinned interface index
-    pds_ifindex_t pinned_ifindex(void) const {
+    if_index_t pinned_ifindex(void) const {
         return pinned_if_idx_;
     }
 
@@ -93,7 +93,7 @@ public:
 
     /// \brief     return encoded ifindex of lif
     /// \return    ifindex of the lif
-    pds_ifindex_t ifindex(void) const { return ifindex_; }
+    if_index_t ifindex(void) const { return ifindex_; }
 
     /// \brief     return vnic hw id of this lif
     /// \return    vnic hw id
@@ -206,7 +206,7 @@ private:
 private:
     pds_obj_key_t    key_;            ///< lif key
     pds_lif_id_t     id_;             ///< (s/w & h/w) internal lif id
-    pds_ifindex_t    pinned_if_idx_;  ///< pinnned if index, if any
+    if_index_t       pinned_if_idx_;  ///< pinnned if index, if any
     lif_type_t       type_;           ///< type of the lif
     /// name of the lif, if any
     char             name_[SDK_MAX_NAME_LEN];
@@ -219,7 +219,7 @@ private:
     // TODO: we can have state per pipeline in this class
     //       ideally, we should have the concrete class inside pipeline specific
     //       dir and this should be a base class !!
-    pds_ifindex_t    ifindex_;        ///< ifindex of this lif
+    if_index_t       ifindex_;        ///< ifindex of this lif
     uint32_t         nh_idx_;         ///< nexthop idx of this lif
     uint16_t         vnic_hw_id_;     ///< vnic hw id
     lif_state_t      admin_state_;    ///< admin state

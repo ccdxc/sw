@@ -45,7 +45,7 @@ protected:
 /// \ref WF_B1
 TEST_F(if_test, if_workflow_b1) {
     if_feeder feeder;
-    feeder.init(int2pdsobjkey(1), "10.1.1.1", PDS_IF_TYPE_L3, 1);
+    feeder.init(int2pdsobjkey(1), "10.1.1.1", IF_TYPE_L3, 1);
     workflow_b1<if_feeder>(feeder);
 }
 
@@ -53,8 +53,8 @@ TEST_F(if_test, if_workflow_b1) {
 /// \ref WF_B2
 TEST_F(if_test, if_workflow_b2) {
     if_feeder feeder1, feeder1A;
-    feeder1.init(int2pdsobjkey(1), "10.1.1.1", PDS_IF_TYPE_L3, 1);
-    feeder1A.init(int2pdsobjkey(1), "10.1.1.2", PDS_IF_TYPE_L3, 1);
+    feeder1.init(int2pdsobjkey(1), "10.1.1.1", IF_TYPE_L3, 1);
+    feeder1A.init(int2pdsobjkey(1), "10.1.1.2", IF_TYPE_L3, 1);
     workflow_b2<if_feeder>(feeder1, feeder1A);
 }
 

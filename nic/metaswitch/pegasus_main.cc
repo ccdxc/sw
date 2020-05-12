@@ -71,7 +71,7 @@ IfSvcImpl::InterfaceCreate(ServerContext *context,
                MIN(request.id().length(), PDS_MAX_KEY_LEN));
 
         api_spec->admin_state = PDS_IF_STATE_UP;
-        api_spec->type = PDS_IF_TYPE_LOOPBACK;
+        api_spec->type = IF_TYPE_LOOPBACK;
 
         // call the metaswitch api
         if ((ret = pds_ms::interface_create(api_spec, bctxt)) != SDK_RET_OK) {

@@ -43,7 +43,7 @@ namespace core {
 
 // port event specific information
 typedef struct port_event_info_s {
-    pds_ifindex_t    ifindex;
+    if_index_t       ifindex;
     port_event_t     event;
     port_speed_t     speed;
     port_fec_type_t  fec_type;
@@ -51,7 +51,7 @@ typedef struct port_event_info_s {
 
 // xcvr event specific information
 typedef struct xcvr_event_info_s {
-    pds_ifindex_t    ifindex;
+    if_index_t       ifindex;
     xcvr_state_t     state;
     xcvr_pid_t       pid;
     cable_type_t     cable_type;
@@ -60,13 +60,13 @@ typedef struct xcvr_event_info_s {
 
 // uplink interface event specific information {
 typedef struct uplink_event_info_s {
-    pds_ifindex_t     ifindex;
+    if_index_t        ifindex;
     pds_if_state_t    state;
 } uplink_event_info_t;
 
 // lif event specific information
 typedef struct lif_event_info_s {
-    pds_ifindex_t    ifindex;
+    if_index_t       ifindex;
     char             name[SDK_MAX_NAME_LEN];
     mac_addr_t       mac;
     lif_state_t      state;
@@ -76,7 +76,7 @@ typedef struct lif_event_info_s {
 typedef struct learn_event_info_s {
     pds_obj_key_t   vpc;
     pds_obj_key_t   subnet;
-    pds_ifindex_t   ifindex;
+    if_index_t      ifindex;
     ip_addr_t       ip_addr;
     mac_addr_t      mac_addr;
 } learn_event_info_t;

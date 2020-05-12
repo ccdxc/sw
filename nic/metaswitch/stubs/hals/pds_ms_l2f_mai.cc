@@ -34,7 +34,7 @@ namespace pds_ms {
 
 void
 l2f_local_mac_ip_add (const pds_obj_key_t& subnet_key, const ip_addr_t& ip,
-                      mac_addr_t mac, pds_ifindex_t lif_ifindex)
+                      mac_addr_t mac, if_index_t lif_ifindex)
 {
     ms_ifindex_t ms_lif_index = pds_to_ms_ifindex(lif_ifindex, IF_TYPE_LIF);
     ms_bd_id_t bd_id;

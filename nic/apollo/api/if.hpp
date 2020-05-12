@@ -40,7 +40,7 @@ public:
     /// \param[in] key        key of the interface
     /// \param[in] ifindex    encoded interface index
     /// \return    new instance of interface or NULL, in case of error
-    static if_entry *factory(pds_obj_key_t& key, pds_ifindex_t ifindex);
+    static if_entry *factory(pds_obj_key_t& key, if_index_t ifindex);
 
     /// \brief    factory method to allocate & initialize a interface entry
     /// \param[in] spec    interface specification
@@ -193,7 +193,7 @@ public:
 
     /// \brief    return the interface index
     /// \return interface index
-    pds_ifindex_t ifindex(void) const { return ifindex_; }
+    if_index_t ifindex(void) const { return ifindex_; }
 
     /// \brief    return the interface key
     /// \return interface index
@@ -205,7 +205,7 @@ public:
 
     /// \brief    return the interface type
     /// \return interface type
-    pds_if_type_t type(void) const { return type_; }
+    if_type_t type(void) const { return type_; }
 
     /// \brief    return the wire encap of this (L3) interface
     /// \return   wire encap of this L3 interface
@@ -235,7 +235,7 @@ public:
 
     /// \brief    set the interface type for this interface
     /// \param[in] if_type    interface type
-    void set_type(pds_if_type_t if_type) {
+    void set_type(if_type_t if_type) {
         type_ = if_type;
     }
 
@@ -279,9 +279,9 @@ private:
     sdk_ret_t nuke_resources_(void);
 
 private:
-    pds_obj_key_t key_;            ///< interface key
-    pds_ifindex_t ifindex_;        ///< interface index
-    pds_if_type_t type_;           ///< interface type
+    pds_obj_key_t  key_;           ///< interface key
+    if_index_t     ifindex_;       ///< interface index
+    if_type_t      type_;          ///< interface type
     pds_if_state_t admin_state_;   ///< admin state
     union {
         ///< physical port specific information

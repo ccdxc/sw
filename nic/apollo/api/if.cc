@@ -33,7 +33,7 @@ if_entry::if_entry() {
 
 // TODO: this method should go away !!!
 if_entry *
-if_entry::factory(pds_obj_key_t& key, pds_ifindex_t ifindex) {
+if_entry::factory(pds_obj_key_t& key, if_index_t ifindex) {
     if_entry *intf;
 
     // create interface entry with defaults, if any
@@ -42,7 +42,7 @@ if_entry::factory(pds_obj_key_t& key, pds_ifindex_t ifindex) {
         new (intf) if_entry();
     }
     memcpy(&intf->key_, &key, sizeof(key_));
-    intf->type_ = ifindex_to_pds_if_type(ifindex);
+    intf->type_ = ifindex_to_if_type(ifindex);
     intf->ifindex_ = ifindex;
     return intf;
 }
@@ -141,7 +141,7 @@ if_entry::init_config(api_ctxt_t *api_ctxt) {
     type_ = spec->type;
     admin_state_ = spec->admin_state;
     switch (type_) {
-    case PDS_IF_TYPE_UPLINK:
+    case IF_TYPE_UPLINK:
         {
             if_entry *phy_intf;
             phy_intf = if_db()->find(&spec->uplink_info.port);
@@ -154,7 +154,7 @@ if_entry::init_config(api_ctxt_t *api_ctxt) {
         }
         break;
 
-    case PDS_IF_TYPE_L3:
+    case IF_TYPE_L3:
          ifindex_ = L3_IFINDEX(l3_if_idxr_++);
          PDS_TRACE_DEBUG("Initializing L3 interface %s, ifindex 0x%x, "
                          "port %s", spec->key.str(), ifindex_,
@@ -167,7 +167,7 @@ if_entry::init_config(api_ctxt_t *api_ctxt) {
                 ETH_ADDR_LEN);
          break;
 
-    case PDS_IF_TYPE_CONTROL:
+    case IF_TYPE_CONTROL:
          ifindex_ = CONTROL_IFINDEX(0);
          PDS_TRACE_DEBUG("Initializing inband control interface %s, ifindex 0x%x",
                          spec->key.str(), ifindex_);
@@ -177,7 +177,7 @@ if_entry::init_config(api_ctxt_t *api_ctxt) {
          if_info_.control_.gateway_ = spec->control_if_info.gateway;
          break;
 
-    case PDS_IF_TYPE_NONE:
+    case IF_TYPE_NONE:
         break;
 
     default:
@@ -219,7 +219,7 @@ if_entry::compute_update(api_obj_ctxt_t *obj_ctxt) {
         obj_ctxt->upd_bmap |= PDS_IF_UPD_ADMIN_STATE;
     }
 
-    if (type_ == PDS_IF_TYPE_UPLINK) {
+    if (type_ == IF_TYPE_UPLINK) {
         // no other changes are relevant to uplink
         return SDK_RET_OK;
     }
@@ -250,10 +250,10 @@ if_entry::fill_spec_(pds_if_spec_t *spec) {
     spec->admin_state = admin_state_;
 
     switch (spec->type) {
-    case PDS_IF_TYPE_UPLINK:
+    case IF_TYPE_UPLINK:
         spec->uplink_info.port = if_info_.uplink_.port_;
         break;
-    case PDS_IF_TYPE_L3:
+    case IF_TYPE_L3:
         spec->l3_if_info.port = if_info_.l3_.port_;
         spec->l3_if_info.vpc = if_info_.l3_.vpc_;
         spec->l3_if_info.ip_prefix = if_info_.l3_.ip_pfx_;
@@ -261,13 +261,13 @@ if_entry::fill_spec_(pds_if_spec_t *spec) {
         memcpy(spec->l3_if_info.mac_addr, if_info_.l3_.mac_,
                ETH_ADDR_LEN);
         break;
-    case PDS_IF_TYPE_CONTROL:
+    case IF_TYPE_CONTROL:
         spec->control_if_info.ip_prefix = if_info_.control_.ip_pfx_;
         memcpy(spec->control_if_info.mac_addr, if_info_.control_.mac_,
                ETH_ADDR_LEN);
         spec->control_if_info.gateway = if_info_.control_.gateway_;
         break;
-    case PDS_IF_TYPE_ETH:
+    case IF_TYPE_ETH:
         break;
     default:
         return SDK_RET_ERR;
@@ -363,13 +363,13 @@ if_entry::delay_delete(void) {
 if_entry *
 if_entry::eth_if(if_entry *intf) {
     switch (intf->type()) {
-    case PDS_IF_TYPE_UPLINK:
+    case IF_TYPE_UPLINK:
         return if_db()->find(&intf->if_info_.uplink_.port_);
 
-    case PDS_IF_TYPE_L3:
+    case IF_TYPE_L3:
         return if_db()->find(&intf->if_info_.l3_.port_);
 
-    case PDS_IF_TYPE_ETH:
+    case IF_TYPE_ETH:
         return intf;
     default:
         PDS_TRACE_ERR("Unknown interface type %u", intf->type());
@@ -388,15 +388,15 @@ if_entry::name(void) {
     if (this->port_type() == port_type_t::PORT_TYPE_MGMT) {
         intf_type = "mgmt";
     } else {
-        intf_type = pds_if_type_to_str(type_);
+        intf_type = if_type_to_str(type_);
     }
 
     switch (type_) {
-    case PDS_IF_TYPE_ETH:
+    case IF_TYPE_ETH:
         intf_id = eth_ifindex_to_ifid_str(ifindex_, separator);
         break;
-    case PDS_IF_TYPE_L3:
-    case PDS_IF_TYPE_LOOPBACK:
+    case IF_TYPE_L3:
+    case IF_TYPE_LOOPBACK:
         intf_id = std::to_string(IFINDEX_TO_IFID(ifindex_));
         break;
     default:

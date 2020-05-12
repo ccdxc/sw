@@ -32,10 +32,10 @@ void phy_port_pds_mock_t::generate_addupd_specs(const phy_port_input_params_t& i
 {
     auto op = (op_create_)?API_OP_CREATE : API_OP_UPDATE;
     test::api::if_feeder if_feeder;
-    pds_ifindex_t eth_ifindex;
+    if_index_t eth_ifindex;
     pds_if_spec_t spec = {0};
     spec.key = make_l3if_key_(input);
-    spec.type = PDS_IF_TYPE_L3;
+    spec.type = IF_TYPE_L3;
     spec.admin_state = input.admin_state ? PDS_IF_STATE_UP:PDS_IF_STATE_DOWN;
     eth_ifindex = ETH_IFINDEX(ETH_IF_DEFAULT_SLOT, input.phy_port,
                               ETH_IF_DEFAULT_CHILD_PORT);

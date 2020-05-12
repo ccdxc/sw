@@ -598,7 +598,7 @@ sdk_ret_t pds_state::transaction_end(bool abort) {
     return SDK_RET_OK;
 }
 
-sdk_ret_t pds_if_read(const pds_ifindex_t *key, pds_if_info_t *info) {
+sdk_ret_t pds_if_read(const if_index_t *key, pds_if_info_t *info) {
     info->status.state = PDS_IF_STATE_UP;
     return SDK_RET_OK;
 }

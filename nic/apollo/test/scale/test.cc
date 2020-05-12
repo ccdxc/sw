@@ -1749,12 +1749,12 @@ create_l3_intfs (uint32_t num_if)
     sdk_ret_t rv;
     uint64_t l3if_mac = 0x00AAAAAAA0ULL;
     pds_if_spec_t pds_if;
-    pds_ifindex_t eth_ifindex;
+    if_index_t eth_ifindex;
     uint32_t vnid = 1;
 
     for (uint32_t i = 1; i <= num_if; i++) {
         pds_if.key = test::int2pdsobjkey(i);
-        pds_if.type = PDS_IF_TYPE_L3;
+        pds_if.type = IF_TYPE_L3;
         pds_if.admin_state = PDS_IF_STATE_UP;
         pds_if.l3_if_info.vpc = test::int2pdsobjkey(i);
         pds_if.l3_if_info.ip_prefix.addr.af = IP_AF_IPV4;

@@ -87,7 +87,7 @@ mirror_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     case PDS_MIRROR_SESSION_TYPE_RSPAN:
         mirror_data.action_id = MIRROR_RSPAN_ID;
         intf = if_find(&spec->rspan_spec.interface);
-        SDK_ASSERT(intf->type() == PDS_IF_TYPE_ETH);
+        SDK_ASSERT(intf->type() == IF_TYPE_ETH);
         mirror_data.rspan_action.tm_oport =
             g_pds_state.catalogue()->ifindex_to_tm_port(intf->ifindex());
         mirror_data.rspan_action.ctag = spec->rspan_spec.encap.val.vlan_tag;

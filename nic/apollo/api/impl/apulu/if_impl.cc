@@ -72,7 +72,7 @@ if_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
     if_entry *intf = (if_entry *)api_obj;
     pds_if_spec_t *spec = &obj_ctxt->api_params->if_spec;
 
-    if (spec->type != PDS_IF_TYPE_UPLINK) {
+    if (spec->type != IF_TYPE_UPLINK) {
         // nothing to reserve
         return SDK_RET_OK;
     }
@@ -105,7 +105,7 @@ sdk_ret_t
 if_impl::release_resources(api_base *api_obj) {
     if_entry *intf = (if_entry *)api_obj;
 
-    if (intf->type() != PDS_IF_TYPE_UPLINK) {
+    if (intf->type() != IF_TYPE_UPLINK) {
         return SDK_RET_OK;
     }
     if (hw_id_ != 0xFFFF) {
@@ -270,7 +270,7 @@ if_impl::activate_create_(pds_epoch_t epoch, if_entry *intf,
 
     PDS_TRACE_DEBUG("Activating if %s, type %u, admin state %u",
                     spec->key.str(), spec->type, spec->admin_state);
-    if (spec->type == PDS_IF_TYPE_UPLINK) {
+    if (spec->type == IF_TYPE_UPLINK) {
         // program the lif id in the TM
         tm_port = if_impl::port(intf);
         PDS_TRACE_DEBUG("Creating uplink if %s, ifidx 0x%x, port %s, "
@@ -303,9 +303,9 @@ if_impl::activate_create_(pds_epoch_t epoch, if_entry *intf,
                           hw_id_);
             return sdk::SDK_RET_HW_PROGRAM_ERR;
         }
-    } else if (spec->type == PDS_IF_TYPE_L3) {
+    } else if (spec->type == IF_TYPE_L3) {
         ret = program_l3_if_(intf, spec);
-    } else if (spec->type == PDS_IF_TYPE_CONTROL) {
+    } else if (spec->type == IF_TYPE_CONTROL) {
         ret = activate_control_if_(intf, spec);
     }
     return SDK_RET_OK;
@@ -374,7 +374,7 @@ if_impl::activate_delete_(pds_epoch_t epoch, if_entry *intf) {
     p4i_device_info_actiondata_t p4i_device_info_data;
     sdk_ret_t ret = SDK_RET_OK;
 
-    if (intf->type() == PDS_IF_TYPE_L3) {
+    if (intf->type() == IF_TYPE_L3) {
         p4pd_ret = p4pd_global_entry_read(P4TBL_ID_P4I_DEVICE_INFO, 0,
                                           NULL, NULL, &p4i_device_info_data);
         if (p4pd_ret != P4PD_SUCCESS) {
@@ -396,7 +396,7 @@ if_impl::activate_delete_(pds_epoch_t epoch, if_entry *intf) {
             PDS_TRACE_ERR("Failed to program P4I_DEVICE_INFO table");
             return sdk::SDK_RET_HW_PROGRAM_ERR;
         }
-    } else if (intf->type() == PDS_IF_TYPE_CONTROL) {
+    } else if (intf->type() == IF_TYPE_CONTROL) {
         ret = deactivate_control_if_(intf);
     } else {
         PDS_TRACE_ERR("Delete unsupported for interface type %u",
@@ -412,17 +412,17 @@ if_impl::activate_update_(pds_epoch_t epoch, if_entry *intf,
     sdk_ret_t ret;
     pds_if_spec_t *spec = &obj_ctxt->api_params->if_spec;
 
-    if (spec->type == PDS_IF_TYPE_UPLINK) {
+    if (spec->type == IF_TYPE_UPLINK) {
         if (obj_ctxt->upd_bmap & PDS_IF_UPD_ADMIN_STATE) {
             // TODO: @akoradha, we need to bring port down here !!
             return SDK_RET_INVALID_OP;
         }
         return SDK_RET_OK;
-    } else if (spec->type == PDS_IF_TYPE_CONTROL) {
+    } else if (spec->type == IF_TYPE_CONTROL) {
         ret = activate_control_if_(intf, spec);
         return ret;
     }
-    SDK_ASSERT_RETURN((spec->type == PDS_IF_TYPE_L3), SDK_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((spec->type == IF_TYPE_L3), SDK_RET_INVALID_ARG);
     return program_l3_if_(intf, spec);
 }
 
@@ -466,7 +466,7 @@ if_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
     intf = if_db()->find((pds_obj_key_t *)key);
     spec = &if_info->spec;
     if_info->status.ifindex = intf->ifindex();
-    if (spec->type == PDS_IF_TYPE_L3) {
+    if (spec->type == IF_TYPE_L3) {
         p4pd_ret = p4pd_global_entry_read(P4TBL_ID_P4I_DEVICE_INFO, 0,
                                           NULL, NULL, &p4i_device_info_data);
         if (p4pd_ret != P4PD_SUCCESS) {
@@ -483,7 +483,7 @@ if_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
                              p4i_device_info_data.p4i_device_info.device_mac_addr2,
                              ETH_ADDR_LEN);
         }
-    } else if (spec->type == PDS_IF_TYPE_UPLINK) {
+    } else if (spec->type == IF_TYPE_UPLINK) {
         if_info->status.uplink_status.lif_id = hw_id_;
     }
     return SDK_RET_OK;

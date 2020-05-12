@@ -118,7 +118,7 @@ xvcr_event_walk_cb (void *entry, void *ctxt)
     int phy_port;
     ::core::event_t event;
     uint32_t logical_port;
-    pds_ifindex_t ifindex;
+    if_index_t ifindex;
     if_entry *intf = (if_entry *)entry;
     xcvr_event_info_t *xcvr_event_info = (xcvr_event_info_t *)ctxt;
 
@@ -256,7 +256,7 @@ port_update (const pds_obj_key_t *key, port_args_t *api_port_info)
  * @return       SDK_RET_OK on success, failure status code on error
  */
 static sdk_ret_t
-create_port (pds_ifindex_t ifindex, port_args_t *port_args)
+create_port (if_index_t ifindex, port_args_t *port_args)
 {
     if_entry *intf;
     void *port_info;
@@ -301,7 +301,7 @@ create_port (pds_ifindex_t ifindex, port_args_t *port_args)
  * @return       SDK_RET_OK on success, failure status code on error
  */
 static sdk_ret_t
-populate_port_info (pds_ifindex_t ifindex, uint32_t phy_port,
+populate_port_info (if_index_t ifindex, uint32_t phy_port,
                     port_args_t *port_args)
 {
     uint32_t    logical_port;
@@ -345,7 +345,7 @@ create_ports (void)
 {
     uint32_t       num_phy_ports;
     port_args_t    port_args;
-    pds_ifindex_t ifindex;
+    if_index_t     ifindex;
 
     PDS_TRACE_DEBUG("Creating ports ...");
     num_phy_ports = g_pds_state.catalogue()->num_fp_ports();
@@ -435,7 +435,7 @@ port_get (const pds_obj_key_t *key, port_get_cb_t port_get_cb, void *ctxt)
 // @param[in]    ctxt        opaque context passed back to the callback
 // @return    SDK_RET_OK on success, failure status code on error
 sdk_ret_t
-port_get (const pds_ifindex_t *key, port_get_cb_t port_get_cb, void *ctxt)
+port_get (const if_index_t *key, port_get_cb_t port_get_cb, void *ctxt)
 {
     if_entry *intf;
     api::port_get_cb_ctxt_t cb_ctxt;

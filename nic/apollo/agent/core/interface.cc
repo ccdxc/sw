@@ -14,8 +14,8 @@ interface_create (pds_if_spec_t *spec,
                   pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
-    if ((spec->type == PDS_IF_TYPE_L3) ||
-        (spec->type == PDS_IF_TYPE_LOOPBACK)) {
+    if ((spec->type == IF_TYPE_L3) ||
+        (spec->type == IF_TYPE_LOOPBACK)) {
         // L3 and loopback interfaces are always sent to control-plane
         // irrespective of overlay routing mode
         if ((ret = pds_ms::interface_create(spec, bctxt)) != SDK_RET_OK) {
@@ -45,8 +45,8 @@ interface_update (pds_if_spec_t *spec,
 {
     sdk_ret_t ret;
 
-    if ((spec->type == PDS_IF_TYPE_L3) ||
-        (spec->type == PDS_IF_TYPE_LOOPBACK)) {
+    if ((spec->type == IF_TYPE_L3) ||
+        (spec->type == IF_TYPE_LOOPBACK)) {
         // L3 and loopback interfaces are always sent to control-plane
         // irrespective of overlay routing mode
         if ((ret = pds_ms::interface_update(spec, bctxt)) != SDK_RET_OK) {

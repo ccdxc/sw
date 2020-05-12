@@ -21,7 +21,7 @@ namespace api {
 
 if_state::if_state() {
     ifindex_ht_ = ht::factory(PDS_MAX_IF >> 1, if_entry::ifindex_func_get,
-                              sizeof(pds_ifindex_t));
+                              sizeof(if_index_t));
     SDK_ASSERT(ifindex_ht_ != NULL);
     if_ht_ = ht::factory(PDS_MAX_IF >> 1, if_entry::if_key_func_get,
                          sizeof(pds_obj_key_t));
@@ -70,7 +70,7 @@ if_state::free(if_entry *intf) {
 }
 
 if_entry *
-if_state::find(const pds_ifindex_t *ifindex) const {
+if_state::find(const if_index_t *ifindex) const {
     return (if_entry *)(ifindex_ht_->lookup((void *)ifindex));
 }
 

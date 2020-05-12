@@ -22,60 +22,6 @@
 
 #define PDS_INTF_ID_INVALID 0     ///< invalid interface id
 
-/// \brief interface type
-typedef enum pds_if_type_e {
-    PDS_IF_TYPE_NONE      = 0,
-    // physical ports
-    PDS_IF_TYPE_ETH       = 1,
-    // L2 uplink interface
-    PDS_IF_TYPE_UPLINK    = 2,
-    // L2 port-channel
-    PDS_IF_TYPE_UPLINK_PC = 3,
-    // L3 interface
-    PDS_IF_TYPE_L3        = 4,
-    // Loopback interface
-    PDS_IF_TYPE_LOOPBACK  = 5,
-    // Vendor specific L3 interface
-    PDS_IF_TYPE_CONTROL   = 6,
-} pds_if_type_t;
-
-static inline pds_if_type_t
-ifindex_to_pds_if_type (pds_ifindex_t ifindex)
-{
-    switch (IFINDEX_TO_IFTYPE(ifindex)) {
-    case IF_TYPE_ETH:
-        return PDS_IF_TYPE_ETH;
-    case IF_TYPE_UPLINK:
-        return PDS_IF_TYPE_UPLINK;
-    case IF_TYPE_UPLINK_PC:
-        return PDS_IF_TYPE_UPLINK_PC;
-    case IF_TYPE_L3:
-        return PDS_IF_TYPE_L3;
-    case IF_TYPE_LOOPBACK:
-        return PDS_IF_TYPE_LOOPBACK;
-    default:
-        return PDS_IF_TYPE_NONE;
-    }
-}
-
-static inline std::string
-pds_if_type_to_str (pds_if_type_t iftype)
-{
-    switch (iftype) {
-    case PDS_IF_TYPE_ETH:
-    case PDS_IF_TYPE_UPLINK:
-        return "uplink";
-    case PDS_IF_TYPE_UPLINK_PC:
-        return "uplink-pc";
-    case PDS_IF_TYPE_L3:
-        return "l3";
-    case PDS_IF_TYPE_LOOPBACK:
-        return "lo";
-    default:
-        return "none";
-    }
-}
-
 /// \brief interface admin/operational state
 typedef enum pds_if_state_e {
     PDS_IF_STATE_NONE = 0,
@@ -117,7 +63,7 @@ typedef struct pds_control_if_s {
 /// \brief interface specification
 typedef struct pds_if_spec_s {
     pds_obj_key_t            key;           ///< interface key
-    pds_if_type_t            type;          ///< type of the interface
+    if_type_t                type;          ///< type of the interface
     pds_if_state_t           admin_state;   ///< admin state of the interface
     union {
         pds_uplink_info_t    uplink_info;
@@ -150,7 +96,7 @@ typedef struct pds_if_loopback_status_s {
 
 /// \brief interface status
 typedef struct pds_if_status_s {
-    pds_ifindex_t ifindex;   ///< encoded interface index
+    if_index_t     ifindex;  ///< encoded interface index
     pds_if_state_t state;    ///< operational status of the interface
     union {
         /// uplink interface operational status

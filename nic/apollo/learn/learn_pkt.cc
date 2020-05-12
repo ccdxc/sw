@@ -49,8 +49,8 @@ detect_l2l_move (learn_ctxt_t *ctxt, pds_mapping_type_t mapping_type)
 {
     pds_obj_key_t vnic_key;
     vnic_entry *vnic;
-    pds_ifindex_t vnic_ifindex;
-    pds_ifindex_t pkt_ifindex;
+    if_index_t vnic_ifindex;
+    if_index_t pkt_ifindex;
     bool l2l_move = false;
     impl::learn_info_t  *impl = &ctxt->pkt_ctxt.impl_info;
     const mac_addr_t *vnic_mac;
@@ -67,7 +67,7 @@ detect_l2l_move (learn_ctxt_t *ctxt, pds_mapping_type_t mapping_type)
         vnic_key = api::uuid_from_objid(ctxt->mac_entry->vnic_obj_id());
         vnic = vnic_db()->find(&vnic_key);
         vnic_ifindex = api::objid_from_uuid(vnic->host_if());
-        pkt_ifindex = (pds_ifindex_t) LIF_IFINDEX(impl->lif);
+        pkt_ifindex = LIF_IFINDEX(impl->lif);
 
         // encap comparison assumes encap type is 802.1Q
         l2l_move = (vnic_ifindex != pkt_ifindex) ||

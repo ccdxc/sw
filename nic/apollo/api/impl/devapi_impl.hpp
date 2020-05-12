@@ -81,17 +81,17 @@ public:
 
     // uplink APIs
     virtual sdk_ret_t uplink_create(uint32_t uplink_ifidx,
-                                    pds_ifindex_t ifidx, bool is_oob) override;
-    virtual sdk_ret_t uplink_destroy(pds_ifindex_t ifidx) {
+                                    if_index_t ifidx, bool is_oob) override;
+    virtual sdk_ret_t uplink_destroy(if_index_t ifidx) {
         return SDK_RET_INVALID_OP;
     }
 
     // port APIs
-    virtual sdk_ret_t port_get_status(pds_ifindex_t ifidx,
+    virtual sdk_ret_t port_get_status(if_index_t ifidx,
                                       port_status_t *status) override;
-    virtual sdk_ret_t port_get_config(pds_ifindex_t ifidx,
+    virtual sdk_ret_t port_get_config(if_index_t ifidx,
                                       port_config_t *config) override;
-    virtual sdk_ret_t port_set_config(pds_ifindex_t ifidx,
+    virtual sdk_ret_t port_set_config(if_index_t ifidx,
                                       port_config_t *config) override;
 
     // single wire management APIs

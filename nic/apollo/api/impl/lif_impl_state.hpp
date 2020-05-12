@@ -122,7 +122,7 @@ public:
     /// \param[in] type         type of the lif of interest
     /// \param[in] pinned_if    pinned interface index
     /// \return pointer to the lif impl instance or NULL if not found
-    lif_impl *find(lif_type_t type, pds_ifindex_t pinned_if) {
+    lif_impl *find(lif_type_t type, if_index_t pinned_if) {
         lif_find_cb_ctxt_t lif_cb_ctxt;
 
         lif_cb_ctxt.lif = NULL;
@@ -150,7 +150,7 @@ private:
     typedef struct lif_find_cb_ctxt_s {
         lif_impl *lif;
         lif_type_t type;
-        pds_ifindex_t pinned_if;
+        if_index_t pinned_if;
     } lif_find_cb_ctxt_t;
 
     static bool lif_compare_cb_(void *entry, void *ctxt) {

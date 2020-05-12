@@ -159,7 +159,7 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
     nacl_swkey_t key;
     p4pd_error_t p4pd_ret;
     sdk::qos::policer_t policer;
-    pds_ifindex_t if_index;
+    if_index_t if_index;
     nacl_swkey_mask_t mask;
     nacl_actiondata_t data;
     uint32_t idx, nacl_idx;
@@ -339,7 +339,7 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
     sdk::qos::policer_t policer;
     nacl_swkey_mask_t mask;
     nacl_actiondata_t data;
-    pds_ifindex_t if_index;
+    if_index_t if_index;
     static uint32_t inb_lif = 0;
     uint32_t idx, nacl_idx, tm_port;
     lif_actiondata_t lif_data = { 0 };

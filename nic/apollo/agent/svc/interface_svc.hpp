@@ -72,18 +72,18 @@ pds_admin_state_to_proto_admin_state (pds_if_state_t state)
 }
 
 static inline pds::IfType
-pds_if_type_to_proto_if_type (pds_if_type_t type)
+if_type_to_proto_if_type (if_type_t type)
 {
     switch (type) {
-    case PDS_IF_TYPE_UPLINK:
+    case IF_TYPE_UPLINK:
         return pds::IF_TYPE_UPLINK;
-    case PDS_IF_TYPE_UPLINK_PC:
+    case IF_TYPE_UPLINK_PC:
         return pds::IF_TYPE_UPLINK_PC;
-    case PDS_IF_TYPE_L3:
+    case IF_TYPE_L3:
         return pds::IF_TYPE_L3;
-    case PDS_IF_TYPE_LOOPBACK:
+    case IF_TYPE_LOOPBACK:
         return pds::IF_TYPE_LOOPBACK;
-    case PDS_IF_TYPE_CONTROL:
+    case IF_TYPE_CONTROL:
         return pds::IF_TYPE_CONTROL;
     default:
         return pds::IF_TYPE_NONE;
@@ -95,18 +95,18 @@ pds_if_api_spec_to_proto (pds::InterfaceSpec *proto_spec,
                           const pds_if_spec_t *api_spec)
 {
     proto_spec->set_id(api_spec->key.id, PDS_MAX_KEY_LEN);
-    proto_spec->set_type(pds_if_type_to_proto_if_type(api_spec->type));
+    proto_spec->set_type(if_type_to_proto_if_type(api_spec->type));
     proto_spec->set_adminstatus(
                 pds_admin_state_to_proto_admin_state(api_spec->admin_state));
 
     switch (api_spec->type) {
-    case PDS_IF_TYPE_UPLINK:
+    case IF_TYPE_UPLINK:
         {
             auto proto_uplink = proto_spec->mutable_uplinkspec();
             proto_uplink->set_portid(api_spec->uplink_info.port.id, PDS_MAX_KEY_LEN);
         }
         break;
-    case PDS_IF_TYPE_L3:
+    case IF_TYPE_L3:
         {
             auto proto_l3 = proto_spec->mutable_l3ifspec();
             proto_l3->set_vpcid(api_spec->l3_if_info.vpc.id, PDS_MAX_KEY_LEN);
@@ -122,7 +122,7 @@ pds_if_api_spec_to_proto (pds::InterfaceSpec *proto_spec,
             }
         }
         break;
-    case PDS_IF_TYPE_LOOPBACK:
+    case IF_TYPE_LOOPBACK:
         {
             auto proto_loopback = proto_spec->mutable_loopbackifspec();
             auto af = api_spec->loopback_if_info.ip_prefix.addr.af;
@@ -132,7 +132,7 @@ pds_if_api_spec_to_proto (pds::InterfaceSpec *proto_spec,
             }
         }
         break;
-    case PDS_IF_TYPE_CONTROL:
+    case IF_TYPE_CONTROL:
         {
             auto proto_control_if = proto_spec->mutable_controlifspec();
             auto af = api_spec->control_if_info.ip_prefix.addr.af;
@@ -159,11 +159,11 @@ pds_if_api_spec_to_proto (pds::InterfaceSpec *proto_spec,
 static inline void
 pds_if_api_status_to_proto (pds::InterfaceStatus *proto_status,
                             const pds_if_status_t *api_status,
-                            pds_if_type_t type)
+                            if_type_t type)
 {
     proto_status->set_ifindex(api_status->ifindex);
     switch (type) {
-    case PDS_IF_TYPE_UPLINK:
+    case IF_TYPE_UPLINK:
         {
             auto uplink_status = proto_status->mutable_uplinkifstatus();
             uplink_status->set_lifid(api_status->uplink_status.lif_id);
@@ -212,7 +212,7 @@ pds_if_proto_to_api_spec (pds_if_spec_t *api_spec,
                           api_spec->key.str());
             return SDK_RET_INVALID_ARG;
         }
-        api_spec->type = PDS_IF_TYPE_L3;
+        api_spec->type = IF_TYPE_L3;
         pds_obj_key_proto_to_api_spec(&api_spec->l3_if_info.vpc,
                                       proto_spec.l3ifspec().vpcid());
         pds_obj_key_proto_to_api_spec(&api_spec->l3_if_info.port,
@@ -236,7 +236,7 @@ pds_if_proto_to_api_spec (pds_if_spec_t *api_spec,
                           api_spec->key.str());
             return SDK_RET_INVALID_ARG;
         }
-        api_spec->type = PDS_IF_TYPE_LOOPBACK;
+        api_spec->type = IF_TYPE_LOOPBACK;
         ippfx_proto_spec_to_api_spec(&api_spec->loopback_if_info.ip_prefix,
                                      proto_spec.loopbackifspec().prefix());
         break;
@@ -257,7 +257,7 @@ pds_if_proto_to_api_spec (pds_if_spec_t *api_spec,
                           api_spec->key.str());
             return SDK_RET_INVALID_ARG;
         }
-        api_spec->type = PDS_IF_TYPE_CONTROL;
+        api_spec->type = IF_TYPE_CONTROL;
         ippfx_proto_spec_to_api_spec(&api_spec->control_if_info.ip_prefix,
                                      proto_spec.controlifspec().prefix());
         MAC_UINT64_TO_ADDR(api_spec->control_if_info.mac_addr,

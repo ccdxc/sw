@@ -13,7 +13,7 @@
 
 #include <string>
 
-enum {
+typedef enum sdk_if_type_e {
     IF_TYPE_NONE       = 0,
     IF_TYPE_ETH        = 1,
     IF_TYPE_ETH_PC     = 2,
@@ -26,7 +26,9 @@ enum {
     IF_TYPE_LOOPBACK   = 9,
     IF_TYPE_CONTROL    = 10,
     IF_TYPE_HOST       = 11,
-};
+} if_type_t;
+
+typedef uint32_t if_index_t;     ///< interface index
 
 #define IFINDEX_INVALID                          0x0
 
@@ -144,6 +146,43 @@ eth_ifindex_to_str (uint32_t ifindex)
         return "-";
     }
     return ifindex_to_type_str(ifindex) + eth_ifindex_to_ifid_str(ifindex);
+}
+
+static inline if_type_t
+ifindex_to_if_type (if_index_t ifindex)
+{
+    switch (IFINDEX_TO_IFTYPE(ifindex)) {
+    case IF_TYPE_ETH:
+        return IF_TYPE_ETH;
+    case IF_TYPE_UPLINK:
+        return IF_TYPE_UPLINK;
+    case IF_TYPE_UPLINK_PC:
+        return IF_TYPE_UPLINK_PC;
+    case IF_TYPE_L3:
+        return IF_TYPE_L3;
+    case IF_TYPE_LOOPBACK:
+        return IF_TYPE_LOOPBACK;
+    default:
+        return IF_TYPE_NONE;
+    }
+}
+
+static inline std::string
+if_type_to_str (if_type_t iftype)
+{
+    switch (iftype) {
+    case IF_TYPE_ETH:
+    case IF_TYPE_UPLINK:
+        return "uplink";
+    case IF_TYPE_UPLINK_PC:
+        return "uplink-pc";
+    case IF_TYPE_L3:
+        return "l3";
+    case IF_TYPE_LOOPBACK:
+        return "lo";
+    default:
+        return "none";
+    }
 }
 
 #endif    // __IF_HPP__

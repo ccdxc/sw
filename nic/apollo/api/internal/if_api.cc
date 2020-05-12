@@ -18,13 +18,13 @@
 namespace api {
 
 static inline if_entry *
-pds_if_entry_find (const pds_ifindex_t *key)
+pds_if_entry_find (const if_index_t *key)
 {
-    return (if_db()->find((pds_ifindex_t *)key));
+    return (if_db()->find((if_index_t *)key));
 }
 
 sdk_ret_t
-pds_if_read (_In_ const pds_ifindex_t *key, _Out_ pds_if_info_t *info)
+pds_if_read (_In_ const if_index_t *key, _Out_ pds_if_info_t *info)
 {
     if_entry *entry;
 

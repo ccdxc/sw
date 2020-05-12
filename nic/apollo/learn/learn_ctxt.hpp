@@ -101,7 +101,7 @@ typedef struct learn_ctxt_s {
     learn_ctx_type_t        ctxt_type;          ///< learn source
     pds_batch_ctxt_t        bctxt;              ///< API batch context
     learn_batch_ctxt_t      *lbctxt;            ///< context common to API batch
-    pds_ifindex_t           ifindex;            ///< ifindex of local vnic
+    if_index_t              ifindex;            ///< ifindex of local vnic
     union {
         learn_pkt_ctxt_t    pkt_ctxt;           ///< learn pkt context
         learn_api_ctxt_t    api_ctxt;           ///< mapping API context

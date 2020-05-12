@@ -99,10 +99,6 @@ typedef uint16_t    pds_vlan_id_t;             ///< VLAN tag value
 typedef uint32_t    pds_vnid_id_t;             ///< VxLAN id
 typedef uint32_t    pds_mpls_tag_t;            ///< MPLS tag value
 typedef uint16_t    pds_lif_id_t;              ///< (internal) lif identifier
-typedef uint32_t    pds_ifindex_t;             ///< interface index
-
-///< pds_ifindex_t is an internal encoded index used by forwarding and other
-///< module to refer to an interface
 
 /// \brief encapsulation type
 typedef enum pds_encap_type_e {
