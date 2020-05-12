@@ -175,6 +175,10 @@ type Indexer struct {
 
 	// flowlogs rate limiters
 	flowlogsRateLimiters *RateLimiterCollection
+	eventCheckerLock     sync.Mutex
+
+	// maintained per tenant
+	lastFwlogsDroppedCriticalEventRaisedTime map[string]time.Time
 }
 
 // WithElasticClient passes a custom client for Elastic
@@ -227,23 +231,25 @@ func NewIndexer(ctx context.Context,
 	logger log.Logger, opts ...Option) (Interface, error) {
 	newCtx, cancelFunc := context.WithCancel(ctx)
 	indexer := Indexer{
-		ctx:                         newCtx,
-		rsr:                         rsr,
-		cancelFunc:                  cancelFunc,
-		apiServerAddr:               apiServerAddr,
-		logger:                      logger,
-		batchSize:                   indexBatchSize,
-		indexIntvl:                  indexBatchIntvl,
-		indexRefreshIntvl:           indexRefreshIntvl,
-		doneCh:                      make(chan error),
-		count:                       0,
-		cache:                       cache,
-		watchVos:                    true,
-		watchAPIServer:              true,
-		numFwLogObjectsToDelete:     numFwLogObjectsToDelete,
-		lastProcessedFwLogObjectKey: map[string]string{},
-		indexFwlogs:                 enableFwlogIndexing,
-		flowlogsRateLimiters:        newRateLimiterCollection(),
+		ctx:                                      newCtx,
+		rsr:                                      rsr,
+		cancelFunc:                               cancelFunc,
+		apiServerAddr:                            apiServerAddr,
+		logger:                                   logger,
+		batchSize:                                indexBatchSize,
+		indexIntvl:                               indexBatchIntvl,
+		indexRefreshIntvl:                        indexRefreshIntvl,
+		doneCh:                                   make(chan error),
+		count:                                    0,
+		cache:                                    cache,
+		watchVos:                                 true,
+		watchAPIServer:                           true,
+		numFwLogObjectsToDelete:                  numFwLogObjectsToDelete,
+		lastProcessedFwLogObjectKey:              map[string]string{},
+		indexFwlogs:                              enableFwlogIndexing,
+		flowlogsRateLimiters:                     newRateLimiterCollection(),
+		lastFwlogsDroppedCriticalEventRaisedTime: map[string]time.Time{},
+		eventCheckerLock:                         sync.Mutex{},
 	}
 
 	for _, opt := range opts {

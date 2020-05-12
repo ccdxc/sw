@@ -107,7 +107,19 @@ func (s *PolicyState) FwlogInit(path string) error {
 	return nil
 }
 
-func (s *PolicyState) handleFwLog(ev *halproto.FWEvent, ts time.Time) {
+func (s *PolicyState) isAtleastOneFwLogCollectorPresent() bool {
+	// Doing it this way becuase sync.Map does not provide Len method and
+	// the regular len method does not support sync.Map type.
+	present := false
+	s.fwLogCollectors.Range(func(k interface{}, v interface{}) bool {
+		present = true
+		return true
+	})
+	return present
+}
+
+// ProcessFWEvent process fwlog event received from ipc
+func (s *PolicyState) ProcessFWEvent(ev *halproto.FWEvent, ts time.Time) {
 	// return if no collectors are present
 	if !s.isAtleastOneFwLogCollectorPresent() {
 		return
@@ -200,20 +212,4 @@ func (s *PolicyState) handleFwLog(ev *halproto.FWEvent, ts time.Time) {
 
 		return true
 	})
-}
-
-func (s *PolicyState) isAtleastOneFwLogCollectorPresent() bool {
-	// Doing it this way becuase sync.Map does not provide Len method and
-	// the regular len method does not support sync.Map type.
-	present := false
-	s.fwLogCollectors.Range(func(k interface{}, v interface{}) bool {
-		present = true
-		return true
-	})
-	return present
-}
-
-// ProcessFWEvent process fwlog event received from ipc
-func (s *PolicyState) ProcessFWEvent(ev *halproto.FWEvent, ts time.Time) {
-	s.handleFwLog(ev, ts)
 }

@@ -457,10 +457,10 @@ func verifyVosRateLimitingAndEventsAtSpyglass(t *testing.T) {
 	startFwLogGen(200, 1200)
 	AssertEventually(t, func() (bool, interface{}) {
 		for _, ev := range mockEventsRecorder.GetEvents() {
-			if ev.EventType == eventtypes.FLOWLOGS_RATE_LIMITED.String() &&
+			if ev.EventType == eventtypes.FLOWLOGS_REPORTING_ERROR.String() &&
 				ev.Category == "system" &&
-				ev.Severity == "critical" &&
-				ev.Message != "" &&
+				ev.Severity == "warn" &&
+				strings.Contains(ev.Message, "Flow logs rate limited at the PSM") &&
 				ev.ObjRef.(*cluster.Tenant).ObjectMeta.Tenant != "" {
 				return true, ev
 			}
@@ -485,7 +485,7 @@ func verifyVosRateLimitingAndEventsAtDSC(ctx context.Context, t *testing.T, r re
 			if ev.EventType == eventtypes.FLOWLOGS_REPORTING_ERROR.String() &&
 				ev.Category == "system" &&
 				ev.Severity == "warn" &&
-				ev.Message != "" &&
+				strings.Contains(ev.Message, "Flow logs could not be reported") &&
 				ev.ObjRef.(*cluster.DistributedServiceCard).ObjectMeta.Tenant != "" {
 				return true, ev
 			}

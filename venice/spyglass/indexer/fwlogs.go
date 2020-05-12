@@ -25,9 +25,18 @@ import (
 )
 
 const (
-	fwlogsBucketName            = "fwlogs"
-	fwlogsSystemMetaBucketName  = "fwlogssystemmeta"
-	lastProcessedKeysObjectName = "lastProcessedKeys"
+	fwlogsBucketName                            = "fwlogs"
+	fwlogsSystemMetaBucketName                  = "fwlogssystemmeta"
+	lastProcessedKeysObjectName                 = "lastProcessedKeys"
+	flowlogsDroppedCriticalEventReportingPeriod = 60 // Minutes
+
+	droppedCriticalEventDescrMessage = "Flow logs rate limited at the PSM.  This error can occur if flow logs throttling has been applied —  " +
+		"when the number of flow log records across the PSM cluster is higher than the maximum number of records that can be published " +
+		"within a specific timeframe"
+
+	droppedWarnEventDescrMessage = "Flow logs rate limited at the PSM, DSC %s, time period %s. This error can occur if flow logs " +
+		"throttling has been applied — when the number of flow log records across the PSM cluster is higher than the maximum number of records " +
+		"that can be published within a specific timeframe"
 )
 
 // FwLogObjectV1 represents an object created in objectstore for FwLogs.
@@ -48,6 +57,17 @@ type FwLogObjectV1 struct {
 func (idr *Indexer) fwlogsRequestCreator(id int, req *indexRequest, bulkTimeout int, processWorkers *workers, pushWorkers *workers) error {
 	if atomic.LoadInt32(&idr.indexFwlogs) == disableFwlogIndexing {
 		return nil
+	}
+
+	shouldRaiseCriticalEvent := func(tenantName string) bool {
+		idr.eventCheckerLock.Lock()
+		defer idr.eventCheckerLock.Unlock()
+		if time.Now().Sub(idr.lastFwlogsDroppedCriticalEventRaisedTime[tenantName]).Minutes() >=
+			flowlogsDroppedCriticalEventReportingPeriod {
+			idr.lastFwlogsDroppedCriticalEventRaisedTime[tenantName] = time.Now()
+			return true
+		}
+		return false
 	}
 
 	handleEvent := func() {
@@ -108,8 +128,17 @@ func (idr *Indexer) fwlogsRequestCreator(id int, req *indexRequest, bulkTimeout 
 					Tenant: ometa.GetTenant(),
 				},
 			}
-			descr := fmt.Sprintf("Flow logs rate-limited for DSC %s, object name: %s", meta["Nodeid"], key)
-			recorder.Event(eventtypes.FLOWLOGS_RATE_LIMITED, descr, tenant)
+
+			// 5th element is the time period i.e. the relative file name
+			fileName := strings.Split(key, "/")[5]
+			fileName = strings.TrimSuffix(fileName, ".csv.gzip")
+			descr := fmt.Sprintf(droppedWarnEventDescrMessage, meta["Nodeid"], fileName)
+			recorder.Event(eventtypes.FLOWLOGS_REPORTING_ERROR, descr, tenant)
+
+			if shouldRaiseCriticalEvent(ometa.GetTenant()) {
+				recorder.Event(eventtypes.FLOWLOGS_RATE_LIMITED, droppedCriticalEventDescrMessage, tenant)
+			}
+
 			return
 		}
 

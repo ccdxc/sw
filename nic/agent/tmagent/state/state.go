@@ -41,21 +41,23 @@ const logChannelSize = 180000
 
 // PolicyState keeps the policy agent state
 type PolicyState struct {
-	ctx                context.Context
-	cancel             context.CancelFunc
-	emstore            emstore.Emstore
-	netAgentURL        string
-	fwLogCollectors    sync.Map
-	fwTable            tsdb.Obj
-	objStoreClients    map[string]objstore.Client // map[bucketName]Client
-	hostname           string
-	appName            string
-	shm                *ipc.SharedMem
-	ipc                []*ipc.IPC
-	wg                 sync.WaitGroup
-	logsChannel        chan singleLog
-	objStoreFileFormat fileFormat
-	zipObjects         bool
+	ctx                                      context.Context
+	cancel                                   context.CancelFunc
+	emstore                                  emstore.Emstore
+	netAgentURL                              string
+	fwLogCollectors                          sync.Map
+	fwTable                                  tsdb.Obj
+	objStoreClients                          map[string]objstore.Client // map[bucketName]Client
+	hostname                                 string
+	appName                                  string
+	shm                                      *ipc.SharedMem
+	ipc                                      []*ipc.IPC
+	wg                                       sync.WaitGroup
+	logsChannel                              chan singleLog
+	objStoreFileFormat                       fileFormat
+	zipObjects                               bool
+	eventCheckerLock                         sync.Mutex
+	lastFwlogsDroppedCriticalEventRaisedTime time.Time
 }
 
 type psmFwlogCollector struct {
@@ -116,6 +118,7 @@ func NewTpAgent(pctx context.Context, agentPort string) (*PolicyState, error) {
 		logsChannel:        make(chan singleLog, logChannelSize),
 		objStoreFileFormat: csvFileFormat,
 		zipObjects:         true,
+		eventCheckerLock:   sync.Mutex{},
 	}
 
 	state.connectSyslog()

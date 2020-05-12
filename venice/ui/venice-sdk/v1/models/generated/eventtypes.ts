@@ -447,7 +447,7 @@ export const eventTypes: { [name: string]: EventType } = {
   'FLOWLOGS_DROPPED' : {
       "Name": "FLOWLOGS_DROPPED",
       "Severity": EventsEvent_severity.critical,
-      "Desc": "Flowlogs dropped at the DSC",
+      "Desc": "Flowlogs dropped",
   },
   'FLOWLOGS_RATE_LIMITED' : {
       "Name": "FLOWLOGS_RATE_LIMITED",
@@ -457,7 +457,7 @@ export const eventTypes: { [name: string]: EventType } = {
   'FLOWLOGS_REPORTING_ERROR' : {
       "Name": "FLOWLOGS_REPORTING_ERROR",
       "Severity": EventsEvent_severity.warn,
-      "Desc": "Flowlogs could not be reported from DSC to PSM",
+      "Desc": "Flowlogs could not be reported",
   },
   'NAPLES_CATTRIP_INTERRUPT' : {
       "Name": "NAPLES_CATTRIP_INTERRUPT",
