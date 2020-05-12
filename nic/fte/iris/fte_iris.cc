@@ -434,8 +434,20 @@ ctx_t::add_flow_logging (hal::flow_key_t key, hal_handle_t sess_hdl,
 
     t_fwlg.Clear();
 
-    t_fwlg.set_source_vrf(key.svrf_id);
-    t_fwlg.set_dest_vrf(key.dvrf_id);
+    // For flow-aware we dont lookup flow objects
+    // so no VRF per se but Venice expects it to
+    // be reported against customer vrf
+    if (hal::g_hal_state->is_flow_aware()) {
+        t_fwlg.set_source_vrf(
+          hal::g_hal_state->customer_default_vrf()?\
+          hal::g_hal_state->customer_default_vrf():0);
+        t_fwlg.set_dest_vrf(
+          hal::g_hal_state->customer_default_vrf()?\
+          hal::g_hal_state->customer_default_vrf():0);
+    } else {
+        t_fwlg.set_source_vrf(key.svrf_id);
+        t_fwlg.set_dest_vrf(key.dvrf_id);
+    }
     t_fwlg.set_sipv4(key.sip.v4_addr);
     t_fwlg.set_dipv4(key.dip.v4_addr);
 
@@ -1192,7 +1204,7 @@ ctx_t::apply_session_limit(void)
     uint8_t                      id = fte_id();
     int8_t                       tcp_flags;
     const fte::cpu_rxhdr_t      *cpurxhdr = cpu_rxhdr();
-
+  
     // check for flood protection limits
     // fetch the security profile, if any
     nwsec_prof_ =

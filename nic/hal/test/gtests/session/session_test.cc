@@ -1957,8 +1957,8 @@ TEST_F(session_test, test11)
 TEST_F(session_test, test12)
 {
     hal_ret_t                   ret;
-    VrfSpec                  ten_spec;
-    VrfResponse              ten_rsp;
+    VrfSpec                     ten_spec;
+    VrfResponse                 ten_rsp;
     L2SegmentSpec               l2seg_spec;
     L2SegmentResponse           l2seg_rsp;
     InterfaceSpec               up_spec;
@@ -1969,14 +1969,26 @@ TEST_F(session_test, test12)
     NetworkResponse             nw_rsp, nw_rsp1;
     ::google::protobuf::uint32  ip1 = 0x0a000003;
     ::google::protobuf::uint32  ip2 = 0x0a000004;
-    NetworkKeyHandle                *nkh = NULL;
+    NetworkKeyHandle           *nkh = NULL;
+    SecurityProfileSpec         sp_spec;
+    SecurityProfileResponse     sp_rsp;
 
     // Switch mode to transparent
     hal::g_hal_state->set_fwd_mode(sys::FWD_MODE_TRANSPARENT);
     hal::g_hal_state->set_policy_mode(sys::POLICY_MODE_FLOW_AWARE);
 
+    // Create nwsec
+    sp_spec.mutable_key_or_handle()->set_profile_id(200);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::securityprofile_create(sp_spec, &sp_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
+
     // Create vrf
     ten_spec.mutable_key_or_handle()->set_vrf_id(1003);
+    ten_spec.mutable_security_key_handle()->set_profile_handle(nwsec_hdl);
+    ten_spec.set_vrf_type(types::VRF_TYPE_CUSTOMER);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::vrf_create(ten_spec, &ten_rsp);
     hal::hal_cfg_db_close();

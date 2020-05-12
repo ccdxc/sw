@@ -144,7 +144,15 @@ ctx_t::init_flows(flow_t iflow[], flow_t rflow[])
         if (ret != HAL_RET_OK) {
             return ret;
         }
-    }
+    } else {
+        // fetch the security profile, if any
+        nwsec_prof_ =
+             hal::find_nwsec_profile_by_handle(
+                        hal::g_hal_state->customer_default_security_profile_hdl());
+        if (nwsec_prof_ == NULL) {
+            return HAL_RET_SECURITY_PROFILE_NOT_FOUND;
+        }
+    }  
 
     // Lookup old session
     ret = lookup_session();
