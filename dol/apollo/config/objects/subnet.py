@@ -116,10 +116,8 @@ class SubnetObject(base.ConfigObjectBase):
         Resmgr.CreateIPv4AddrPoolForSubnet(self.SubnetId, self.IPPrefix[1])
 
         self.__set_vrouter_attributes(spec)
-        self.__fill_default_rules_in_policy(node)
         self.DeriveOperInfo()
         self.Mutable = utils.IsUpdateSupported()
-        self.Show()
 
         ############### CHILDREN OBJECT GENERATION
         # Generate Metaswitch Objects configuration
@@ -129,6 +127,9 @@ class SubnetObject(base.ConfigObjectBase):
         # Generate VNIC and Remote Mapping configuration
         vnic.client.GenerateObjects(node, self, spec)
         rmapping.client.GenerateObjects(node, self, spec)
+
+        self.__fill_default_rules_in_policy(node)
+        self.Show()
 
         return
 

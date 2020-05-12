@@ -1,0 +1,103 @@
+# Apulu RFC IPv4 Egress modules list for policy with combination of tag and pfx range.
+feature:
+    id          : rfc
+    sub         : ipv4_egress_tag_pfx_range
+    package     : test.rfc
+    module      : rfc
+    runorder    : 10000
+    enable      : True
+    ignore      : False
+
+modules:
+
+    - module:
+        name    : SRC_SPECIFIC
+        spec    : rfc_egress.testspec
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=user_specific_src_tag
+            - policy : filter://AddrFamily=IPV4,PolicyType=icmp_specific_src_tag
+
+    - module:
+        name    : SRC_TAG_ADJCENT_FIRST
+        spec    : rfc_egress.testspec
+        args    :
+            - prefix : first
+            - sport  : first
+            - dport  : first
+        iterate :
+            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent_src_tag
+
+    - module:
+        name    : SRC_TAG_ADJCENT_LAST
+        spec    : rfc_egress.testspec
+        args    :
+            - prefix : last
+            - sport  : last
+            - dport  : last
+        iterate :
+            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent_src_tag
+
+    - module:
+        name    : SRC_TAG_ADJCENT_LEFT
+        spec    : rfc_egress.testspec
+        args    :
+            - sport  : left
+            - dport  : left
+        iterate :
+            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent_src_tag
+
+    - module:
+        name    : SRC_TAG_ADJCENT_RIGHT
+        spec    : rfc_egress.testspec
+        args    :
+            - sport  : right
+            - dport  : right
+        iterate :
+            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent_src_tag
+
+    - module:
+        name    : DST_SPECIFIC
+        spec    : rfc_egress.testspec
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=user_specific_dst_tag
+            - policy : filter://AddrFamily=IPV4,PolicyType=icmp_specific_dst_tag
+
+    - module:
+        name    : DST_TAG_ADJCENT_FIRST
+        spec    : tag_only.testspec
+        args    :
+            - prefix : first
+            - sport  : first
+            - dport  : first
+        iterate :
+            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent_dst_tag
+
+    - module:
+        name    : DST_TAG_ADJCENT_LAST
+        spec    : tag_only.testspec
+        args    :
+            - prefix : last
+            - sport  : last
+            - dport  : last
+        iterate :
+            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent_dst_tag
+
+    - module:
+        name    : DST_TAG_ADJCENT_LEFT
+        spec    : tag_only.testspec
+        args    :
+            - sport  : left
+            - dport  : left
+        iterate :
+            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent_dst_tag
+
+    - module:
+        name    : DST_TAG_ADJCENT_RIGHT
+        ignore  : True
+        spec    : tag_only.testspec
+        args    :
+            - sport  : right
+            - dport  : right
+        iterate :
+            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent_dst_tag
+

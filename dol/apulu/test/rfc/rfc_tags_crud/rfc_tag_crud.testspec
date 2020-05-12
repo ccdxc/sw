@@ -1,0 +1,14 @@
+selectors:
+    root: ref://store/templates/id=POLICY
+    maxlimits: 1
+    policy: filter://Direction=ingress,Level=subnet
+
+trigger:
+    configs:
+        - object: callback://common/config/GetCfgObject
+          method: callback://common/config/GetCfgOperFn
+
+expect:
+    configs:
+        - object: callback://common/config/GetCfgObject
+          method: Read

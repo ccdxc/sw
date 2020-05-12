@@ -122,7 +122,7 @@ node:
                   rxpolicer: 5
                   txpolicer: 6
               rmap:
-                - count : 4
+                - count : 3
             - count     : 1
               v4prefixlen : 28
               v6prefixlen : 96

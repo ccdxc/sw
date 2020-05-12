@@ -1,0 +1,370 @@
+# RFC Topology Specification for policy with TAGs and PFX range in rules.
+meta:
+    id: TOPO_PFX_RANGE
+
+dutnode : 1
+node:
+  - id : 1
+    uplink:
+        - entry:
+            id      : uplink0
+            port    : 1
+            mode    : auto # host, switch, auto (default, depending on device mode)
+            status  : UP
+
+        - entry:
+            id      : uplink1
+            port    : 2
+            mode    : auto
+            status  : UP
+
+    hostinterface:
+        lif         : ref://store/specs/id=LIF_ETH
+
+    device:
+        mode        : auto # auto (default, based on pipeline), host, bitw
+        stack       : ipv4 # ipv4 (default), ipv6
+        bridging    : false # false (default), true
+        learning    : false # false (default), true
+        ipaddress   : None # Taken from resmgr
+        gateway     : None # Taken from resmgr
+        encap       : vxlan # vxlan or mplsodup
+        tunnel      :
+            - count : 16
+              type  : underlay
+
+    vpc:
+        # If dual stack true, VPC and Subnet will have both v4 & v6 based on the prefixlen.
+        - stack  : dual # dual, ipv4 , ipv6
+          count : 1
+          type  : underlay  # This VPC is applicable only for ARTEMIS pipeline.
+          nexthop:
+            - type : underlay
+              count : 2
+          interface:
+            - iid           : 1
+              iftype        : l3
+              ifadminstatus : UP
+              ipprefix      : '1.1.0.102\24'
+              macaddress    : macaddr/00ae.cd00.4fde
+              portid        : 1
+              encap         : none
+            - iid           : 2
+              iftype        : l3
+              ifadminstatus : UP
+              ipprefix      : '1.2.0.102\24'
+              macaddress    : macaddr/00ae.cd00.4fdd
+              portid        : 2
+              encap         : none
+        - stack  : dual
+          count : 1
+          type  : tenant
+          subnet:
+            # apulu supports max 8 lifs - so 8 subnets & 8 policies for now
+            - count            : 8        # should be same as total routetbl / policy
+              v4prefixlen      : 24
+              v6prefixlen      : 64
+              v4ingrpolicycount: 1        # default 0
+              v4egrpolicycount : 1        # default 0
+              v6ingrpolicycount: 1        # default 0
+              v6egrpolicycount : 1        # default 0
+              vnic:
+                - count   : 1             # VNICs per subnet
+                  ipcount : 2             # Local IP mapping per vnic
+                  public  : false
+                  policy  : false         # security policy at vnic level (0 - 2)
+                  tagged  : false         # true or false (default true)
+                  tag     : true          # Local mapping tags
+              rmap:                       # Remote IP mappings per subnet
+                - count : 2
+                  tag   : true
+          routetbl:
+                 - type: base
+                   routetype: fulloverlap_max_with_default
+                   count : 8
+                   teptype : underlay
+                   v4base: '66.0.0.0\16'
+                   v4prefixlen: 24
+                   nv4routes   : 1023     # Max routes per route table
+                   v6base: '2002::\65'
+                   v6prefixlen: 120
+                   nv6routes   : 1023
+                   v4routes:
+                       - '0.0.0.0\0'
+                   v6routes:
+                       - '0::\0'
+          nexthop:
+                 - type : underlay
+                   count : 2
+          policy:
+                  - type : specific
+                    policytype : icmp_specific_src_tag
+                    direction : bidir
+                    rule:
+                      - protocol: icmp
+                        priority: 'MINPRIO'
+                        action  : deny       # picks random choice of allow/deny
+                        srctype : tag
+                        srctag  : 1
+                        dsttype : pfxrange
+                        v4dstiplow : '99.88.77.66'
+                        v4dstiphigh : '99.88.77.66'
+                        icmptype : any
+                        icmpcode : any
+
+                      - protocol: any
+                        priority: 'MINPRIO'
+                        action  : deny
+                        v4pfx: '0.0.0.0\0'
+                        v6pfx: '0::0\0'
+
+                  - type : specific
+                    policytype : icmp_specific_dst_tag
+                    direction : bidir
+                    rule:
+                      - protocol: icmp
+                        priority: 'MINPRIO'
+                        action  : random      # picks random choice of allow/deny
+                        srctype : pfxrange
+                        v4srciplow : '99.88.77.66'
+                        v4srciphigh : '99.88.77.66'
+                        dsttype : tag
+                        dsttag  : 1
+                        icmptype : any
+                        icmpcode : any
+
+                      - protocol: any
+                        priority: 'MINPRIO'
+                        action  : deny
+                        v4pfx: '0.0.0.0\0'
+                        v6pfx: '0::0\0'
+                        
+                  - type : specific
+                    policytype : user_specific_src_tag
+                    direction : bidir
+                    rule:
+                      - protocol: tcp
+                        priority: 'MAXPRIO'
+                        action  : deny
+                        srctype : tag
+                        srctag  : 8
+                        dsttype : pfxrange
+                        v4dstiplow : '99.88.77.66'
+                        v4dstiphigh : '99.88.77.66'
+                        v6dstiplow : 'e1ba:aced:a11:face:b00c::bade'
+                        v6dstiphigh : 'e1ba:aced:a11:face:b00c::bade'
+                        sportlow: 9999
+                        sporthigh: 9999
+                        dportlow: 8888
+                        dporthigh: 8888
+
+                      - protocol: udp
+                        priority: 'MAXPRIO * 0.5'
+                        action  : deny
+                        srctype : tag
+                        srctag  : 2
+                        dsttype : pfxrange
+                        v4dstiplow : '66.77.88.99'
+                        v4dstiphigh : '66.77.88.99'
+                        v6dstiplow : '1234:a11:bad:b075:d1e::90d'
+                        v6dstiphigh : '1234:a11:bad:b075:d1e::90d'
+                        sportlow: 13579
+                        sporthigh: 13579
+                        dportlow: 24680
+                        dporthigh: 24680
+
+                      - protocol: any
+                        priority: 'MINPRIO'
+                        action  : allow
+                        v4pfx: '0.0.0.0\0'
+                        v6pfx: '0::0\0'
+
+                  - type : specific
+                    policytype : user_specific_dst_tag
+                    direction : bidir
+                    rule:
+                      - protocol: tcp
+                        priority: 'MAXPRIO'
+                        action  : deny
+                        srctype : pfxrange
+                        v4srciplow : '99.88.77.66'
+                        v4srciphigh : '99.88.77.66'
+                        v6srciplow : 'e1ba:aced:a11:face:b00c::bade'
+                        v6srciphigh : 'e1ba:aced:a11:face:b00c::bade'
+                        dsttype : tag
+                        dsttag  : 8
+                        sportlow: 9999
+                        sporthigh: 9999
+                        dportlow: 8888
+                        dporthigh: 8888
+
+                      - protocol: udp
+                        priority: 'MAXPRIO * 0.5'
+                        action  : deny
+                        srctype : pfxrange
+                        v4srciplow : '66.77.88.99'
+                        v4srciphigh : '66.77.88.99'
+                        v6srciplow : '1234:a11:bad:b075:d1e::90d'
+                        v6srciphigh : '1234:a11:bad:b075:d1e::90d'
+                        dsttype : tag
+                        dsttag  : 2
+                        sportlow: 13579
+                        sporthigh: 13579
+                        dportlow: 24680
+                        dporthigh: 24680
+
+                      - protocol: any
+                        priority: 'MINPRIO'
+                        action  : deny
+                        v4pfx: '0.0.0.0\0'
+                        v6pfx: '0::0\0'
+
+                  - type : specific
+                    policytype : stateless
+                    overlaptype : adjacent_src_tag   # all attr are adjacent
+                    direction  : bidir
+                    rule:
+                      - protocol: tcp        # src - tag but dst - pfxrange
+                        action  : allow
+                        srctype : tag
+                        srctag  : 10
+                        dsttype : pfxrange
+                        v4dstiplow : '10.10.10.0'
+                        v4dstiphigh : '10.10.10.255'
+                        v6dstiplow : 'e1ba:aced:a11:face:b00a::0'
+                        v6dstiphigh : 'e1ba:aced:a11:face:b00a:ffff:ffff:ffff'
+                        sportlow: 10
+                        sporthigh: 20
+                        dportlow: 10
+                        dporthigh: 20
+
+                      - protocol: tcp        
+                        action  : deny
+                        srctype : tag
+                        srctag  : 11
+                        dsttype : pfxrange
+                        v4dstiplow : '10.10.11.0'
+                        v4dstiphigh : '10.10.11.255'
+                        v6dstiplow : 'e1ba:aced:a11:face:b00b::0'
+                        v6dstiphigh : 'e1ba:aced:a11:face:b00b:ffff:ffff:ffff'
+                        sportlow: 21
+                        sporthigh: 30
+                        dportlow: 21
+                        dporthigh: 30
+
+                      - protocol: tcp        
+                        action  : allow
+                        srctype : tag
+                        srctag  : 12
+                        dsttype : pfxrange
+                        v4dstiplow : '10.10.12.0'
+                        v4dstiphigh : '10.10.12.255'
+                        v6dstiplow : 'e1ba:aced:a11:face:b00c::0'
+                        v6dstiphigh : 'e1ba:aced:a11:face:b00c:ffff:ffff:ffff'
+                        sportlow: 31
+                        sporthigh: 40
+                        dportlow: 31
+                        dporthigh: 40
+
+                      - protocol: tcp        
+                        action  : deny
+                        srctype : tag
+                        srctag  : 13
+                        dsttype : pfxrange
+                        v4dstiplow : '10.10.13.0'
+                        v4dstiphigh : '10.10.13.255'
+                        v6dstiplow : 'e1ba:aced:a11:face:b00d::0'
+                        v6dstiphigh : 'e1ba:aced:a11:face:b00d:ffff:ffff:ffff'
+                        sportlow: 41
+                        sporthigh: 50
+                        dportlow: 41
+                        dporthigh: 50
+
+                      - protocol: tcp        
+                        action  : allow
+                        srctype : tag
+                        srctag  : 14
+                        dsttype : pfxrange
+                        v4dstiplow : '10.10.14.0'
+                        v4dstiphigh : '10.10.14.255'
+                        v6dstiplow : 'e1ba:aced:a11:face:b00e::0'
+                        v6dstiphigh : 'e1ba:aced:a11:face:b00e:ffff:ffff:ffff'
+                        sportlow: 51
+                        sporthigh: 60
+                        dportlow: 51
+                        dporthigh: 60
+
+                  - type : specific
+                    policytype : stateless
+                    overlaptype : adjacent_dst_tag   # all attr are adjacent
+                    direction  : bidir
+                    rule:
+                      - protocol: udp        # src - pfxrange but dst - tag
+                        action: allow
+                        srctype : pfxrange
+                        v4srciplow : '10.10.10.0'
+                        v4srciphigh : '10.10.10.255'
+                        v6srciplow : 'e1ba:aced:a11:face:b010::0'
+                        v6srciphigh : 'e1ba:aced:a11:face:b010:ffff:ffff:ffff'
+                        dsttype : tag
+                        dsttag  : 1
+                        sportlow: 1
+                        sporthigh: 10
+                        dportlow: 1
+                        dporthigh: 10
+
+                      - protocol: udp        # src - pfxrange but dst - tag
+                        action : deny
+                        srctype : pfxrange
+                        v4srciplow : '10.10.11.0'
+                        v4srciphigh : '10.10.11.255'
+                        v6srciplow : 'e1ba:aced:a11:face:b011::0'
+                        v6srciphigh : 'e1ba:aced:a11:face:b011:ffff:ffff:ffff'
+                        dsttype : tag
+                        dsttag  : 2
+                        sportlow: 11
+                        sporthigh: 20
+                        dportlow: 11
+                        dporthigh: 20
+
+                      - protocol: udp        # src - pfxrange but dst - tag
+                        action : allow
+                        srctype : pfxrange
+                        v4srciplow : '10.10.12.0'
+                        v4srciphigh : '10.10.12.255'
+                        v6srciplow : 'e1ba:aced:a11:face:b012::0'
+                        v6srciphigh : 'e1ba:aced:a11:face:b012:ffff:ffff:ffff'
+                        dsttype : tag
+                        dsttag  : 3
+                        sportlow: 21
+                        sporthigh: 30
+                        dportlow: 21
+                        dporthigh: 30
+
+                      - protocol: udp        # src - pfxrange but dst - tag
+                        action : deny
+                        srctype : pfxrange
+                        v4srciplow : '10.10.31.0'
+                        v4srciphigh : '10.10.31.255'
+                        v6srciplow : 'e1ba:aced:a11:face:b013::0'
+                        v6srciphigh : 'e1ba:aced:a11:face:b013:ffff:ffff:ffff'
+                        dsttype : tag
+                        dsttag  : 4
+                        sportlow: 31
+                        sporthigh: 40
+                        dportlow: 31
+                        dporthigh: 40
+
+                      - protocol: udp        # src - pfxrange but dst - tag
+                        action : allow
+                        srctype : pfxrange
+                        v4srciplow : '10.10.14.0'
+                        v4srciphigh : '10.10.14.255'
+                        v6srciplow : 'e1ba:aced:a11:face:b014::0'
+                        v6srciphigh : 'e1ba:aced:a11:face:b014:ffff:ffff:ffff'
+                        dsttype : tag
+                        dsttag  : 5
+                        sportlow: 41
+                        sporthigh: 50
+                        dportlow: 41
+                        dporthigh: 50

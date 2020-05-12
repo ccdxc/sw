@@ -118,6 +118,12 @@ class Resmgr(base.ConfigObjectBase):
 
     LocalMappingIdAllocator = iter(irange(1,128*1024))
     RemoteMappingIdAllocator = iter(irange(1,16*1024*1024))
+
+    LocalMappingV4TagIdAllocator = iter(irange(1, 2*1024*1024))
+    LocalMappingV6TagIdAllocator = iter(irange(1, 2*1024*1024))
+    RemoteMappingV4TagIdAllocator = iter(irange(1, 2*1024*1024))
+    RemoteMappingV6TagIdAllocator = iter(irange(1, 2*1024*1024))
+
     VnicMacAllocator = objects.TemplateFieldObject("macstep/00DD.0000.0001/0000.0000.0001")
 
     def __init__(self, node):

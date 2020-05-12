@@ -1,0 +1,126 @@
+# Apulu RFC IPv4 Egress modules list for adjacent policy
+feature:
+    id          : rfc
+    sub         : tag_crud
+    package     : test.rfc
+    module      : rfc
+    runorder    : 11000
+    enable      : True
+    ignore      : False
+
+modules:
+  - module          :
+      name          : REMOVE_TAG_1
+      spec          : rfc_tag_crud.testspec
+      args          :
+        - object    : localmapping
+          operation : RemoveTag
+      iterate       :
+        - policy    : filter://AddrFamily=IPV4,OverlapType=none
+
+  - module          :
+      name          : REMOVE_TAG_2
+      spec          : rfc_tag_crud.testspec
+      args          :
+        - object    : localmapping
+          operation : RemoveTag
+      iterate       :
+        - policy    : filter://AddrFamily=IPV4,OverlapType=none
+              
+  - module          :
+      name          : REMOVE_TAG_3
+      spec          : rfc_tag_crud.testspec
+      args          :
+        - object    : localmapping
+          operation : RemoveTag
+      iterate       :
+        - policy    : filter://AddrFamily=IPV4,OverlapType=none
+
+  - module          :
+      name          : REMOVE_TAG_4
+      spec          : rfc_tag_crud.testspec
+      args          :
+        - object    : localmapping
+          operation : RemoveTag
+      iterate       :
+        - policy    : filter://AddrFamily=IPV4,OverlapType=none
+
+  - module          :
+      name          : REMOVE_TAG_5
+      spec          : rfc_tag_crud.testspec
+      args          :
+        - object    : localmapping
+          operation : RemoveTag
+      iterate       :
+        - policy    : filter://AddrFamily=IPV4,OverlapType=none
+
+  - module          :
+      name          : APPEND_TAG_1
+      spec          : rfc_tag_crud.testspec
+      args          :
+        - object    : localmapping
+          operation : AppendTag
+      iterate       :
+        - policy    : filter://AddrFamily=IPV4,OverlapType=none
+
+  - module          :
+      name          : APPEND_TAG_2
+      spec          : rfc_tag_crud.testspec
+      args          :
+        - object    : localmapping
+          operation : AppendTag
+      iterate       :
+        - policy    : filter://AddrFamily=IPV4,OverlapType=none
+              
+  - module          :
+      name          : APPEND_TAG_3
+      spec          : rfc_tag_crud.testspec
+      args          :
+        - object    : localmapping
+          operation : AppendTag
+      iterate       :
+        - policy    : filter://AddrFamily=IPV4,OverlapType=none
+
+  - module          :
+      name          : APPEND_TAG_4
+      spec          : rfc_tag_crud.testspec
+      args          :
+        - object    : localmapping
+          operation : AppendTag
+      iterate       :
+        - policy    : filter://AddrFamily=IPV4,OverlapType=none
+
+  - module          :
+      name          : APPEND_TAG_5
+      spec          : rfc_tag_crud.testspec
+      args          :
+        - object    : localmapping
+          operation : AppendTag
+      iterate       :
+        - policy    : filter://AddrFamily=IPV4,OverlapType=none
+
+  - module          :
+      name          : DELETE_LMAP
+      spec          : rfc_tag_crud.testspec
+      args          :
+        - object    : localmapping
+          operation : Delete
+      iterate       :
+        - policy    : filter://AddrFamily=IPV4,OverlapType=none
+
+  - module          :
+      name          : CREATE_LMAP
+      spec          : rfc_tag_crud.testspec
+      args          :
+        - object    : localmapping
+          operation : Create
+      iterate       :
+        - policy    : filter://AddrFamily=IPV4,OverlapType=none
+
+  - module          :
+      name          : RFC_V4_INGRESS_DISJOINT_MLIST
+      mlist         : rfc_v4_ingress_disjoint.mlist
+
+
+
+

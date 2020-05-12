@@ -436,6 +436,14 @@ def ValidateUpdate(obj, resps, expApiStatus = types_pb2.API_STATUS_OK):
             return False
     return True
 
+def ValidateTagsList(obj_tag_list, spec_tag_list):
+    if len(obj_tag_list) != len(spec_tag_list):
+        return False
+    for tag in obj_tag_list:
+        if tag not in spec_tag_list:
+            return False
+    return True
+
 def LoadYaml(cmdoutput):
     return yaml.load(cmdoutput, Loader=yaml.FullLoader)
 

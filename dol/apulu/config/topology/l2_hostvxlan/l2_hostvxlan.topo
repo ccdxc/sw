@@ -95,7 +95,7 @@ node:
                 - count : 4
                   l2 : true
             - count     : 1
-              v4prefixlen : 28
+              v4prefixlen : 26
               v6prefixlen : 96
               vnic:
                 - count   : 1             # 1 tagged VNIC
@@ -121,7 +121,7 @@ node:
                 - count : 4
                   l2 : true
             - count     : 1
-              v4prefixlen : 28
+              v4prefixlen : 26
               v6prefixlen : 96
               vnic:
                 - count   : 2             # 2 tagged VNICs

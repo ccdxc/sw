@@ -691,7 +691,7 @@ class PolicyObjectClient(base.ConfigClientBase):
                 if utils.IsPipelineArtemis():
                     return utils.isTagWithDefaultRoute(tag)
                 else:
-                    return True
+                    return tag == None
             return False
 
         def __get_l3_attr(l3matchtype, newpfx, newtag):
@@ -727,11 +727,14 @@ class PolicyObjectClient(base.ConfigClientBase):
         direction = policy.Direction
         af = utils.GetIPVersion(policy.AddrFamily)
         subnetpfx = subnetobj.IPPrefix[1] if af == utils.IP_VERSION_4 else subnetobj.IPPrefix[0]
-        subnettag = None
+        subnettag_list = []
         if utils.IsTagSupported():
             if utils.IsPipelineArtemis():
-                subnettag = tag.client.GetCreateTag(policy.VPCId, af, subnetpfx)
+                subnettag_list = [tag.client.GetCreateTag(policy.VPCId, af, subnetpfx)]
+            elif utils.IsPipelineApulu():
+                subnettag_list = LmappingClient.GetTagsBySubnet(node, subnetobj, "v4" if af == utils.IP_VERSION_4 else "v6")
         for rule in policy.rules:
+            subnettag = random.choice(subnettag_list) if subnettag_list else None
             __modify_l3_match(direction, rule.L3Match, subnetpfx, subnettag)
         return
 

@@ -164,14 +164,14 @@ def __get_usable_host_from_rule(rule, policy, pfxpos, testcase):
     l3match = rule.L3Match
     if not l3match.valid:
         pfx = None
-    elif direction == types_pb2.RULE_DIR_INGRESS:
+    elif direction == "ingress":
         if utils.IsPipelineApulu() and (l3match.SrcType == topo.L3MatchType.TAG):
             if af == "IPV4":
-                obj = random.choice(config.v4rtags[l3match.SrcTag])
+                obj = random.choice(testcase.config.v4rtags[l3match.SrcTag])
                 testcase.config.remotemapping = obj
                 return obj.IP
             else:
-                obj = random.choice(config.v6rtags[l3match.SrcTag])
+                obj = random.choice(testcase.config.v6rtags[l3match.SrcTag])
                 testcase.config.remotemapping = obj
                 return obj.IP
         else:
