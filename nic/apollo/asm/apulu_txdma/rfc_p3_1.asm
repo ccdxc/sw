@@ -19,23 +19,8 @@ rfc_p3_1:
     /* Action = r7 & SACL_P3_ENTRY_ACTION_MASK */
     and        r2, r7, SACL_P3_ENTRY_ACTION_MASK
 
-    /* Set c2 if table constant is FW_ACTION_XPOSN_ANY_DENY */
-    seq        c2, r5, FW_ACTION_XPOSN_ANY_DENY
-    /* Set c3 if current action is deny */
-    seq        c3, r2, SACL_P3_ENTRY_ACTION_DENY
-    /* Set c4 if previous action is deny */
-    seq        c4, k.txdma_to_p4e_drop, SACL_P3_ENTRY_ACTION_DENY
-    /* Set c5 if current priority is higher that previous */
-    slt        c5, r1, k.txdma_control_rule_priority
-
-    /* previous is allow OR better priority */
-    setcf      c6, [!c4 | c5]
-    /* NOT any_deny_is_deny AND better priority? */
-    setcf      c1, [!c2 & c5]
-    /* any_deny_is_deny, current is deny, previous is allow OR better priority */
-    orcf       c1, [c2 & c3 & c6]
-    /* any_deny_is_deny, current is allow, previous is allow AND better priority */
-    orcf       c1, [c2 & !c3 & !c4 & c5]
+    /* Set c1 if current priority is higher that previous */
+    slt        c1, r1, k.txdma_control_rule_priority
 
     /* Update PHV with new priority and action if c1 is set */
     phvwr.c1   p.txdma_control_rule_priority, r1
