@@ -3,17 +3,14 @@
     <div fxFlex="auto" class="syslog-syslog" fxLayout="column" formArrayName="targets"
          [ngStyle]="syslogFieldsetWidth?{'width': '530px'} : {'width': ''}">
       <!-- Buffer, creating as a div so there are no hiccups in the animation-->
-      <fieldset *ngIf="!showSyslogOptions" class="syslog-export-config">
-        <legend>EXPORT CONFIGURATION</legend>
+      <app-fieldcontainer *ngIf="!showSyslogOptions" fieldTitle="EXPORT CONFIGURATION">
         <ng-container *ngTemplateOutlet="syslogOptions"></ng-container>
-      </fieldset>
-      <fieldset *ngIf="showSyslogOptions" class="syslog-export-config">
-        <legend>SYSLOG EXPORT CONFIGURATION</legend>
+      </app-fieldcontainer>
+      <app-fieldcontainer *ngIf="showSyslogOptions" fieldTitle="SYSLOG EXPORT CONFIGURATION">
         <ng-container *ngTemplateOutlet="syslogOptions"></ng-container>
-      </fieldset>
+      </app-fieldcontainer>
       <div fxFlex="10px"></div>
-      <fieldset class="syslog-target">
-        <legend>TARGET:</legend>
+      <app-fieldcontainer fieldTitle="Target">
         <div fxFlex="nogrow" fxLayout="column" [@slideInOut]
              *ngFor="let target of targets; let index = index; let first = first ;let last=last"
              [formGroupName]="index">
@@ -39,7 +36,7 @@
           <div fxFlex="none"></div>
           <!-- Buffer, creating as a div so there are no hiccups in the animation-->
         </div>
-      </fieldset>
+      </app-fieldcontainer>
     </div>
   </div>
 

@@ -132,19 +132,6 @@ $dary-grey: #a9a9a9;
   height: 100%
 }
 
-fieldset {
-  border: 1px solid $dary-grey;
-  padding: 5px;
-  margin-bottom: 10px;
-
-  legend {
-    padding: 0 2px;
-    @include primary-font(15px);
-    color: #676763;
-    margin-bottom: 0px;
-  }
-}
-
 .newhost-content {
   .newhost-name {
     width: 250px;
@@ -153,6 +140,10 @@ fieldset {
 
 .newhost-dsc-container {
   margin-left: 10px;
+}
+
+.newhost-rule-app {
+  width: 260px;
 }
 
 .newhost-attach-radio {
@@ -173,9 +164,6 @@ fieldset {
   height: 25px
 }
 
-.newhost-rule-app legend {
-  width: 85px;
-}
 
 .newhost-radio-container {
   height: 5px;
@@ -195,7 +183,7 @@ fieldset {
 }
 
 .newhost-sub-container {
-  min-width: 250px;
+  min-width: 260px;
   margin-top: 6px;
   margin-right: 5px;
 }

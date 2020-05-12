@@ -124,7 +124,6 @@ export class NewflowexportpolicyComponent extends CreationForm<IMonitoringFlowEx
           targetsCtrl.get('gateway').setValidators(null);
         });
       }
-      console.log();
     }
     if (this.ExportPolicyRules.length === 0) {
       this.addRule();
@@ -142,25 +141,13 @@ export class NewflowexportpolicyComponent extends CreationForm<IMonitoringFlowEx
       data: { rule: rule },
       inEdit: false
     });
-    this.editRule(this.ExportPolicyRules.length - 1);
-  }
-
-  editRule(index) {
-    // Collapse any other open rules, and make index rule open
     this.ExportPolicyRules.forEach((r, i) => {
-      if (i === index) {
+      if (i === this.ExportPolicyRules.length - 1) {
         r.inEdit = true;
       } else {
         r.inEdit = false;
       }
     });
-  }
-
-  orderedListClick(index) {
-    // Only toggle if the rule we are clicking on isn't in edit mode
-    if (!this.ExportPolicyRules[index].inEdit) {
-      this.editRule(index);
-    }
   }
 
   deleteRule(index) {

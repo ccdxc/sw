@@ -115,10 +115,7 @@
 
 <ng-template #newHostCreation let-index="index">
   <div fxFlex="none" class="newhost-sub-container">
-    <fieldset class="newhost-rule-app">
-      <legend>
-        ADD DSC BY:
-      </legend>
+    <app-fieldcontainer class="newhost-rule-app" fieldTitle="ADD DSC BY:">
       <div fxflex="nogrow" fxLayout="column" class="newhost-sNI-choose"
            [formGroup]="newHostForm.get(['spec','dscs', index])">
         <div fxFlex="5px"></div>
@@ -169,6 +166,6 @@
           </ng-container>
         </div>
       </div>
-    </fieldset>
+    </app-fieldcontainer>
   </div>
 </ng-template>

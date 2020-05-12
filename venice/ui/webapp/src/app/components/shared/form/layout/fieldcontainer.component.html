@@ -1,0 +1,10 @@
+<fieldset class="psm-fieldset">
+  <legend>
+    <span [ngClass]="{
+      'psm-fieldset-title' : true,
+      'requiredLabel': requiredLabel
+    }">{{ fieldTitle }}</span>
+    <span *ngIf="subtitle" class="psm-fieldset-subtitle">{{ ' ' + subtitle.trim() }}</span>
+  </legend>
+  <ng-content></ng-content>
+</fieldset>

@@ -143,13 +143,10 @@ export class FlowexportpolicyComponent extends TablevieweditAbstract<IMonitoring
         ret += dest.join(', ');
       }
 
-      ret += '    Apps: ';
-      let apps = req['app-protocol-selectors'].applications || [];
+      let apps = [];
       apps = apps.concat(req['app-protocol-selectors']['proto-ports']);
-      if (apps.length === 0) {
-        ret += '*';
-      } else {
-        ret += apps.join(', ');
+      if (apps.length > 0) {
+        ret += '    Protol / Ports: ' + apps.join(', ');
       }
       retArr.push(ret);
     });

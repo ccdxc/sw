@@ -81,38 +81,21 @@
     <div fxFlex="none" fxLayout="row">
       <div fxFlex="none">Export Packet Rule:</div>
     </div>
-    <div fxFlex="10px">
-
-    </div>
-    <app-orderedlist [enableDragDrop]="false" [enableOrdering]="false"
-                     [dataArray]="ExportPolicyRules" [template]="ruleTemplate"
-                     (itemClick)="orderedListClick($event)"></app-orderedlist>
-    <div fxFlex="none" (click)="addRule()" class="export-policy-add-rule">+ ADD</div>
+    <div fxFlex="10px"></div>
+    <app-orderedlist
+                     [enableDragDrop]="false" [enableOrdering]="false"
+                     [dataArray]="ExportPolicyRules"
+                     [templateEdit]="ruleTemplateEdit" [templateView]="ruleTemplateView"
+                     (addItem)="addRule()" (deleteItem)="deleteRule($event)">
+    </app-orderedlist>
   </div>
 </ng-template>
-
-<ng-template #ruleTemplate let-data="data" let-index="index" let-inEdit="inEdit">
-  <div fxFlex="auto" fxLayout="column">
-    <div *ngIf="!inEdit" [@slideInOut] fxFlex="auto" fxLayout="column">
-      <ng-container
-                    *ngTemplateOutlet="ruleTemplateView; context:{data: data, index: index, inEdit: inEdit}">
-      </ng-container>
-    </div>
-    <div *ngIf="inEdit" [@slideInOut] fxFlex="auto" fxLayout="column">
-      <ng-container
-                    *ngTemplateOutlet="ruleTemplateEdit; context:{data: data, index: index, inEdit: inEdit}">
-      </ng-container>
-    </div>
-  </div>
-</ng-template>
-
 
 <ng-template #ruleTemplateEdit let-data="data" let-index="index" let-inEdit="inEdit">
   <!-- data is MonitoringMatchRule -->
 
   <div fxFlex="auto" fxLayout="column" fxLayoutGap="10px"
-       fxLayoutAlign="center none" class="new-export-policy-rule-template"
-       [ngClass]="{'newmirrorsession-hide-primeng-panel': !ExportPolicyRules[index].inEdit}">
+       fxLayoutAlign="center none" class="new-export-policy-rule-template">
     <div fxFlex="none" fxLayout="row" fxLayoutGap="40px" class="flow-export-policy-rule-row">
       <app-formchips fxFlex="none" [chipsLabel]="'Source ' + IPS_LABEL"
                      [formControl]="data.rule.$formGroup.get(['source', 'ip-addresses'])"
@@ -127,8 +110,7 @@
     </div>
     <!--
     <div fxFlex="none">
-      <fieldset>
-        <legend>Source</legend>
+      <app-fieldcontainer fieldTitle="Source">
         <div fxFlex="none" fxLayout="row">
           <div fxFlex="none" fxLayout="column" class="flow-export-policy-rule-inputs">
             <app-formchips fxFlex="none" [chipsLabel]="IPS_LABEL"
@@ -145,11 +127,10 @@
             </app-formchips>
           </div>
         </div>
-      </fieldset>
+      </app-fieldcontainer>
     </div>
     <div fxFlex="none">
-      <fieldset>
-        <legend>Target</legend>
+      <app-fieldcontainer fieldTitle="Target">
         <div fxFlex="none" fxLayout="row">
           <div fxFlex="none" fxLayout="column" class="flow-export-policy-rule-inputs">
             <app-formchips fxFlex="none" [chipsLabel]="IPS_LABEL"
@@ -166,7 +147,7 @@
             </app-formchips>
           </div>
         </div>
-      </fieldset>
+      </app-fieldcontainer>
     </div>
     -->
     <div fxFlex="none" class="flow-export-policy-rule-row">
@@ -176,9 +157,7 @@
                      [itemErrorMsg]="PORTS_ERRORMSG" [toolTip]="PROTS_TOOLTIP">
       </app-formchips>
       <!--
-      <fieldset>
-        <legend>Protocol</legend>
-
+      <app-fieldcontainer fieldTitle="Protocol">
         <div fxFlex="none" fxLayout="column" class="flow-export-policy-rule-inputs">
           <app-formchips fxFlex="none" [chipsLabel]="protoAppOptions[0]['value']"
                          [formControl]="data.rule.$formGroup.get(['app-protocol-selectors', 'proto-ports'])"
@@ -186,7 +165,7 @@
                          [itemErrorMsg]="PORTS_ERRORMSG" [toolTip]="PROTS_TOOLTIP">
           </app-formchips>
         </div>
-      </fieldset>
+      </app-fieldcontainer>
       -->
     </div>
   </div>
@@ -194,8 +173,7 @@
 
 <ng-template #ruleTemplateView let-data="data" let-index="index" let-inEdit="inEdit">
   <div fxFlex="auto" fxLayout="row"
-       fxLayoutAlign="start none" class="new-export-policy-rule-template"
-       [ngClass]="{'newsgpolicy-hide-primeng-panel': !ExportPolicyRules[index].inEdit}">
+       fxLayoutAlign="start none" class="new-export-policy-rule-template">
     <div fxFlex="auto" fxLayout="row" fxLayoutAlign="start start">
       <div fxFlex="10px"></div>
       <div fxFlex="90%" fxLayout="row wrap" fxLayoutAlign="space-between start">
@@ -262,22 +240,6 @@
         </div>
 
 
-      </div>
-    </div>
-    <ng-container *ngTemplateOutlet="ruleEditDeleteOption;context:{ index: index}"></ng-container>
-  </div>
-</ng-template>
-
-<ng-template #ruleEditDeleteOption let-index="index">
-  <div fxFlex="none" fxLayout="row" fxLayoutAlign="start center">
-    <div fxFlex="auto" fxLayoutAlign="end center">
-      <div>
-        <mat-icon class="new-export-policy-edit-hoverbuttons" [matTooltip]="'Edit'"
-                  fxFlex="nogrow" (click)="editRule(index)">edit
-        </mat-icon>
-        <mat-icon class="new-export-policy-edit-hoverbuttons" [matTooltip]="'Delete'"
-                  fxFlex="nogrow" (click)="deleteRule(index)">delete
-        </mat-icon>
       </div>
     </div>
   </div>

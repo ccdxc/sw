@@ -12,18 +12,6 @@ $dary-grey: #a9a9a9;
   }
 
   .newflow-export-policy-packet {
-    fieldset {
-      border: 1px solid $dary-grey;
-      padding: 5px;
-    }
-
-    legend {
-      width: auto;
-      padding: 0 2px;
-      font-size: 14px;
-      color: #676763;
-    }
-
     .policy-required-match-rule {
       padding: 10px 0;
 
@@ -60,10 +48,6 @@ $dary-grey: #a9a9a9;
   .new-export-policy-rule-template {
     cursor: pointer;
 
-    fieldset>legend {
-      width: auto;
-    }
-
     .export-policy-rule-boxes {
       ul {
         width: 240px;
@@ -95,16 +79,6 @@ $dary-grey: #a9a9a9;
       .mat-radio-label-content {
         @include primary-font(14px);
         padding-top: 2px;
-      }
-    }
-
-    .new-export-policy-edit-hoverbuttons {
-      display: none;
-    }
-
-    &:hover {
-      .new-export-policy-edit-hoverbuttons {
-        display: inherit;
       }
     }
 

@@ -12,7 +12,7 @@ import { SearchService } from '@app/services/generated/search.service';
 import { SecurityService } from '@app/services/generated/security.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { SearchPolicySearchRequest, ISearchPolicyMatchEntry, ISearchPolicySearchResponse, SearchPolicySearchResponse_status } from '@sdk/v1/models/generated/search';
-import { ISecuritySGRule, SecuritySGRule, SecurityNetworkSecurityPolicy, SecuritySGRule_action_uihint, ISecurityNetworkSecurityPolicy } from '@sdk/v1/models/generated/security';
+import { ISecuritySGRule, SecuritySGRule, SecurityNetworkSecurityPolicy, SecuritySGRule_action_uihint, ISecurityNetworkSecurityPolicy, SecurityApp } from '@sdk/v1/models/generated/security';
 import { CustomFormControl } from '@sdk/v1/utils/validators';
 import { TableCol, CustomExportMap, CustomExportFunctionOpts } from '@app/components/shared/tableviewedit';
 import { MetricsqueryService, TelemetryPollingMetricQueries } from '@app/services/metricsquery.service';
@@ -98,13 +98,16 @@ export class SgpolicydetailComponent extends TableviewAbstract<ISecurityNetworkS
   naples: ReadonlyArray<ClusterDistributedServiceCard> = [];
   naplesEventUtility: HttpEventUtility<ClusterDistributedServiceCard>;
   viewPendingNaples: boolean = false;
+  started_get_policy_metrics: boolean = false;
+
+  METRICS_POLLING_INTERVAL = 60000;
 
   cols: TableCol[] = [
     { field: 'ruleNum', header: 'Number', class: 'sgpolicy-rule-number', width: 4 },
     { field: 'sourceIPs', header: 'Source IPs', class: 'sgpolicy-source-ip', width: 22 },
     { field: 'destIPs', header: 'Destination IPs', class: 'sgpolicy-dest-ip', width: 22 },
     { field: 'action', header: 'Action', class: 'sgpolicy-action', width: 24 },
-    { field: 'protocolPort', header: 'Protocol/Ports', class: 'sgpolicy-port', width: 20 },
+    { field: 'protocolPort', header: 'Protocol / Application', class: 'sgpolicy-port', width: 20 },
     { field: 'TotalHits', header: 'Total Connection Hits', class: 'sgpolicy-rule-stat', width: 10 },
   ];
 
@@ -154,6 +157,9 @@ export class SgpolicydetailComponent extends TableviewAbstract<ISecurityNetworkS
 
   portFormControl: FormControl = CustomFormControl(new FormControl('', [
   ]), { description: 'Value should be either <protocol>/<port> or app name' });
+
+  securityApps: ReadonlyArray<SecurityApp> = [];
+  securityAppOptions: SelectItem[] = [];
 
   // Holds all policy objects
   sgPolicies: ReadonlyArray<SecurityNetworkSecurityPolicy>;
@@ -286,6 +292,26 @@ export class SgpolicydetailComponent extends TableviewAbstract<ISecurityNetworkS
     this.portFormControl.setValue('');
     this.enableFormControls();
     this.getNaples();
+    this.getSecurityApps();
+  }
+
+  getSecurityApps() {
+    const sub = this.securityService.ListAppCache().subscribe(
+      response => {
+        if (response.connIsErrorState) {
+          return;
+        }
+        this.securityApps = response.data;
+        this.securityAppOptions = this.securityApps.map(item => {
+          return {
+            label: item.meta.name,
+            value: item.meta.name
+          };
+        });
+      },
+      this.controllerService.webSocketErrorHandler('Failed to get apps')
+    );
+    this.subscriptions.push(sub);
   }
 
   getNaples() {
@@ -584,7 +610,10 @@ export class SgpolicydetailComponent extends TableviewAbstract<ISecurityNetworkS
           this.selectedPolicy = this.sgPolicies[0];
           this.searchPolicyInvoked = false;
           this.generateRuleMap();
-          this.getPolicyMetrics();
+          if (!this.started_get_policy_metrics) { // only start polling metrics once
+            this.started_get_policy_metrics = true;
+            this.getPolicyMetrics();
+          }
           this.updateRulesByPolicy();
           this.exportFilename = this.selectedPolicy.meta.name;
           this.resetMapsAndSelection();
@@ -635,7 +664,7 @@ export class SgpolicydetailComponent extends TableviewAbstract<ISecurityNetworkS
     // We create a new query for each rule
     // We then group each rule by reporter ID
     // We then sum them to generate the total for the rule
-    const sub = this.metricsqueryService.pollMetrics('sgpolicyDetail', queryList).subscribe(
+    const sub = this.metricsqueryService.pollMetrics('sgpolicyDetail', queryList, this.METRICS_POLLING_INTERVAL).subscribe(
       (data: ITelemetry_queryMetricsQueryResponse) => {
         if (data && data.results) {
           this.ruleMetrics = {};
@@ -766,8 +795,9 @@ export class SgpolicydetailComponent extends TableviewAbstract<ISecurityNetworkS
   formatApp(rule: ISecuritySGRule) {
     let protoPorts = [];
     let apps = [];
-    if (rule['apps'] != null) {
+    if (rule['apps'] && rule['apps'].length > 0) {
       apps = rule['apps'];
+      return 'Applications: ' + apps.join('');
     }
     if (rule['proto-ports'] != null) {
       protoPorts = rule['proto-ports'].map((entry) => {
@@ -777,7 +807,7 @@ export class SgpolicydetailComponent extends TableviewAbstract<ISecurityNetworkS
         return entry.protocol + '/' + entry.ports;
       });
     }
-    return protoPorts.concat(apps).join(', ');
+    return 'Protocol / Ports: ' + protoPorts.join(', ');
   }
 
   /*

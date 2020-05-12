@@ -73,32 +73,16 @@
       <div fxFlex="5px"></div>
       <div fxFlex="none" class="newsgpolicy-subtext">(specify one or more)</div>
     </div>
-    <app-orderedlist [dataArray]="rules" [template]="ruleTemplate"
-                     (itemClick)="orderedListClick($event)"></app-orderedlist>
-    <div fxFlex="none" (click)="addRule()" class="newsgpolicy-add-rule">+ RULE</div>
-  </div>
-</ng-template>
-
-<ng-template #ruleTemplate let-data="data" let-index="index" let-inEdit="inEdit">
-  <div [@.disabled]="!repeaterAnimationEnabled || indexToSkipAnimation === index" fxFlex="auto"
-       fxLayout="column">
-    <div *ngIf="!inEdit" [@slideInOut] fxFlex="auto" fxLayout="column">
-      <ng-container
-                    *ngTemplateOutlet="ruleTemplateView; context:{data: data, index: index, inEdit: inEdit}">
-      </ng-container>
-    </div>
-
-    <div *ngIf="inEdit" [@slideInOut] fxFlex="auto" fxLayout="column">
-      <ng-container
-                    *ngTemplateOutlet="ruleTemplateEdit; context:{data: data, index: index, inEdit: inEdit}">
-      </ng-container>
-    </div>
+    <app-orderedlist
+                     [templateEdit]="ruleTemplateEdit" [templateView]="ruleTemplateView"
+                     [dataArray]="rules" (addItem)="addRule()" (deleteItem)="deleteRule($event)">
+    </app-orderedlist>
   </div>
 </ng-template>
 
 <ng-template #ruleTemplateEdit let-data="data" let-index="index" let-inEdit="inEdit">
-  <div fxFlex="auto" fxLayout="column" fxLayoutAlign="center none" class="newsgpolicy-rule-template"
-       [ngClass]="{'newsgpolicy-hide-primeng-panel': !rules[index].inEdit}">
+  <div fxFlex="auto" fxLayout="column" fxLayoutAlign="center none"
+       class="newsgpolicy-rule-template">
     <ng-container [formGroup]="data.rule.$formGroup">
       <div fxFlex="none" fxLayout="column" fxLayoutAlign="start start">
         <div fxFlex="none" fxLayout="row">
@@ -168,26 +152,12 @@
   </div>
 </ng-template>
 
-
 <ng-template #ruleTemplateView let-data="data" let-index="index" let-inEdit="inEdit">
-  <div fxFlex="auto" fxLayout="column" fxLayoutAlign="start none" class="newsgpolicy-rule-template"
-       [ngClass]="{'newsgpolicy-hide-primeng-panel': !rules[index].inEdit}">
+  <div fxFlex="auto" fxLayout="column" fxLayoutAlign="start none" class="newsgpolicy-rule-template">
     <div class="newsgpolicy-order-header" fxFlex="none" fxLayout="row" fxLayoutAlign="start end">
       <div fxFlex="none" fxLayout="row" fxLayoutAlign="start end" fxLayoutGap="25px">
         <div fxFlex="auto" class="newsgpolicy-bold">ACTION</div>
         <div fxFlex="auto">{{ displayArrayField(data, 'action') }}</div>
-      </div>
-      <div fxFlex="auto" fxLayoutAlign="end center">
-        <div>
-          <mat-icon class="newsgpolicy-edit-buttons newsgpolicy-edit-hoverbuttons"
-                    *ngIf="!rules[index].inEdit"
-                    [matTooltip]="'Edit'" (click)="editRule(index)" fxFlex="nogrow">edit
-          </mat-icon>
-          <mat-icon class="newsgpolicy-edit-buttons newsgpolicy-edit-hoverbuttons"
-                    [matTooltip]="'Delete'"
-                    (click)="deleteRule(index)" fxFlex="nogrow">delete
-          </mat-icon>
-        </div>
       </div>
     </div>
 

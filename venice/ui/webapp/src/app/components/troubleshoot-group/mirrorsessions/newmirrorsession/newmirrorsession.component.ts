@@ -4,29 +4,21 @@ import { SecurityService } from '@app/services/generated/security.service';
 import { CreationForm } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { Animations } from '@app/animations';
 import {
-  IMonitoringMirrorSession, MonitoringMirrorSession, ILabelsRequirement,
+  IMonitoringMirrorSession, MonitoringMirrorSession,
   MonitoringMirrorSessionSpec, MonitoringMirrorCollector, MonitoringMatchRule,
   MonitoringMirrorSessionSpec_packet_filters, LabelsRequirement
 } from '@sdk/v1/models/generated/monitoring';
-import { SecurityApp } from '@sdk/v1/models/generated/security';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
-import {
-  AbstractControl, FormArray, FormControl, ValidatorFn, Validators, ValidationErrors
-} from '@angular/forms';
+import { AbstractControl, FormArray, ValidatorFn, ValidationErrors } from '@angular/forms';
 import { IPUtility } from '@app/common/IPUtility';
 import { Utility } from '@app/common/Utility';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
-import { SearchUtil } from '@app/components/search/SearchUtil';
 import { OrderedItem } from '@app/components/shared/orderedlist/orderedlist.component';
 import { SelectItem } from 'primeng/api';
-import { HttpEventUtility } from '@app/common/HttpEventUtility';
-import { minValueValidator, maxValueValidator } from '@sdk/v1/utils/validators';
 import { NetworkNetworkInterface, NetworkNetworkInterfaceSpec_type } from '@sdk/v1/models/generated/network';
 import { NetworkService } from '@app/services/generated/network.service';
-import {SearchExpression, SearchInputTypeValue, SearchModelField, SearchSpec} from '@app/components/search';
-import { LabelsSelector, ILabelsSelector } from '@sdk/v1/models/generated/monitoring/labels-selector.model';
-import { MonitoringInterfaceMirror, IMonitoringInterfaceMirror } from '@sdk/v1/models/generated/monitoring/monitoring-interface-mirror.model';
-import { selector, values } from 'd3';
+import { LabelsSelector } from '@sdk/v1/models/generated/monitoring/labels-selector.model';
+import { MonitoringInterfaceMirror } from '@sdk/v1/models/generated/monitoring/monitoring-interface-mirror.model';
 
 export interface MatchRule {
   key: string;
@@ -83,10 +75,6 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
     { label: 'APPS', value: this.APPS_OPTION },
   ];
 
-  securityAppsEventUtility: HttpEventUtility<SecurityApp>;
-  securityApps: ReadonlyArray<SecurityApp> = [];
-  securityAppOptions: SelectItem[] = [];
-
   labelMatchCount: number = 0;
   matchMap: Map<string, any> = new Map<string, any>();
   allNIList: string[] = [];
@@ -109,30 +97,11 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
     super(_controllerService, uiconfigsService, MonitoringMirrorSession);
   }
 
-  getSecurityApps() {
-    this.securityAppsEventUtility = new HttpEventUtility<SecurityApp>(SecurityApp, false, null, true); // https://pensando.atlassian.net/browse/VS-93 we want to trim the object
-    this.securityApps = this.securityAppsEventUtility.array as ReadonlyArray<SecurityApp>;
-    const subscription = this.securityService.WatchApp().subscribe(
-      response => {
-        this.securityAppsEventUtility.processEvents(response);
-        this.securityAppOptions = this.securityApps.map(app => {
-          return {
-            label: app.meta.name,
-            value: app.meta.uuid,
-          };
-        });
-      },
-      this._controllerService.webSocketErrorHandler('Failed to get Apps')
-    );
-    this.subscriptions.push(subscription); // add subscription to list, so that it will be cleaned up when component is destroyed.
-  }
-
   getClassName(): string {
     return this.constructor.name;
   }
 
   postNgInit(): void {
-    // this.getSecurityApps();
     this.getNILabels();
 
    // currently backend does not support any drop packets
@@ -242,8 +211,6 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
     return data;
   }
 
-
-
   isFormValid(): boolean {
     // vs-1021 packet-filters can be empty
     // due to currently backend does not support all drops, comment out next lines
@@ -351,48 +318,6 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
     return currValue;
   }
 
-  convertFormArrayToSearchExpression(value, addMetatag: boolean = false) {
-    const data = value;
-    if (data == null) {
-      return null;
-    }
-
-    let retData = data.filter((item) => {
-      return !Utility.isEmpty(item.key) && !Utility.isEmpty(item.values) && item.values.length !== 0;
-    });
-    // make sure the value field is an array
-    retData = retData.map((item) => {
-      const tag = item.key;
-      const keyValue = ((addMetatag) ? 'meta.labels.' : '')  + tag;
-      // modify here to trim each string of the array
-      const valValues = Array.isArray(item.values) ?
-        item.values : item.values.trim().split(',');
-      const trimmedValues = valValues.map(each => (each) ? each.trim() : each);
-      const searchExpression: SearchExpression = {
-        key:  keyValue,
-        operator: item.operators,
-        values: trimmedValues
-      };
-      return searchExpression;
-    });
-    return retData;
-  }
-
-  protected buildLabelFormControlList(searchExpressons: ILabelsRequirement[]): FormControl[] {
-    const list = [];
-    searchExpressons.forEach((item) => {
-      const op = item.operator;
-      const formControl = new FormControl({
-        keyFormControl: '',
-        operatorFormControl: op,
-        valueFormControl: (item.values) ? item.values : [],
-        keytextFormName: item.key
-      });
-      list.push(formControl);
-    });
-    return list;
-  }
-
   isMirrorsessionNameValid(existingTechSupportRequest: MonitoringMirrorSession[]): ValidatorFn {
     return Utility.isModelNameUniqueValidator(existingTechSupportRequest, 'Mirror-session-name');
   }
@@ -492,24 +417,13 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
 
   addRule() {
     const rule = new MonitoringMatchRule();
-    // due to currently backend does not support all drops, comment out next lines
-    /*
-    rule.$formGroup.valueChanges.subscribe(() => {
-      this.newObject.$formGroup.get(['spec', 'packet-filters']).updateValueAndValidity();
-    });
-    */
     this.rules.push({
       id: Utility.s4(),
       data: { rule: rule, selectedProtoAppOption: this.PROTO_PORTS_OPTION },
       inEdit: false
     });
-    this.editRule(this.rules.length - 1);
-  }
-
-  editRule(index) {
-    // Collapse any other open rules, and make index rule open
     this.rules.forEach((r, i) => {
-      if (i === index) {
+      if (i === this.rules.length - 1) {
         r.inEdit = true;
       } else {
         r.inEdit = false;
@@ -520,13 +434,6 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
   deleteRule(index) {
     if (this.rules.length > 1) {
       this.rules.splice(index, 1);
-    }
-  }
-
-  orderedListClick(index) {
-    // Only toggle if the rule we are clicking on isn't in edit mode
-    if (!this.rules[index].inEdit) {
-      this.editRule(index);
     }
   }
 
@@ -556,21 +463,7 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
     return true;
   }
 
-  getAppArray(data: any) {
-    if (!this.securityAppOptions || this.securityAppOptions.length === 0) {
-      return [];
-    }
-    const arr = data.rule.$formGroup.get(['app-protocol-selectors', 'applications']).value;
-    return arr.map(id => {
-      const obj: SelectItem = this.securityAppOptions.find(item => item.value === id);
-      return obj.label;
-    });
-  }
-
   getDataArray(data: any, type: string, field: string) {
-    if (type === 'app-protocol-selectors' && field === 'applications') {
-      return this.getAppArray(data);
-    }
     return data.rule.$formGroup.get([type, field]).value;
   }
 

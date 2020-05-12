@@ -118,6 +118,11 @@ export class NewsgpolicyComponent extends CreationForm<ISecurityNetworkSecurityP
           inEdit: false,
         });
       });
+      this.rules.forEach((r, idx) => {
+        if ((r.data.rule.$formGroup.get('proto-ports') as FormArray).length === 0) {
+          this.addProtoTarget(idx);
+        }
+      });
     }
 
     if (this.rules.length === 0) {
@@ -308,16 +313,11 @@ export class NewsgpolicyComponent extends CreationForm<ISecurityNetworkSecurityP
       data: { rule: rule, selectedProtoAppOption: this.PROTO_PORTS_OPTION },
       inEdit: false,
     });
-    this.editRule(this.rules.length - 1);
-  }
-
-  editRule(index) {
-    // Collapse any other open rules, and make index rule open
     this.rules.forEach( (r, i) => {
-      if (i === index) {
+      if (i === this.rules.length - 1) {
         r.inEdit = true;
         if ((r.data.rule.$formGroup.get('proto-ports') as FormArray).length === 0) {
-          this.addProtoTarget(index);
+          this.addProtoTarget(this.rules.length - 1);
         }
       } else {
         r.inEdit = false;
@@ -328,18 +328,6 @@ export class NewsgpolicyComponent extends CreationForm<ISecurityNetworkSecurityP
   deleteRule(index) {
     if (this.rules.length > 1) {
       this.rules.splice(index, 1);
-    }
-  }
-
-  orderedListClick(index) {
-    // Only toggle if the rule we are clicking on isn't in edit mode
-    if (!this.rules[index].inEdit) {
-      this.editRule(index);
-
-      setTimeout(() => {
-        // programmatically trigger window resize to tell sideNav container adjust widow size
-        window.dispatchEvent(new Event('resize'));
-      }, 500);
     }
   }
 

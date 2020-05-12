@@ -48,50 +48,36 @@ $dary-grey: #a9a9a9;
     }
   }
 
-  fieldset {
-    width: 100%;
-    border: 1px solid $dary-grey;
-    padding: 5px;
+  .newVcenter-cred-box {
+    width: 370px;
+    margin: 0px auto;
 
-    legend {
-      padding: 0 5px;
-      @include primary-font(15px);
-      color: #676763;
-      margin-bottom: 0px;
-      width: 75px;
-    }
+    .newVenter-attach-radio {
+      .mat-radio-button {
+        padding-right: 5px;
 
-    .newVcenter-cred-box {
-      width: 370px;
-      margin: 0px auto;
-
-      .newVenter-attach-radio {
-        .mat-radio-button {
-          padding-right: 5px;
-
-          .mat-radio-label-content {
-            font-family: "Fira Sans Condensed";
-            @include primary-font(14px);
-            font-weight: 400;
-            color: #676763;
-            padding-top: 2px;
-            text-transform: capitalize;
-          }
+        .mat-radio-label-content {
+          font-family: "Fira Sans Condensed";
+          @include primary-font(14px);
+          font-weight: 400;
+          color: #676763;
+          padding-top: 2px;
+          text-transform: capitalize;
         }
       }
+    }
 
-      textarea.ui-inputtext {
-        padding: 5px 10px;
-      }
+    textarea.ui-inputtext {
+      padding: 5px 10px;
+    }
 
-      .textarea.ui-float-label>label {
-        top: 15px;
-      }
+    .textarea.ui-float-label>label {
+      top: 15px;
+    }
 
-      .ui-float-label textarea:focus~label,
-      .ui-float-label textarea.ui-state-filled~label {
-        top: -10px;
-      }
+    .ui-float-label textarea:focus~label,
+    .ui-float-label textarea.ui-state-filled~label {
+      top: -10px;
     }
   }
 }

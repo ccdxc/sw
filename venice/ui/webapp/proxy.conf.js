@@ -17,6 +17,7 @@ const URL = "10.7.100.21:10001"  // Jeff's dev
 // const URL =  "10.30.2.174"  
 // const URL = "10.8.102.52"; // scale setup admin/Pensando0$
 // const URL = "10.8.102.157"; // scale setup admin/Pensando0$
+// const URL = "10.30.6.148"; // scale setup admin/Systest-1$
 // const URL = "10.30.5.181";  // qixin setup admin/Systest-1$
 // const URL = "10.30.1.111" // arunkumar's esx server
 // const URL = "10.30.5.171" // Venky's server 

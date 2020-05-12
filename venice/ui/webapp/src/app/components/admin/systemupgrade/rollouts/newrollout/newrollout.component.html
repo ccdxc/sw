@@ -252,24 +252,19 @@
 <ng-template #upgradeDsc let-newRolloutForm='newRolloutForm'>
   <div fxFlex="none" fxLayout="column" class="newrollout-row upgrade-dsc"
        *ngIf="isToShowNicOrderDiv()">
-    <fieldset class="newrollout-selectors">
-      <legend>DSCs labels </legend>
+    <app-fieldcontainer fieldTitle="DSCs labels">
       <div [formGroup]="newRolloutForm.get('spec')">
         <div fxFlex="auto"
              class="newrollout-NicOrder-div" fxLayout="column"
              formArrayName="order-constraints">
-
-          <app-orderedlist [dataArray]="orders" (itemClick)="toggleOrderState($event)"
-                           [template]="orderTemplate" (orderChange)="onOrderChange()">
+          <app-orderedlist
+                           [dataArray]="orders" [template]="orderTemplate"
+                           [skipRenderActionIcons]="true" (itemClick)="toggleOrderState($event)"
+                           (addItem)="addOrder()" (orderChange)="onOrderChange()">
           </app-orderedlist>
-          <div fxFlex="10px"></div>
-          <button (click)="addOrder()"
-                  class="global-button-primary newrollout-addneworder newrollout-addneworder-clear">Add
-            Order</button>
-          <div fxFlex="10px"></div>
         </div>
       </div>
-    </fieldset>
+    </app-fieldcontainer>
   </div>
 </ng-template>
 

@@ -43,11 +43,8 @@
 
 <ng-template #match_rules>
   <div fxFlex="none" fxLayout="column">
-    <fieldset class="new-workload-interfaces">
-      <legend>
-        <span [ngClass]="{'requiredLabel': !oneInterfaceIsValid()}">Interfaces: </span>
-        <span class="new-workload-subtext">(specify one or more)</span>
-      </legend>
+    <app-fieldcontainer class="new-workload-interfaces" fieldTitle="Interfaces"
+                        [requiredLabel]="!oneInterfaceIsValid()" subtitle="(specify one or more)">
       <div fxFlex="none" fxLayout="column" fxLayoutGap="15px"
            [formGroup]="newObject.$formGroup.get(['spec', 'interfaces'])">
         <div fxFlex="nogrow" [formGroupName]="index" [@fastSlideInOut]
@@ -98,6 +95,6 @@
       <div fxFlex="15px"></div>
       <div fxFlex="none" (click)="addInterface()"
            class="new-workload-add-interface">+ INTERFACE</div>
-    </fieldset>
+    </app-fieldcontainer>
   </div>
 </ng-template>

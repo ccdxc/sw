@@ -1,11 +1,11 @@
 import {  ComponentFixture, TestBed } from '@angular/core/testing';
 import { configureTestSuite } from 'ng-bullet';
 
-import { SyslogComponent } from './syslog.component';
 import { MaterialdesignModule } from '@app/lib/materialdesign.module';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { PrimengModule } from '@app/lib/primeng.module';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { SharedModule } from '@components/shared/shared.module';
 import { ControllerService } from '@app/services/controller.service';
 import { ConfirmationService } from 'primeng/primeng';
 import { LogService } from '@app/services/logging/log.service';
@@ -16,6 +16,8 @@ import { LicenseService } from '@app/services/license.service';
 import { MessageService } from '@app/services/message.service';
 import { RouterTestingModule } from '@angular/router/testing';
 import { AuthService } from '@app/services/auth.service';
+import { FieldContainerComponent } from '../form/layout/fieldcontainer.component';
+import { SyslogComponent } from './syslog.component';
 
 describe('SyslogComponent', () => {
   let component: SyslogComponent;
@@ -23,7 +25,10 @@ describe('SyslogComponent', () => {
 
   configureTestSuite(() => {
     TestBed.configureTestingModule({
-      declarations: [SyslogComponent],
+      declarations: [
+        FieldContainerComponent,
+        SyslogComponent
+      ],
       imports: [
         MaterialdesignModule,
         RouterTestingModule,

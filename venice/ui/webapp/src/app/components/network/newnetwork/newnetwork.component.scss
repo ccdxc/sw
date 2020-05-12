@@ -43,20 +43,6 @@ $dary-grey: #a9a9a9;
       box-shadow: inset 5px 0 0 0 #6ba0e5 !important;
     }
 
-    fieldset {
-      width: 100%;
-      border: 1px solid $dary-grey;
-      padding: 5px;
-
-      legend {
-        padding: 0 5px;
-        @include primary-font(15px);
-        color: #676763;
-        margin-bottom: 0px;
-        width: 92px;
-      }
-    }
-
     .new-network-orchestrator-selectbox,
     .new-network-orchestrator-inputbox {
       width: 265px;

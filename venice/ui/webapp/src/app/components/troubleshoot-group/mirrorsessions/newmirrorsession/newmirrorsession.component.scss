@@ -24,6 +24,10 @@ $dary-grey: #a9a9a9;
     @include primary-font(16px);
   }
 
+  .newmirrorsession-collectors {
+    width: 590px;
+  }
+
   .newmirrorsession-general-inputbox,
   .newmirrorsession-calendar-inputbox,
   .newmirrorsession-collector-inputbox {
@@ -85,32 +89,15 @@ $dary-grey: #a9a9a9;
     top: 8px;
   }
 
-  .newmirrorsession-add-collector,
-  .newmirrorsession-add-rule {
+  .newmirrorsession-add-collector {
     cursor: pointer;
     width: 100px;
-  }
-
-  .newmirrorsession-add-collector,
-  .newmirrorsession-add-rule {
     @include primary-font(16px, #6ba0e5, 400);
     margin-top: 5px;
   }
 
-  .newmirrorsession-collectors {
-    width: 590px;
-
-    legend {
-      width: 170px;
-    }
-  }
-
   .newmirrorsession-selectors {
     width: 590px;
-
-    legend {
-      width: 265px;
-    }
 
     .newmirrorsession-interface-direction-box {
       margin-left: 10px;
@@ -179,27 +166,9 @@ $dary-grey: #a9a9a9;
   }
 }
 
-fieldset {
-  border: 1px solid $dary-grey;
-  padding: 5px;
-
-  legend {
-    padding: 0 2px;
-    font-size: 14px;
-    color: #676763
-  }
-}
-
 .newmirrorsession-rule-app,
-.newmirrorsession-rule-source,
 .newmirrorsession-rule-target {
   padding: 0px 10px 10px;
-
-  legend {
-    padding-left: 5px;
-    width: 50px;
-    height: 16px;
-  }
 }
 
 .newmirrorsession-rule-row {
@@ -208,21 +177,6 @@ fieldset {
 
 .newmirrorsession-rule-app legend {
   width: 60px;
-}
-
-.newmirrorsession-rule-template {
-  margin-left: 5px;
-  cursor: pointer;
-
-  .newmirrorsession-edit-hoverbuttons {
-    display: none;
-  }
-
-  &:hover {
-    .newmirrorsession-edit-hoverbuttons {
-      display: inherit;
-    }
-  }
 }
 
 .newmirrorsession-rule-content {
@@ -271,11 +225,6 @@ fieldset {
   font-size: 14px;
   font-weight: 400;
   color: #676763;
-}
-
-.newmirrorsession-subtext {
-  margin-top: 2px;
-  @include primary-font(12px, #b2b3b4, 300);
 }
 
 .newmirrorsession-toolbar-button {

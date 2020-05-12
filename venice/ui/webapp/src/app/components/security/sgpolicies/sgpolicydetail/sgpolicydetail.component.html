@@ -165,7 +165,7 @@
       </div>
       <div *roleGuard="'monitoringfwlogpolicy_update'" fxFlex="none" fxLayout="row"
            fxLayoutAlign="center center" [@fastSlideInOut]>
-        <mat-icon [matTooltip]="'Edit Selected Rules'" *ngIf="isAnythingSelected()"
+        <mat-icon [matTooltip]="'Edit Selected Rules'" *ngIf="isOneSelected()"
                   class="sgpolicy-icons-button" (click)="onUpdate()"
                   fxFlex="none">edit</mat-icon>
         <mat-icon [matTooltip]="'Mark For Deletion'" *ngIf="isAnythingSelected()"
@@ -199,7 +199,7 @@
   <p-dialog header="Policy Editing" [(visible)]="display" [appendTo]="'body'" [maximizable]="true"
             [modal]="true" [styleClass]="'popup'">
     <app-partial-edit-sgpolicy [style.width]="'100%'" [objectData]="this.editObject"
-                               [isInline]="true"
+                               [isInline]="true" [securityAppOptions]='securityAppOptions'
                                fxFlex="none" (saveEmitter)="onSave($event)"
                                (closeEmitter)="onClose()">
     </app-partial-edit-sgpolicy>

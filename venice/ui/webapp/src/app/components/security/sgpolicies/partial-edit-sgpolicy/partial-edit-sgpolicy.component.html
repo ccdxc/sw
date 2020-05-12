@@ -74,28 +74,10 @@
       <div fxFlex="5px"></div>
       <div fxFlex="none" class="partial-edit-sgpolicy-subtext">(specify one or more)</div>
     </div>
-    <app-orderedlist [dataArray]="rules" [template]="ruleTemplate"
-                     (itemClick)="orderedListClick($event)"
-                     [enableDragDrop]="false"
-                     [enableOrdering]="false"></app-orderedlist>
-    <!--<div fxFlex="none" (click)="addRule()" class="partial-edit-sgpolicy-add-rule">+ RULE</div>-->
-  </div>
-</ng-template>
-
-<ng-template #ruleTemplate let-data="data" let-index="index" let-inEdit="inEdit">
-  <div [@.disabled]="!repeaterAnimationEnabled || indexToSkipAnimation === index" fxFlex="auto"
-       fxLayout="column">
-    <div *ngIf="!inEdit" [@slideInOut] fxFlex="auto" fxLayout="column">
-      <ng-container
-                    *ngTemplateOutlet="ruleTemplateView; context:{data: data, index: index, inEdit: inEdit}">
-      </ng-container>
-    </div>
-
-    <div *ngIf="inEdit" [@slideInOut] fxFlex="auto" fxLayout="column">
-      <ng-container
-                    *ngTemplateOutlet="ruleTemplateEdit; context:{data: data, index: index, inEdit: inEdit}">
-      </ng-container>
-    </div>
+    <app-orderedlist [dataArray]="rules" [template]="ruleTemplateEdit"
+                     [enableDragDrop]="false" [enableOrdering]="false"
+                     [skipRenderActionIcons]="true">
+    </app-orderedlist>
   </div>
 </ng-template>
 
@@ -123,22 +105,36 @@
       <!--<div fxFlex="5px"></div>
       <div fxFlex="15px" class="partial-edit-sgpolicy-divider"></div>-->
 
-      <div fxFlex="none" fxLayout="column" fxLayoutAlign="start start">
-        <div fxFlex="none">ACTION</div>
-        <div fxFlex="none" fxLayout="row">
-          <div fxFlex="15px"></div>
-          <div fxFlex="none" fxLayout="column">
-            <div fxFlex="10px"></div>
-            <p-dropdown class="partial-edit-sgpolicy-input"
-                        formControlName="action"
-                        [options]="actionOptions">
-            </p-dropdown>
-          </div>
-        </div>
+      <div fxFlex="none" fxLayout="row">
+        <p-dropdown class="partial-edit-sgpolicy-input"
+                    formControlName="action" appFloatLabel="Action"
+                    [options]="actionOptions">
+        </p-dropdown>
       </div>
 
       <div fxFlex="20px"></div>
 
+      <div fxFlex="none" fxLayout="row">
+        <span
+              [ngClass]="{'app-formchips-requiredField': isFieldEmpty(data.rule.$formGroup.get(['from-ip-addresses']))}">
+          <app-formchips fxFlex="none" [chipsLabel]="'Source ' + IPS_LABEL"
+                         [formControl]="data.rule.$formGroup.get(['from-ip-addresses'])"
+                         boxStyleClass="partial-edit-sgpolicy-chip" [itemValidator]="isValidIP"
+                         [itemErrorMsg]="IPS_ERRORMSG" [toolTip]="IPS_TOOLTIP">
+          </app-formchips>
+        </span>
+        <div fxFlex="20px"></div>
+        <span
+              [ngClass]="{'app-formchips-requiredField': isFieldEmpty(data.rule.$formGroup.get(['to-ip-addresses']))}">
+          <app-formchips fxFlex="none" [chipsLabel]="'Destination ' + IPS_LABEL"
+                         [formControl]="data.rule.$formGroup.get(['to-ip-addresses'])"
+                         boxStyleClass="partial-edit-sgpolicy-chip" [itemValidator]="isValidIP"
+                         [itemErrorMsg]="IPS_ERRORMSG" [toolTip]="IPS_TOOLTIP">
+          </app-formchips>
+        </span>
+      </div>
+
+      <!--
       <div fxFlex="none" fxLayout="column" fxLayoutAlign="start start">
         <div fxFlex="none">FROM</div>
         <div fxFlex="none" fxLayout="row">
@@ -153,9 +149,9 @@
                              [itemErrorMsg]="IPS_ERRORMSG" [toolTip]="IPS_TOOLTIP">
               </app-formchips>
             </span>
-          </div>
-          <!-- Release-A Constraints -->
-          <!-- <div fxFlex="none" fxLayout="column" fxLayoutGap="10px">            
+          </div> -->
+      <!-- Release-A Constraints -->
+      <!-- <div fxFlex="none" fxLayout="column" fxLayoutGap="10px">            
             <div fxFlex="none" fxLayout="row">
               <div fxFlex="none">Security Groups:</div>
               <div fxFlex="5px"></div>
@@ -169,9 +165,11 @@
                               [showHeader]="false" [options]="securityGroupOptions"></p-multiSelect>
             </div>
           </div> -->
+      <!--
         </div>
       </div>
-
+      -->
+      <!--
       <div fxFlex="20px"></div>
 
       <div fxFlex="none" fxLayout="column" fxLayoutAlign="start start">
@@ -188,9 +186,9 @@
                              [itemErrorMsg]="IPS_ERRORMSG" [toolTip]="IPS_TOOLTIP">
               </app-formchips>
             </span>
-          </div>
-          <!-- Release-A Constraints -->
-          <!-- <div fxFlex="none" fxLayout="column" fxLayoutGap="10px">
+          </div> -->
+      <!-- Release-A Constraints -->
+      <!-- <div fxFlex="none" fxLayout="column" fxLayoutGap="10px">
             <div fxFlex="none" fxLayout="row">
               <div fxFlex="none">Security Groups:</div>
               <div fxFlex="5px"></div>
@@ -204,9 +202,10 @@
                               [showHeader]="false" [options]="securityGroupOptions"></p-multiSelect>
             </div>
           </div> -->
+      <!--
         </div>
       </div>
-
+      -->
       <div fxFlex="20px"></div>
 
     </ng-container>
@@ -309,7 +308,6 @@
        [formGroup]="target">
     <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start center"
          style="margin-bottom: 15px; padding-top: 5px;">
-      <div fxFlex="15px"></div>
       <div fxFlex="none" fxLayout="row">
         <span [style.width]="'200px'"
               [ngClass]="{'requiredField': isFieldEmpty(target.get(['protocol']))}">
@@ -344,7 +342,6 @@
 
 <ng-template #appsTemplate let-data="data" let-index="index">
   <div fxFlex="none" fxLayout="row">
-    <div fxFlex="15px"></div>
     <span [ngClass]="{
       'partial-edit-sgpolicy-appContainer': true,
       'requiredField': isFieldEmpty(data.rule.$formGroup.get(['apps']))
@@ -352,7 +349,6 @@
       <p-multiSelect class="partial-edit-sgpolicy-multiselect" fxFlex="300px" appendTo="body"
                      [filter]="false" [showHeader]="false" [showToggleAll]="false"
                      [defaultLabel]="!securityAppOptions || securityAppOptions.length < 1 ? 'No Apps Available' : 'Select Apps...'"
-                     [disabled]="!securityAppOptions || securityAppOptions.length < 1"
                      [options]="securityAppOptions"
                      [formControl]="data.rule.$formGroup.get('apps')">
       </p-multiSelect>

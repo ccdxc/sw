@@ -28,15 +28,6 @@ $dary-grey: #a9a9a9;
 
   .new-workload-interfaces {
     width: 630px;
-    border: 1px solid $dary-grey;
-    padding: 5px;
-
-    legend {
-      width: 180px;
-      padding: 0 2px;
-      font-size: 14px;
-      color: #676763
-    }
 
     .new-workload-add-interface {
       @include primary-font(16px, #6ba0e5, 400);
@@ -80,19 +71,6 @@ $dary-grey: #a9a9a9;
       label {
         font-size: 14px;
       }
-    }
-  }
-
-  .new-workload-rule-source {
-    border: 1px solid $dary-grey;
-    padding: 5px;
-    width: 520px;
-
-    legend {
-      width: auto;
-      padding: 0 2px;
-      font-size: 14px;
-      color: #676763;
     }
   }
 

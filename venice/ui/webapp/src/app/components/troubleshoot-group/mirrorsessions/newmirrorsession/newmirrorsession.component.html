@@ -85,9 +85,8 @@
 </ng-template>
 
 <ng-template #collectors>
-  <fieldset class="newmirrorsession-collectors">
-    <legend>Collectors <span class="newmirrorsession-subtext">(specify one or more)</span>
-    </legend>
+  <app-fieldcontainer class="newmirrorsession-collectors"
+                      fieldTitle="Collectors" subtitle="(specify one or more)">
     <div fxFlex="none" fxLayout="column" fxLayoutGap="15px"
          [formGroup]="newObject.$formGroup.get(['spec', 'collectors'])">
       <div fxFlex="nogrow" [formGroupName]="index" [@fastSlideInOut]
@@ -132,16 +131,14 @@
     </div>
     <div fxFlex="10px"></div>
     <div *ngIf="isShowAddCollector()" fxFlex="none" (click)="addCollector()"
-         class="newmirrorsession-add-collector">+ COLLECTOR</div>
+         class="newmirrorsession-add-collector">+ ADD</div>
     <div class="newmirrorsession-add-collector" *ngIf="!isShowAddCollector()"></div>
-  </fieldset>
+  </app-fieldcontainer>
 </ng-template>
 
 <ng-template #interface_selector>
-  <fieldset class="newmirrorsession-selectors">
-    <legend fxFlex="shrink">Uplink Interfaces <span class="newmirrorsession-subtext">(select
-        from interface labels)</span>
-    </legend>
+  <app-fieldcontainer class="newmirrorsession-selectors"
+                      fieldTitle="Uplink Interfaces" subtitle="(select from interface labels)">
     <div fxFlex="none" fxLayout="row" class="newmirrorsession-interface-direction-box"
          [formGroup]="newObject.$formGroup.get(['spec', 'interfaces'])">
       <p-dropdown appFloatLabel="Direction" appendTo="body"
@@ -209,7 +206,7 @@
         Interfaces matched.
       </ng-container>
     </div>
-  </fieldset>
+  </app-fieldcontainer>
 </ng-template>
 
 <ng-template #match_rules>
@@ -220,36 +217,21 @@
       <div fxFlex="none" class="newmirrorsession-subtext">(specify one or more)</div>
     </div>
     <div fxFlex="10px"></div>
-    <app-orderedlist [enableDragDrop]="false" [enableOrdering]="false"
-                     [dataArray]="rules" [template]="ruleTemplate"
-                     (itemClick)="orderedListClick($event)"></app-orderedlist>
-    <div fxFlex="none" (click)="addRule()" class="newmirrorsession-add-rule">+ RULE</div>
-  </div>
-</ng-template>
-
-<ng-template #ruleTemplate let-data="data" let-index="index" let-inEdit="inEdit">
-  <div fxFlex="auto" fxLayout="column">
-    <div *ngIf="!inEdit" [@slideInOut] fxFlex="auto" fxLayout="column">
-      <ng-container
-                    *ngTemplateOutlet="ruleTemplateView; context:{data: data, index: index, inEdit: inEdit}">
-      </ng-container>
-    </div>
-    <div *ngIf="inEdit" [@slideInOut] fxFlex="auto" fxLayout="column">
-      <ng-container
-                    *ngTemplateOutlet="ruleTemplateEdit; context:{data: data, index: index, inEdit: inEdit}">
-      </ng-container>
-    </div>
+    <app-orderedlist
+                     [enableDragDrop]="false" [enableOrdering]="false" [dataArray]="rules"
+                     [templateEdit]="ruleTemplateEdit" [templateView]="ruleTemplateView"
+                     (addItem)="addRule()" (deleteItem)="deleteRule($event)">
+    </app-orderedlist>
   </div>
 </ng-template>
 
 <ng-template #ruleTemplateEdit let-data="data" let-index="index" let-inEdit="inEdit">
   <!-- data is MonitoringMatchRule -->
   <div fxFlex="auto" fxLayout="column" fxLayoutGap="15px"
-       fxLayoutAlign="center none" class="newmirrorsession-rule-template"
-       [ngClass]="{'newmirrorsession-hide-primeng-panel': !rules[index].inEdit}">
+       fxLayoutAlign="center none" class="newmirrorsession-rule-template">
     <div fxFlex="none" fxLayout="row" fxLayoutGap="40px" class="newmirrorsession-rule-row">
       <!--
-      <fieldset class="newmirrorsession-rule-source">
+      <app-fieldcontainer class="newmirrorsession-rule-source" fieldTitle="Source">
         <legend>Source</legend>
         <div fxFlex="none" fxLayout="row" fxLayoutGap="40px">
           <div fxFlex="none" fxLayout="column">
@@ -270,7 +252,7 @@
             </app-formchips>
           </div>
         </div>
-      </fieldset>
+      </app-fieldcontainer>
       -->
       <app-formchips fxFlex="none" [chipsLabel]="'Source ' + IPS_LABEL"
                      [formControl]="data.rule.$formGroup.get(['source', 'ip-addresses'])"
@@ -285,8 +267,7 @@
     </div>
     <!--
     <div fxFlex="none">
-      <fieldset class="newmirrorsession-rule-source">
-        <legend>Target</legend>
+      <app-fieldcontainer class="newmirrorsession-rule-source" fieldTitle="Target">
         <div fxFlex="none" fxLayout="row" fxLayoutGap="40px">
           <div fxFlex="none" fxLayout="column">
             <div fxFlex="5px"></div>
@@ -306,7 +287,7 @@
             </app-formchips>
           </div>
         </div>
-      </fieldset>
+      </app-fieldcontainer>
     </div>
     -->
     <div fxFlex="none" class="newmirrorsession-rule-row">
@@ -351,20 +332,7 @@
 
 <ng-template #ruleTemplateView let-data="data" let-index="index" let-inEdit="inEdit">
   <div fxFlex="auto" fxLayout="column"
-       fxLayoutAlign="start none" class="newmirrorsession-rule-template"
-       [ngClass]="{'newsgpolicy-hide-primeng-panel': !rules[index].inEdit}">
-    <div fxFlex="none" fxLayout="row" fxLayoutAlign="start end">
-      <div fxFlex="auto" fxLayoutAlign="end center">
-        <div>
-          <mat-icon class="newmirrorsession-edit-hoverbuttons" [matTooltip]="'Edit'"
-                    fxFlex="nogrow" (click)="editRule(index)">edit
-          </mat-icon>
-          <mat-icon class="newmirrorsession-edit-hoverbuttons" [matTooltip]="'Delete'"
-                    fxFlex="nogrow" (click)="deleteRule(index)">delete
-          </mat-icon>
-        </div>
-      </div>
-    </div>
+       fxLayoutAlign="start none" class="newmirrorsession-rule-template">
     <div fxFlex="auto" fxLayout="row" fxLayoutAlign="start start">
       <div fxFlex="10px"></div>
       <div fxFlex="90%" fxLayout="row wrap" fxLayoutAlign="space-between start">

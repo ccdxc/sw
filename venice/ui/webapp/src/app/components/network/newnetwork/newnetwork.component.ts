@@ -140,11 +140,8 @@ export class NewnetworkComponent extends CreationForm<INetworkNetwork, NetworkNe
       this.newObject.$formGroup.get(['spec', 'orchestrators'])).controls;
     for (let i = 0; i < orchestrators.length; i++) {
       const orchestrator = orchestrators[i];
-      if (Utility.isEmpty(orchestrator.get(['orchestrator-name']).value)) {
-        this.createButtonTooltip = 'Error: VCenter name is required.';
-        return false;
-      }
-      if (Utility.isEmpty(orchestrator.get(['namespace']).value)) {
+      if (!Utility.isEmpty(orchestrator.get(['orchestrator-name']).value) &&
+          Utility.isEmpty(orchestrator.get(['namespace']).value)) {
         this.createButtonTooltip = 'Error: Datacenter name is required.';
         return false;
       }

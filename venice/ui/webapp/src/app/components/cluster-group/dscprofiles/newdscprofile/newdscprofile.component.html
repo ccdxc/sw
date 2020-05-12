@@ -65,11 +65,8 @@
 </ng-template>
 
 <ng-template #feature_options>
-  <fieldset [formGroup]="newObject.$formGroup">
-    <legend>
-      Configure DSC Profile
-    </legend>
-    <div fxFlex="100" fxLayout="row" formGroupName="spec">
+  <app-fieldcontainer fieldTitle="Configure DSC Profile">
+    <div fxFlex="100" fxLayout="row" [formGroup]="newObject.$formGroup.get(['spec'])">
       <span formGroupName="feature-set">
         <div *ngFor="let k of getObjectKeys(newObject.spec['feature-set']) let i=index"
              class="new-dsc-profile-feature-loop">
@@ -83,8 +80,7 @@
         </div>
       </span>
     </div>
-
-  </fieldset>
+  </app-fieldcontainer>
 </ng-template>
 
 <ng-template #divider>

@@ -33,24 +33,8 @@ $form-width: 450px;
       width: $form-width;
     }
 
-    fieldset {
-      border: 1px solid #a9a9a9;
-      margin-bottom: 10px;
-      padding: 5px;
-
-      legend {
-        padding: 0 2px;
-        font-size: 14px;
-        color: #676763;
-      }
-    }
-
     .newsecurityapp-protocolsandports {
       width: $form-width;
-
-      legend {
-        width: 120px;
-      }
 
       .newsecurityapp-prot-box {
         width: 170px;
@@ -59,10 +43,6 @@ $form-width: 450px;
 
     .newsecurityapp-alg {
       width: $form-width;
-
-      legend {
-        width: 25px;
-      }
 
       .newsecurityapp-alg-type,
       .newsecurityapp-alg-icmp-box,

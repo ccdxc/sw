@@ -108,21 +108,3 @@ $vertical-gutter: 5px;
 .newsgpolicy-protocol-app-container {
   width: 525px;
 }
-
-.newsgpolicy-rule-template {
-  cursor: pointer;
-
-  .newsgpolicy-edit-hoverbuttons {
-    display: none;
-  }
-
-  &:hover {
-    .newsgpolicy-edit-hoverbuttons {
-      display: inherit;
-    }
-  }
-}
-
-.newsgpolicy-rule-template.newsgpolicy-hide-primeng-panel .newsgpolicy-select-panel {
-  display: none;
-}

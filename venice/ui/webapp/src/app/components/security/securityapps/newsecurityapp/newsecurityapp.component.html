@@ -67,8 +67,7 @@
 </ng-template>
 
 <ng-template #protoandportsTemplate>
-  <fieldset class="newsecurityapp-protocolsandports">
-    <legend>Protocols and Ports</legend>
+  <app-fieldcontainer class="newsecurityapp-protocolsandports" fieldTitle="Protocols and Ports">
     <div fxFlex="nogrow" fxLayout="column" [@slideInOut]
          *ngFor="let target of protoandports; let index = index; let first = first">
       <div fxFlex="nogrow" fxLayout="row" style="margin-bottom: 15px;"
@@ -98,12 +97,11 @@
         </div>
       </div>
     </div>
-  </fieldset>
+  </app-fieldcontainer>
 </ng-template>
 
 <ng-template #algOnlyTemplate>
-  <fieldset class="newsecurityapp-alg">
-    <legend>ALG</legend>
+  <app-fieldcontainer class="newsecurityapp-alg" fieldTitle="ALG">
     <div fxFlex="nogrow" fxLayout="column" [@slideInOut] fxLayoutAlign="start start"
          [formGroup]="securityForm.get(['spec','alg'])">
       <div fxLayout="row">
@@ -198,7 +196,7 @@
       </div>
       <div fxFlex="10px"></div>
     </div>
-  </fieldset>
+  </app-fieldcontainer>
 </ng-template>
 
 <ng-template #SunRPCTemplate>

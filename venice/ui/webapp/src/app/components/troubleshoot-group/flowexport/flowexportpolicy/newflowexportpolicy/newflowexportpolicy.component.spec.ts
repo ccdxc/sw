@@ -78,21 +78,6 @@ describe('NewflowexportComponent', () => {
     expect(component.ExportPolicyRules.length).toBeGreaterThan(0);
   });
 
-  it('should edit the rule in export packet', () => {
-    expect(component.editRule).toBeTruthy();
-  });
-
-  it('should edit the rule in export packet on click of packet', () => {
-    component.ExportPolicyRules = [{
-      id: Utility.s4(),
-      data: {},
-      inEdit: true
-    }];
-    spyOn(component, 'editRule');
-    component.orderedListClick(0);
-    expect(component.editRule).toBeTruthy();
-  });
-
   it('should delete the current selected Rule from export packet on click of delete button', () => {
     const length = component.ExportPolicyRules.length;
     component.deleteRule(1);
