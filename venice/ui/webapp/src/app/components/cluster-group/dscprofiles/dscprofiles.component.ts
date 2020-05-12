@@ -14,6 +14,7 @@ import { Observable } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
 import { ObjectsRelationsUtility } from '@app/common/ObjectsRelationsUtility';
 import { SelectItem } from 'primeng/api';
+import { DSCProfileUtil, DSCProfileUIModel } from './dscprofileUtil';
 
 
 interface DSCMacName {
@@ -24,8 +25,8 @@ interface DSCProfileUiModel {
   associatedDSCS: ClusterDistributedServiceCard[];
   associatedDSCSPercentile: Number;
   pendingDSCNames?: DSCMacName[];
-  featureset: string;
-  description: string;
+  deploymentTarget: string;
+  featureSet: string;
 }
 
 /**
@@ -87,7 +88,8 @@ export class DscprofilesComponent extends TablevieweditAbstract<IClusterDSCProfi
     // comment these two columns out for now 2020-05-01
     // { field: 'spec.feature-set', header: 'Feature Set', class: 'dscprofiles-column-feature-set', sortable: true, width: 20 },
     // { field: 'status.propagation-status.updated', header: 'Update DSC', class: 'dscprofiles-column-status-updated', sortable: true, width: 5 },
-    { field: 'Feature', header: 'Feature Set', class: 'dscprofiles-column-feature-set', sortable: true, width: 20 },
+    { field: 'deploymentTarget', header: 'Deployment Target', class: 'dscprofiles-column-feature-set', sortable: true, width: 20 },
+    { field: 'featureSet', header: 'Feature Set', class: 'dscprofiles-column-feature-set', sortable: true, width: 20 },
     { field: 'Propagation', header: 'Propagation Status', class: 'dscprofiles-column-propagation-status', sortable: true, width: 20 },
     { field: 'status.propagation-status.pending-dscs', header: 'Pending DSC', class: 'dscprofiles-column-status-pendig', sortable: true, width: 20 },
     { field: 'meta.mod-time', header: 'Modification Time', class: 'dscprofiles-column-date', sortable: true, width: '180px' },
@@ -97,13 +99,6 @@ export class DscprofilesComponent extends TablevieweditAbstract<IClusterDSCProfi
 
   macToNameMap: { [key: string]: string } = {};
   viewPendingNaples: boolean;
-
-  options: SelectItem[] = [
-    { label: 'HPF', value: { InterVMServices: false,  FlowAware : false, Firewall: false, description: 'The High-Performance Forwarding (HPF) Feature Set enables a higher number of connections per second to be established through the card. The only feature supported, besides the ones of a typical NIC is interface-based ERSPAN.' } },
-    { label: 'Flow Aware', value: { InterVMServices: false,  FlowAware : true, Firewall: false, description: 'The Flow Aware Feature Set includes features that require a DSC to keep track of individual flows. Examples include flow-based ERSPAN, flow statistics, NetFlow/IPFIX.' } },
-    { label: 'Firewall', value: { InterVMServices: false,  FlowAware : true, Firewall: true, description: 'The Firewall Feature Set includes the capability of enforcing security policies, where a security policy specifies flows whose packets shall be forwarded or dropped by DSCs. The Firewall Feature Set includes also all the features of the Flow Aware feature set.' } },
-    { label: 'Inter-VM Services', value: { InterVMServices: true,  FlowAware : true, Firewall: true, description: 'The Inter-VM Services Feature Set includes features of the Flow Aware and Firewall Features Set applied also to traffic among workloads (e.g., Virtual Machines) in execution on the same host. As an example, this Feature Set is required when implementing micro-segmentation.'}}
-  ];
 
   constructor(protected _controllerService: ControllerService,
     protected uiconfigsService: UIConfigsService,
@@ -232,19 +227,29 @@ export class DscprofilesComponent extends TablevieweditAbstract<IClusterDSCProfi
       associatedDSCS: dscsnames,
       associatedDSCSPercentile: (dscsnames.length / this.naplesList.length),
       pendingDSCNames: pendingDSCNames,
-      featureset: this.getFeatureName(dscProfile),
-      description: this.getFeatureDescription(dscProfile)
+      deploymentTarget: this.getDeploymentTarget(dscProfile),
+      featureSet: this.getFeatureSet(dscProfile)
+
+      // TODO: add after backend adds it
+      // description: this.getFeatureDescription(dscProfile)
     };
     dscProfile._ui = dscProfileUiModel;
   }
-  getFeatureDescription(dscProfile: ClusterDSCProfile): string {
-    const item = this.getFeaturesetHelper(dscProfile);
-    return (item) ? item.value.description : '';
+
+  getDeploymentTarget(dscProfile: ClusterDSCProfile): string {
+    const dscProfileUI = DSCProfileUtil.convertUIModel(dscProfile);
+    return dscProfileUI.deploymentTarget;
   }
 
-  getFeatureName(dscProfile: ClusterDSCProfile): string {
+  getFeatureSet(dscProfile: ClusterDSCProfile): string {
+    const dscProfileUI = DSCProfileUtil.convertUIModel(dscProfile);
+    return dscProfileUI.featureSet;
+  }
+
+  // TODO: Feature set data. Wait for backend
+/*   getFeatureDescription(dscProfile: ClusterDSCProfile): string {
     const item = this.getFeaturesetHelper(dscProfile);
-    return (item) ? item.label : '';
+    return (item) ? item.value.description : '';
   }
 
   getFeaturesetHelper(dscProfile: ClusterDSCProfile): SelectItem {
@@ -262,7 +267,7 @@ export class DscprofilesComponent extends TablevieweditAbstract<IClusterDSCProfi
       return matched;
     });
     return theOne;
-  }
+  } */
 
   getNaplesName(mac: string): string {
     return this.macToNameMap[mac];

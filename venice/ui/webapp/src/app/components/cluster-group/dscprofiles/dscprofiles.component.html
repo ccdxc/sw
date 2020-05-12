@@ -48,7 +48,7 @@
 </ng-template>
 
 <ng-template #createTemplate>
-  <app-newdscprofile (formClose)="creationFormClose()" fxFlex="grow" [options]="options"
+  <app-newdscprofile (formClose)="creationFormClose()" fxFlex="grow"
                      [existingObjects]='dataObjects'>
   </app-newdscprofile>
 </ng-template>
@@ -112,6 +112,16 @@
            [matTooltip]="'Assigned to ' + ((rowData._ui.associatedDSCS && rowData._ui.associatedDSCS.length) ? rowData._ui.associatedDSCS.length : 0 ) + ' DSCs'">
         {{rowData._ui['associatedDSCSPercentile'] |  percent:'1.2-3'}} </div>
     </ng-container>
+    <ng-container *ngSwitchCase="'deploymentTarget'">
+      <div class="dscprofile-dsc-div-deployment-target"
+           [matTooltip]="'Deployment Target'">
+        {{rowData._ui.deploymentTarget}} </div>
+    </ng-container>
+    <ng-container *ngSwitchCase="'featureSet'">
+      <div class="dscprofile-dsc-div-feature-set"
+           [matTooltip]="'Feature Set'">
+        {{rowData._ui.featureSet}} </div>
+    </ng-container>
     <!-- comment it out per decision make 2020-04-27. showing feature-set instead of feature combination
     <ng-container *ngSwitchCase="'spec.feature-set'">
       <div *ngFor="let k of getObjectKeys(rowData.spec['feature-set']) let i=index"
@@ -160,7 +170,7 @@
 <ng-template #expandTemplate let-rowData let-columns="columns">
   <app-newdscprofile [style.width]="'100%'" [objectData]="rowData" [isInline]="true"
                      (formClose)="closeRowExpand()"
-                     [options]="options" fxFlex="none"></app-newdscprofile>
+                     fxFlex="none"></app-newdscprofile>
 </ng-template>
 
 <ng-template #selectedDSCProfileDetail>
@@ -211,9 +221,16 @@
       <div fxFlex fxLayout="row">
         <div fxFlex fxLayout="column">
           <div fxLayout="row">
+            <a fxFlex fxLayoutAlign="start center" class="dscprofiles-detail-key">Deployment
+              Target:</a>
+            <a fxFlex fxLayoutAlign="start center" class="dscprofiles-detail-value">
+              {{ this.selectedDSCProfile._ui.deploymentTarget}}
+            </a>
+          </div>
+          <div fxLayout="row">
             <a fxFlex fxLayoutAlign="start center" class="dscprofiles-detail-key">Feature set:</a>
             <a fxFlex fxLayoutAlign="start center" class="dscprofiles-detail-value">
-              {{ this.selectedDSCProfile._ui.featureset}}
+              {{ this.selectedDSCProfile._ui.featureSet}}
             </a>
           </div>
         </div>

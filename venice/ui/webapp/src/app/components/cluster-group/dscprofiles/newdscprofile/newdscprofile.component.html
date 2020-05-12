@@ -36,15 +36,30 @@
 
 <ng-template #feature_set>
   <div fxLayout="column" fxLayoutAlign="center start">
+    <div class="new-dsc-profile-deployment-listbox">
+      <div class="new-dsc-profile-feature-description">Deployment Target</div>
+      <p-listbox #nodesListbox [options]="this.depolymentTargetOptions"
+                 styleClass="new-dsc-profile-row"
+                 *ngIf="this.depolymentTargetOptions && this.depolymentTargetOptions.length>0"
+                 [(ngModel)]="this.selectedDeploymentTarget"
+                 optionLabel="label" (onChange)="resetFeatureSet()"
+                 [listStyle]="{'height':'125px'}">
+      </p-listbox>
+    </div>
+
     <div class="new-dsc-profile-feature-listbox">
-      <p-listbox #nodesListbox [options]="options" styleClass="new-dsc-profile-row"
-                 *ngIf="options && options.length>0" [(ngModel)]="selectedFeatureSet"
+      <div class="new-dsc-profile-feature-description">Feature Set</div>
+      <p-listbox #nodesListbox [options]="getFeatureSetOptions()"
+                 styleClass="new-dsc-profile-row"
+                 *ngIf="this.selectedDeploymentTarget" [(ngModel)]="this.selectedFeatureSet"
                  optionLabel="label"
                  [listStyle]="{'height':'125px'}">
       </p-listbox>
     </div>
+
     <div class="new-dsc-profile-feature-description">
-      {{this.selectedFeatureSet? this.selectedFeatureSet.value.description : 'Please select an option for DSC profile Feature Set.'}}
+      {{this.selectedDeploymentTarget && this.selectedFeatureSet? this.selectedFeatureSet.value.description : 
+        'Please select both a Deployment Target and Feature Set.'}}
     </div>
   </div>
 </ng-template>
