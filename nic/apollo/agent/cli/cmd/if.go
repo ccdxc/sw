@@ -247,11 +247,11 @@ func printLifSummary(count int) {
 }
 
 func printLifHeader() {
-	hdrLine := strings.Repeat("-", 155)
+	hdrLine := strings.Repeat("-", 172)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-40s%-10s%-15s%-20s%-40s%-25s%-5s\n",
+	fmt.Printf("%-40s%-10s%-15s%-20s%-40s%-25s%-11s%-11s\n",
 		"ID", "IfIndex", "Name", "MAC Address", "PinnedInterface",
-		"Type", "State")
+		"Type", "Oper State", "Admin State")
 	fmt.Println(hdrLine)
 }
 
@@ -261,8 +261,11 @@ func printLif(lif *pds.Lif) {
 	lifType := strings.Replace(spec.GetType().String(), "LIF_TYPE_", "", -1)
 	lifType = strings.Replace(lifType, "_", "-", -1)
 	state := strings.Replace(status.GetStatus().String(), "IF_STATUS_", "", -1)
-	fmt.Printf("%-40s%-10x%-15s%-20s%-40s%-25s%-5s\n",
+	adminState := strings.Replace(status.GetAdminState().String(), "IF_STATUS_", "", -1)
+	fmt.Printf("%-40s%-10x%-15s%-20s%-40s%-25s%-11s%-11s\n",
 		uuid.FromBytesOrNil(spec.GetId()).String(), status.GetIfIndex(),
 		status.GetName(), utils.MactoStr(spec.GetMacAddress()),
-		uuid.FromBytesOrNil(spec.GetPinnedInterface()).String(), lifType, state)
+		uuid.FromBytesOrNil(spec.GetPinnedInterface()).String(), lifType, state,
+		adminState)
+
 }

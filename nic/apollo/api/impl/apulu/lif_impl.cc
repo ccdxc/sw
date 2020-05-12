@@ -138,9 +138,8 @@ void
 lif_impl::set_admin_state(lif_state_t state) {
     pds_event_t event;
 
-    // udpate the admin state
+    // update the admin state
     admin_state_ = state;
-
     // and notify lif update
     if ((type_ == sdk::platform::LIF_TYPE_HOST_MGMT) ||
         (type_ == sdk::platform::LIF_TYPE_HOST)) {

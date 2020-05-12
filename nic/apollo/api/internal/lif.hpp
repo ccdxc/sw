@@ -38,6 +38,7 @@ pds_lif_to_lif_status (pds_lif_status_t *status, api::impl::lif_impl *lif)
 {
     strncpy(status->name, lif->name(), SDK_MAX_NAME_LEN);
     status->state = lif_state_to_if_state(lif->state());
+    status->admin_state = lif_state_to_if_state(lif->admin_state());
     status->ifindex = lif->ifindex();
     return SDK_RET_OK;
 }
