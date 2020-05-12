@@ -16,3 +16,42 @@ testcases:
             cps       : [ 10000, 20000, 200 ]
             duration  : [ 10, 10, 3000 ]
 
+    -   name    : Traffic_Test_With_Triggers
+        testcase: testcases.networking.conn_per_sec
+        stress  : True
+        ignore  : True
+        args    :
+            type: remote_only
+            objtype : [ vnic, subnet ]
+            triggers : True
+        iterators:
+            type      : simple
+            proto     : [ udp ]
+            cps       : [ 1000 ]
+            duration  : [ 100 ]
+        background_tasks:
+            showStats        :
+                trigger         : auto
+                run             : repeat
+                sleep_interval  : 20
+                terminate       : verify
+            switchPortFlap   :
+                trigger         : auto
+                run             : repeat
+                sleep_interval  : 15
+                terminate       : verify
+            clearFlows       :
+                trigger         : auto
+                run             : repeat
+                sleep_interval  : 15
+                terminate       : verify
+            showFlows        :
+                trigger         : auto
+                run             : repeat
+                sleep_interval  : 10
+                terminate       : verify
+            configurationChangeEvent :
+                trigger         : auto
+                run             : repeat
+                sleep_interval  : 10
+                terminate       : verify
