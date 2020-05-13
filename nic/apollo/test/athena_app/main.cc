@@ -665,8 +665,16 @@ main (int argc, char **argv)
     // initialize the logger instance
     core::logger_init();
 
-    if (fte_ath::g_athena_app_mode == ATHENA_APP_MODE_SOFT_INIT)
+    if (fte_ath::g_athena_app_mode == ATHENA_APP_MODE_CPP) {
+        init_params.flow_age_pid = getpid();
+    }
+
+    // Currently, soft-init mode is assumed to also take on
+    // the CPP role for aging.
+    if (fte_ath::g_athena_app_mode == ATHENA_APP_MODE_SOFT_INIT) {
         init_params.flags = PDS_FLAG_INIT_TYPE_SOFT;
+        init_params.flow_age_pid = getpid();
+    }
 
     ret = pds_global_init(&init_params);
     if (ret != PDS_RET_OK) {
@@ -711,7 +719,7 @@ main (int argc, char **argv)
         p4_tables_clear();
 #endif
 
-        fte_ath::fte_init();
+        fte_ath::fte_init(&init_params);
     }
 
     printf("Initialization done ...\n");
@@ -781,7 +789,9 @@ main (int argc, char **argv)
     recv_packet();
 #endif /* __x86_64__ */
 
-    if (hw() && (fte_ath::g_athena_app_mode == ATHENA_APP_MODE_CPP) &&
+    if (hw() && 
+        ((fte_ath::g_athena_app_mode == ATHENA_APP_MODE_CPP) ||
+         (fte_ath::g_athena_app_mode == ATHENA_APP_MODE_SOFT_INIT)) &&
         (server_init() == PDS_RET_OK)) {
         server_poll();
     } else {

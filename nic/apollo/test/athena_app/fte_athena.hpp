@@ -13,10 +13,11 @@
 
 #include "nic/sdk/third-party/zmq/include/zmq.h"
 #include "nic/apollo/api/include/athena/pds_base.h"
+#include "nic/apollo/api/include/athena/pds_init.h"
 
 namespace fte_ath {
 
-void fte_init(void);
+void fte_init(pds_cinit_params_t *init_params);
 void fte_fini(void);
 sdk_ret_t fte_session_indexer_init(void);
 void fte_session_indexer_destroy(void);

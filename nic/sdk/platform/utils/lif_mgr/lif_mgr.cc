@@ -317,17 +317,22 @@ lif_mgr::init(lif_qstate_t *qstate)
         ret = SDK_RET_ENTRY_EXISTS;
     }
 
-    // Compute hbm base
-    alloc_units = (state->allocation_size + kAllocUnit - 1) & ~(kAllocUnit - 1);
-    alloc_units /= kAllocUnit;
-    irs = hbm_indexer_->alloc_block(&alloc_offset, alloc_units);
-    if (irs != indexer::SUCCESS) {
-        ret = SDK_RET_NO_RESOURCE;
-        goto end;
+    // In soft init mode, the lif qstate base address should already
+    // have been obtained from HW and copied to state->hbm_address above.
+    if (sdk::asic::asic_is_hard_init()) {
+
+        // Compute hbm base
+        alloc_units = (state->allocation_size + kAllocUnit - 1) & ~(kAllocUnit - 1);
+        alloc_units /= kAllocUnit;
+        irs = hbm_indexer_->alloc_block(&alloc_offset, alloc_units);
+        if (irs != indexer::SUCCESS) {
+            ret = SDK_RET_NO_RESOURCE;
+            goto end;
+        }
+        allocation_sizes_[alloc_offset] = alloc_units;
+        alloc_offset *= kAllocUnit;
+        state->hbm_address = hbm_base_ + alloc_offset;
     }
-    allocation_sizes_[alloc_offset] = alloc_units;
-    alloc_offset *= kAllocUnit;
-    state->hbm_address = hbm_base_ + alloc_offset;
 
 end:
     LIF_MGR_API_END_UNLOCK();

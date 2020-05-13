@@ -154,7 +154,7 @@ init(void)
 void
 fini(void)
 {
-    if (lif_init_done()) {
+    if (lif_init_done() && nicmgr_shm_is_cpp_pid(FTL)) {
         scanners_stop(true);
         if (mpu_timestamp_ctl()) {
             mpu_timestamp_ctl()->stop(true);
@@ -390,6 +390,11 @@ dev_identify(void)
     ftl_lif = ftl_dev->LifFind(0);
     SDK_ASSERT_TRACE_RETURN(ftl_lif, PDS_RET_ERR,
                             "LIF at index 0 not found");
+    if (sdk::asic::asic_is_hard_init()) {
+        ret = (pds_ret_t)nicmgr_shm_base_lif_id_set(FTL, ftl_lif->LifIdGet());
+        SDK_ASSERT_TRACE_RETURN(ret == PDS_RET_OK, ret,
+                                "failed nicmgr_shm lif ID set");
+    }
     return ret;
 }
 
@@ -456,11 +461,20 @@ lif_init(void)
                 ret = mpu_timestamp_ctl()->init(&devcmd_qinit);
             }
 
+            if (sdk::asic::asic_is_hard_init() && (ret == PDS_RET_OK)) {
+                ret = (pds_ret_t)nicmgr_shm_lif_fully_created_set(FTL);
+                SDK_ASSERT_TRACE_RETURN(ret == PDS_RET_OK, ret,
+                                        "failed nicmgr_shm set");
+            }
+
             /*
-             * Scanners are always started by default unless we're in
-             * SIM mode, in which case, a test program will start them.
+             * Scanners are always started by default in the designated
+             * process unless we're in SIM mode, in which case, a test
+             * program will start them.
              */
-            if (platform_is_hw(platform_type)) {
+            if (platform_is_hw(platform_type) &&
+                nicmgr_shm_is_cpp_pid(FTL)) {
+
                 if (mpu_timestamp_ctl() && (ret == PDS_RET_OK)) {
                     ret = mpu_timestamp_ctl()->start(&devcmd_qinit);
                 }

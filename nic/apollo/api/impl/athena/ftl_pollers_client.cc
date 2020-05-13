@@ -137,16 +137,19 @@ init(void)
         }
         PDS_TRACE_DEBUG("pollers_qcount %u", pollers_qcount);
 
-        queue = &client_queue[0];
-        for (uint32_t qid = 0; qid < FTL_POLLERS_MAX_QUEUES; qid++, queue++) {
-            queue->qid = qid;
-            if (qid < pollers_qcount) {
-                queue->poller_slot_data = (poller_slot_data_t *)
-                               SDK_MALLOC(SDK_MEM_ALLOC_FTL_POLLER_SLOT_DATA,
-                                          FTL_POLLERS_BURST_BUF_SZ);
-                if (!queue->poller_slot_data) {
-                    PDS_TRACE_ERR("failed to allocate slot data for qid %u", qid);
-                    return PDS_RET_OOM;
+        if (nicmgr_shm_is_cpp_pid(FTL)) {
+            queue = &client_queue[0];
+            for (uint32_t qid = 0; qid < FTL_POLLERS_MAX_QUEUES; qid++, queue++) {
+                queue->qid = qid;
+                if (qid < pollers_qcount) {
+                    queue->poller_slot_data = (poller_slot_data_t *)
+                           SDK_MALLOC(SDK_MEM_ALLOC_FTL_POLLER_SLOT_DATA,
+                                      FTL_POLLERS_BURST_BUF_SZ);
+                    if (!queue->poller_slot_data) {
+                        PDS_TRACE_ERR("failed to allocate slot data for qid %u",
+                                      qid);
+                        return PDS_RET_OOM;
+                    }
                 }
             }
         }

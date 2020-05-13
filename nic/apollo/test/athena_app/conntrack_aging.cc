@@ -132,7 +132,7 @@ conntrack_populate_random(test_vparam_ref_t vparam)
 {
     pds_conntrack_spec_t    spec;
     tuple_eval_t            tuple_eval;
-    uint32_t                start_idx;
+    uint32_t                start_idx = 0;
     uint32_t                count = 0;
     bool                    randomize_typestate;
     pds_ret_t               ret = PDS_RET_OK;

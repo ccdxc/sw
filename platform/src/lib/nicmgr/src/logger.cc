@@ -3,17 +3,26 @@
 #include <cstdlib>
 
 #include "logger.hpp"
+#include "nic/sdk/asic/asic.hpp"
 
 namespace utils {
 namespace logger {
 
 const auto LOG_FILENAME = "nicmgr.log";
+const auto LOG_SEC_FILENAME = "nicmgr-sec-agent.log";
 const auto LOG_MAX_FILESIZE = 2*1024*1024; // 2 MiB
 const auto LOG_MAX_FILES = 5;
 const auto LOG_PATTERN = "%L [%Y-%m-%d %H:%M:%S.%e%z] %v";
 
 static std::shared_ptr<spdlog::logger> _logger = NULL;
 static std::shared_ptr<spdlog::logger> _syslogger = NULL;
+
+static const char *
+log_filename(void)
+{
+    return sdk::asic::asic_is_hard_init() ?
+           LOG_FILENAME : LOG_SEC_FILENAME;
+}
 
 void
 init (void)
@@ -47,7 +56,7 @@ init (void)
     logdir = std::getenv("LOG_DIR");
     if (!logdir) {
         // log in the current dir
-        logfile = LOG_FILENAME;
+        logfile = log_filename();
     } else {
         // check if this log dir exists
         if (stat(logdir, &st) == -1) {
@@ -68,7 +77,7 @@ init (void)
                 return;
             }
         }
-        logfile = std::string(logdir) + "/" + LOG_FILENAME;
+        logfile = std::string(logdir) + "/" + log_filename();
     }
 
     spdlog::set_level(level);

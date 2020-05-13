@@ -13,13 +13,17 @@
 
 #include "nic/include/base.hpp"
 #include "nic/sdk/platform/misc/include/misc.h"
-
+#include "nicmgr_shm.hpp"
 
 #include "logger.hpp"
 #include "ftl_dev.hpp"
 #include "ftl_lif.hpp"
 #include "pd_client.hpp"
 
+/*
+ * Max amount of time to wait for LIF to be fully created by hard init process
+ */
+#define FTL_DEV_LIF_CREATE_TIME_US  (60 * USEC_PER_SEC)
 
 /*
  * Devapi availability check
@@ -50,23 +54,46 @@ FtlDev::FtlDev(devapi *dapi,
     spec((ftl_devspec_t *)dev_spec),
     pd(pd_client),
     dev_api(dapi),
+    lif_base(0),
     delphi_mounted(false),
     EV_A(EV_A)
 {
     ftl_lif_res_t       lif_res;
     sdk_ret_t           ret = SDK_RET_OK;
+    ftl_timestamp_t     ts;
 
     /*
      * Allocate LIFs
      */
-    ret = pd->lm_->alloc_id(&lif_base, spec->lif_count);
-    if (ret != SDK_RET_OK) {
-        NIC_LOG_ERR("{}: Failed to allocate lifs. ret: {}", DevNameGet(), ret);
-        throw;
+    if (sdk::asic::asic_is_hard_init()) {
+        ret = pd->lm_->alloc_id(&lif_base, spec->lif_count);
+        if (ret != SDK_RET_OK) {
+            NIC_LOG_ERR("{}: Failed to allocate lifs. ret: {}", DevNameGet(), ret);
+            throw;
+        }
+
+    } else if (nicmgr_shm_is_cpp_pid(FTL)) {
+        ts.time_expiry_set(FTL_DEV_LIF_CREATE_TIME_US);
+        while (!nicmgr_shm_lif_fully_created(FTL)) {
+            if (ts.time_expiry_check()) {
+                NIC_LOG_ERR("{}: Failed to locate lifs", DevNameGet());
+                throw;
+            }
+
+            /*
+             * Inside nicmgr init thread so it's ok to sleep
+             */
+            usleep(100000);
+        }
+        lif_base = nicmgr_shm_base_lif_id(FTL);
+
+    } else {
+        NIC_LOG_DEBUG("{}: creation skipped", DevNameGet());
+        return;
     }
+
     NIC_LOG_DEBUG("{}: lif_base {} lif_count {}",
                   DevNameGet(), lif_base, spec->lif_count);
-
     /*
      * Create LIF
      */
@@ -79,6 +106,14 @@ FtlDev::FtlDev(devapi *dapi,
         throw;
     }
     lif_vec.push_back(lif);
+
+    /*
+     * HAL can be considered as up at this point for soft init
+     * (by virtue of nicmgr_shm_lif_fully_created() above)
+     */
+    if (sdk::asic::asic_is_soft_init() && nicmgr_shm_is_cpp_pid(FTL)) {
+        lif->HalEventHandler(true);
+    }
 }
 
 FtlDev::~FtlDev()
@@ -90,7 +125,9 @@ FtlDev::~FtlDev()
         delete lif;
     }
     lif_vec.clear();
-    pd->lm_->free_id(lif_base, spec->lif_count);
+    if (sdk::asic::asic_is_hard_init()) {
+        pd->lm_->free_id(lif_base, spec->lif_count);
+    }
 }
 
 void

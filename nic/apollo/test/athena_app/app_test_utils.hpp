@@ -38,10 +38,16 @@
 #endif
 
 #define TEST_LOG_INFO(args...)                      \
-    printf(args)
+    do {                                            \
+        printf(args);                               \
+        fflush(stdout);                             \
+    } while (false)
 
 #define TEST_LOG_ERR(args...)                       \
-    printf("ERROR: " args)
+    do {                                            \
+         printf("ERROR: " args);                    \
+         fflush(stdout);                             \
+     } while (false)
 
 
 namespace test {

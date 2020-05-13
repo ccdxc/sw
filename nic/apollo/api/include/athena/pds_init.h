@@ -34,6 +34,7 @@ typedef struct pds_cinit_params_s {
     pds_cinit_mode_t           init_mode;       ///< mode of initialization
     void                       *trace_cb;         ///< callback for trace msgs
     uint32_t                   flags;
+    pid_t                      flow_age_pid;   ///< designated process to do flow aging
 } pds_cinit_params_t;
 
 

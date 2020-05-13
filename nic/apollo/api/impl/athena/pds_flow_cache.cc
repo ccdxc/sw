@@ -427,6 +427,9 @@ flow_cache_entry_iterate_cb (sdk_table_api_params_t *params)
         data->index = ftlv6_get_index(hwentry);
         data->index_type =
             (pds_flow_spec_index_type_t)ftlv6_get_index_type(hwentry);
+        cbdata->iter_cb_arg->primary = !params->handle.svalid();
+        cbdata->iter_cb_arg->cache_id = cbdata->iter_cb_arg->primary ?
+                params->handle.pindex() : params->handle.sindex();
         cbdata->iter_cb(cbdata->iter_cb_arg);
     }
     return;

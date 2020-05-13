@@ -19,6 +19,7 @@
 #include "nic/sdk/platform/misc/include/maclib.h"
 #include "nic/sdk/platform/pciemgr_if/include/pciemgr_if.hpp"
 #include "nic/sdk/platform/mnet/include/mnet.h"
+#include "nicmgr_shm.hpp"
 
 #include "logger.hpp"
 
@@ -142,9 +143,15 @@ void
 DeviceManager::Init(devicemgr_cfg_t *cfg) {
     PlatformInit(cfg);
     HalLifIDReserve();
-    LifsReset();
-    PciemgrInit(cfg);
-    HeartbeatStart();
+
+    // Note: some pipelines (such as athena) can support certain nicmgr
+    // devices even in soft init mode, in which case, the device LIFs
+    // will be rebuilt from HW state.
+    if (sdk::asic::asic_is_hard_init()) {
+        LifsReset();
+        PciemgrInit(cfg);
+        HeartbeatStart();
+    }
     NIC_HEADER_TRACE("DeviceManager Init Done");
 }
 
@@ -152,9 +159,11 @@ void
 DeviceManager::UpgradeGracefulInit(devicemgr_cfg_t *cfg) {
     PlatformInit(cfg);
     HalLifIDReserve();
-    LifsReset();
-    PciemgrInit(cfg);
-    HeartbeatStart();
+    if (sdk::asic::asic_is_hard_init()) {
+        LifsReset();
+        PciemgrInit(cfg);
+        HeartbeatStart();
+    }
     NIC_HEADER_TRACE("DeviceManager Graceful Init Done");
 }
 
@@ -162,8 +171,10 @@ void
 DeviceManager::UpgradeHitlessInit(devicemgr_cfg_t *cfg) {
     PlatformInit(cfg);
     HalLifIDReserve();
-    PciemgrInit(cfg);
-    HeartbeatStart();
+    if (sdk::asic::asic_is_hard_init()) {
+        PciemgrInit(cfg);
+        HeartbeatStart();
+    }
     NIC_HEADER_TRACE("DeviceManager Hitless Init Done");
 }
 
@@ -636,6 +647,11 @@ DeviceManager::LoadProfile(string device_json_file, bool init_pci)
 void
 DeviceManager::AddDevice(enum DeviceType type, void *dev_spec)
 {
+    // In soft init mode, create the device only for CPP process.
+    if (sdk::asic::asic_is_soft_init() && !nicmgr_shm_is_cpp_pid(type)) {
+        return;
+    }
+
     switch (type) {
     case DEBUG:
         NIC_LOG_ERR("Unsupported Device Type DEBUG");
@@ -945,7 +961,7 @@ DeviceManager::DeviceCreate(bool status) {
     skip_hwinit = true;
 #endif
 
-    if (status) {
+    if (status && sdk::asic::asic_is_hard_init()) {
         /* Create local devices creation thread */
         mnet_list = new vector<struct mnet_dev_create_req_t *>;
         for (auto it = devices.begin(); it != devices.end(); it++) {

@@ -485,6 +485,19 @@ PdClient::init()
 {
     int ret;
 
+    // in soft init mode, we just need access to already programmed
+    // lif qstates and the facility for that is in lif_mgr.
+    if (sdk::asic::asic_is_soft_init()) {
+        NIC_LOG_DEBUG("Initializing HBM Memory Partitions from: {}...", hal_cfg_path_);
+        mp_ = mpartition::factory(mpart_cfg_path_.c_str());
+        assert(mp_);
+
+        NIC_LOG_DEBUG("Initializing LIF Manager ...");
+        lm_ = lif_mgr::factory(kNumMaxLIFs, mp_, kLif2QstateHBMLabel);
+        assert(lm_);
+        return;
+    }
+
 #ifdef IRIS
     // initialize asicpd_state_pd
     sdk::asic::pd::asicpd_state_pd_init(NULL);
@@ -559,27 +572,29 @@ PdClient* PdClient::factory(sdk::platform::platform_type_t platform,
 void PdClient::destroy(PdClient *pdc)
 {
     uint32_t    tid;
-    if (pdc->p4plus_rxdma_dm_tables_) {
-        for (tid = P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN;
-             tid < P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MAX; tid++) {
-            if (pdc->p4plus_rxdma_dm_tables_[tid - P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN]) {
-                directmap::destroy(pdc->p4plus_rxdma_dm_tables_[tid -
-                                                           P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN]);
+    if (sdk::asic::asic_is_hard_init()) {
+        if (pdc->p4plus_rxdma_dm_tables_) {
+            for (tid = P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN;
+                 tid < P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MAX; tid++) {
+                if (pdc->p4plus_rxdma_dm_tables_[tid - P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN]) {
+                    directmap::destroy(pdc->p4plus_rxdma_dm_tables_[tid -
+                                                               P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN]);
+                }
             }
+
+            free(pdc->p4plus_rxdma_dm_tables_);
         }
 
-        free(pdc->p4plus_rxdma_dm_tables_);
-    }
-
-    if (pdc->p4plus_txdma_dm_tables_) {
-        for (tid = P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN;
-             tid < P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MAX; tid++) {
-            if (pdc->p4plus_txdma_dm_tables_[tid - P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN]) {
-                directmap::destroy(pdc->p4plus_txdma_dm_tables_[tid -
-                                                           P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN]);
+        if (pdc->p4plus_txdma_dm_tables_) {
+            for (tid = P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN;
+                 tid < P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MAX; tid++) {
+                if (pdc->p4plus_txdma_dm_tables_[tid - P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN]) {
+                    directmap::destroy(pdc->p4plus_txdma_dm_tables_[tid -
+                                                               P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN]);
+                }
             }
+            free(pdc->p4plus_txdma_dm_tables_);
         }
-        free(pdc->p4plus_txdma_dm_tables_);
     }
 
     lm_->destroy(lm_);
@@ -703,6 +718,55 @@ PdClient::program_qstate(struct queue_info* queue_info,
     // Penable the lif - programs lif qstate map in hw
     lm_->enable(lif_info->lif_id);
 
+    return 0;
+}
+
+int
+PdClient::lif_qstate_map_read(uint64_t hw_lif_id,
+                              lif_info_t *lif_info,
+                              struct queue_info* queue_info)
+{
+    lif_qstate_t qstate;
+
+    memset(&qstate, 0, sizeof(lif_qstate_t));
+    qstate.lif_id = hw_lif_id;
+
+    // Reserve lif id
+    lm_->reserve_id(qstate.lif_id, 1);
+
+    NIC_LOG_INFO("lif{}: Started reading lif qstate map", qstate.lif_id);
+    lm_->read_qstate_map(hw_lif_id, &qstate);
+    lm_->init(&qstate);
+
+    NIC_LOG_INFO("lif{}: Finished initializing lif", qstate.lif_id);
+
+    // populate lif info with qstate map info
+    for (uint8_t type = 0; type < NUM_QUEUE_TYPES; type++) {
+        auto &qinfo = queue_info[type];
+        if (qinfo.size < 1) continue;
+
+        lif_info->qstate_addr[type] = lm_->get_lif_qstate_addr(lif_info->lif_id, type, 0);
+
+        NIC_LOG_DEBUG("lif-{}: qtype: {}, qstate_base: {:#x}",
+                     lif_info->lif_id,
+                     type, lif_info->qstate_addr[type]);
+    }
+
+    return 0;
+}
+
+int
+PdClient::soft_program_qstate(struct queue_info* queue_info,
+                              lif_info_t *lif_info)
+{
+    int ret;
+
+    NIC_LOG_DEBUG("lif-{}: Soft programming qstate", lif_info->lif_id);
+
+    ret = lif_qstate_map_read(lif_info->lif_id, lif_info, queue_info);
+    if (ret != 0) {
+        return -1;
+    }
     return 0;
 }
 

@@ -25,9 +25,9 @@ enum DeviceType
     NVME,
     VIRTIO,
     PCIESTRESS,
-#ifdef ATHENA
     FTL,
-#endif
+    DEVICETYPE_MAX,
+    DEVICETYPE_FIRST = DEBUG
 };
 
 /**

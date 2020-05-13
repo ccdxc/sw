@@ -89,6 +89,11 @@ public:
     int program_qstate(struct queue_info* queue_info,
                        lif_info_t *lif_info,
                        uint8_t coses);
+    int lif_qstate_map_read(uint64_t hw_lif_id,
+                            lif_info_t *lif_info,
+                            struct queue_info* queue_info);
+    int soft_program_qstate(struct queue_info* queue_info,
+                            lif_info_t *lif_info);
 
     uint8_t get_iq(uint8_t pcp_or_dscp, uint8_t pinned_uplink_port_num);
 

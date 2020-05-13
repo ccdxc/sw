@@ -847,24 +847,26 @@ FtlLif::ftl_lif_hal_up_action(ftl_lif_event_t event,
     hw_ns_per_tick = hw_coreclk_freq ?
                      (double)1E9 / (double)hw_coreclk_freq : 0;
 
-    FTL_LIF_DEVAPI_CHECK(FTL_RC_ERROR, FTL_LIF_EV_NULL);
-    dev_api->qos_get_txtc_cos("INTERNAL_TX_PROXY_DROP", 1, &cosB);
-    if ((int)cosB < 0) {
-        NIC_LOG_ERR("{}: Failed to get cosB for group {}, uplink {}",
-                    LifNameGet(), "INTERNAL_TX_PROXY_DROP", 1);
-        cosB = 0;
-        devcmd_ctx.status = FTL_RC_ERROR;
-    }
-    dev_api->qos_get_txtc_cos("CONTROL", 1, &ctl_cosB);
-    if ((int)ctl_cosB < 0) {
-        NIC_LOG_ERR("{}: Failed to get cosB for group {}, uplink {}",
-                    LifNameGet(), "CONTROL", 1);
-        ctl_cosB = 0;
-        devcmd_ctx.status = FTL_RC_ERROR;
-    }
+    if (sdk::asic::asic_is_hard_init()) {
+        FTL_LIF_DEVAPI_CHECK(FTL_RC_ERROR, FTL_LIF_EV_NULL);
+        dev_api->qos_get_txtc_cos("INTERNAL_TX_PROXY_DROP", 1, &cosB);
+        if ((int)cosB < 0) {
+            NIC_LOG_ERR("{}: Failed to get cosB for group {}, uplink {}",
+                        LifNameGet(), "INTERNAL_TX_PROXY_DROP", 1);
+            cosB = 0;
+            devcmd_ctx.status = FTL_RC_ERROR;
+        }
+        dev_api->qos_get_txtc_cos("CONTROL", 1, &ctl_cosB);
+        if ((int)ctl_cosB < 0) {
+            NIC_LOG_ERR("{}: Failed to get cosB for group {}, uplink {}",
+                        LifNameGet(), "CONTROL", 1);
+            ctl_cosB = 0;
+            devcmd_ctx.status = FTL_RC_ERROR;
+        }
 
-    NIC_LOG_DEBUG("{}: cosA: {} cosB: {} ctl_cosA: {} ctl_cosB: {}",
-                  LifNameGet(), cosA, cosB, ctl_cosA, ctl_cosB);
+        NIC_LOG_DEBUG("{}: cosA: {} cosB: {} ctl_cosA: {} ctl_cosB: {}",
+                      LifNameGet(), cosA, cosB, ctl_cosA, ctl_cosB);
+    }
     return FTL_LIF_EV_NULL;
 }
 
@@ -879,16 +881,18 @@ FtlLif::ftl_lif_setattr_action(ftl_lif_event_t event,
     switch (cmd->attr) {
 
     case FTL_LIF_ATTR_NAME:
-        FTL_LIF_DEVAPI_CHECK(FTL_RC_ERROR, FTL_LIF_EV_NULL);
+        if (sdk::asic::asic_is_hard_init()) {
+            FTL_LIF_DEVAPI_CHECK(FTL_RC_ERROR, FTL_LIF_EV_NULL);
 
-        /*
-         * Note: this->lif_name must remains fixed as it was used
-         * for log tracing purposes. Only the HAL lif name should change.
-         */
-        strncpy0(hal_lif_info_.name, cmd->name, sizeof(hal_lif_info_.name));
-        dev_api->lif_upd_name(LifIdGet(), hal_lif_info_.name);
-        NIC_LOG_DEBUG("{}: HAL name changed to {}",
-                      LifNameGet(), hal_lif_info_.name);
+            /*
+             * Note: this->lif_name must remains fixed as it was used
+             * for log tracing purposes. Only the HAL lif name should change.
+             */
+            strncpy0(hal_lif_info_.name, cmd->name, sizeof(hal_lif_info_.name));
+            dev_api->lif_upd_name(LifIdGet(), hal_lif_info_.name);
+            NIC_LOG_DEBUG("{}: HAL name changed to {}",
+                          LifNameGet(), hal_lif_info_.name);
+        }
         break;
 
     case FTL_LIF_ATTR_NORMAL_AGE_TMO:
@@ -1067,14 +1071,20 @@ FtlLif::ftl_lif_init_action(ftl_lif_event_t event,
 
     fsm_ctx.reset = false;
     fsm_ctx.reset_destroy = false;
-    FTL_LIF_DEVAPI_CHECK(FTL_RC_ERROR, FTL_LIF_EV_NULL);
-    if (dev_api->lif_create(&hal_lif_info_) != SDK_RET_OK) {
-        NIC_LOG_ERR("{}: Failed to create LIF", LifNameGet());
-        devcmd_ctx.status = FTL_RC_ERROR;
-    }
 
-    pd->program_qstate((struct queue_info*)hal_lif_info_.queue_info,
-                       &hal_lif_info_, 0x0);
+    if (sdk::asic::asic_is_hard_init()) {
+        FTL_LIF_DEVAPI_CHECK(FTL_RC_ERROR, FTL_LIF_EV_NULL);
+        if (dev_api->lif_create(&hal_lif_info_) != SDK_RET_OK) {
+            NIC_LOG_ERR("{}: Failed to create LIF", LifNameGet());
+            devcmd_ctx.status = FTL_RC_ERROR;
+        }
+
+        pd->program_qstate((struct queue_info*)hal_lif_info_.queue_info,
+                           &hal_lif_info_, 0x0);
+    } else {
+        pd->soft_program_qstate((struct queue_info*)hal_lif_info_.queue_info,
+                                &hal_lif_info_);
+    }
     NIC_LOG_INFO("{}: created", LifNameGet());
     return FTL_LIF_EV_NULL;
 }
@@ -1390,6 +1400,11 @@ FtlLif::age_tmo_cb_init(age_tmo_cb_t *age_tmo_cb,
 {
     memset(age_tmo_cb, 0, sizeof(*age_tmo_cb));
 
+    if (sdk::asic::asic_is_soft_init()) {
+        access.small_read(0, (uint8_t *)age_tmo_cb, sizeof(*age_tmo_cb));
+        return;
+    }
+
     /*
      * Timeout values are stored in big endian to make it
      * convenient for MPU code to load them with bit truncation.
@@ -1683,6 +1698,7 @@ ftl_lif_queues_ctl_t::init(const scanners_init_cmd_t *cmd)
                   "poller_qtype {}", cmd->poller_lif,
                   cmd->poller_qcount, cmd->poller_qdepth,
                   cmd->poller_qtype);
+
     qstate_access.clear();
     wring_access.clear();
     qid_high_ = 0;
@@ -1833,21 +1849,24 @@ ftl_lif_queues_ctl_t::init(const mpu_timestamp_init_cmd_t *cmd)
                                                  false));
     }
     qs_access.reset(qstate_addr, sizeof(qstate));
-    status = pgm_pc_offset_get("mpu_timestamp_stage0", &pc_offset);
-    if (status != FTL_RC_SUCCESS) {
-        return status;
+
+    if (sdk::asic::asic_is_hard_init()) {
+        status = pgm_pc_offset_get("mpu_timestamp_stage0", &pc_offset);
+        if (status != FTL_RC_SUCCESS) {
+            return status;
+        }
+
+        qstate.qstate_1ring.pc_offset = pc_offset;
+        qstate.qstate_1ring.eval_last = 1 << 0;
+        qstate.qstate_1ring.cosB = cmd->cos_override ? cmd->cos : lif.cosB;
+        qstate.qstate_1ring.host_wrings = 0;
+        qstate.qstate_1ring.total_wrings = 1;
+        qstate.qstate_1ring.pid = cmd->pid;
+        qs_access.small_write(0, (uint8_t *)&qstate, sizeof(qstate));
+        qs_access.cache_invalidate();
     }
+
     lif.mpu_timestamp_access.reset(qs_access.va());
-
-    qstate.qstate_1ring.pc_offset = pc_offset;
-    qstate.qstate_1ring.eval_last = 1 << 0;
-    qstate.qstate_1ring.cosB = cmd->cos_override ? cmd->cos : lif.cosB;
-    qstate.qstate_1ring.host_wrings = 0;
-    qstate.qstate_1ring.total_wrings = 1;
-    qstate.qstate_1ring.pid = cmd->pid;
-    qs_access.small_write(0, (uint8_t *)&qstate, sizeof(qstate));
-    qs_access.cache_invalidate();
-
     qstate_access.push_back(std::move(qs_access));
     return FTL_RC_SUCCESS;
 }
@@ -2306,53 +2325,56 @@ ftl_lif_queues_ctl_t::scanner_init_single(const scanner_init_single_cmd_t *cmd)
     qs_access.reset(qstate_addr, sizeof(scanner_session_qstate_t));
 
     qid_high_ = std::max(qid_high_, qid);
-    status = pgm_pc_offset_get("scanner_session_stage0", &pc_offset);
-    if (status != FTL_RC_SUCCESS) {
-        return status;
-    }
-    qstate.cb.qstate_1ring.pc_offset = pc_offset;
-    qstate.cb.qstate_1ring.eval_last = 1 << 0;
-    qstate.cb.qstate_1ring.cosB = cmd->cos_override ? cmd->cos : lif.cosB;
-    qstate.cb.qstate_1ring.host_wrings = 0;
-    qstate.cb.qstate_1ring.total_wrings = 1;
-    qstate.cb.qstate_1ring.pid = cmd->pid;
+    if (sdk::asic::asic_is_hard_init()) {
+        status = pgm_pc_offset_get("scanner_session_stage0", &pc_offset);
+        if (status != FTL_RC_SUCCESS) {
+            return status;
+        }
+        qstate.cb.qstate_1ring.pc_offset = pc_offset;
+        qstate.cb.qstate_1ring.eval_last = 1 << 0;
+        qstate.cb.qstate_1ring.cosB = cmd->cos_override ? cmd->cos : lif.cosB;
+        qstate.cb.qstate_1ring.host_wrings = 0;
+        qstate.cb.qstate_1ring.total_wrings = 1;
+        qstate.cb.qstate_1ring.pid = cmd->pid;
 
-    qstate.cb.normal_tmo_cb_addr = lif.normal_age_access().pa();
-    qstate.cb.accel_tmo_cb_addr = lif.accel_age_access().pa();
-    qstate.cb.scan_resched_ticks =
-           time_us_to_txs_sched_ticks(cmd->scan_resched_time,
-                                      &qstate.cb.resched_uses_slow_timer);
-    /*
-     * burst size may be zero but range size must be > 0
-     */
-    assert(cmd->scan_range_sz);
-    qstate.fsm.scan_range_sz = cmd->scan_range_sz;
-    if (cmd->scan_burst_sz) {
-
+        qstate.cb.normal_tmo_cb_addr = lif.normal_age_access().pa();
+        qstate.cb.accel_tmo_cb_addr = lif.accel_age_access().pa();
+        qstate.cb.scan_resched_ticks =
+               time_us_to_txs_sched_ticks(cmd->scan_resched_time,
+                                          &qstate.cb.resched_uses_slow_timer);
         /*
-         * round up burst size to next power of 2
+         * burst size may be zero but range size must be > 0
          */
-        qstate.fsm.scan_burst_sz = cmd->scan_burst_sz;
-        qstate.fsm.scan_burst_sz_shft = log_2(cmd->scan_burst_sz);
-    }
-    qstate.fsm.fsm_state = SCANNER_STATE_INITIAL;
-    qstate.fsm.scan_id_base = cmd->scan_id_base;
-    qstate.fsm.scan_id_next = cmd->scan_id_base;
-    qstate.fsm.scan_addr_base = cmd->scan_addr_base;
+        assert(cmd->scan_range_sz);
+        qstate.fsm.scan_range_sz = cmd->scan_range_sz;
+        if (cmd->scan_burst_sz) {
 
-    qstate.summarize.poller_qdepth_shft = cmd->poller_qdepth_shft;
-    poller_qstate_addr = lif.pd->lm_->get_lif_qstate_addr(cmd->poller_lif,
-                                      cmd->poller_qtype, cmd->poller_qid);
-    if (poller_qstate_addr < 0) {
-        NIC_LOG_ERR("{}: Failed to get qstate address for poller "
-                    "lif {} qtype {} qid {}", lif.LifNameGet(),
-                    cmd->poller_lif, cmd->poller_qtype, cmd->poller_qid);
-        return FTL_RC_ERROR;
+            /*
+             * round up burst size to next power of 2
+             */
+            qstate.fsm.scan_burst_sz = cmd->scan_burst_sz;
+            qstate.fsm.scan_burst_sz_shft = log_2(cmd->scan_burst_sz);
+        }
+        qstate.fsm.fsm_state = SCANNER_STATE_INITIAL;
+        qstate.fsm.scan_id_base = cmd->scan_id_base;
+        qstate.fsm.scan_id_next = cmd->scan_id_base;
+        qstate.fsm.scan_addr_base = cmd->scan_addr_base;
+
+        qstate.summarize.poller_qdepth_shft = cmd->poller_qdepth_shft;
+        poller_qstate_addr = lif.pd->lm_->get_lif_qstate_addr(cmd->poller_lif,
+                                          cmd->poller_qtype, cmd->poller_qid);
+        if (poller_qstate_addr < 0) {
+            NIC_LOG_ERR("{}: Failed to get qstate address for poller "
+                        "lif {} qtype {} qid {}", lif.LifNameGet(),
+                        cmd->poller_lif, cmd->poller_qtype, cmd->poller_qid);
+            return FTL_RC_ERROR;
+        }
+        qstate.summarize.poller_qstate_addr = poller_qstate_addr;
+        qstate.metrics0.min_range_elapsed_ticks = 
+                            ~qstate.metrics0.min_range_elapsed_ticks;
+        qs_access.small_write(0, (uint8_t *)&qstate, sizeof(qstate));
+        qs_access.cache_invalidate();
     }
-    qstate.summarize.poller_qstate_addr = poller_qstate_addr;
-    qstate.metrics0.min_range_elapsed_ticks = ~qstate.metrics0.min_range_elapsed_ticks;
-    qs_access.small_write(0, (uint8_t *)&qstate, sizeof(qstate));
-    qs_access.cache_invalidate();
 
     qstate_access.push_back(std::move(qs_access));
     return FTL_RC_SUCCESS;
@@ -2385,20 +2407,22 @@ ftl_lif_queues_ctl_t::poller_init_single(const poller_init_single_cmd_t *cmd)
     qs_access.reset(qstate_addr, sizeof(poller_qstate_t));
 
     qid_high_ = std::max(qid_high_, qid);
-    qstate.qstate_1ring.host_wrings = 0;
-    qstate.qstate_1ring.total_wrings = 1;
-    qstate.qstate_1ring.pid = cmd->pid;
-    qstate.qdepth_shft = cmd->qdepth_shft;
-    qstate.wring_base_addr = cmd->wring_base_addr;
-    qs_access.small_write(0, (uint8_t *)&qstate, sizeof(qstate));
-    qs_access.cache_invalidate();
+    if (sdk::asic::asic_is_hard_init()) {
+        qstate.qstate_1ring.host_wrings = 0;
+        qstate.qstate_1ring.total_wrings = 1;
+        qstate.qstate_1ring.pid = cmd->pid;
+        qstate.qdepth_shft = cmd->qdepth_shft;
+        qstate.wring_base_addr = cmd->wring_base_addr;
+        qs_access.small_write(0, (uint8_t *)&qstate, sizeof(qstate));
+        qs_access.cache_invalidate();
+    }
 
     qstate_access.push_back(std::move(qs_access));
 
     /*
      * Similarly, mmap the wring as required
      */
-    wr_access.reset(qstate.wring_base_addr, cmd->wring_sz);
+    wr_access.reset(cmd->wring_base_addr, cmd->wring_sz);
     wring_access.push_back(std::move(wr_access));
     return FTL_RC_SUCCESS;
 }

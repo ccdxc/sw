@@ -16,6 +16,7 @@
 #include "nic/apollo/api/include/athena/pds_l2_flow_cache.h"
 #include "nic/apollo/api/include/athena/pds_flow_age.h"
 #include "nic/sdk/asic/asic.hpp"
+#include "platform/src/lib/nicmgr/include/nicmgr_shm.hpp"
 
 using namespace sdk;
 using namespace sdk::asic;
@@ -58,6 +59,7 @@ pds_global_init (pds_cinit_params_t *params)
 #else
      params_cpp.cfg_file = "hal.json";
 #endif
+    params_cpp.flow_age_pid = params->flow_age_pid;
    
     if (params->flags & PDS_FLAG_INIT_TYPE_SOFT) {
         asic_init_type = ASIC_INIT_TYPE_SOFT;
@@ -93,7 +95,12 @@ pds_global_init (pds_cinit_params_t *params)
         PDS_TRACE_ERR("DNAT map init failed with ret %u\n", ret);
         return (pds_ret_t)ret;
     }
-    if (!asic::asic_is_soft_init()) {
+
+    // In hard init mode, pds_flow_age_init() will drive the FTL lif
+    // initialization but will stop short of starting the scanners.
+    // The process designated as CPP for FTL will continue that
+    // initialization the rest of the way.
+    if (asic::asic_is_hard_init() || nicmgr_shm_is_cpp_pid(FTL)) {
         ret = (sdk_ret_t)pds_flow_age_init();
         if (ret != SDK_RET_OK) {
             PDS_TRACE_ERR("Flow aging init failed with ret %u\n", ret);

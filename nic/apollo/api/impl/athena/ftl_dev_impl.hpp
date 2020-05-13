@@ -33,6 +33,7 @@
 #include "platform/src/lib/nicmgr/include/dev.hpp"
 #include "platform/src/lib/nicmgr/include/ftl_dev.hpp"
 #include "platform/src/lib/nicmgr/include/ftl_lif.hpp"
+#include "platform/src/lib/nicmgr/include/nicmgr_shm.hpp"
 
 /*
  * Max devcmd retry timeout

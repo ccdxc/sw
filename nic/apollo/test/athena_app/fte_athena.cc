@@ -436,7 +436,7 @@ dump_single_flow(pds_flow_iter_cb_arg_t *iter_cb_arg)
                         "DstIP:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x "
                         "Dport:%u Sport:%u Proto:%u "
                         "Ktype:%u VNICID:%u "
-                        "index:%u index_type:%u\n",
+                        "index:%u index_type:%u cacheID:%u prim:%u\n",
                         key->ip_saddr[0], key->ip_saddr[1], key->ip_saddr[2], key->ip_saddr[3],
                         key->ip_saddr[4], key->ip_saddr[5], key->ip_saddr[6], key->ip_saddr[7],
                         key->ip_saddr[8], key->ip_saddr[9], key->ip_saddr[10], key->ip_saddr[11],
@@ -447,18 +447,20 @@ dump_single_flow(pds_flow_iter_cb_arg_t *iter_cb_arg)
                         key->ip_daddr[12], key->ip_daddr[13], key->ip_daddr[14], key->ip_daddr[15],
                         key->l4.tcp_udp.dport, key->l4.tcp_udp.sport,
                         key->ip_proto, (uint8_t)key->key_type, key->vnic_id,
-                        data->index, (uint8_t)data->index_type);
+                        data->index, (uint8_t)data->index_type,
+                        iter_cb_arg->cache_id, iter_cb_arg->primary);
     } else {
         CACHE_DUMP_LOG("SrcIP:%d.%d.%d.%d "
                         "DstIP:%d.%d.%d.%d "
                         "Dport:%u Sport:%u Proto:%u "
                         "Ktype:%u VNICID:%u "
-                        "index:%u index_type:%u\n",
+                        "index:%u index_type:%u cacheID:%u prim:%u\n",
                         key->ip_saddr[3], key->ip_saddr[2], key->ip_saddr[1], key->ip_saddr[0],
                         key->ip_daddr[3], key->ip_daddr[2], key->ip_daddr[1], key->ip_daddr[0],
                         key->l4.tcp_udp.dport, key->l4.tcp_udp.sport,
                         key->ip_proto, (uint8_t)key->key_type, key->vnic_id,
-                        data->index, (uint8_t)data->index_type);
+                        data->index, (uint8_t)data->index_type,
+                        iter_cb_arg->cache_id, iter_cb_arg->primary);
     }
     return;
 }
@@ -1229,7 +1231,7 @@ _init_port (void)
 }
 
 static int
-fte_main (void)
+fte_main (pds_cinit_params_t *init_params)
 {
     int ret;
     sdk_ret_t sdk_ret;
@@ -1272,8 +1274,9 @@ fte_main (void)
         }
     }
 
-    if (!sdk::asic::asic_is_soft_init())
+    if (init_params->flow_age_pid == getpid()) {
         _init_pollers_client();
+    }
 
     ret = 0;
     // launch per-lcore init on every slave lcore
@@ -1283,16 +1286,15 @@ fte_main (void)
    
 skip_dpdk:
     flows_fp_init(&g_flows_fp);
-
     return ret;
 }
 
 void
-fte_init (void)
+fte_init (pds_cinit_params_t *init_params)
 {
     PDS_TRACE_DEBUG("FTE entering forever loop ...");
 
-    fte_main();
+    fte_main(init_params);
 
     return;
 }

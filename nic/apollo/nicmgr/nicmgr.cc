@@ -46,8 +46,10 @@ nicmgrapi::nicmgr_thread_init(void *ctxt) {
     string device_cfg_file;
     sdk::event_thread::event_thread *curr_thread;
     devicemgr_cfg_t cfg;
-    upg_mode_t upg_init_mode = api::g_upg_state->upg_init_mode();
-    bool init_pci = sdk::platform::upgrade_mode_none(upg_init_mode);
+    upg_mode_t upg_init_mode = api::g_upg_state ?
+        api::g_upg_state->upg_init_mode() : upg_mode_t::UPGRADE_MODE_NONE;
+    bool init_pci = sdk::platform::upgrade_mode_none(upg_init_mode) &&
+                    sdk::asic::asic_is_hard_init();
 
     // get pds state
     state = (pds_state *)sdk::lib::thread::current_thread()->data();
@@ -96,14 +98,16 @@ nicmgrapi::nicmgr_thread_init(void *ctxt) {
         // g_devmgr->UpgradeHitlessInit(&cfg);
     }
 
-    sdk::ipc::subscribe(EVENT_ID_PORT_STATUS, port_event_handler_, NULL);
-    sdk::ipc::subscribe(EVENT_ID_XCVR_STATUS, xcvr_event_handler_, NULL);
-    sdk::ipc::subscribe(EVENT_ID_PDS_HAL_UP, hal_up_event_handler_, NULL);
-    sdk::event_thread::prepare_init(&g_ev_prepare, prepare_callback, NULL);
-    sdk::event_thread::prepare_start(&g_ev_prepare);
+    if (sdk::asic::asic_is_hard_init()) {
+        sdk::ipc::subscribe(EVENT_ID_PORT_STATUS, port_event_handler_, NULL);
+        sdk::ipc::subscribe(EVENT_ID_XCVR_STATUS, xcvr_event_handler_, NULL);
+        sdk::ipc::subscribe(EVENT_ID_PDS_HAL_UP, hal_up_event_handler_, NULL);
+        sdk::event_thread::prepare_init(&g_ev_prepare, prepare_callback, NULL);
+        sdk::event_thread::prepare_start(&g_ev_prepare);
 
-    // register for upgrade events
-    nicmgr_upg_graceful_init();
+        // register for upgrade events
+        nicmgr_upg_graceful_init();
+    }
 
     PDS_TRACE_INFO("Listening to events ...");
 }
@@ -114,7 +118,9 @@ nicmgrapi::nicmgr_thread_init(void *ctxt) {
 void
 nicmgrapi::nicmgr_thread_exit(void *ctxt) {
     delete g_devmgr;
-    sdk::event_thread::prepare_stop(&g_ev_prepare);
+    if (sdk::asic::asic_is_hard_init()) {
+        sdk::event_thread::prepare_stop(&g_ev_prepare);
+    }
 }
 
 void
