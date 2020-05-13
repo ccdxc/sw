@@ -428,35 +428,26 @@ profile_p4_table_clear(const char * fn_name, pds_ret_t (*fn_ptr)(void))
     return ret;
 }
 
+#define PROFILE_CLEAR_TABLE(tbl_)                           \
+    do {                                                    \
+        ret = profile_p4_table_clear(#tbl_,  tbl_);         \
+        if (ret != PDS_RET_OK) {                            \
+            printf("Failed to clear table: " #tbl_ "\n");   \
+        }                                                   \
+    } while (0)
+
+
 
 void
 p4_tables_clear(void)
 {
     pds_ret_t    ret;
     
-    ret = profile_p4_table_clear("pds_flow_cache_table_clear",
-            pds_flow_cache_table_clear);
-    if (ret != PDS_RET_OK) {
-        printf("Failed to clear table: profile_p4_table_clear\n");
-    }
-
-    ret = profile_p4_table_clear("pds_dnat_map_table_clear",
-            pds_dnat_map_table_clear);
-    if (ret != PDS_RET_OK) {
-        printf("Failed to clear table: pds_dnat_map_table_clear\n");
-    }
-
-    ret = profile_p4_table_clear("pds_vlan_to_vnic_map_table_clear",
-            pds_vlan_to_vnic_map_table_clear);
-    if (ret != PDS_RET_OK) {
-        printf("Failed to clear table: pds_vlan_to_vnic_map_table_clear\n");
-    }
-
-    ret = profile_p4_table_clear("pds_mpls_label_to_vnic_map_table_clear",
-            pds_mpls_label_to_vnic_map_table_clear);
-    if (ret != PDS_RET_OK) {
-        printf("Failed to clear table: pds_mpls_label_to_vnic_map_table_clear\n");
-    }
+    PROFILE_CLEAR_TABLE(pds_flow_cache_table_clear);
+    PROFILE_CLEAR_TABLE(pds_l2_flow_cache_table_clear);
+    PROFILE_CLEAR_TABLE(pds_dnat_map_table_clear);
+    PROFILE_CLEAR_TABLE(pds_vlan_to_vnic_map_table_clear);
+    PROFILE_CLEAR_TABLE(pds_mpls_label_to_vnic_map_table_clear);
 
 }
 
