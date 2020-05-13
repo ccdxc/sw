@@ -1,0 +1,17 @@
+meta:
+    name    : networking
+    os      : [ linux ]
+    nics    : [ pensando ]
+
+testcases:
+    -   name    : Verify_Athena_App_Running_No_DPDK
+        testcase: testcases.networking.athena_app_no_dpdk_verify
+        enable  : True
+
+    -   name    : Pdsctl_Port_Cmd
+        testcase: testcases.networking.pdsctl_port
+        enable  : True
+
+    -   name    : Pdsctl_Show_Cmd
+        testcase: testcases.networking.pdsctl_show
+        enable  : True

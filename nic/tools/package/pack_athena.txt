@@ -7,6 +7,7 @@ nic/conf/$PIPELINE/device.json                                    /nic/conf/
 nic/conf/$PIPELINE/operd-regions.json                             /nic/conf/
 nic/conf/$PIPELINE/operd.json                                     /nic/conf/
 nic/conf/$PIPELINE/policy.json                                    /nic/conf/$PIPELINE/
+nic/conf/$PIPELINE/policy_2M.json                                 /nic/conf/$PIPELINE/
 nic/conf/$PIPELINE/sshd_boot_config                               /nic/conf/
 
 # HW catalog files
