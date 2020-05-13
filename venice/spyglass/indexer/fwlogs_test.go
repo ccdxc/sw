@@ -85,10 +85,10 @@ func SkipTestAppendOnlyWriter(t *testing.T) {
 		verifyAndReturnFirewallIndexName(t, esClient)
 	})
 
-	// // TestVerifyDiskMonitoring verifies disk monitoring
-	// t.Run("TestVerifyDiskMonitoring", func(t *testing.T) {
-	// 	verifyDiskMonitoring(ctx, t, esClient, logger)
-	// })
+	// TestVerifyDiskMonitoring verifies disk monitoring
+	t.Run("TestVerifyDiskMonitoring", func(t *testing.T) {
+		verifyDiskMonitoring(ctx, t, esClient, logger)
+	})
 
 	// TestVerifyLastProcessedObjectKeys verifies that lastProcessedObjectKeys
 	// are getting persisted in minio
@@ -271,7 +271,9 @@ func verifyAndReturnFirewallIndexName(t *testing.T, esClient elastic.ESClient) s
 
 func verifyDiskMonitoring(ctx context.Context, t *testing.T, esClient elastic.ESClient, logger log.Logger) {
 	query := es.NewMatchAllQuery()
-	oldCount := 0
+	// The rate at which we are posting objects, it will create 9 objects
+	maxCount := 9
+	reachedMax := false
 	assert := func() (bool, interface{}) {
 		result, err := esClient.Search(ctx,
 			elastic.GetIndex(globals.FwLogsObjects, ""), // index
@@ -292,15 +294,18 @@ func verifyDiskMonitoring(ctx context.Context, t *testing.T, esClient elastic.ES
 			return false, nil
 		}
 
-		if oldCount == 0 {
-			oldCount = len(result.Hits.Hits)
+		// Wait till theresult reaches max count
+		// Deletion will start after that
+		if len(result.Hits.Hits) != maxCount && !reachedMax {
 			return false, nil
 		}
 
-		return oldCount > len(result.Hits.Hits), nil
+		reachedMax = true
+
+		return maxCount > len(result.Hits.Hits), nil
 	}
 
-	AssertEventually(t, assert, "old objects are not getting deleted from elastic", string("1s"), string("200s"))
+	AssertEventually(t, assert, "old objects are not getting deleted from elastic", string("1s"), string("300s"))
 }
 
 func verifyLastProcessedObjectKeys(ctx context.Context, t *testing.T, r resolver.Interface, logger log.Logger) {

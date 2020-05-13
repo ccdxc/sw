@@ -1,16 +1,21 @@
 package indexer
 
 import (
-	"context"
+	"encoding/json"
+	"fmt"
 	"strings"
+	"sync"
 
 	es "github.com/olivere/elastic"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/globals"
-	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/elastic"
 	vosinternalprotos "github.com/pensando/sw/venice/vos/protos"
+)
+
+const (
+	vosDiskMonitorID = 101
 )
 
 func (idr *Indexer) createVosDiskMonitorWatcher() error {
@@ -85,130 +90,143 @@ func (idr *Indexer) handleVosDiskMonitorUpdate(obj *vosinternalprotos.DiskUpdate
 }
 
 func (idr *Indexer) cleanupOldObjects() {
-	l, err := idr.deleteOldestFwLogObjects()
+	objs, err := idr.getOldestFwLogObjects()
 	if err != nil {
-		idr.logger.Debugf("error in deleting old object keys, err: %s", err.Error())
+		idr.logger.Debugf("error in fetching old object keys from elastic, err: %s", err.Error())
+		return
 	}
-	idr.logger.Infof("disk used capacity reached, total objects deleted %d", l)
+	idr.logger.Infof("disk used capacity reached, total objects %d", len(objs))
+
+	wg := sync.WaitGroup{}
+	erroredObjs := map[string]map[string]struct{}{}
+	for tenant, tenantObjs := range objs {
+		objectCh := make(chan string)
+		errorCh := idr.vosFwLogsHTTPClient.RemoveObjectsWithContext(
+			idr.ctx,
+			tenant+"."+fwlogsBucketName,
+			objectCh)
+
+		wg.Add(1)
+		go func() {
+			defer func() {
+				wg.Done()
+				close(objectCh)
+			}()
+
+			for _, obj := range tenantObjs {
+				objectCh <- obj.Key
+			}
+		}()
+
+		wg.Add(1)
+		go func(tenantName string) {
+			defer wg.Done()
+			for err := range errorCh {
+				eObjs, ok := erroredObjs[tenantName]
+				if !ok {
+					eObjs = map[string]struct{}{}
+					erroredObjs[tenantName] = eObjs
+				}
+				eObjs[err.ObjectName] = struct{}{}
+				idr.logger.Debugf("error while deleting object %s, err %+v", err.ObjectName, err.Err)
+			}
+		}(tenant)
+	}
+
+	wg.Wait()
+
+	// Delete the objects from elastic's index as well
+	objDeleteReqs := [][]*elastic.BulkRequest{}
+	temp := []*elastic.BulkRequest{}
+	for tenant, tenantObjs := range objs {
+		for _, obj := range tenantObjs {
+			if _, ok := erroredObjs[tenant][obj.Key]; !ok {
+				// prepare the delete request
+				request := &elastic.BulkRequest{
+					RequestType: elastic.Delete,
+					Index:       elastic.GetIndex(globals.FwLogsObjects, ""),
+					IndexType:   elastic.GetDocType(globals.FwLogsObjects),
+					ID:          getUUIDForFwlogObject("Object", tenant, fwlogsBucketName, obj.Key),
+					Obj:         obj, // req.object
+				}
+
+				temp = append(temp, request)
+
+				if len(temp) >= fwLogsElasticBatchSize {
+					objDeleteReqs = append(objDeleteReqs, temp)
+					temp = []*elastic.BulkRequest{}
+				}
+			}
+		}
+
+		if len(temp) != 0 {
+			objDeleteReqs = append(objDeleteReqs, temp)
+		}
+	}
+
+	for _, reqs := range objDeleteReqs {
+		if len(reqs) != 0 {
+			idr.logger.Infof("VosDiskMonitor: Calling Bulk Delete Api reached batchsize len: %d",
+				len(reqs))
+			idr.helper(vosDiskMonitorID, bulkTimeout, reqs, nil)
+		}
+	}
 }
 
-func (idr *Indexer) deleteOldestFwLogObjects() (int, error) {
+func (idr *Indexer) getOldestFwLogObjects() (map[string][]*FwLogObjectV1, error) {
 	query := es.NewMatchAllQuery()
 	maxResults := 10000
 	if idr.numFwLogObjectsToDelete < 10000 {
 		maxResults = idr.numFwLogObjectsToDelete
 	}
-	deleted := 0
+	objectsFetched := 0
+
+	// Per tenant objects
+	objs := map[string][]*FwLogObjectV1{}
+
 	for {
-		if deleted >= idr.numFwLogObjectsToDelete {
+		if objectsFetched >= idr.numFwLogObjectsToDelete {
 			break
 		}
-		if idr.numFwLogObjectsToDelete-deleted > 10000 {
+		if idr.numFwLogObjectsToDelete-objectsFetched > 10000 {
 			maxResults = 10000
 		} else {
-			maxResults = idr.numFwLogObjectsToDelete - deleted
+			maxResults = idr.numFwLogObjectsToDelete - objectsFetched
 		}
 
-		result, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
-			return idr.elasticClient.DeleteByQuery(idr.ctx,
-				elastic.GetIndex(globals.FwLogsObjects, ""), // index
-				"",           // skip the index type
-				query,        // query to be executed
-				maxResults,   // to
-				"creationts", // sorting is required
-				false)        // sort in asc order
-		}, indexRetryIntvl, indexMaxRetries)
+		// execute query
+		result, err := idr.elasticClient.Search(idr.ctx,
+			elastic.GetIndex(globals.FwLogsObjects, ""), // index
+			"",                      // skip the index type
+			query,                   // query to be executed
+			nil,                     // no aggregation
+			int32(objectsFetched+1), // from
+			int32(maxResults),       // to
+			"creationts",            // sorting is required
+			true)                    // sort in desc order
 
 		if err != nil {
 			idr.logger.Errorf("failed to query elasticsearch, err: %+v", err)
-			return deleted, err
+			return nil, fmt.Errorf("failed to query elasticsearch, err: %+v", err)
 		}
 
-		deleted += int(result.(*es.BulkIndexByScrollResponse).Deleted)
+		if len(result.Hits.Hits) == 0 {
+			break
+		}
+
+		// parse the result
+		for _, res := range result.Hits.Hits {
+			var obj FwLogObjectV1
+			if err := json.Unmarshal(*res.Source, &obj); err != nil {
+				idr.logger.Debugf("failed to unmarshal elasticsearch result, err: %+v", err)
+				continue
+			}
+			objs[obj.Tenant] = append(objs[obj.Tenant], &obj)
+			objectsFetched++
+		}
 	}
-	return deleted, nil
+
+	idr.logger.Debugf("GetOldestFwLogObjects response: {%+v}", objs)
+
+	return objs, nil
 }
-
-// Dont remove this commented code.
-// func (idr *Indexer) cleanupOldObjects() {
-// 	objs, err := idr.getOldestFwLogObjects()
-// 	if err != nil {
-// 		idr.logger.Debugf("error in fetching old object keys from elastic, err: %s", err.Error())
-// 		return
-// 	}
-
-// 	idr.logger.Infof("disk used capacity reached, total objects %d", len(objs))
-
-// 	for _, obj := range objs {
-// 		// Delete the object from Minio and then delete its index from elastic
-// 		err = idr.vosFwLogsHTTPClient.RemoveObject(obj.Key)
-// 		if err != nil {
-// 			idr.logger.Errorf("error in removing old object from vos, key %s", obj.Key)
-// 			continue
-// 		}
-
-// 		err = idr.elasticClient.Delete(idr.ctx,
-// 			elastic.GetIndex(globals.FwLogsObjects, ""),
-// 			elastic.GetDocType(globals.FwLogsObjects),
-// 			getUUIDForFwlogObject("Object", "fwlogs", "fwlogs", obj.Key))
-
-// 		if err != nil {
-// 			idr.logger.Errorf("error in deleting old object index from elastic, key %s, err %+v", obj.Key, err)
-// 		}
-// 	}
-// }
-
-// func (idr *Indexer) getOldestFwLogObjects() ([]*FwLogObjectV1, error) {
-// 	query := es.NewMatchQuery("bucket", "fwlogs")
-// 	maxResults := 10000
-// 	if idr.numFwLogObjectsToDelete < 10000 {
-// 		maxResults = idr.numFwLogObjectsToDelete
-// 	}
-// 	objectsFetched := 0
-// 	objs := []*FwLogObjectV1{}
-// 	for {
-// 		if objectsFetched >= idr.numFwLogObjectsToDelete {
-// 			break
-// 		}
-// 		if idr.numFwLogObjectsToDelete-objectsFetched > 10000 {
-// 			maxResults = 10000
-// 		} else {
-// 			maxResults = idr.numFwLogObjectsToDelete - objectsFetched
-// 		}
-
-// 		// execute query
-// 		result, err := idr.elasticClient.Search(idr.ctx,
-// 			elastic.GetIndex(globals.FwLogsObjects, ""), // index
-// 			"",                // skip the index type
-// 			query,             // query to be executed
-// 			nil,               // no aggregation
-// 			0,                 // from
-// 			int32(maxResults), // to
-// 			"creationTs",      // sorting is required
-// 			true)              // sort in desc order
-
-// 		if err != nil {
-// 			idr.logger.Errorf("failed to query elasticsearch, err: %+v", err)
-// 			return nil, fmt.Errorf("failed to query elasticsearch, err: %+v", err)
-// 		}
-
-// 		if len(result.Hits.Hits) == 0 {
-// 			break
-// 		}
-
-// 		// parse the result
-// 		for _, res := range result.Hits.Hits {
-// 			var obj FwLogObjectV1
-// 			if err := json.Unmarshal(*res.Source, &obj); err != nil {
-// 				idr.logger.Debugf("failed to unmarshal elasticsearch result, err: %+v", err)
-// 				continue
-// 			}
-// 			objs = append(objs, &obj)
-// 			objectsFetched++
-// 		}
-// 	}
-
-// 	idr.logger.Debugf("GetOldestFwLogObjects response: {%+v}", objs)
-
-// 	return objs, nil
-// }

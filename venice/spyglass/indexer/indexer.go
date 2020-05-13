@@ -55,7 +55,7 @@ const (
 	indexBatchSize                      = 100
 	indexBatchIntvl                     = 5 * time.Second
 	indexRefreshIntvl                   = 60 * time.Second
-	fwLogsElasticBatchSize              = 100
+	fwLogsElasticBatchSize              = 1000
 	fwLogsElasticWriteWorkerSize        = 15
 	fwLogsElasticWriterWorkerBufferSize = 1000
 

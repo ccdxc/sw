@@ -20,7 +20,7 @@ import (
 	types "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
 	mockmc "github.com/pensando/sw/venice/utils/objstore/client/mock"
-	"github.com/pensando/sw/venice/utils/objstore/minio/client"
+	minio "github.com/pensando/sw/venice/utils/objstore/minio/client"
 	mockresolver "github.com/pensando/sw/venice/utils/resolver/mock"
 	tu "github.com/pensando/sw/venice/utils/testutils"
 )
@@ -528,6 +528,18 @@ func TestRemoveObjects(t *testing.T) {
 	mc.EXPECT().RemoveObjects(gomock.Any()).Return(fmt.Errorf("%s", connectErr)).Times(1)
 	err = mockClient.RemoveObjects("obj1")
 	tu.Assert(t, err != nil, "remobj didn't fail on connect error")
+
+	mockClient.client = mc
+	mc.EXPECT().RemoveObject(gomock.Any()).Return(fmt.Errorf("%s", connectErr)).Times(1)
+	err = mockClient.RemoveObject("obj1")
+	tu.Assert(t, err != nil, "remobj didn't fail on connect error")
+
+	mockClient.client = mc
+	objectCh := make(chan string)
+	errCh := make(<-chan interface{})
+	mc.EXPECT().RemoveObjectsWithContext(gomock.Any(), gomock.Any(), gomock.Any()).Return(errCh).Times(1)
+	removeObjectErrCh := mockClient.RemoveObjectsWithContext(context.Background(), "dummy", objectCh)
+	tu.Assert(t, removeObjectErrCh != nil, "remobj didn't fail on connect error")
 }
 
 func TestGetStreamObjectAtOffset(t *testing.T) {

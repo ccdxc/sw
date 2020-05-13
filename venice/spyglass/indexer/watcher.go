@@ -31,6 +31,10 @@ const (
 	failedWriteTimeout = 1 * time.Minute
 )
 
+var (
+	bulkTimeout = int((1 / (indexRetryIntvl.Seconds() * indexMaxRetries)) * failedWriteTimeout.Seconds())
+)
+
 type service interface {
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
 }
@@ -315,7 +319,6 @@ func (idr *Indexer) startOrderedWriter(id int) {
 	idr.requests[id] = make([]*elastic.BulkRequest, 0, idr.batchSize)
 
 	failedBulkCount := 0
-	bulkTimeout := int((1 / (indexRetryIntvl.Seconds() * indexMaxRetries)) * failedWriteTimeout.Seconds())
 	for {
 
 		// If we fail to write for 2 min, we drop the request

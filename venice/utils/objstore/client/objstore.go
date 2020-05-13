@@ -56,6 +56,11 @@ type objStoreBackend interface {
 
 	// RemoveObject removes one object
 	RemoveObject(path string) error
+
+	// RemoveObjectsWithContext removes all objects whose names are passed into the channel
+	// The returned channel is channel of interface{}, which interface{} should be the errors returned by
+	// different types of backends.
+	RemoveObjectsWithContext(ctx context.Context, bucketName string, objectsCh <-chan string) <-chan interface{}
 }
 
 // object store back-end details
@@ -473,4 +478,21 @@ func (c *client) RemoveObject(path string) error {
 		}
 	}
 	return fmt.Errorf("maximum retries exceeded to remove %s", path)
+}
+
+// RemoveObjectsWithContext removes all objects whose names are passed into the channel
+func (c *client) RemoveObjectsWithContext(ctx context.Context, bucketName string, objectsCh <-chan string) <-chan RemoveObjectError {
+	outCh := make(chan RemoveObjectError)
+	errCh := c.client.RemoveObjectsWithContext(ctx, bucketName, objectsCh)
+	go func() {
+		defer close(outCh)
+		for err := range errCh {
+			switch err.(type) {
+			case minio.RemoveObjectError:
+				minioErr := err.(minio.RemoveObjectError)
+				outCh <- RemoveObjectError{minioErr.ObjectName, minioErr.Err}
+			}
+		}
+	}()
+	return outCh
 }

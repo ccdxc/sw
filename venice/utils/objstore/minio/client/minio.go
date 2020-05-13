@@ -29,6 +29,12 @@ type ObjectStats struct {
 	UserMeta     map[string]string // user metadata
 }
 
+// RemoveObjectError is returned when trying to delete a series of objects
+type RemoveObjectError struct {
+	ObjectName string
+	Err        error
+}
+
 const (
 	amzPrefix     = "x-amz-"
 	amzMetaPrefix = "x-amz-meta-"
@@ -247,4 +253,17 @@ func (c *Client) RemoveObjects(prefix string) error {
 // RemoveObject deletes one object
 func (c *Client) RemoveObject(name string) error {
 	return c.client.RemoveObject(c.bucketName, name)
+}
+
+// RemoveObjectsWithContext removes all objects whose names are passed into the channel
+func (c *Client) RemoveObjectsWithContext(ctx context.Context, bucketName string, objectsCh <-chan string) <-chan interface{} {
+	outCh := make(chan interface{})
+	errorChannel := c.client.RemoveObjectsWithContext(ctx, bucketName, objectsCh)
+	go func() {
+		defer close(outCh)
+		for err := range errorChannel {
+			outCh <- RemoveObjectError{err.ObjectName, err.Err}
+		}
+	}()
+	return outCh
 }

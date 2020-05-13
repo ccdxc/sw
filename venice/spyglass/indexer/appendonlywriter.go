@@ -24,7 +24,6 @@ func (idr *Indexer) startAppendOnlyWriter(id int,
 	idr.logger.Infof("Starting scaled writer: %d to elasticsearch batchSize: %d", id, batchSize)
 	idr.requests[id] = make([]*elastic.BulkRequest, 0, batchSize)
 
-	bulkTimeout := int((1 / (indexRetryIntvl.Seconds() * indexMaxRetries)) * failedWriteTimeout.Seconds())
 	for {
 		select {
 

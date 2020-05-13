@@ -138,3 +138,15 @@ func (m *MockobjStoreBackend) RemoveObject(path string) error {
 func (mr *MockobjStoreBackendMockRecorder) RemoveObject(path interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveObject", reflect.TypeOf((*MockobjStoreBackend)(nil).RemoveObject), path)
 }
+
+// RemoveObjectsWithContext mocks base method
+func (m *MockobjStoreBackend) RemoveObjectsWithContext(ctx context.Context, bucketName string, objectsCh <-chan string) <-chan interface{} {
+	ret := m.ctrl.Call(m, "RemoveObjectsWithContext", ctx, bucketName, objectsCh)
+	ret0, _ := ret[0].(<-chan interface{})
+	return ret0
+}
+
+// RemoveObjectsWithContext indicates an expected call of RemoveObjectsWithContext
+func (mr *MockobjStoreBackendMockRecorder) RemoveObjectsWithContext(ctx, bucketName, objectsCh interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveObjectsWithContext", reflect.TypeOf((*MockobjStoreBackend)(nil).RemoveObjectsWithContext), ctx, bucketName, objectsCh)
+}

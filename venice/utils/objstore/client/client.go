@@ -47,10 +47,14 @@ type Client interface {
 	// RemoveObjects removes all objects with the given prefix
 	// this function walks through all the objects with the given prefix and deletes one object at a time
 	// status is returned at the end of the walk with details of the failed objects, if any
+	// TODO: Rename this function to RemoveObjectsByPrefix
 	RemoveObjects(prefix string) error
 
 	// RemoveObject one object with the given path
 	RemoveObject(path string) error
+
+	// RemoveObjectsWithContext removes all objects whose names are passed into the channel
+	RemoveObjectsWithContext(ctx context.Context, bucketName string, objectsCh <-chan string) <-chan RemoveObjectError
 }
 
 // ObjectStats is the object information returned from stats API
@@ -59,4 +63,10 @@ type ObjectStats struct {
 	Size         int64             // Size in bytes of the object.
 	ContentType  string            // A standard MIME type describing the format of the object data.
 	MetaData     map[string]string // user metadata
+}
+
+// RemoveObjectError is thrown when there is an error encountered in removing series of objects
+type RemoveObjectError struct {
+	ObjectName string
+	Err        error
 }

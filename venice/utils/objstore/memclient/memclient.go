@@ -139,6 +139,15 @@ func (m *memClient) RemoveObject(path string) error {
 	return nil
 }
 
+// RemoveObjectsWithContext removes all objects whose names are passed into the channel
+func (m *memClient) RemoveObjectsWithContext(ctx context.Context, bucketName string, objectsCh <-chan string) <-chan objstore.RemoveObjectError {
+	ch := make(chan objstore.RemoveObjectError)
+	go func() {
+		ch <- objstore.RemoveObjectError{ObjectName: "", Err: errors.New("unimplemented")}
+	}()
+	return ch
+}
+
 // NewMemObjstore returns a new MemObjstore object
 func NewMemObjstore() objstore.Client {
 	return &memClient{store: make(map[string]memObj)}

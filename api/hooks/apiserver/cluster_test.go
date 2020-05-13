@@ -1405,6 +1405,11 @@ func (m *fakeOclient) RemoveObject(path string) error {
 	return nil
 }
 
+// RemoveObjectsWithContext is a mock client implementation
+func (m *fakeOclient) RemoveObjectsWithContext(ctx context.Context, bucketName string, objectsCh <-chan string) <-chan objstore.RemoveObjectError {
+	return make(chan objstore.RemoveObjectError)
+}
+
 // Read is a mock implementation
 func (m *fakeOclient) Read(p []byte) (n int, err error) {
 	return int(m.read), nil
