@@ -6,6 +6,7 @@
 
 #include "devapi_object.hpp"
 #include "devapi_iris_types.hpp"
+#include "nic/sdk/include/sdk/types.hpp"
 
 namespace iris {
 
@@ -35,6 +36,7 @@ private:
     // Oper State
     intf::LifSpec spec_;
     intf::LifState state_;
+    lif_state_t admin_state_;
 
     // Valid only for internal mgmt mnic
     devapi_vrf *vrf_;
@@ -96,6 +98,7 @@ public:
     sdk_ret_t reset(void);
     static sdk_ret_t get_max_filters(uint32_t *ucast_filters, uint32_t *mcast_filters);
     sdk_ret_t upd_state(lif_state_t state);
+    sdk_ret_t upd_admin_state(lif_state_t state);
     sdk_ret_t upd_rdma_sniff(bool rdma_sniff);
 
     void remove_macfilters(bool skip_native_mac, bool update_d);

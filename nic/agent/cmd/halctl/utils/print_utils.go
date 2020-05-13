@@ -60,6 +60,20 @@ func VrfTypeToStr(vrfType halproto.VrfType) string {
 	}
 }
 
+// IfStatusToStr converts IF status to string
+func IfStatusToStr(ifStatus halproto.IfStatus) string {
+	switch ifStatus {
+	case halproto.IfStatus_IF_STATUS_NONE:
+		return "---"
+	case halproto.IfStatus_IF_STATUS_UP:
+		return "Up"
+	case halproto.IfStatus_IF_STATUS_DOWN:
+		return "Down"
+	default:
+		return "---"
+	}
+}
+
 // TableKindToStr converts table type to string
 func TableKindToStr(tType halproto.TableKind) string {
 	switch tType {

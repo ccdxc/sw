@@ -98,6 +98,7 @@ typedef struct lif_s {
     char                name[LIF_NAME_LEN]; // LIF's name
     types::LifType      type;            // lif type
     intf::IfStatus      admin_status;    // admin status
+    intf::IfStatus      oper_status;     // oper status
     intf::LifState      state;
     bool                vlan_strip_en;   // vlan strip enable
     bool                vlan_insert_en;  // if en, ingress vlan is in p4plus_to_p4 dr
@@ -180,7 +181,8 @@ typedef struct lif_update_app_ctxt_s {
     hal_handle_t new_pinned_uplink;
     bool         rss_config_changed;
     bool         name_changed:1;
-    bool         status_changed:1;
+    bool         admin_status_changed:1;
+    bool         oper_status_changed:1;
     bool         bcast_filters_changed:1;
     bool         mcast_filters_changed:1;
     bool         rx_en_changed:1;

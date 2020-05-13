@@ -157,38 +157,39 @@ message LifSpec {
   kh.InterfaceKeyHandle              pinned_uplink_if_key_handle = 3 [(gogoproto.moretags) = "venice:ref,venice:constraints={intf.InterfaceSpec.type=interface_pb2.IF_TYPE_UPLINK}" ];
   string                             name                        = 4;    // LIF's name
   IfStatus                           admin_status                = 5;    // admin status of the interface
-  types.LifType                      type                        = 6;    // LIF type
-  repeated LifQStateMapEntry         lif_qstate_map              = 7;    // LIF -> Qstate map.
-  bool                               vlan_strip_en               = 8;    // LIF vlan strip enable
-  bool                               vlan_insert_en              = 9;    // Ingress vlan tag in p4plus_to_p4 hdr
-  bool                               enable_rdma                 = 10;    // RDMA: enable RDMA on LIF
-  bool                               is_management               = 11 [(gogoproto.moretags) = "venice:immutable"];    // Set for MNICs and Management NICs.
-  bool                               rdma_sniff_en               = 12;   // Enable RDMA sniffer
-  PktFilter                          packet_filter               = 13;   // Packet filters
-  uint32                             hw_lif_id                   = 14;   // hw lif id. Zero will make Hal allocate it
-  uint32                             rdma_max_keys               = 15;   // RDMA: max key entries
-  uint32                             rdma_max_ahs                = 16;
-  uint32                             rdma_max_pt_entries         = 17;   // RDMA: max pt entries
-  repeated QStateSetReq              lif_qstate                  = 18;   // Initialize Qstate
-  LifRssSpec                         rss                         = 19;   // ETH: LIF RSS configuration
-  qos.PolicerSpec                    tx_policer                  = 20;   // QOS Policer for tx traffic
-  qos.PolicerSpec                    rx_policer                  = 21;   // QOS Policer for rx traffic
-  kh.QosClassKeyHandle               rx_qos_class                = 22;   // QOS class-of-service for Rx traffic.
-  kh.QosClassKeyHandle               tx_qos_class                = 23;   // QOS class-of-service for Tx traffic.
-  uint32                             rdma_barmap_size            = 24;   // RDMA: barmap size in bytes, rounded to power of 2
-  bool                               enable_nvme                 = 25;   // NVME: enable NVME on LIF
-  uint32                             nvme_max_ns                 = 26;   // NVME: maximum number of namespaces
-  uint32                             nvme_max_sess               = 27;   // NVME: maximum number of sessions
-  uint32                             nvme_host_page_size         = 28;   // NVME: host page size, must be power of 2
-  kh.InterfaceKeyHandle              swm_oob                     = 29;   // SWM: Uplink to reach BMC
-  BcastPktFilter                     bcast_pkt_filter            = 30;
-  McastPktFilter                     mcast_pkt_filter            = 31;
-  bool                               rx_en                       = 32;   // SWM: Applicable only for SWM LIFs
-  fixed64                            mac_address                 = 33;   // LIF's mac
-  LifState                           state                       = 34;
-  repeated kh.MirrorSessionKeyHandle TxMirrorSessions            = 35 [(gogoproto.moretags) = "venice:ref"]; // Tx MirrorSessions
-  repeated kh.MirrorSessionKeyHandle RxMirrorSessions            = 36 [(gogoproto.moretags) = "venice:ref"]; // Rx MirrorSessions
-  bool                               stats_reset                 = 37;   // Reset lif stats
+  IfStatus                           oper_status                 = 6;    // admin status of the interface
+  types.LifType                      type                        = 7;    // LIF type
+  repeated LifQStateMapEntry         lif_qstate_map              = 8;    // LIF -> Qstate map.
+  bool                               vlan_strip_en               = 9;    // LIF vlan strip enable
+  bool                               vlan_insert_en              = 10;    // Ingress vlan tag in p4plus_to_p4 hdr
+  bool                               enable_rdma                 = 11;    // RDMA: enable RDMA on LIF
+  bool                               is_management               = 12 [(gogoproto.moretags) = "venice:immutable"];    // Set for MNICs and Management NICs.
+  bool                               rdma_sniff_en               = 13;   // Enable RDMA sniffer
+  PktFilter                          packet_filter               = 14;   // Packet filters
+  uint32                             hw_lif_id                   = 15;   // hw lif id. Zero will make Hal allocate it
+  uint32                             rdma_max_keys               = 16;   // RDMA: max key entries
+  uint32                             rdma_max_ahs                = 17;
+  uint32                             rdma_max_pt_entries         = 18;   // RDMA: max pt entries
+  repeated QStateSetReq              lif_qstate                  = 19;   // Initialize Qstate
+  LifRssSpec                         rss                         = 20;   // ETH: LIF RSS configuration
+  qos.PolicerSpec                    tx_policer                  = 21;   // QOS Policer for tx traffic
+  qos.PolicerSpec                    rx_policer                  = 22;   // QOS Policer for rx traffic
+  kh.QosClassKeyHandle               rx_qos_class                = 23;   // QOS class-of-service for Rx traffic.
+  kh.QosClassKeyHandle               tx_qos_class                = 24;   // QOS class-of-service for Tx traffic.
+  uint32                             rdma_barmap_size            = 25;   // RDMA: barmap size in bytes, rounded to power of 2
+  bool                               enable_nvme                 = 26;   // NVME: enable NVME on LIF
+  uint32                             nvme_max_ns                 = 27;   // NVME: maximum number of namespaces
+  uint32                             nvme_max_sess               = 28;   // NVME: maximum number of sessions
+  uint32                             nvme_host_page_size         = 29;   // NVME: host page size, must be power of 2
+  kh.InterfaceKeyHandle              swm_oob                     = 30;   // SWM: Uplink to reach BMC
+  BcastPktFilter                     bcast_pkt_filter            = 31;
+  McastPktFilter                     mcast_pkt_filter            = 32;
+  bool                               rx_en                       = 33;   // SWM: Applicable only for SWM LIFs
+  fixed64                            mac_address                 = 34;   // LIF's mac
+  LifState                           state                       = 35;
+  repeated kh.MirrorSessionKeyHandle TxMirrorSessions            = 36 [(gogoproto.moretags) = "venice:ref"]; // Tx MirrorSessions
+  repeated kh.MirrorSessionKeyHandle RxMirrorSessions            = 37 [(gogoproto.moretags) = "venice:ref"]; // Rx MirrorSessions
+  bool                               stats_reset                 = 38;   // Reset lif stats
 }
 
 // LifRequestMsg is batched request used to create/update of LIFs

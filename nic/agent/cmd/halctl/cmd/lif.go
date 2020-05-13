@@ -246,13 +246,14 @@ func lifShowSpecHeader() {
 	fmt.Printf("\n")
 	fmt.Printf("Id:          Lif Id                   Name:        Lif Name\n")
 	fmt.Printf("Type:        Lif Type                 PktFilter:   Packet Filters (AM, BC, PR)\n")
-	fmt.Printf("PUplink:     Pinned Uplink IF Id      \n")
+	fmt.Printf("PUplink:     Pinned Uplink IF Id      Admin:       Admin status\n")
+	fmt.Printf("Oper:        Oper status\n")
 	fmt.Printf("Flags:       VS: Vlan Strip, VI: Vlan Insert, RE: RDMA Enable, RS: RDMA Sniffer\n")
 	fmt.Printf("\n")
 	hdrLine := strings.Repeat("-", 110)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-10s%-20s%-25s%-10s%-15s%-15s\n",
-		"Id", "Name", "Type", "PktFilter", "PUplink", "Flags")
+	fmt.Printf("%-10s%-20s%-25s%-6s%-6s%-10s%-15s%-15s\n",
+		"Id", "Name", "Type", "Admin", "Oper", "PktFilter", "PUplink", "Flags")
 	fmt.Println(hdrLine)
 }
 
@@ -260,10 +261,12 @@ func lifShowSpecOneResp(resp *halproto.LifGetResponse) {
 	ifIDStr := utils.IfIndexToStr(uint32(resp.GetSpec().GetPinnedUplinkIfKeyHandle().GetInterfaceId()))
 	typeStr := strings.Replace(resp.GetSpec().GetType().String(), "LIF_TYPE_", "", -1)
 	typeStr = strings.ToLower(strings.Replace(typeStr, "_", "-", -1))
-	fmt.Printf("%-10d%-20s%-25s%-10s%-15s%-15s\n",
+	fmt.Printf("%-10d%-20s%-25s%-6s%-6s%-10s%-15s%-15s\n",
 		resp.GetSpec().GetKeyOrHandle().GetLifId(),
 		strings.ToLower(resp.GetSpec().GetName()),
 		typeStr,
+		utils.IfStatusToStr(resp.GetSpec().GetAdminStatus()),
+		utils.IfStatusToStr(resp.GetStatus().GetLifStatus()),
 		pktfltrToStr(resp.GetSpec().GetPacketFilter()),
 		ifIDStr,
 		lifFlagsToStr(resp))

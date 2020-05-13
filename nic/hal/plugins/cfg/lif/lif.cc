@@ -45,6 +45,7 @@ lif_process_get (lif_t *lif, LifGetResponse *rsp)
     spec->set_name(lif->name);
     spec->set_type(lif->type);
     spec->set_admin_status(lif->admin_status);
+    spec->set_oper_status(lif->oper_status);
     spec->set_enable_rdma(lif->enable_rdma);
     spec->set_rdma_max_keys(lif->rdma_max_keys);
     spec->set_rdma_max_pt_entries(lif->rdma_max_pt_entries);
@@ -73,7 +74,7 @@ lif_process_get (lif_t *lif, LifGetResponse *rsp)
 
     rsp->mutable_status()->set_hw_lif_id(hw_lif_id);
     rsp->mutable_status()->set_lif_handle(lif->hal_handle);
-    rsp->mutable_status()->set_lif_status(lif->admin_status);
+    rsp->mutable_status()->set_lif_status(lif->oper_status);
 
     // Return LifQstate addresses
     intf::LifQState *entry;
@@ -1141,6 +1142,7 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
     strcpy(lif->name, spec.name().c_str());
     lif->type                = spec.type();
     lif->admin_status        = spec.admin_status();
+    lif->oper_status         = spec.oper_status();
     lif->hal_handle          = hal_alloc_handle();
     lif->vlan_strip_en       = spec.vlan_strip_en();
     lif->vlan_insert_en      = spec.vlan_insert_en();
@@ -1286,7 +1288,7 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
     hw_lif_id = app_ctxt.hw_lif_id; // populated in lif_create_add_cb
     lif_prepare_rsp(rsp, ret, hal_handle);
     rsp->mutable_status()->set_hw_lif_id(hw_lif_id);
-    rsp->mutable_status()->set_lif_status(lif->admin_status);
+    rsp->mutable_status()->set_lif_status(lif->oper_status);
 
     // Return LifQstate addresses
     intf::LifQState *entry;
@@ -1483,8 +1485,12 @@ lif_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
         strcpy(lif_clone->name, spec->name().c_str());
     }
 
-    if (app_ctxt->status_changed) {
+    if (app_ctxt->admin_status_changed) {
         lif_clone->admin_status = spec->admin_status();
+    }
+
+    if (app_ctxt->oper_status_changed) {
+        lif_clone->oper_status = spec->oper_status();
     }
 
     // 1. PD Call to allocate PD resources and HW programming
@@ -1676,11 +1682,6 @@ lif_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
     if (app_ctxt->name_changed) {
         g_hal_state->lif_name_id_map_delete(lif->name);
         g_hal_state->lif_name_id_map_insert(lif_clone->name, lif_clone->lif_id);
-    }
-
-    // TBD trigger a LIF GET here
-    if (app_ctxt->status_changed) {
-        lif_clone->admin_status = lif->admin_status;
     }
 
     if (app_ctxt->rx_en_changed) {
@@ -1890,7 +1891,17 @@ lif_handle_update (lif_update_app_ctxt_t *app_ctxt, lif_t *lif)
     }
 
     if (lif->admin_status != spec->admin_status()) {
-        app_ctxt->status_changed = true;
+        HAL_TRACE_DEBUG("admin status changed: {} => {}",
+                        lif->admin_status,
+                        spec->admin_status());
+        app_ctxt->admin_status_changed = true;
+    }
+
+    if (lif->oper_status != spec->oper_status()) {
+        HAL_TRACE_DEBUG("oper status changed: {} => {}",
+                        lif->oper_status,
+                        spec->oper_status());
+        app_ctxt->oper_status_changed = true;
     }
 
     if (lif->rx_en != spec->rx_en()) {
@@ -2014,7 +2025,8 @@ lif_update (LifSpec& spec, LifResponse *rsp)
           app_ctxt.mcast_filters_changed ||
           app_ctxt.pinned_uplink_changed ||
           app_ctxt.name_changed ||
-          app_ctxt.status_changed ||
+          app_ctxt.admin_status_changed ||
+          app_ctxt.oper_status_changed ||
           app_ctxt.rx_en_changed ||
           app_ctxt.rdma_sniff_en_changed ||
           app_ctxt.state_changed ||
@@ -2058,7 +2070,7 @@ end:
        rsp->mutable_status()->set_hw_lif_id(hw_lif_id);
      }
 
-    if (lif->type == types::LIF_TYPE_NONE) {
+    if (lif->type != types::LIF_TYPE_NONE) {
         // Send updates to Agent
         lifupd_timer = sdk::lib::timer_schedule(HAL_TIMER_ID_STREAM_LIF_UPDATE,
                                         LIF_STREAM_TIMER,

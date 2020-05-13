@@ -225,6 +225,7 @@ devapi_swm::initialize_lif_(channel_info_t *cinfo)
     // Create lif
     snprintf(info.name, sizeof(info.name), "swm_lif%d", ETH_IFINDEX_TO_PARENT_PORT(cinfo->port_num));
     info.lif_id                   = cinfo->swm_lif_id;
+    info.lif_state                = sdk::types::LIF_STATE_UP;
     info.type                     = sdk::platform::LIF_TYPE_SWM;
     info.pinned_uplink_port_num   = cinfo->port_num;
     info.is_management            = true;

@@ -438,7 +438,20 @@ devapi_iris::lif_get_max_filters(uint32_t *ucast_filters,
 sdk_ret_t
 devapi_iris::eth_dev_admin_status_update(uint32_t lif_id, lif_state_t state)
 {
-    return SDK_RET_OK;
+    sdk_ret_t ret = SDK_RET_OK;
+    devapi_lif *lif = NULL;
+
+    lif = devapi_lif::lookup(lif_id);
+    if (!lif) {
+        NIC_LOG_ERR("Failed to update name. lif id: {}. Not found",
+                    lif_id);
+        ret = SDK_RET_ERR;
+        goto end;
+    }
+    return lif->upd_admin_state(state);
+
+end:
+    return ret;
 }
 
 sdk_ret_t

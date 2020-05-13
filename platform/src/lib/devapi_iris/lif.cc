@@ -201,6 +201,10 @@ devapi_lif::init_(lif_info_t *info)
     enic_ = NULL;
     native_l2seg_ = NULL;
     state_ = intf::LIF_STATE_CREATE;
+    admin_state_ = sdk::types::LIF_STATE_DOWN;
+    if (info->type == sdk::platform::LIF_TYPE_SWM) {
+        admin_state_ = sdk::types::LIF_STATE_UP;
+    }
 
     return SDK_RET_OK;
 }
@@ -1006,8 +1010,28 @@ devapi_lif::upd_name(std::string name)
 sdk_ret_t
 devapi_lif::upd_state(lif_state_t state)
 {
-    NIC_LOG_DEBUG("devapi_lif: {} state: {} -> {}", info_.lif_id, info_.lif_state, state);
+    if (admin_state_ == state) {
+        NIC_LOG_WARN("No change in oper state: {}. Nop",
+                     state);
+        return SDK_RET_OK;
+    }
+    NIC_LOG_DEBUG("devapi_lif: {} oper state: {} -> {}", 
+                  info_.lif_id, info_.lif_state, state);
     info_.lif_state = state;
+    return lif_halupdate();
+}
+
+sdk_ret_t
+devapi_lif::upd_admin_state(lif_state_t state)
+{
+    if (admin_state_ == state) {
+        NIC_LOG_WARN("No change in admin state: {}. Nop",
+                     state);
+        return SDK_RET_OK;
+    }
+    NIC_LOG_DEBUG("devapi_lif: {} adming state: {} -> {}", 
+                  info_.lif_id, admin_state_, state);
+    admin_state_ = state;
     return lif_halupdate();
 }
 
@@ -1280,7 +1304,7 @@ devapi_lif::lif_halcreate(void)
 
     NIC_LOG_DEBUG("Creating devapi_lif: id: {}, name: {}, prom: {}, oob: {}, "
                   "int_mgmt_mnic: {}, host_mgmt_mnic: {}, rdma_en: {}, "
-                  "admin_status: {}",
+                  "oper_status: {}",
                   lif_info->lif_id,
                   lif_info->name,
                   lif_info->receive_promiscuous,
@@ -1422,7 +1446,8 @@ devapi_lif::populate_req(LifRequestMsg &req_msg,
     req->set_vlan_insert_en(lif_info->vlan_insert_en);
     req->set_is_management(is_oobmnic() ||
                            is_intmgmt());
-    req->set_admin_status((::intf::IfStatus)lif_info->lif_state);
+    req->set_oper_status((::intf::IfStatus)lif_info->lif_state);
+    req->set_admin_status((::intf::IfStatus)admin_state_);
     req->set_enable_rdma(lif_info->enable_rdma);
     req->set_rdma_sniff_en(lif_info->rdma_sniff);
     req->set_mac_address(MAC_TO_UINT64(lif_info->mac));

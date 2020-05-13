@@ -1965,6 +1965,7 @@ func (i *IrisAPI) GetWatchOptions(ctx context.Context, kind string) (ret api.Lis
 // ############################################### Helper Methods  ###############################################
 func (i *IrisAPI) createHostInterface(uid string, spec *halapi.LifSpec, status *halapi.LifStatus) error {
 	var ifStatus string
+	var ifAdminStatus string
 	// skip any internal lifs
 	if spec.GetType() != halapi.LifType_LIF_TYPE_HOST {
 		log.Infof("Skipping LIF_CREATE event for lif %v, type %v", uid, spec.GetType().String())
@@ -1975,6 +1976,12 @@ func (i *IrisAPI) createHostInterface(uid string, spec *halapi.LifSpec, status *
 		ifStatus = strings.ToLower(netproto.IFStatus_UP.String())
 	} else {
 		ifStatus = strings.ToLower(netproto.IFStatus_DOWN.String())
+	}
+
+	if spec.GetAdminStatus().String() == "IF_STATUS_UP" {
+		ifAdminStatus = strings.ToLower(netproto.IFStatus_UP.String())
+	} else {
+		ifAdminStatus = strings.ToLower(netproto.IFStatus_DOWN.String())
 	}
 
 	lifIndex := utils.GetLifIndex(status.HwLifId)
@@ -1999,7 +2006,7 @@ func (i *IrisAPI) createHostInterface(uid string, spec *halapi.LifSpec, status *
 		},
 		Spec: netproto.InterfaceSpec{
 			Type:        netproto.InterfaceSpec_HOST_PF.String(),
-			AdminStatus: strings.ToLower(netproto.IFStatus_UP.String()),
+			AdminStatus: ifAdminStatus,
 		},
 		Status: netproto.InterfaceStatus{
 			InterfaceID: uint64(lifIndex),
