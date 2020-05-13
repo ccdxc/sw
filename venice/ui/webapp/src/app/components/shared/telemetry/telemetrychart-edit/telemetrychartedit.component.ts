@@ -18,6 +18,7 @@ import { FieldSelectorTransform } from '../transforms/fieldselector.transform';
 import { GraphTitleTransform } from '../transforms/graphtitle.transform';
 import { RepeaterData, ValueType } from 'web-app-framework';
 import { NetworkNetworkInterface } from '@sdk/v1/models/generated/network';
+import { ObjectsRelationsUtility } from '@app/common/ObjectsRelationsUtility';
 
 /**
  * A data source allows a user to select a single measurement,
@@ -188,7 +189,7 @@ export class TelemetrycharteditComponent extends BaseComponent implements OnInit
   getCardFieldDataForNetworkInterfaces(res: RepeaterData[], type: string) {
     res[0].values = this.chart.networkInterfacesTypeMap[type].map((ni: NetworkNetworkInterface) => {
       return {
-        label: ni.meta.name,
+        label: ObjectsRelationsUtility.getNetworkinterfaceUIName(ni, this.chart.naples as ClusterDistributedServiceCard[]),
         value: ni.meta.name
       };
     });

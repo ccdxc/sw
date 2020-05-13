@@ -3,7 +3,7 @@ import { ClusterDistributedServiceCard, ClusterHost, IClusterDistributedServiceC
 import { Utility } from '@app/common/Utility';
 import { SecuritySecurityGroup, SecurityNetworkSecurityPolicy } from '@sdk/v1/models/generated/security';
 import { OrchestrationOrchestrator } from '@sdk/v1/models/generated/orchestration';
-import { NetworkNetwork } from '@sdk/v1/models/generated/network';
+import { NetworkNetwork, NetworkNetworkInterface } from '@sdk/v1/models/generated/network';
 import { EventTypes } from '@sdk/v1/services/generated/abstract.service';
 
 
@@ -684,5 +684,26 @@ export class ObjectsRelationsUtility {
             list: dataList
         };
         return handleWatchItemResult;
+    }
+
+    public static getNetworkinterfaceUIName(selectedNetworkInterface: NetworkNetworkInterface, naplesList: ClusterDistributedServiceCard[], delimiter: string = '-'): string {
+        const myDSCnameToMacMap = ObjectsRelationsUtility.buildDSCsNameMacMap(naplesList);
+        const niName = selectedNetworkInterface.meta.name;
+        const idx = niName.indexOf(delimiter);
+        const macPart = niName.substring(0, idx);
+        const typePart = niName.substring(idx + 1);
+        let dscname = myDSCnameToMacMap.macToNameMap[selectedNetworkInterface.status.dsc];
+        if (niName.indexOf(dscname) === 0) {
+            return niName; // VS-1374 as niName='systest-naples-6-uplink-1-2' and dscname = 'systest-naples-6'
+        }
+        if (!dscname) {
+            // NI-name is 00ae.cd01.0ed8-uplink129 where NI.status.dsc is missing.
+            dscname = myDSCnameToMacMap.macToNameMap[macPart];
+            if (!dscname) {
+            // NI-name is 00aecd0115e0-pf-70
+            dscname = myDSCnameToMacMap.macToNameMap[Utility.chunk(macPart, 4).join('.')];
+            }
+        }
+        return dscname ? dscname + '-' + typePart : niName;
     }
 }

@@ -57,6 +57,20 @@
       border-right: 0px solid transparent;
     }
 
+    th.naplesdetail-interface-col-doublefixwidth {
+      width: 142px !important;
+    }
+
+    td.naplesdetail-interface-col-fixwidth,
+    th.naplesdetail-interface-col-fixwidth {
+      width: 70px !important;
+    }
+
+    td.naplesdetail-interface-col-bytes,
+    th.naplesdetail-interface-col-bytes {
+      width: 70% !important;
+    }
+
     td {
       font-size: 12px;
     }
