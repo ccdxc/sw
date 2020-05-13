@@ -39,18 +39,6 @@ ftl_set_lookup_id(flow_hash_entry_t *entry,
     entry->set_vnic_metadata_vpc_id(lookup_id);
 }
 
-uint16_t
-ftlv4_get_lookup_id(ipv4_flow_hash_entry_t *entry)
-{
-    return entry->get_vnic_metadata_vpc_id();
-}
-
-uint16_t
-ftl_get_lookup_id(flow_hash_entry_t *entry)
-{
-    return entry->get_vnic_metadata_vpc_id();
-}
-
 void
 ftlv4_set_flow_miss_hit(ipv4_flow_hash_entry_t *entry, uint8_t val)
 {
@@ -63,8 +51,38 @@ ftl_set_flow_miss_hit(flow_hash_entry_t *entry, uint8_t val)
     return;
 }
 
+void
+ftlv4_set_l2l(ipv4_flow_hash_entry_t *entry, uint8_t val)
+{
+    return;
+}
+
+void
+ftl_set_l2l(flow_hash_entry_t *entry, uint8_t val)
+{
+    return;
+}
+
+uint16_t
+ftlv4_get_lookup_id(ipv4_flow_hash_entry_t *entry)
+{
+    return entry->get_vnic_metadata_vpc_id();
+}
+
+uint16_t
+ftl_get_lookup_id(flow_hash_entry_t *entry)
+{
+    return entry->get_vnic_metadata_vpc_id();
+}
+
 uint8_t
 ftlv4_get_epoch(ipv4_flow_hash_entry_t *entry)
+{
+    return entry->get_epoch();
+}
+
+uint8_t
+ftl_get_epoch(flow_hash_entry_t *entry)
 {
     return entry->get_epoch();
 }
@@ -76,7 +94,19 @@ ftlv4_get_nexthop_valid(ipv4_flow_hash_entry_t *entry)
 }
 
 uint8_t
+ftl_get_nexthop_valid(flow_hash_entry_t *entry)
+{
+    return 0;
+}
+
+uint8_t
 ftlv4_get_nexthop_type(ipv4_flow_hash_entry_t *entry)
+{
+    return 0;
+}
+
+uint8_t
+ftl_get_nexthop_type(flow_hash_entry_t *entry)
 {
     return 0;
 }
@@ -87,8 +117,32 @@ ftlv4_get_nexthop_id(ipv4_flow_hash_entry_t *entry)
     return 0;
 }
 
+uint16_t
+ftl_get_nexthop_id(flow_hash_entry_t *entry)
+{
+    return 0;
+}
+
 uint8_t
 ftlv4_get_nexthop_priority(ipv4_flow_hash_entry_t *entry)
+{
+    return 0;
+}
+
+uint8_t
+ftlv4_get_nexthop_priority(flow_hash_entry_t *entry)
+{
+    return 0;
+}
+
+uint8_t
+ftlv4_get_l2l(ipv4_flow_hash_entry_t *entry)
+{
+    return 0;
+}
+
+uint8_t
+ftl_get_l2l(flow_hash_entry_t *entry)
 {
     return 0;
 }

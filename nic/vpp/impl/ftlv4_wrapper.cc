@@ -804,6 +804,12 @@ ftlv4_cache_set_epoch (uint8_t val)
     ftlv4_set_epoch(g_ip4_flow_cache.ip4_flow + g_ip4_flow_cache.count, val);
 }
 
+void
+ftlv4_cache_set_l2l (uint8_t val)
+{
+    ftlv4_set_entry_l2l(g_ip4_flow_cache.ip4_flow + g_ip4_flow_cache.count, val);
+}
+
 /*
 void
 ftlv4_cache_batch_flush (ftlv4 *obj, int *status)
@@ -838,6 +844,23 @@ ftlv4_set_last_read_entry_epoch (uint8_t epoch)
 {
     ipv4_flow_hash_entry_t *v4entry = &g_ip4_flow_cache.ip4_last_read_flow;
     ftlv4_set_epoch(v4entry, epoch);
+}
+
+void
+ftlv4_get_last_read_entry_epoch (uint8_t *epoch)
+{
+    ipv4_flow_hash_entry_t *v4entry = &g_ip4_flow_cache.ip4_last_read_flow;
+    *epoch = ftlv4_get_entry_epoch(v4entry);
+}
+
+void
+ftlv4_set_last_read_entry_nexthop (uint32_t nhid,
+                                   uint32_t nhtype,
+                                   uint8_t nh_valid,
+                                   uint8_t priority)
+{
+   ipv4_flow_hash_entry_t *v4entry = &g_ip4_flow_cache.ip4_last_read_flow;
+   ftlv4_set_entry_nexthop(v4entry, nhid, nhtype, nh_valid, priority);
 }
 
 void

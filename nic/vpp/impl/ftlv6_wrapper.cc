@@ -298,6 +298,12 @@ ftlv6_cache_set_epoch (uint8_t val)
 }
 
 void
+ftlv6_cache_set_l2l (uint8_t val)
+{
+    ftl_set_entry_l2l(g_ip6_flow_cache.flow + g_ip6_flow_cache.count, val);
+}
+
+void
 ftlv6_cache_set_hash_log (uint32_t val, uint8_t log)
 {
     g_ip6_flow_cache.hash[g_ip6_flow_cache.count] = val;

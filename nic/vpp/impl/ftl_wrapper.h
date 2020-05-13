@@ -112,6 +112,8 @@ void ftl_set_key_lookup_id(flow_entry *entry, uint16_t lookup_id);
 
 void ftl_set_entry_flow_miss_hit(flow_entry *entry, uint8_t val);
 
+void ftl_set_entry_l2l(flow_entry *entry, uint8_t val);
+
 void ftl_set_entry_nexthop(flow_entry *entry, uint32_t nhid, uint32_t nhtype,
                            uint8_t nhvalid, uint8_t priority);
 
@@ -134,6 +136,8 @@ uint16_t ftlv4_get_entry_nexthop_id(v4_flow_entry *entry);
 uint8_t ftlv4_get_entry_nexthop_priority(v4_flow_entry *entry);
 
 void ftlv4_set_entry_flow_miss_hit(v4_flow_entry *entry, uint8_t val);
+
+void ftlv4_set_entry_l2l(v4_flow_entry *entry, uint8_t val);
 
 ftlv4 * ftlv4_create(void *key2str,
                      void *appdata2str);
@@ -202,6 +206,8 @@ uint32_t ftlv4_cache_get_session_index(int id);
 uint8_t ftlv4_cache_get_proto(int id);
 
 void ftlv4_cache_set_epoch(uint8_t val);
+
+void ftlv4_cache_set_l2l(uint8_t val);
 
 void ftlv4_cache_set_hash_log(uint32_t val, uint8_t log);
 
@@ -288,6 +294,8 @@ uint8_t ftlv6_cache_get_proto(int id);
 
 void ftlv6_cache_set_epoch(uint8_t val);
 
+void ftlv6_cache_set_l2l(uint8_t val);
+
 void ftlv6_cache_set_flow_miss_hit(uint8_t val);
 
 void ftlv6_cache_set_update_flag(uint8_t update);
@@ -338,6 +346,13 @@ void ftlv4_get_last_read_session_info(uint32_t *sip, uint32_t *dip, uint16_t *sp
                                       uint16_t *dport, uint16_t *lkp_id);
 
 void ftlv4_set_last_read_entry_epoch(uint8_t epoch);
+
+void ftlv4_get_last_read_entry_epoch(uint8_t *epoch);
+
+void ftlv4_set_last_read_entry_nexthop(uint32_t nhid,
+                                       uint32_t nhtype,
+                                       uint8_t nh_valid,
+                                       uint8_t priority);
 
 void ftlv4_set_last_read_entry_miss_hit(uint8_t flow_miss);
 

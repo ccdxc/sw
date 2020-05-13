@@ -560,6 +560,12 @@ ftl_get_key_lookup_id (flow_hash_entry_t *entry)
     return ftl_get_lookup_id(entry);
 }
 
+uint8_t
+ftl_get_entry_l2l (flow_hash_entry_t *entry)
+{
+    return ftl_get_l2l(entry);
+}
+
 void
 ftl_set_thread_id (ftl *obj, uint32_t thread_id)
 {
@@ -577,6 +583,12 @@ void
 ftl_set_entry_flow_miss_hit (flow_hash_entry_t *entry, uint8_t val)
 {
     ftl_set_flow_miss_hit(entry, val);
+}
+
+void
+ftl_set_entry_l2l (flow_hash_entry_t *entry, uint8_t val)
+{
+    ftl_set_l2l(entry, val);
 }
 
 void
@@ -617,6 +629,12 @@ ftlv4_get_entry_epoch (ipv4_flow_hash_entry_t *entry)
     return ftlv4_get_epoch(entry);
 }
 
+void
+ftlv4_set_entry_l2l (ipv4_flow_hash_entry_t *entry, uint8_t val)
+{
+    ftlv4_set_l2l(entry, val);
+}
+
 uint8_t
 ftlv4_get_entry_nexthop_valid (ipv4_flow_hash_entry_t *entry)
 {
@@ -641,4 +659,9 @@ ftlv4_get_entry_nexthop_priority (ipv4_flow_hash_entry_t *entry)
     return ftlv4_get_nexthop_priority(entry);
 }
 
+uint8_t
+ftlv4_get_entry_l2l (ipv4_flow_hash_entry_t *entry)
+{
+    return ftlv4_get_l2l(entry);
+}
 }

@@ -7,7 +7,7 @@ selectors:
 
 packets:
     - packet:
-        id          : BASE_PKT # Base packet
+        id          : IFLOW_PKT
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : callback://networking/packets/GetPacketTemplateFromMapping/proto=TCP
         headers     :
@@ -32,13 +32,37 @@ packets:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
     - packet:
-        id          : FROM_HOST_PKT # Input packet
-        clone       : ref://testcase/packets/id=BASE_PKT
+        id          : RFLOW_PKT
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : callback://networking/packets/GetPacketTemplateFromMapping/proto=TCP
+        headers     :
+            eth:
+                src     : ref://testcase/config/remotemapping/VNIC/MACAddr
+                dst     : callback://networking/packets/GetDstMac/direction=TX
+            qtag:
+                vlan    : ref://testcase/config/remotemapping/VNIC/VlanId
+            ipv4:
+                src     : ref://testcase/config/remotemapping/IP
+                dst     : ref://testcase/config/localmapping/IP
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/remotemapping/IP
+                dst     : ref://testcase/config/localmapping/IP
+                hlim    : 64
+            tcp:
+                sport   : 200
+                dport   : 100
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+    - packet:
+        id          : FROM_LOCAL_MAPPING_PKT # Input packet
+        clone       : ref://testcase/packets/id=IFLOW_PKT
         encaps      : callback://networking/packets/GetHostPacketEncapFromVnic
 
     - packet:
-        id          : TO_HOST_PKT # Expected packet
-        clone       : ref://testcase/packets/id=BASE_PKT
+        id          : TO_REMOTE_MAPPING_PKT # Expected packet
+        clone       : ref://testcase/packets/id=IFLOW_PKT
         encaps      : callback://networking/packets/GetHostPacketEncapFromVnic/vnic=remote
         headers     :
             eth:
@@ -48,7 +72,26 @@ packets:
                 vlan    : ref://testcase/config/remotemapping/VNIC/VlanId
                 prio    : 0
             ipv4:
-                ttl     : callback://networking/packets/GetPacketTtl/Fwdmode=L2L,ipkt=FROM_HOST_PKT
+                ttl     : callback://networking/packets/GetPacketTtl/Fwdmode=L2L,ipkt=FROM_LOCAL_MAPPING_PKT
+
+    - packet:
+        id          : FROM_REMOTE_MAPPING_PKT # Input packet
+        clone       : ref://testcase/packets/id=RFLOW_PKT
+        encaps      : callback://networking/packets/GetHostPacketEncapFromVnic
+
+    - packet:
+        id          : TO_LOCAL_MAPPING_PKT # Expected packet
+        clone       : ref://testcase/packets/id=RFLOW_PKT
+        encaps      : callback://networking/packets/GetHostPacketEncapFromVnic/vnic=remote
+        headers     :
+            eth:
+                dst     : ref://testcase/config/localmapping/VNIC/MACAddr
+                src     : callback://networking/packets/GetPacketSrcMacFromMapping/Fwdmode=L2L
+            qtag:
+                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
+                prio    : 0
+            ipv4:
+                ttl     : callback://networking/packets/GetPacketTtl/Fwdmode=L2L,ipkt=FROM_REMOTE_MAPPING_PKT
 
 buffers:
     - buffer:
@@ -56,19 +99,43 @@ buffers:
         template: ref://factory/templates/id=ETH_BUFFER
         fields  :
            bind : True
-           size : ref://testcase/packets/id=FROM_HOST_PKT/size
-           data : ref://testcase/packets/id=FROM_HOST_PKT/rawbytes
+           size : ref://testcase/packets/id=FROM_LOCAL_MAPPING_PKT/size
+           data : ref://testcase/packets/id=FROM_LOCAL_MAPPING_PKT/rawbytes
 
     - buffer:
         id       : BUF2  # Expected Buffer
         template : ref://factory/templates/id=ETH_BUFFER
         fields   :
             bind : False
-            size : ref://testcase/packets/id=TO_HOST_PKT/size
-            data : ref://testcase/packets/id=TO_HOST_PKT/rawbytes
+            size : ref://testcase/packets/id=TO_REMOTE_MAPPING_PKT/size
+            data : ref://testcase/packets/id=TO_REMOTE_MAPPING_PKT/rawbytes
 
     - buffer:
         id          : BUF3  # Input Buffer
+        template    : ref://factory/templates/id=ETH_BUFFER
+        fields      :
+            bind    : True
+            size    : 1518
+            data    : None
+
+    - buffer:
+        id      : BUF4    # Input Buffer
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields  :
+           bind : True
+           size : ref://testcase/packets/id=FROM_REMOTE_MAPPING_PKT/size
+           data : ref://testcase/packets/id=FROM_REMOTE_MAPPING_PKT/rawbytes
+
+    - buffer:
+        id       : BUF5  # Expected Buffer
+        template : ref://factory/templates/id=ETH_BUFFER
+        fields   :
+            bind : False
+            size : ref://testcase/packets/id=TO_LOCAL_MAPPING_PKT/size
+            data : ref://testcase/packets/id=TO_LOCAL_MAPPING_PKT/rawbytes
+
+    - buffer:
+        id          : BUF6  # Input Buffer
         template    : ref://factory/templates/id=ETH_BUFFER
         fields      :
             bind    : True
@@ -105,6 +172,34 @@ descriptors:
             _buf    : ref://testcase/buffers/id=BUF2
             len     : ref://testcase/buffers/id=BUF2/size
 
+    - descriptor:
+        id          : DESC5
+        template    : ref://factory/templates/id=DESCR_ETH_TX
+        fields      :
+            _buf    : ref://testcase/buffers/id=BUF4
+            addr    : ref://testcase/buffers/id=BUF4/addr
+            len     : ref://testcase/buffers/id=BUF4/size
+
+    - descriptor:
+        id          : DESC6 # Expected Descriptor
+        template    : ref://factory/templates/id=DESCR_ETH_TX_CQ
+        fields      :
+            status  : 0x0
+
+    - descriptor:
+        id          : DESC7 # Input Descriptor
+        template    : ref://factory/templates/id=DESCR_ETH_RX
+        fields      :
+            _buf    : ref://testcase/buffers/id=BUF6
+            addr    : ref://testcase/buffers/id=BUF6/addr
+            len     : ref://testcase/buffers/id=BUF6/size
+
+    - descriptor:
+        id          : DESC8 # Expected Descriptor
+        template    : ref://factory/templates/id=DESCR_ETH_RX_CQ
+        fields      :
+            _buf    : ref://testcase/buffers/id=BUF5
+            len     : ref://testcase/buffers/id=BUF5/size
 
 session:
 
@@ -146,22 +241,22 @@ session:
             delay: 1
             descriptors:
                 - descriptor:
-                    object  : ref://testcase/descriptors/id=DESC3
-                    ring    : callback://networking/packets/GetRingFromMapping/type=remote,qid=RX
+                    object  : ref://testcase/descriptors/id=DESC7
+                    ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=RX
                 - descriptor:
-                    object  : ref://testcase/descriptors/id=DESC1
-                    ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
+                    object  : ref://testcase/descriptors/id=DESC5
+                    ring    : callback://networking/packets/GetRingFromMapping/type=remote,qid=TX
 
         expect:
             delay: 1
             descriptors:
                 - descriptor:
-                    object  : ref://testcase/descriptors/id=DESC2
-                    ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
+                    object  : ref://testcase/descriptors/id=DESC6
+                    ring    : callback://networking/packets/GetRingFromMapping/type=remote,qid=TX
                 - descriptor:
                     negtest : True
                     object  : ref://testcase/descriptors/id=DESC4
-                    ring    : callback://networking/packets/GetRingFromMapping/type=remote,qid=RX
+                    ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=RX
 
     - step:
         trigger:
@@ -202,6 +297,28 @@ session:
             delay: 1
             descriptors:
                 - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC7
+                    ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=RX
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC5
+                    ring    : callback://networking/packets/GetRingFromMapping/type=remote,qid=TX
+
+        expect:
+            delay: 1
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC6
+                    ring    : callback://networking/packets/GetRingFromMapping/type=remote,qid=TX
+                - descriptor:
+                    negtest : True
+                    object  : ref://testcase/descriptors/id=DESC8
+                    ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=RX
+
+    - step:
+        trigger:
+            delay: 1
+            descriptors:
+                - descriptor:
                     object  : ref://testcase/descriptors/id=DESC3
                     ring    : callback://networking/packets/GetRingFromMapping/type=remote,qid=RX
                 - descriptor:
@@ -240,3 +357,25 @@ session:
                     negtest : callback://networking/packets/IsNegativeTestCase
                     object  : ref://testcase/descriptors/id=DESC4
                     ring    : callback://networking/packets/GetRingFromMapping/type=remote,qid=RX
+
+    - step:
+        trigger:
+            delay: 1
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC7
+                    ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=RX
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC5
+                    ring    : callback://networking/packets/GetRingFromMapping/type=remote,qid=TX
+
+        expect:
+            delay: 1
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC6
+                    ring    : callback://networking/packets/GetRingFromMapping/type=remote,qid=TX
+                - descriptor:
+                    negtest : callback://networking/packets/IsNegativeTestCase
+                    object  : ref://testcase/descriptors/id=DESC8
+                    ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=RX

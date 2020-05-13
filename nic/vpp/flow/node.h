@@ -40,7 +40,8 @@
         _(L2_FLOW_PROG, "pds-l2-flow-program" )                     \
         _(IP4_TUN_FLOW_PROG, "pds-tunnel-ip4-flow-program" )        \
         _(IP6_TUN_FLOW_PROG, "pds-tunnel-ip6-flow-program" )        \
-        _(IP4_L2L_FLOW_PROG, "pds-l2l-ip4-flow-program" )           \
+        _(IP4_L2L_FLOW_PROG, "pds-l2l-rx-ip4-flow-program" )        \
+        _(IP4_L2L_DEF_FLOW_PROG, "pds-l2l-ip4-def-flow-program" )   \
         _(AGE_FLOW, "pds-flow-age-setup" )                          \
         _(IP4_NAT, "pds-nat44" )                                    \
         _(IP4_NAT_INVAL, "pds-nat44-inval" )                        \
@@ -66,6 +67,7 @@
         _(TCP_PKT_NO_SES, "TCP packets with invalid session id")    \
         _(SES_NOT_FOUND, "Packets with invalid session id")         \
         _(DEFUNCT_RFLOW, "Defunct rflow")                           \
+        _(L2L_NDEF_IFLOW, "Non-defunct L2l iflow")                  \
 
 #define foreach_flow_prog_next                                      \
         _(FWD_FLOW, "pds-fwd-flow" )                                \
@@ -79,6 +81,8 @@
         _(FLOW_DELETE_FAILED, "Flow delete failed")                 \
         _(SESSION_ID_ALLOC_FAILED, "Session ID alloc failed")       \
         _(SESSION_ID_INVALID, "Invalid Session ID")                 \
+        _(L2L_RFLOW, "L2L responder flow")                          \
+        _(L2L_DUP_RFLOW, "L2L duplicate responder flow")            \
 
 #define foreach_fwd_flow_next                                       \
         _(INTF_OUT, "interface-tx" )                                \
@@ -270,8 +274,9 @@ typedef CLIB_PACKED(struct pds_flow_hw_ctx_s {
     u8 iflow_rx : 1; // true if iflow is towards the host
     u8 monitor_seen : 1; // 1 if monitor process has seen flow
     u8 nat : 1;
-    u16 vnic_id : 7;
-    u16 reserved_2 : 9;
+    u8 drop : 1;
+    u8 vnic_id : 7;
+    u8 reserved;
 }) pds_flow_hw_ctx_t;
 
 typedef struct pds_flow_session_id_thr_local_pool_s {
@@ -581,7 +586,8 @@ always_inline void pds_session_set_data(u32 ses_id, u32 i_pindex,
                                         u32 i_sindex, u32 r_pindex,
                                         u32 r_sindex, pds_flow_protocol proto,
                                         uint8_t vnic_id, bool v4,
-                                        bool host_origin, u8 packet_type)
+                                        bool host_origin, u8 packet_type,
+                                        bool drop)
 {
     pds_flow_main_t *fm = &pds_flow_main;
 
@@ -614,6 +620,7 @@ always_inline void pds_session_set_data(u32 ses_id, u32 i_pindex,
     } else {
         data->nat = 0;
     }
+    data->drop = drop;
     //pds_flow_prog_unlock();
     return;
 }

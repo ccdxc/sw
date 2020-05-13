@@ -152,8 +152,7 @@ pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
             (RX_REWRITE_ENCAP_VLAN << RX_REWRITE_ENCAP_START) : 0);
     ses_track_en = fm->con_track_en && (ctx->proto == PDS_FLOW_PROTO_TCP);
     actiondata.session_tracking_en = ses_track_en;
-    actiondata.drop = PDS_FLOW_NH_DROP_GET(
-                      vnet_buffer(b)->pds_flow_data.nexthop);
+    actiondata.drop = ctx->drop;
     if (ses_track_en && !pds_is_flow_session_present(b)) {
         track_actiondata.action_u.session_track_session_track_info.iflow_tcp_state = FLOW_STATE_INIT;
         track_actiondata.action_u.session_track_session_track_info.iflow_tcp_seq_num = 
@@ -426,9 +425,50 @@ pds_flow_appdata2str (void *appdata)
     return str;
 }
 
+always_inline bool
+pds_is_flow_drop (vlib_buffer_t *p0)
+{
+    if (PDS_FLOW_NH_DROP_GET(vnet_buffer(p0)->pds_flow_data.nexthop)) {
+        return true;
+    }
+    return false;
+}
+
 always_inline void
-pds_flow_extract_nexthop_info(vlib_buffer_t *p0,
-                              u8 is_ip4, u8 iflow)
+pds_l2l_flow_extract_nexthop_info (vlib_buffer_t *p0,
+                                   u16 *nhid,
+                                   u8 *nh_type,
+                                   u8 *nh_valid,
+                                   u8 *nh_priority,
+                                   u8 *drop)
+{
+    u32 nexthop = 0;
+    pds_flow_main_t *fm = &pds_flow_main;
+
+    nexthop = vnet_buffer(p0)->pds_flow_data.nexthop;
+    *nh_priority = PDS_FLOW_NH_PRIO_GET(nexthop);
+    if (PREDICT_FALSE(PDS_FLOW_NH_DROP_GET(nexthop))) {
+        *drop = 1;
+        *nh_valid = 1;
+        *nh_type = NEXTHOP_TYPE_NEXTHOP;
+        *nhid = fm->drop_nexthop;
+        return;
+    }
+    *drop = 0;
+    *nh_type = PDS_FLOW_NH_TYPE_GET(nexthop);
+    if (0 != nexthop) {
+        *nh_valid = 1;
+        *nhid = PDS_FLOW_NH_ID_GET(nexthop);
+        return;
+    }
+    *nh_valid = 0;
+    *nhid = 0;
+    return;
+}
+
+always_inline void
+pds_flow_extract_nexthop_info (vlib_buffer_t *p0,
+                               u8 is_ip4, u8 iflow)
 {
     u32 nexthop = 0;
     pds_impl_db_vnic_entry_t *vnic0;
@@ -755,6 +795,79 @@ pds_flow_vr_ip_ping (p4_rx_cpu_hdr_t *hdr, vlib_buffer_t *vlib, u16 nh_hw_id,
 }
 
 always_inline void
+pds_flow_classify_no_vnic (vlib_buffer_t *p,
+                           p4_rx_cpu_hdr_t *hdr,
+                           u16 *next,
+                           u32 *counter)
+{
+    if (hdr->rx_packet && (hdr->flags & VPP_CPU_FLAGS_IPV4_2_VALID)) {
+        /*
+         * When vnic lookup fails in P4, P4/P4+ cannot do a route lookup on
+         * the source ip to determine route hit with NAT rule enabled. We
+         * assume such packets are invalid NAT flows (sent to server not
+         * containing the NAT port block matching the dest ip)
+         */
+        vnet_buffer(p)->pds_flow_data.flags |= hdr->flags;
+        vnet_buffer2(p)->pds_nat_data.vpc_id = hdr->vpc_id;
+        /*
+         * set l3_hdr_offset to offset to outer header from current
+         * location. set l4_hdr_offset to offset to inner l4 header from
+         * current location
+         */
+        vnet_buffer(p)->l3_hdr_offset = hdr->l3_offset -
+                hdr->l3_inner_offset;
+        vnet_buffer(p)->l4_hdr_offset = hdr->l4_inner_offset -
+                hdr->l3_inner_offset;
+        vlib_buffer_advance(p, VPP_P4_TO_ARM_HDR_SZ +
+                hdr->l3_inner_offset - hdr->l2_offset);
+        *next = FLOW_CLASSIFY_NEXT_IP4_NAT_INVAL;
+        counter[FLOW_CLASSIFY_COUNTER_IP4_NAT_INVAL] += 1;
+    } else {
+        *next = FLOW_CLASSIFY_NEXT_DROP;
+        counter[FLOW_CLASSIFY_COUNTER_VNIC_NOT_FOUND] += 1;
+    }
+    return;
+}
+
+always_inline void
+pds_flow_l2l_packet_process (vlib_buffer_t *p,
+                             p4_rx_cpu_hdr_t *hdr,
+                             pds_flow_hw_ctx_t *ctx,
+                             u8 flags,
+                             u16 *next,
+                             u32 *counter)
+{
+    pds_impl_db_vnic_entry_t *vnic;
+
+    if (hdr->rx_packet) {
+        if (!BIT_ISSET(flags, VPP_CPU_FLAGS_IPV4_2_VALID)) {
+            *next = FLOW_CLASSIFY_NEXT_DROP;
+            counter[FLOW_CLASSIFY_COUNTER_VNIC_NOT_FOUND] += 1;
+            return;
+        }
+        vnic = pds_impl_db_vnic_get(ctx->vnic_id);
+        if (PREDICT_FALSE(!vnic)) {
+            *next = FLOW_CLASSIFY_NEXT_DROP;
+            counter[FLOW_CLASSIFY_COUNTER_VNIC_NOT_FOUND] += 1;
+            return;
+        }
+        vnet_buffer(p)->pds_flow_data.lif = vnic->host_lif_hw_id;
+        vnet_buffer(p)->pds_flow_data.l2_inner_offset =
+                hdr->l2_inner_offset;
+        vlib_buffer_advance(p, pds_flow_classify_get_advance_offset(p,
+                            hdr->flags));
+        *next = FLOW_CLASSIFY_NEXT_IP4_L2L_FLOW_PROG;
+    } else {
+        vnet_buffer(p)->pds_flow_data.egress_lkp_id = hdr->egress_bd_id;
+        vlib_buffer_advance(p, pds_flow_classify_get_advance_offset(p,
+                            hdr->flags));
+        *next = FLOW_CLASSIFY_NEXT_IP4_L2L_DEF_FLOW_PROG;
+    }
+    counter[FLOW_CLASSIFY_COUNTER_IP4_L2L_FLOW] += 1;
+    return;
+}
+
+always_inline void
 pds_flow_classify_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
 {
     p4_rx_cpu_hdr_t *hdr = vlib_buffer_get_current(p);
@@ -768,32 +881,7 @@ pds_flow_classify_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
     u8 flags = BIT_ISSET(flag_orig, VPP_CPU_FLAGS_IP_VALID);
     vnic = pds_impl_db_vnic_get(hdr->vnic_id);
     if (PREDICT_FALSE(!vnic)) {
-        if (hdr->rx_packet && flag_orig & VPP_CPU_FLAGS_IPV4_2_VALID) {
-            /*
-             * When vnic lookup fails in P4, P4/P4+ cannot do a route lookup on
-             * the source ip to determine route hit with NAT rule enabled. We
-             * assume such packets are invalid NAT flows (sent to server not
-             * containing the NAT port block matching the dest ip)
-             */
-            vnet_buffer(p)->pds_flow_data.flags |= flag_orig;
-            vnet_buffer2(p)->pds_nat_data.vpc_id = hdr->vpc_id;
-            /*
-             * set l3_hdr_offset to offset to outer header from current
-             * location. set l4_hdr_offset to offset to inner l4 header from
-             * current location
-             */
-            vnet_buffer(p)->l3_hdr_offset = hdr->l3_offset - 
-                                            hdr->l3_inner_offset;
-            vnet_buffer(p)->l4_hdr_offset = hdr->l4_inner_offset -
-                                            hdr->l3_inner_offset;
-            vlib_buffer_advance(p, VPP_P4_TO_ARM_HDR_SZ +
-                                hdr->l3_inner_offset - hdr->l2_offset);
-            *next = FLOW_CLASSIFY_NEXT_IP4_NAT_INVAL;
-            counter[FLOW_CLASSIFY_COUNTER_IP4_NAT_INVAL] += 1;
-        } else {
-            *next = FLOW_CLASSIFY_NEXT_DROP;
-            counter[FLOW_CLASSIFY_COUNTER_VNIC_NOT_FOUND] += 1;
-        }
+        pds_flow_classify_no_vnic(p, hdr, next, counter);
         return;
     }
     vnet_buffer(p)->pds_flow_data.ses_id = hdr->session_id;
@@ -828,40 +916,26 @@ pds_flow_classify_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
     vnet_buffer2(p)->pds_nat_data.vpc_id = hdr->vpc_id;
     vnet_buffer2(p)->pds_nat_data.vnic_id = hdr->vnic_id;
 
+    if (PREDICT_FALSE(pds_is_flow_session_present(p))) {
+        ctx = pds_flow_get_hw_ctx(
+              vnet_buffer(p)->pds_flow_data.ses_id);
+        if (PREDICT_FALSE(NULL == ctx)) {
+            *next = FLOW_CLASSIFY_NEXT_DROP;
+            counter[FLOW_CLASSIFY_COUNTER_SES_NOT_FOUND] += 1;
+            return;
+        }
+        if (pds_flow_packet_l2l(ctx->packet_type)) {
+            pds_flow_l2l_packet_process(p, hdr, ctx, flags, next, counter);
+            goto end;
+        }
+    }
+
     // drop rflow defunct packets
     // ideally these should be dropped in p4, extra check here
     if (PREDICT_FALSE(hdr->defunct_flow && hdr->flow_role)) {
         *next = FLOW_CLASSIFY_NEXT_DROP;
         counter[FLOW_CLASSIFY_COUNTER_DEFUNCT_RFLOW] += 1;
         return;
-    }
-
-    if (PREDICT_FALSE(pds_is_flow_session_present(p))) {
-        ctx = pds_flow_get_hw_ctx(
-              vnet_buffer(p)->pds_flow_data.ses_id);
-        if (PREDICT_FALSE(!ctx || !ctx->is_in_use)) {
-            *next = FLOW_CLASSIFY_NEXT_DROP;
-            counter[FLOW_CLASSIFY_COUNTER_SES_NOT_FOUND] += 1;
-            return;
-        }
-        if (pds_flow_packet_l2l(ctx->packet_type) && hdr->rx_packet) {
-            if (BIT_ISSET(flags, VPP_CPU_FLAGS_IPV4_2_VALID)) {
-                vnic = pds_impl_db_vnic_get(ctx->vnic_id);
-                if (PREDICT_FALSE(!vnic)) {
-                    *next = FLOW_CLASSIFY_NEXT_DROP;
-                    counter[FLOW_CLASSIFY_COUNTER_VNIC_NOT_FOUND] += 1;
-                    return;
-                }
-                vnet_buffer(p)->pds_flow_data.lif = vnic->host_lif_hw_id;
-                vnet_buffer(p)->pds_flow_data.l2_inner_offset =
-                    hdr->l2_inner_offset;
-                vlib_buffer_advance(p, pds_flow_classify_get_advance_offset(p,
-                                    flag_orig));
-                *next = FLOW_CLASSIFY_NEXT_IP4_L2L_FLOW_PROG;
-                counter[FLOW_CLASSIFY_COUNTER_IP4_L2L_FLOW] += 1;
-                goto end;
-            }
-        }
     }
 
     // If it's a TCP SYN packet, it should always go to FLOW_PROG node
@@ -930,7 +1004,7 @@ pds_flow_classify_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
 
 always_inline void
 pds_flow_handle_l2l (vlib_buffer_t *p0, u8 flow_exists,
-                     u8 *miss_hit, pds_flow_hw_ctx_t   *ses)
+                     u8 *miss_hit, pds_flow_hw_ctx_t *ses)
 {
     if (flow_exists) {
         *miss_hit = 0;

@@ -155,6 +155,24 @@ pds_flow_appdata2str (void *appdata)
     return str;
 }
 
+always_inline bool
+pds_is_flow_drop (vlib_buffer_t *p0)
+{
+    return false;
+}
+
+always_inline void
+pds_l2l_flow_extract_nexthop_info (vlib_buffer_t *p0,
+                                   u16 *nhid,
+                                   u8 *nh_type,
+                                   u8 *nh_valid,
+                                   u8 *nh_priority,
+                                   u8 *drop)
+{
+    *nh_valid = *drop = 0;
+    return;
+}
+
 always_inline void
 pds_flow_extract_nexthop_info(vlib_buffer_t *p0, u8 is_ip4, u8 iflow)
 {
