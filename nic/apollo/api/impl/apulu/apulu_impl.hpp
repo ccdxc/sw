@@ -174,11 +174,11 @@ namespace impl {
     memset((key), 0, sizeof(*(key)));                                        \
     (key)->p4_to_rxdma_vpc_id = (vpc_hw_id);                                 \
     if ((ip)->af == IP_AF_IPV6) {                                            \
-        (key)->p4_to_rxdma_iptype = KEY_TYPE_IPV6;                           \
+        (key)->p4_to_rxdma_iptype = IPTYPE_IPV6;                             \
         sdk::lib::memrev((key)->rx_to_tx_hdr_remote_ip,                      \
                          (ip)->addr.v6_addr.addr8, IP6_ADDR8_LEN);           \
     } else {                                                                 \
-        (key)->p4_to_rxdma_iptype = KEY_TYPE_IPV4;                           \
+        (key)->p4_to_rxdma_iptype = IPTYPE_IPV4;                             \
         memcpy((key)->rx_to_tx_hdr_remote_ip,                                \
                &(ip)->addr.v4_addr, IP4_ADDR8_LEN);                          \
     }                                                                        \
