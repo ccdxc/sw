@@ -18,6 +18,9 @@ def __get_cfg_object_selector(modargs):
 def __get_cfg_operation_selector(modargs):
     return __get_module_args_value(modargs, 'operation')
 
+def __get_cfg_fields_selector(modargs):
+    return __get_module_args_value(modargs, "fields")
+
 def GetCfgObject(tc):
     objname = __get_cfg_object_selector(tc.module.args)
     cfgObject = None
@@ -51,8 +54,13 @@ def GetCfgObject(tc):
         cfgObject = tc.config.policy
     elif objname == 'vpc':
         cfgObject = tc.config.localmapping.VNIC.SUBNET.VPC
+    elif objname == 'securityprofile':
+        cfgObject = tc.config.securityprofile
     logger.info(" Selecting %s for %s" % (cfgObject, objname))
     return cfgObject
 
 def GetCfgOperFn(tc):
     return __get_cfg_operation_selector(tc.module.args)
+
+def GetCfgFields(tc):
+    return __get_cfg_fields_selector(tc.module.args)

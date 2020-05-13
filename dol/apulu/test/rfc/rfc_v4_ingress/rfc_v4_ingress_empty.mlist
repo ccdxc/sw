@@ -20,8 +20,10 @@ modules:
               proto  : UDP
             - policy : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFWAction=allow
               proto  : ICMP
-#            - policy : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFWAction=allow
-#              proto  : ESP
+            - policy : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFWAction=allow
+              proto  : ESP
+              result : deny
+             
 
     - module         :
         name         : EMPTY_DENY
@@ -33,13 +35,12 @@ modules:
               proto  : UDP
             - policy : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFWAction=deny
               proto  : ICMP
-#            - policy : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFWAction=deny
-#              proto  : ESP
+            - policy : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFWAction=deny
+              proto  : ESP
 
     - module         :
         name         : EMPTY_NONE
         spec         : rfc_security_profile_ingress.testspec
-        ignore       : True
         iterate      :
             - policy : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFWAction=none
               proto  : TCP
@@ -49,5 +50,6 @@ modules:
               proto  : ICMP
             - policy : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFWAction=none
               proto  : ESP
+              result : deny
 
        

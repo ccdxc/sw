@@ -7,6 +7,7 @@ trigger:
     configs:
         - object: callback://common/config/GetCfgObject
           method: callback://common/config/GetCfgOperFn
+          fields: callback://common/config/GetCfgFields
 
 expect:
     configs:

@@ -225,7 +225,11 @@ class DOLTestCase(TestCase):
                 tc_config.method = cfg_method.call(self)
             else:
                 tc_config.method = cfg_method
-            tc_config.spec = getattr(spec_config_entry, "fields", None)
+            cfg_fields = getattr(spec_config_entry, "fields", None)
+            if objects.IsCallback(cfg_fields):
+                tc_config.spec = cfg_fields.call(self)
+            else:
+                tc_config.spec = cfg_fields
             tcsn.configs.append(tc_config)
    
     #def __setup_ignore_excess_packets(self, tcsn, spsn):

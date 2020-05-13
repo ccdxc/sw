@@ -17,7 +17,6 @@ from infra.common.glopts  import GlobalOptions
 import apollo.config.agent.api as api
 from apollo.config.resmgr import client as ResmgrClient
 from apollo.config.resmgr import Resmgr
-from apollo.config.objects.security_profile import client as SecurityProfileClient
 from apollo.config.objects.lmapping import client as LmappingClient
 from apollo.config.objects.rmapping import client as RmappingClient
 
@@ -531,8 +530,8 @@ class PolicyObject(base.ConfigObjectBase):
             return False
         if spec.AddrFamily != utils.GetRpcIPAddrFamily(self.AddrFamily):
             return False
-        # if spec.DefaultFWAction != utils.GetRpcSecurityRuleAction(self.DefaultFwAction):
-        #     return False
+        if spec.DefaultFWAction != utils.GetRpcSecurityRuleAction(self.DefaultFWAction):
+            return False
         if len(spec.Rules) != len(self.rules):
             return False
         for rrule,erule in zip(spec.Rules,self.rules):

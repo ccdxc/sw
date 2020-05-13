@@ -10,44 +10,101 @@ feature:
 
 modules:
 
-    - module         :
-        name         : EMPTY_ALLOW
-        spec         : rfc_egress.testspec
-        iterate      :
-            - policy : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFWAction=allow
-              proto  : TCP
-            - policy : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFWAction=allow
-              proto  : UDP
-            - policy : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFWAction=allow
-              proto  : ICMP
-            - policy : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFWAction=allow
-              proto  : ESP
+    - module          :
+        name          : EMPTY_ALLOW
+        spec          : rfc_egress.testspec
+        iterate       :
+            - policy  : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFWAction=allow
+              proto   : TCP
+            - policy  : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFWAction=allow
+              proto   : UDP
+            - policy  : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFWAction=allow
+              proto   : ICMP
+            - policy  : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFWAction=allow
+              proto   : ESP
 
-    - module         :
-        name         : EMPTY_DENY
-        spec         : rfc_egress.testspec
-        iterate      :
-            - policy : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFWAction=deny
-              proto  : TCP
-            - policy : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFWAction=deny
-              proto  : UDP
-            - policy : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFWAction=deny
-              proto  : ICMP
-            - policy : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFWAction=deny
-              proto  : ESP
+    - module          :
+        name          : EMPTY_DENY
+        spec          : rfc_egress.testspec
+        iterate       :
+            - policy  : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFWAction=deny
+              proto   : TCP
+            - policy  : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFWAction=deny
+              proto   : UDP
+            - policy  : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFWAction=deny
+              proto   : ICMP
+            - policy  : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFWAction=deny
+              proto   : ESP
 
-    - module         :
-        name         : EMPTY_NONE
-        spec         : rfc_security_profile_egress.testspec
-        ignore       : True
-        iterate      :
-            - policy : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFWAction=none
-              proto  : TCP
-            - policy : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFWAction=none
-              proto  : UDP
-            - policy : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFWAction=none
-              proto  : ICMP
-            - policy : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFWAction=none
-              proto  : ESP
+    - module          :
+        name          : EMPTY_NONE_RESULT_ALLOW
+        spec          : rfc_egress.testspec
+        iterate       :
+            - policy  : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFWAction=none
+              proto   : TCP
+            - policy  : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFWAction=none
+              proto   : UDP
+            - policy  : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFWAction=none
+              proto   : ICMP
+            - policy  : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFWAction=none
+              proto   : ESP
 
+    - module          :
+        name          : SECURITY_PROFILE_UPDATE_ACTION_DENY
+        spec          : rfc_tag_crud.testspec
+        args          :
+          - object    : securityprofile
+            operation : UpdateDefaultFWAction
+            fields    :
+              DefaultFWAction : deny
+        iterate       :
+          - policy    : filter://AddrFamily=IPV4,OverlapType=none
+
+    - module          :
+        name          : EMPTY_NONE_RESULT_DENY
+        spec          : rfc_egress.testspec
+        iterate       :
+            - policy  : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFWAction=none
+              proto   : TCP
+            - policy  : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFWAction=none
+              proto   : UDP
+            - policy  : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFWAction=none
+              proto   : ICMP
+            - policy  : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFWAction=none
+              proto   : ESP
+
+    - module          :
+        name          : SECURITY_PROFILE_UPDATE_ACTION_NONE
+        spec          : rfc_tag_crud.testspec
+        args          :
+          - object    : securityprofile
+            operation : UpdateDefaultFWAction
+            fields    :
+              DefaultFWAction : none
+        iterate       :
+          - policy    : filter://AddrFamily=IPV4,OverlapType=none
+
+    - module          :
+        name          : EMPTY_NONE_RESULT_NONE
+        spec          : rfc_egress.testspec
+        iterate       :
+            - policy  : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFWAction=none
+              proto   : TCP
+            - policy  : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFWAction=none
+              proto   : UDP
+            - policy  : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFWAction=none
+              proto   : ICMP
+            - policy  : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFWAction=none
+              proto   : ESP
+
+    - module          :
+        name          : SECURITY_PROFILE_UPDATE_ACTION_ALLOW
+        spec          : rfc_tag_crud.testspec
+        args          :
+          - object    : securityprofile
+            operation : UpdateDefaultFWAction
+            fields    :
+              DefaultFWAction : allow
+        iterate       :
+          - policy    : filter://AddrFamily=IPV4,OverlapType=none
 

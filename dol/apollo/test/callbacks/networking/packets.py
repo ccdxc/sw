@@ -497,7 +497,13 @@ def __rule_dump(tc_rule, match_rule):
 def __get_final_result(tc_rule, match_rule, testcase):
     policy = testcase.config.policy
     securityprofile = testcase.config.securityprofile
-    if match_rule:
+    iterelem = testcase.module.iterator.Get()
+    result = getattr(iterelem, "result", None) if iterelem else None
+    if result:
+        final_result = utils.GetRpcSecurityRuleAction(result)
+        logger.info(f"Matching to overrided result action: {final_result}")
+        return final_result
+    elif match_rule:
         final_result = match_rule.Action
         logger.info(f"Matching to rule action: {final_result}")
     elif policy.DefaultFWAction != "none":

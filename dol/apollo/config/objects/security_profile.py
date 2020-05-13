@@ -5,6 +5,7 @@ import infra.common.objects as objects
 
 from apollo.config.resmgr import Resmgr
 from apollo.config.store import client as EzAccessStoreClient
+from apollo.config.objects.policy import client as PolicyClient
 
 import apollo.config.agent.api as api
 import apollo.config.objects.base as base
@@ -158,7 +159,13 @@ class SecurityProfileObject(base.ConfigObjectBase):
             logger.info(f"Updating security profile default FW action -> {action}")
             self.DefaultFWAction = utils.GetRpcSecurityRuleAction(action)
             self.Show()
-            return utils.UpdateObject(self)
+            if not utils.UpdateObject(self):
+                return False
+            # Trigger the update on policy so that correct default FW action
+            # is inherited from security profile.
+            for policy in PolicyClient.Objects(self.Node):
+                policy.SetDirty(True)
+                assert(policy.CommitUpdate())
         return True
 
 class SecurityProfileObjectClient(base.ConfigClientBase):
