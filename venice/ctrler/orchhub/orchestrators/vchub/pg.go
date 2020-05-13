@@ -35,7 +35,7 @@ func (d *PenDVS) AddPenPG(pgName string, networkMeta api.ObjectMeta) error {
 				d.Log.Errorf("Failed to assign vlans for PG")
 				if err.Error() == "PG limit reached" {
 					// Generate error
-					evtMsg := fmt.Sprintf("Failed to create Network %s in Datacenter %s. Max network limit reached.", networkMeta.Name, d.DcName)
+					evtMsg := fmt.Sprintf("%v : Failed to create port group %s in Datacenter %s. Max port group limit reached.", d.State.OrchConfig.Name, networkMeta.Name, d.DcName)
 					d.Log.Errorf(evtMsg)
 
 					recorder.Event(eventtypes.ORCH_CONFIG_PUSH_FAILURE, evtMsg, d.State.OrchConfig)
@@ -47,7 +47,7 @@ func (d *PenDVS) AddPenPG(pgName string, networkMeta api.ObjectMeta) error {
 	d.Log.Debugf("Adding PG %s with pvlan of %d and %d", pgName, primaryVlan, secondaryVlan)
 	err = d.AddPenPGWithVlan(pgName, networkMeta, primaryVlan, secondaryVlan)
 	if err != nil {
-		evtMsg := fmt.Sprintf("Failed to set configuration for network %s in Datacenter %s", networkMeta.Name, d.DcName)
+		evtMsg := fmt.Sprintf("%v : Failed to set configuration for port group %s in Datacenter %s. %v", d.State.OrchConfig.Name, networkMeta.Name, d.DcName, err)
 		d.Log.Errorf("%s, err %s", evtMsg, err)
 		if d.Ctx.Err() == nil {
 			recorder.Event(eventtypes.ORCH_CONFIG_PUSH_FAILURE, evtMsg, d.State.OrchConfig)
@@ -300,7 +300,7 @@ func (v *VCHub) handlePG(m defs.VCEventMsg) {
 	}
 
 	if penPG.PgName != pgConfig.Name {
-		evtMsg := fmt.Sprintf("User renamed a Pensando created Port Group. Port group name has been changed back.")
+		evtMsg := fmt.Sprintf("%v : User renamed Pensando created port group from %v to %v. Port group name has been changed back.", v.State.OrchConfig.Name, penPG.PgName, pgConfig.Name)
 		recorder.Event(eventtypes.ORCH_INVALID_ACTION, evtMsg, v.State.OrchConfig)
 		// Put object name back
 		err := v.probe.RenamePG(m.DcName, pgConfig.Name, penPG.PgName, defaultRetryCount)
@@ -332,8 +332,13 @@ func (v *VCHub) handlePG(m defs.VCEventMsg) {
 	err = dvs.AddPenPG(pgConfig.Name, penPG.NetworkMeta)
 	if err != nil {
 		v.Log.Errorf("Failed to set vlan config for PG %s, %s", pgConfig.Name, err)
+
+		evtMsg := fmt.Sprintf("%v : Failed to set vlan config for PG %s. %s", v.State.OrchConfig.Name, pgConfig.Name, err)
+		recorder.Event(eventtypes.ORCH_CONFIG_PUSH_FAILURE, evtMsg, v.State.OrchConfig)
+		return
 	}
-	evtMsg := fmt.Sprintf("User modified vlan settings for a Pensando created Port Group. Port group settings have been changed back.")
+
+	evtMsg := fmt.Sprintf("%v : User modified vlan settings for Pensando created port group %v. Port group settings have been changed back.", v.State.OrchConfig.Name, pgConfig.Name)
 	recorder.Event(eventtypes.ORCH_INVALID_ACTION, evtMsg, v.State.OrchConfig)
 }
 

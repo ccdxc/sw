@@ -137,7 +137,7 @@ func TestNetworks(t *testing.T) {
 					evts := eventRecorder.GetEvents()
 					found := false
 					for _, evt := range evts {
-						if evt.EventType == eventtypes.ORCH_INVALID_ACTION.String() && strings.Contains(evt.Message, "Port Group") {
+						if evt.EventType == eventtypes.ORCH_INVALID_ACTION.String() && strings.Contains(evt.Message, "Port group") {
 							found = true
 						}
 					}
@@ -388,7 +388,7 @@ func TestNetworks(t *testing.T) {
 					evts := eventRecorder.GetEvents()
 					found := false
 					for _, evt := range evts {
-						if evt.EventType == eventtypes.ORCH_INVALID_ACTION.String() && strings.Contains(evt.Message, "Port Group") {
+						if evt.EventType == eventtypes.ORCH_INVALID_ACTION.String() && strings.Contains(evt.Message, "Port group") {
 							found = true
 						}
 					}

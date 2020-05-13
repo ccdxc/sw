@@ -14,6 +14,8 @@ import (
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/events/generated/eventtypes"
+	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub"
+	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
@@ -959,23 +961,22 @@ func (ws *WorkloadState) trackMigration() {
 			if ws.Workload.Status.MigrationStatus.Stage == workload.WorkloadMigrationStatus_MIGRATION_ABORT.String() {
 				ws.Workload.Status.MigrationStatus.Status = workload.WorkloadMigrationStatus_FAILED.String()
 				log.Errorf("Workload [%v] migration aborted.", ws.Workload.Name)
-				recorder.Event(eventtypes.MIGRATION_FAILED,
-					fmt.Sprintf("Workload [%v] migration failed", ws.Workload.Name),
-					nil)
 			} else if ws.Workload.Status.MigrationStatus.Status == workload.WorkloadMigrationStatus_STARTED.String() {
 				// In case of timeout move the EPs to the new HOST
 				log.Errorf("Workload [%v] migration timed out.", ws.Workload.Name)
 
 				// Wait for EP move goroutines to exit before updating the status to API Server
 				ws.Workload.Status.MigrationStatus.Status = workload.WorkloadMigrationStatus_TIMED_OUT.String()
-				ws.Workload.Status.MigrationStatus.CompletedAt = &api.Timestamp{}
-				ws.Workload.Status.MigrationStatus.CompletedAt.SetTime(time.Now())
-				recorder.Event(eventtypes.MIGRATION_TIMED_OUT,
-					fmt.Sprintf("Workload [%v] migration timed out", ws.Workload.Name),
-					nil)
 
-				ws.Workload.Write()
+				vmName, dcName, orchName := ws.getOrchestrationLabels()
+				recorder.Event(eventtypes.MIGRATION_TIMED_OUT,
+					fmt.Sprintf("%v : VM %v (%v) in Datacenter %v migration timed out. Traffic may be affected.", orchName, vmName, ws.Workload.Name, dcName),
+					nil)
 			}
+
+			ws.Workload.Status.MigrationStatus.CompletedAt = &api.Timestamp{}
+			ws.Workload.Status.MigrationStatus.CompletedAt.SetTime(time.Now())
+			ws.Workload.Write()
 
 			return
 		case <-checkDataplaneMigration.C:
@@ -995,11 +996,29 @@ func (ws *WorkloadState) trackMigration() {
 				ws.Workload.Status.MigrationStatus.CompletedAt = &api.Timestamp{}
 				ws.Workload.Status.MigrationStatus.CompletedAt.SetTime(time.Now())
 				ws.Workload.Write()
+
+				vmName, dcName, orchName := ws.getOrchestrationLabels()
 				recorder.Event(eventtypes.MIGRATION_FAILED,
-					fmt.Sprintf("Workload [%v] migration failed", ws.Workload.Name),
+					fmt.Sprintf("%v : VM %v (%v) in Datacenter %v migration failed. Traffic may be affected.", orchName, vmName, ws.Workload.Name, dcName),
 					nil)
 				return
 			}
 		}
 	}
+}
+
+func (ws *WorkloadState) getOrchestrationLabels() (vmName, dcName, orchName string) {
+	if n, ok := ws.Workload.Labels[vchub.NameKey]; ok {
+		vmName = n
+	}
+
+	if n, ok := ws.Workload.Labels[utils.NamespaceKey]; ok {
+		dcName = n
+	}
+
+	if n, ok := ws.Workload.Labels[utils.OrchNameKey]; ok {
+		orchName = n
+	}
+
+	return
 }

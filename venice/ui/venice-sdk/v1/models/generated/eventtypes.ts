@@ -116,12 +116,12 @@ export const eventTypes: { [name: string]: EventType } = {
   },
   'MIGRATION_FAILED' : {
       "Name": "MIGRATION_FAILED",
-      "Severity": EventsEvent_severity.warn,
+      "Severity": EventsEvent_severity.critical,
       "Desc": "Migration Failed",
   },
   'MIGRATION_TIMED_OUT' : {
       "Name": "MIGRATION_TIMED_OUT",
-      "Severity": EventsEvent_severity.warn,
+      "Severity": EventsEvent_severity.critical,
       "Desc": "Migration Timed out",
   },
   'ORCH_ALREADY_MANAGED' : {
@@ -131,7 +131,7 @@ export const eventTypes: { [name: string]: EventType } = {
   },
   'ORCH_CONFIG_PUSH_FAILURE' : {
       "Name": "ORCH_CONFIG_PUSH_FAILURE",
-      "Severity": EventsEvent_severity.warn,
+      "Severity": EventsEvent_severity.critical,
       "Desc": "Failed to push some configurations to orchestrator",
   },
   'ORCH_CONNECTION_ERROR' : {
@@ -146,12 +146,12 @@ export const eventTypes: { [name: string]: EventType } = {
   },
   'ORCH_LOGIN_FAILURE' : {
       "Name": "ORCH_LOGIN_FAILURE",
-      "Severity": EventsEvent_severity.critical,
+      "Severity": EventsEvent_severity.warn,
       "Desc": "Login credentials were invalid for orchestrator.",
   },
   'ORCH_UNSUPPORTED_VERSION' : {
       "Name": "ORCH_UNSUPPORTED_VERSION",
-      "Severity": EventsEvent_severity.critical,
+      "Severity": EventsEvent_severity.warn,
       "Desc": "Unsupported orchestrator version",
   },
   'AUDITING_FAILED' : {

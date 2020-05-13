@@ -109,7 +109,7 @@ func (v *VCHub) tagSync() {
 				v.Log.Errorf("Found tag %s from another PSM on our object %s %s, raising event...", tag, objName, obj.Value)
 				// Another Venice is/has managed this DC
 				evt := eventtypes.ORCH_ALREADY_MANAGED
-				msg := fmt.Sprintf("Found tag %s on object %s. This namespace might be managed by another PSM.", tag, objName)
+				msg := fmt.Sprintf("%v : Object %v is managed by multiple PSMs. Found tag %s on object.", v.State.OrchConfig.Name, objName, tag)
 				recorder.Event(evt, msg, v.State.OrchConfig)
 			}
 			vlan, ok := v.probe.IsVlanTag(tag)

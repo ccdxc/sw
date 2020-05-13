@@ -362,25 +362,25 @@ enum EventTypes {
                                            (severity) = CRITICAL,
                                            (desc)     = "Failed to connect to orchestrator"];
     ORCH_LOGIN_FAILURE                     = 1002 [(category) = Orchestration,
-                                           (severity) = CRITICAL,
+                                           (severity) = WARN,
                                            (desc)     = "Login credentials were invalid for orchestrator."];
     ORCH_CONFIG_PUSH_FAILURE               = 1003 [(category) = Orchestration,
-                                           (severity) = WARN,
+                                           (severity) = CRITICAL,
                                            (desc)     = "Failed to push some configurations to orchestrator"];
     ORCH_INVALID_ACTION                    = 1004 [(category) = Orchestration,
                                            (severity) = WARN,
                                            (desc)     = "User performed an action that is not supported"];
     MIGRATION_FAILED                       = 1005 [(category) = Orchestration,
-                                           (severity) = WARN,
+                                           (severity) = CRITICAL,
                                            (desc)     = "Migration Failed"];
     MIGRATION_TIMED_OUT                    = 1006 [(category) = Orchestration,
-                                           (severity) = WARN,
+                                           (severity) = CRITICAL,
                                            (desc)     = "Migration Timed out"];
     ORCH_ALREADY_MANAGED                   = 1007 [(category) = Orchestration,
                                            (severity) = WARN,
                                            (desc)     = "Another PSM may be managing the same namespace"];
     ORCH_UNSUPPORTED_VERSION               = 1008 [(category) = Orchestration,
-                                           (severity) = CRITICAL,
+                                           (severity) = WARN,
                                            (desc)     = "Unsupported orchestrator version"];
     ORCH_DSC_NOT_ADMITTED                  = 1009 [(category)    = Cluster,
                                            (severity)    = WARN,

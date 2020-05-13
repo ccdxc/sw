@@ -533,14 +533,14 @@ func init() {
 
 	eventTypes[ORCH_LOGIN_FAILURE] = &EventTypeAttributes{
 		EType:      ORCH_LOGIN_FAILURE.String(),
-		Severity:   "critical",
+		Severity:   "warn",
 		Category:   "",
 		Desc:       "Login credentials were invalid for orchestrator.",
 		SuppressMM: false}
 
 	eventTypes[ORCH_CONFIG_PUSH_FAILURE] = &EventTypeAttributes{
 		EType:      ORCH_CONFIG_PUSH_FAILURE.String(),
-		Severity:   "warn",
+		Severity:   "critical",
 		Category:   "",
 		Desc:       "Failed to push some configurations to orchestrator",
 		SuppressMM: false}
@@ -554,14 +554,14 @@ func init() {
 
 	eventTypes[MIGRATION_FAILED] = &EventTypeAttributes{
 		EType:      MIGRATION_FAILED.String(),
-		Severity:   "warn",
+		Severity:   "critical",
 		Category:   "",
 		Desc:       "Migration Failed",
 		SuppressMM: false}
 
 	eventTypes[MIGRATION_TIMED_OUT] = &EventTypeAttributes{
 		EType:      MIGRATION_TIMED_OUT.String(),
-		Severity:   "warn",
+		Severity:   "critical",
 		Category:   "",
 		Desc:       "Migration Timed out",
 		SuppressMM: false}
@@ -575,7 +575,7 @@ func init() {
 
 	eventTypes[ORCH_UNSUPPORTED_VERSION] = &EventTypeAttributes{
 		EType:      ORCH_UNSUPPORTED_VERSION.String(),
-		Severity:   "critical",
+		Severity:   "warn",
 		Category:   "",
 		Desc:       "Unsupported orchestrator version",
 		SuppressMM: false}

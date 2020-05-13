@@ -94,7 +94,7 @@ func (v *VCHub) startEventsListener() {
 				} else if connStatus.State == orchestration.OrchestratorStatus_Failure.String() {
 					evt := eventtypes.ORCH_CONNECTION_ERROR
 					msg = connStatus.Err.Error()
-					evtMsg := fmt.Sprintf("%s: %s", v.OrchConfig.Name, msg)
+					evtMsg := fmt.Sprintf("%v : Connection issues with orchestrator. %s", v.OrchConfig.Name, msg)
 					// Generate event depending on error type
 					if strings.HasPrefix(msg, utils.UnsupportedVersionMsg) {
 						evt = eventtypes.ORCH_UNSUPPORTED_VERSION
@@ -102,7 +102,7 @@ func (v *VCHub) startEventsListener() {
 						// Check if it is a credential issue
 						soapErr := soap.ToSoapFault(connStatus.Err)
 						msg = soapErr.String
-						evtMsg = fmt.Sprintf("%s: %s", v.OrchConfig.Name, msg)
+						evtMsg = fmt.Sprintf("%v : Connection issues with orchestrator. %s", v.OrchConfig.Name, msg)
 						if _, ok := soapErr.Detail.Fault.(types.InvalidLogin); ok {
 							// Login error
 							evt = eventtypes.ORCH_LOGIN_FAILURE
@@ -119,7 +119,7 @@ func (v *VCHub) startEventsListener() {
 				} else if connStatus.State == orchestration.OrchestratorStatus_Degraded.String() {
 					evt := eventtypes.ORCH_CONNECTION_ERROR
 					msg = connStatus.Err.Error()
-					evtMsg := fmt.Sprintf("%s: %s", v.OrchConfig.Name, msg)
+					evtMsg := fmt.Sprintf("%v : Connection issues with the orchestrator. %s", v.OrchConfig.Name, msg)
 					if v.probe.IsREST401(connStatus.Err) {
 						evt = eventtypes.ORCH_LOGIN_FAILURE
 					}
@@ -251,7 +251,7 @@ func (v *VCHub) handleDC(m defs.VCEventMsg) {
 
 			v.Log.Infof("DC %s renamed to %s, changing back...", name, oldName)
 
-			evtMsg := fmt.Sprintf("User renamed a Pensando managed DC. Name has been changed back.")
+			evtMsg := fmt.Sprintf("%v : User renamed a Pensando managed Datacenter from %v to %v. Datacenter name has been changed back to %v.", v.State.OrchConfig.Name, name, oldName, name)
 			recorder.Event(eventtypes.ORCH_INVALID_ACTION, evtMsg, v.State.OrchConfig)
 
 			err := v.probe.RenameDC(name, oldName, 3)

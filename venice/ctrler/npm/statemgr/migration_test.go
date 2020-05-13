@@ -281,14 +281,10 @@ func TestMigrationWorkloadMigrationAbort(t *testing.T) {
 	AssertEventually(t, func() (bool, interface{}) {
 		wrk, err := stateMgr.FindWorkload("default", "testWorkload")
 		if err == nil && wrk.Workload.Status.MigrationStatus.Status == workload.WorkloadMigrationStatus_FAILED.String() {
-			for _, evt := range eventRecorder.GetEvents() {
-				if evt.EventType == eventtypes.MIGRATION_FAILED.String() {
-					return true, nil
-				}
-			}
+			return true, nil
 		}
 		return false, nil
-	}, "Workload not found", "1ms", "5s")
+	}, "Workload not found", "5s", "2m")
 }
 
 // TestMigrationWorkloadMigrationTimeout sets a low timeout value for migration, and checks if the status in workload object is correctly set

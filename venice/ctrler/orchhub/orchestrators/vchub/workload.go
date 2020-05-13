@@ -413,8 +413,14 @@ func (v *VCHub) handleVMotionStart(m defs.VMotionStartMsg) {
 		}
 	}
 	if err != nil {
-		evtMsg := fmt.Sprintf("Could not start migration on workload %s - %s", wlName, err)
+		var vmName string
+		if n, ok := workloadObj.Labels[NameKey]; ok {
+			vmName = n
+		}
+
+		evtMsg := fmt.Sprintf("%v : Could not start migration of VM %s (%s) from host %v to %v. %v", v.OrchConfig.Name, vmName, wlName, curHostName, hostName, err)
 		recorder.Event(eventtypes.MIGRATION_FAILED, evtMsg, &wlCopy)
+
 		v.Log.Errorf("%s", evtMsg)
 		// free the useg allocation done on new host
 		if err := v.releaseUsegVlans(&wlCopy, false /*old*/); err != nil {
@@ -466,7 +472,12 @@ func (v *VCHub) handleVMotionFailed(m defs.VMotionFailedMsg) {
 			}
 		}
 		if err != nil {
-			evtMsg := fmt.Sprintf("Could not cancel migration on workload %s - %s", wlObj.Name, err)
+			var vmName string
+			if n, ok := wlObj.Labels[NameKey]; ok {
+				vmName = n
+			}
+
+			evtMsg := fmt.Sprintf("%v : Could not cancel migration of VM %s (%s). %s", v.OrchConfig.Name, vmName, wlObj.Name, err)
 			recorder.Event(eventtypes.MIGRATION_FAILED, evtMsg, wlObj)
 			v.Log.Errorf("%s", evtMsg)
 			// If workload has finished migration, but the call hasn't finished
@@ -655,7 +666,12 @@ func (v *VCHub) finishMigration(wlObj *workload.Workload) {
 		}
 	}
 	if err != nil {
-		evtMsg := fmt.Sprintf("Could not complete migration on workload %s - %s", wlObj.Name, err)
+		var vmName string
+		if n, ok := wlObj.Labels[NameKey]; ok {
+			vmName = n
+		}
+
+		evtMsg := fmt.Sprintf("%v : Could not complete migration of VM %s (%s) from %v to %v. %v", v.State.OrchConfig.Name, wlObj.Name, vmName, wlObj.Spec.HostName, wlObj.Status.HostName, err)
 		recorder.Event(eventtypes.MIGRATION_FAILED, evtMsg, wlObj)
 		v.Log.Errorf("%s", evtMsg)
 	}
@@ -760,7 +776,7 @@ func (v *VCHub) reassignUsegs(dcName string, wlObj *workload.Workload) error {
 			errMsg := fmt.Errorf("Failed to assign vlan %v", err)
 			v.Log.Errorf("%s", errMsg)
 			if err.Error() == usegvlanmgr.VlanExhaustedErr {
-				evtMsg := fmt.Sprintf("Workload interfaces per host limit reached. Unable to allocate a micro seg vlan for workload %s, interface %s", wlObj.Name, inf.MACAddress)
+				evtMsg := fmt.Sprintf("%v : Unable to allocate a micro seg vlan for workload %s, interface %s. Microsegmentation VLAN per host limit reached.", v.State.OrchConfig.Name, wlObj.Name, inf.MACAddress)
 				recorder.Event(eventtypes.ORCH_CONFIG_PUSH_FAILURE, evtMsg, v.State.OrchConfig)
 			}
 			return errMsg
@@ -934,7 +950,7 @@ func (v *VCHub) assignUsegs(workload *workload.Workload) {
 			v.Log.Errorf("Failed to assign vlan %v", err)
 			// if vlans are full, raise event
 			if err.Error() == usegvlanmgr.VlanExhaustedErr {
-				evtMsg := fmt.Sprintf("Workload interfaces per host limit reached. Unable to allocate a micro seg vlan for workload %s, interface %s", workload.Name, inf.MACAddress)
+				evtMsg := fmt.Sprintf("%v : Unable to allocate a micro seg vlan for workload %s, interface %s. Microsegmentation VLAN per host limit reached.", v.State.OrchConfig.Name, workload.Name, inf.MACAddress)
 				recorder.Event(eventtypes.ORCH_CONFIG_PUSH_FAILURE, evtMsg, v.State.OrchConfig)
 			}
 		} else {
@@ -1009,7 +1025,7 @@ func (v *VCHub) processVMGuestInfo(prop types.PropertyChange, dcID string, dcNam
 
 		mac, err := conv.ParseMacAddr(nicInfo.MacAddress)
 		if err != nil {
-			v.Log.Errorf("Failed to parse mac address %s. Err : %v", nicInfo.MacAddress, err)
+			v.Log.Errorf("Failed to parse mac address %s. %v", nicInfo.MacAddress, err)
 			continue
 		}
 
@@ -1096,7 +1112,7 @@ func (v *VCHub) parseVnic(vnic types.BaseVirtualDevice) (string, string, string,
 		}
 		mac, err := conv.ParseMacAddr(vec.MacAddress)
 		if err != nil {
-			v.Log.Errorf("Failed to parse mac addres. Err : %v", err)
+			v.Log.Errorf("Failed to parse mac addres. %v", err)
 			return "", "", "", false
 		}
 		pg := back.Port.PortgroupKey

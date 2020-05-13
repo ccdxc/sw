@@ -7,12 +7,12 @@
   },
   {
    "Name": "MIGRATION_FAILED",
-   "Severity": "warn",
+   "Severity": "critical",
    "Desc": "Migration Failed"
   },
   {
    "Name": "MIGRATION_TIMED_OUT",
-   "Severity": "warn",
+   "Severity": "critical",
    "Desc": "Migration Timed out"
   },
   {
@@ -22,7 +22,7 @@
   },
   {
    "Name": "ORCH_CONFIG_PUSH_FAILURE",
-   "Severity": "warn",
+   "Severity": "critical",
    "Desc": "Failed to push some configurations to orchestrator"
   },
   {
@@ -37,12 +37,12 @@
   },
   {
    "Name": "ORCH_LOGIN_FAILURE",
-   "Severity": "critical",
+   "Severity": "warn",
    "Desc": "Login credentials were invalid for orchestrator."
   },
   {
    "Name": "ORCH_UNSUPPORTED_VERSION",
-   "Severity": "critical",
+   "Severity": "warn",
    "Desc": "Unsupported orchestrator version"
   }
  ],

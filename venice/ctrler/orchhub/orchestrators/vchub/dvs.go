@@ -230,7 +230,7 @@ func (d *PenDVS) SetVlanOverride(port string, vlan int, workloadName string, mac
 	if err != nil {
 		d.Log.Errorf("Failed to set vlan override for DC %s - dvs %s, err %s", d.DcName, d.DvsName, err)
 
-		evtMsg := fmt.Sprintf("Failed to set vlan override in DC %s for workload %s interface %s. Traffic may be impacted.", d.DcName, workloadName, mac)
+		evtMsg := fmt.Sprintf("%v : Failed to set vlan override in Datacenter %s for workload %s interface %s. Traffic may be impacted. %v", d.State.OrchConfig.Name, d.DcName, workloadName, mac, err)
 
 		if d.Ctx.Err() == nil {
 			recorder.Event(eventtypes.ORCH_CONFIG_PUSH_FAILURE, evtMsg, d.State.OrchConfig)
@@ -306,7 +306,7 @@ func (v *VCHub) handleDVS(m defs.VCEventMsg) {
 			v.Log.Errorf("Failed to recreate DVS for DC %s, %s", m.DcName, err)
 			// Generate event
 			if v.Ctx.Err() == nil {
-				evtMsg := fmt.Sprintf("Failed to recreate DVS in Datacenter %s. Network configuration cannot be pushed.", m.DcName)
+				evtMsg := fmt.Sprintf("%v : Failed to recreate DVS in Datacenter %s. %v", v.State.OrchConfig.Name, m.DcName, err)
 				recorder.Event(eventtypes.ORCH_CONFIG_PUSH_FAILURE, evtMsg, v.State.OrchConfig)
 			}
 		} else {
@@ -339,8 +339,9 @@ func (v *VCHub) handleDVS(m defs.VCEventMsg) {
 	// Check if we need to rename
 	if len(name) != 0 && dvs.DvsName != name {
 		// DVS renamed
-		evtMsg := fmt.Sprintf("User renamed a Pensando created DVS. Name has been changed back.")
+		evtMsg := fmt.Sprintf("%v : User renamed a Pensando created DVS in Datacenter %v from %v to %v. Name has been changed back.", v.State.OrchConfig.Name, m.DcName, dvs.DvsName, name)
 		recorder.Event(eventtypes.ORCH_INVALID_ACTION, evtMsg, v.State.OrchConfig)
+
 		// Put object name back
 		err := v.probe.RenameDVS(m.DcName, name, dvs.DvsName, defaultRetryCount)
 		if err != nil {
@@ -369,7 +370,15 @@ func (v *VCHub) handleDVS(m defs.VCEventMsg) {
 	err := penDC.AddPenDVS()
 	if err != nil {
 		v.Log.Errorf("Failed to write DVS %s config back, err %s ", dvs.DvsName, err)
+
+		// Generate event
+		if v.Ctx.Err() == nil {
+			evtMsg := fmt.Sprintf("%v : Failed to write DVS %s config back to Datacenter %v. %v", v.State.OrchConfig.Name, dvs.DvsName, m.DcName, err)
+			recorder.Event(eventtypes.ORCH_CONFIG_PUSH_FAILURE, evtMsg, v.State.OrchConfig)
+		}
+		return
 	}
-	evtMsg := fmt.Sprintf("User modified vlan settings for a Pensando created DVS. DVS settings have been changed back.")
+
+	evtMsg := fmt.Sprintf("%v : User modified vlan settings for Pensando created DVS %v in Datacenter %v. DVS settings have been changed back.", v.State.OrchConfig.Name, dvs.DvsName, m.DcName)
 	recorder.Event(eventtypes.ORCH_INVALID_ACTION, evtMsg, v.State.OrchConfig)
 }
