@@ -9,7 +9,6 @@ targets:
     feature:
     build-dependencies:
     - build-iris-x86
-    - build-iris-x86-elba
   halctl:
     commands: ["make", "jobd/halctl"]
     owners: ["email:bharat@pensando.io"]
