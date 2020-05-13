@@ -234,6 +234,8 @@ jobs:
     labels: ["precommit"]
   iota/test/standalone/precheckin/apulu-sdn-pds:
     labels: ["precommit"]
+  iota/test/standalone/precheckin/athena:
+    labels: ["precommit"]
   iota/test/standalone/sanity/apulu:
     labels: ["2xhourly"]
   iota/test/standalone/regression/esx:
@@ -341,6 +343,7 @@ dependencies:
     - reference: iota/test/standalone/precheckin/esx
     - reference: iota/test/standalone/precheckin/linux
     - reference: iota/test/standalone/precheckin/windows
+    - reference: iota/test/standalone/precheckin/athena
   iota/svcs:
     - reference: iota/test/standalone/precheckin/esx
     - reference: iota/test/standalone/precheckin/linux
@@ -390,6 +393,10 @@ dependencies:
   nic/apollo/tools/dev-docker:
     - reference: nic/apollo/tools/apulu/sanity/customer-docker
     # - reference: nic/apollo/tools/athena/sanity/customer-docker
+  nic/apollo/p4/athena_p4-16:
+    - reference: iota/test/standalone/precheckin/athena
+  nic/apollo/test/athena_app:
+    - reference: iota/test/standalone/precheckin/athena
   nic/agent:
     - reference: iota/test/venice
     - reference: iota/test/standalone/precheckin/esx

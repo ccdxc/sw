@@ -665,7 +665,7 @@ class NaplesManagement(EntityManagement):
     def __read_mac(self):
         if hasattr(self.nic_spec, 'OobandLink') and self.nic_spec.OobandLink == False:
             print("Naples: OobandLink not available")
-            return
+            return False
 
         for _ in range(10):
             output = self.RunCommandOnConsoleWithOutput("ip link | grep oob_mnic0 -A 1 | grep ether")
@@ -674,18 +674,19 @@ class NaplesManagement(EntityManagement):
             if len(x) > 0:
                 self.mac_addr = x[0]
                 print("Read MAC {0}".format(self.mac_addr))
-                return
+                return True
             else:
                 print("Did not Read MAC  : o/p {0}, pattern {1}".format(output, x))
             time.sleep(2)
-        raise Exception("Not able to read oob mac")
+        return False
 
     @_exceptionWrapper(_errCodes.NAPLES_LOGIN_FAILED, "Login Failed")
     def Login(self, bringup_oob=True, force_connect=True):
         self.__login(force_connect)
-        self.__read_mac()
-        if bringup_oob:
+        if bringup_oob and self.__read_mac():
             self.ReadExternalIP()
+        else:
+            self.ReadInternalIP()
 
     @_exceptionWrapper(_errCodes.NAPLES_GOLDFW_UNKNOWN, "Gold FW unknown")
     def ReadGoldFwVersion(self):

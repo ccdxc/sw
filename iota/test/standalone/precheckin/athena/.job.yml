@@ -8,7 +8,7 @@ queue_name: baremetal
 
 e2e-targets:
  e2e-athena-core:
-   commands: ["sh", "-c", "make linux && ./run_iota.sh --pipeline athena --testsuite networking"]
+   commands: ["sh", "-c", "make athena-linux && ./run_iota.sh --pipeline athena --testsuite networking --precheckin --skip-sanity"]
    owners: ["email:weijia@pensando.io"]
    area:
    sub-area:

@@ -24,6 +24,9 @@ apulu-linux: extract-artifacts
 
 apulu-networking: apulu-linux extract-protos-apulu
 
+athena-linux: NAPLES_FW_TAR=naples_fw_all_athena.tgz
+athena-linux: extract-artifacts
+
 linux: extract-artifacts
 
 freebsd: extract-artifacts

@@ -5,7 +5,7 @@ meta:
 nodes:
     - node: node1
       name: node1
-      role: auto
+      role: PERSONALITY_NAPLES_BITW
       workloads:
         linux:
             type    : WORKLOAD_TYPE_BARE_METAL
@@ -16,7 +16,7 @@ nodes:
 
     - node: node2
       name: node2
-      role: auto
+      role: PERSONALITY_NAPLES_BITW
       workloads:
         linux:
             type    : WORKLOAD_TYPE_BARE_METAL

@@ -37,6 +37,8 @@ def GetNodePersonalityByNicType(nic_type, mode = None):
     if nic_type in ['pensando', 'naples']:
         if mode == "dvs":
             return topo_pb2.PERSONALITY_NAPLES_DVS
+        elif mode == "bitw":
+            return topo_pb2.PERSONALITY_NAPLES_BITW
         return topo_pb2.PERSONALITY_NAPLES
     elif nic_type == 'mellanox':
         if mode == "dvs":
@@ -424,9 +426,6 @@ class Node(object):
     def __get_instance_role(self, role, mode=None):
         if role != 'auto':
             return topo_pb2.PersonalityType.Value(role)
-
-        if getattr(self.__inst.Resource, "DataNicType", None):
-            return topo_pb2.PERSONALITY_NAPLES_BITW
 
         personalities = []
         for _, dev in self.__devices.items():
