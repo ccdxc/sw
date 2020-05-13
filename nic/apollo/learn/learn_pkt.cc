@@ -439,7 +439,9 @@ update_ep (learn_ctxt_t *ctxt)
                       ctxt->str(), ret);
         return ret;
     }
-    PDS_TRACE_INFO("Processed %s", ctxt->log_str(PDS_MAPPING_TYPE_L2));
+    if (ctxt->mac_learn_type != LEARN_TYPE_NONE) {
+        PDS_TRACE_DEBUG("Processed %s", ctxt->log_str(PDS_MAPPING_TYPE_L2));
+    }
 
     if (ctxt->ip_learn_type != LEARN_TYPE_INVALID) {
         ret = update_ep_ip(ctxt);
@@ -447,7 +449,9 @@ update_ep (learn_ctxt_t *ctxt)
             PDS_TRACE_ERR("Failed to update EP %s IP state (error code %u)",
                           ctxt->str(), ret);
         }
-        PDS_TRACE_INFO("Processed %s", ctxt->log_str(PDS_MAPPING_TYPE_L3));
+        if (ctxt->ip_learn_type != LEARN_TYPE_NONE) {
+            PDS_TRACE_DEBUG("Processed %s", ctxt->log_str(PDS_MAPPING_TYPE_L3));
+        }
     }
     return ret;
 }
@@ -522,7 +526,9 @@ process_learn_pkt (void *mbuf)
         goto error;
     }
 
-    PDS_TRACE_DEBUG("Learn context %s", ctxt.str());
+    if (ctxt.needs_logging()) {
+        PDS_TRACE_DEBUG("Learn context %s", ctxt.str());
+    }
     has_learn_info = true;
     ctxt.pkt_ctxt.pkt_drop_reason = PKT_DROP_REASON_LEARNING_FAIL;
 

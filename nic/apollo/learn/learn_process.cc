@@ -531,12 +531,12 @@ process_learn (learn_ctxt_t *ctxt)
     }
 
     if (learn_mac) {
-        PDS_TRACE_DEBUG("Processing %s", ctxt->log_str(PDS_MAPPING_TYPE_L2));
+        PDS_TRACE_VERBOSE("Processing %s", ctxt->log_str(PDS_MAPPING_TYPE_L2));
         ret = process_learn_dispatch(ctxt, ctxt->mac_learn_type,
                                      PDS_MAPPING_TYPE_L2);
     }
     if (ret == SDK_RET_OK && learn_ip) {
-        PDS_TRACE_DEBUG("Processing %s", ctxt->log_str(PDS_MAPPING_TYPE_L3));
+        PDS_TRACE_VERBOSE("Processing %s", ctxt->log_str(PDS_MAPPING_TYPE_L3));
         ret = process_learn_dispatch(ctxt, ctxt->ip_learn_type,
                                           PDS_MAPPING_TYPE_L3);
     }

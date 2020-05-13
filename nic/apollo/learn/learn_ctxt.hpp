@@ -214,6 +214,30 @@ typedef struct learn_ctxt_s {
         }
     }
 
+    bool needs_logging(pds_mapping_type_t mtype) const {
+        ep_learn_type_t learn_type;
+
+        if (mtype == PDS_MAPPING_TYPE_L2) {
+            learn_type = mac_learn_type;
+        } else {
+            learn_type = ip_learn_type;
+        }
+        return (learn_type != LEARN_TYPE_INVALID &&
+                learn_type != LEARN_TYPE_NONE);
+    }
+
+    bool needs_logging(void) const {
+        bool ret;
+
+        if (ctxt_type == LEARN_CTXT_TYPE_API) {
+            ret = needs_logging(api_ctxt.mkey->type);
+        } else {
+            ret = needs_logging(PDS_MAPPING_TYPE_L2) ||
+                  needs_logging(PDS_MAPPING_TYPE_L3);
+        }
+        return ret;
+    }
+
 } learn_ctxt_t;
 
 static inline void
