@@ -19,6 +19,7 @@ import (
 	hdr "github.com/pensando/sw/venice/utils/histogram"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
+	"github.com/pensando/sw/venice/utils/memdb/objReceiver"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -40,6 +41,7 @@ type updatable interface {
 // dscUpdateIntf
 type dscUpdateIntf interface {
 	processDSCUpdate(dsc *cluster.DistributedServiceCard) error
+	processDSCDelete(dsc *cluster.DistributedServiceCard) error
 	isMarkedForDelete() bool
 	GetKey() string
 }
@@ -340,8 +342,6 @@ func (sm *Statemgr) Register(name string, svc FeatureStateMgr) {
 }
 
 func (sm *Statemgr) registerForDscUpdate(object dscUpdateIntf) {
-	sm.Lock()
-	defer sm.Unlock()
 	sm.dscUpdateNotifObjects[object.GetKey()] = object
 }
 
@@ -353,6 +353,18 @@ func (sm *Statemgr) sendDscUpdateNotification(dsc *cluster.DistributedServiceCar
 			delete(sm.dscUpdateNotifObjects, obj.GetKey())
 		} else {
 			obj.processDSCUpdate(dsc)
+		}
+	}
+}
+
+func (sm *Statemgr) sendDscDeleteNotification(dsc *cluster.DistributedServiceCard) {
+	sm.Lock()
+	defer sm.Unlock()
+	for _, obj := range sm.dscUpdateNotifObjects {
+		if obj.isMarkedForDelete() {
+			delete(sm.dscUpdateNotifObjects, obj.GetKey())
+		} else {
+			obj.processDSCDelete(dsc)
 		}
 	}
 }
@@ -777,6 +789,18 @@ type nodeStatus struct {
 	KindStatus map[string]*evStatus
 }
 
+type objectStatus struct {
+	Key         string
+	PendingDSCs []string
+	Updated     int32
+	Pending     int32
+	Version     string
+}
+
+type objectConfigStatus struct {
+	KindObjects map[string][]*objectStatus
+}
+
 type configPushStatus struct {
 	KindObjects map[string]int
 	NodesStatus []*nodeStatus
@@ -906,6 +930,7 @@ func (sm *Statemgr) GetConfigPushStatus() interface{} {
 	policies, _ := sm.ListSgpolicies()
 	pushStatus.KindObjects["NetworkSecurityPolicy"] = len(policies)
 	events := []api.EventType{api.EventType_CreateEvent, api.EventType_DeleteEvent, api.EventType_UpdateEvent}
+
 	for _, obj := range objs {
 		snic, err := DistributedServiceCardStateFromObj(obj)
 		if err != nil || !sm.isDscHealthy(&snic.DistributedServiceCard.DistributedServiceCard) {
@@ -983,4 +1008,174 @@ func (sm *Statemgr) StopAppWatch() {
 //StopNetworkSecurityPolicyWatch stops App watch, used of testing
 func (sm *Statemgr) StopNetworkSecurityPolicyWatch() {
 	sm.ctrler.NetworkSecurityPolicy().StopWatch(sm)
+}
+
+type mbusObject interface {
+	objectTrackerIntf
+	dscUpdateIntf
+	GetDBObject() memdb.Object
+}
+
+type mbusPushObject interface {
+	mbusObject
+	PushObject() memdb.PushObjectHandle
+}
+
+//AddObjectToMbus add object with tracking to gen ID
+func (sm *Statemgr) AddObjectToMbus(key string, obj mbusObject, refs map[string]apiintf.ReferenceObj) error {
+
+	dbObject := obj.GetDBObject()
+	meta := dbObject.GetObjectMeta()
+	//meta.GenerationID = obj.incrementGenID()
+	sm.Lock()
+	sm.registerForDscUpdate(obj)
+	obj.reinitObjTracking(meta.GenerationID)
+	sm.Unlock()
+	return sm.mbus.AddObjectWithReferences(key, dbObject, refs)
+}
+
+//UpdateObjectToMbus updates object with tracking to gen ID
+func (sm *Statemgr) UpdateObjectToMbus(key string, obj mbusObject, refs map[string]apiintf.ReferenceObj) error {
+
+	dbObject := obj.GetDBObject()
+	meta := dbObject.GetObjectMeta()
+	meta.GenerationID = obj.incrementGenID()
+	obj.reinitObjTracking(meta.GenerationID)
+	return sm.mbus.UpdateObjectWithReferences(key, dbObject, refs)
+}
+
+//DeleteObjectToMbus deletes objects with mbus
+func (sm *Statemgr) DeleteObjectToMbus(key string, obj mbusObject, refs map[string]apiintf.ReferenceObj) error {
+
+	dbObject := obj.GetDBObject()
+	meta := dbObject.GetObjectMeta()
+	meta.GenerationID = obj.incrementGenID()
+	obj.reinitObjTracking(meta.GenerationID)
+	return sm.mbus.DeleteObjectWithReferences(key, dbObject, refs)
+}
+
+//AddPushObjectToMbus add object with tracking to gen ID
+func (sm *Statemgr) AddPushObjectToMbus(key string, obj mbusObject,
+	refs map[string]apiintf.ReferenceObj, receivers []objReceiver.Receiver) (memdb.PushObjectHandle, error) {
+
+	dbObject := obj.GetDBObject()
+	meta := dbObject.GetObjectMeta()
+	meta.GenerationID = obj.incrementGenID()
+	sm.Lock()
+	sm.registerForDscUpdate(obj)
+	obj.reinitObjTracking(meta.GenerationID)
+	sm.Unlock()
+
+	return sm.mbus.AddPushObject(key, dbObject, refs, receivers)
+
+}
+
+//UpdatePushObjectToMbus add object with tracking to gen ID
+func (sm *Statemgr) UpdatePushObjectToMbus(key string, obj mbusPushObject,
+	refs map[string]apiintf.ReferenceObj) error {
+
+	dbObject := obj.GetDBObject()
+	pushObject := obj.PushObject()
+	meta := dbObject.GetObjectMeta()
+	meta.GenerationID = obj.incrementGenID()
+	obj.reinitObjTracking(meta.GenerationID)
+
+	return pushObject.UpdateObjectWithReferences(key, dbObject, refs)
+
+}
+
+//DeletePushObjectToMbus add object with tracking to gen ID
+func (sm *Statemgr) DeletePushObjectToMbus(key string, obj mbusPushObject,
+	refs map[string]apiintf.ReferenceObj) error {
+
+	dbObject := obj.GetDBObject()
+	pushObject := obj.PushObject()
+	meta := dbObject.GetObjectMeta()
+	meta.GenerationID = obj.incrementGenID()
+	obj.reinitObjTracking(meta.GenerationID)
+
+	pushObject.RemoveAllObjReceivers()
+	return pushObject.DeleteObjectWithReferences(key, dbObject, refs)
+
+}
+
+//GetObjectConfigPushStatus for debugging
+func (sm *Statemgr) GetObjectConfigPushStatus(kinds []string) interface{} {
+	objConfigStatus := &objectConfigStatus{}
+
+	objConfigStatus.KindObjects = make(map[string][]*objectStatus)
+	for _, kind := range kinds {
+		var objects []interface{}
+		switch kind {
+		case "Endpoint":
+			eps, err := sm.ListEndpoints()
+			if err != nil {
+				return fmt.Errorf("Error querying endpoints %v", err)
+			}
+			objects = make([]interface{}, len(eps))
+			for i := range eps {
+				objects[i] = eps[i]
+			}
+
+		case "App":
+			eps, err := sm.ListApps()
+			if err != nil {
+				return fmt.Errorf("Error querying apps %v", err)
+			}
+			objects = make([]interface{}, len(eps))
+			for i := range eps {
+				objects[i] = eps[i]
+			}
+		case "FirewallProfile":
+			eps, err := sm.ListFirewallProfiles()
+			if err != nil {
+				return fmt.Errorf("Error querying fwp %v", err)
+			}
+			objects = make([]interface{}, len(eps))
+			for i := range eps {
+				objects[i] = eps[i]
+			}
+		case "NetworkSecurityPolicy":
+			eps, err := sm.ListSgpolicies()
+			if err != nil {
+				return fmt.Errorf("Error querying policy %v", err)
+			}
+			objects = make([]interface{}, len(eps))
+			for i := range eps {
+				objects[i] = eps[i]
+			}
+		case "MirrorSession":
+			eps, err := sm.ListMirrorSesssions()
+			if err != nil {
+				return fmt.Errorf("Error querying mirror sessions %v", err)
+			}
+			objects = make([]interface{}, len(eps))
+			for i := range eps {
+				objects[i] = eps[i]
+			}
+		case "NetworkInterface":
+			eps, err := sm.ListNetworkInterfaces()
+			if err != nil {
+				return fmt.Errorf("Error querying network interfaces %v", err)
+			}
+			objects = make([]interface{}, len(eps))
+			for i := range eps {
+				objects[i] = eps[i]
+			}
+		}
+
+		for _, obj := range objects {
+			stateObj := obj.(stateObj)
+			propStatus := stateObj.getPropStatus()
+			objStaus := &objectStatus{}
+			objStaus.Key = stateObj.GetKey()
+			objStaus.Updated = propStatus.updated
+			objStaus.Pending = propStatus.pending
+			objStaus.Version = propStatus.generationID
+			objStaus.PendingDSCs = propStatus.pendingDSCs
+			objConfigStatus.KindObjects[kind] = append(objConfigStatus.KindObjects[kind], objStaus)
+		}
+	}
+
+	return objConfigStatus
 }

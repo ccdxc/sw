@@ -9,10 +9,12 @@ import (
 	"github.com/gogo/protobuf/types"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/memdb"
 	"github.com/pensando/sw/venice/utils/ref"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
@@ -95,8 +97,10 @@ func getProtoPorts(app *security.App) []*netproto.ProtoPort {
 
 // AppState is a wrapper for app object
 type AppState struct {
-	App      *ctkit.App `json:"-"` // app object
-	stateMgr *Statemgr  // pointer to state manager
+	smObjectTracker
+	App             *ctkit.App `json:"-"` // app object
+	stateMgr        *Statemgr  // pointer to state manager
+	markedForDelete bool
 }
 
 // AppStateFromObj converts from runtime object to app state
@@ -116,6 +120,11 @@ func AppStateFromObj(obj runtime.Object) (*AppState, error) {
 	}
 }
 
+//GetDBObject get DB representation of the object
+func (aps *AppState) GetDBObject() memdb.Object {
+	return convertApp(aps)
+}
+
 // NewAppState creates new app state object
 func NewAppState(app *ctkit.App, stateMgr *Statemgr) (*AppState, error) {
 	aps := &AppState{
@@ -124,10 +133,41 @@ func NewAppState(app *ctkit.App, stateMgr *Statemgr) (*AppState, error) {
 	}
 	app.HandlerCtx = aps
 
-	// store it in local DB
-	stateMgr.mbus.AddObjectWithReferences(app.MakeKey("security"), convertApp(aps), references(app))
+	aps.init(aps)
+	//No need to send update notification as we are not updating status yet
+	aps.smObjectTracker.skipUpdateNotification()
+	err := stateMgr.AddObjectToMbus(app.MakeKey("security"), aps, references(app))
+	if err != nil {
+		log.Errorf("Error storing the sg policy in memdb. Err: %v", err)
+		return nil, err
+	}
 
 	return aps, nil
+}
+
+// GetKey returns the key of App
+func (aps *AppState) GetKey() string {
+	return aps.App.GetKey()
+}
+
+//TrackedDSCs get DSCs that needs to be tracked
+func (aps *AppState) TrackedDSCs() []*cluster.DistributedServiceCard {
+
+	dscs, _ := aps.stateMgr.ListDistributedServiceCards()
+
+	trackedDSCs := []*cluster.DistributedServiceCard{}
+	for _, dsc := range dscs {
+		if aps.stateMgr.isDscEnforcednMode(&dsc.DistributedServiceCard.DistributedServiceCard) {
+			trackedDSCs = append(trackedDSCs, &dsc.DistributedServiceCard.DistributedServiceCard)
+		}
+	}
+
+	return trackedDSCs
+}
+
+// Write writes the object to api server
+func (aps *AppState) Write() error {
+	return nil
 }
 
 // convertApp converts from npm state to netproto app
@@ -216,33 +256,60 @@ func convertApp(aps *AppState) *netproto.App {
 }
 
 // attachPolicy adds a policy to attached policy list
-func (app *AppState) attachPolicy(sgpName string) error {
+func (aps *AppState) attachPolicy(sgpName string) error {
 	// see if the policy is already part of the list
-	for _, pn := range app.App.Status.AttachedPolicies {
+	for _, pn := range aps.App.Status.AttachedPolicies {
 		if pn == sgpName {
 			return nil
 		}
 	}
 
 	// add the policy to the list
-	app.App.Status.AttachedPolicies = append(app.App.Status.AttachedPolicies, sgpName)
+	aps.App.Status.AttachedPolicies = append(aps.App.Status.AttachedPolicies, sgpName)
 
 	// save the updated app
-	app.App.Write()
+	aps.App.Write()
+
+	return nil
+}
+
+func (aps *AppState) isMarkedForDelete() bool {
+	return aps.markedForDelete
+}
+
+// processDSCUpdate sgpolicy update handles for DSC
+func (aps *AppState) processDSCUpdate(dsc *cluster.DistributedServiceCard) error {
+
+	aps.App.Lock()
+	defer aps.App.Unlock()
+
+	if aps.stateMgr.isDscEnforcednMode(dsc) {
+		aps.smObjectTracker.startDSCTracking(dsc)
+	}
+
+	return nil
+}
+
+// processDSCUpdate sgpolicy update handles for DSC
+func (aps *AppState) processDSCDelete(dsc *cluster.DistributedServiceCard) error {
+
+	aps.App.Lock()
+	defer aps.App.Unlock()
+	aps.smObjectTracker.stopDSCTracking(dsc)
 
 	return nil
 }
 
 // detachPolicy removes a policy from
-func (app *AppState) detachPolicy(sgpName string) error {
+func (aps *AppState) detachPolicy(sgpName string) error {
 	// see if the policy is already part of the list
-	for idx, pn := range app.App.Status.AttachedPolicies {
+	for idx, pn := range aps.App.Status.AttachedPolicies {
 		if pn == sgpName {
-			app.App.Status.AttachedPolicies = append(app.App.Status.AttachedPolicies[:idx], app.App.Status.AttachedPolicies[idx+1:]...)
+			aps.App.Status.AttachedPolicies = append(aps.App.Status.AttachedPolicies[:idx], aps.App.Status.AttachedPolicies[idx+1:]...)
 		}
 	}
 	// save the updated app
-	app.App.Write()
+	aps.App.Write()
 
 	return nil
 }
@@ -252,6 +319,40 @@ func (sm *Statemgr) GetAppWatchOptions() *api.ListWatchOptions {
 	opts := api.ListWatchOptions{}
 	opts.FieldChangeSelector = []string{"Spec"}
 	return &opts
+}
+
+//OnAppCreateReq create req from agent
+func (sm *Statemgr) OnAppCreateReq(nodeID string, objinfo *netproto.App) error {
+	return nil
+}
+
+//OnAppUpdateReq  update req from agent
+func (sm *Statemgr) OnAppUpdateReq(nodeID string, objinfo *netproto.App) error {
+	return nil
+
+}
+
+//OnAppDeleteReq  delete req from agent
+func (sm *Statemgr) OnAppDeleteReq(nodeID string, objinfo *netproto.App) error {
+	return nil
+
+}
+
+// OnAppOperUpdate gets called when agent sends oper update
+func (sm *Statemgr) OnAppOperUpdate(nodeID string, objinfo *netproto.App) error {
+
+	eps, err := sm.FindApp(objinfo.Tenant, objinfo.Name)
+	if err != nil {
+		return err
+	}
+	eps.updateNodeVersion(nodeID, objinfo.ObjectMeta.GenerationID)
+	return nil
+}
+
+// OnAppOperDelete oper delete
+func (sm *Statemgr) OnAppOperDelete(nodeID string, objinfo *netproto.App) error {
+	return nil
+
 }
 
 // OnAppCreate handles app creation
@@ -292,7 +393,7 @@ func (sm *Statemgr) OnAppUpdate(app *ctkit.App, napp *security.App) error {
 	}
 
 	// save the updated app
-	sm.mbus.UpdateObjectWithReferences(app.MakeKey("security"), convertApp(aps), references(napp))
+	sm.UpdateObjectToMbus(app.MakeKey("security"), aps, references(napp))
 
 	return nil
 }
@@ -307,8 +408,9 @@ func (sm *Statemgr) OnAppDelete(app *ctkit.App) error {
 	}
 	log.Infof("Deleting app: %+v", fapp)
 
+	fapp.markedForDelete = true
 	// delete the object
-	return sm.mbus.DeleteObjectWithReferences(app.MakeKey("security"), convertApp(fapp),
+	return sm.DeleteObjectToMbus(app.MakeKey("security"), fapp,
 		references(app))
 }
 

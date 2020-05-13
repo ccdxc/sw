@@ -202,7 +202,11 @@ func (sm *Statemgr) OnInterfaceDeleteReq(nodeID string, agentNetif *netproto.Int
 
 // OnInterfaceOperUpdate gets called when agent sends create request
 func (sm *Statemgr) OnInterfaceOperUpdate(nodeID string, agentNetif *netproto.Interface) error {
-	// FIXME: handle status updates
+	eps, err := smgrNetworkInterface.FindNetworkInterface(agentNetif.Name)
+	if err != nil {
+		return err
+	}
+	eps.updateNodeVersion(nodeID, agentNetif.ObjectMeta.GenerationID)
 	return nil
 }
 
@@ -284,11 +288,12 @@ type SmNetworkInterface struct {
 
 // NetworkInterfaceState is a wrapper for NetworkInterface object
 type NetworkInterfaceState struct {
-	featureMgrBase
 	NetworkInterfaceState  *ctkit.NetworkInterface `json:"-"` // NetworkInterface object
 	pushObject             memdb.PushObjectHandle
 	netProtoMirrorSessions []string
 	mirrorSessions         []string
+	smObjectTracker
+	markedForDelete bool
 }
 
 var smgrNetworkInterface *SmNetworkInterface
@@ -325,6 +330,9 @@ func NewNetworkInterfaceState(intf *ctkit.NetworkInterface, sma *SmNetworkInterf
 		NetworkInterfaceState: intf,
 	}
 	intf.HandlerCtx = ifcfg
+	ifcfg.smObjectTracker.init(ifcfg)
+	//No need to send update notification as we are not updating status yet
+	ifcfg.smObjectTracker.skipUpdateNotification()
 	return ifcfg, nil
 }
 
@@ -666,6 +674,21 @@ func selectorsMatch(selectors []*labels.Selector, l labels.Set) bool {
 	return true
 }
 
+//TrackedDSCs tracked dscs
+func (nw *NetworkInterfaceState) TrackedDSCs() []*cluster.DistributedServiceCard {
+
+	mgr := MustGetStatemgr()
+	trackedDSCs := []*cluster.DistributedServiceCard{}
+
+	dsc, err := mgr.FindDistributedServiceCard("default", nw.NetworkInterfaceState.Status.DSC)
+	if err != nil {
+		log.Errorf("Error looking up DSC %v", nw.NetworkInterfaceState.Status.DSC)
+	} else {
+		trackedDSCs = append(trackedDSCs, &dsc.DistributedServiceCard.DistributedServiceCard)
+	}
+	return trackedDSCs
+}
+
 func (sma *SmNetworkInterface) updateMirror(nw *NetworkInterfaceState) error {
 
 	collectorIntfState := make(map[string]*intfMirrorState)
@@ -727,8 +750,13 @@ func (sma *SmNetworkInterface) updateMirror(nw *NetworkInterfaceState) error {
 		//Sendupdate
 		log.Infof("Sending mirror update for DSC %v Intf %v Mirror Sessions %v",
 			nw.NetworkInterfaceState.Status.DSC, nw.NetworkInterfaceState.Name, nw.mirrorSessions)
-		err = nw.pushObject.UpdateObjectWithReferences(nw.NetworkInterfaceState.MakeKey(string(apiclient.GroupNetwork)),
-			convertNetworkInterfaceObject(nw), references(nw.NetworkInterfaceState))
+		err = sma.sm.UpdatePushObjectToMbus(nw.NetworkInterfaceState.MakeKey(string(apiclient.GroupNetwork)),
+			nw, references(nw.NetworkInterfaceState))
+		if err != nil {
+			log.Errorf("error updating  push object %v", err)
+			return err
+		}
+
 		if err != nil {
 			log.Errorf("Error updating interface %v", err.Error())
 			return err
@@ -772,10 +800,10 @@ func (sma *SmNetworkInterface) UpdateInterfacesMatchingSelector(oldSelCol *inter
 
 	log.Infof("Number of nw interfaces states %v", len(nwInterfaceStatesMap))
 	for _, nw := range nwInterfaceStatesMap {
-		nw.Lock()
+		nw.NetworkInterfaceState.Lock()
 		sma.updateMirror(nw)
 		sma.sm.PeriodicUpdaterPush(nw)
-		nw.Unlock()
+		nw.NetworkInterfaceState.Unlock()
 	}
 
 	return nil
@@ -816,13 +844,27 @@ func (nw *NetworkInterfaceState) GetKey() string {
 func (nw *NetworkInterfaceState) Write() error {
 	var err error
 
-	nw.Lock()
-	defer nw.Unlock()
+	nw.NetworkInterfaceState.Lock()
+	defer nw.NetworkInterfaceState.Unlock()
 
 	nw.NetworkInterfaceState.Status.MirroSessions = nw.mirrorSessions
 	err = nw.NetworkInterfaceState.Write()
 
 	return err
+}
+
+//GetDBObject get db object
+func (nw *NetworkInterfaceState) GetDBObject() memdb.Object {
+	return convertNetworkInterfaceObject(nw)
+}
+
+//PushObject get push object
+func (nw *NetworkInterfaceState) PushObject() memdb.PushObjectHandle {
+	return nw.pushObject
+}
+
+func (nw *NetworkInterfaceState) isMarkedForDelete() bool {
+	return nw.markedForDelete
 }
 
 // OnNetworkInterfaceCreate creates a NetworkInterface
@@ -841,13 +883,13 @@ func (sma *SmNetworkInterface) OnNetworkInterfaceCreate(ctkitNetif *ctkit.Networ
 		return err
 	}
 
-	pushObj, err := sma.sm.mbus.AddPushObject(ctkitNetif.MakeKey(string(apiclient.GroupNetwork)), convertNetworkInterfaceObject(ifcfg), references(ctkitNetif),
+	pushObj, err := sma.sm.AddPushObjectToMbus(ctkitNetif.MakeKey(string(apiclient.GroupNetwork)), ifcfg, references(ctkitNetif),
 		[]objReceiver.Receiver{receiver})
+
 	if err != nil {
 		log.Errorf("error adding push object %v", err)
 		return err
 	}
-
 	ifcfg.pushObject = pushObj
 
 	sma.sm.PeriodicUpdaterPush(ifcfg)
@@ -878,8 +920,7 @@ func (sma *SmNetworkInterface) OnNetworkInterfaceUpdate(ctkitNetif *ctkit.Networ
 	ctkitNetif.ObjectMeta = nctkitNetif.ObjectMeta
 	ctkitNetif.Spec = nctkitNetif.Spec
 
-	err = currIntf.pushObject.UpdateObjectWithReferences(ctkitNetif.MakeKey(string(apiclient.GroupNetwork)),
-		convertNetworkInterfaceObject(currIntf), references(ctkitNetif))
+	err = sma.sm.UpdatePushObjectToMbus(ctkitNetif.MakeKey(string(apiclient.GroupNetwork)), currIntf, references(ctkitNetif))
 	if err != nil {
 		log.Errorf("error updating  push object %v", err)
 		return err
@@ -905,9 +946,8 @@ func (sma *SmNetworkInterface) OnNetworkInterfaceDelete(ctkitNetif *ctkit.Networ
 	}
 
 	sma.clearLabelMap(ifcfg)
-	ifcfg.pushObject.RemoveAllObjReceivers()
-	return ifcfg.pushObject.DeleteObjectWithReferences(ctkitNetif.MakeKey(string(apiclient.GroupNetwork)),
-		convertNetworkInterfaceObject(ifcfg), references(ctkitNetif))
+	return sma.sm.DeletePushObjectToMbus(ctkitNetif.MakeKey(string(apiclient.GroupNetwork)),
+		ifcfg, references(ctkitNetif))
 }
 
 // OnNetworkInterfaceReconnect is called when ctkit reconnects to apiserver
@@ -971,4 +1011,16 @@ func (sma *SmNetworkInterface) ProcessDSCEvent(ev EventType, dsc *cluster.Distri
 		}
 	}
 
+}
+
+// processDSCUpdate sgpolicy update handles for DSC
+func (nw *NetworkInterfaceState) processDSCUpdate(dsc *cluster.DistributedServiceCard) error {
+
+	return nil
+}
+
+// processDSCDelete sgpolicy update handles for DSC
+func (nw *NetworkInterfaceState) processDSCDelete(dsc *cluster.DistributedServiceCard) error {
+
+	return nil
 }

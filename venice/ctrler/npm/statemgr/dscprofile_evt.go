@@ -303,6 +303,7 @@ func (dps *DSCProfileState) Write() error {
 			dps.DSCProfile.Status.PropagationStatus = *prop
 		}
 	}
+	log.Infof("dscProfile %s Evaluate status done", dps.DSCProfile.Name)
 	return err
 }
 
@@ -372,13 +373,18 @@ func (sm *Statemgr) UpdateDSCProfileStatusOnOperDelete(nodeuuid, tenant, name, g
 
 	// lock profile for concurrent modifications
 	dscProfile.DSCProfile.Lock()
-	defer dscProfile.DSCProfile.Unlock()
+	update := false
 	_, ok := dscProfile.DscList[snic.DistributedServiceCard.Name]
 
 	if !ok {
 		log.Infof("OnOperDelete: received status for profile %s tenant %s nodeuud %s", name, tenant, nodeuuid)
 		// update node version
 		delete(dscProfile.NodeVersions, nodeuuid)
+		update = true
+	}
+
+	dscProfile.DSCProfile.Unlock()
+	if update {
 		sm.PeriodicUpdaterPush(dscProfile)
 	}
 }
@@ -402,9 +408,9 @@ func (sm *Statemgr) UpdateDSCProfileStatusOnOperUpdate(nodeuuid, tenant, name, g
 
 	// lock profile for concurrent modifications
 	dscProfile.DSCProfile.Lock()
-	defer dscProfile.DSCProfile.Unlock()
 	expVersion, ok := dscProfile.DscList[snic.DistributedServiceCard.Name]
 
+	update := false
 	if ok && expVersion.profileName == name && expVersion.agentGenID == generationID {
 		log.Infof("OnOperUpdate:Enqueue profile for status %s tenant %s nodeuud %s", name, tenant, nodeuuid)
 		// update node version
@@ -412,7 +418,12 @@ func (sm *Statemgr) UpdateDSCProfileStatusOnOperUpdate(nodeuuid, tenant, name, g
 		// ToDo: Writing status from NPM conflicts with CMD in integ tests.
 		//  We have to fix this eventually
 		//snic.NodeVersion = cluster.DSCProfileVersion{ProfileName: name, GenerationID: generationID}
+		update = true
+	}
+	dscProfile.DSCProfile.Unlock()
+	if update {
 		sm.PeriodicUpdaterPush(dscProfile)
 	}
+	log.Infof("OnOperUpdate: received status for profile %s tenant %s nodeuud %s done", name, tenant, nodeuuid)
 
 }

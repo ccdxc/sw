@@ -860,8 +860,18 @@ func (gs *EntBaseCfg) CleanupAllConfig() error {
 	return nil
 }
 
-//IsConfigPushComplete checks whether config push is complete.
+//IsConfigPushComplete is config push complete
 func (gs *EntBaseCfg) IsConfigPushComplete() (bool, error) {
+
+	if done, err := gs.configPushComplete(); !done || err != nil {
+		return false, fmt.Errorf("Config push incomplete")
+	}
+
+	return true, nil
+}
+
+//IsConfigPushComplete checks whether config push is complete.
+func (gs *EntBaseCfg) configComplete() (bool, error) {
 
 	var configStatus objClient.VeniceConfigStatus
 	var rawData objClient.VeniceRawData
@@ -941,6 +951,103 @@ func (gs *EntBaseCfg) IsConfigPushComplete() (bool, error) {
 
 		if !node.KindStatus.SgPolicy.Status.Delete {
 			log.Infof("SgPolicy deletes not synced for node %v", node.NodeID)
+			return false, nil
+		}
+	}
+
+	return true, nil
+}
+
+//IsConfigPushComplete checks whether config push is complete.
+func (gs *EntBaseCfg) configPushComplete() (bool, error) {
+
+	var configPushStatus objClient.VeniceConfigPushStatus
+	var rawData objClient.VeniceRawData
+
+	rClient := gs.Client
+
+	err := rClient.PullConfigPushStatus([]string{"App", "Endpoint", "NetworkInterface",
+		"FirewallProfile", "NetworkSecurityPolicy", "MirrorSession"}, &rawData)
+	if err != nil {
+		log.Infof("Config  Failed %v", err)
+		return false, err
+	}
+
+	err = json.Unmarshal([]byte(rawData.Diagnostics.String), &configPushStatus)
+	if err != nil {
+		log.Infof("Config unmarshalling Failed, ignoring as format may not be supported %v", err)
+		return true, nil
+	}
+
+	/*
+		workloads, err := rClient.ListWorkload()
+		if err != nil {
+			return false, err
+		}
+
+
+		if len(configPushStatus.KindObjects.Endpoint) != len(workloads)*gs.Cfg.WorkloadParams.InterfacesPerWorkload {
+			log.Infof("Endpoints not synced with NPM yet. %v %v", len(configPushStatus.KindObjects.Endpoint), len(workloads))
+			return false, nil
+		} */
+
+	policies, err := rClient.ListNetworkSecurityPolicy()
+	if err != nil {
+		return false, err
+	}
+	if len(configPushStatus.KindObjects.NetworkSecurityPolicy) != len(policies) {
+		log.Infof("policies not synced with NPM yet.")
+		return false, nil
+	}
+
+	apps, err := rClient.ListApp()
+	if err != nil {
+		return false, err
+	}
+
+	if len(configPushStatus.KindObjects.App) != len(apps) {
+		log.Infof("apps not synced with NPM yet.")
+		return false, nil
+	}
+
+	for _, ep := range configPushStatus.KindObjects.Endpoint {
+		if len(ep.PendingDSCs) != 0 {
+			log.Infof("EP %v not push to DSCs pending :%v ", ep.Key, ep.PendingDSCs)
+			return false, nil
+		}
+	}
+
+	for _, ep := range configPushStatus.KindObjects.App {
+		if len(ep.PendingDSCs) != 0 {
+			log.Infof("APP %v not push to DSCs pending :%v ", ep.Key, ep.PendingDSCs)
+			return false, nil
+		}
+	}
+
+	for _, ep := range configPushStatus.KindObjects.FirewallProfile {
+		if len(ep.PendingDSCs) != 0 {
+			log.Infof("FirewallProfile %v not push to DSCs pending :%v ", ep.Key, ep.PendingDSCs)
+			return false, nil
+		}
+	}
+
+	for _, ep := range configPushStatus.KindObjects.MirrorSession {
+		if len(ep.PendingDSCs) != 0 {
+			log.Infof("MirrorSession %v not push to DSCs pending :%v ", ep.Key, ep.PendingDSCs)
+			return false, nil
+		}
+	}
+
+	for _, ep := range configPushStatus.KindObjects.NetworkInterface {
+		if len(ep.PendingDSCs) != 0 {
+			log.Infof("NetworkInterface %v not push to DSCs pending :%v ", ep.Key, ep.PendingDSCs)
+			return false, nil
+		}
+	}
+
+	for _, ep := range configPushStatus.KindObjects.NetworkSecurityPolicy {
+		if len(ep.PendingDSCs) != 0 {
+			log.Infof("NetworkSecurityPolicy %v not push to DSCs pending :%v ", ep.Key, ep.PendingDSCs)
 			return false, nil
 		}
 	}

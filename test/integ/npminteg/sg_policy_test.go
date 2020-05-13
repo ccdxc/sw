@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"strconv"
 	"time"
 
 	agentTypes "github.com/pensando/sw/nic/agent/dscagent/types"
@@ -113,7 +114,8 @@ func (it *integTestSuite) TestNpmSgPolicy(c *C) {
 		},
 	}
 	sgp.Spec.Rules = append(sgp.Spec.Rules, newRule)
-	sgp.ObjectMeta.GenerationID = "2"
+	//sgp.ObjectMeta.GenerationID = "2"
+	sgp.ObjectMeta.GenerationID = incrementGenID(sgp.ObjectMeta.GenerationID)
 	_, err = it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Update(context.Background(), &sgp)
 	AssertOk(c, err, "error updating sg policy")
 
@@ -143,7 +145,7 @@ func (it *integTestSuite) TestNpmSgPolicy(c *C) {
 			return false, gerr
 		}
 		if (tsgp.Status.PropagationStatus.Updated != int32(it.numAgents)) || (tsgp.Status.PropagationStatus.Pending != 0) ||
-			(tsgp.Status.PropagationStatus.MinVersion != "" || len(tsgp.Status.RuleStatus) != len(sgp.Spec.Rules)) {
+			(len(tsgp.Status.RuleStatus) != len(sgp.Spec.Rules)) {
 			return false, tsgp
 		}
 		return true, nil
@@ -225,6 +227,7 @@ func (it *integTestSuite) TestNpmSgPolicyValidators(c *C) {
 
 	// try updating the policy with invalid app
 	sgp.Spec.Rules[0].Apps = []string{"invalid"}
+	sgp.ObjectMeta.GenerationID = incrementGenID(sgp.ObjectMeta.GenerationID)
 	_, err = it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Update(context.Background(), &sgp)
 	Assert(c, err != nil, "sgpolicy update with invalid app reference didnt fail")
 
@@ -330,8 +333,7 @@ func (it *integTestSuite) TestNpmSgPolicyNicAdmission(c *C) {
 		if tsgp.Status.PropagationStatus.GenerationID != sgp.ObjectMeta.GenerationID {
 			return false, tsgp
 		}
-		if (tsgp.Status.PropagationStatus.Updated != int32(it.numAgents)) || (tsgp.Status.PropagationStatus.Pending != 0) ||
-			(tsgp.Status.PropagationStatus.MinVersion != "") {
+		if (tsgp.Status.PropagationStatus.Updated != int32(it.numAgents)) || (tsgp.Status.PropagationStatus.Pending != 0) {
 			return false, tsgp
 		}
 		return true, nil
@@ -366,8 +368,7 @@ func (it *integTestSuite) TestNpmSgPolicyNicAdmission(c *C) {
 		if gerr != nil {
 			return false, gerr
 		}
-		if (tsgp.Status.PropagationStatus.Updated != int32(it.numAgents+1)) || (tsgp.Status.PropagationStatus.Pending != 0) ||
-			(tsgp.Status.PropagationStatus.MinVersion != "") {
+		if (tsgp.Status.PropagationStatus.Updated != int32(it.numAgents+1)) || (tsgp.Status.PropagationStatus.Pending != 0) {
 			return false, tsgp
 		}
 		return true, nil
@@ -473,6 +474,12 @@ func (it *integTestSuite) TestNpmSgPolicyNicAdmission(c *C) {
 	AssertOk(c, err, "Error deleting sgpolicy with reference to icmp app")
 }
 
+func incrementGenID(ID string) string {
+	genID, _ := strconv.Atoi(ID)
+	genID++
+	return strconv.Itoa(genID)
+}
+
 func (it *integTestSuite) TestNpmSgPolicyBurstChange(c *C) {
 	// clean up stale SG Policies
 	policies, err := it.apisrvClient.SecurityV1().NetworkSecurityPolicy().List(context.Background(), &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: globals.DefaultTenant}})
@@ -565,6 +572,7 @@ func (it *integTestSuite) TestNpmSgPolicyBurstChange(c *C) {
 				},
 			}
 			sgp.Spec.Rules = append(sgp.Spec.Rules, newRule)
+			sgp.ObjectMeta.GenerationID = incrementGenID(sgp.ObjectMeta.GenerationID)
 			_, err = it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Update(context.Background(), &sgp)
 			AssertOk(c, err, "error updating sg policy")
 		}

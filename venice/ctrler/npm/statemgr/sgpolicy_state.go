@@ -5,7 +5,6 @@ package statemgr
 import (
 	"fmt"
 	"hash/fnv"
-	"strconv"
 	"strings"
 	"time"
 
@@ -18,26 +17,19 @@ import (
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/memdb"
 	"github.com/pensando/sw/venice/utils/ref"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
 // SgpolicyState security policy state
 type SgpolicyState struct {
+	smObjectTracker
 	NetworkSecurityPolicy *ctkit.NetworkSecurityPolicy `json:"-"` // embedded security policy object
 	groups                map[string]*SecurityGroupState
-	stateMgr              *Statemgr         // pointer to state manager
-	NodeVersions          map[string]string // Map for node -> version
+	stateMgr              *Statemgr // pointer to state manager
 	ruleStats             []security.SGRuleStatus
 	markedForDelete       bool
-}
-
-func versionToInt(v string) int {
-	i, err := strconv.Atoi(v)
-	if err != nil {
-		return 0
-	}
-	return i
 }
 
 // convertPolicyAction converts from Venice Action to netproto Action strings
@@ -153,7 +145,14 @@ func (sgp *SgpolicyState) Write() error {
 	defer sgp.NetworkSecurityPolicy.Unlock()
 
 	prop := &sgp.NetworkSecurityPolicy.Status.PropagationStatus
-	newProp := sgp.stateMgr.updatePropogationStatus(sgp.NetworkSecurityPolicy.GenerationID, prop, sgp.NodeVersions)
+	propStatus := sgp.getPropStatus()
+	newProp := &security.PropagationStatus{
+		GenerationID:  propStatus.generationID,
+		MinVersion:    propStatus.minVersion,
+		Pending:       propStatus.pending,
+		PendingNaples: propStatus.pendingDSCs,
+		Updated:       propStatus.updated,
+	}
 
 	//Do write only if changed
 	if sgp.stateMgr.propgatationStatusDifferent(prop, newProp) {
@@ -245,24 +244,23 @@ func (sm *Statemgr) updateAttachedApps(sgp *security.NetworkSecurityPolicy) erro
 	return nil
 }
 
-// initNodeVersions initializes node versions for the policy
-func (sgp *SgpolicyState) initNodeVersions() error {
+func (sgp *SgpolicyState) isMarkedForDelete() bool {
+	return sgp.markedForDelete
+}
+
+//TrackedDSCs tracked DSCs
+func (sgp *SgpolicyState) TrackedDSCs() []*cluster.DistributedServiceCard {
+
 	dscs, _ := sgp.stateMgr.ListDistributedServiceCards()
 
-	// walk all smart nics
+	trackedDSCs := []*cluster.DistributedServiceCard{}
 	for _, dsc := range dscs {
 		if sgp.stateMgr.isDscEnforcednMode(&dsc.DistributedServiceCard.DistributedServiceCard) {
-			if _, ok := sgp.NodeVersions[dsc.DistributedServiceCard.Name]; !ok {
-				sgp.NodeVersions[dsc.DistributedServiceCard.Name] = ""
-			}
+			trackedDSCs = append(trackedDSCs, &dsc.DistributedServiceCard.DistributedServiceCard)
 		}
 	}
 
-	return nil
-}
-
-func (sgp *SgpolicyState) isMarkedForDelete() bool {
-	return sgp.markedForDelete
+	return trackedDSCs
 }
 
 // processDSCUpdate sgpolicy update handles for DSC
@@ -270,16 +268,29 @@ func (sgp *SgpolicyState) processDSCUpdate(dsc *cluster.DistributedServiceCard) 
 
 	sgp.NetworkSecurityPolicy.Lock()
 	defer sgp.NetworkSecurityPolicy.Unlock()
+
 	if sgp.stateMgr.isDscEnforcednMode(dsc) {
-		log.Infof("DSC %v is being tracked for propogation status for policy %s", dsc.Name, sgp.GetKey())
-		sgp.NodeVersions[dsc.Name] = ""
+		sgp.smObjectTracker.startDSCTracking(dsc)
 	} else {
-		log.Infof("DSC %v is being untracked for propogation status for policy %s", dsc.Name, sgp.GetKey())
-		delete(sgp.NodeVersions, dsc.Name)
+		sgp.smObjectTracker.stopDSCTracking(dsc)
 	}
 
-	sgp.stateMgr.PeriodicUpdaterPush(sgp)
 	return nil
+}
+
+// processDSCUpdate sgpolicy update handles for DSC
+func (sgp *SgpolicyState) processDSCDelete(dsc *cluster.DistributedServiceCard) error {
+
+	sgp.NetworkSecurityPolicy.Lock()
+	defer sgp.NetworkSecurityPolicy.Unlock()
+	sgp.smObjectTracker.stopDSCTracking(dsc)
+
+	return nil
+}
+
+//GetDBObject get db object
+func (sgp *SgpolicyState) GetDBObject() memdb.Object {
+	return convertNetworkSecurityPolicy(sgp)
 }
 
 // SgpolicyStateFromObj converts from memdb object to sgpolicy state
@@ -305,9 +316,9 @@ func NewSgpolicyState(sgp *ctkit.NetworkSecurityPolicy, stateMgr *Statemgr) (*Sg
 	sgps := SgpolicyState{
 		NetworkSecurityPolicy: sgp,
 		stateMgr:              stateMgr,
-		NodeVersions:          make(map[string]string),
 	}
 	sgp.HandlerCtx = &sgps
+	sgps.smObjectTracker.init(&sgps)
 
 	return &sgps, nil
 }
@@ -398,7 +409,7 @@ func (sm *Statemgr) OnNetworkSecurityPolicyCreate(sgp *ctkit.NetworkSecurityPoli
 	}
 
 	// store it in local DB
-	err = sm.mbus.AddObjectWithReferences(sgp.MakeKey("security"), convertNetworkSecurityPolicy(sgps), references(sgp))
+	err = sm.AddObjectToMbus(sgp.MakeKey("security"), sgps, references(sgp))
 	if err != nil {
 		log.Errorf("Error storing the sg policy in memdb. Err: %v", err)
 		return err
@@ -411,9 +422,7 @@ func (sm *Statemgr) OnNetworkSecurityPolicyCreate(sgp *ctkit.NetworkSecurityPoli
 		return err
 	}
 
-	sgps.initNodeVersions()
 	sm.PeriodicUpdaterPush(sgps)
-	sm.registerForDscUpdate(sgps)
 
 	return nil
 }
@@ -454,8 +463,7 @@ func (sm *Statemgr) OnNetworkSecurityPolicyUpdate(sgp *ctkit.NetworkSecurityPoli
 	sgps.NetworkSecurityPolicy.Status = security.NetworkSecurityPolicyStatus{}
 
 	// store it in local DB
-	err = sm.mbus.UpdateObjectWithReferences(sgps.NetworkSecurityPolicy.MakeKey("security"),
-		convertNetworkSecurityPolicy(sgps), references(nsgp))
+	err = sm.UpdateObjectToMbus(sgp.MakeKey("security"), sgps, references(sgp))
 	if err != nil {
 		log.Errorf("Error storing the sg policy in memdb. Err: %v", err)
 		return err
@@ -477,7 +485,6 @@ func (sm *Statemgr) OnNetworkSecurityPolicyUpdate(sgp *ctkit.NetworkSecurityPoli
 
 	log.Infof("Updated sgpolicy %#v", sgp.ObjectMeta)
 
-	sgps.initNodeVersions()
 	sm.PeriodicUpdaterPush(sgps)
 
 	return nil
@@ -515,8 +522,8 @@ func (sm *Statemgr) OnNetworkSecurityPolicyDelete(sgpo *ctkit.NetworkSecurityPol
 
 	// delete it from the DB
 	log.Infof("Sending delete to mbus for %#v", sgpo.NetworkSecurityPolicy.ObjectMeta)
-	return sm.mbus.DeleteObjectWithReferences(sgpo.MakeKey("security"),
-		convertNetworkSecurityPolicy(sgp), references(sgpo))
+	return sm.DeleteObjectToMbus(sgpo.MakeKey("security"), sgp, references(sgpo))
+
 }
 
 // OnNetworkSecurityPolicyReconnect is called when ctkit reconnects to apiserver
@@ -531,21 +538,6 @@ func (sm *Statemgr) UpdateSgpolicyStatus(nodeuuid, tenant, name, generationID st
 		return
 	}
 
-	// find smartnic object
-	snic, err := sm.FindDistributedServiceCard(tenant, nodeuuid)
-	if err == nil {
-		// if smartnic is not healthy, dont update
-		if !sm.isDscHealthy(&snic.DistributedServiceCard.DistributedServiceCard) {
-			log.Infof("DSC %v unhealthy but ignoring to update policy status with genID %v", nodeuuid, generationID)
-		}
-	}
+	policy.updateNodeVersion(nodeuuid, generationID)
 
-	// lock policy for concurrent modifications
-	policy.NetworkSecurityPolicy.Lock()
-	defer policy.NetworkSecurityPolicy.Unlock()
-
-	// update node version
-	policy.NodeVersions[nodeuuid] = generationID
-
-	sm.PeriodicUpdaterPush(policy)
 }

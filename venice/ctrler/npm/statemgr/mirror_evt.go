@@ -12,6 +12,7 @@ import (
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/api/generated/monitoring"
 	apiintf "github.com/pensando/sw/api/interfaces"
@@ -82,6 +83,65 @@ func (mss *MirrorSessionState) handleExpTimer() {
 	mss.stateMgr.mirrorTimerWatcher <- MirrorTimerEvent{
 		Type:               mirrorExpTimer,
 		MirrorSessionState: mss}
+}
+
+//GetKey get key
+func (mss *MirrorSessionState) GetKey() string {
+	return mss.MirrorSession.GetKey()
+}
+
+//Write writes to apiserver
+func (mss *MirrorSessionState) Write() error {
+	return nil
+}
+
+// processDSCUpdate sgpolicy update handles for DSC
+func (mss *MirrorSessionState) processDSCUpdate(dsc *cluster.DistributedServiceCard) error {
+
+	mss.MirrorSession.Lock()
+	defer mss.MirrorSession.Unlock()
+
+	if !mss.isFlowBasedMirroring() {
+		return nil
+	}
+
+	if mss.stateMgr.sm.isDscEnforcednMode(dsc) || mss.stateMgr.sm.isDscFlowawareMode(dsc) {
+		mss.smObjectTracker.startDSCTracking(dsc)
+	}
+
+	return nil
+}
+
+// processDSCUpdate sgpolicy update handles for DSC
+func (mss *MirrorSessionState) processDSCDelete(dsc *cluster.DistributedServiceCard) error {
+
+	mss.MirrorSession.Lock()
+	defer mss.MirrorSession.Unlock()
+
+	mss.smObjectTracker.startDSCTracking(dsc)
+
+	return nil
+}
+
+//TrackedDSCs tracked DSCs
+func (mss *MirrorSessionState) TrackedDSCs() []*cluster.DistributedServiceCard {
+
+	//Track mirror session only for flow aware case
+	if !mss.isFlowBasedMirroring() {
+		return nil
+	}
+
+	dscs, _ := mss.stateMgr.sm.ListDistributedServiceCards()
+
+	trackedDSCs := []*cluster.DistributedServiceCard{}
+	for _, dsc := range dscs {
+		if mss.stateMgr.sm.isDscEnforcednMode(&dsc.DistributedServiceCard.DistributedServiceCard) ||
+			mss.stateMgr.sm.isDscFlowawareMode(&dsc.DistributedServiceCard.DistributedServiceCard) {
+			trackedDSCs = append(trackedDSCs, &dsc.DistributedServiceCard.DistributedServiceCard)
+		}
+	}
+
+	return trackedDSCs
 }
 
 func buildDSCMirrorSession(mss *MirrorSessionState) *netproto.MirrorSession {
@@ -273,6 +333,7 @@ type interfaceMirrorSession struct {
 
 // MirrorSessionState keep state of mirror session
 type MirrorSessionState struct {
+	smObjectTracker
 	MirrorSession *ctkit.MirrorSession `json:"-"`
 	stateMgr      *SmMirrorSessionInterface
 	schTime       time.Time
@@ -281,7 +342,7 @@ type MirrorSessionState struct {
 	// Local information
 	State             monitoring.MirrorSessionState
 	intfMirrorSession interfaceMirrorSession
-	deleted           bool
+	markedForDelete   bool
 }
 
 // runMirrorSessionWatcher watches on a channel for changes from api server and internal events
@@ -307,7 +368,7 @@ func (smm *SmMirrorSessionInterface) runMirrorSessionWatcher() {
 func (smm *SmMirrorSessionInterface) handleMirrorSessionTimerEvent(et mirrorTimerType, genID string, mss *MirrorSessionState) {
 	mss.MirrorSession.Lock()
 	defer mss.MirrorSession.Unlock()
-	if mss.deleted || genID != mss.MirrorSession.ObjectMeta.GenerationID {
+	if mss.markedForDelete || genID != mss.MirrorSession.ObjectMeta.GenerationID {
 		return
 	}
 	switch et {
@@ -385,6 +446,9 @@ func NewMirroSessionState(mirror *ctkit.MirrorSession, stateMgr *SmMirrorSession
 		stateMgr:      stateMgr,
 	}
 	mirror.HandlerCtx = ms
+	ms.init(ms)
+	//No need to send update notification as we are not updating status yet
+	ms.smObjectTracker.skipUpdateNotification()
 
 	return ms, nil
 }
@@ -395,19 +459,28 @@ type interfaceMirrorSelector struct {
 	mirrorSession     string
 }
 
+//GetDBObject get db object
+func (mss *MirrorSessionState) GetDBObject() memdb.Object {
+	return buildDSCMirrorSession(mss)
+}
+
+func (mss *MirrorSessionState) isMarkedForDelete() bool {
+	return mss.markedForDelete
+}
+
 func (smm *SmMirrorSessionInterface) pushAddMirrorSession(mss *MirrorSessionState) error {
-	return smm.sm.mbus.AddObjectWithReferences(mss.MirrorSession.MakeKey("monitoring"),
-		buildDSCMirrorSession(mss), references(mss.MirrorSession))
+	return smm.sm.AddObjectToMbus(mss.MirrorSession.MakeKey("monitoring"),
+		mss, references(mss.MirrorSession))
 }
 
 func (smm *SmMirrorSessionInterface) pushUpdateMirrorSession(mss *MirrorSessionState) error {
-	return smm.sm.mbus.UpdateObjectWithReferences(mss.MirrorSession.MakeKey("monitoring"),
-		buildDSCMirrorSession(mss), references(mss.MirrorSession))
+	return smm.sm.UpdateObjectToMbus(mss.MirrorSession.MakeKey("monitoring"),
+		mss, references(mss.MirrorSession))
 }
 
 func (smm *SmMirrorSessionInterface) pushDeleteMirrorSession(mss *MirrorSessionState) error {
-	return smm.sm.mbus.DeleteObjectWithReferences(mss.MirrorSession.MakeKey("monitoring"),
-		buildDSCMirrorSession(mss), references(mss.MirrorSession))
+	return smm.sm.DeleteObjectToMbus(mss.MirrorSession.MakeKey("monitoring"),
+		mss, references(mss.MirrorSession))
 }
 
 //OnMirrorSessionCreate mirror session create handle
@@ -482,7 +555,7 @@ func (smm *SmMirrorSessionInterface) getAllInterfaceMirrorSessions() []*interfac
 			log.Errorf("Error finding mirror object for delete %v", err)
 			continue
 		}
-		if mirror.deleted || ms.MirrorSession.MirrorSession.Spec.Interfaces == nil {
+		if mirror.markedForDelete || ms.MirrorSession.MirrorSession.Spec.Interfaces == nil {
 			continue
 		}
 
@@ -976,7 +1049,7 @@ func (smm *SmMirrorSessionInterface) OnMirrorSessionDelete(obj *ctkit.MirrorSess
 	// If Timers cannot be stopped, its ok. Set the state to STOPPED. Timers
 	// check the state and will no-op if it is STOPPED
 	//mark as deleted to that fired timer will not schedule
-	ms.deleted = true
+	ms.markedForDelete = true
 	if ms.schTimer != nil {
 		log.Infof("STOP SchTimer for %v", ms.MirrorSession.Name)
 		ms.schTimer.Stop()
@@ -1028,4 +1101,46 @@ func (smm *SmMirrorSessionInterface) GetMirrorSessionWatchOptions() *api.ListWat
 	opts := &api.ListWatchOptions{}
 	opts.FieldChangeSelector = []string{"ObjectMeta", "Spec"}
 	return opts
+}
+
+// FindMirrorSession finds mirror session
+func (sm *Statemgr) FindMirrorSession(tenant, name string) (*AppState, error) {
+	// find the object
+	obj, err := sm.FindObject("MirrorSession", tenant, "default", name)
+	if err != nil {
+		return nil, err
+	}
+
+	return AppStateFromObj(obj)
+}
+
+//OnMirrorSessionCreateReq create req
+func (sm *Statemgr) OnMirrorSessionCreateReq(nodeID string, objinfo *netproto.MirrorSession) error {
+	return nil
+}
+
+//OnMirrorSessionUpdateReq  update req
+func (sm *Statemgr) OnMirrorSessionUpdateReq(nodeID string, objinfo *netproto.MirrorSession) error {
+
+	return nil
+}
+
+//OnMirrorSessionDeleteReq  delete req
+func (sm *Statemgr) OnMirrorSessionDeleteReq(nodeID string, objinfo *netproto.MirrorSession) error {
+	return nil
+}
+
+//OnMirrorSessionOperUpdate oper update
+func (sm *Statemgr) OnMirrorSessionOperUpdate(nodeID string, objinfo *netproto.MirrorSession) error {
+	eps, err := sm.FindMirrorSession(objinfo.Tenant, objinfo.Name)
+	if err != nil {
+		return err
+	}
+	eps.updateNodeVersion(nodeID, objinfo.ObjectMeta.GenerationID)
+	return nil
+}
+
+//OnMirrorSessionOperDelete  delete
+func (sm *Statemgr) OnMirrorSessionOperDelete(nodeID string, objinfo *netproto.MirrorSession) error {
+	return nil
 }

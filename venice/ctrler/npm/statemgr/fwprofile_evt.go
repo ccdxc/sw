@@ -3,8 +3,6 @@
 package statemgr
 
 import (
-	"fmt"
-	"strings"
 	"time"
 
 	"github.com/gogo/protobuf/types"
@@ -15,15 +13,16 @@ import (
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/memdb"
 	"github.com/pensando/sw/venice/utils/ref"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
 // FirewallProfileState is a wrapper for fwProfile object
 type FirewallProfileState struct {
+	smObjectTracker
 	FirewallProfile *ctkit.FirewallProfile `json:"-"` // fwProfile object
 	stateMgr        *Statemgr              // pointer to state manager
-	NodeVersions    map[string]string      // Map fpr node -> version
 	markedForDelete bool
 }
 
@@ -56,9 +55,9 @@ func NewFirewallProfileState(fwProfile *ctkit.FirewallProfile, stateMgr *Statemg
 	fps := FirewallProfileState{
 		FirewallProfile: fwProfile,
 		stateMgr:        stateMgr,
-		NodeVersions:    make(map[string]string),
 	}
 	fwProfile.HandlerCtx = &fps
+	fps.smObjectTracker.init(&fps)
 
 	return &fps, nil
 }
@@ -98,45 +97,6 @@ func convertFirewallProfile(fps *FirewallProfileState) *netproto.SecurityProfile
 	return &fwp
 }
 
-func (sm *Statemgr) updatePropogationStatus(genID string,
-	current *security.PropagationStatus, nodeVersions map[string]string) *security.PropagationStatus {
-
-	objs := sm.ListObjects("DistributedServiceCard")
-	newProp := &security.PropagationStatus{GenerationID: genID}
-
-	pendingNodes := []string{}
-	for _, obj := range objs {
-		snic, err := DistributedServiceCardStateFromObj(obj)
-		if err != nil || !sm.isDscAdmitted(&snic.DistributedServiceCard.DistributedServiceCard) {
-			continue
-		}
-
-		//Update only for the nodes which have entry
-		if ver, ok := nodeVersions[snic.DistributedServiceCard.Name]; ok {
-			if ver == genID {
-				newProp.Updated++
-			} else {
-				pendingNodes = append(pendingNodes, snic.DistributedServiceCard.Name)
-				newProp.Pending++
-				if current.MinVersion == "" || versionToInt(ver) < versionToInt(newProp.MinVersion) {
-					newProp.MinVersion = ver
-				}
-			}
-		}
-	}
-
-	// set status
-	if newProp.Pending == 0 {
-		newProp.Status = fmt.Sprintf("Propagation Complete")
-		newProp.PendingNaples = []string{}
-	} else {
-		newProp.Status = fmt.Sprintf("Propagation pending on: %s", strings.Join(pendingNodes, ", "))
-		newProp.PendingNaples = pendingNodes
-	}
-
-	return newProp
-}
-
 func (sm *Statemgr) propgatationStatusDifferent(
 	current *security.PropagationStatus,
 	other *security.PropagationStatus) bool {
@@ -170,20 +130,19 @@ func (sm *Statemgr) propgatationStatusDifferent(
 	return false
 }
 
-// initNodeVersions initializes node versions for the policy
-func (fps *FirewallProfileState) initNodeVersions() error {
+//TrackedDSCs tracked DSCs
+func (fps *FirewallProfileState) TrackedDSCs() []*cluster.DistributedServiceCard {
+
 	dscs, _ := fps.stateMgr.ListDistributedServiceCards()
 
-	// walk all smart nics
+	trackedDSCs := []*cluster.DistributedServiceCard{}
 	for _, dsc := range dscs {
 		if fps.stateMgr.isDscEnforcednMode(&dsc.DistributedServiceCard.DistributedServiceCard) {
-			if _, ok := fps.NodeVersions[dsc.DistributedServiceCard.Name]; !ok {
-				fps.NodeVersions[dsc.DistributedServiceCard.Name] = ""
-			}
+			trackedDSCs = append(trackedDSCs, &dsc.DistributedServiceCard.DistributedServiceCard)
 		}
 	}
 
-	return nil
+	return trackedDSCs
 }
 
 func (fps *FirewallProfileState) isMarkedForDelete() bool {
@@ -195,13 +154,21 @@ func (fps *FirewallProfileState) processDSCUpdate(dsc *cluster.DistributedServic
 
 	fps.FirewallProfile.Lock()
 	defer fps.FirewallProfile.Unlock()
+
 	if fps.stateMgr.isDscEnforcednMode(dsc) {
-		log.Infof("DSC %v is being tracked for propogation status for fwprofile %s", dsc.Name, fps.GetKey())
-		fps.NodeVersions[dsc.Name] = ""
-	} else {
-		log.Infof("DSC %v is being untracked for propogation status for fwprofile %s", dsc.Name, fps.GetKey())
-		delete(fps.NodeVersions, dsc.Name)
+		fps.smObjectTracker.startDSCTracking(dsc)
 	}
+
+	return nil
+}
+
+// processDSCUpdate sgpolicy update handles for DSC
+func (fps *FirewallProfileState) processDSCDelete(dsc *cluster.DistributedServiceCard) error {
+
+	fps.FirewallProfile.Lock()
+	defer fps.FirewallProfile.Unlock()
+
+	fps.smObjectTracker.stopDSCTracking(dsc)
 
 	return nil
 }
@@ -211,8 +178,15 @@ func (fps *FirewallProfileState) Write() error {
 	fps.FirewallProfile.Lock()
 	defer fps.FirewallProfile.Unlock()
 
+	propStatus := fps.getPropStatus()
+	newProp := &security.PropagationStatus{
+		GenerationID:  propStatus.generationID,
+		MinVersion:    propStatus.minVersion,
+		Pending:       propStatus.pending,
+		PendingNaples: propStatus.pendingDSCs,
+		Updated:       propStatus.updated,
+	}
 	prop := &fps.FirewallProfile.Status.PropagationStatus
-	newProp := fps.stateMgr.updatePropogationStatus(fps.FirewallProfile.GenerationID, prop, fps.NodeVersions)
 
 	//Do write only if changed
 	if fps.stateMgr.propgatationStatusDifferent(prop, newProp) {
@@ -250,6 +224,11 @@ func (sm *Statemgr) OnSecurityProfileOperDelete(nodeID string, objinfo *netproto
 	return nil
 }
 
+//GetDBObject get db object
+func (fps *FirewallProfileState) GetDBObject() memdb.Object {
+	return convertFirewallProfile(fps)
+}
+
 // OnFirewallProfileCreate handles fwProfile creation
 func (sm *Statemgr) OnFirewallProfileCreate(fwProfile *ctkit.FirewallProfile) error {
 	log.Infof("Creating fwProfile: %+v", fwProfile)
@@ -261,12 +240,16 @@ func (sm *Statemgr) OnFirewallProfileCreate(fwProfile *ctkit.FirewallProfile) er
 		return err
 	}
 
-	fps.initNodeVersions()
+	//fps.iniNo
+
 	sm.PeriodicUpdaterPush(fps)
-	sm.registerForDscUpdate(fps)
 
 	// store it in local DB
-	sm.mbus.AddObjectWithReferences(fwProfile.MakeKey("security"), convertFirewallProfile(fps), references(fwProfile))
+	err = sm.AddObjectToMbus(fwProfile.MakeKey("security"), fps, references(fwProfile))
+	if err != nil {
+		log.Errorf("Error storing the sg policy in memdb. Err: %v", err)
+		return err
+	}
 
 	return nil
 }
@@ -294,7 +277,11 @@ func (sm *Statemgr) OnFirewallProfileUpdate(fwProfile *ctkit.FirewallProfile, nf
 	fps.FirewallProfile.Status = security.FirewallProfileStatus{}
 
 	log.Infof("Sending udpate received")
-	sm.mbus.UpdateObjectWithReferences(fwProfile.MakeKey("security"), convertFirewallProfile(fps), references(nfwp))
+	err = sm.UpdateObjectToMbus(fwProfile.MakeKey("security"), fps, references(fwProfile))
+	if err != nil {
+		log.Errorf("Error storing the sg policy in memdb. Err: %v", err)
+		return err
+	}
 	log.Infof("Updated fwProfile: %+v", fwProfile)
 
 	return nil
@@ -317,8 +304,8 @@ func (sm *Statemgr) OnFirewallProfileDelete(fwProfile *ctkit.FirewallProfile) er
 	// update current object.
 	fps.markedForDelete = true
 	// delete the object
-	return sm.mbus.DeleteObjectWithReferences(fwProfile.MakeKey("security"),
-		convertFirewallProfile(fps), references(fwProfile))
+	return sm.DeleteObjectToMbus(fwProfile.MakeKey("security"),
+		fps, references(fwProfile))
 }
 
 // OnFirewallProfileReconnect is called when ctkit reconnects to apiserver
@@ -367,14 +354,5 @@ func (sm *Statemgr) UpdateFirewallProfileStatus(nodeuuid, tenant, name, generati
 		return
 	}
 
-	// lock policy for concurrent modifications
-	fps.FirewallProfile.Lock()
-	defer fps.FirewallProfile.Unlock()
-
-	if fps.NodeVersions == nil {
-		fps.NodeVersions = make(map[string]string)
-	}
-	fps.NodeVersions[nodeuuid] = generationID
-
-	sm.PeriodicUpdaterPush(fps)
+	fps.updateNodeVersion(nodeuuid, generationID)
 }

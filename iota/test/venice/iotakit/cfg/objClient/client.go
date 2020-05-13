@@ -105,6 +105,7 @@ type ObjClient interface {
 	ConfigureSnapshot() error
 
 	PullConfigStatus(configStatus interface{}) error
+	PullConfigPushStatus(kinds []string, configStatus interface{}) error
 
 	ListObjectStoreObjects() (objs []*objstore.Object, err error)
 
@@ -166,6 +167,54 @@ type VeniceConfigStatus struct {
 			} `json:"NetworkSecurityPolicy"`
 		} `json:"KindStatus"`
 	} `json:"NodesStatus"`
+}
+
+//VeniceConfigPushStatus config push status of objects
+type VeniceConfigPushStatus struct {
+	KindObjects struct {
+		Endpoint []struct {
+			Key         string   `json:"Key"`
+			PendingDSCs []string `json:"PendingDSCs"`
+			Updated     int      `json:"Updated"`
+			Pending     int      `json:"Pending"`
+			Version     string   `json:"Version"`
+		} `json:"Endpoint"`
+		App []struct {
+			Key         string   `json:"Key"`
+			PendingDSCs []string `json:"PendingDSCs"`
+			Updated     int      `json:"Updated"`
+			Pending     int      `json:"Pending"`
+			Version     string   `json:"Version"`
+		} `json:"App"`
+		NetworkSecurityPolicy []struct {
+			Key         string   `json:"Key"`
+			PendingDSCs []string `json:"PendingDSCs"`
+			Updated     int      `json:"Updated"`
+			Pending     int      `json:"Pending"`
+			Version     string   `json:"Version"`
+		} `json:"NetworkSecurityPolicy"`
+		NetworkInterface []struct {
+			Key         string   `json:"Key"`
+			PendingDSCs []string `json:"PendingDSCs"`
+			Updated     int      `json:"Updated"`
+			Pending     int      `json:"Pending"`
+			Version     string   `json:"Version"`
+		} `json:"NetworkInterface"`
+		FirewallProfile []struct {
+			Key         string   `json:"Key"`
+			PendingDSCs []string `json:"PendingDSCs"`
+			Updated     int      `json:"Updated"`
+			Pending     int      `json:"Pending"`
+			Version     string   `json:"Version"`
+		} `json:"FirewallProfile"`
+		MirrorSession []struct {
+			Key         string   `json:"Key"`
+			PendingDSCs []string `json:"PendingDSCs"`
+			Updated     int      `json:"Updated"`
+			Pending     int      `json:"Pending"`
+			Version     string   `json:"Version"`
+		} `json:"MirrorSession"`
+	} `json:"KindObjects"`
 }
 
 // VeniceRawData saves venice diagnosis information
@@ -1570,10 +1619,51 @@ func (r *Client) doConfigPostAction(action string, configStatus interface{}) err
 	return fmt.Errorf("Failed Request for config push : %v", err)
 }
 
+func (r *Client) doPostAction(queryParams map[string]string, configStatus interface{}) error {
+
+	npmURLs, err := r.GetNpmDebugModuleURLs()
+	if err != nil {
+		return errors.New("Npm debug URL not found")
+	}
+
+	req := &diagnostics.DiagnosticsRequest{
+		Query:      "action",
+		Parameters: queryParams}
+
+	restcl := netutils.NewHTTPClient()
+	restcl.WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
+	restcl.DisableKeepAlives()
+	defer restcl.CloseIdleConnections()
+
+	// get authz header
+	authzHeader, ok := loginctx.AuthzHeaderFromContext(r.ctx)
+	if !ok {
+		return fmt.Errorf("no authorization header in context")
+	}
+	restcl.SetHeader("Authorization", authzHeader)
+	for _, url := range npmURLs {
+		_, err = restcl.Req("POST", url, req, configStatus)
+		if err == nil {
+			return nil
+		}
+		fmt.Printf("Error in request %+v\n", err)
+
+	}
+
+	return fmt.Errorf("Failed Request for config push : %v", err)
+}
+
 //PullConfigStatus pulls config status
 func (r *Client) PullConfigStatus(configStatus interface{}) error {
 
 	return r.doConfigPostAction("config-status", configStatus)
+}
+
+//PullConfigPushStatus pulls config status
+func (r *Client) PullConfigPushStatus(kinds []string, configPushStatus interface{}) error {
+
+	return r.doPostAction(map[string]string{"action": "config-push-status", "kinds": strings.Join(kinds, ",")},
+		configPushStatus)
 }
 
 //CreateOrchestration creates orchestration object

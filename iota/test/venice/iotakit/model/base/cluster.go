@@ -1269,7 +1269,7 @@ func (sm *SysModel) SetUpNaplesPostCluster(nodes []*testbed.TestNode) error {
 	defer cancel()
 	var token string
 
-	bkCtx, cancelFunc := context.WithTimeout(context.Background(), 10*time.Minute)
+	bkCtx, cancelFunc := context.WithTimeout(context.Background(), 15*time.Minute)
 	defer cancelFunc()
 
 L:
@@ -1336,7 +1336,7 @@ L1:
 		}
 	}
 
-	bkCtx, cancelFunc = context.WithTimeout(context.Background(), 10*time.Minute)
+	bkCtx, cancelFunc = context.WithTimeout(context.Background(), 15*time.Minute)
 	defer cancelFunc()
 
 L2:

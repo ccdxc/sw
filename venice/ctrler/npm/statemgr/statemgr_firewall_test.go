@@ -451,7 +451,7 @@ func getPolicyVersionForNode(s *Statemgr, policyname, nodename string) (string, 
 		return "", err
 	}
 
-	version, ok := p.NodeVersions[nodename]
+	version, ok := p.smObjectTracker.nodeVersions[nodename]
 	if ok != true {
 		return "", errors.New("Smartnic not found in versions")
 	}
@@ -544,6 +544,7 @@ func TestNetworkSecurityPolicySmartNICEvents(t *testing.T) {
 		if err != nil {
 			return false, err
 		}
+
 		prop := &sgp.NetworkSecurityPolicy.Status.PropagationStatus
 		log.Infof("Got propagation status: %#v", prop)
 		if prop.Updated != 0 || prop.Pending != 1 || prop.GenerationID != "1" || prop.MinVersion != "" {
@@ -826,7 +827,7 @@ func getFwProfileVersionForNode(s *Statemgr, fwprofilename, nodename string) (st
 		return "", err
 	}
 
-	version, ok := p.NodeVersions[nodename]
+	version, ok := p.smObjectTracker.nodeVersions[nodename]
 	if ok != true {
 		return "", errors.New("Smartnic not found in versions")
 	}

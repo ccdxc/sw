@@ -254,7 +254,19 @@ func (d *diagHandler) HandleRequest(ctx context.Context, req *diagapi.Diagnostic
 		} else {
 			ret.Content = strings.Replace(string(str), "\\\"", "\"", -1)
 		}
-
+	case "config-push-status":
+		kinds, ok := params["kinds"]
+		if !ok {
+			ret.Content = "kinds were not specified"
+		} else {
+			cfgPushStatus := d.stateMgr.GetObjectConfigPushStatus(strings.Split(kinds, ","))
+			str, err := json.Marshal(cfgPushStatus)
+			if err != nil {
+				ret.Content = fmt.Sprintf("marshall returned error (%s)", err)
+			} else {
+				ret.Content = strings.Replace(string(str), "\\\"", "\"", -1)
+			}
+		}
 	case "watch-db":
 		kind, ok := params["kind"]
 		if !ok {

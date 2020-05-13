@@ -379,7 +379,8 @@ func (ws *WorkloadState) createEndpoints() error {
 
 	// loop over each interface of the workload
 	ws.stateMgr.Lock()
-	defer ws.stateMgr.Unlock()
+	var eps []*workload.Endpoint
+	createErr := false
 	for ii := range ws.Workload.Spec.Interfaces {
 		var netName string
 		if len(ws.Workload.Spec.Interfaces[ii].Network) == 0 {
@@ -419,7 +420,7 @@ func (ws *WorkloadState) createEndpoints() error {
 				snic, err := ws.stateMgr.FindDistributedServiceCardByHname(host.Host.Spec.DSCs[jj].ID)
 				if err != nil {
 					log.Warnf("Error finding smart nic for name %v for workload %v", host.Host.Spec.DSCs[jj].ID, ws.Workload.Name)
-					return nil
+					continue
 				}
 				nodeUUID = snic.DistributedServiceCard.Name
 			} else if host.Host.Spec.DSCs[jj].MACAddress != "" {
@@ -427,7 +428,7 @@ func (ws *WorkloadState) createEndpoints() error {
 				snic, err := ws.stateMgr.FindDistributedServiceCardByMacAddr(snicMac)
 				if err != nil {
 					log.Warnf("Error finding smart nic for mac add %v  for workload %v", snicMac, ws.Workload.Name)
-					return nil
+					continue
 				}
 				nodeUUID = snic.DistributedServiceCard.Name
 			}
@@ -460,7 +461,9 @@ func (ws *WorkloadState) createEndpoints() error {
 				ws.Workload.Status.PropagationStatus.Status = DuplicateMacErr
 
 				// write the status back
-				return ws.Workload.Write()
+				ws.Workload.Write()
+				createErr = true
+				continue
 			}
 		}
 
@@ -468,9 +471,10 @@ func (ws *WorkloadState) createEndpoints() error {
 		epInfo := workload.Endpoint{
 			TypeMeta: api.TypeMeta{Kind: "Endpoint"},
 			ObjectMeta: api.ObjectMeta{
-				Name:      epName,
-				Tenant:    ws.Workload.Tenant,
-				Namespace: ws.Workload.Namespace,
+				Name:         epName,
+				Tenant:       ws.Workload.Tenant,
+				Namespace:    ws.Workload.Namespace,
+				GenerationID: "1",
 			},
 			Spec: workload.EndpointSpec{
 				NodeUUID:         nodeUUID,
@@ -496,19 +500,33 @@ func (ws *WorkloadState) createEndpoints() error {
 			epInfo.Status.Migration.Status = workload.EndpointMigrationStatus_FROM_NON_PEN_HOST.String()
 		}
 
+		eps = append(eps, &epInfo)
+
+	}
+
+	ws.stateMgr.Unlock()
+	for _, epInfo := range eps {
+
+		//NodeUUID may not be set because DSC event may not be received yet.
+		if epInfo.Spec.NodeUUID == "" {
+			log.Errorf("Error creating endpoint %v, destination node not found", epInfo.Name)
+			return kvstore.NewTxnFailedError()
+		}
 		// create new endpoint
-		err = ws.stateMgr.ctrler.Endpoint().Create(&epInfo)
+		err = ws.stateMgr.ctrler.Endpoint().Create(epInfo)
 		if err != nil {
 			log.Errorf("Error creating endpoint. Err: %v", err)
 			return kvstore.NewTxnFailedError()
 		}
 	}
+	if !createErr {
+		// Clear propagation error message
+		ws.Workload.Status.PropagationStatus.Status = ""
+		err = ws.Workload.Write()
+		if err != nil {
+			log.Errorf("failed to clear propagation status. Err : %v", err)
+		}
 
-	// Clear propagation error message
-	ws.Workload.Status.PropagationStatus.Status = ""
-	err = ws.Workload.Write()
-	if err != nil {
-		log.Errorf("failed to clear propagation status. Err : %v", err)
 	}
 
 	return nil

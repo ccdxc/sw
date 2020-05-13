@@ -161,16 +161,13 @@ func (sm *Statemgr) dscCreate(smartNic *ctkit.DistributedServiceCard) (*Distribu
 
 func (sm *Statemgr) addDSCRelatedobjects(smartNic *ctkit.DistributedServiceCard, sns *DistributedServiceCardState, sendSgPolicies bool) {
 	// see if smartnic is admitted
-	if sm.isDscAdmitted(&smartNic.DistributedServiceCard) {
+	/*if sm.isDscAdmitted(&smartNic.DistributedServiceCard) {
 		if sendSgPolicies {
 			// Update SGPolicies
 			policies, _ := sm.ListSgpolicies()
 			for _, policy := range policies {
 				policy.NetworkSecurityPolicy.Lock()
-				if _, ok := policy.NodeVersions[smartNic.DistributedServiceCard.Name]; ok == false {
-					policy.NodeVersions[smartNic.DistributedServiceCard.Name] = ""
-					sm.PeriodicUpdaterPush(policy)
-				}
+				policy.processDSCUpdate(&smartNic.DistributedServiceCard)
 				policy.NetworkSecurityPolicy.Unlock()
 			}
 		}
@@ -178,13 +175,10 @@ func (sm *Statemgr) addDSCRelatedobjects(smartNic *ctkit.DistributedServiceCard,
 		fwprofiles, _ := sm.ListFirewallProfiles()
 		for _, fwprofile := range fwprofiles {
 			fwprofile.FirewallProfile.Lock()
-			if _, ok := fwprofile.NodeVersions[smartNic.DistributedServiceCard.Name]; ok == false {
-				fwprofile.NodeVersions[smartNic.DistributedServiceCard.Name] = ""
-				sm.PeriodicUpdaterPush(fwprofile)
-			}
+			fwprofile.processDSCUpdate(&smartNic.DistributedServiceCard)
 			fwprofile.FirewallProfile.Unlock()
 		}
-	}
+	}*/
 
 	hosts, err := sm.ctrler.Host().List(context.Background(), &api.ListWatchOptions{})
 	if err != nil {
@@ -304,23 +298,13 @@ func (sm *Statemgr) updateDSC(smartNic *ctkit.DistributedServiceCard, nsnic *clu
 }
 
 func (sm *Statemgr) updateDSCRelatedObjects(sns *DistributedServiceCardState, nsnic *cluster.DistributedServiceCard, sgPolicyUpdate bool) {
-	if sgPolicyUpdate {
+	//TODO : Not sure why bekiw code is required, commenting out for now
+	/*if sgPolicyUpdate {
 		// Update SGPolicies
 		policies, _ := sm.ListSgpolicies()
 		for _, policy := range policies {
 			policy.NetworkSecurityPolicy.Lock()
-			if sm.isDscAdmitted(nsnic) {
-				if _, ok := policy.NodeVersions[nsnic.Name]; !ok {
-					policy.NodeVersions[nsnic.Name] = ""
-					sm.PeriodicUpdaterPush(policy)
-				}
-			} else {
-				_, ok := policy.NodeVersions[nsnic.Name]
-				if ok {
-					delete(policy.NodeVersions, nsnic.Name)
-					sm.PeriodicUpdaterPush(policy)
-				}
-			}
+			policy.processDSCUpdate(nsnic)
 			policy.NetworkSecurityPolicy.Unlock()
 		}
 	}
@@ -330,24 +314,16 @@ func (sm *Statemgr) updateDSCRelatedObjects(sns *DistributedServiceCardState, ns
 	for _, fwprofile := range fwprofiles {
 		if sm.isDscAdmitted(nsnic) {
 			fwprofile.FirewallProfile.Lock()
-			if _, ok := fwprofile.NodeVersions[nsnic.Name]; ok == false {
-				fwprofile.NodeVersions[nsnic.Name] = ""
-				sm.PeriodicUpdaterPush(fwprofile)
-			} else {
-				_, ok := fwprofile.NodeVersions[nsnic.Name]
-				if ok {
-					delete(fwprofile.NodeVersions, nsnic.Name)
-					sm.PeriodicUpdaterPush(fwprofile)
-				}
-			}
+			fwprofile.processDSCUpdate(nsnic)
 			fwprofile.FirewallProfile.Unlock()
 		}
-	}
+	} */
 }
 
 // OnDistributedServiceCardDelete handles smartNic deletion
 func (sm *Statemgr) OnDistributedServiceCardDelete(smartNic *ctkit.DistributedServiceCard) error {
 	defer sm.ProcessDSCEvent(DeleteEvent, &smartNic.DistributedServiceCard)
+	defer sm.sendDscDeleteNotification(&smartNic.DistributedServiceCard)
 	hs, err := sm.deleteDsc(smartNic)
 	if err != nil {
 		return err
@@ -389,16 +365,13 @@ func (sm *Statemgr) deleteDsc(smartNic *ctkit.DistributedServiceCard) (*Distribu
 }
 
 func (sm *Statemgr) deleteDscRelatedObjects(smartNic *ctkit.DistributedServiceCard, hs *DistributedServiceCardState, sgPolicyDelete bool) error {
-	if sgPolicyDelete {
+	//TODO : Not sure why bekiw code is required, commenting out for now
+	/*if sgPolicyDelete {
 		// Update SGPolicies
 		policies, _ := sm.ListSgpolicies()
 		for _, policy := range policies {
 			policy.NetworkSecurityPolicy.Lock()
-			_, ok := policy.NodeVersions[hs.DistributedServiceCard.Name]
-			if ok {
-				delete(policy.NodeVersions, hs.DistributedServiceCard.Name)
-				sm.PeriodicUpdaterPush(policy)
-			}
+			policy.stopDSCTracking(&hs.DistributedServiceCard.DistributedServiceCard)
 			policy.NetworkSecurityPolicy.Unlock()
 		}
 	}
@@ -406,13 +379,9 @@ func (sm *Statemgr) deleteDscRelatedObjects(smartNic *ctkit.DistributedServiceCa
 	fwprofiles, _ := sm.ListFirewallProfiles()
 	for _, fwprofile := range fwprofiles {
 		fwprofile.FirewallProfile.Lock()
-		_, ok := fwprofile.NodeVersions[hs.DistributedServiceCard.Name]
-		if ok {
-			delete(fwprofile.NodeVersions, hs.DistributedServiceCard.Name)
-			sm.PeriodicUpdaterPush(fwprofile)
-		}
+		fwprofile.stopDSCTracking(&hs.DistributedServiceCard.DistributedServiceCard)
 		fwprofile.FirewallProfile.Unlock()
-	}
+	} */
 
 	hosts, err := sm.ctrler.Host().List(context.Background(), &api.ListWatchOptions{})
 	if err != nil {
@@ -556,4 +525,19 @@ func (sm *Statemgr) isDscEnforcednMode(nsnic *cluster.DistributedServiceCard) bo
 	}
 
 	return profileState.DSCProfile.DSCProfile.Spec.Features.Firewall == true
+}
+
+// isDscEnforcednMode returns true if the DSC in insertion mode cluster
+func (sm *Statemgr) isDscFlowawareMode(nsnic *cluster.DistributedServiceCard) bool {
+
+	if !sm.isDscAdmitted(nsnic) {
+		return false
+	}
+
+	profileState, err := sm.FindDSCProfile("", nsnic.Spec.DSCProfile)
+	if err != nil {
+		return false
+	}
+
+	return profileState.DSCProfile.DSCProfile.Spec.Features.FlowAware == true
 }

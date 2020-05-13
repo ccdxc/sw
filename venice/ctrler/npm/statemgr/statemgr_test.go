@@ -496,6 +496,10 @@ func createNetworkInterface(stateMgr *Statemgr, intfName string, dsc string, lab
 		},
 		Spec: network.NetworkInterfaceSpec{
 			Type: network.IFType_UPLINK_ETH.String(),
+			Pause: &network.PauseSpec{
+				Type: network.PauseType_DISABLE.String(),
+			},
+			IPConfig: &cluster.IPConfig{},
 		},
 		Status: network.NetworkInterfaceStatus{DSC: dsc},
 	}
@@ -507,14 +511,16 @@ func createNetworkInterface(stateMgr *Statemgr, intfName string, dsc string, lab
 		TypeMeta:   api.TypeMeta{Kind: "Interface"},
 		ObjectMeta: nr.ObjectMeta,
 		Status: netproto.InterfaceStatus{
-			DSC:   dsc,
-			DSCID: dsc,
+			DSC:        dsc,
+			DSCID:      dsc,
+			OperStatus: "UP",
 		},
 		Spec: netproto.InterfaceSpec{
 			Type: "UPLINK_ETH",
 		},
 	})
 
+	//stateMgr.ctrler.NetworkInterface().Create(&nr)
 	return &nr, err
 }
 
@@ -536,6 +542,20 @@ func updateNetworkInterface(stateMgr *Statemgr, intfName string, dsc string, lab
 		TypeMeta:   api.TypeMeta{Kind: "Interface"},
 		ObjectMeta: nr.ObjectMeta,
 		Status: netproto.InterfaceStatus{
+			DSC:        dsc,
+			DSCID:      dsc,
+			OperStatus: "DOWN",
+		},
+		Spec: netproto.InterfaceSpec{
+			Type: "UPLINK_ETH",
+		},
+	})
+
+	// create sg
+	err = stateMgr.OnInterfaceCreateReq(dsc, &netproto.Interface{
+		TypeMeta:   api.TypeMeta{Kind: "Interface"},
+		ObjectMeta: nr.ObjectMeta,
+		Status: netproto.InterfaceStatus{
 			DSC:   dsc,
 			DSCID: dsc,
 		},
@@ -545,7 +565,7 @@ func updateNetworkInterface(stateMgr *Statemgr, intfName string, dsc string, lab
 	})
 
 	// create sg
-	err = stateMgr.OnInterfaceCreateReq(dsc, &netproto.Interface{
+	err = stateMgr.OnInterfaceOperUpdate(dsc, &netproto.Interface{
 		TypeMeta:   api.TypeMeta{Kind: "Interface"},
 		ObjectMeta: nr.ObjectMeta,
 		Status: netproto.InterfaceStatus{
@@ -574,6 +594,19 @@ func deleteNetworkInterface(stateMgr *Statemgr, intfName string, label map[strin
 
 	// create sg
 	err := stateMgr.ctrler.NetworkInterface().Delete(&nr)
+
+	// fakedelete
+	stateMgr.OnInterfaceDeleteReq("", &netproto.Interface{
+		TypeMeta:   api.TypeMeta{Kind: "Interface"},
+		ObjectMeta: nr.ObjectMeta,
+		Status: netproto.InterfaceStatus{
+			DSC:   "",
+			DSCID: "",
+		},
+		Spec: netproto.InterfaceSpec{
+			Type: "UPLINK_ETH",
+		},
+	})
 
 	return &nr, err
 }
@@ -1963,6 +1996,21 @@ func TestWorkloadCreateDelete(t *testing.T) {
 	Assert(t, ok, "Could not find the endpoint", "testWorkload-0001.0203.0409")
 	Assert(t, (foundEp.Endpoint.Status.WorkloadName == wr.Name), "endpoint params did not match")
 
+	objStatusIntf := stateMgr.GetObjectConfigPushStatus([]string{"Endpoint"})
+	Assert(t, objStatusIntf != nil, "Object status empty")
+
+	objStatus, ok := objStatusIntf.(*objectConfigStatus)
+	fmt.Printf("TYPE %v", objStatusIntf)
+	Assert(t, ok, "Object status not found")
+	Assert(t, len(objStatus.KindObjects) == 1, "Object status empty")
+
+	epObjectStatus, ok := objStatus.KindObjects["Endpoint"]
+	Assert(t, ok, "Endpoint status not found")
+	Assert(t, len(epObjectStatus) == 1, "Endpoint status count does not match")
+	Assert(t, epObjectStatus[0].Pending == 0, "Endpoint status count does not match")
+	Assert(t, epObjectStatus[0].Updated == 0, "Endpoint status count does not match")
+	Assert(t, epObjectStatus[0].Version == "1", "Endpoint status count does not match")
+
 	// delete the workload
 	err = stateMgr.ctrler.Workload().Delete(&wr)
 	AssertOk(t, err, "Error deleting the workload")
@@ -3206,12 +3254,6 @@ func TestNetworkInterfaceCRUD(t *testing.T) {
 	nifstate, err := networkInterfaceStateFromObj(cif)
 	nifstate.NetworkInterfaceState = cif
 	AssertOk(t, err, "expecting to succeed creating Netif State")
-	npif := convertNetworkInterfaceObject(nifstate)
-	opts := stateMgr.GetInterfaceWatchOptions()
-	Assert(t, opts != nil, "expecting non-nul options")
-
-	err = stateMgr.OnInterfaceOperUpdate("node1", npif)
-	AssertOk(t, err, "expecting to pass")
 
 }
 

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"strconv"
 	"strings"
 	"time"
@@ -1089,8 +1090,28 @@ func (sm *SysModel) AddTaskResult(taskName string, err error) {
 
 }
 
+func (sm *SysModel) combineLogs() {
+
+	// create a tar.gz from all log files
+	cmdStr := fmt.Sprintf("pushd %s/src/github.com/pensando/sw/iota && tar cvzf venice-iota.tgz *.log logs  && popd", os.Getenv("GOPATH"))
+	cmd := exec.Command("bash", "-c", cmdStr)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		fmt.Printf("tar command out:\n%s\n", string(out))
+		log.Errorf("Collecting log files failed with: %s. trying to collect server logs\n", err)
+		cmdStr = fmt.Sprintf("pushd %s/src/github.com/pensando/sw/iota/logs && tar cvzf venice-iota.tgz ../*.log && popd", os.Getenv("GOPATH"))
+		cmd = exec.Command("bash", "-c", cmdStr)
+		out, err = cmd.CombinedOutput()
+		if err != nil {
+			fmt.Printf("tar command out:\n%s\n", string(out))
+			log.Errorf("Collecting server log files failed with: %s.\n", err)
+		}
+	}
+}
+
 // PrintResult prints test result summary
 func (sm *SysModel) PrintResult() {
+	sm.combineLogs()
 	fmt.Printf("==========================================================================================================================================\n")
 	fmt.Printf("                Test Results \n")
 	fmt.Printf("==========================================================================================================================================\n")
@@ -1143,6 +1164,7 @@ func (sm *SysModel) PrintResult() {
 	fmt.Printf("              Overall Run Summary Total Cases : %v %s Pass  : %v  %s Fail : %v %s Skipped : %v %s Duration %v \n", totalCases,
 		greenColor, totalPass, redColor, totalFail, yellowColor, totalSkipped, defaultStyle, totalDuration.String())
 	fmt.Printf("==========================================================================================================================================\n")
+
 }
 
 const defaultStyle = "\x1b[0m"
