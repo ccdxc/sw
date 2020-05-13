@@ -28,13 +28,28 @@ type NetworkCollection struct {
 	subnets []*Network
 }
 
+func (n *Network) IPPrefix() string {
+	return n.ipPrefix
+}
+
+//NewNetworkCollectionsFromNetworks For every network create a new collector
+func NewNetworkCollectionsFromNetworks(client objClient.ObjClient, nws []*network.Network) []*NetworkCollection {
+
+	var newNc []*NetworkCollection
+	for index := 0; index < len(nws); index++ {
+		sNet := nws[index:index+1]
+		newNc = append(newNc, NewNetworkCollectionFromNetworks(client, sNet))
+	}
+	return newNc
+}
+
 //NewNetworkCollection create a new collector
 func NewNetworkCollectionFromNetworks(client objClient.ObjClient, nws []*network.Network) *NetworkCollection {
 
 	nwc := NetworkCollection{CollectionCommon: CollectionCommon{Client: client}}
 	for _, nw := range nws {
 		nwc.subnets = append(nwc.subnets,
-			&Network{VeniceNetwork: nw, Name: nw.Name})
+			&Network{VeniceNetwork: nw, Name: nw.Name, ipPrefix: nw.Spec.IPv4Subnet})
 	}
 
 	return &nwc

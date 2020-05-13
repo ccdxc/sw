@@ -785,6 +785,50 @@ func (wc *WorkloadCollection) RemotePairsWithinNetwork() *WorkloadPairCollection
 	return collection
 }
 
+func (wc *WorkloadCollection) LocalPairsAcrossNetwork(workload *Workload) *WorkloadPairCollection {
+	collection := NewWorkloadPairCollection(wc.Client, wc.Testbed)
+	for i, wf := range wc.Workloads {
+		if wf.iotaWorkload.NetworkName == workload.iotaWorkload.NetworkName &&
+		wf.iotaWorkload.UplinkVlan == workload.iotaWorkload.UplinkVlan {
+			for j, ws := range wc.Workloads {
+				if i != j && ws.iotaWorkload.NodeName == workload.iotaWorkload.NodeName &&
+				ws.iotaWorkload.UplinkVlan != workload.iotaWorkload.UplinkVlan &&
+				ws.iotaWorkload.NetworkName != workload.iotaWorkload.NetworkName {
+					pair := WorkloadPair{
+						First:  wf,
+						Second: ws,
+					}
+					collection.Pairs = append(collection.Pairs, &pair)
+				}
+			}
+			return collection
+		}
+	}
+	return collection
+}
+
+func (wc *WorkloadCollection) RemotePairsAcrossNetwork(workload *Workload) *WorkloadPairCollection {
+	collection := NewWorkloadPairCollection(wc.Client, wc.Testbed)
+	for i, wf := range wc.Workloads {
+		if wf.iotaWorkload.NetworkName == workload.iotaWorkload.NetworkName &&
+		wf.iotaWorkload.UplinkVlan == workload.iotaWorkload.UplinkVlan {
+			for j, ws := range wc.Workloads {
+				if i != j && ws.iotaWorkload.NodeName != workload.iotaWorkload.NodeName &&
+				ws.iotaWorkload.UplinkVlan != workload.iotaWorkload.UplinkVlan &&
+				ws.iotaWorkload.NetworkName != workload.iotaWorkload.NetworkName {
+					pair := WorkloadPair{
+						First:  wf,
+						Second: ws,
+					}
+					collection.Pairs = append(collection.Pairs, &pair)
+				}
+			}
+			return collection
+		}
+	}
+	return collection
+}
+
 func (wpc *WorkloadPairCollection) WorkloadPairGetDynamicIps(tb *testbed.TestBed) error {
 	cmds := []*iota.Command{}
 	for _, pair := range wpc.Pairs {

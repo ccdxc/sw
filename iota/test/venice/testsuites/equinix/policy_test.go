@@ -289,6 +289,181 @@ func testBlacklistPolicy(fromIP, toIP, proto, port string) error {
 	return nil
 }
 
+func getNetworkCollections() ([]*objects.NetworkCollection, error) {
+
+	// add permit rules for workload pairs
+	ten, err := ts.model.ConfigClient().ListTenant()
+	if err != nil {
+		return nil, err
+	}
+
+	if len(ten) == 0 {
+		return nil, fmt.Errorf("Not enough tenants to list networks")
+	}
+
+	nws, err := ts.model.ConfigClient().ListNetwork(ten[0].Name)
+
+	nwc := objects.NewNetworkCollectionsFromNetworks(ts.model.ConfigClient(), nws)
+
+	return nwc, nil
+}
+
+var _ = Describe("scale policy", func() {
+	var startTime time.Time
+	BeforeEach(func() {
+		//verify cluster is in good health
+		startTime = time.Now().UTC()
+
+		Eventually(func() error {
+			return ts.model.VerifyClusterStatus()
+		}).Should(Succeed())
+
+		// delete the default allow policy
+		Expect(ts.model.DefaultNetworkSecurityPolicy().Delete()).ShouldNot(HaveOccurred())
+	})
+	AfterEach(func() {
+		//Expect No Service is stopped
+		Expect(ts.model.ServiceStoppedEvents(startTime, ts.model.Naples()).Len(0))
+		nwcs, err := getNetworkCollections()
+		Expect(err).Should(BeNil())
+
+		// Delete the policies. Reset the network references
+		for index := 0; index < len(nwcs) ; index++ {
+			nwcs[index].SetIngressSecurityPolicy(nil)
+			nwcs[index].SetEgressSecurityPolicy(nil)
+			ts.model.NetworkSecurityPolicy(fmt.Sprintf("ingress%v%v", index, index)).Delete()
+			ts.model.NetworkSecurityPolicy(fmt.Sprintf("ingress%v%v", index, index+1)).Delete()
+			ts.model.NetworkSecurityPolicy(fmt.Sprintf("egress%v%v", index, index)).Delete()
+			ts.model.NetworkSecurityPolicy(fmt.Sprintf("egress%v%v", index, index+1)).Delete()
+		}
+		// recreate default allow policy
+		Expect(ts.model.DefaultNetworkSecurityPolicy().Restore()).ShouldNot(HaveOccurred())
+	})
+	Context("Scale Policy tests", func() {
+		var (
+			protoList = []string{"tcp", "udp", "icmp"}
+			portList = []string{"80", "53", "0"}
+		)
+		It("scale policy", func() {
+			Skip("Skip scale policy tests until datapath issues are addressed")
+			if !ts.tb.HasNaplesHW() {
+				Skip("Disabling on naples sim till traffic issue is debugged")
+			}
+			//Get all the networks as individual collection
+			nwcs, err := getNetworkCollections()
+			Expect(err).Should(BeNil())
+			var networkPrefixList []string
+			for _, nwc := range nwcs {
+				networkPrefixList = append(networkPrefixList, nwc.Subnets()[0].IPPrefix())
+			}
+			log.Infof("PREFIX::::: %v", networkPrefixList)
+
+			// Add Policy for all networks (source:'x' destination:all excluding 'x')
+			for index := 0; index < len(nwcs) ; index++ {
+				nwc := nwcs[index]
+				sourcePrefixList := []string{networkPrefixList[index]}
+				var targetPrefixList []string
+				for _, prefix := range networkPrefixList {
+					if  prefix != sourcePrefixList[0] {
+						targetPrefixList = append(targetPrefixList, prefix)
+					}
+				}
+				//Create user provider Ingress policy
+				ingress_policy := ts.model.NewNetworkSecurityPolicy(fmt.Sprintf("ingress%v%v",index,index)).AddRuleForSubnets(targetPrefixList, sourcePrefixList, "any", "any", "PERMIT")
+				ingress_policy.Add(ts.model.NewNetworkSecurityPolicy(fmt.Sprintf("ingress%v%v",index,index+1)).AddRuleForSubnets(
+					targetPrefixList, sourcePrefixList,portList[index % len(portList)], protoList[index % len(protoList)], "PERMIT"))
+				//Create user provider Egress policy
+				egress_policy := ts.model.NewNetworkSecurityPolicy(fmt.Sprintf("egress%v%v",index,index)).AddRuleForSubnets(sourcePrefixList, targetPrefixList, "any", "any", "PERMIT")
+				egress_policy.Add(ts.model.NewNetworkSecurityPolicy(fmt.Sprintf("egress%v%v",index,index+1)).AddRuleForSubnets(
+					sourcePrefixList, targetPrefixList,portList[index % len(portList)], protoList[index % len(protoList)], "PERMIT"))
+
+				//Set tenant for both policies
+				ingress_policy.SetTenant(nwc.GetTenant())
+				egress_policy.SetTenant(nwc.GetTenant())
+				//Commit the ingress and egress policy
+				Expect(ingress_policy.Commit()).Should(Succeed())
+				Expect(egress_policy.Commit()).Should(Succeed())
+				//Apply the ingress and egress policies
+				Expect(nwc.SetIngressSecurityPolicy(ingress_policy)).Should(BeNil())
+				Expect(nwc.SetEgressSecurityPolicy(egress_policy)).Should(BeNil())
+				//Verify if the policies are available in datapath
+				Eventually(func() error { return ts.model.VerifyPolicyStatus(ingress_policy) }).Should(Succeed())
+				Eventually(func() error { return ts.model.VerifyPolicyStatus(egress_policy) }).Should(Succeed())
+
+			}
+
+			//Data Traffic Tests. From network 'x' to all other networks as per the installed policy
+			for index := 0; index < len(nwcs) ; index++ {
+				nwc := nwcs[index]
+				sourceNetwork := nwc.Subnets()[0]
+				var targetNetwork []*objects.Network
+				for _, network := range nwcs {
+					//Collect the target networks
+					if network.Subnets()[0] != sourceNetwork {
+						targetNetwork = append(targetNetwork, network.Subnets()[0])
+					}
+				}
+				//Create workload pairs in same network
+				wp1 := ts.model.WorkloadPairs().OnNetwork(sourceNetwork)
+				//Create workload pair in different network and in same naples
+				wps2 := ts.model.Workloads().LocalPairsAcrossNetwork(wp1.Pairs[0].First).Any(1)
+				//Create workload pair in different network and in different naples
+				wps3 := ts.model.Workloads().RemotePairsAcrossNetwork(wp1.Pairs[0].First).Any(1)
+
+				//Verify the traffic does not flow within same subnet within and across hosts
+				//Uncomment the below once the datapath for dual policy is fixed
+				Expect(ts.model.PingFails(wp1)).Should(BeNil())
+
+				//Verify the traffic across networks according to policies
+				port, err := strconv.Atoi(portList[index % len(portList)])
+				Expect(err).Should(BeNil())
+				proto := protoList[index % len(protoList)]
+				switch proto {
+				case "tcp":
+					//Verify TCP traffic flow
+					Expect(ts.model.TCPSession(wps2, port)).Should(BeNil())
+					Expect(ts.model.TCPSession(wps2.ReversePairs(), port)).Should(BeNil())
+					Expect(ts.model.TCPSession(wps3, port)).Should(BeNil())
+					Expect(ts.model.TCPSession(wps3.ReversePairs(), port)).Should(BeNil())
+
+					//Verify other traffic fails
+					Expect(ts.model.PingFails(wps2)).Should(BeNil())
+					Expect(ts.model.PingFails(wps3)).Should(BeNil())
+					Expect(ts.model.UDPSessionFails(wps2, port)).Should(BeNil())
+					Expect(ts.model.UDPSessionFails(wps3, port)).Should(BeNil())
+				case "udp":
+					//Verify UDP traffic flow
+					Expect(ts.model.UDPSession(wps2, port)).Should(BeNil())
+					Expect(ts.model.UDPSession(wps2.ReversePairs(), port)).Should(BeNil())
+					Expect(ts.model.UDPSession(wps3, port)).Should(BeNil())
+					Expect(ts.model.UDPSession(wps3.ReversePairs(), port)).Should(BeNil())
+
+					//Verify other traffic fails
+					Expect(ts.model.PingFails(wps2)).Should(BeNil())
+					Expect(ts.model.PingFails(wps3)).Should(BeNil())
+					Expect(ts.model.TCPSessionFails(wps2, port)).Should(BeNil())
+					Expect(ts.model.TCPSessionFails(wps3, port)).Should(BeNil())
+				case "icmp":
+					//Verify ICMP traffic flow
+					Expect(ts.model.PingPairs(wps2)).Should(BeNil())
+					Expect(ts.model.PingPairs(wps3)).Should(BeNil())
+
+					//Verify other traffic fails
+					Expect(ts.model.UDPSessionFails(wps2, port)).Should(BeNil())
+					Expect(ts.model.UDPSessionFails(wps2.ReversePairs(), port)).Should(BeNil())
+					Expect(ts.model.TCPSessionFails(wps2, port)).Should(BeNil())
+					Expect(ts.model.TCPSessionFails(wps2.ReversePairs(), port)).Should(BeNil())
+					Expect(ts.model.UDPSessionFails(wps3, port)).Should(BeNil())
+					Expect(ts.model.UDPSessionFails(wps3.ReversePairs(), port)).Should(BeNil())
+					Expect(ts.model.TCPSessionFails(wps3, port)).Should(BeNil())
+					Expect(ts.model.TCPSessionFails(wps3.ReversePairs(), port)).Should(BeNil())
+				default:
+				}
+			}
+		})
+	})
+})
+
 var _ = Describe("single policy", func() {
 	var startTime time.Time
 	BeforeEach(func() {
