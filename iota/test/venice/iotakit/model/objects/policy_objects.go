@@ -86,43 +86,6 @@ func (spc *NetworkSecurityPolicyCollection) DeleteAllRules() *NetworkSecurityPol
 	return spc
 }
 
-// AddRuleForSubnets adds rule between multiple subnets
-func (spc *NetworkSecurityPolicyCollection) AddRuleForSubnets(srcNetworks, dstNetworks []string, port, proto, action string) *NetworkSecurityPolicyCollection {
-	if spc.err != nil {
-		return spc
-	}
-	// build the rule
-	rule := security.SGRule{
-		Action: action,
-		FromIPAddresses: srcNetworks,
-		ToIPAddresses:   dstNetworks,
-	}
-	// determine protocol
-	switch proto {
-	case "any":
-		fallthrough
-	case "icmp":
-		rule.ProtoPorts = append(rule.ProtoPorts, security.ProtoPort{Protocol: proto})
-	default:
-		// determine ports
-		if port != "any" {
-			pp := security.ProtoPort{
-				Protocol: proto,
-				Ports:    port,
-			}
-			rule.ProtoPorts = append(rule.ProtoPorts, pp)
-		} else {
-			rule.ProtoPorts = append(rule.ProtoPorts, security.ProtoPort{Protocol: proto, Ports: "0-65535"})
-		}
-
-	}
-	for _, pol := range spc.Policies {
-		pol.VenicePolicy.Spec.Rules = append(pol.VenicePolicy.Spec.Rules, rule)
-	}
-	return spc
-
-}
-
 // AddRulesForWorkloadPairs adds rule for each workload pair into the policies
 func (spc *NetworkSecurityPolicyCollection) AddRulesForWorkloadPairs(wpc *WorkloadPairCollection, port, action string) *NetworkSecurityPolicyCollection {
 	if spc.err != nil {
