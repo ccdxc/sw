@@ -1,0 +1,7 @@
+import { MetricMeasurement } from './metadata';
+
+export const MetricsMetadata{{pipeline}}: { [key: string]: MetricMeasurement } = {
+  {{#messages}}
+  {{this.name}}: {{#toJSON this}}{{/toJSON}},
+  {{/messages}}
+}

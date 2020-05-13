@@ -3,6 +3,7 @@ import { generateMetricMetadata } from './generators/metrics';
 import { generateHelpDocs, Config as HelpConfig } from './generators/helpdocs';
 import { generateEventTypesFile } from './generators/events';
 import { generateUIPermissionsFile } from './generators/permissions';
+import { Pipeline} from './generators/metrics';
 import { getManifest } from './generators/utils';
 import * as handlebars from 'handlebars';
 import { genModelAndServices, Config as ModelConfig } from './generators/models';
@@ -57,9 +58,18 @@ generateHelpDocs(helpConfig);
 
 
 // Metrics doc
-const metricsFolder = '../../../metrics/generated/';
 const metricsOutput = path.join(process.cwd(), 'metrics/', 'generated/');
-generateMetricMetadata(metricsFolder, metricsOutput);
+const pipelines: Pipeline[] = [
+  {
+    pipeline: "Iris",
+    basePath: '../../../metrics/generated/',
+  },
+  {
+    pipeline: "Apulu",
+    basePath: '../../../metrics/apulu/generated',
+  }
+]
+generateMetricMetadata(pipelines, metricsOutput);
 
 
 

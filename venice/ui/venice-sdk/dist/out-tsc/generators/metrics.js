@@ -7,12 +7,7 @@ var custom_metrics_1 = require("../custom-metrics");
 var _ = require("lodash");
 var rmdir = require("rimraf");
 var enums_1 = require("../v1/models/generated/network/enums");
-function generateMetricMetadata(inputBaseFolder, outputFolder) {
-    if (fs.existsSync(outputFolder)) {
-        // Delete all contents
-        rmdir.sync(outputFolder);
-    }
-    fs.mkdirSync(outputFolder, { recursive: true });
+function generatePipelineMetricMetadata(pipeline, inputBaseFolder, outputFolder) {
     var basetypeToJSType = {
         int8: 'number',
         uint8: 'number',
@@ -103,8 +98,26 @@ function generateMetricMetadata(inputBaseFolder, outputFolder) {
     custom_metrics_1.customMetrics.forEach(function (metric) {
         messages.push(metric);
     });
+    var data = {
+        pipeline: pipeline,
+        messages: messages,
+    };
+    var template = 'generate-pipeline-metrics-ts.hbs';
+    var outputFile = outputFolder + pipeline.toLowerCase() + '_metadata.ts';
+    utils.writeTemplate(template, data, outputFile);
+}
+exports.generatePipelineMetricMetadata = generatePipelineMetricMetadata;
+function generateMetricMetadata(pipelines, outputFolder) {
+    if (fs.existsSync(outputFolder)) {
+        // Delete all contents
+        rmdir.sync(outputFolder);
+    }
+    fs.mkdirSync(outputFolder, { recursive: true });
+    pipelines.forEach(function (pipeline) {
+        generatePipelineMetricMetadata(pipeline.pipeline, pipeline.basePath, outputFolder);
+    });
     var template = 'generate-metrics-ts.hbs';
-    var outputFile = 'metrics/generated/metadata.ts';
-    utils.writeTemplate(template, messages, outputFile);
+    var outputFile = outputFolder + 'metadata.ts';
+    utils.writeTemplate(template, {}, outputFile);
 }
 exports.generateMetricMetadata = generateMetricMetadata;

@@ -25,8 +25,8 @@ export interface MetricMeasurement {
   tags?: string[],
 }
 
-export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
-  {{#each this}}
-  {{this.name}}: {{#toJSON this}}{{/toJSON}},
-  {{/each}}
+export let MetricsMetadata: { [key: string]: MetricMeasurement } = {}
+
+export function setMetricsMetadata(val: { [key: string]: MetricMeasurement }) {
+  MetricsMetadata = val;
 }

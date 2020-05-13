@@ -7,13 +7,16 @@ import { Observable, Subscription } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Utility } from '../../common/Utility';
 import { GenServiceUtility } from './GenUtility';
-import { UIConfigsService } from '../uiconfigs.service';
+import { UIConfigsService, Features } from '../uiconfigs.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 import { NEVER } from 'rxjs';
 import { MethodOpts } from '@sdk/v1/services/generated/abstract.service';
 
 import { Telemetry_queryv1Service } from '@sdk/v1/services/generated/telemetry_queryv1.service';
 import { ITelemetry_queryMetricsQueryList } from '@sdk/v1/models/generated/telemetry_query';
+import { setMetricsMetadata } from '@sdk/metrics/generated/metadata';
+import { MetricsMetadataIris } from '@sdk/metrics/generated/iris_metadata';
+import { MetricsMetadataApulu } from '@sdk/metrics/generated/apulu_metadata';
 
 @Injectable()
 export class TelemetryqueryService extends Telemetry_queryv1Service implements OnDestroy {
@@ -29,6 +32,18 @@ export class TelemetryqueryService extends Telemetry_queryv1Service implements O
               protected _controllerService: ControllerService,
               protected uiconfigsService: UIConfigsService) {
     super(_http);
+    if (this.uiconfigsService.isFeatureEnabled(Features.cloud)) {
+      setMetricsMetadata(MetricsMetadataApulu);
+    } else {
+      setMetricsMetadata(MetricsMetadataIris);
+    }
+    this._controllerService.subscribe(Eventtypes.NEW_FEATURE_PERMISSIONS, () => {
+      if (this.uiconfigsService.isFeatureEnabled(Features.cloud)) {
+        setMetricsMetadata(MetricsMetadataApulu);
+      } else {
+        setMetricsMetadata(MetricsMetadataIris);
+      }
+    });
     this.serviceUtility = new GenServiceUtility(
       _http,
       (payload) => { this.publishAJAXStart(payload); },

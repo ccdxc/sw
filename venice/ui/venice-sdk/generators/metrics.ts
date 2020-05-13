@@ -6,13 +6,12 @@ import * as _ from 'lodash';
 import * as rmdir from 'rimraf';
 import { NetworkNetworkInterfaceSpec_type } from "../v1/models/generated/network/enums"
 
-export function generateMetricMetadata(inputBaseFolder, outputFolder) {
-  if (fs.existsSync(outputFolder)){
-    // Delete all contents
-    rmdir.sync(outputFolder);
-  }
-  fs.mkdirSync(outputFolder, {recursive: true});
+export interface Pipeline {
+  basePath: string;
+  pipeline: string;
+}
 
+export function generatePipelineMetricMetadata(pipeline, inputBaseFolder, outputFolder) {
   const basetypeToJSType = {
     int8: 'number',
     uint8: 'number',
@@ -108,7 +107,26 @@ export function generateMetricMetadata(inputBaseFolder, outputFolder) {
   customMetrics.forEach( (metric) => {
     messages.push(metric);
   })
+  const data = {
+    pipeline: pipeline,
+    messages: messages,
+  }
+  const template = 'generate-pipeline-metrics-ts.hbs';
+  const outputFile = outputFolder + pipeline.toLowerCase() + '_metadata.ts';
+  utils.writeTemplate(template, data, outputFile);
+}
+
+export function generateMetricMetadata(pipelines: Pipeline[], outputFolder) {
+  if (fs.existsSync(outputFolder)){
+    // Delete all contents
+    rmdir.sync(outputFolder);
+  }
+  fs.mkdirSync(outputFolder, {recursive: true})
+  pipelines.forEach( pipeline => {
+    generatePipelineMetricMetadata(pipeline.pipeline, pipeline.basePath, outputFolder)
+  });
+
   const template = 'generate-metrics-ts.hbs';
-  const outputFile = 'metrics/generated/metadata.ts';
-  utils.writeTemplate(template, messages, outputFile);
+  const outputFile = outputFolder + 'metadata.ts';
+  utils.writeTemplate(template, {}, outputFile);
 }

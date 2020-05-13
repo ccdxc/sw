@@ -50,6 +50,15 @@ var helpConfig = {
 };
 helpdocs_1.generateHelpDocs(helpConfig);
 // Metrics doc
-var metricsFolder = '../../../metrics/generated/';
 var metricsOutput = path.join(process.cwd(), 'metrics/', 'generated/');
-metrics_1.generateMetricMetadata(metricsFolder, metricsOutput);
+var pipelines = [
+    {
+        pipeline: "Iris",
+        basePath: '../../../metrics/generated/',
+    },
+    {
+        pipeline: "Apulu",
+        basePath: '../../../metrics/apulu/generated',
+    }
+];
+metrics_1.generateMetricMetadata(pipelines, metricsOutput);
