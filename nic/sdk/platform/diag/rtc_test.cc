@@ -70,9 +70,15 @@ int do_rtc_test()
     if (min_diff)
         sec_diff = (sec_diff + 60);
 
-    if (sec_diff != duration)
+    /* RTC needs to tick at least duration seconds. It can tick more times
+     * if the card is running at slower freq e.g. Naples25 SWM, OCP cards
+     * when they are running out of Aux power supply
+     * */
+    if (sec_diff < duration)
     {
-        SDK_TRACE_ERR("RTC test Failed !!! (time diff is %d:%d (mm::ss): expected time diff: %d second(s))\n", min_diff, sec_diff, duration);
+        SDK_TRACE_ERR("RTC test Failed !!! (time diff is %d:%d (mm::ss): "
+            "expected minimum time diff: %d second(s))\n", min_diff, sec_diff,
+                duration);
         retval = -1;
     }
 
