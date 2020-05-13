@@ -268,6 +268,8 @@ mapping_entry::read(pds_obj_key_t *key, pds_mapping_info_t *info) {
         // and then read from h/w
         memcpy(&info->spec.key, key, sizeof(*key));
         memcpy(&info->spec.skey, &skey, sizeof(skey));
+        info->spec.num_tags = num_tags_;
+        memcpy(info->spec.tags, tags_, num_tags_ * sizeof(tags_[0]));
         return impl_->read_hw(this, (impl::obj_key_t *)&skey,
                               (impl::obj_info_t *)info);
     }
