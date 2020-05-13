@@ -6,20 +6,24 @@ CMDARGS=""
 LOGDIR=""
 LOGSWITCH="--log-dir"
 while (( "$#" )); do
-    if [[ "$1" == $LOGSWITCH ]]; then 
+    if [[ "$1" == $LOGSWITCH ]]; then
         if [[ -z $2 ]]; then
           echo "Log dir not specified"
           exit
         fi
         LOGDIR="$2"
         shift 2
-    else 
+    else
         CMDARGS+="$1 "
         shift
     fi
 done
 
 source $CUR_DIR/../setup_env_sim.sh apulu $LOGDIR
+
+# mount hugetlbfs
+mkdir -p /dev/hugepages
+mount -t hugetlbfs nodev /dev/hugepages || { echo "Failed to mount hugetlbfs"; }
 
 echo "Starting Agent: `date +%x_%H:%M:%S:%N`"
 rm -f $PDSPKG_TOPDIR/conf/pipeline.json

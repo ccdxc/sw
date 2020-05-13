@@ -395,12 +395,8 @@ pds_init (pds_init_params_t *params)
         // initialize all the signal handlers
         core::sig_init(SIGUSR1, api::sig_handler);
 
-        // temporary workaround - disable sysmon on apulu pipeline to mask
-        // learn DPDK corruption
-#ifndef APULU
         // initialize and start system monitoring
         api::sysmon_init();
-#endif
 
         // don't interfere with nicmgr
         while (!core::is_nicmgr_ready()) {

@@ -127,6 +127,8 @@ function finish () {
     if [ $DRYRUN == 0 ]; then
         stop_process
         stop_model
+        # unmount hugetlbfs
+        umount /dev/hugepages || { echo "Failed to unmount hugetlbfs"; }
     fi
     collect_logs
     ${PDSPKG_TOPDIR}/tools/print-cores.sh

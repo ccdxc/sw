@@ -75,8 +75,7 @@ learn_state::lif_init_(void) {
     PDS_TRACE_INFO("UIO device created, retry count %d", count);
 
     params.log_cb = learn_log;
-    params.eal_init_list = "-n 4 --in-memory --file-prefix learn "
-                           "--master-lcore 1 -c 3";
+    params.eal_init_list = "-n 4 --file-prefix learn --master-lcore 1 -c 3";
     params.log_name = "learn_dpdk";
     params.mbuf_pool_name = "learn_dpdk";
     params.mbuf_size = LEARN_LIF_PKT_BUF_SZ;
