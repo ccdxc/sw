@@ -36,6 +36,9 @@ header_type apulu_txdma_to_p4e_header_t {
         snat_type       : 2;
         dnat_en         : 1;
         dnat_idx        : 13;
+        src_bd_id       : 16;
+        pad             : 7;
+        src_mapping_hit : 1;
         route_priority  : 16;
     }
 }
@@ -84,11 +87,13 @@ header_type apulu_p4_to_arm_header_t {
 
         defunct_flow            : 1;
         local_mapping_ip_type   : 2;
-        pad                     : 5;
+        src_mapping_hit         : 1;
+        pad                     : 4;
 
         epoch                   : 8;
         sw_meta                 : 32;
 
+        src_bd_id               : 16;
         route_priority          : 16;
     }
 }
@@ -159,7 +164,9 @@ header_type apulu_rx_to_tx_header_t {
         sport_classid3  : 8;  // Byte 59
         dport_classid3  : 8;  // Byte 60
 
-        pad7            : 24; // Bytes 61 to 63
+        src_bd_id       : 16; // Bytes 61 to 62
+        pad7            : 7;  // Byte 63
+        src_mapping_hit : 1;
 
         /*--------------512b ---------------*/
 

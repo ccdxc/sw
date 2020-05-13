@@ -116,9 +116,11 @@ class P4ToARM(Packet):
             BitField("drop", 0, 1),
             BitField("defunct_flow", 0, 1),
             BitField("local_mapping_ip_type", 0, 2),
-            BitField("pad", 0, 5),
+            BitField("src_mapping_hit", 0, 1),
+            BitField("pad", 0, 4),
             ByteField("epoch", 0),
             IntField("sw_meta", 0),
+            ShortField("src_bd_id", 0),
             ShortField("route_priority", 0)]
 
 def dump_pkt(pkt, sname):

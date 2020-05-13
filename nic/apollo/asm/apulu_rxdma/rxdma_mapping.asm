@@ -37,6 +37,8 @@ rxdma_mapping_miss:
     phvwr.f         p.p4_to_rxdma_mapping_done, TRUE
 
 rxdma_mapping_hit:
+    phvwr           p.rx_to_tx_hdr_src_mapping_hit, TRUE
+    phvwr           p.rx_to_tx_hdr_src_bd_id, d.rxdma_mapping_info_d.bd_id
     phvwr.e         p.lpm_metadata_mapping_tag_idx, \
                         d.rxdma_mapping_info_d.tag_idx
     phvwr.f         p.p4_to_rxdma_mapping_done, TRUE

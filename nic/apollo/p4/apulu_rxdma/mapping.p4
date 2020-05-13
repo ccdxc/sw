@@ -4,11 +4,14 @@
 @pragma capi appdatafields tag_idx
 @pragma capi hwfields_access_api
 action rxdma_mapping_info(entry_valid, tag_idx, more_hashes, hash1, hint1,
-                          hash2, hint2, more_hints) {
+                          hash2, hint2, more_hints, bd_id) {
     if (entry_valid == TRUE) {
         // if hardware register indicates hit, take the results
         modify_field(scratch_metadata.field20, tag_idx);
         modify_field(lpm_metadata.mapping_tag_idx, scratch_metadata.field20);
+        modify_field(scratch_metadata.field12, bd_id);
+        modify_field(rx_to_tx_hdr.src_bd_id, scratch_metadata.field12);
+        modify_field(rx_to_tx_hdr.src_mapping_hit, TRUE);
         modify_field(p4_to_rxdma.mapping_done, TRUE);
 
         // if hardware register indicates miss, compare hashes with r1

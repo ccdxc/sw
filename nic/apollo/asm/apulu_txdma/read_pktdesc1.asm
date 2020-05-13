@@ -37,10 +37,15 @@ read_pktdesc1:
                      rx_to_tx_hdr_pad3, \
                      rx_to_tx_hdr_sport_classid3, \
                      rx_to_tx_hdr_dport_classid3, \
-                     rx_to_tx_hdr_pad7}, \
-                     d[511:(512-(offsetof(p,rx_to_tx_hdr_remote_ip) + \
-                          sizeof(p.rx_to_tx_hdr_remote_ip) - \
-                          offsetof(p, rx_to_tx_hdr_pad7)))]
+                     rx_to_tx_hdr_src_bd_id, \
+                     rx_to_tx_hdr_pad7, \
+                     rx_to_tx_hdr_src_mapping_hit}, \
+                     d[511:0]
+
+    phvwrpair  p.txdma_to_p4e_src_bd_id, \
+                    d.read_pktdesc1_d.src_bd_id, \
+                    p.txdma_to_p4e_src_mapping_hit, \
+                    d.read_pktdesc1_d.src_mapping_hit
 
     /* Setup for route LPM lookup */
     sne        c1, d.read_pktdesc1_d.route_base_addr, r0

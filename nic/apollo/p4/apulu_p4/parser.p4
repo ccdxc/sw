@@ -86,7 +86,7 @@ header erspan_header_t3_t erspan;
 header ethernet_t ethernet_1;
 header vlan_tag_t ctag_1;
 header arp_rarp_t arp;
-@pragma pa_header_union xgress ipv4_1 ipv6_1
+@pragma pa_header_union ingress ipv4_1 ipv6_1
 header ipv4_t ipv4_1;
 header ipv6_t ipv6_1;
 header udp_t udp_1;

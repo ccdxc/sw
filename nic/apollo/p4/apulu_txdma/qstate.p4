@@ -70,7 +70,9 @@ action read_pktdesc1(remote_ip,
                      pad3,
                      sport_classid3,
                      dport_classid3,
-                     pad7
+                     src_bd_id,
+                     pad7,
+                     src_mapping_hit
                     )
 {
     modify_field(rx_to_tx_hdr.remote_ip, remote_ip);
@@ -99,7 +101,12 @@ action read_pktdesc1(remote_ip,
     modify_field(scratch_metadata.field4, pad3);
     modify_field(rx_to_tx_hdr.sport_classid3, sport_classid3);
     modify_field(rx_to_tx_hdr.dport_classid3, dport_classid3);
-    modify_field(scratch_metadata.field4, pad7);
+    modify_field(rx_to_tx_hdr.src_bd_id, src_bd_id);
+    modify_field(scratch_metadata.field7, pad7);
+    modify_field(rx_to_tx_hdr.src_mapping_hit, src_mapping_hit);
+
+    modify_field(txdma_to_p4e.src_bd_id, src_bd_id);
+    modify_field(txdma_to_p4e.src_mapping_hit, src_mapping_hit);
 
     // Setup for route LPM lookup
     if (route_base_addr != 0) {

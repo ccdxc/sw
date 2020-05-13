@@ -10,6 +10,7 @@ struct phv_         p;
 %%
 
 // r1 : packet length
+// r2 : k.rewrite_metadata_flags
 // c7 : tunnel_tos_override
 
 nexthop_info:
@@ -42,23 +43,25 @@ nexthop_info2:
 
 nexthop_rewrite:
     bbeq            k.control_metadata_rx_packet, TRUE, nexthop_rx_rewrite
+    or              r2, k.rewrite_metadata_flags_s8_e15, \
+                        k.rewrite_metadata_flags_s0_e7, 8
 nexthop_tx_rewrite:
-    seq             c1, k.rewrite_metadata_flags[TX_REWRITE_DMAC_BITS], \
+    seq             c1, r2[TX_REWRITE_DMAC_BITS], \
                         TX_REWRITE_DMAC_FROM_MAPPING
     phvwr.c1        p.ethernet_1_dstAddr, k.rewrite_metadata_dmaci
-    seq             c1, k.rewrite_metadata_flags[TX_REWRITE_DMAC_BITS], \
+    seq             c1, r2[TX_REWRITE_DMAC_BITS], \
                         TX_REWRITE_DMAC_FROM_NEXTHOP
     phvwr.c1        p.ethernet_1_dstAddr, d.nexthop_info_d.dmaci
-    seq             c1, k.rewrite_metadata_flags[TX_REWRITE_DMAC_BITS], \
+    seq             c1, r2[TX_REWRITE_DMAC_BITS], \
                         TX_REWRITE_DMAC_FROM_TUNNEL
     phvwr.c1        p.ethernet_1_dstAddr, k.rewrite_metadata_tunnel_dmaci
-    seq             c1, k.rewrite_metadata_flags[TX_REWRITE_SMAC_BITS], \
+    seq             c1, r2[TX_REWRITE_SMAC_BITS], \
                         TX_REWRITE_SMAC_FROM_VRMAC
     phvwr.c1        p.ethernet_1_srcAddr, k.rewrite_metadata_vrmac
-    seq             c1, k.rewrite_metadata_flags[TX_REWRITE_ENCAP_BITS], \
+    seq             c1, r2[TX_REWRITE_ENCAP_BITS], \
                         TX_REWRITE_ENCAP_VXLAN
     bcf             [c1], vxlan_encap
-    seq             c1, k.rewrite_metadata_flags[TX_REWRITE_ENCAP_BITS], \
+    seq             c1, r2[TX_REWRITE_ENCAP_BITS], \
                         TX_REWRITE_ENCAP_VLAN
     bcf             [c1], vlan_encap
     nop.!c1.e
@@ -69,7 +72,7 @@ vxlan_encap:
     phvwr.c1        p.ethernet_1_etherType, k.ctag_1_etherType
     phvwr           p.{ethernet_0_dstAddr,ethernet_0_srcAddr}, \
                         d.{nexthop_info_d.dmaco,nexthop_info_d.smaco}
-    seq             c1, k.rewrite_metadata_flags[TX_REWRITE_VNI_BITS], \
+    seq             c1, r2[TX_REWRITE_VNI_BITS], \
                         TX_REWRITE_VNI_FROM_TUNNEL
     sne.!c1         c1, k.rewrite_metadata_tunnel_vni, r0
     cmov            r7, c1, k.rewrite_metadata_tunnel_vni, \
@@ -150,16 +153,16 @@ ipv6_vxlan_encap:
     phvwr.f         p.capri_p4_intrinsic_packet_len, r1
 
 nexthop_rx_rewrite:
-    seq             c1, k.rewrite_metadata_flags[RX_REWRITE_DMAC_BITS], \
+    seq             c1, r2[RX_REWRITE_DMAC_BITS], \
                         RX_REWRITE_DMAC_FROM_MAPPING
     phvwr.c1        p.ethernet_1_dstAddr, k.rewrite_metadata_dmaci
-    seq             c1, k.rewrite_metadata_flags[RX_REWRITE_DMAC_BITS], \
+    seq             c1, r2[RX_REWRITE_DMAC_BITS], \
                         RX_REWRITE_DMAC_FROM_NEXTHOP
     phvwr.c1        p.ethernet_1_dstAddr, d.nexthop_info_d.dmaci
-    seq             c1, k.rewrite_metadata_flags[RX_REWRITE_SMAC_BITS], \
+    seq             c1, r2[RX_REWRITE_SMAC_BITS], \
                         RX_REWRITE_SMAC_FROM_VRMAC
     phvwr.c1        p.ethernet_1_srcAddr, k.rewrite_metadata_vrmac
-    seq             c1, k.rewrite_metadata_flags[RX_REWRITE_ENCAP_BITS], \
+    seq             c1, r2[RX_REWRITE_ENCAP_BITS], \
                         RX_REWRITE_ENCAP_VLAN
     bcf             [c1], vlan_encap
     nop.!c1.e
