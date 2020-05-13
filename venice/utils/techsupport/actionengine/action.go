@@ -5,7 +5,6 @@ package actionengine
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os/exec"
 	"regexp"
 	"strings"
@@ -22,25 +21,16 @@ func RunShellCmd(cmdStr, cmdsDir string) error {
 	cmdFileName := strings.ReplaceAll(cmdStr, " ", "_")
 	cmdFileName = reg.ReplaceAllString(cmdFileName, "")
 	cmdStr = fmt.Sprintf("%s >> %s/%s.txt", cmdStr, cmdsDir, cmdFileName)
+	log.Infof("Running : %s", cmdStr)
 
-	log.Infof("Running : " + cmdStr)
-	cmdOut := exec.Command("bash", "-c", cmdStr)
+	cmd := exec.Command("bash", "-c", cmdStr)
 
-	stderr, err := cmdOut.StderrPipe()
+	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return err
+		return fmt.Errorf("%v", string(output))
 	}
 
-	if err := cmdOut.Start(); err != nil {
-		return err
-	}
-
-	slurp, _ := ioutil.ReadAll(stderr)
-	if err := cmdOut.Wait(); err != nil {
-		return err
-	}
-
-	return fmt.Errorf("%v", slurp)
+	return nil
 }
 
 // GetDelphiObject gets delphi object details
