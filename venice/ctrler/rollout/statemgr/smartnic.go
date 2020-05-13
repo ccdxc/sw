@@ -245,18 +245,30 @@ func (snicState *DSCRolloutState) UpdateDSCRolloutStatus(newStatus *protos.DSCRo
 				evt = fsmEvOneSmartNICPreupgFail
 				atomic.AddInt32(&snicState.ros.numPreUpgradeFailures, 1)
 				phase = roproto.RolloutPhase_FAIL
+				if s.Message == "" {
+					s.Message = "Precheck failed."
+				}
 			case protos.DSCOp_DSCPreCheckForUpgOnNextHostReboot:
 				evt = fsmEvOneSmartNICPreupgFail
 				atomic.AddInt32(&snicState.ros.numPreUpgradeFailures, 1)
 				phase = roproto.RolloutPhase_FAIL
+				if s.Message == "" {
+					s.Message = "Precheck failed."
+				}
 			case protos.DSCOp_DSCUpgOnNextHostReboot:
 				atomic.AddUint32(&snicState.ros.numFailuresSeen, 1)
 				evt = fsmEvOneSmartNICUpgFail
 				phase = roproto.RolloutPhase_FAIL
+				if s.Message == "" {
+					s.Message = "Rollout NextHostReboot failed."
+				}
 			case protos.DSCOp_DSCDisruptiveUpgrade:
 				atomic.AddUint32(&snicState.ros.numFailuresSeen, 1)
 				evt = fsmEvOneSmartNICUpgFail
 				phase = roproto.RolloutPhase_FAIL
+				if s.Message == "" {
+					s.Message = "Rollout Graceful upgrade failed."
+				}
 			default:
 				log.Errorf("Failure for unknown Op %d from %s ", s.Op, snicState.DSCRollout.Name)
 				return

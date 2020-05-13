@@ -365,6 +365,9 @@ func (n *NMD) UpgFailed(errStrList *[]string) {
 	n.Lock()
 	defer n.Unlock()
 	message := strings.Join(*errStrList, ", ")
+	if message == "" {
+		message = "DSC rollout failed."
+	}
 
 	if n.ro.InProgressOp.Op != protos.DSCOp_DSCNoOp {
 		n.updateOpStatus(n.ro.InProgressOp.Op, n.ro.InProgressOp.Version, "failure", message)
@@ -402,6 +405,9 @@ func (n *NMD) UpgNotPossible(errStrList *[]string) {
 
 	log.Infof("UpgNotPossible got called")
 	message := strings.Join(*errStrList, ", ")
+	if message == "" {
+		message = "DSC rollout not possible. precheck failed."
+	}
 
 	if n.ro.InProgressOp.Op != protos.DSCOp_DSCNoOp {
 		n.updateOpStatus(n.ro.InProgressOp.Op, n.ro.InProgressOp.Version, "failure", message)

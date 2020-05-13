@@ -355,8 +355,10 @@ func (h *rolloutHooks) doRolloutAction(ctx context.Context, kv kvstore.Interface
 	clusterVersionObjectKey := clusterVersionObject.MakeKey(string(apiclient.GroupCluster))
 	if err = kv.Get(ctx, clusterVersionObjectKey, &clusterVersionObject); err == nil {
 		srcVersion := clusterVersionObject.Status.BuildVersion
+		destMajor, destMinor, _ := version.GetVersionAndPatch(buf.Spec.Version)
 		rolloutType := version.GetRolloutType(srcVersion, buf.Spec.Version)
-		if rolloutType == version.Downgrade && buf.Spec.UpgradeType == rollout.RolloutSpec_Graceful.String() {
+		/*If we are going to version less than 1.8, where 'graceful' is not supported, block rollout*/
+		if rolloutType == version.Downgrade && buf.Spec.UpgradeType == rollout.RolloutSpec_Graceful.String() && destMajor == 1 && destMinor < 8 {
 			errmsg := fmt.Sprintf("Downgrade with upgrade type '%s' is not allowed. Please use upgrade type as disruptive.", buf.Spec.UpgradeType)
 			h.l.WarnLog("msg", errmsg)
 			return nil, false, errors.New(errmsg)

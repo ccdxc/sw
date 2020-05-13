@@ -88,6 +88,31 @@ func GetMajorVersion(version string) int {
 	return majorVersion
 }
 
+//GetVersionAndPatch returns the Minor field from the version string
+func GetVersionAndPatch(version string) (int, int, int) {
+	if version == "" {
+		log.Errorf("Image version is empty")
+		return 0, 0, 0
+	}
+	dashVersions := strings.SplitN(version, "-", 3)
+	dotVersions := strings.SplitN(dashVersions[0], ".", 3)
+	if len(dotVersions) < 3 { //major.minor.patch
+		log.Errorf("Image version not in standard format. version(%s)", version)
+		return 0, 0, 0
+	}
+	majorVersion, err := strconv.Atoi(dotVersions[0])
+	if err != nil {
+		log.Errorf("Couldnt determine major version %+v", err)
+		return 0, 0, 0
+	}
+	minorVersion, err := strconv.Atoi(dotVersions[1])
+	if err != nil {
+		log.Errorf("Couldnt determine minor version %+v", err)
+		return 0, 0, 0
+	}
+	return majorVersion, minorVersion, 0
+}
+
 //GetMinorVersion returns the Minor field from the version string
 func GetMinorVersion(version string) int {
 	if version == "" {

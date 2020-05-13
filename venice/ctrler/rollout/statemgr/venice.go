@@ -165,9 +165,15 @@ func (vros *VeniceRolloutState) UpdateVeniceRolloutStatus(newStatus *protos.Veni
 			case protos.VeniceOp_VenicePreCheck:
 				evt = fsmEvOneVenicePreUpgFail
 				phase = rollout.RolloutPhase_FAIL
+				if s.Message == "" {
+					s.Message = "Venice Precheck failed."
+				}
 			case protos.VeniceOp_VeniceRunVersion:
 				evt = fsmEvOneVeniceUpgFail
 				phase = rollout.RolloutPhase_FAIL
+				if s.Message == "" {
+					s.Message = "Venice rollout failed."
+				}
 			}
 		}
 		vros.status[s.Op] = s

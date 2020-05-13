@@ -150,6 +150,9 @@ func (sros *ServiceRolloutState) UpdateServiceRolloutStatus(newStatus *protos.Se
 			if s.Op == protos.ServiceOp_ServiceRunVersion {
 				evt = fsmEvServiceUpgFail
 				phase = roproto.RolloutPhase_FAIL
+				if message == "" {
+					message = "Service rollout failed."
+				}
 			}
 		}
 		sros.status[s.Op] = s

@@ -414,7 +414,7 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
       }
       return reasons;
     }
-    return [];
+    return ['Rollout failed due to communication error'];
   }
 
   /**

@@ -215,6 +215,12 @@ function doPreUpgrade() {
         echo "Not enough free disk space to install image"
         exit 18
     fi
+    diskavailpercent=$(df -kP /run/initramfs/live  | grep  /run/initramfs/live |  awk '{print $5};' | sed 's/%$//')
+    if [[ ${diskavailpercent} -lt 3 ]]
+    then
+        echo "Disk is more than 97% full. Please free up atleast 5% diskspace in the system before rollout can proceed."
+        exit 20
+    fi
 }
 
 function doDeleteOldDockerImages() {
