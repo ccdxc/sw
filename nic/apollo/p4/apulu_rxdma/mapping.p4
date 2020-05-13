@@ -1,7 +1,7 @@
 /******************************************************************************/
 /* mapping table to derive tags                                               */
 /******************************************************************************/
-@pragma capi appdatafields tag_idx
+@pragma capi appdatafields tag_idx bd_id
 @pragma capi hwfields_access_api
 action rxdma_mapping_info(entry_valid, tag_idx, more_hashes, hash1, hint1,
                           hash2, hint2, more_hints, bd_id) {
