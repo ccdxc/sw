@@ -22,7 +22,9 @@ const (
 	defaultRanges                  = 10
 	defaultSendInterval            = 10 * time.Second
 	defaultConnectionRetryInterval = 100 * time.Millisecond
-	defaultNumPoints               = 150 // save points generated in 15 minutes (max. 5 instance)
+	// rule-stats alone can have 2500 entries (rules), drop-stats can grow to 100s
+	// ~20 metrics with  approx. 5 instance in each
+	defaultNumPoints = 3000
 )
 
 var (
