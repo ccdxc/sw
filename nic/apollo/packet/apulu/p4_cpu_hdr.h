@@ -77,6 +77,7 @@ typedef struct p4_rx_cpu_hdr_s {
     };
     uint8_t  epoch;
     uint32_t sw_meta;
+    uint16_t src_bd_id;
     uint16_t route_priority;
 } __attribute__ ((packed)) p4_rx_cpu_hdr_t;
 
