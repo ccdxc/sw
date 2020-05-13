@@ -25,9 +25,10 @@ PDSAGENT=/sw/nic/apollo/tools/apulu/start-agent-mock.sh
 
 RR=0
 DOL_RUN=0
+DOL_TEST=0
 UNDERLAY=0
 
-CMDARGS=$*
+CMDARGS=""
 argc=$#
 argv=($@)
 for (( j=0; j<argc; j++ )); do
@@ -35,11 +36,20 @@ for (( j=0; j<argc; j++ )); do
         RR=1
     elif [ ${argv[j]} == '--dolrun' ];then
         DOL_RUN=1
-    fi
-    if [ ${argv[j]} == '--underlay' ];then
+    elif [ ${argv[j]} == '--doltest' ];then
+        DOL_TEST=1
+    elif [ ${argv[j]} == '--underlay' ];then    
         UNDERLAY=1
+    else
+        CMDARGS+="${argv[j]} "
     fi
 done
+
+if [ $DOL_TEST == 1 ]; then
+    # Setup already made - just run DOL
+    docker exec -it "$CONTAINER"1 sh -c "sudo ./apollo/tools/rundol.sh --pipeline apulu --topo overlay --feature overlay_networking --sub underlay_trig $CMDARGS" || ret=$?
+    exit
+fi
 
 # Pull the pensando/nic container image from the registry
 # and create a container
@@ -55,7 +65,7 @@ do
     docker kill $id > /dev/null
 done
 
-INTF_NAME=`ip link show | grep en.*UP | head -n1 | cut -d ":" -f2 | xargs`
+INTF_NAME=`ip link show | grep -v @ | grep en.*UP | head -n1 | cut -d ":" -f2 | xargs`
 echo "Using interface $INTF_NAME"
 
 #Cleanup mac-vlan interface, if exists
@@ -106,7 +116,6 @@ do
 done
 echo ""
 
-rr=0
 # Remove interface addresses - controlplane should install this
 docker exec -dit "$CONTAINER"1 ip addr del 10.1.1.1/24 dev eth0
 docker exec -dit "$CONTAINER"1 ip addr del 11.1.1.1/24 dev eth1
@@ -115,7 +124,6 @@ docker exec -dit "$CONTAINER"2 ip addr del 11.1.1.2/24 dev eth1
 
 if [ $RR == 1 ]; then
     echo "RR testing mode"
-    rr=1
 fi
 
 if [ $DOL_RUN == 0 ]; then 
@@ -165,9 +173,12 @@ if [ $UNDERLAY == 0 ] && [ $RR == 0 ]; then
     docker exec -it "$CONTAINER"3 python $MIB_PY set localhost evpnEntTable evpnEntEntityIndex=2 evpnEntLocalRouterAddressType=inetwkAddrTypeIpv4 evpnEntLocalRouterAddress='0xd2 0xd2 0x3 0x3'
 fi
 
-rrcmd='/sw/nic/build/x86_64/apulu/capri/bin/pds_ms_uecmp_rr_grpc_test'
-if [ $UNDERLAY = 1 ]; then
-    rrcmd='/sw/nic/build/x86_64/apulu/capri/bin/pds_ms_uecmp_rr_grpc_test underlay'
+if [ $RR = 1 ]; then
+    cmd='/sw/nic/build/x86_64/apulu/capri/bin/pds_ms_uecmp_rr_grpc_test'
+elif [ $UNDERLAY = 1 ]; then
+    cmd='/sw/nic/build/x86_64/apulu/capri/bin/pds_ms_uecmp_rr_grpc_test underlay'
+else
+    cmd='/sw/nic/build/x86_64/apulu/capri/bin/pds_ms_uecmp_grpc_test'
 fi
 
 for i in {1..3}
@@ -181,13 +192,10 @@ do
         continue
     fi
     ret=0
-    if [ $RR == 1 ]; then
-        echo "push "$DOL_CFG"$i/evpn.json RR config to "$CONTAINER"$i"
-        docker exec -it -e CONFIG_PATH="$DOL_CFG"$i  "$CONTAINER"$i sh -c "$rrcmd" || ret=$?
-    else   
-        echo "push "$DOL_CFG"$i/evpn.json config to "$CONTAINER"$i"
-        docker exec -it -e CONFIG_PATH="$DOL_CFG"$i  "$CONTAINER"$i sh -c '/sw/nic/build/x86_64/apulu/capri/bin/pds_ms_uecmp_grpc_test' || ret=$?
-    fi
+
+    echo "push "$DOL_CFG"$i/evpn.json config to "$CONTAINER"$i"
+    docker exec -it -e CONFIG_PATH="$DOL_CFG"$i  "$CONTAINER"$i sh -c "$cmd" || ret=$?
+
     if [ $ret -ne 0 ]; then
         echo "failed to push config to "$CONTAINER"$i: $ret"
     fi
@@ -212,7 +220,7 @@ if [ $RR == 0 ]; then
 fi
 
 if [ $DOL_RUN == 1 ]; then
-    docker exec -it "$CONTAINER"1 sh -c "sudo ./apollo/tools/rundol.sh --pipeline apulu --topo overlay --feature overlay_networking --sub underlay_trig" || ret=$?
+    docker exec -it "$CONTAINER"1 sh -c "sudo ./apollo/tools/rundol.sh --pipeline apulu --topo overlay --feature overlay_networking --sub underlay_trig $CMDARGS" || ret=$?
     if [ $ret -ne 0 ]; then
         echo "DOL run failed: $ret"
     else

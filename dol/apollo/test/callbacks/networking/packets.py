@@ -2,6 +2,7 @@
 import ipaddress
 import random
 from scapy.all import *
+import pdb 
 
 from infra.common.logging import logger
 import infra.api.api as infra_api
@@ -990,9 +991,9 @@ def GetDstMac(testcase, packet, args=None):
         else:
             if lobj.VNIC.SUBNET.SubnetId != robj.SUBNET.SubnetId:
                 if args.direction == 'TX':
-                    return robj.SUBNET.VirtualRouterMACAddr
-                elif args.direction == 'RX':
                     return lobj.VNIC.SUBNET.VirtualRouterMACAddr
+                elif args.direction == 'RX':
+                    return robj.SUBNET.VirtualRouterMACAddr
                 else:
                     logger.error("Direction not provided")
                     assert(0)

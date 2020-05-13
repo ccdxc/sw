@@ -21,7 +21,21 @@ node:
               count : 1
               type  : underlay
               dstaddr : '200.200.2.2'
+              encap : 200
+              # Type5 Router MAC - System MAC of the container 2 (dummy FRU)
+              macaddress : macaddr/0000.0200.0025
             - id : 3
+              count : 1
+              type  : underlay
+              dstaddr : '200.200.2.2'
+            - id : 4
+              count : 1
+              type  : underlay-ecmp
+              dstaddr : '210.210.3.3'
+              encap : 200
+              # Type5 Router MAC - System MAC of the container 3 (dummy FRU)
+              macaddress : macaddr/0000.0300.0025
+            - id : 5
               count : 1
               type  : underlay-ecmp
               dstaddr : '210.210.3.3'
