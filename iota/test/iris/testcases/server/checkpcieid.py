@@ -59,7 +59,9 @@ def Trigger(tc):
 
     for node in tc.Nodes:
         naples_fru = common.GetNaplesFruJson(node)
-        # Find the naples part number
+        if naples_fru == None:
+            api.Logger.error("Error reading FRU")
+            return api.types.status.FAILURE        # Find the naples part number
         naples_partnum = naples_fru["part-number"]
         if naples_partnum == None:
             api.Logger.error("Cannot find naples part number")
