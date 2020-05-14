@@ -2,7 +2,6 @@ package firewall_test
 
 import (
 	"fmt"
-	"os"
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -48,17 +47,17 @@ var _ = Describe("tests for storing firewall logs in object store and elastic", 
 	// For now, just checking that number of objects in the bucket are increasing when logs are getting uploaded
 	// to the bucket.
 	Context("verify fwlog on traffic in objectstore and elastic", func() {
-		It("should push fwlog to objectstore", func() {
-			if !ts.tb.HasNaplesHW() || os.Getenv("REGRESSION") == "" {
-				Skip("runs only on hardware naples and in regression")
+		It("tags:regression=true should push fwlog to objectstore", func() {
+			if !ts.tb.HasNaplesHW() {
+				Skip("runs only on hardware naples")
 			}
 			ts.model.WorkloadPairs().WithinNetwork().Permit(ts.model.DefaultNetworkSecurityPolicy(), "icmp")
 			pushLogsAndVerify()
 		})
 
-		It("venice isolate APIServer node, should not affect reporting of fwlogs", func() {
-			if !ts.tb.HasNaplesHW() || os.Getenv("REGRESSION") == "" {
-				Skip("runs only on hardware naples and in regression")
+		It("tags:regression=true venice isolate APIServer node, should not affect reporting of fwlogs", func() {
+			if !ts.tb.HasNaplesHW() {
+				Skip("runs only on hardware naples")
 			}
 			ts.model.WorkloadPairs().WithinNetwork().Permit(ts.model.DefaultNetworkSecurityPolicy(), "icmp")
 
@@ -88,10 +87,10 @@ var _ = Describe("tests for storing firewall logs in object store and elastic", 
 			pushLogsAndVerify()
 		})
 
-		It("venice isolate nodes in a loop, should not affect reporting of fwlogs", func() {
+		It("tags:regression=true venice isolate nodes in a loop, should not affect reporting of fwlogs", func() {
 			Skip("reenable this test after testing")
-			if !ts.tb.HasNaplesHW() || os.Getenv("REGRESSION") == "" {
-				Skip("runs only on hardware naples and in regression")
+			if !ts.tb.HasNaplesHW() {
+				Skip("runs only on hardware naples")
 			}
 			ts.model.WorkloadPairs().WithinNetwork().Permit(ts.model.DefaultNetworkSecurityPolicy(), "icmp")
 
@@ -123,9 +122,9 @@ var _ = Describe("tests for storing firewall logs in object store and elastic", 
 			})
 		})
 
-		It("reloading venice nodes should not affect fwlogs", func() {
-			if !ts.tb.HasNaplesHW() || os.Getenv("REGRESSION") == "" {
-				Skip("runs only on hardware naples and in regression")
+		It("tags:regression=true reloading venice nodes should not affect fwlogs", func() {
+			if !ts.tb.HasNaplesHW() {
+				Skip("runs only on hardware naples")
 			}
 			ts.model.WorkloadPairs().WithinNetwork().Permit(ts.model.DefaultNetworkSecurityPolicy(), "icmp")
 
