@@ -27,7 +27,7 @@ testcases:
     -   name    : LifTriggers
         testcase: testcases.drivers.lif_flap
         enable  : True
-        ignore  : True
+        ignore  : False
 
     #XXX maybe needs a larger mtu to make this work?
     #-   name    : TxSG

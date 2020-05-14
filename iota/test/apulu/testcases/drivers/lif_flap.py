@@ -86,7 +86,7 @@ def CheckLifStatus(yaml_output, if_name, status):
         if yamlOp['spec']['type'] != types_pb2.LIF_TYPE_HOST: 
             continue
         if if_name == yamlOp['status']['name'] and \
-           status != yamlOp['status']['status']:
+           status != yamlOp['status']['adminstate']:
             result = api.types.status.FAILURE
             lif_uuid = yaml_utils.List2UuidStr(yaml_utils.GetYamlSpecAttr(yamlOp['spec'], 'id'))
             break
@@ -166,9 +166,9 @@ def Trigger(tc):
 
     status = types_pb2.ADMIN_STATE_DISABLE
 
-    api.Logger.info("Validating LIF status after admin down")
+    api.Logger.info("Validating LIF admin status after admin down")
     if ValidateLifStatus(tc, status) != api.types.status.SUCCESS:
-        api.Logger.error("Failed in validating LIF status after admin down")
+        api.Logger.error("Failed in validating LIF admin status after admin down")
         result = api.types.status.FAILURE
 
     api.Logger.info("Admin UP all Host LIF's")
@@ -176,10 +176,10 @@ def Trigger(tc):
         api.Logger.error("Failed to bring UP one or more Host Lifs")
 
     if result != api.types.status.FAILURE:
-        api.Logger.info("Validating LIF status after admin up")
+        api.Logger.info("Validating LIF admin status after admin up")
         status = types_pb2.ADMIN_STATE_ENABLE
         if ValidateLifStatus(tc, status) != api.types.status.SUCCESS:
-            api.Logger.error("Failed in validating LIF status after admin up")
+            api.Logger.error("Failed in validating LIF admin status after admin up")
             result = api.types.status.FAILURE
 
     return result
