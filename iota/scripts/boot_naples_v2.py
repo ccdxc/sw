@@ -685,7 +685,7 @@ class NaplesManagement(EntityManagement):
         self.__login(force_connect)
         if bringup_oob and self.__read_mac():
             self.ReadExternalIP()
-        else:
+        elif not GlobalOptions.no_mgmt:
             self.ReadInternalIP()
 
     @_exceptionWrapper(_errCodes.NAPLES_GOLDFW_UNKNOWN, "Gold FW unknown")
