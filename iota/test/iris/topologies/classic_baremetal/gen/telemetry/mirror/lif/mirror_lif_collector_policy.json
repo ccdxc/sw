@@ -11,6 +11,7 @@
                 "tenant": "default"
             }, 
             "spec": {
+                "span-id": "1",
                 "packet-size": 128,
                 "mirror-direction": 0,
                 "collectors": [

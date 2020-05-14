@@ -219,6 +219,7 @@ def updateVlanStripOption(tc, c):
 #
 def establishCollectorSecondaryIPs(tc):
     tc.collector_ip_address = []
+    tc.collector_span_id = []
     tc.collector_seq_num = []
     tc.collector_tstmp = []
     tc.collector_ipfix_records = []
@@ -234,6 +235,7 @@ def establishCollectorSecondaryIPs(tc):
 
     for c in range(0, len(tc.collector)):
         tc.collector_ip_address.append(tc.collector[c].ip_address)
+        tc.collector_span_id.append(0)
         tc.collector_seq_num.append(0)
         tc.collector_tstmp.append(0)
         tc.collector_ipfix_records.append(0)
@@ -287,6 +289,7 @@ def establishCollectorSecondaryIPs(tc):
 
     c = 0
     while c < tc.sec_ip_count:
+        tc.collector_span_id.append(0)
         tc.collector_seq_num.append(0)
         tc.collector_tstmp.append(0)
         tc.collector_ipfix_records.append(0)
@@ -531,6 +534,7 @@ def generateLifCollectorConfig(tc, colObjects):
     i = 0
     for obj in colObjects:
         obj.meta.name = "lif-collector-{}".format(i)
+        obj.spec.span_id = (tc.iterators.pktsize*(i+1)) - 1
         obj.spec.packet_size = tc.iterators.pktsize
 
         if tc.iterators.direction == 'ingress':
@@ -547,6 +551,7 @@ def generateLifCollectorConfig(tc, colObjects):
                 obj.spec.collectors.append(tmp)
             obj.spec.collectors[c].export_config.destination = \
                                    tc.collector_ip_address[idx]
+            tc.collector_span_id[idx] = obj.spec.span_id
             if tc.collector_erspan_type[idx] == 'type_2':
                 obj.spec.collectors[c].type = 'erspan_type_2'
             elif tc.collector_erspan_type[idx] == 'type_3':
@@ -568,6 +573,7 @@ def generateLifCollectorConfigForMultiMirrorSession(tc, colObjects):
             tmp = copy.deepcopy(colObjects[0])
             colObjects.append(tmp)
         colObjects[c].meta.name = "lif-collector-{}".format(c)
+        colObjects[c].spec.span_id = (tc.iterators.pktsize*(c+1)) - 1
         colObjects[c].spec.packet_size = tc.iterators.pktsize
         if tc.iterators.direction == 'ingress':
             colObjects[c].spec.mirror_direction = MIRROR_DIR_INGRESS
@@ -578,6 +584,7 @@ def generateLifCollectorConfigForMultiMirrorSession(tc, colObjects):
 
         colObjects[c].spec.collectors[0].export_config.destination = \
                                          tc.collector_ip_address[idx]
+        tc.collector_span_id[idx] = colObjects[c].spec.span_id
         if tc.collector_erspan_type[idx] == 'type_2':
             colObjects[c].spec.collectors[0].type = 'erspan_type_2'
         elif tc.collector_erspan_type[idx] == 'type_3':
@@ -676,6 +683,7 @@ def deGenerateLifInterfaceConfig(tc, ifObjects, colObjects):
 # Superimpose template-mirror-config with Workload-IP-attributes
 #
 def generateMirrorConfig(tc, policy_json, newObjects):
+    i = 0
     for obj in newObjects:
         for i in range(0, len(obj.spec.match_rules)):
             if (i % 2) == 0:
@@ -698,6 +706,7 @@ def generateMirrorConfig(tc, policy_json, newObjects):
                     obj.spec.match_rules[i].source.addresses[0] = \
                                             tc.naples_peer.ip_address
 
+        obj.spec.span_id = (tc.iterators.pktsize*(i+1)) - 1
         obj.spec.packet_size = tc.iterators.pktsize
         for c in range(0, len(tc.flow_collector)):
             idx = tc.flow_collector_idx[c]
@@ -706,11 +715,14 @@ def generateMirrorConfig(tc, policy_json, newObjects):
                 obj.spec.collectors.append(tmp)
             obj.spec.collectors[c].export_config.destination = \
                                    tc.collector_ip_address[idx]
+            tc.collector_span_id[idx] = obj.spec.span_id
             if tc.collector_erspan_type[idx] == 'type_2':
                 obj.spec.collectors[c].type = 'erspan_type_2'
             elif tc.collector_erspan_type[idx] == 'type_3':
                 obj.spec.collectors[c].type = 'erspan_type_3'
             obj.spec.collectors[c].strip_vlan_hdr = tc.collector_vlan_strip[idx]
+
+        i += 1
 
     verif_json = utils.GetVerifJsonFromPolicyJson(policy_json)
     api.Logger.info("VERIFY JSON FILE {}".format(verif_json))
@@ -1255,6 +1267,13 @@ def validateErspanPackets(tc, lif_flow_collector, lif_flow_collector_idx):
             if tc.collector_erspan_type[idx] == 'type_3' and\
                pkt.haslayer(ERSPAN_III):
 
+                # Extract SpanID and Validate
+                session_id = pkt[ERSPAN_III].session_id
+                if session_id != tc.collector_span_id[idx]:
+                    api.Logger.error("ERROR: SpanID {} {}".format(session_id, 
+                                     tc.collector_span_id[idx]))
+                    tc.result[c] = api.types.status.FAILURE
+
                 # Extract Timestamp and Validate
                 if pkt[ERSPAN_III].haslayer(ERSPAN_PlatformSpecific) == False:
                     api.Logger.error("ERROR: PlatformSpecific Hdr Not Present")
@@ -1312,6 +1331,14 @@ def validateErspanPackets(tc, lif_flow_collector, lif_flow_collector_idx):
                     tc.result[c] = api.types.status.FAILURE
             elif tc.collector_erspan_type[idx] == 'type_2' and\
                  pkt.haslayer(ERSPAN_II):
+
+                # Extract SpanID and Validate
+                session_id = pkt[ERSPAN_II].session_id
+                if session_id != tc.collector_span_id[idx]:
+                    api.Logger.error("ERROR: SpanID {} {}".format(session_id, 
+                                     tc.collector_span_id[idx]))
+                    tc.result[c] = api.types.status.FAILURE
+
                 # Extract Vlan-tag, if present
                 if pkt[ERSPAN_II].haslayer(Dot1Q):
                     if tc.collector_vlan_strip[idx] == True and\
