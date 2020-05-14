@@ -231,17 +231,20 @@ func restGet(url string) ([]byte, error) {
 	}
 	defer getResp.Body.Close()
 	printHTTPResp(getResp)
-	if getResp.StatusCode != 200 {
-		if verbose {
-			fmt.Println(getResp.Status + " " + url)
-		}
-		return nil, errors.New(url + " not found. Please make sure dsc is reachable and provide token file if dsc is part of cluster.")
-	}
 	if verbose {
 		fmt.Println("Status: ", getResp.Status)
 		fmt.Println("Header: ", getResp.Header)
 	}
 	bodyBytes, _ := ioutil.ReadAll(getResp.Body)
+	if getResp.StatusCode != 200 {
+		if verbose {
+			fmt.Println(getResp.Status + " " + url)
+		}
+		if len(string(bodyBytes)) != 0 {
+			return nil, errors.New(string(bodyBytes))
+		}
+		return nil, errors.New(url + " not found. Please make sure dsc is reachable and provide token file if dsc is part of cluster.")
+	}
 
 	if isJSONString(string(bodyBytes)) && (jsonFormat || yamlFormat) {
 		var prettyJSON bytes.Buffer
@@ -307,6 +310,9 @@ func restGetWithBody(v interface{}, url string) ([]byte, error) {
 	if getResp.StatusCode != 200 {
 		if verbose {
 			fmt.Println(getResp.Status + " " + url)
+		}
+		if len(string(bodyBytes)) != 0 {
+			return nil, errors.New(string(bodyBytes))
 		}
 		return nil, errors.New(url + " not found. Please make sure dsc is reachable and provide token file if dsc is part of cluster.")
 	}
