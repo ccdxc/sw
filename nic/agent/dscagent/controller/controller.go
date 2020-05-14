@@ -33,7 +33,7 @@ import (
 	"github.com/pensando/sw/nic/agent/dscagent/types"
 	"github.com/pensando/sw/nic/agent/httputils"
 	"github.com/pensando/sw/nic/agent/protos/generated/nimbus"
-	"github.com/pensando/sw/nic/agent/protos/generated/restapi/netagent"
+	restapi "github.com/pensando/sw/nic/agent/protos/generated/restapi/netagent"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/events"
@@ -587,6 +587,7 @@ func (c *API) netIfWorker(ctx context.Context) {
 	nctx, cancel := context.WithCancel(context.Background())
 
 	defer log.Info("Ending Netif worker")
+	ticker := time.NewTicker(types.NetIfUpdateDelay)
 	for {
 		select {
 		case <-ctx.Done():
@@ -596,7 +597,7 @@ func (c *API) netIfWorker(ctx context.Context) {
 			}
 			cancel()
 			return
-		default:
+		case <-ticker.C:
 			intfKind := netproto.Interface{
 				TypeMeta: api.TypeMeta{Kind: "Interface"},
 			}
@@ -610,7 +611,6 @@ func (c *API) netIfWorker(ctx context.Context) {
 				}
 			}
 		}
-		time.Sleep(types.NetIfUpdateDelay)
 	}
 }
 
