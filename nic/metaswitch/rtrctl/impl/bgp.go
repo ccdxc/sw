@@ -146,8 +146,8 @@ func bgpShowCmdHandler(cmd *cobra.Command, args []string) error {
 }
 
 const (
-	bgpPeerFmt = `%-10s %-16v %-5v %-10v %-16v`
-	bgpPeerHdr = "AdminState,Remote Address,ASN,Auth,Status"
+	bgpPeerFmt = `%-10s %-16v %-5v %-10v %-16v %-30v`
+	bgpPeerHdr = "AdminState,Remote Address,ASN,Auth,Status,FSM Established Time (sec)"
 
 	bgpPeerDetStr = `BGP Peer details
 ------------------------------------
@@ -263,7 +263,7 @@ func bgpPeersShowCmdHandler(cmd *cobra.Command, args []string) error {
 					peer.Status.FsmEstablishedTime, peer.Status.InUpdatesElpsTime,
 					peer.Status.InOpens, peer.Status.OutOpens)
 			} else {
-				fmt.Printf(bgpPeerFmt, peer.Spec.State, peer.Spec.PeerAddr, peer.Spec.RemoteASN, peer.Spec.Password, peer.Status.Status)
+				fmt.Printf(bgpPeerFmt, peer.Spec.State, peer.Spec.PeerAddr, peer.Spec.RemoteASN, peer.Spec.Password, peer.Status.Status, peer.Status.FsmEstablishedTime)
 				fmt.Printf("\n")
 			}
 		}
