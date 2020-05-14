@@ -6,6 +6,11 @@ jobd/runner/core_count_check:
 JOBD_PREREQS:= jobd/runner/core_count_check | jobd/package
 ifeq (${PKG_PIPELINE},)
   PKG_PIPELINE=${PIPELINE}
+  ifeq (${PKG_PIPELINE}, iris)
+    PKG_TAR_FILE=build_$(PKG_PIPELINE)_x86_${ASIC}.tar.gz
+  else
+	PKG_TAR_FILE=build_$(PKG_PIPELINE)_x86.tar.gz
+  endif
 endif
 # jobd uses pre-build package
 .PHONY: jobd/package
@@ -13,8 +18,8 @@ jobd/package:
 	@if [ "x${JOB_ID}" = "x" ] || [ "x${IGNORE_BUILD_PIPELINE}" != "x" ]; then \
 		make package; \
 	else \
-	  if [ -f /sw/build_$(PKG_PIPELINE)_x86.tar.gz ]; then \
-	    tar -zxf /sw/build_$(PKG_PIPELINE)_x86.tar.gz -C /; \
+	  if [ -f /sw/${PKG_TAR_FILE} ]; then \
+	    tar -zxf /sw/${PKG_TAR_FILE} -C /; \
 	  fi \
 	fi
 
@@ -396,6 +401,11 @@ jobd/agent: ${JOBD_PREREQS}
 .PHONY: jobd/platform/drivers
 jobd/platform/drivers:
 	${MAKE} -j1 -C ${TOPDIR}/platform/drivers/linux build
+
+.PHONY: jobd/platform/pciemgrd
+jobd/platform/pciemgrd: ${JOBD_PREREQS}
+	make -C ../platform/src/third-party/app/pciutils
+	make BUILD_ARCH=x86_64 -C ../platform/src/app/pciemgrd/tests test
 
 .PHONY: jobd/halctl
 jobd/halctl: ${JOBD_PREREQS}
