@@ -513,7 +513,6 @@ message Interface {
      string   switch_name                   = 14;
     
      string   network_name                  = 15;
-        
 }
 
 message Workload {

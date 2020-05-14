@@ -1,7 +1,7 @@
 #! /usr/bin/python3
 import iota.harness.api as api
 import iota.test.utils.naples_host as host
-import iota.test.iris.config.netagent.hw_push_config as hw_config
+import iota.test.iris.config.workload.api as wl_api
 
 # Check that the driver can reconnect to the device
 # after an FLR has been triggered.
@@ -144,6 +144,6 @@ def Verify(tc):
     if host.LoadDriver(tc.os, hostname) is api.types.status.FAILURE:
         return api.types.status.FAILURE
 
-    hw_config.ReAddWorkloads(hostname)
+    wl_api.ReAddWorkloads(hostname)
 
     return api.types.status.SUCCESS

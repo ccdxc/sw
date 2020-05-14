@@ -15,7 +15,7 @@
 import time
 import iota.harness.api as api
 import iota.test.utils.naples_host as host
-import iota.test.iris.config.netagent.hw_push_config as hw_config
+import iota.test.iris.config.workload.api as wl_api
 
 mc_cmd_base = "for i in \`/nic/bin/halctl show multicast | grep 3333 | cut -c34-40 \` ; do /nic/bin/halctl show multicast --oif-list --handle \$i | tail -1 ; done | grep -c "
 
@@ -252,7 +252,7 @@ def Trigger(tc):
         # restart the drivers and gather the results
         if host.LoadDriver(tc.os, node) is api.types.status.FAILURE:
             return api.types.status.FAILURE
-        hw_config.ReAddWorkloads(node)
+        wl_api.ReAddWorkloads(node)
         api.Logger.info("Driver reload on " + node)
 
         errcnt += gatherUnloadedMulticastTest(node)
@@ -269,7 +269,7 @@ def Verify(tc):
     # this is required to bring the testbed into operation state
     # after driver unload interfaces need to be initialized
     for node in api.GetNaplesHostnames():
-        hw_config.ReAddWorkloads(node)
+        wl_api.ReAddWorkloads(node)
 
     return api.types.status.SUCCESS
 

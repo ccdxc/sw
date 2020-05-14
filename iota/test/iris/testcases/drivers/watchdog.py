@@ -6,7 +6,7 @@ import pdb
 import time
 import iota.harness.api as api
 import iota.test.utils.naples_host as host
-import iota.test.iris.config.netagent.hw_push_config as hw_config
+import iota.test.iris.config.workload.api as wl_api
 
 WDOG_ERR_ADQ_HB  = 1
 WDOG_ERR_CMD_HB  = 2
@@ -213,6 +213,6 @@ def Teardown(tc):
 
         # this is required to bring the testbed into operation state;
         # after driver unload interfaces need to be initialized
-        hw_config.ReAddWorkloads(node)
+        wl_api.ReAddWorkloads(node)
 
     return api.types.status.SUCCESS

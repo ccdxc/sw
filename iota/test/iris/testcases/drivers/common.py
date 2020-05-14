@@ -6,8 +6,7 @@ import iota.harness.api as api
 import iota.protos.pygen.iota_types_pb2 as types_pb2
 import iota.protos.pygen.topo_svc_pb2 as topo_svc_pb2
 import iota.test.iris.testcases.drivers.cmd_builder as cmd_builder
-import iota.test.iris.config.netagent.hw_push_config as cfg_api
-import iota.test.iris.config.netagent.hw_push_config as hw_config
+import iota.test.iris.config.workload.api as wl_api
 
 WINDOWS_CMD_TIMEOUT = 300
 
@@ -207,7 +206,7 @@ def setup_features(tc):
                 nodes.add(wl.node_name)
         time.sleep(5)
         for node in nodes:
-            hw_config.ReAddWorkloads(node)
+            wl_api.ReAddWorkloads(node)
 
     return api.types.status.SUCCESS
 

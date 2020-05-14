@@ -354,7 +354,7 @@ class _Testbed:
     def __get_instance_nic_type(self, instance):
         # for multi-nic support, return list
         nic_types = []
-        if hasattr(instance, 'Nics'):
+        if hasattr(instance, 'Nics') and instance.Nics:
             for nic in instance.Nics:
                 nic_types.append(getattr(nic, "Type", "pensando-sim"))
         elif hasattr(instance, 'Resource') and hasattr(instance.Resource, 'NICType'):
@@ -364,6 +364,8 @@ class _Testbed:
         return nic_types
 
     def __has_naples_device(self, instance):
+        if instance.Type != "bm":
+            return False
         nic_types = self.__get_instance_nic_type(instance) 
         return 'pensando' in nic_types or 'naples' in nic_types
 
@@ -534,10 +536,11 @@ class _Testbed:
                 proc_hdls.append(proc_hdl)
 
         result = 0
+        starttime = time.asctime()
         try:
             for idx in range(len(proc_hdls)):
                 proc_hdl = proc_hdls[idx]
-                Logger.debug('Firmware upgrade started at time: {0}'.format(time.asctime()))
+                Logger.debug('Firmware upgrade started at time: {0}'.format(starttime))
                 while proc_hdl.poll() is None:
                     time.sleep(5)
                     continue
@@ -545,6 +548,7 @@ class _Testbed:
                     result = proc_hdl.returncode
                     _, err = proc_hdl.communicate()
                     Logger.header("FIRMWARE UPGRADE / MODE CHANGE / REBOOT FAILED: LOGFILE = %s" % logfiles[idx])
+                    Logger.error("Firmware upgrade failed : %d " % result)
                     Logger.error("Firmware upgrade failed : " + err.decode())
                 else:
                     Logger.debug('Firmware upgrade finished at time: {0}'.format(time.asctime()))

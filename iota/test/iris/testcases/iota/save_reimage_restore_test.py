@@ -3,7 +3,7 @@ import time
 import pdb
 
 import iota.harness.api as api
-import iota.test.iris.config.netagent.hw_push_config as hw_config
+import iota.test.iris.config.workload.api as wl_api
 
 def Setup(tc):
     tc.nodes = api.GetNaplesHostnames()
@@ -33,8 +33,7 @@ def Trigger(tc):
 
     api.Logger.info("Attempting ReAddWorkloads on all naples nodes...")
     for node in tc.nodes:
-        hw_config.ReAddWorkloads(node)
-
+        wl_api.ReAddWorkloads(node)
     return resp
 
 def Verify(tc):

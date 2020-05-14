@@ -1,7 +1,7 @@
 #! /usr/bin/python3
 import iota.harness.api as api
 import iota.test.iris.config.netagent.api as netagent_api
-import iota.test.iris.config.netagent.hw_push_config as hw_push_config
+import iota.test.iris.config.workload.api as wl_api
 
 def Setup(tc):
     return api.types.status.SUCCESS
@@ -12,7 +12,7 @@ def Trigger(tc):
     print("\t\t\t########################################################################")
 
     # Delete workloads
-    hw_push_config.DeleteWorkloads()
+    wl_api.DeleteWorkloads()
 
     # Reset the config object store
     netagent_api.ResetConfigs()
@@ -27,7 +27,7 @@ def Trigger(tc):
         return ret
 
     # HW push
-    ret = hw_push_config.Main(None)
+    ret = wl_api.Main(None)
     if ret != api.types.status.SUCCESS:
         api.Logger.error("Failed to push hw config")
         return ret

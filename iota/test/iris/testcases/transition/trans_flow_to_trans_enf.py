@@ -1,7 +1,6 @@
 #! /usr/bin/python3
 import iota.harness.api as api
 import iota.test.iris.config.netagent.api as netagent_api
-import iota.test.iris.config.netagent.hw_push_config as hw_push_config
 
 def Setup(tc):
     return api.types.status.SUCCESS

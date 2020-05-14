@@ -7,7 +7,7 @@ import iota.harness.api as api
 import iota.protos.pygen.topo_svc_pb2 as topo_svc
 import iota.harness.infra.utils.parser as parser
 import iota.harness.infra.resmgr as resmgr
-import iota.test.iris.config.netagent.hw_push_config as hw_config
+import iota.test.iris.config.workload.api as wl_api
 import iota.harness.infra.store as store
 import iota.test.utils.naples_host as naples_utils
 
@@ -229,23 +229,23 @@ def initialize_tagged_config_workloads():
             __pernode_network_spec[node_name] = def_nw_spec
 
     # Store subnet allocators for network spec
-    # case 1: Get subnet from hw_config
+    # case 1: Get subnet from wl_api
     for k, net in network_specs.items() :
-        ipv4_subnet = hw_config.GetIPv4Allocator(net.name)
+        ipv4_subnet = wl_api.GetIPv4Allocator(net.name)
         if ipv4_subnet is None and net.ipv4.enable:
             __ipv4_subnet_allocator[net.name] = resmgr.IpAddressStep(net.ipv4.ipam_base.split('/')[0], # 10.255.0.0/16 \
                     str(ipaddress.IPv4Address(1 << int(net.ipv4.ipam_base.split('/')[1]))))
         else:
             __ipv4_subnet_allocator[net.name] = ipv4_subnet
 
-        ipv6_subnet = hw_config.GetIPv6Allocator(net.name)
+        ipv6_subnet = wl_api.GetIPv6Allocator(net.name)
         if ipv6_subnet is None and net.ipv6.enable:
             __ipv6_subnet_allocator[net.name] = resmgr.Ipv6AddressStep(net.ipv6.ipam_base.split('/')[0], # 2000::/48\
                     str(ipaddress.IPv6Address(1 << int(net.ipv6.ipv6.ipam_base.split('/')[1]))))
         else:
             __ipv6_subnet_allocator[net.name] = ipv6_subnet
 
-    __mac_allocator = hw_config.GetMacAllocator()
+    __mac_allocator = wl_api.GetMacAllocator()
 
 # create subifs outside (global) store
 # store it locally
@@ -313,17 +313,18 @@ def __create_new_workload_outside_store(req, node_name, parent_inf, subifs_count
         wl_msg = req.workloads.add()
         ip4_addr_str = str(ipv4_allocator.Alloc())
         ip6_addr_str = str(ipv6_allocator.Alloc())
-        wl_msg.ip_prefix = ip4_addr_str + "/" + str(subif_spec.ipv4.prefix_length)
-        wl_msg.ipv6_prefix = ip6_addr_str + "/" + str(subif_spec.ipv6.prefix_length)
-        wl_msg.mac_address = __mac_allocator.Alloc().get()
-        wl_msg.encap_vlan = vlan
-        wl_msg.uplink_vlan = wl_msg.encap_vlan
+        intf = wl_msg.interfaces.add()
+        intf.ip_prefix = ip4_addr_str + "/" + str(subif_spec.ipv4.prefix_length)
+        intf.ipv6_prefix = ip6_addr_str + "/" + str(subif_spec.ipv6.prefix_length)
+        intf.mac_address = __mac_allocator.Alloc().get()
+        intf.encap_vlan = vlan
+        intf.uplink_vlan = intf.encap_vlan
         wl_msg.workload_name = workload_name
         wl_msg.node_name = node_name
-        wl_msg.pinned_port = 1
-        wl_msg.interface_type = topo_svc.INTERFACE_TYPE_VSS
-        wl_msg.interface = parent_inf + "_" + str(vlan)
-        wl_msg.parent_interface = parent_inf
+        intf.pinned_port = 1
+        intf.interface_type = topo_svc.INTERFACE_TYPE_VSS
+        intf.interface = parent_inf + "_" + str(vlan)
+        intf.parent_interface = parent_inf
         wl_msg.workload_type = api.GetWorkloadTypeForNode(node_name)
         wl_msg.workload_image = api.GetWorkloadImageForNode(node_name)
         __add_subifs_wl.append(wl_msg.interface)
@@ -375,17 +376,18 @@ def __add_from_store(req, node_name, parent_inf, total):
 
         api.Logger.info("adding to store again: %s" % wl.workload_name)
         wl_msg = req.workloads.add()
-        wl_msg.ip_prefix = wl.ip_prefix
-        wl_msg.ipv6_prefix = wl.ipv6_prefix
-        wl_msg.mac_address = wl.mac_address
-        wl_msg.encap_vlan = wl.encap_vlan
-        wl_msg.uplink_vlan = wl.uplink_vlan
+        intf = wl_msg.interfaces.add()
+        intf.ip_prefix = wl.ip_prefix
+        intf.ipv6_prefix = wl.ipv6_prefix
+        intf.mac_address = wl.mac_address
+        intf.encap_vlan = wl.encap_vlan
+        intf.uplink_vlan = wl.uplink_vlan
         wl_msg.workload_name = wl.workload_name
         wl_msg.node_name = wl.node_name
-        wl_msg.pinned_port = wl.pinned_port
-        wl_msg.interface_type = wl.interface_type
-        wl_msg.interface = wl.interface
-        wl_msg.parent_interface = wl.parent_interface
+        intf.pinned_port = wl.pinned_port
+        intf.interface_type = wl.interface_type
+        intf.interface = wl.interface
+        intf.parent_interface = wl.parent_interface
         wl_msg.workload_type = wl.workload_type
         wl_msg.workload_image = wl.workload_image
 

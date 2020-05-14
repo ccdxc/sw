@@ -26,7 +26,7 @@ setup:
                fwd_mode    : "INSERTION"
                policy_Mode : "ENFORCED"
                mgmt_intf   : "IN_BAND"
-        - step : config.netagent.hw_push_config
+        - step : config.workload.api
           args :
              spec : scale_cfg_1vrf_1nw_2ep_2rep.cfgyml
         - step : testcases.drivers.install_iperf

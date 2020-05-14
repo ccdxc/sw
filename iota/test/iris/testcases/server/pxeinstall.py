@@ -3,7 +3,7 @@ import subprocess
 import socket
 import iota.harness.api as api
 from iota.harness.infra.exceptions import *
-import iota.test.iris.config.netagent.hw_push_config as hw_config
+import iota.test.iris.config.workload.api as wl_api
 
 
 
@@ -117,7 +117,7 @@ def Trigger(tc):
             api.Logger.error(f"Failed to restore agent state after PXE install")
             raise OfflineTestbedException
         api.Logger.info(f"PXE install iteration #{install} - SUCCESS")
-        hw_config.ReAddWorkloads(tc.test_node)
+        wl_api.ReAddWorkloads(tc.test_node)
 
         # check touched file is not present, to ensure this is a new OS instance
         req = api.Trigger_CreateExecuteCommandsRequest()

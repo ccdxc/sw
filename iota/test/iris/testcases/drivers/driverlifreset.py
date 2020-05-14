@@ -2,7 +2,7 @@
 import time
 import iota.harness.api as api
 import iota.test.utils.naples_host as host
-import iota.test.iris.config.netagent.hw_push_config as hw_config
+import iota.test.iris.config.workload.api as wl_api
 import iota.test.iris.utils.traffic as traffic
 
 #
@@ -82,7 +82,7 @@ def do_lif_reset_test(node, os):
             api.Logger.error("ionic load failed loop %d" % i)
             return api.types.status.FAILURE
         
-        hw_config.ReAddWorkloads(node)
+        wl_api.ReAddWorkloads(node)
 
         if api.GetNaplesHostInterfaces(node) is None:
             api.Logger.error("No ionic interface after loop %d" % i)

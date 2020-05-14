@@ -624,7 +624,7 @@ class Node(object):
     def IsWorkloadNode(self):
         return self.__role != topo_pb2.PERSONALITY_VENICE and self.__role != topo_pb2.PERSONALITY_VCENTER_NODE
 
-    def GetDevicesNames(self):
+    def GetDeviceNames(self):
         return sorted(self.__devices.keys())
 
     def GetDevices(self):
@@ -654,8 +654,14 @@ class Node(object):
         dev.SetUuid(uuid)
 
     def HostInterfaces(self, device = None):
-        dev = self.__get_device(device)
-        return dev.HostIntfs()
+        if device:
+            dev = self.__get_device(device)
+            return dev.HostIntfs()
+        else:
+            iflist = []
+            for dev in self.GetDevices():
+                iflist.extend(self.__get_device(dev).HostIntfs())
+            return iflist
 
     def AllocateHostInterface(self, device = None):
         dev = self.__get_device(device)
@@ -1332,8 +1338,8 @@ class Topology(object):
                 ips.append(n.Name())
         return ips
 
-    def GetNaplesHostInterfaces(self, name):
-        return self.__nodes[name].HostInterfaces()
+    def GetNaplesHostInterfaces(self, name, device_name=None):
+        return self.__nodes[name].HostInterfaces(device_name)
 
     def GetWorkloadNodeHostnames(self):
         ips = []
@@ -1342,8 +1348,8 @@ class Topology(object):
                 ips.append(n.Name())
         return ips
 
-    def GetWorkloadNodeHostInterfaces(self, node_name):
-        return self.__nodes[node_name].HostInterfaces()
+    def GetWorkloadNodeHostInterfaces(self, node_name, device_name=None):
+        return self.__nodes[node_name].HostInterfaces(device_name)
 
     def GetWorkloadTypeForNode(self, node_name):
         return self.__nodes[node_name].WorkloadType()
@@ -1380,6 +1386,9 @@ class Topology(object):
         if self.__nodes[node_name].IsNaples():
             return self.__nodes[node_name].MgmtIpAddress()
 
+    def GetDevices(self, node_name):
+        return self.__nodes[node_name].GetDevices()
+
     def GetNicMgmtIP(self, node_name, device = None):
         return self.__nodes[node_name].GetNicMgmtIP(device)
 
@@ -1412,6 +1421,9 @@ class Topology(object):
 
     def GetNodes(self):
         return list(self.__nodes.values())
+
+    def GetDeviceNames(self, node_name):
+        return self.__nodes[node_name].GetDeviceNames()
 
     def GetOrchestratorNode(self):
         return self.__orch_node.Name()

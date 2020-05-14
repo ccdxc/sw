@@ -7,7 +7,7 @@ import json
 import iota.harness.api as api
 import iota.harness.infra.utils.parser as parser
 import iota.test.utils.compat as compat
-import iota.test.iris.config.netagent.hw_push_config as hw_config
+import iota.test.iris.config.workload.api as wl_api
 
 OS_TYPE_LINUX = "linux"
 OS_TYPE_BSD   = "freebsd"
@@ -51,7 +51,7 @@ def Setup(tc):
         for node in tc.nodes:
             # this is required to bring the testbed into operation state
             # after driver unload interfaces need to be initialized
-            hw_config.ReAddWorkloads(node)
+            wl_api.ReAddWorkloads(node)
 
     if getattr(tc.args, 'type', 'local_only') == 'local_only': 
         tc.workload_pairs = api.GetLocalWorkloadPairs()
@@ -148,6 +148,6 @@ def Teardown(tc):
         for node in tc.nodes:
             # this is required to bring the testbed into operation state
             # after driver unload interfaces need to be initialized
-            hw_config.ReAddWorkloads(node)
+            wl_api.ReAddWorkloads(node)
 
     return api.types.status.SUCCESS

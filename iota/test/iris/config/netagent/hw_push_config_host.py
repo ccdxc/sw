@@ -6,7 +6,7 @@ import json
 import iota.harness.api as api
 import iota.harness.infra.utils.parser as parser
 import iota.test.iris.config.netagent.api as netagent_api
-import iota.test.iris.config.netagent.hw_push_config as hw_push_config
+import iota.test.iris.config.workload.api as wl_api
 import iota.protos.pygen.topo_svc_pb2 as topo_svc
 
 
@@ -107,7 +107,7 @@ def Main(args):
                 if cmd.exit_code != 0 :
                     assert(0)
 
-    hw_push_config.AddWorkloads()
+    wl_api.AddWorkloads()
     return api.types.status.SUCCESS
 
 if __name__ == '__main__':

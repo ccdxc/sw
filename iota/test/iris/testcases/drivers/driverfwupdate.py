@@ -1,7 +1,7 @@
 #! /usr/bin/python3
 import iota.harness.api as api
 import iota.test.utils.naples_host as host
-import iota.test.iris.config.netagent.hw_push_config as hw_config
+import iota.test.iris.config.workload.api as wl_api
 
 IONIC_DRV_PATH = api.HOST_NAPLES_DIR + "/drivers-freebsd-eth"
 IONIC_FW_DRV_PATH = api.HOST_NAPLES_DIR + "/drivers-freebsd-eth/sys/modules/ionic_fw"
@@ -107,7 +107,7 @@ def Verify(tc):
     for node in tc.nodes:
         # this is required to bring the testbed into operation state
         # after driver unload interfaces need to be initialized
-        hw_config.ReAddWorkloads(node)
+        wl_api.ReAddWorkloads(node)
 
     if tc.resp is None:
         return api.types.status.FAILURE

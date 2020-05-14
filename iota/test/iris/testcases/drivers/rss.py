@@ -6,7 +6,7 @@ from collections import Counter
 import iota.harness.api as api
 import iota.test.iris.utils.iperf as iperf
 import iota.test.utils.naples_host as host
-import iota.test.iris.config.netagent.hw_push_config as hw_config
+import iota.test.iris.config.workload.api as wl_api
 import pdb
 import iota.harness.infra.utils.toeplitz as toeplitz
 from iota.harness.infra.utils.toeplitz import *
@@ -274,7 +274,7 @@ def Setup(tc):
         return api.types.status.FAILURE
     if host.LoadDriver(tc.os, tc.server.node_name) is api.types.status.FAILURE:
         return api.types.status.FAILURE
-    hw_config.ReAddWorkloads(tc.server.node_name)
+    wl_api.ReAddWorkloads(tc.server.node_name)
 
     if tc.tc_ip_proto is 'v6': 
         tc.server_ip = ipaddress.ip_address(tc.server.ipv6_address)

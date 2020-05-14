@@ -349,8 +349,8 @@ def GetWorkloadNodeHostnames():
 def GetTopologyDirectory():
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetDirectory()
 
-def GetNaplesHostInterfaces(name):
-    return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetNaplesHostInterfaces(name)
+def GetNaplesHostInterfaces(node_name, device_name=None):
+    return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetNaplesHostInterfaces(node_name, device_name)
 
 def AllocateHostInterfaceForNode(name):
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().AllocateHostInterfaceForNode(name)
@@ -378,6 +378,13 @@ def GetWorkloadMemoryForNode(node_name):
 
 def GetNodes():
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetNodes()
+
+def GetDeviceNames(node_name):
+    return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetDeviceNames(node_name)
+
+def GetDeviceHint(node_name, device_name):
+    devices = store.GetTestbed().GetCurrentTestsuite().GetTopology().GetDevices(node_name)
+    return devices[device_name].GetMac()
 
 def GetVCenterDataCenterName():
     return store.GetTestbed().GetVCenterDataCenterName()
@@ -534,7 +541,6 @@ def GetDriverVersion():
 #Returns true if tests running on same switch
 def RunningOnSameSwitch():
     return (len(store.GetTestbed().GetCurrentTestsuite().GetTopology().Switches()) <= 1 )
-
 
 def GetNicType(node_name):
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetNicType(node_name)

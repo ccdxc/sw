@@ -7,7 +7,7 @@ import json
 import iota.harness.api as api
 import iota.test.utils.naples_host as host
 import iota.test.utils.compat as compat
-import iota.test.iris.config.netagent.hw_push_config as hw_config
+import iota.test.iris.config.workload.api as wl_api
 import iota.harness.infra.utils.parser as parser
 
 OS_TYPE_LINUX = "linux"
@@ -49,7 +49,7 @@ def Setup(tc):
                 return api.types.status.FAILURE
             # this is required to bring the testbed into operation state
             # after driver unload interfaces need to be initialized
-            hw_config.ReAddWorkloads(node)
+            wl_api.ReAddWorkloads(node)
         elif tc.os == OS_TYPE_ESX:
             host.UnloadDriver(tc.os, node)
             tc.driver_changed = True
@@ -147,7 +147,7 @@ def Teardown(tc):
         for node in tc.nodes:
             host.UnloadDriver(tc.os, node, whichdriver="eth")
             host.LoadDriver(tc.os, node)
-            hw_config.ReAddWorkloads(node)
+            wl_api.ReAddWorkloads(node)
     elif tc.os == OS_TYPE_ESX:
         manifest_file = os.path.join(api.GetTopDir(), 'images', 'latest.json')
         for node in tc.nodes:

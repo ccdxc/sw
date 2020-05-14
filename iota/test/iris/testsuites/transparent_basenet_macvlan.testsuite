@@ -25,7 +25,7 @@ setup:
         - step : utils.enable_l2_fwd_offload
         - step : utils.naples_workloads
         - step : config.config_link_flap
-        - step : config.netagent.hw_push_config
+        - step : config.workload.api
         - step : testcases.drivers.install_iperf
 
 common:

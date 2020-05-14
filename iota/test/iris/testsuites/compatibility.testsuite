@@ -21,7 +21,7 @@ setup:
         - step : testcases.penctl.install
         - step : testcases.penctl.enable_ssh
         - step : utils.naples_workloads
-        - step : config.netagent.hw_push_config
+        - step : config.workload.api
 
 common:
     verifs:

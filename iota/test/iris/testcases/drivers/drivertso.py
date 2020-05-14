@@ -7,7 +7,7 @@ import iota.test.utils.ionic_utils as ionic_utils
 import iota.test.utils.ionic_stats as ionic_stats
 import iota.test.iris.testcases.drivers.common as common
 import iota.test.iris.testcases.drivers.cmd_builder as cmd_builder
-import iota.test.iris.config.netagent.hw_push_config as hw_config
+import iota.test.iris.config.workload.api as wl_api
 
 
 def VerifyNetStat(tc):
@@ -363,7 +363,7 @@ def Verify(tc):
     for node in tc.nodes:
         # this is required to bring the testbed into operation state
         # after driver unload interfaces need to be initialized
-        hw_config.ReAddWorkloads(node)
+        wl_api.ReAddWorkloads(node)
 
     return api.types.status.SUCCESS
 
