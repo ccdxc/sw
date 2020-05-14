@@ -120,6 +120,11 @@ func (sm *Statemgr) OnInterfaceCreateReq(nodeID string, agentNetif *netproto.Int
 		log.Infof("Ignore interface create for %v DSC ID not set ", agentNetif.Name)
 		return nil
 	}
+
+	_, err := sm.FindObject("NetworkInterface", agentNetif.ObjectMeta.Tenant, agentNetif.ObjectMeta.Namespace, agentNetif.ObjectMeta.Name)
+	if err == nil {
+		return sm.OnInterfaceUpdateReq(nodeID, agentNetif)
+	}
 	// convert agent's netif struct to the api object
 	netif := convertNetifObj(nodeID, agentNetif)
 
@@ -164,6 +169,9 @@ func (sm *Statemgr) OnInterfaceUpdateReq(nodeID string, agentNetif *netproto.Int
 	defer ctkitNetif.Unlock()
 
 	//For now Update only operation status
+	if ctkitNetif.Status.OperStatus == agentNetif.Status.OperStatus {
+		return nil
+	}
 	ctkitNetif.Status.OperStatus = agentNetif.Status.OperStatus
 	// retry till it succeeds
 	now := time.Now()
