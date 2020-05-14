@@ -178,14 +178,16 @@ format_pds_p4_rx_cpu_hdr (u8 * s, va_list * args)
                " tx_meter_id[%d],"
                "\n\tnexthop_id[%d], vpc_id[%d], vnic_id[%d], "
                "dnat_id[%d], flags_short[0x%x], flags2[0x%x], "
-               "\n\tepoch[%d], route_priority[%d]",
+               "\n\tepoch[%d], route_priority[%d]"
+               "\n\tsw_meta[%d], src_bd_id[%d]",
                t->packet_len, t->flags, t->nacl_data, t->ingress_bd_id, t->flow_hash,
                t->l2_offset, t->l3_offset, t->l4_offset, t->l2_inner_offset,
                t->l3_inner_offset, t->l4_inner_offset, t->payload_offset,
                t->tcp_flags, t->session_id, t->lif, t->egress_bd_id,
                t->service_xlate_id, t->mapping_xlate_id,
                t->tx_meter_id, t->nexthop_id, t->vpc_id, t->vnic_id,
-               t->dnat_id, t->flags_short, t->flags2, t->epoch, t->route_priority);
+               t->dnat_id, t->flags_short, t->flags2, t->epoch, t->route_priority,
+               t->sw_meta, t->src_bd_id);
     return s;
 }
 
@@ -196,11 +198,11 @@ format_pds_p4_tx_cpu_hdr (u8 * s, va_list * args)
 
     s = format(s, "lif[0x%x], nhop_valid[%d], nhop_type[%d], nhop_id[%d] "
                "mapping_overide[%d], flow_lkp_id_override[%d], "
-               "flow_lkp_id[%d]",
+               "flow_lkp_id[%d], skip_stats_update[%d], sw_meta[%d]",
                t->lif_sbit0_ebit7 | (t->lif_sbit8_ebit10 << 8),
                t->nexthop_valid, t->nexthop_type, t->nexthop_id,
                t->local_mapping_override, t->flow_lkp_id_override,
-               t->flow_lkp_id);
+               t->flow_lkp_id, t->skip_stats_update, t->sw_meta);
     return s;
 }
 

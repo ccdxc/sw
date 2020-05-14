@@ -161,7 +161,8 @@ pds_cfg_db_device_set_cb (const pds_cfg_msg_t *msg)
     rc = pds_impl_db_device_set(msg->device.spec.spec.device_mac_addr,
                                 (const uint8_t *) &spec->device_ip_addr.addr,
                                 (spec->device_ip_addr.af == IP_AF_IPV4) ? 1:0,
-                                spec->overlay_routing_en);
+                                spec->overlay_routing_en,
+                                spec->ip_mapping_priority);
 
     if (rc == 0) {
         return sdk::SDK_RET_OK;

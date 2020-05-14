@@ -1,0 +1,176 @@
+# Test Spec for local2remote scenarios from Host
+selectors:
+    root: ref://store/templates/id=FLOW
+    maxlimits: 1
+    flow: filter://HasDefaultRoute=True
+    vnic: filter://any
+
+packets:
+    - packet:
+        id          : FROM_HOST_PKT # Input packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : callback://networking/packets/GetPacketTemplateFromMapping/proto=TCP
+        encaps      : callback://networking/packets/GetHostPacketEncapFromVnic
+        headers     :
+            eth:
+                src     : ref://testcase/config/localmapping/VNIC/MACAddr
+                dst     : callback://networking/packets/GetDstMac/direction=TX
+            qtag:
+                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
+            ipv4:
+                src     : ref://testcase/config/localmapping/IP
+                dst     : ref://testcase/config/remotemapping/IP
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/localmapping/IP
+                dst     : ref://testcase/config/remotemapping/IP
+                hlim    : 64
+            tcp:
+                sport   : 100
+                dport   : 200
+                flags   : syn
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+    - packet:
+        id          : TO_SWITCH_PKT # Expected packet
+        clone       : ref://testcase/packets/id=FROM_HOST_PKT
+        encaps      : callback://networking/packets/GetPacketEncapFromMapping
+        headers     :
+            outereth:
+                src     : callback://networking/packets/GetUplinkPortMac
+                dst     : callback://networking/packets/GetUnderlayRemoteMac
+            outeripv4:
+                src     : ref://testcase/config/devicecfg/IP
+                dst     : callback://networking/packets/GetTunnelIPFromMapping
+                ttl     : 64
+                tos     : 0
+                id      : 0
+            vxlan:
+                vni     : ref://testcase/config/remotemapping/SUBNET/Vnid
+            eth:
+                src     : callback://networking/packets/GetPacketSrcMacFromMapping/Fwdmode=L2R
+            ipv4:
+                ttl     : callback://networking/packets/GetPacketTtl/Fwdmode=L2R,ipkt=FROM_HOST_PKT
+
+    - packet:
+        id          : TO_HOST_PKT # Expected packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : callback://networking/packets/GetPacketTemplateFromMapping/proto=TCP
+        encaps      : callback://networking/packets/GetHostPacketEncapFromVnic
+        headers     :
+            eth:
+                src     : callback://networking/packets/GetPacketSrcMacFromMapping/Fwdmode=R2L
+                dst     : ref://testcase/config/localmapping/VNIC/MACAddr
+            qtag:
+                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
+            ipv4:
+                src     : ref://testcase/config/remotemapping/IP
+                dst     : ref://testcase/config/localmapping/IP
+                ttl     : callback://networking/packets/GetPacketTtl/Fwdmode=R2L,ipkt=FROM_SWITCH_PKT
+            ipv6:
+                src     : ref://testcase/config/remotemapping/IP
+                dst     : ref://testcase/config/localmapping/IP
+                hlim    : 64
+            tcp:
+                sport   : 200
+                dport   : 100
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+    - packet:
+        id          : FROM_SWITCH_PKT # Input packet
+        clone       : ref://testcase/packets/id=TO_HOST_PKT
+        encaps      : callback://networking/packets/GetPacketEncapFromMapping
+        headers     :
+            outereth:
+                src     : callback://networking/packets/GetUnderlayRemoteMac
+                dst     : callback://networking/packets/GetUplinkPortMac
+            outeripv4:
+                dst     : ref://testcase/config/devicecfg/IP
+                src     : callback://networking/packets/GetTunnelIPFromMapping
+                ttl     : 64
+                tos     : 0
+                id      : 0
+            vxlan:
+                vni     : ref://testcase/config/localmapping/VNIC/SUBNET/Vnid
+
+buffers:
+    - buffer:
+        id      : BUF1
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+           bind : True
+           size : ref://testcase/packets/id=FROM_HOST_PKT/size
+           data : ref://testcase/packets/id=FROM_HOST_PKT/rawbytes
+    - buffer:
+        id      : BUF2
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+           bind : True
+           size : ref://testcase/packets/id=FROM_SWITCH_PKT/size
+           data : ref://testcase/packets/id=FROM_SWITCH_PKT/rawbytes
+
+descriptors:
+    - descriptor:
+        id      : DESC1
+        template: ref://factory/templates/id=DESCR_ETH_TX
+        fields:
+            _buf  : ref://testcase/buffers/id=BUF1
+            addr  : ref://testcase/buffers/id=BUF1/addr
+            len   : ref://testcase/buffers/id=BUF1/size
+
+    - descriptor:
+        id      : DESC2 # Expected Descriptor
+        template: ref://factory/templates/id=DESCR_ETH_TX_CQ
+        fields:
+            status     : 0x0
+
+    - descriptor:
+        id      : DESC3
+        template: ref://factory/templates/id=DESCR_ETH_TX
+        fields:
+            _buf  : ref://testcase/buffers/id=BUF3
+            addr  : ref://testcase/buffers/id=BUF3/addr
+            len   : ref://testcase/buffers/id=BUF3/size
+
+    - descriptor:
+        id      : DESC4 # Expected Descriptor
+        template: ref://factory/templates/id=DESCR_ETH_TX_CQ
+        fields:
+            status     : 0x0
+
+session:
+    - step:
+        trigger:
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC1
+                    ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
+        expect:
+            delay    :    1
+            packets:
+                - packet:
+                    object  : callback://networking/packets/GetExpectedPacket/pkt=TO_SWITCH_PKT
+                    port    : callback://networking/packets/GetExpectedEgressUplinkPort
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC2
+                    ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
+
+    - step:
+        trigger:
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC3
+                    ring    : callback://networking/packets/GetRingFromMapping/type=remote,qid=TX
+        expect:
+            delay    :    1
+            packets:
+                - packet:
+                    object  : callback://networking/packets/GetExpectedPacket/pkt=TO_HOST_PKT
+                    port    : callback://networking/packets/GetExpectedEgressUplinkPort
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC4
+                    ring    : callback://networking/packets/GetRingFromMapping/type=remote,qid=TX

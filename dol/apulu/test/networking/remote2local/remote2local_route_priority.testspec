@@ -1,0 +1,210 @@
+# Test Spec for remote2local scenarios from Switch to Host
+selectors:
+    root: ref://store/templates/id=FLOW
+    maxlimits: 1
+    flow: filter://HasDefaultRoute=True
+    vnic: filter://any
+
+packets:
+    - packet:
+        id          : BASE_PKT # Base packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : callback://networking/packets/GetPacketTemplateFromMapping/proto=TCP
+        headers     :
+            eth:
+                dst     : callback://networking/packets/GetDstMac/direction=RX
+                src     : callback://networking/packets/GetPacketSrcMacAddrFromMapping/direction=RX
+            ipv4:
+                dst     : ref://testcase/config/localmapping/IP
+                src     : ref://testcase/config/remotemapping/IP
+                ttl     : 64
+            ipv6:
+                dst     : ref://testcase/config/localmapping/IP
+                src     : ref://testcase/config/remotemapping/IP
+                hlim    : 64
+            tcp:
+                sport   : 100
+                dport   : 200
+                flags   : syn
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+    - packet:
+        id          : FROM_SWITCH_PKT # Input packet
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : callback://networking/packets/GetPacketEncapFromMapping
+        headers     :
+            outereth:
+                src     : callback://networking/packets/GetUnderlayRemoteMac
+                dst     : callback://networking/packets/GetUplinkPortMac
+            outeripv4:
+                dst     : ref://testcase/config/devicecfg/IP
+                src     : callback://networking/packets/GetTunnelIPFromMapping
+                ttl     : 64
+                tos     : 0
+                id      : 0
+            vxlan:
+                vni     : ref://testcase/config/localmapping/VNIC/SUBNET/Vnid
+
+    - packet:
+        id          : TO_HOST_PKT # Expected packet
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : callback://networking/packets/GetHostPacketEncapFromVnic
+        headers     :
+            eth:
+                dst     : ref://testcase/config/localmapping/VNIC/MACAddr
+            qtag:
+                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
+                prio    : 0
+            ipv4:
+                ttl     : callback://networking/packets/GetPacketTtl/Fwdmode=R2L,ipkt=FROM_SWITCH_PKT
+
+    - packet:   
+        id          : FROM_HOST_PKT # Input packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : callback://networking/packets/GetPacketTemplateFromMapping/proto=TCP
+        encaps      : callback://networking/packets/GetHostPacketEncapFromVnic
+        headers     :
+            eth:
+                src     : ref://testcase/config/localmapping/VNIC/MACAddr
+                dst     : callback://networking/packets/GetDstMac/direction=TX
+            qtag:   
+                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
+            ipv4:
+                src     : ref://testcase/config/localmapping/IP
+                dst     : ref://testcase/config/remotemapping/IP
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/localmapping/IP
+                dst     : ref://testcase/config/remotemapping/IP
+                hlim    : 64
+            tcp:
+                sport   : 200
+                dport   : 100
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+                
+    - packet:
+        id          : TO_SWITCH_PKT # Expected packet
+        clone       : ref://testcase/packets/id=FROM_HOST_PKT
+        encaps      : callback://networking/packets/GetPacketEncapFromMapping
+        headers     :
+            outereth:
+                src     : callback://networking/packets/GetUplinkPortMac
+                dst     : callback://networking/packets/GetUnderlayRemoteMac
+            outeripv4:
+                src     : ref://testcase/config/devicecfg/IP
+                dst     : callback://networking/packets/GetTunnelIPFromMapping
+                ttl     : 64
+                tos     : 0
+                id      : 0
+            vxlan:
+                vni     : ref://testcase/config/remotemapping/SUBNET/Vnid
+            eth:
+                src     : callback://networking/packets/GetPacketSrcMacFromMapping/Fwdmode=L2R
+            ipv4:
+                ttl     : callback://networking/packets/GetPacketTtl/Fwdmode=L2R,ipkt=FROM_HOST_PKT
+
+buffers                 :
+    - buffer            :
+        id              : BUF1  # Input Buffer
+        template        : ref://factory/templates/id=ETH_BUFFER
+        fields          :
+            bind        : True
+            size        : 1518
+            data        : None
+
+    - buffer            :
+        id              : BUF2  # Expected Buffer
+        template        : ref://factory/templates/id=ETH_BUFFER
+        fields:
+            bind        : False
+            size        : ref://testcase/packets/id=TO_HOST_PKT/size
+            data        : ref://testcase/packets/id=TO_HOST_PKT/rawbytes
+
+    - buffer            :
+        id              : BUF3  # Input Buffer
+        template        : ref://factory/templates/id=ETH_BUFFER
+        fields          :
+            bind        : True
+            size        : 1518
+            data        : None
+
+    - buffer            :
+        id              : BUF4  # Expected Buffer
+        template        : ref://factory/templates/id=ETH_BUFFER
+        fields:
+            bind        : False
+            size        : ref://testcase/packets/id=TO_SWITCH_PKT/size
+            data        : ref://testcase/packets/id=TO_SWITCH_PKT/rawbytes
+
+descriptors             :
+    - descriptor        :
+        id              : DESC1 # Input Descriptor
+        template        : ref://factory/templates/id=DESCR_ETH_RX
+        fields          :
+            _buf        : ref://testcase/buffers/id=BUF1
+            addr        : ref://testcase/buffers/id=BUF1/addr
+            len         : ref://testcase/buffers/id=BUF1/size
+
+    - descriptor        :
+        id              : DESC2 # Expected Descriptor
+        template        : ref://factory/templates/id=DESCR_ETH_RX_CQ
+        fields          :
+            _buf        : ref://testcase/buffers/id=BUF2
+            len         : ref://testcase/buffers/id=BUF2/size
+
+    - descriptor        :
+        id              : DESC3 # Input Descriptor
+        template        : ref://factory/templates/id=DESCR_ETH_RX
+        fields          :
+            _buf        : ref://testcase/buffers/id=BUF3
+            addr        : ref://testcase/buffers/id=BUF3/addr
+            len         : ref://testcase/buffers/id=BUF3/size
+
+    - descriptor        :
+        id              : DESC4 # Expected Descriptor
+        template        : ref://factory/templates/id=DESCR_ETH_RX_CQ
+        fields          :
+            _buf        : ref://testcase/buffers/id=BUF4
+            len         : ref://testcase/buffers/id=BUF4/size
+
+session:
+    - step:
+        trigger                 :
+            descriptors         :
+                - descriptor    :
+                    object      : ref://testcase/descriptors/id=DESC1
+                    ring        : callback://networking/packets/GetRingFromMapping/type=local,qid=RX
+            packets             :
+                - packet        :
+                    object      : ref://testcase/packets/id=FROM_SWITCH_PKT
+                    # TODO: Fix topo & choose one of the uplink port
+                    port        : ref://testcase/config/switchport
+        expect                  :
+            delay               : 1
+            descriptors         :
+                - descriptor    :
+                    # set negtest to True if packet is NOT expected on this queue
+                    negtest     : callback://networking/packets/IsNegativeTestCase
+                    object      : ref://testcase/descriptors/id=DESC2
+                    ring        : callback://networking/packets/GetRingFromMapping/type=local,qid=RX
+
+#    - step:
+#        trigger                 :
+#            descriptors         :
+#                - descriptor    :
+#                    object      : ref://testcase/descriptors/id=DESC3
+#                    ring        : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
+#            packets             :
+#                - packet        :
+#                    object      : ref://testcase/packets/id=FROM_HOST_PKT
+#                    port        : callback://networking/packets/GetExpectedEgressUplinkPort
+#        expect                  :
+#            delay               : 1
+#            descriptors         :
+#                - descriptor    :
+#                    # set negtest to True if packet is NOT expected on this queue
+#                    negtest     : callback://networking/packets/IsNegativeTestCase
+#                    object      : ref://testcase/descriptors/id=DESC4
+#                    ring        : callback://networking/packets/GetRingFromMapping/type=local,qid=TX

@@ -106,15 +106,17 @@ device_impl_db_dump ()
 
     device = &impl_db_ctx.device;
 
-    PRINT_BUF_LINE(57);
-    vlib_cli_output(vm, "%=21s%=16s%=20s", "MAC","DeviceIp", "Flags");
-    PRINT_BUF_LINE(57);
+    PRINT_BUF_LINE(73);
+    vlib_cli_output(vm, "%=21s%=16s%=20s%=16s", "MAC","DeviceIp",
+                    "Flags", "MappingPriority");
+    PRINT_BUF_LINE(73);
 
     ip = device->device_ip;
     ip.ip4.as_u32 = clib_net_to_host_u32(ip.ip4.as_u32);
-    vlib_cli_output(vm, "%=21U%=16U%=20s\n",
+    vlib_cli_output(vm, "%=21U%=16U%=20s%=16d\n",
                     format_ethernet_address, device->device_mac,
                     format_ip46_address, &ip, IP46_TYPE_ANY,
-                    (device->overlay_routing_en ? "Overlay-Routing" : "-"));
+                    (device->overlay_routing_en ? "Overlay-Routing" : "-"),
+                    device->mapping_prio);
     return 0;
 }

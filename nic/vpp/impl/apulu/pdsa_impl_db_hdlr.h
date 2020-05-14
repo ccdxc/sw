@@ -43,7 +43,8 @@ uint8_t pds_impl_db_vpc_is_control_vpc (uint16_t vpc_hw_id);
 int pds_impl_db_vpc_del(uint16_t vpc_hw_id);
 
 int pds_impl_db_device_set(const uint8_t *mac, const uint8_t *ip,
-                           uint8_t ip4, uint8_t bridging_en);
+                           uint8_t ip4, uint8_t bridging_en,
+                           uint16_t mapping_prio);
 
 int pds_impl_db_device_del(void);
 

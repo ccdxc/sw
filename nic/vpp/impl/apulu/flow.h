@@ -550,7 +550,46 @@ pds_flow_classify_get_advance_offset (vlib_buffer_t *b, u8 p4_flags)
     return VPP_P4_TO_ARM_HDR_SZ;
 }
 
-void
+always_inline bool
+pds_flow_mapping_over_route_check (p4_rx_cpu_hdr_t *hdr,
+                                   u8 is_rx)
+{
+    static pds_impl_db_device_entry_t *device = NULL; 
+
+    if (PREDICT_FALSE(NULL == device)) {
+        device = pds_impl_db_device_get();
+    }
+
+    // no route, then mapping wins always
+    if (hdr->drop || (0 == hdr->nexthop_id)) {
+        return true;
+    }
+
+    // packet from host
+    if (!is_rx) {
+        if (!hdr->mapping_hit) {
+            // only route present
+            return false;
+        }
+        goto priority_check;
+    }
+    // packet from uplink
+    if (!hdr->src_mapping_hit) {
+        // only route present
+        return false;
+    }
+
+priority_check:
+    // both route and mapping are hit, whichever has lesser
+    // value of priority that wins.
+    if (PREDICT_FALSE(hdr->route_priority < device->mapping_prio)) {
+        return false;
+    }
+    // in case of tie between mapping and route, mapping wins.
+    return true;
+}
+
+always_inline void
 pds_flow_packet_type_derive (vlib_buffer_t *p, p4_rx_cpu_hdr_t *hdr,
                              u16 flags, u16 *next, u32 *counter,
                              pds_flow_hw_ctx_t *ctx)
@@ -559,6 +598,7 @@ pds_flow_packet_type_derive (vlib_buffer_t *p, p4_rx_cpu_hdr_t *hdr,
     u8 intra_subnet = 0;
     u8 pkt_type;
     pds_impl_db_device_entry_t *dev = pds_impl_db_device_get();
+    bool mapping;
 
     vnet_buffer(p)->sw_if_index[VLIB_TX] = hdr->ingress_bd_id;
 
@@ -566,7 +606,8 @@ pds_flow_packet_type_derive (vlib_buffer_t *p, p4_rx_cpu_hdr_t *hdr,
         if (hdr->ingress_bd_id == hdr->egress_bd_id) {
             intra_subnet = 1;
         }
-        if (hdr->mapping_hit) {
+        mapping = pds_flow_mapping_over_route_check(hdr, 0);
+        if (mapping) {
             // assume l2l traffic is handled by vswitch on host
             if (PREDICT_FALSE(hdr->is_local)) {
                 vnet_buffer(p)->pds_flow_data.egress_lkp_id = hdr->egress_bd_id;
@@ -672,8 +713,9 @@ pds_flow_packet_type_derive (vlib_buffer_t *p, p4_rx_cpu_hdr_t *hdr,
             }
         }
     } else {
+        mapping = pds_flow_mapping_over_route_check(hdr, 1);
         vnet_buffer(p)->pds_flow_data.egress_lkp_id = hdr->egress_bd_id;
-        if (!hdr->drop && hdr->nexthop_id) {
+        if (!mapping) {
             pds_impl_db_vpc_entry_t *vpc = pds_impl_db_vpc_get(hdr->vpc_id);
             if (PREDICT_FALSE(!vpc)) {
                 *next = FLOW_CLASSIFY_NEXT_DROP;
@@ -727,11 +769,8 @@ pds_flow_packet_type_derive (vlib_buffer_t *p, p4_rx_cpu_hdr_t *hdr,
                 }
             }
         } else {
-            // we cant make out r2l inter/intra subnet cases,
-            // so we rely on remote end to make that decision.
-            // only if VNI is l3 vnid then we consider it as
-            // across subnets which will not happen normally
-            if (PREDICT_FALSE(hdr->is_l3_vnid)) {
+            if ((hdr->is_l3_vnid) ||
+                (hdr->egress_bd_id != hdr->src_bd_id)) {
                 pkt_type = PDS_FLOW_R2L_INTER_SUBNET;
             } else {
                 pkt_type = PDS_FLOW_R2L_INTRA_SUBNET;

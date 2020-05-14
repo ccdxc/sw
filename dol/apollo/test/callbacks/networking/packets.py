@@ -652,7 +652,11 @@ def __get_packet_srcmac(fwdmode, robj, lobj):
         else:
             return lobj.VNIC.MACAddr
     elif fwdmode == 'R2L':
-        return lobj.SUBNET.VirtualRouterMACAddr
+        remote_subnet = robj.SUBNET
+        if local_subnet.SubnetId != remote_subnet.SubnetId:
+            return lobj.VNIC.SUBNET.VirtualRouterMACAddr
+        else:
+            return robj.VNIC.MACAddr
     elif fwdmode == 'L2N':
         return lobj.VNIC.SUBNET.VPC.VirtualRouterMACAddr
     elif fwdmode == 'N2L':
@@ -700,7 +704,11 @@ def __get_packet_ttl(fwdmode, robj, lobj, ttl):
         else:
             return ttl
     elif fwdmode == 'R2L':
-        return ttl
+        remote_subnet = robj.SUBNET
+        if local_subnet.SubnetId != remote_subnet.SubnetId:
+            return ttl - 1
+        else:
+            return ttl
     elif fwdmode == 'L2N' or fwdmode == 'N2L':
         return ttl - 1
 
