@@ -2585,7 +2585,7 @@ ep_to_ep_get_response (ep_t *ep, EndpointGetResponse *response)
 
     auto vrf       = vrf_lookup_by_handle(ep->vrf_handle);
     auto l2seg     = find_l2seg_by_id(ep->l2_key.l2_segid);
-    if (l2seg_is_telemetry(l2seg)) {
+    if (l2seg && l2seg_is_telemetry(l2seg)) {
         interface = find_if_by_handle(g_hal_state->inb_bond_active_uplink());
     } else {
         interface = find_if_by_handle(ep->if_handle);
