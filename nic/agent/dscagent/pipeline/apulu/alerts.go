@@ -20,13 +20,14 @@ import (
 	"github.com/pensando/sw/nic/agent/dscagent/pipeline/utils"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
 	halapi "github.com/pensando/sw/nic/apollo/agent/gen/pds"
+	operdapi "github.com/pensando/sw/nic/operd/daemon/gen/operd"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/events"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
 // helper function to convert HAL alert to venice alert
-func convertToVeniceAlert(nEvt *halapi.Alert) *evtsapi.Event {
+func convertToVeniceAlert(nEvt *operdapi.Alert) *evtsapi.Event {
 	uuid := uuid.NewV4().String()
 	// TODO: Timestamp is not populated by pdsagent
 	// until then use current time instead of nEvt.GetTimestamp()
@@ -64,7 +65,7 @@ func convertToVeniceAlert(nEvt *halapi.Alert) *evtsapi.Event {
 	return vAlert
 }
 
-func queryAlerts(evtsDispatcher events.Dispatcher, stream halapi.OperSvc_AlertsGetClient) {
+func queryAlerts(evtsDispatcher events.Dispatcher, stream operdapi.AlertsSvc_AlertsGetClient) {
 	for {
 		resp, err := stream.Recv()
 		if err == io.EOF {
@@ -97,7 +98,7 @@ func queryAlerts(evtsDispatcher events.Dispatcher, stream halapi.OperSvc_AlertsG
 }
 
 // HandleAlerts handles collecting and reporting of alerts
-func HandleAlerts(evtsDispatcher events.Dispatcher, client halapi.OperSvcClient) {
+func HandleAlerts(evtsDispatcher events.Dispatcher, client operdapi.AlertsSvcClient) {
 	emptyStruct := &halapi.Empty{}
 	// create a stream for alerts
 	alertsStream, err := client.AlertsGet(context.Background(), emptyStruct)
@@ -107,16 +108,16 @@ func HandleAlerts(evtsDispatcher events.Dispatcher, client halapi.OperSvcClient)
 		return
 	}
 
-	// periodically query for alerts from PDS agent
-	go func(stream halapi.OperSvc_AlertsGetClient) {
+	// periodically query for alerts from pen_oper plugin
+	go func(stream operdapi.AlertsSvc_AlertsGetClient) {
 		ticker := time.NewTicker(time.Second * 5)
 
 		for {
 			select {
 			case <-ticker.C:
-				pdsAgentURL := fmt.Sprintf("127.0.0.1:%s", types.PDSGRPCDefaultPort)
-				if utils.IsHalUp(pdsAgentURL) == false {
-					// HAL is not up yet, skip querying
+				penOperURL := fmt.Sprintf("127.0.0.1:%s", types.PenOperGRPCDefaultPort)
+				if utils.IsServerUp(penOperURL) == false {
+					// pen_oper is not up yet, skip querying
 					continue
 				}
 				queryAlerts(evtsDispatcher, stream)

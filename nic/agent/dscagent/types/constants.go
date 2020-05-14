@@ -154,6 +154,9 @@ const (
 	// OperdGRPCDefaultPort is the default port for Operd. used for Cloud Pipeline
 	OperdGRPCDefaultPort = "11359"
 
+	// PenOperGRPCDefaultPort is the default port for pen-oper plugin. used for Cloud Pipeline
+	PenOperGRPCDefaultPort = "11360"
+
 	// HalGRPCWaitTimeout is the timeout for which agent will wait for HAL to be up
 	HalGRPCWaitTimeout = time.Minute * 10
 

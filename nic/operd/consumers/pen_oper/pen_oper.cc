@@ -9,6 +9,7 @@
 #include "nic/sdk/include/sdk/globals.hpp"
 #include "nic/sdk/lib/event_thread/event_thread.hpp"
 #include "nic/sdk/lib/operd/operd.hpp"
+#include "nic/sdk/lib/pal/pal.hpp"
 #include "nic/sdk/lib/thread/thread.hpp"
 #include "nic/apollo/include/globals.hpp"
 #include "core/state.hpp"
@@ -64,7 +65,7 @@ spawn_grpc_thread (void)
     // spawn grpc server which handles alerts & metrics
     g_pen_oper_grpc_thread =
         sdk::event_thread::event_thread::factory(
-            "grpc", SDK_IPC_ID_OPERD_PLUGIN,
+            "pen_oper_grpc", SDK_IPC_ID_OPERD_PLUGIN,
             sdk::lib::THREAD_ROLE_CONTROL, 0x0, grpc_thread_init,
             grpc_thread_exit, NULL,
             sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
@@ -80,15 +81,29 @@ spawn_grpc_thread (void)
 
 extern "C" {
 
-sdk_ret_t
+int
 plugin_init (void)
 {
-    if (core::pen_oper_state::init() != SDK_RET_OK) {
-        fprintf(stderr, "Failed to init pen_oper_state\n");
-        return SDK_RET_ERR;
+    pal_ret_t ret;
+
+#ifdef SIM
+    ret = sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_MOCK);
+#else
+    ret = sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_HW);
+#endif
+
+    if (ret != sdk::lib::PAL_RET_OK) {
+        fprintf(stderr, "pal init failed, ret %u\n", ret);
+        return 1;
     }
 
-    return spawn_grpc_thread();
+    if (core::pen_oper_state::init() != SDK_RET_OK) {
+        fprintf(stderr, "Failed to init pen_oper_state\n");
+        return 1;
+    }
+    spawn_grpc_thread();
+
+    return 0;
 }
 
 // consumes alerts from operd daemon

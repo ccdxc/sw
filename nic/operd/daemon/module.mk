@@ -14,7 +14,7 @@ MODULE_SRCS     += $(wildcard ${MODULE_SRC_DIR}/impl/stub/*.cc)
 else
 MODULE_SRCS     += $(wildcard ${MODULE_SRC_DIR}/impl/${PIPELINE}/*.cc)
 MODULE_SOLIBS   += operdproto operdsvc event_thread thread logger utils \
-                   sdkeventmgr list slab shmmgr ht
+                   sdkeventmgr list slab shmmgr ht sdkpal
 MODULE_LDLIBS   += ${NIC_THIRDPARTY_GOOGLE_LDLIBS} ${NIC_COMMON_LDLIBS}
 MODULE_INCS     = ${MODULE_GEN_DIR}
 endif

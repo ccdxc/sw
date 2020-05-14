@@ -55,6 +55,8 @@ type ApuluAPI struct {
 	EvpnClient              msapi.EvpnSvcClient
 	CPRouteSvcClient        msapi.CPRouteSvcClient
 	OperSvcClient           operdapi.OperSvcClient
+	AlertsSvcClient         operdapi.AlertsSvcClient
+	MetricsSvcClient        operdapi.MetricsSvcClient
 	LocalInterfaces         map[string]string
 }
 
@@ -69,6 +71,12 @@ func NewPipelineAPI(infraAPI types.InfraAPI) (*ApuluAPI, error) {
 	operdconn, err := utils.CreateNewGRPCClient("OPERD_GRPC_PORT", types.OperdGRPCDefaultPort)
 	if err != nil {
 		log.Errorf("Failed to create GRPC Connection to Operd. Err: %v", err)
+		return nil, err
+	}
+
+	penoperconn, err := utils.CreateNewGRPCClient("PEN_OPER_GRPC_PORT", types.PenOperGRPCDefaultPort)
+	if err != nil {
+		log.Errorf("Failed to create GRPC Connection to pen_oper plugin. Err: %v", err)
 		return nil, err
 	}
 
@@ -89,6 +97,8 @@ func NewPipelineAPI(infraAPI types.InfraAPI) (*ApuluAPI, error) {
 		MirrorClient:            halapi.NewMirrorSvcClient(conn),
 		OperClient:              halapi.NewOperSvcClient(conn),
 		OperSvcClient:           operdapi.NewOperSvcClient(operdconn),
+		AlertsSvcClient:         operdapi.NewAlertsSvcClient(penoperconn),
+		MetricsSvcClient:        operdapi.NewMetricsSvcClient(penoperconn),
 		LocalInterfaces:         make(map[string]string),
 	}
 
@@ -155,7 +165,7 @@ func (a *ApuluAPI) PipelineInit() error {
 	a.initEventStream()
 
 	// handle all the metrics
-	apulu.HandleMetrics(a.InfraAPI, a.OperClient)
+	apulu.HandleMetrics(a.InfraAPI, a.MetricsSvcClient)
 	// Ensure that the watches for all objects are set up since Apulu doesn't have a profile that dictates which objects to be watched
 
 	a.startDynamicWatch(types.CloudPipelineKinds)
@@ -1381,17 +1391,17 @@ func (a *ApuluAPI) HandleRouteTable(oper types.Operation, routetableObj netproto
 	return
 }
 
-// HandleTechSupport unimplemented
+// HandleTechSupport requests techsupport to operd
 func (a *ApuluAPI) HandleTechSupport(obj tsproto.TechSupportRequest) (string, error) {
 	a.Lock()
 	defer a.Unlock()
 	return apulu.HandleTechSupport(a.OperSvcClient, obj.Spec.SkipCores, obj.Spec.InstanceID)
 }
 
-// HandleTechSupport unimplemented
+// HandleAlerts start consuming alerts from operd plugin & export
 func (a *ApuluAPI) HandleAlerts(evtsDispatcher events.Dispatcher) {
 	// handle all the alerts
-	apulu.HandleAlerts(evtsDispatcher, a.OperClient)
+	apulu.HandleAlerts(evtsDispatcher, a.AlertsSvcClient)
 }
 
 // ReplayConfigs replays last known configs from boltDB

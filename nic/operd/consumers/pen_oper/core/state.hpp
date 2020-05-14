@@ -32,6 +32,6 @@ private:
     eventmgr *evmgr_;  // event manager instance
 };
 
-} // namespace core
+}    // namespace core
 
-#endif // __PEN_OPER_CORE_STATE_HPP__
+#endif    // __PEN_OPER_CORE_STATE_HPP__

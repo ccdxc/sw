@@ -18,6 +18,7 @@ import (
 	"github.com/pensando/sw/nic/agent/dscagent/types"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	halapi "github.com/pensando/sw/nic/apollo/agent/gen/pds"
+	operdapi "github.com/pensando/sw/nic/operd/daemon/gen/operd"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/tsdb"
 )
@@ -61,9 +62,9 @@ func GetMetricsKeyFromMac(objval int, mac string) []byte {
 	return output
 }
 
-func queryPDSMetrics(infraObj types.InfraAPI, metricsClient halapi.OperSvc_MetricsGetClient, metricName string, keyId int) (resp *halapi.MetricsGetResponse, err error) {
+func queryPDSMetrics(infraObj types.InfraAPI, metricsClient operdapi.MetricsSvc_MetricsGetClient, metricName string, keyId int) (resp *operdapi.MetricsGetResponse, err error) {
 	//construct metrics request object
-	metricsRequest := &halapi.MetricsGetRequest{}
+	metricsRequest := &operdapi.MetricsGetRequest{}
 	metricsRequest.Key = GetMetricsKeyFromMac(keyId, infraObj.GetDscName())
 	metricsRequest.Name = metricName
 
@@ -80,7 +81,7 @@ func queryPDSMetrics(infraObj types.InfraAPI, metricsClient halapi.OperSvc_Metri
 	return resp, err
 }
 
-func validateMetricsResponse(tableName string, resp *halapi.MetricsGetResponse, err error) (isValidated bool) {
+func validateMetricsResponse(tableName string, resp *operdapi.MetricsGetResponse, err error) (isValidated bool) {
 	if err == io.EOF { //reached end of stream
 		log.Error(errors.Wrapf(types.ErrMetricsRecv, "%v - Metrics stream ended | Err %v", tableName, err))
 		return false
@@ -96,7 +97,7 @@ func validateMetricsResponse(tableName string, resp *halapi.MetricsGetResponse, 
 	return true
 }
 
-func convertMetricsResponseToPoint(resp *halapi.MetricsGetResponse, tagName string) (points []*tsdb.Point) {
+func convertMetricsResponseToPoint(resp *operdapi.MetricsGetResponse, tagName string) (points []*tsdb.Point) {
 	points = []*tsdb.Point{}
 	tags := map[string]string{"tenant": "", "name": tagName}
 	fields := make(map[string]interface{})
@@ -110,7 +111,7 @@ func convertMetricsResponseToPoint(resp *halapi.MetricsGetResponse, tagName stri
 	return points
 }
 
-func exportPDSMetrics(resp *halapi.MetricsGetResponse, metricName string) {
+func exportPDSMetrics(resp *operdapi.MetricsGetResponse, metricName string) {
 	// build the row to be added to tsdb
 	points := convertMetricsResponseToPoint(resp, metricName)
 	if err := tsdbObjs[metricName].Points(points, time.Now()); err != nil {
@@ -120,7 +121,7 @@ func exportPDSMetrics(resp *halapi.MetricsGetResponse, metricName string) {
 	//log.Errorf("%v - successfully exported metrics!", metricName)
 }
 
-func processMetrics(infraObj types.InfraAPI, metricsClient halapi.OperSvc_MetricsGetClient, metricName string, keyId int) {
+func processMetrics(infraObj types.InfraAPI, metricsClient operdapi.MetricsSvc_MetricsGetClient, metricName string, keyId int) {
 	resp, err := queryPDSMetrics(infraObj, metricsClient, metricName, keyId)
 
 	//validate the response
@@ -131,7 +132,7 @@ func processMetrics(infraObj types.InfraAPI, metricsClient halapi.OperSvc_Metric
 	exportPDSMetrics(resp, metricName)
 }
 
-func queryInterfaceMetrics(infraAPI types.InfraAPI, stream halapi.OperSvc_MetricsGetClient) (err error) {
+func queryInterfaceMetrics(infraAPI types.InfraAPI, stream operdapi.MetricsSvc_MetricsGetClient) (err error) {
 	var (
 		dat [][]byte
 	)
@@ -141,7 +142,7 @@ func queryInterfaceMetrics(infraAPI types.InfraAPI, stream halapi.OperSvc_Metric
 		log.Error(errors.Wrapf(types.ErrBadRequest, "Interface retrieval from db failed, Err: %v", err))
 		return errors.Wrapf(types.ErrBadRequest, "Interface retrieval from db failed, Err: %v", err)
 	}
-	metricsGetRequest := &halapi.MetricsGetRequest{}
+	metricsGetRequest := &operdapi.MetricsGetRequest{}
 
 	// walk over all the interfaces and query for statistics
 	for _, o := range dat {
@@ -202,11 +203,11 @@ func queryInterfaceMetrics(infraAPI types.InfraAPI, stream halapi.OperSvc_Metric
 	return nil
 }
 
-func queryFlowStatsSummaryMetrics(infraObj types.InfraAPI, metricsClient halapi.OperSvc_MetricsGetClient) {
+func queryFlowStatsSummaryMetrics(infraObj types.InfraAPI, metricsClient operdapi.MetricsSvc_MetricsGetClient) {
 	processMetrics(infraObj, metricsClient, metricsFlowStatsSummary, 0)
 }
 
-func querySysmonMetrics(infraObj types.InfraAPI, metricsClient halapi.OperSvc_MetricsGetClient) {
+func querySysmonMetrics(infraObj types.InfraAPI, metricsClient operdapi.MetricsSvc_MetricsGetClient) {
 	sysmonMetricsTables := metricsTables[4:8]
 	for _, metricName := range sysmonMetricsTables {
 		processMetrics(infraObj, metricsClient, metricName, 0)
@@ -214,7 +215,7 @@ func querySysmonMetrics(infraObj types.InfraAPI, metricsClient halapi.OperSvc_Me
 }
 
 // HandleMetrics handles collecting and reporting of metrics
-func HandleMetrics(infraAPI types.InfraAPI, client halapi.OperSvcClient) error {
+func HandleMetrics(infraAPI types.InfraAPI, client operdapi.MetricsSvcClient) error {
 	// create a bidir stream for metrics
 	metricsStream, err := client.MetricsGet(context.Background())
 	if err != nil {
@@ -222,8 +223,8 @@ func HandleMetrics(infraAPI types.InfraAPI, client halapi.OperSvcClient) error {
 		return errors.Wrapf(types.ErrMetricsGet, "MetricsGet failure | Err %v", err)
 	}
 
-	// periodically query for metrics from PDS agent
-	go func(stream halapi.OperSvc_MetricsGetClient) {
+	// periodically query for metrics from pen_oper plugin
+	go func(stream operdapi.MetricsSvc_MetricsGetClient) {
 		for {
 			if ok := tsdb.IsInitialized(); ok {
 				break
@@ -255,9 +256,9 @@ func HandleMetrics(infraAPI types.InfraAPI, client halapi.OperSvcClient) error {
 			select {
 			case <-ticker.C:
 				log.Info("Querying metrics")
-				pdsAgentURL := fmt.Sprintf("127.0.0.1:%s", types.PDSGRPCDefaultPort)
-				if utils.IsHalUp(pdsAgentURL) == false {
-					// HAL is not up, skip querying
+				penOperURL := fmt.Sprintf("127.0.0.1:%s", types.PenOperGRPCDefaultPort)
+				if utils.IsServerUp(penOperURL) == false {
+					// pen_oper is not up, skip querying
 					continue
 				}
 				queryInterfaceMetrics(infraAPI, stream)

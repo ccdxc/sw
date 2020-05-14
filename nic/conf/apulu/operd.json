@@ -17,7 +17,8 @@
         "input": ["vpp"]
     },
     {
-        "name": "pen_oper",
+        "name": "pensando_default",
+        "description": "Operd plugin to export alerts & metrics over grpc",
         "provider": "pensando.io",
         "output": {
             "type": "library",

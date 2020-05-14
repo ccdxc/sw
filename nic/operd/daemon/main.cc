@@ -9,7 +9,6 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#include "nic/sdk/include/sdk/base.hpp"
 #include "lib/operd/operd.hpp"
 #include "lib/operd/decoder.h"
 
@@ -37,7 +36,7 @@ private:
 private:
     std::string path_;
     void *dlhandle_;
-    sdk_ret_t (*init_)(void);
+    int (*init_)(void);
     void (*handler_)(sdk::operd::log_ptr entry);
 };
 typedef std::shared_ptr<library> library_ptr;
@@ -134,7 +133,7 @@ library::try_load_(void) {
 
     // initialize the plugin
     if (load_symbol_(this->dlhandle_, "plugin_init", (void **)(&this->init_))) {
-        if (this->init_() == SDK_RET_OK) {
+        if (this->init_() == 0) {
             fprintf(stdout, "initialized plugin %s\n", this->path_.c_str());
         } else {
             fprintf(stderr, "Failed to init %s\n", this->path_.c_str());

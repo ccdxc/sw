@@ -25,7 +25,7 @@ func HandleTechSupport(client operdapi.OperSvcClient, skipCores bool, instanceID
 	resp, err := client.TechSupportCollect(context.Background(), techSupportReq)
 	if err != nil || resp == nil {
 		log.Errorf("TechSupport ID: %s Create returned | Error: %s", instanceID, err)
-		return "", errors.Wrapf(err, "failed to collect tech support from PDS")
+		return "", errors.Wrapf(err, "failed to collect tech support from Operd")
 	}
 	if err := utils.HandleErr(types.Create, resp.ApiStatus, err, fmt.Sprintf("TechSupport: %s Create Failed for", instanceID)); err != nil {
 		return "", err
