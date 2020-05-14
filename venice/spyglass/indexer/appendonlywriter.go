@@ -6,6 +6,7 @@ import (
 
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/elastic"
+	"github.com/pensando/sw/venice/utils/log"
 )
 
 // Start the Bulk/Batch writer to Elasticsearch
@@ -48,7 +49,7 @@ func (idr *Indexer) startAppendOnlyWriter(id int,
 
 			// check if batchSize is reached and call the bulk API
 			if len(idr.requests[id]) >= batchSize {
-				idr.helper(id, bulkTimeout, idr.requests[id], pushWorkers)
+				helper(idr.ctx, id, idr.logger, idr.elasticClient, bulkTimeout, idr.requests[id], pushWorkers)
 				idr.updateIndexer(id)
 				idr.requests[id] = make([]*elastic.BulkRequest, 0, batchSize)
 			}
@@ -56,7 +57,7 @@ func (idr *Indexer) startAppendOnlyWriter(id int,
 		// timer callback that fires every index-interval
 		case <-time.After(idr.indexIntvl):
 			if len(idr.requests[id]) != 0 {
-				idr.helper(id, bulkTimeout, idr.requests[id], pushWorkers)
+				helper(idr.ctx, id, idr.logger, idr.elasticClient, bulkTimeout, idr.requests[id], pushWorkers)
 				idr.updateIndexer(id)
 				idr.requests[id] = make([]*elastic.BulkRequest, 0, batchSize)
 			}
@@ -64,12 +65,14 @@ func (idr *Indexer) startAppendOnlyWriter(id int,
 	}
 }
 
-func (idr *Indexer) helper(id, timeout int, reqs []*elastic.BulkRequest, pushWorkers *workers) {
+func helper(ctx context.Context,
+	id int, logger log.Logger, elasticClient elastic.ESClient, timeout int,
+	reqs []*elastic.BulkRequest, pushWorkers *workers) {
 	failedBulkCount := 0
 	// Batch any pending requests.
 	if len(reqs) > 0 {
 		// Send a bulk request
-		idr.logger.Debugf("Writer: %d Calling Bulk Api len: %d requests",
+		logger.Debugf("Writer: %d Calling Bulk Api len: %d requests",
 			id,
 			len(reqs))
 
@@ -77,24 +80,24 @@ func (idr *Indexer) helper(id, timeout int, reqs []*elastic.BulkRequest, pushWor
 			return func() {
 				for {
 					if failedBulkCount == timeout {
-						idr.logger.Errorf("Writer: %d elastic write failed for %d seconds. so, dropping the request", id, timeout)
+						logger.Errorf("Writer: %d elastic write failed for %d seconds. so, dropping the request", id, timeout)
 						metric.addDrop()
 						break
 					}
 
 					result, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
-						return idr.elasticClient.Bulk(idr.ctx, reqs)
+						return elasticClient.Bulk(ctx, reqs)
 					}, indexRetryIntvl, indexMaxRetries)
 
 					if err != nil {
-						idr.logger.Errorf("Writer: %d Failed to perform bulk indexing, resp: %+v err: %+v",
+						logger.Errorf("Writer: %d Failed to perform bulk indexing, resp: %+v err: %+v",
 							id, result, err)
 						failedBulkCount++
 						metric.addRetries(failedBulkCount)
 						continue
 					}
 
-					idr.logger.Debugf("Writer: %d Bulk request succeeded after (%d) failures", id, failedBulkCount)
+					logger.Debugf("Writer: %d Bulk request succeeded after (%d) failures", id, failedBulkCount)
 					failedBulkCount = 0
 					break
 				}

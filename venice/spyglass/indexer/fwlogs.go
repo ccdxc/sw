@@ -212,7 +212,7 @@ func (idr *Indexer) fwlogsRequestCreator(id int, req *indexRequest, bulkTimeout 
 
 						idr.updateLastProcessedkeys(key)
 
-						idr.helper(id, bulkTimeout, fwlogs, pushWorkers)
+						helper(idr.ctx, id, idr.logger, idr.elasticClient, bulkTimeout, fwlogs, pushWorkers)
 					}
 				}
 			}

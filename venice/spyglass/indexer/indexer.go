@@ -26,7 +26,6 @@ import (
 	objstore "github.com/pensando/sw/venice/utils/objstore/client"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
-	vosinternalprotos "github.com/pensando/sw/venice/vos/protos"
 )
 
 /**
@@ -72,7 +71,7 @@ type Option func(*Indexer)
 // Indexer is an implementation of the indexer.Interface
 type Indexer struct {
 	sync.RWMutex
-	sync.WaitGroup
+	wg         sync.WaitGroup
 	ctx        context.Context
 	cancelFunc context.CancelFunc
 	logger     log.Logger
@@ -155,10 +154,7 @@ type Indexer struct {
 	maxWriters           int // Max concurrent writers
 	indexMaxBuffer       int
 
-	// Vos disk update watcher
-	vosDiskUpdateWatcher    vosinternalprotos.ObjstoreInternalService_WatchDiskThresholdUpdatesClient
-	numFwLogObjectsToDelete int
-	indexFwlogs             int32 // Its an int for doing atomic operation on it.
+	indexFwlogs int32 // Its an int for doing atomic operation on it.
 
 	// Whether or not to watch VOS objects
 	watchVos       bool
@@ -179,6 +175,10 @@ type Indexer struct {
 
 	// maintained per tenant
 	lastFwlogsDroppedCriticalEventRaisedTime map[string]time.Time
+
+	// vosdisk watcher
+	vosDiskWtcher           *vosDiskWatcher
+	numFwLogObjectsToDelete int
 }
 
 // WithElasticClient passes a custom client for Elastic
@@ -233,6 +233,7 @@ func NewIndexer(ctx context.Context,
 	indexer := Indexer{
 		ctx:                                      newCtx,
 		rsr:                                      rsr,
+		wg:                                       sync.WaitGroup{},
 		cancelFunc:                               cancelFunc,
 		apiServerAddr:                            apiServerAddr,
 		logger:                                   logger,
@@ -385,7 +386,7 @@ func (idr *Indexer) Start() error {
 	idr.resVersionUpdater = make([]func(), idr.maxWriters)
 
 	go func() {
-		idr.Add(1)
+		idr.wg.Add(1)
 		idr.initializeAndStartWatchers()
 	}()
 
@@ -393,9 +394,9 @@ func (idr *Indexer) Start() error {
 	k = 0
 	idr.logger.Infof("Starting ordered %d writers", idr.maxOrderedWriters)
 	for i := 0; i < idr.maxOrderedWriters; i++ {
-		idr.Add(1)
+		idr.wg.Add(1)
 		go func(id int) {
-			defer idr.Done()
+			defer idr.wg.Done()
 			idr.startOrderedWriter(id)
 		}(k)
 		k++
@@ -404,9 +405,9 @@ func (idr *Indexer) Start() error {
 	// start append only writers
 	idr.logger.Infof("Starting append only %d writers", idr.maxAppendOnlyWriters)
 	for i := 0; i < idr.maxAppendOnlyWriters; i++ {
-		idr.Add(1)
+		idr.wg.Add(1)
 		go func(id int) {
-			defer idr.Done()
+			defer idr.wg.Done()
 			// TODO: Generalize if needed. For now directly feeding fwlog parameters
 			// because append-only-writer is only working for fwlogs.
 			idr.startAppendOnlyWriter(id,
@@ -433,7 +434,7 @@ func (idr *Indexer) Start() error {
 }
 
 func (idr *Indexer) initializeAndStartWatchers() {
-	defer idr.Done()
+	defer idr.wg.Done()
 
 	if err := idr.initialize(); err != nil {
 		idr.logger.Errorf("failed to create watchers, err: %v", err)
@@ -448,7 +449,7 @@ func (idr *Indexer) initializeAndStartWatchers() {
 	idr.startWatchers()
 
 	if idr.watchVos {
-		idr.startVosDiskMonitorWatcher()
+		idr.vosDiskWtcher.startVosDiskMonitorWatcher(idr.watcherDone)
 	}
 }
 
@@ -488,7 +489,7 @@ func (idr *Indexer) restartWatchers() {
 	idr.logger.Info("Restarting watchers")
 	idr.stopWatchers()
 	go func() {
-		idr.Add(1)
+		idr.wg.Add(1)
 		idr.initializeAndStartWatchers()
 	}()
 }
@@ -502,7 +503,7 @@ func (idr *Indexer) Stop() {
 
 	idr.SetRunningStatus(false)
 	idr.cancelFunc()
-	idr.Wait() // wait for all the watchers and writers to stop (<-ctx.Done())
+	idr.wg.Wait() // wait for all the watchers and writers to stop (<-ctx.Done())
 	// close the channel where the writers were receiving the request from
 	for i := range idr.reqChan {
 		close(idr.reqChan[i])
@@ -680,9 +681,9 @@ func (idr *Indexer) refreshIndices() {
 	}
 	idr.refreshIndicesRunning = true
 	idr.logger.Infof("Launching index refresher")
-	idr.Add(1)
+	idr.wg.Add(1)
 	go func() {
-		defer idr.Done()
+		defer idr.wg.Done()
 		query := func() {
 			idr.logger.Debugf("Executing query to keep indices warm in cache")
 			idr.elasticClient.Search(idr.ctx,
@@ -843,9 +844,9 @@ func (idr *Indexer) persistLastProcessedkeys() error {
 	}
 
 	client := result.(objstore.Client)
-	idr.Add(1)
+	idr.wg.Add(1)
 	go func() {
-		defer idr.Done()
+		defer idr.wg.Done()
 		for {
 			select {
 			case <-idr.ctx.Done():

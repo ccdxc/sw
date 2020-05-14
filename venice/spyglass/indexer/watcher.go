@@ -131,7 +131,14 @@ func (idr *Indexer) createWatchers() error {
 			}
 		}
 
-		err = idr.createVosDiskMonitorWatcher()
+		idr.vosDiskWtcher, err = newVosDiskWatcher(idr.ctx,
+			&idr.wg,
+			idr.logger,
+			idr.numFwLogObjectsToDelete,
+			idr.vosInternalClient,
+			idr.elasticClient,
+			idr.vosFwLogsHTTPClient)
+
 		if err != nil {
 			// Stop existing watchers
 			idr.stopWatchersHelper()
@@ -170,10 +177,10 @@ func (idr *Indexer) addWatcher(key string, watch kvstore.Watcher, err error) err
 func (idr *Indexer) startWatchers() {
 	idr.logger.Info("Starting watchers")
 	activateIndices := false
-	idr.Add(1)
+	idr.wg.Add(1)
 	go func() {
 
-		defer idr.Done()
+		defer idr.wg.Done()
 
 		// The following code snippet performs Select on a slice of channels
 		// Initialize the SelectCase slice, with one channel per Kind and
@@ -560,8 +567,8 @@ func (idr *Indexer) stopWatchersHelper() {
 			}
 			idr.watchers[key] = nil
 		}
-		if idr.vosDiskUpdateWatcher != nil {
-			idr.vosDiskUpdateWatcher.CloseSend()
+		if idr.vosDiskWtcher != nil {
+			idr.vosDiskWtcher.StopWatchers()
 		}
 		idr.watchers = nil
 		idr.channels = nil
