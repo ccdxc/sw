@@ -121,8 +121,10 @@ portmap_foreach_port(portmap_cb_t callbackf, void *arg)
     uint32_t portmask = portmap_portmask();
     int port;
 
-    for (port = 0; portmask && (portmask & (1 << port)); port++) {
-        callbackf(port, arg);
+    for (port = 0; portmask; port++) {
+        if (portmask & (1 << port)) {
+            callbackf(port, arg);
+        }
         portmask &= ~(1 << port);
     }
 }
@@ -133,8 +135,10 @@ portmap_foreach_host(portmap_cb_t callbackf, void *arg)
     uint32_t hostmask = portmap_hostmask();
     int host;
 
-    for (host = 0; hostmask && (hostmask & (1 << host)); host++) {
-        callbackf(host, arg);
+    for (host = 0; hostmask; host++) {
+        if (hostmask & (1 << host)) {
+            callbackf(host, arg);
+        }
         hostmask &= ~(1 << host);
     }
 }

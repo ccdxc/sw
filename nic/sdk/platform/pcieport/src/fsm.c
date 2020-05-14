@@ -355,7 +355,7 @@ fsm_table[PCIEPORTST_MAX][PCIEPORTEV_MAX] = {
      *                      |    |    |    |    BUSCHG
      *                      |    |    |    |    |    OFF
      *                      |    |    |    |    |    |   */
-    [PCIEPORTST_OFF]    = { NOP, MCU, NOP, INV, NOP, NOP },
+    [PCIEPORTST_OFF]    = { NOP, MCU, NOP, INV, NOP, OFF },
     [PCIEPORTST_DOWN]   = { NOP, MCU, NOP, INV, NOP, OFF },
     [PCIEPORTST_MACUP]  = { MCD, INV, NOP, LKU, NOP, MUO },
     [PCIEPORTST_LINKUP] = { LMD, INV, LKD, NOP, UP_, LUO },

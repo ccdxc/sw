@@ -69,10 +69,10 @@ pcieportpd_hostconfig(pcieport_t *p, const pciemgr_params_t *params)
 {
     switch (p->cap_width) {
     case  1: /* x1 uses 2 lanes */
-    case  2: p->lanemask = 0x0003 << (p->port << 0); break;
-    case  4: p->lanemask = 0x000f << (p->port << 1); break;
-    case  8: p->lanemask = 0x00ff << (p->port << 2); break;
-    case 16: p->lanemask = 0xffff << (p->port << 4); break;
+    case  2: p->lanemask = 0x0003 << (p->port * 2); break;
+    case  4: p->lanemask = 0x000f << (p->port * 2); break;
+    case  8: p->lanemask = 0x00ff << (p->port * 2); break;
+    case 16: p->lanemask = 0xffff << (p->port * 2); break;
     }
 
     return 0;
