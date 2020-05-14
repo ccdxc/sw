@@ -77,7 +77,7 @@ asic_do_read (thread *curr_thread, uint8_t opn, uint64_t addr,
     }
 
     if (g_asicrw_workq[qid].nentries >= ASICRW_Q_SIZE) {
-        SDK_TRACE_ERR("asic read operation failed, tid %u, addr 0x%llx, "
+        SDK_TRACE_ERR("asic read operation failed, tid %u, addr 0x%lx, "
                       "data %p, len %u", qid, addr, data, len);
         return SDK_RET_HW_PROGRAM_ERR;
     }
@@ -129,7 +129,7 @@ asic_reg_read (uint64_t addr, uint32_t *data, uint32_t num_words,
     }
 
     if (rc != SDK_RET_OK) {
-        SDK_TRACE_ERR("Error reading reg addr 0x%llx", addr);
+        SDK_TRACE_ERR("Error reading reg addr 0x%lx", addr);
         SDK_ASSERT(0);
     }
 
@@ -160,7 +160,7 @@ asic_mem_read (uint64_t addr, uint8_t *data, uint32_t len, bool read_thru)
     }
 
     if (rc != SDK_RET_OK) {
-        SDK_TRACE_ERR("Error reading mem addr 0x%llx data %p", addr, data);
+        SDK_TRACE_ERR("Error reading mem addr 0x%lx data %p", addr, data);
     }
 
     time_profile_end(sdk::utils::time_profile::ASIC_MEM_READ);
@@ -187,7 +187,7 @@ asic_vmem_read (mem_addr_t addr, uint8_t *data, uint32_t len, bool read_thru)
     }
 
     if (rc != SDK_RET_OK) {
-        SDK_TRACE_ERR("Error reading mem addr 0x%llx data %p", addr, data);
+        SDK_TRACE_ERR("Error reading mem addr 0x%lx data %p", addr, data);
     }
 
     time_profile_end(sdk::utils::time_profile::ASIC_MEM_READ);
@@ -209,7 +209,7 @@ asic_do_write (thread *curr_thread, uint8_t opn, uint64_t addr, uint8_t *data,
     uint32_t           qid = curr_thread->thread_id();
 
     if (g_asicrw_workq[qid].nentries >= ASICRW_Q_SIZE) {
-        SDK_TRACE_ERR("asic write operation failed, qid %u, addr 0x%llx, "
+        SDK_TRACE_ERR("asic write operation failed, qid %u, addr 0x%lx, "
                       "data %p, len %u", qid, addr, data, len);
         return SDK_RET_HW_PROGRAM_ERR;
     }
@@ -253,7 +253,7 @@ asic_reg_write (uint64_t addr, uint32_t *data, uint32_t num_words,
     sdk_ret_t    rc = SDK_RET_OK;
     thread       *curr_thread = sdk::lib::thread::current_thread();
 
-    //SDK_TRACE_DEBUG("addr 0x%llx, data %p, len %u, mode %u",
+    //SDK_TRACE_DEBUG("addr 0x%lx, data %p, len %u, mode %u",
                     //addr, data, num_words, mode);
     if ((mode == ASIC_WRITE_MODE_WRITE_THRU) || (g_asicrw_ready_ == false) ||
         (curr_thread == NULL)) {
@@ -268,7 +268,7 @@ asic_reg_write (uint64_t addr, uint32_t *data, uint32_t num_words,
                            addr, (uint8_t *)data, num_words, mode);
     }
     if (rc != SDK_RET_OK) {
-        SDK_TRACE_ERR("Error writing addr 0x%llx, data %u", addr, *data);
+        SDK_TRACE_ERR("Error writing addr 0x%lx, data %u", addr, *data);
         SDK_ASSERT(0);
     }
 
@@ -286,7 +286,7 @@ asic_mem_write (uint64_t addr, uint8_t *data, uint32_t len,
     thread       *curr_thread = sdk::lib::thread::current_thread();
 
     time_profile_begin(sdk::utils::time_profile::ASIC_MEM_WRITE);
-    //SDK_TRACE_DEBUG("addr 0x%llx, data %p, len %u, mode %u",
+    //SDK_TRACE_DEBUG("addr 0x%lx, data %p, len %u, mode %u",
                     //addr, data, len, mode);
     if ((mode == ASIC_WRITE_MODE_WRITE_THRU) || (g_asicrw_ready_ == false) ||
         (curr_thread == NULL)) {
@@ -301,7 +301,7 @@ asic_mem_write (uint64_t addr, uint8_t *data, uint32_t len,
                            addr, data, len, mode);
     }
     if (rc != SDK_RET_OK) {
-        SDK_TRACE_ERR("Error writing mem addr 0x%llx, data %p", addr, data);
+        SDK_TRACE_ERR("Error writing mem addr 0x%lx, data %p", addr, data);
         SDK_ASSERT(0);
     }
     time_profile_end(sdk::utils::time_profile::ASIC_MEM_WRITE);
@@ -317,7 +317,7 @@ asic_vmem_write (uint64_t addr, uint8_t *data, uint32_t len,
     thread       *curr_thread = sdk::lib::thread::current_thread();
 
     time_profile_begin(sdk::utils::time_profile::ASIC_MEM_WRITE);
-    //SDK_TRACE_DEBUG("addr 0x%llx, data %p, len %u, mode %u",
+    //SDK_TRACE_DEBUG("addr 0x%lx, data %p, len %u, mode %u",
                     //addr, data, len, mode);
     if ((mode == ASIC_WRITE_MODE_WRITE_THRU) || (g_asicrw_ready_ == false) ||
         (curr_thread == NULL)) {
@@ -331,7 +331,7 @@ asic_vmem_write (uint64_t addr, uint8_t *data, uint32_t len,
                            addr, data, len, mode);
     }
     if (rc != SDK_RET_OK) {
-        SDK_TRACE_ERR("Error writing mem addr 0x%llx, data %p", addr, data);
+        SDK_TRACE_ERR("Error writing mem addr 0x%lx, data %p", addr, data);
         SDK_ASSERT(0);
     }
     time_profile_end(sdk::utils::time_profile::ASIC_MEM_WRITE);
@@ -348,7 +348,7 @@ asic_ring_doorbell (uint64_t addr, uint64_t data, asic_write_mode_t mode)
     sdk_ret_t    rc = SDK_RET_OK;
     thread       *curr_thread = sdk::lib::thread::current_thread();
 
-    //SDK_TRACE_DEBUG("addr 0x%llx, data %llx, mode %u", addr, data, mode);
+    //SDK_TRACE_DEBUG("addr 0x%lx, data %lx, mode %u", addr, data, mode);
     if ((mode == ASIC_WRITE_MODE_WRITE_THRU) || (g_asicrw_ready_ == false) ||
         (curr_thread == NULL)) {
         // bypass asicrw thread
@@ -360,7 +360,7 @@ asic_ring_doorbell (uint64_t addr, uint64_t data, asic_write_mode_t mode)
                            addr, (uint8_t *)&data, sizeof(data), mode);
     }
     if (rc != SDK_RET_OK) {
-        SDK_TRACE_ERR("Error ringing doorbell addr 0x%llx, data 0x%llx",
+        SDK_TRACE_ERR("Error ringing doorbell addr 0x%lx, data 0x%lx",
                        addr, data);
         SDK_ASSERT(0);
     }

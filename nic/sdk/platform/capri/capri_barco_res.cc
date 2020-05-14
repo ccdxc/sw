@@ -129,7 +129,7 @@ capri_barco_obj_alloc(capri_barco_resources_t *capri_barco_res,
     if (res)
         *res = lres;
 
-    SDK_TRACE_DEBUG("%s: Allocated 0x%llx @ index:%d",
+    SDK_TRACE_DEBUG("%s: Allocated 0x%lx @ index %u",
             capri_barco_res->allocator_name, lres, idx);
 
     return SDK_RET_OK;
@@ -175,9 +175,9 @@ capri_barco_obj_free(capri_barco_resources_t *capri_barco_res, uint64_t res)
     if ((res < capri_barco_res->hbm_region) ||
         (res > (capri_barco_res->hbm_region + capri_barco_res->hbm_region_size -
                         capri_barco_res->obj_size))) {
-        SDK_TRACE_ERR("%s: Invalid descriptor address: 0x%llx",
+        SDK_TRACE_ERR("%s: Invalid descriptor address 0x%lx",
                       capri_barco_res->allocator_name, res);
-        SDK_TRACE_ERR("HBM Region: 0x%llx, Region Size: %d, Obj Size: %d",
+        SDK_TRACE_ERR("HBM Region 0x%lx, Region Size %u, Obj Size %u",
                       capri_barco_res->hbm_region,
                       capri_barco_res->hbm_region_size,
                       capri_barco_res->obj_size);
@@ -302,7 +302,7 @@ capri_barco_res_allocator_init(void)
         capri_barco_resources[idx].hbm_region_size = region_size;
         capri_barco_resources[idx].idxer =
             barco_indexers[(capri_barco_res_type_t)idx];
-        SDK_TRACE_DEBUG("Setting up %d %s @ 0x%llx",
+        SDK_TRACE_DEBUG("Setting up %u %s @ 0x%lx",
                         capri_barco_resources[idx].obj_count,
                         capri_barco_resources[idx].allocator_name,
                         region);

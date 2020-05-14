@@ -99,7 +99,7 @@ nexthop_group_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
         // reserve an entry in NEXTHOP_GROUP table
         ret = nexthop_group_impl_db()->nhgroup_idxr()->alloc(&idx);
         if (ret != SDK_RET_OK) {
-            PDS_TRACE_ERR("Failed to reserve an entry in ECMP table, ",
+            PDS_TRACE_ERR("Failed to reserve an entry in ECMP table, "
                           "for nexthop group %s, err %u", spec->key.str(), ret);
             return ret;
         }
@@ -438,8 +438,8 @@ nexthop_group_impl::restore_resources(obj_info_t *info) {
 
     ret = nexthop_group_impl_db()->nhgroup_idxr()->alloc(status->hw_id);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to restore an entry in ECMP table, ",
-                      "for nexthop group %u, err %u", spec->key.id, ret);
+        PDS_TRACE_ERR("Failed to restore an entry in ECMP table, "
+                      "for nexthop group %s, err %u", spec->key.str(), ret);
         return ret;
     }
     hw_id_ = status->hw_id;
@@ -449,7 +449,7 @@ nexthop_group_impl::restore_resources(obj_info_t *info) {
                                                             spec->num_nexthops);
             if (ret != SDK_RET_OK) {
                 PDS_TRACE_ERR("Failed to restore %u entries in "
-                              "NEXTHOP table for nexthop group %u, "
+                              "NEXTHOP table for nexthop group %s, "
                               "err %u", spec->num_nexthops,
                               spec->key.str(), ret);
                 goto error;

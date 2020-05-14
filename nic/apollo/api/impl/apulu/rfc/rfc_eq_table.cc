@@ -494,7 +494,7 @@ rfc_p1_action_data_flush (mem_addr_t addr, void *actiondata)
     sdk_ret_t                        ret;
     rfc_p1_actiondata_t    *action_data;
 
-    PDS_TRACE_DEBUG("Flushing action data to 0x%llx", addr);
+    PDS_TRACE_DEBUG("Flushing action data to 0x%lx", addr);
     action_data = (rfc_p1_actiondata_t *)actiondata;
     ret = impl_base::pipeline_impl()->write_to_txdma_table(addr,
                                    P4_P4PLUS_TXDMA_TBL_ID_RFC_P1,
@@ -517,7 +517,7 @@ rfc_p2_action_data_flush (mem_addr_t addr, void *actiondata)
     sdk_ret_t                        ret;
     rfc_p2_actiondata_t    *action_data;
 
-    PDS_TRACE_DEBUG("Flushing action data to 0x%llx", addr);
+    PDS_TRACE_DEBUG("Flushing action data to 0x%lx", addr);
     action_data = (rfc_p2_actiondata_t *)actiondata;
     ret = impl_base::pipeline_impl()->write_to_txdma_table(addr,
               P4_P4PLUS_TXDMA_TBL_ID_RFC_P2,
@@ -834,7 +834,7 @@ rfc_p3_action_data_flush (mem_addr_t addr, void *actiondata)
     sdk_ret_t               ret;
     rfc_p3_actiondata_t    *action_data;
 
-    PDS_TRACE_DEBUG("Flushing action data to 0x%llx", addr);
+    PDS_TRACE_DEBUG("Flushing action data to 0x%lx", addr);
     action_data = (rfc_p3_actiondata_t *)actiondata;
     ret = impl_base::pipeline_impl()->write_to_txdma_table(addr,
               P4_P4PLUS_TXDMA_TBL_ID_RFC_P3,

@@ -375,7 +375,8 @@ if_walk_port_get_cb (void *entry, void *ctxt)
     port_info.stats_data = stats_data;
     ret = sdk::linkmgr::port_get(intf->port_info(), &port_info);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to get port 0x%x info, err %u", intf->key(), ret);
+        PDS_TRACE_ERR("Failed to get port 0x%s info, err %u", intf->key().str(),
+                      ret);
         return false;
     }
     port_info.port_num = intf->ifindex();

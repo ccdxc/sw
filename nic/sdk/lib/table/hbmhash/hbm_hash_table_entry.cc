@@ -80,7 +80,7 @@ HbmHashTableEntry::insert(HbmHashEntry *h_entry)
     bool                is_new_fse = FALSE;
     std::map<uint32_t, HbmHashHintGroup*>::iterator itr;
 
-    SDK_TRACE_DEBUG("Hash_Table_Entry:%#x ...", get_bucket_index());
+    SDK_TRACE_DEBUG("Hash_Table_Entry %#x ...", get_bucket_index());
 
     hint_bits = get_hbm_hash()->fetch_hint_bits_(h_entry->get_hash_val());
     itr = hint_groups_map_.find(hint_bits);
@@ -97,7 +97,7 @@ HbmHashTableEntry::insert(HbmHashEntry *h_entry)
 
         rs = get_spine_entry_for_hg(fh_grp, h_entry, &is_new_fse, &fse);
         if (rs != SDK_RET_OK) {
-            SDK_TRACE_DEBUG("Failed to get spine entry. ret: %d", rs);
+            SDK_TRACE_DEBUG("Failed to get spine entry, ret %d", rs);
             return rs;
         }
 
@@ -115,7 +115,7 @@ HbmHashTableEntry::insert(HbmHashEntry *h_entry)
         // Check if we can put this new HG in the existing Spine Entry
         rs = get_spine_entry_for_new_hg(&is_new_fse, h_entry, &fse);
         if (rs != SDK_RET_OK) {
-            SDK_TRACE_DEBUG("Failed to create spine entry. ret: %d",
+            SDK_TRACE_DEBUG("Failed to create spine entry, ret %d",
                             rs);
             return rs;
         }
@@ -162,13 +162,13 @@ HbmHashTableEntry::remove(HbmHashEntry *h_entry)
     HbmHashHintGroup *hg = h_entry->get_fh_group();
     HbmHashSpineEntry *fspe = h_entry->get_eff_spine_entry();
 
-    SDK_TRACE_DEBUG("HTE: FT bits: %#x, Hint bits: %#x",
+    SDK_TRACE_DEBUG("HTE: FT bits %#x, Hint bits %#x",
                     bucket_index_,
                     hg->get_hint_bits());
 
     rs = h_entry->remove();
 
-    SDK_TRACE_DEBUG("After Removal: hg_num_fes:%d, hg_num_anchors:%d",
+    SDK_TRACE_DEBUG("After Removal: hg_num_fes %d, hg_num_anchors %d",
                     hg->get_num_hbm_hash_entries(),
                     hg->get_num_anchor_hbm_hash_entries());
     // Check if this is last in Hint group.
@@ -176,7 +176,7 @@ HbmHashTableEntry::remove(HbmHashEntry *h_entry)
         SDK_TRACE_DEBUG("hint_bits:%#x Removing hg", hg->get_hint_bits());
         remove_hg(hg);
     }
-    SDK_TRACE_DEBUG("After Removal: fspe_has_anchor:%#x, fspe_num_hgs:%d",
+    SDK_TRACE_DEBUG("After Removal: fspe_has_anchor %#x, fspe_num_hgs %d",
                     fspe->get_anchor_entry() ? true : false,
                     fspe->get_num_hgs());
     // Check if this is last in Spine entry.
@@ -254,7 +254,7 @@ HbmHashTableEntry::get_spine_entry_for_new_hg(bool *is_new,
         if (h_entry->get_recircs() == hbm_hash_->max_recircs()) {
             ret = SDK_RET_MAX_RECIRC_EXCEED;
             SDK_TRACE_ERR("Unable to install flow. #recircs "
-                          "exceeds max recircs: %d. ret: %d",
+                          "exceeds max recircs %d, ret %d",
                           hbm_hash_->max_recircs(), ret);
             return ret;
         }
@@ -281,7 +281,7 @@ HbmHashTableEntry::get_spine_entry_for_new_hg(bool *is_new,
             if (h_entry->get_recircs() == hbm_hash_->max_recircs()) {
                 ret = SDK_RET_MAX_RECIRC_EXCEED;
                 SDK_TRACE_ERR("Unable to install flow. #recircs "
-                              "exceeds max recircs: %d. ret: %d",
+                              "exceeds max recircs %d, ret %d",
                               hbm_hash_->max_recircs(), ret);
                 return ret;
             }
@@ -484,7 +484,7 @@ HbmHashTableEntry::print_hbm_hash_table_entries()
         sp_entry = sp_entry->get_next();
     }
 
-    SDK_TRACE_DEBUG("Total Num_HGs:%d", hint_groups_map_.size());
+    SDK_TRACE_DEBUG("Total Num_HGs:%lu", hint_groups_map_.size());
     for (HGMap::const_iterator it = hint_groups_map_.begin();
             it != hint_groups_map_.end(); ++it) {
             hint_bits = it->first;

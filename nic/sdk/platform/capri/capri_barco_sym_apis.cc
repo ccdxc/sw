@@ -106,7 +106,7 @@ capri_barco_sym_hash_process_request (CryptoApiHashType hash_type,
                       generate ? "generate" : "verify");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG("SYM Hash %s-%s: Allocated memory for ilist DMA Descr @ 0x%llx",
+    SDK_TRACE_DEBUG("SYM Hash %s-%s: Allocated memory for ilist DMA Descr @ 0x%lx",
                     CryptoApiHashType_Name(hash_type),
                     generate ? "generate" : "verify", ilist_msg_descr_addr);
 
@@ -118,7 +118,7 @@ capri_barco_sym_hash_process_request (CryptoApiHashType hash_type,
                       generate ? "generate" : "verify");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG("SYM Hash %s-%s: Allocated memory for input mem @ 0x%llx",
+    SDK_TRACE_DEBUG("SYM Hash %s-%s: Allocated memory for input mem @ 0x%lx",
                     CryptoApiHashType_Name(hash_type),
                     generate ? "generate" : "verify", ilist_mem_addr);
 
@@ -130,7 +130,7 @@ capri_barco_sym_hash_process_request (CryptoApiHashType hash_type,
                       generate ? "generate" : "verify");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG("SYM Hash %s-%s: Allocated memory for auth-tag mem @ 0x%llx",
+    SDK_TRACE_DEBUG("SYM Hash %s-%s: Allocated memory for auth-tag mem @ 0x%lx",
                     CryptoApiHashType_Name(hash_type),
                     generate ? "generate" : "verify", auth_tag_mem_addr);
 
@@ -142,7 +142,7 @@ capri_barco_sym_hash_process_request (CryptoApiHashType hash_type,
                       generate ? "generate" : "verify");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG("SYM Hash %s-%s: Allocated memory for status mem @ 0x%llx",
+    SDK_TRACE_DEBUG("SYM Hash %s-%s: Allocated memory for status mem @ 0x%lx",
                     CryptoApiHashType_Name(hash_type),
                     generate ? "generate" : "verify", status_addr);
     if (key_len) {
@@ -173,7 +173,7 @@ capri_barco_sym_hash_process_request (CryptoApiHashType hash_type,
     /* Copy the data input to the ilist memory */
     curr_ptr = ilist_mem_addr;
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)data, data_len)) {
-        SDK_TRACE_ERR("SYM Hash %s-%s: Failed to write data bytes into ilist memory @ 0x%llx",
+        SDK_TRACE_ERR("SYM Hash %s-%s: Failed to write data bytes into ilist memory @ 0x%lx",
                       CryptoApiHashType_Name(hash_type),
                       generate ? "generate" : "verify", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
@@ -207,7 +207,7 @@ capri_barco_sym_hash_process_request (CryptoApiHashType hash_type,
             }
 
             if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)sha3_pad, sha3_pad_len)) {
-                SDK_TRACE_ERR("SYM Hash %s-%s: Failed to write SHA3 pad bytes into ilist memory @ 0x%llx",
+                SDK_TRACE_ERR("SYM Hash %s-%s: Failed to write SHA3 pad bytes into ilist memory @ 0x%lx",
                               CryptoApiHashType_Name(hash_type),
                               generate ? "generate" : "verify",
                               (uint64_t) curr_ptr);
@@ -237,7 +237,7 @@ capri_barco_sym_hash_process_request (CryptoApiHashType hash_type,
     if (sdk::asic::asic_mem_write(ilist_msg_descr_addr,
                                   (uint8_t*)&ilist_msg_descr,
                                   sizeof(ilist_msg_descr))) {
-        SDK_TRACE_ERR("SYM Hash %s-%s: Failed to write ilist MSG Descr @ 0x%llx",
+        SDK_TRACE_ERR("SYM Hash %s-%s: Failed to write ilist MSG Descr @ 0x%lx",
                       CryptoApiHashType_Name(hash_type),
                       generate ? "generate" : "verify",
                       (uint64_t) ilist_msg_descr_addr);
@@ -252,7 +252,7 @@ capri_barco_sym_hash_process_request (CryptoApiHashType hash_type,
     if (!generate) {
         if (sdk::asic::asic_mem_write(auth_tag_mem_addr, (uint8_t*)digest,
                                       digest_len)) {
-        SDK_TRACE_ERR("SYM Hash %s-%s: Failed to write input digest @ 0x%llx",
+        SDK_TRACE_ERR("SYM Hash %s-%s: Failed to write input digest @ 0x%lx",
                       CryptoApiHashType_Name(hash_type),
                       generate ? "generate" : "verify",
                       (uint64_t) auth_tag_mem_addr);
@@ -265,7 +265,7 @@ capri_barco_sym_hash_process_request (CryptoApiHashType hash_type,
      */
         if (sdk::asic::asic_mem_write(status_addr, (uint8_t*)&status,
                                       sizeof(status))) {
-        SDK_TRACE_ERR("SYM Hash %s-%s: Failed to initialize status value @ 0x%llx",
+        SDK_TRACE_ERR("SYM Hash %s-%s: Failed to initialize status value @ 0x%lx",
                       CryptoApiHashType_Name(hash_type),
                       generate ? "generate" : "verify",
                       (uint64_t) status_addr);
@@ -397,7 +397,7 @@ capri_barco_sym_hash_process_request (CryptoApiHashType hash_type,
     if (generate) {
         if (sdk::asic::asic_mem_read(auth_tag_mem_addr, (uint8_t*)digest,
                                      digest_len)) {
-            SDK_TRACE_ERR("SYM Hash %s-%s: Failed to read output digest at Auth-tag addr @ 0x%llx",
+            SDK_TRACE_ERR("SYM Hash %s-%s: Failed to read output digest at Auth-tag addr @ 0x%lx",
                           CryptoApiHashType_Name(hash_type),
                           generate ? "generate" : "verify",
                           (uint64_t) auth_tag_mem_addr);
@@ -408,14 +408,14 @@ capri_barco_sym_hash_process_request (CryptoApiHashType hash_type,
     } else {
         if (sdk::asic::asic_mem_read(status_addr, (uint8_t*)&status,
                                      sizeof(uint64_t))){
-            SDK_TRACE_ERR("SYM Hash %s-%s: Failed to read status at Status addr @ 0x%llx",
+            SDK_TRACE_ERR("SYM Hash %s-%s: Failed to read status at Status addr @ 0x%lx",
                           CryptoApiHashType_Name(hash_type),
                           generate ? "generate" : "verify",
                           (uint64_t) status_addr);
             ret = SDK_RET_INVALID_ARG;
             goto cleanup;
         }
-        SDK_TRACE_DEBUG("SYM Hash %s-%s:  Verify - got STATUS 0x%llx-%s from barco",
+        SDK_TRACE_DEBUG("SYM Hash %s-%s:  Verify - got STATUS 0x%lx-%s from barco",
                         CryptoApiHashType_Name(hash_type),
                         generate ? "generate" : "verify",
                         status, barco_symm_err_status_str(status));
@@ -425,7 +425,7 @@ cleanup:
     if (status_addr) {
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B, status_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("SYM Hash %s-%s: Failed to free memory for status addr content:0x%llx",
+            SDK_TRACE_ERR("SYM Hash %s-%s: Failed to free memory for status addr content:0x%lx",
                           CryptoApiHashType_Name(hash_type),
                           generate ? "generate" : "verify", status_addr);
         }
@@ -435,7 +435,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                    auth_tag_mem_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("SYM Hash %s-%s: Failed to free memory for auth-tag addr content:0x%llx",
+            SDK_TRACE_ERR("SYM Hash %s-%s: Failed to free memory for auth-tag addr content:0x%lx",
                           CryptoApiHashType_Name(hash_type),
                           generate ? "generate" : "verify", auth_tag_mem_addr);
         }
@@ -445,7 +445,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512KB,
                                    ilist_mem_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("SYM Hash %s-%s: Failed to free memory for ilist content:0x%llx",
+            SDK_TRACE_ERR("SYM Hash %s-%s: Failed to free memory for ilist content:0x%lx",
                           CryptoApiHashType_Name(hash_type),
                           generate ? "generate" : "verify", ilist_mem_addr);
         }
@@ -455,7 +455,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_SYM_MSG_DESCR,
                                    ilist_msg_descr_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("SYM Hash %s-%s: Failed to free memory for ilist MSG Descr:0x%llx",
+            SDK_TRACE_ERR("SYM Hash %s-%s: Failed to free memory for ilist MSG Descr:0x%lx",
                           CryptoApiHashType_Name(hash_type),
                           generate ? "generate" : "verify",
                           ilist_msg_descr_addr);
@@ -465,7 +465,7 @@ cleanup:
     if (hmac_key_descr_idx != -1) {
         ret = capri_barco_sym_free_key(hmac_key_descr_idx);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("SYM Hash %s-%s: Failed to free key descriptor @ 0x%llx",
+            SDK_TRACE_ERR("SYM Hash %s-%s: Failed to free key descriptor @ %d",
                           CryptoApiHashType_Name(hash_type),
                           generate ? "generate" : "verify", hmac_key_descr_idx);
         }
@@ -524,7 +524,7 @@ capri_barco_sym_aes_encrypt_process_request (capri_barco_symm_enctype_e enc_type
                       encrypt ? "encrypt" : "decrypt");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG("SYMM Encrypt %s-%s: Allocated memory for ilist DMA Descr @ 0x%llx",
+    SDK_TRACE_DEBUG("SYMM Encrypt %s-%s: Allocated memory for ilist DMA Descr @ 0x%lx",
                     capri_barco_symm_enctype_name(enc_type),
                     encrypt ? "encrypt" : "decrypt",
                     ilist_msg_descr_addr);
@@ -537,7 +537,7 @@ capri_barco_sym_aes_encrypt_process_request (capri_barco_symm_enctype_e enc_type
                       encrypt ? "encrypt" : "decrypt");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG("SYMM Encrypt %s-%s: Allocated memory for input mem @ 0x%llx",
+    SDK_TRACE_DEBUG("SYMM Encrypt %s-%s: Allocated memory for input mem @ 0x%lx",
                     capri_barco_symm_enctype_name(enc_type),
                     encrypt ? "encrypt" : "decrypt", ilist_mem_addr);
 
@@ -550,7 +550,7 @@ capri_barco_sym_aes_encrypt_process_request (capri_barco_symm_enctype_e enc_type
                       encrypt ? "encrypt" : "decrypt");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG("SYMM Encrypt %s-%s: Allocated memory for olist DMA Descr @ 0x%llx",
+    SDK_TRACE_DEBUG("SYMM Encrypt %s-%s: Allocated memory for olist DMA Descr @ 0x%lx",
                     capri_barco_symm_enctype_name(enc_type),
                     encrypt ? "encrypt" : "decrypt", olist_msg_descr_addr);
 
@@ -562,7 +562,7 @@ capri_barco_sym_aes_encrypt_process_request (capri_barco_symm_enctype_e enc_type
                       encrypt ? "encrypt" : "decrypt");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG("SYMM Encrypt %s-%s: Allocated memory for output mem @ 0x%llx",
+    SDK_TRACE_DEBUG("SYMM Encrypt %s-%s: Allocated memory for output mem @ 0x%lx",
                     capri_barco_symm_enctype_name(enc_type),
                     encrypt ? "encrypt" : "decrypt",
                     olist_mem_addr);
@@ -575,7 +575,7 @@ capri_barco_sym_aes_encrypt_process_request (capri_barco_symm_enctype_e enc_type
                       encrypt ? "encrypt" : "decrypt");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG("SYMM Encrypt %s-%s: Allocated memory for IV content @ 0x%llx",
+    SDK_TRACE_DEBUG("SYMM Encrypt %s-%s: Allocated memory for IV content @ 0x%lx",
                     capri_barco_symm_enctype_name(enc_type),
                     encrypt ? "encrypt" : "decrypt",
                     iv_addr);
@@ -588,7 +588,7 @@ capri_barco_sym_aes_encrypt_process_request (capri_barco_symm_enctype_e enc_type
                       encrypt ? "encrypt" : "decrypt");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG("SYMM Encrypt %s-%s: Allocated memory for auth-tag mem @ 0x%llx",
+    SDK_TRACE_DEBUG("SYMM Encrypt %s-%s: Allocated memory for auth-tag mem @ 0x%lx",
                     capri_barco_symm_enctype_name(enc_type),
                     encrypt ? "encrypt" : "decrypt", auth_tag_mem_addr);
 
@@ -600,7 +600,7 @@ capri_barco_sym_aes_encrypt_process_request (capri_barco_symm_enctype_e enc_type
                       encrypt ? "encrypt" : "decrypt");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG("SYMM Encrypt %s-%s: Allocated memory for status mem @ 0x%llx",
+    SDK_TRACE_DEBUG("SYMM Encrypt %s-%s: Allocated memory for status mem @ 0x%lx",
                     capri_barco_symm_enctype_name(enc_type),
                     encrypt ? "encrypt" : "decrypt", status_addr);
 
@@ -614,19 +614,19 @@ capri_barco_sym_aes_encrypt_process_request (capri_barco_symm_enctype_e enc_type
             goto cleanup;
         }
 
-        SDK_TRACE_DEBUG("SYMM Encrypt %s-%s: Allocated AES128 Key Descr @ 0x%llx",
+        SDK_TRACE_DEBUG("SYMM Encrypt %s-%s: Allocated AES128 Key Descr @ %d",
                         capri_barco_symm_enctype_name(enc_type),
                         encrypt ? "encrypt" : "decrypt", aes_key_descr_idx);
 
         ret = capri_barco_setup_key(aes_key_descr_idx, CRYPTO_KEY_TYPE_AES256,
                                     (uint8_t *)key, (uint32_t) key_len);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to write AES Key @ 0x%llx",
+            SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to write AES Key @ %d",
                           capri_barco_symm_enctype_name(enc_type),
                           encrypt ? "encrypt" : "decrypt", aes_key_descr_idx);
             goto cleanup;
         }
-        SDK_TRACE_DEBUG("SYMM Encrypt %s-%s: Setup AES Key @ 0x%llx",
+        SDK_TRACE_DEBUG("SYMM Encrypt %s-%s: Setup AES Key @ %d",
                         capri_barco_symm_enctype_name(enc_type),
                         encrypt ? "encrypt" : "decrypt",
                         aes_key_descr_idx);
@@ -655,7 +655,7 @@ capri_barco_sym_aes_encrypt_process_request (capri_barco_symm_enctype_e enc_type
 
         if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)ccm_header,
                                       sizeof(ccm_header))) {
-            SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to write header bytes into ilist memory @ 0x%llx",
+            SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to write header bytes into ilist memory @ 0x%lx",
                           capri_barco_symm_enctype_name(enc_type),
                           encrypt ? "encrypt" : "decrypt", (uint64_t) curr_ptr);
             ret = SDK_RET_INVALID_ARG;
@@ -664,7 +664,7 @@ capri_barco_sym_aes_encrypt_process_request (capri_barco_symm_enctype_e enc_type
         header_len = TLS_AES_CCM_HEADER_SIZE;
     } else {
         if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)header, header_len)) {
-            SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to write header bytes into ilist memory @ 0x%llx",
+            SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to write header bytes into ilist memory @ 0x%lx",
                           capri_barco_symm_enctype_name(enc_type),
                           encrypt ? "encrypt" : "decrypt",
                           (uint64_t) curr_ptr);
@@ -678,7 +678,7 @@ capri_barco_sym_aes_encrypt_process_request (capri_barco_symm_enctype_e enc_type
     if (encrypt) {
         if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)plaintext,
                                       plaintext_len)) {
-            SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to write plaintext bytes into ilist memory @ 0x%llx",
+            SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to write plaintext bytes into ilist memory @ 0x%lx",
                           capri_barco_symm_enctype_name(enc_type),
                           encrypt ? "encrypt" : "decrypt",
                           (uint64_t) curr_ptr);
@@ -687,7 +687,7 @@ capri_barco_sym_aes_encrypt_process_request (capri_barco_symm_enctype_e enc_type
         }
     } else {
         if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)ciphertext, ciphertext_len)) {
-            SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to write ciphertext bytes into ilist memory @ 0x%llx",
+            SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to write ciphertext bytes into ilist memory @ 0x%lx",
                           capri_barco_symm_enctype_name(enc_type),
                           encrypt ? "encrypt" : "decrypt",
                           (uint64_t) curr_ptr);
@@ -698,7 +698,7 @@ capri_barco_sym_aes_encrypt_process_request (capri_barco_symm_enctype_e enc_type
 
     /* Copy the IV content */
     if (sdk::asic::asic_mem_write(iv_addr, (uint8_t*)iv, iv_len)) {
-        SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to write IV bytes into ilist memory @ 0x%llx",
+        SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to write IV bytes into ilist memory @ 0x%lx",
                       capri_barco_symm_enctype_name(enc_type),
                       encrypt ? "encrypt" : "decrypt", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
@@ -722,7 +722,7 @@ capri_barco_sym_aes_encrypt_process_request (capri_barco_symm_enctype_e enc_type
     if (sdk::asic::asic_mem_write(ilist_msg_descr_addr,
                                   (uint8_t*)&ilist_msg_descr,
                                   sizeof(ilist_msg_descr))) {
-        SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to write ilist MSG Descr @ 0x%llx",
+        SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to write ilist MSG Descr @ 0x%lx",
                       capri_barco_symm_enctype_name(enc_type),
                       encrypt ? "encrypt" : "decrypt",
                       (uint64_t) ilist_msg_descr_addr);
@@ -747,7 +747,7 @@ capri_barco_sym_aes_encrypt_process_request (capri_barco_symm_enctype_e enc_type
     if (sdk::asic::asic_mem_write(olist_msg_descr_addr,
                                   (uint8_t*)&olist_msg_descr,
                                   sizeof(olist_msg_descr))) {
-        SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to write olist MSG Descr @ 0x%llx",
+        SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to write olist MSG Descr @ 0x%lx",
                       capri_barco_symm_enctype_name(enc_type),
                       encrypt ? "encrypt" : "decrypt",
                       (uint64_t) olist_msg_descr_addr);
@@ -762,7 +762,7 @@ capri_barco_sym_aes_encrypt_process_request (capri_barco_symm_enctype_e enc_type
     if (!encrypt) {
         if (sdk::asic::asic_mem_write(auth_tag_mem_addr, (uint8_t*)auth_tag,
                                       auth_tag_len)) {
-            SDK_TRACE_ERR("SYMM Decrypt %s-%s: Failed to write input auth-tag @ 0x%llx",
+            SDK_TRACE_ERR("SYMM Decrypt %s-%s: Failed to write input auth-tag @ 0x%lx",
                           capri_barco_symm_enctype_name(enc_type),
                           encrypt ? "encrypt" : "decrypt",
                           (uint64_t) auth_tag_mem_addr);
@@ -775,7 +775,7 @@ capri_barco_sym_aes_encrypt_process_request (capri_barco_symm_enctype_e enc_type
          */
         if (sdk::asic::asic_mem_write(status_addr, (uint8_t*)&status,
                                       sizeof(status))) {
-            SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to write ilist MSG Descr @ 0x%llx",
+            SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to write ilist MSG Descr @ 0x%lx",
                           capri_barco_symm_enctype_name(enc_type),
                           encrypt ? "encrypt" : "decrypt",
                           (uint64_t) ilist_msg_descr_addr);
@@ -911,7 +911,7 @@ capri_barco_sym_aes_encrypt_process_request (capri_barco_symm_enctype_e enc_type
     if (encrypt) {
         if (sdk::asic::asic_mem_read(auth_tag_mem_addr, (uint8_t*)auth_tag,
                                      auth_tag_len)) {
-        SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to read output Auth-tag at addr @ 0x%llx",
+        SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to read output Auth-tag at addr @ 0x%lx",
                       capri_barco_symm_enctype_name(enc_type),
                       encrypt ? "encrypt" : "decrypt",
                       (uint64_t) auth_tag_mem_addr);
@@ -921,7 +921,7 @@ capri_barco_sym_aes_encrypt_process_request (capri_barco_symm_enctype_e enc_type
 
         if (sdk::asic::asic_mem_read(olist_mem_addr + header_len,
                                      (uint8_t*)ciphertext, ciphertext_len)) {
-        SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to read output ciphertext at addr @ 0x%llx",
+        SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to read output ciphertext at addr @ 0x%lx",
                       capri_barco_symm_enctype_name(enc_type),
                       encrypt ? "encrypt" : "decrypt",
                       (uint64_t) olist_mem_addr);
@@ -932,20 +932,20 @@ capri_barco_sym_aes_encrypt_process_request (capri_barco_symm_enctype_e enc_type
     } else {
         if (sdk::asic::asic_mem_read(status_addr,
                                      (uint8_t*)&status, sizeof(uint64_t))){
-        SDK_TRACE_ERR("SYMM Decrypt %s-%s: Failed to read status at Status addr @ 0x%llx",
+        SDK_TRACE_ERR("SYMM Decrypt %s-%s: Failed to read status at Status addr @ 0x%lx",
                       capri_barco_symm_enctype_name(enc_type),
                       encrypt ? "encrypt" : "decrypt", (uint64_t) status_addr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
-    SDK_TRACE_DEBUG("SYMM Decrypt %s-%s:  Decrypt - got STATUS 0x%llx-%s from barco",
+    SDK_TRACE_DEBUG("SYMM Decrypt %s-%s:  Decrypt - got STATUS 0x%lx-%s from barco",
                     capri_barco_symm_enctype_name(enc_type),
                     encrypt ? "encrypt" : "decrypt",
                     status, barco_symm_err_status_str(status));
 
         if (sdk::asic::asic_mem_read(olist_mem_addr + header_len,
                                      (uint8_t*)plaintext, plaintext_len)) {
-        SDK_TRACE_ERR("SYMM Decrypt %s-%s: Failed to read output decrypted plaintext @ 0x%llx",
+        SDK_TRACE_ERR("SYMM Decrypt %s-%s: Failed to read output decrypted plaintext @ 0x%lx",
                       capri_barco_symm_enctype_name(enc_type),
                       encrypt ? "encrypt" : "decrypt",
                       (uint64_t) (olist_mem_addr + header_len));
@@ -958,7 +958,7 @@ cleanup:
     if (status_addr) {
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B, status_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to free memory for status addr content:0x%llx",
+            SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to free memory for status addr content:0x%lx",
                           capri_barco_symm_enctype_name(enc_type),
                           encrypt ? "encrypt" : "decrypt", status_addr);
         }
@@ -967,7 +967,7 @@ cleanup:
     if (iv_addr) {
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B, iv_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to free memory for IV addr content:0x%llx",
+            SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to free memory for IV addr content:0x%lx",
                           capri_barco_symm_enctype_name(enc_type),
                           encrypt ? "encrypt" : "decrypt", iv_addr);
         }
@@ -977,7 +977,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                    auth_tag_mem_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to free memory for auth-tag addr content:0x%llx",
+            SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to free memory for auth-tag addr content:0x%lx",
                           capri_barco_symm_enctype_name(enc_type),
                           encrypt ? "encrypt" : "decrypt", auth_tag_mem_addr);
         }
@@ -987,7 +987,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                    olist_mem_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to free memory for olist content:0x%llx",
+            SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to free memory for olist content:0x%lx",
                           capri_barco_symm_enctype_name(enc_type),
                           encrypt ? "encrypt" : "decrypt", olist_mem_addr);
         }
@@ -996,7 +996,7 @@ cleanup:
     if (ilist_mem_addr) {
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B, ilist_mem_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to free memory for ilist content:0x%llx",
+            SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to free memory for ilist content:0x%lx",
                           capri_barco_symm_enctype_name(enc_type),
                           encrypt ? "encrypt" : "decrypt", ilist_mem_addr);
         }
@@ -1006,7 +1006,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_SYM_MSG_DESCR,
                                    olist_msg_descr_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to free memory for olist MSG Descr:0x%llx",
+            SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to free memory for olist MSG Descr:0x%lx",
                           capri_barco_symm_enctype_name(enc_type),
                           encrypt ? "encrypt" : "decrypt",
                           olist_msg_descr_addr);
@@ -1017,7 +1017,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_SYM_MSG_DESCR,
                                    ilist_msg_descr_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to free memory for ilist MSG Descr:0x%llx",
+            SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to free memory for ilist MSG Descr:0x%lx",
                           capri_barco_symm_enctype_name(enc_type),
                           encrypt ? "encrypt" : "decrypt",
                           ilist_msg_descr_addr);
@@ -1533,17 +1533,17 @@ capri_barco_init_drbg (void)
     //////////// DRBG
     rng = 0;
     rng |= (0x1 << 0); ///NDRNG
-    SDK_TRACE_DEBUG("rng = 0x%lx", rng);
+    SDK_TRACE_DEBUG("rng = 0x%x", rng);
     rng |= (0x1 << 2); ///DRNG
-    SDK_TRACE_DEBUG("rng = 0x%lx", rng);
+    SDK_TRACE_DEBUG("rng = 0x%x", rng);
     rng |= (0x80 << 4); //size
-    SDK_TRACE_DEBUG("rng = 0x%lx", rng);
+    SDK_TRACE_DEBUG("rng = 0x%x", rng);
     rng |= (0x0 << 29); ///TestDRNG
-    SDK_TRACE_DEBUG("rng = 0x%lx", rng);
+    SDK_TRACE_DEBUG("rng = 0x%x", rng);
     rng |= ((psnl_str_p_len << 3) << 16); ///PSize
-    SDK_TRACE_DEBUG("rng = 0x%lx", rng);
+    SDK_TRACE_DEBUG("rng = 0x%x", rng);
     rng |= (0x1 << 31); ///start 0
-    SDK_TRACE_DEBUG("set rng = 0x%lx", rng);
+    SDK_TRACE_DEBUG("set rng = 0x%x", rng);
     cap_drbg_set_ctl_rng(0, rng, true);
 
     SDK_TRACE_DEBUG("start polling gs");
@@ -1567,7 +1567,7 @@ capri_barco_init_drbg (void)
     rng |= (0x80 << 4); //size
     rng |= (0x0 << 29); //TestDRNG
     rng |= (0x1 << 31); //start
-    SDK_TRACE_DEBUG("set rng = 0x%llx", rng);
+    SDK_TRACE_DEBUG("set rng = 0x%x", rng);
     cap_drbg_set_ctl_rng(0, rng, true);
 
     SDK_TRACE_DEBUG("start polling gs");
@@ -1609,7 +1609,7 @@ capri_barco_setup_dummy_gcm1_req (uint32_t key_idx)
         SDK_TRACE_ERR(PRE_HDR":Failed to allocate memory for composite content");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(PRE_HDR":Allocated memory @ 0x%llx to support dummy GCM request descriptor",
+    SDK_TRACE_DEBUG(PRE_HDR":Allocated memory @ 0x%lx to support dummy GCM request descriptor",
                     mem_addr);
 
 
@@ -1656,7 +1656,7 @@ capri_barco_setup_dummy_gcm1_req (uint32_t key_idx)
     if (sdk::asic::asic_mem_write(ilist_msg_descr_addr,
                                   (uint8_t*)&ilist_msg_descr,
                                   sizeof(ilist_msg_descr))) {
-        SDK_TRACE_ERR(PRE_HDR":Failed to write ilist MSG Descr @ 0x%llx",
+        SDK_TRACE_ERR(PRE_HDR":Failed to write ilist MSG Descr @ 0x%lx",
                       (uint64_t) ilist_msg_descr_addr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -1679,7 +1679,7 @@ capri_barco_setup_dummy_gcm1_req (uint32_t key_idx)
     if (sdk::asic::asic_mem_write(olist_msg_descr_addr,
                                   (uint8_t*)&olist_msg_descr,
                                   sizeof(olist_msg_descr))) {
-        SDK_TRACE_ERR(PRE_HDR":Failed to write olist MSG Descr @ 0x%llx",
+        SDK_TRACE_ERR(PRE_HDR":Failed to write olist MSG Descr @ 0x%lx",
                       (uint64_t) olist_msg_descr_addr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -1705,7 +1705,7 @@ capri_barco_setup_dummy_gcm1_req (uint32_t key_idx)
 
         if (sdk::asic::asic_mem_write(gcm1_slot_addr, (uint8_t*)&sym_req_descr,
                     sizeof(sym_req_descr))) {
-            SDK_TRACE_ERR(PRE_HDR":Failed to write Sym req descr @ 0x%llx",
+            SDK_TRACE_ERR(PRE_HDR":Failed to write Sym req descr @ 0x%lx",
                           (uint64_t) gcm1_slot_addr);
             ret = SDK_RET_INVALID_ARG;
             goto cleanup;

@@ -149,7 +149,7 @@ mirror_impl::activate_create_(pds_epoch_t epoch, mirror_session *ms,
                 break;
             default:
                 // blackhole if some other type of lif is provided
-                PDS_TRACE_ERR("Unsupported lif type %u in mirror session %s, ",
+                PDS_TRACE_ERR("Unsupported lif type %u in mirror session %s, "
                               "blackholing mirrored traffic",
                               lif->type(), spec->key.str());
                 mirror_data.lspan_action.nexthop_type = NEXTHOP_TYPE_NEXTHOP;

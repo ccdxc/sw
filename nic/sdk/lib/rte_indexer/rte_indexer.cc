@@ -171,7 +171,7 @@ rte_indexer::init_(uint32_t size, bool thread_safe, bool skip_zero) {
             this->set_curr_slab_(indx);
         }
     }
-    SDK_TRACE_VERBOSE("Indexer %p slab %lx current index %u usage %u",
+    SDK_TRACE_VERBOSE("Indexer %p slab %lx current index %lu usage %lu",
                       (void *)INDEXER, this->curr_slab_, this->curr_index_, usage_);
     if (rs != SDK_RET_OK)
         return false;
@@ -225,7 +225,7 @@ rte_indexer::alloc(uint32_t *index) {
     this->curr_index_ = nextpos;
     this->set_curr_slab_(this->curr_index_);
     usage_++;
-    SDK_TRACE_VERBOSE("Indexer %p Allocated idx %u and slab %lx curr index %u usage %u",
+    SDK_TRACE_VERBOSE("Indexer %p Allocated idx %u and slab %lx curr index %lu usage %lu",
                       (void*)INDEXER, *index, (long)this->curr_slab_, this->curr_index_, usage_);
 end:
     if (thread_safe_) {

@@ -30,7 +30,8 @@ enum sdk_trace_level_e {
 class logger {
 public:
     typedef int (*trace_cb_t)(uint32_t mod_id, sdk_trace_level_e trace_level,
-                              const char *format, ...);
+                              const char *format, ...)
+                              __attribute__((format (printf, 3, 4)));
     static void init(trace_cb_t trace_cb);
     static trace_cb_t trace_cb(void) {
         return trace_cb_ ? trace_cb_ : null_logger_;

@@ -278,7 +278,7 @@ void hals_ecmp_t::make_pds_underlay_nhgroup_spec_
     // in hardware. If the actual number of nexthops is lesser we need to repeat to
     // fill up space.
     auto max_num_nh = ips_info_.ips->max_num_next_hop_objects;
-    PDS_TRACE_DEBUG("Underlay Direct Pathset %d,  Max NH# %d Cur NH# %d",
+    PDS_TRACE_DEBUG("Underlay Direct Pathset %u,  Max NH# %u Cur NH# %lu",
                     ips_info_.pathset_id, max_num_nh, ips_info_.nexthops.size());
 
     // Max NH allowed is 2 for underlay. Going beyond this requires complicated logic
@@ -316,7 +316,7 @@ void hals_ecmp_t::make_pds_underlay_nhgroup_spec_
 
             memcpy(nhgroup_spec.nexthops[i].underlay_mac, nh.mac_addr.m_mac,
                    ETH_ADDR_LEN);
-            PDS_TRACE_DEBUG("Underlay Direct Pathset %ld add NH MSIfIndex 0x%lx PDSIf"
+            PDS_TRACE_DEBUG("Underlay Direct Pathset %u add NH MSIfIndex 0x%x PDSIf"
                             " UUID %s MAC %s",
                             ips_info_.pathset_id, nh.ms_ifindex,
                             nhgroup_spec.nexthops[i].l3_if.str(),
@@ -352,7 +352,7 @@ void hals_ecmp_t::make_pds_overlay_nhgroup_spec_
             // TODO: Assuming that the same {TEP, VNI} will not advertise
             // multiple Router MACs. Hence blindly overwriting existing MAC
             if (is_mac_set(dmaci)) {
-                PDS_TRACE_ERR("!! Overwriting Router MAC address for TEP %s VNI %s"
+                PDS_TRACE_ERR("!! Overwriting Router MAC address for TEP %s VNI %u"
                               " L3 VXLAN Port 0x%x from %s to %s - UNDEFINED BEHAVIOR !!!",
                               ipaddr2str(&vxp_prop.tep_ip), vxp_prop.vni,
                               vxp_prop.ifindex, macaddr2str(dmaci),
@@ -362,7 +362,7 @@ void hals_ecmp_t::make_pds_overlay_nhgroup_spec_
             li_vxlan_port vxp;
             vxp.add_pds_tep_spec(store_info_.bctxt, state_ctxt.state(),
                                  vxp_if_obj, tep_obj, false /* Op Update */);
-            PDS_TRACE_DEBUG("Setting DMAC for Type5 TEP %s VNI %d L3 VXLAN Port"
+            PDS_TRACE_DEBUG("Setting DMAC for Type5 TEP %s VNI %u L3 VXLAN Port"
                             " 0x%x to %s",
                             ipaddr2str(&vxp_prop.tep_ip), vxp_prop.vni,
                             vxp_prop.ifindex, macaddr2str(nh.mac_addr.m_mac));
@@ -510,12 +510,12 @@ void hals_ecmp_t::send_delete_to_hal_(state_t::context_t& state_ctxt) {
         l_underlay = false;
         ips_info_.ps_type = ps_type_e::OVERLAY;
         dp_corr = store_info_.pathset_obj->hal_oecmp_idx_guard->idx();
-        PDS_TRACE_DEBUG ("Overlay Pathset %ld: Delete IPS DP Corr %d",
+        PDS_TRACE_DEBUG ("Overlay Pathset %u: Delete IPS DP Corr %d",
                          ips_info_.pathset_id, dp_corr);
     } else {
         ips_info_.ps_type = ps_type_e::DIRECT;
         dp_corr = ips_info_.pathset_id;
-        PDS_TRACE_DEBUG ("Underlay Pathset %ld: Delete IPS",
+        PDS_TRACE_DEBUG ("Underlay Pathset %u: Delete IPS",
                          ips_info_.pathset_id);
     }
 
@@ -528,7 +528,7 @@ void hals_ecmp_t::send_delete_to_hal_(state_t::context_t& state_ctxt) {
             //-----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
             //-----------------------------------------------------------------
-            PDS_TRACE_DEBUG("++++ %s Pathset %ld NHGroup %d delete %s Async reply ++++",
+            PDS_TRACE_DEBUG("++++ %s Pathset %u NHGroup %d delete %s Async reply ++++",
                             (l_underlay) ? "Underlay" : "Overlay",
                             pathset_id, dp_corr,
                             (pds_status) ? "Success" : "Failure");
@@ -549,7 +549,7 @@ void hals_ecmp_t::send_delete_to_hal_(state_t::context_t& state_ctxt) {
     if (ips_info_.ps_type == ps_type_e::OVERLAY) {
         state_ctxt.state()->pathset_store().erase(ips_info_.pathset_id);
     }
-    PDS_TRACE_DEBUG ("%s Pathset %ld delete PDS Batch commit successful",
+    PDS_TRACE_DEBUG ("%s Pathset %u delete PDS Batch commit successful",
                      (l_underlay) ? "Underlay" : "Overlay",
                      ips_info_.pathset_id);
 }
@@ -694,7 +694,7 @@ NBB_BYTE hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_
     // Direct Pathset - can be underlay or overlay
     if (ips_info_.ps_type == ps_type_e::DIRECT) {
         auto num_nexthops = ips_info_.nh_count[PDS_MS_NH_DEST_PORT];
-        PDS_TRACE_DEBUG ("Underlay Direct Pathset %ld: %s IPS Num nexthops %ld",
+        PDS_TRACE_DEBUG ("Underlay Direct Pathset %u: %s IPS Num nexthops %u",
                          ips_info_.pathset_id,
                          (op_ == op_type_e::CREATE) ? "Create" :
                          (op_ == op_type_e::DELETE) ? "Delete" : "Update",
@@ -724,10 +724,10 @@ NBB_BYTE hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_
                 // when the PDS API response is received
                 cookie_uptr_->objs.push_back(std::move(pathset_obj_uptr));
 
-                PDS_TRACE_DEBUG ("Overlay Pathset %ld: Create IPS Num nexthops %ld",
+                PDS_TRACE_DEBUG ("Overlay Pathset %u: Create IPS Num nexthops %ld",
                                  ips_info_.pathset_id, ips_info_.nexthops.size());
             } else {
-                PDS_TRACE_DEBUG ("Overlay Pathset %ld: Update IPS Num nexthops %ld",
+                PDS_TRACE_DEBUG ("Overlay Pathset %u: Update IPS Num nexthops %ld",
                                  ips_info_.pathset_id, ips_info_.nexthops.size());
             }
         }
@@ -783,7 +783,7 @@ NBB_BYTE hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_
                         NBB_CORR_GET_VALUE (dp_corr, add_upd_ecmp_ips->dp_correlator);
                     }
                 }
-                PDS_TRACE_DEBUG("++++ %s Pathset %d NHgroup %d Num NH %d Async reply"
+                PDS_TRACE_DEBUG("++++ %s Pathset %u NHgroup %u Num NH %lu Async reply"
                                 " %s ++++", (l_overlay) ? "Overlay": "Underlay",
                                 pathset_id, dp_corr, l_num_nh,
                                 (pds_status) ? "Success" : "Failure");
@@ -807,7 +807,7 @@ NBB_BYTE hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_
                         .append(std::to_string(ips_info_.pathset_id))
                         .append(" err=").append(std::to_string(ret)));
         }
-        PDS_TRACE_DEBUG ("%s Pathset %ld NHgroup %d Add/Upd PDS Batch commit successful",
+        PDS_TRACE_DEBUG ("%s Pathset %u NHgroup %d Add/Upd PDS Batch commit successful",
                          (l_overlay) ? "Overlay" : "Underlay", ips_info_.pathset_id,
                          (l_overlay) ? store_info_.pathset_obj->hal_oecmp_idx_guard->idx()
                          : pathset_id);
@@ -839,7 +839,7 @@ void hals_ecmp_t::handle_delete(NBB_CORRELATOR ms_pathset_id) {
         if (state_ctxt.state()->indirect_ps_store().
             erase(ips_info_.pathset_id)) {
             // Ignore deletes of indirect pathset
-            PDS_TRACE_DEBUG ("Indirect Pathset %ld: Delete IPS nothing to do",
+            PDS_TRACE_DEBUG ("Indirect Pathset %u: Delete IPS nothing to do",
                              ips_info_.pathset_id);
             return;
         }

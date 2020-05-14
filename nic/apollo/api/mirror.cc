@@ -71,7 +71,7 @@ mirror_session::clone(api_ctxt_t *api_ctxt) {
         }
         cloned_session->impl_ = impl_->clone();
         if (unlikely(cloned_session->impl_ == NULL)) {
-            PDS_TRACE_ERR("Failed to clone mirror session %u impl", key_.id);
+            PDS_TRACE_ERR("Failed to clone mirror session %s impl", key_.str());
             goto error;
         }
     }
@@ -150,7 +150,7 @@ mirror_session::init_config(api_ctxt_t *api_ctxt) {
         if (intf) {
             if ((intf->type() != IF_TYPE_ETH) &&
                 (intf->type() != IF_TYPE_UPLINK)) {
-                PDS_TRACE_ERR("Invalid interface type %u in RSPAN config %s, "
+                PDS_TRACE_ERR("Invalid interface type %s in RSPAN config %s, "
                               "only eth and uplink interfaces are supported",
                               spec->rspan_spec.interface.str(),
                               spec->key.str());

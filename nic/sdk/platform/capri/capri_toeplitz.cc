@@ -35,7 +35,7 @@ capri_rss_table_config (uint32_t stage, uint32_t stage_tableid,
     cap_te_csr_t *te_csr;
     int tbl_id = stage_tableid;
 
-    SDK_TRACE_DEBUG("rss_indir_table stage %u stage-tableid %u table_base %x\n",
+    SDK_TRACE_DEBUG("rss_indir_table stage %u stage-tableid %u table_base 0x%lx\n",
                     stage, tbl_id, tbl_base);
 
     te_csr = &cap0.pcr.te[stage];
@@ -84,7 +84,7 @@ capri_rss_table_config_ex (uint32_t stage, uint32_t stage_tableid,
                         (char *) ETH_RSS_INDIR_PROGRAM);
         return SDK_RET_ERR;
     }
-    SDK_TRACE_DEBUG("Resolved handle %s program %s to PC 0x%x",
+    SDK_TRACE_DEBUG("Resolved handle %s program %s to PC 0x%lx",
                     (char *) CAPRI_P4PLUS_HANDLE,
                     (char *) ETH_RSS_INDIR_PROGRAM,
                     pc);
@@ -102,7 +102,7 @@ capri_rss_table_config_ex (uint32_t stage, uint32_t stage_tableid,
     tbl_base = (tbl_base + rss_indir_tbl_total_size) &
         ~(rss_indir_tbl_total_size - 1);
 
-    SDK_TRACE_DEBUG("rss_indir_table stage %u stage-tableid %u table_base 0x%x rss_indir_tbl_entry_size %u rss_indir_tbl_size %u rss_indir_tbl_total_size %u\n",
+    SDK_TRACE_DEBUG("rss_indir_table stage %u stage-tableid %d table_base 0x%lx rss_indir_tbl_entry_size %u rss_indir_tbl_size %lu rss_indir_tbl_total_size %lu\n",
                     stage, tbl_id, tbl_base, rss_indir_tbl_entry_size,
                     rss_indir_tbl_size, rss_indir_tbl_total_size);
 
@@ -145,7 +145,7 @@ capri_rss_table_base_pc_get (const char *handle, uint64_t *tbl_base,
                         handle, (char *) ETH_RSS_INDIR_PROGRAM);
         return SDK_RET_ERR;
     }
-    SDK_TRACE_DEBUG("Resolved handle %s program %s to PC 0x%x",
+    SDK_TRACE_DEBUG("Resolved handle %s program %s to PC 0x%lx",
                     handle, (char *)ETH_RSS_INDIR_PROGRAM, *pc);
 
 

@@ -2121,7 +2121,7 @@ capri_tm_alloc_hbm_buffers (capri_tm_buf_cfg_t *buf_cfg)
     payload_chunks = control_chunks * tm_asic_profile()->hbm_fifo_control_scale_factor;
     SDK_ASSERT((payload_chunks + control_chunks) <= total_hbm_chunks);
 
-    SDK_TRACE_DEBUG("Available hbm chunks total %u payload %u control %u",
+    SDK_TRACE_DEBUG("Available hbm chunks total %lu payload %lu control %lu",
                     total_hbm_chunks, payload_chunks, control_chunks);
 
     uint64_t total_reserved_hbm_chunks = 0;
@@ -2148,8 +2148,8 @@ capri_tm_alloc_hbm_buffers (capri_tm_buf_cfg_t *buf_cfg)
     }
 
     if (payload_chunks < total_reserved_hbm_chunks) {
-        SDK_TRACE_ERR("Error allocating hbm fifo . Available chunks %u "
-                      "total reserved required %u ",
+        SDK_TRACE_ERR("Error allocating hbm fifo . Available chunks %lu "
+                      "total reserved required %lu ",
                       payload_chunks, total_reserved_hbm_chunks);
         return sdk::SDK_RET_NO_RESOURCE;
     }
@@ -2159,9 +2159,9 @@ capri_tm_alloc_hbm_buffers (capri_tm_buf_cfg_t *buf_cfg)
     //
     uint64_t payload_chunks_per_context = rem_payload_chunks/total_hbm_contexts;
 
-    SDK_TRACE_DEBUG("HBM fifo allocation total payload %u, reserved %u "
-                    "remaining %u total_contexts %u "
-                    "payload chunks per context %u",
+    SDK_TRACE_DEBUG("HBM fifo allocation total payload %lu, reserved %lu "
+                    "remaining %lu total_contexts %lu "
+                    "payload chunks per context %lu",
                     payload_chunks, total_reserved_hbm_chunks,
                     rem_payload_chunks, total_hbm_contexts, payload_chunks_per_context);
 
@@ -2184,7 +2184,7 @@ capri_tm_alloc_hbm_buffers (capri_tm_buf_cfg_t *buf_cfg)
         }
     }
     SDK_ASSERT(offset <= (control_chunks + payload_chunks));
-    SDK_TRACE_DEBUG("unallocated hbm chunks %u total %u",
+    SDK_TRACE_DEBUG("unallocated hbm chunks %lu total %lu",
                     (control_chunks + payload_chunks) - offset,
                     total_hbm_chunks);
     return sdk::SDK_RET_OK;
@@ -3014,9 +3014,9 @@ cap_pb_sched_node_alloc (int port,
                             node_cfg[node_type].node_bitmap;
 
     if (NULL == node_bitmap) {
-        SDK_TRACE_ERR("node_bitmap indexer NULL. "
-                      "port: %u, node_type: %u, index: %u",
-                      port, node_type, *index);
+        SDK_TRACE_ERR("node_bitmap indexer NULL, "
+                      "port %d, node_type %u, index %u",
+                      port, (uint32_t)node_type, *index);
         return SDK_RET_ERR;
     }
 
@@ -3027,9 +3027,9 @@ cap_pb_sched_node_alloc (int port,
     }
 
     if (status != indexer::status::SUCCESS) {
-        SDK_TRACE_ERR("Indexer allocation failed. "
-                      "port: %u, node_type: %u, index: %u",
-                      port, node_type, *index);
+        SDK_TRACE_ERR("Indexer allocation failed, "
+                      "port %d, node_type %u, index %u",
+                      port, (uint32_t)node_type, *index);
         return SDK_RET_ERR;
     }
 
@@ -3046,19 +3046,19 @@ cap_pb_sched_inputs_bitmap_free (int port,
     indexer *inputs_bitmap = pb_sched_port_cfg[port].node_cfg[node_type].
                                     input_cfg[node_index].inputs_bitmap;
     if (NULL == inputs_bitmap) {
-        SDK_TRACE_ERR("inputs_bitmap indexer NULL. "
-                      "port: %u, node_type: %u, node_index: %u",
-                      "input_index: %u",
-                      port, node_type, node_index, input_index);
+        SDK_TRACE_ERR("inputs_bitmap indexer NULL, "
+                      "port %d, node_type %u, node_index %d, "
+                      "input_index %d",
+                      port, (uint32_t)node_type, node_index, input_index);
         return SDK_RET_ERR;
     }
 
     status = inputs_bitmap->free(input_index);
     if (status != indexer::status::SUCCESS) {
-        SDK_TRACE_ERR("Indexer free failed. "
-                      "port: %u, node_type: %u, node_index: %u",
-                      "input_index: %u",
-                      port, node_type, node_index, input_index);
+        SDK_TRACE_ERR("Indexer free failed, "
+                      "port %d, node_type %u, node_index %d, "
+                      "input_index %d",
+                      port, (uint32_t)node_type, node_index, input_index);
         return SDK_RET_ERR;
     }
 
@@ -3078,10 +3078,10 @@ cap_pb_sched_inputs_bitmap_alloc (int port,
 
     indexer *inputs_bitmap = input_cfg->inputs_bitmap;
     if (NULL == inputs_bitmap) {
-        SDK_TRACE_ERR("inputs_bitmap indexer NULL. "
-                      "port: %u, node_type: %u, node_index: %u",
-                      "input_index: %u",
-                      port, node_type, node_index, *input_index);
+        SDK_TRACE_ERR("inputs_bitmap indexer NULL, "
+                      "port %d, node_type %u, node_index %d, "
+                      "input_index %u",
+                      port, (uint32_t)node_type, node_index, *input_index);
         return SDK_RET_ERR;
     }
 
@@ -3092,10 +3092,10 @@ cap_pb_sched_inputs_bitmap_alloc (int port,
     }
 
     if (status != indexer::status::SUCCESS) {
-        SDK_TRACE_ERR("Indexer alloc failed. "
-                      "port: %u, node_type: %u, node_index: %u",
-                      "input_index: %u",
-                      port, node_type, node_index, *input_index);
+        SDK_TRACE_ERR("Indexer alloc failed, "
+                      "port %d, node_type %u, node_index %d, "
+                      "input_index %u",
+                      port, (uint32_t)node_type, node_index, *input_index);
         return SDK_RET_ERR;
     }
 
@@ -3161,7 +3161,7 @@ cap_pb_sched_node_pgm (int chip_id, int inst_id, int port,
                                             input_cfg->total_weights;
 
         if (input_info->is_strict == true) {
-            SDK_TRACE_DEBUG("bypass_timer: %u, input_info->sp_rate_mbps: %u",
+            SDK_TRACE_DEBUG("bypass_timer %lu, input_info->sp_rate_mbps %lu",
                             input_info->priority_bypass_timer,
                             input_info->sp_rate_mbps);
 
@@ -3173,7 +3173,7 @@ cap_pb_sched_node_pgm (int chip_id, int inst_id, int port,
                             (CAPRI_TM_CLK_PERIOD * CAPRI_TM_BUS_WIDTH));
             }
 
-            SDK_TRACE_DEBUG("cfg_quota: %u", input_info->cfg_quota);
+            SDK_TRACE_DEBUG("cfg_quota %lu", input_info->cfg_quota);
         } else {
             input_info->cfg_quota = input_info->dwrr_ratio * CAPRI_TM_DWRR_UNIT
                                         * input_cfg->total_weights;
@@ -4653,7 +4653,7 @@ capri_tm_soft_init (sdk::lib::catalog* catalog,
     }
 
     SDK_TRACE_DEBUG("cfg-profile sw_init_en %u sw_cfg_write_en %u "
-                    "num_active_uplink_ports %u hbm_fifo_size %u hbm_fifo_base 0x%x",
+                    "num_active_uplink_ports %u hbm_fifo_size %u hbm_fifo_base 0x%lx",
                     tm_cfg_profile->sw_init_enabled,
                     tm_cfg_profile->sw_cfg_write_enabled,
                     tm_cfg_profile->num_active_uplink_ports,
@@ -4702,7 +4702,7 @@ capri_tm_init (sdk::lib::catalog* catalog,
     }
 
     SDK_TRACE_DEBUG("cfg-profile sw_init_en %u sw_cfg_write_en %u "
-                    "num_active_uplink_ports %u hbm_fifo_size %u hbm_fifo_base 0x%x",
+                    "num_active_uplink_ports %u hbm_fifo_size %u hbm_fifo_base 0x%lx",
                     tm_cfg_profile->sw_init_enabled,
                     tm_cfg_profile->sw_cfg_write_enabled,
                     tm_cfg_profile->num_active_uplink_ports,

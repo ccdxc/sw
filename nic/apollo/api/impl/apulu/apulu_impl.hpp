@@ -487,7 +487,7 @@ do {                                          \
                                          PDS_POLICER_MAX_TOKENS_PER_INTERVAL,  \
                                          &rate_tokens, &burst_tokens);         \
         SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);                           \
-        PDS_TRACE_DEBUG("burst %lu, rate %lu, tbkt %u", burst_tokens,          \
+        PDS_TRACE_DEBUG("burst %lu, rate %lu, tbkt %lu", burst_tokens,         \
                         rate_tokens, burst_tokens);                            \
         memcpy(tbl ## _data.tbl ## _info.burst, &burst_tokens,                 \
                 std::min(sizeof(tbl ## _data.tbl ## _info.burst),              \

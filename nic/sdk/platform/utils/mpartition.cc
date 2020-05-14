@@ -183,7 +183,7 @@ mpartition::upg_regions (const char *cfg_path, bool oper_table_persist) {
             }
             if (mreg->start_offset != offset || mreg->size != size) {
                 SDK_TRACE_ERR("Static region mismatch name %s, cur_offset %lx,"
-                              "new_offset %lx, cur_size %u, new_size %u",
+                              "new_offset %lx, cur_size %lu, new_size %lu",
                               reg_name.c_str(),mreg->start_offset, offset, mreg->size, size);
                 return SDK_RET_ERR;
             }
@@ -264,9 +264,9 @@ insert_common_regions (mpartition_region_t *reg, const char *name,
     reg->kind = MEM_REGION_KIND_STATIC;
 
     SDK_TRACE_DEBUG(
-        "region : %s, size : %u, block size : %u, block count : %u, "
-        "max elems : %u, reset : %u, cpipe : %s, start : 0x%" PRIx64
-        ", end : 0x%" PRIx64 "", reg->mem_reg_name, reg->size,
+        "region %s, size %lu, block size %lu, block count %lu, "
+        "max elems %u, reset %u, cpipe %s, start 0x%llx"
+        ", end 0x%llx", reg->mem_reg_name, reg->size,
         reg->block_size, reg->block_count, reg->max_elements, reg->reset,
         "none", MREGION_BASE_ADDR + offset,
         MREGION_BASE_ADDR + offset + reg->size);
@@ -392,7 +392,8 @@ mpartition::region_init(const char *mpart_json_file, shmmgr *mmgr)
         if (base_region != "null") {
             mpartition_region_t *base = region(base_region.c_str());
             if (base == NULL) {
-                SDK_TRACE_ERR("Unable to find base region %s for the region %s", base_region, reg->mem_reg_name);
+                SDK_TRACE_ERR("Unable to find base region %s for the region %s",
+                              base_region.c_str(), reg->mem_reg_name);
                 return SDK_RET_ERR;
             }
             reg->alias_index = base - &regions_[0] ;
@@ -403,16 +404,16 @@ mpartition::region_init(const char *mpart_json_file, shmmgr *mmgr)
             offset += reg->size;
         }
 
-        SDK_TRACE_DEBUG("region : %s, size : %u, block size : %u, "
-                        "block count : %u, max elements : %u, reset : %u, "
-                        "cpipe : %s, start : 0x%" PRIx64 ", end : 0x%" PRIx64 "",
+        SDK_TRACE_DEBUG("region %s, size %lu, block size %lu, "
+                        "block count %lu, max elements %u, reset %u, "
+                        "cpipe %s, start 0x%" PRIx64 ", end 0x%" PRIx64 "",
                         reg->mem_reg_name, reg->size, reg->block_size,
                         reg->block_count, reg->max_elements, reg->reset,
                         cache_pipe_name.c_str(), addr(reg->start_offset),
                         addr(reg->start_offset + reg->size));
         reg++;
     }
-    SDK_TRACE_DEBUG("Region Memory Usage %uM,%uK", offset >> 20,
+    SDK_TRACE_DEBUG("Region Memory Usage %lulM,%lulK", offset >> 20,
                     (offset - ((offset >> 20) << 20)) >> 10);
     return SDK_RET_OK;
 }

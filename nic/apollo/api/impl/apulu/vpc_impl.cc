@@ -36,7 +36,7 @@ vpc_impl::factory(pds_vpc_spec_t *spec) {
     if (spec->fabric_encap.type != PDS_ENCAP_TYPE_VXLAN) {
         PDS_TRACE_ERR("Unknown fabric encap type %u, value %u - only VxLAN "
                       "fabric encap is supported", spec->fabric_encap.type,
-                      spec->fabric_encap.val);
+                      spec->fabric_encap.val.value);
         return NULL;
     }
     impl = vpc_impl_db()->alloc();

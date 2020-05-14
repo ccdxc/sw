@@ -945,11 +945,11 @@ asicpd_p4p_rxdma_mpu_trace_enable (uint32_t stage_id, uint32_t mpu,
 {
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
 
-    SDK_TRACE_DEBUG ("RXDMA: stage {:d} mpu {:d} base_addr {:#x} enable {:d} reset {:d} wrap {:d}",
+    SDK_TRACE_DEBUG ("RXDMA: stage %u mpu %u base_addr 0x%lx enable %u reset %u wrap %u",
                      stage_id, mpu, base_addr, enable, reset, wrap);
-    SDK_TRACE_DEBUG ("RXDMA: trace_enable {:d} phv_debug {:d} phv_error {:d} watch_pc {:d} table_key {:d}",
+    SDK_TRACE_DEBUG ("RXDMA: trace_enable %u phv_debug %u phv_error %u watch_pc %lu table_key %u",
                      trace_enable, phv_debug, phv_error, watch_pc, table_key);
-    SDK_TRACE_DEBUG ("RXDMA: instructions {:d} buf_size {:d}",
+    SDK_TRACE_DEBUG ("RXDMA: instructions %u buf_size %u",
                      instructions, buf_size);
 
     // TODO max check on mpu and stage_id
@@ -990,11 +990,11 @@ asicpd_p4p_txdma_mpu_trace_enable (uint32_t stage_id, uint32_t mpu,
 {
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
 
-    SDK_TRACE_DEBUG ("TXDMA: stage {:d} mpu {:d} base_addr {:#x} enable {:d} reset {:d} wrap {:d}",
+    SDK_TRACE_DEBUG ("TXDMA: stage %u mpu %u base_addr 0x%lx enable %u reset %u wrap %u",
                      stage_id, mpu, base_addr, enable, reset, wrap);
-    SDK_TRACE_DEBUG ("TXDMA: trace_enable {:d} phv_debug {:d} phv_error {:d} watch_pc {:d} table_key {:d}",
+    SDK_TRACE_DEBUG ("TXDMA: trace_enable %u phv_debug %u phv_error %u watch_pc %lu table_key %u",
                      trace_enable, phv_debug, phv_error, watch_pc, table_key);
-    SDK_TRACE_DEBUG ("TXDMA: instructions {:d} buf_size {:d}",
+    SDK_TRACE_DEBUG ("TXDMA: instructions %u buf_size %u",
                      instructions, buf_size);
 
     // TODO max check on mpu and stage_id
@@ -1035,11 +1035,11 @@ asicpd_p4_ingress_mpu_trace_enable (uint32_t stage_id, uint32_t mpu,
 {
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
 
-    SDK_TRACE_DEBUG ("INGRESS: stage {:d} mpu {:d} base_addr {:#x} enable {:d} reset {:d} wrap {:d}",
+    SDK_TRACE_DEBUG ("INGRESS: stage %u mpu %u base_addr 0x%lx enable %u reset %u wrap %u",
                      stage_id, mpu, base_addr, enable, reset, wrap);
-    SDK_TRACE_DEBUG ("INGRESS: trace_enable {:d} phv_debug {:d} phv_error {:d} watch_pc {:d} table_key {:d}",
+    SDK_TRACE_DEBUG ("INGRESS: trace_enable %u phv_debug %u phv_error %u watch_pc %lu table_key %u",
                      trace_enable, phv_debug, phv_error, watch_pc, table_key);
-    SDK_TRACE_DEBUG ("INGRESS: instructions {:d} buf_size {:d}",
+    SDK_TRACE_DEBUG ("INGRESS: instructions %u buf_size %u",
                      instructions, buf_size);
 
     // TODO max check on mpu and stage_id
@@ -1080,11 +1080,11 @@ asicpd_p4_egress_mpu_trace_enable (uint32_t stage_id, uint32_t mpu,
 {
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
 
-    SDK_TRACE_DEBUG ("EGRESS: stage {:d} mpu {:d} base_addr {:#x} enable {:d} reset {:d} wrap {:d}",
+    SDK_TRACE_DEBUG ("EGRESS: stage %u mpu %u base_addr 0x%lx enable %u reset %u wrap %u",
                      stage_id, mpu, base_addr, enable, reset, wrap);
-    SDK_TRACE_DEBUG ("EGRESS: trace_enable {:d} phv_debug {:d} phv_error {:d} watch_pc {:d} table_key {:d}",
+    SDK_TRACE_DEBUG ("EGRESS: trace_enable %u phv_debug %u phv_error %u watch_pc %lu table_key %u",
                      trace_enable, phv_debug, phv_error, watch_pc, table_key);
-    SDK_TRACE_DEBUG ("EGRESS: instructions {:d} buf_size {:d}",
+    SDK_TRACE_DEBUG ("EGRESS: instructions %u buf_size %u",
                      instructions, buf_size);
 
     // TODO max check on mpu and stage_id
@@ -1295,7 +1295,7 @@ asicpd_dpp_int_credit (uint32_t instance, uint32_t value)
 {
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
 
-    SDK_TRACE_DEBUG ("INGRESS: instance {:d} value {:d}", instance, value);
+    SDK_TRACE_DEBUG ("INGRESS: instance %u value %u", instance, value);
 
     cap0.dpp.dpp[instance].int_credit.int_test_set.ptr_credit_ovflow_interrupt(value);
     cap0.dpp.dpp[instance].int_credit.int_test_set.ptr_credit_undflow_interrupt(value);

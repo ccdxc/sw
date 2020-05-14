@@ -96,7 +96,7 @@ upg_ev_handler (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
 
     if (event->stage >= UPG_STAGE_MAX) {
         SDK_TRACE_INFO("Upgrade Invalid stage %s, ignoring",
-                       upg_stage2str(event->stage));
+                       (char *)upg_stage2str(event->stage));
         // returning OK as latest upgmgr and prev services should work
         return upg_ev_process_response(SDK_RET_OK, info);
     }
@@ -106,7 +106,7 @@ upg_ev_handler (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
 
     // if it not implemented, just return OK
     if (!ev_func) {
-        SDK_TRACE_INFO("Upgrade stage %s not implemented %s",
+        SDK_TRACE_INFO("Upgrade stage %s not implemented",
                        upg_stage2str(event->stage));
         return upg_ev_process_response(SDK_RET_OK, info);
     }

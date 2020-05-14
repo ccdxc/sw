@@ -201,7 +201,8 @@ HbmHashEntry::insert(HbmHashHintGroup *hg, HbmHashSpineEntry *fse)
             SDK_TRACE_ERR("Unable to install flow. #recircs "
                           "exceeds max recircs: %d. ret: %d",
                           fse->get_ht_entry()->
-                          get_hbm_hash()->max_recircs());
+                          get_hbm_hash()->max_recircs(),
+                          SDK_RET_MAX_RECIRC_EXCEED);
             rs = SDK_RET_MAX_RECIRC_EXCEED;
             return rs;
         }
@@ -288,7 +289,7 @@ HbmHashEntry::remove()
     // HbmHashTableEntry *fte = eff_spine_entry->get_ht_entry();
     std::list<HbmHashHintGroup*>::iterator itr;
 
-    SDK_TRACE_DEBUG("Removing an entry from HG: 0x%x", hint_group_);
+    SDK_TRACE_DEBUG("Removing an entry from HG: %p", hint_group_);
 
     // Step 1: Replace the entry & reprogram
     if (is_anchor_entry_) {

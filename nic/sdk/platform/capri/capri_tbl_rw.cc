@@ -199,7 +199,7 @@ capri_program_table_mpu_pc (int tableid, bool ingress, int stage,
     cap_top_csr_t & cap0 = g_capri_state_pd->cap_top();
 
     assert(stage_tableid < 16);
-    SDK_TRACE_DEBUG("====Stage: %d Tbl_id: %u, Stg_Tbl_id %u, Tbl base: 0x%lx==",
+    SDK_TRACE_DEBUG("====Stage %d, Tbl_id %u, Stg_Tbl_id %u, Tbl base 0x%lx==",
                     stage, tableid, stage_tableid, capri_table_asm_base);
     if (ingress) {
         cap_te_csr_t &te_csr = cap0.sgi.te[stage];
@@ -545,12 +545,12 @@ capri_timer_init_helper (uint32_t key_lines)
         sdk::asic::asic_get_mem_addr(MEM_REGION_TIMERS_NAME);
 
     txs_csr->cfg_timer_static.read();
-    SDK_TRACE_DEBUG("hbm_base %llx",
+    SDK_TRACE_DEBUG("hbm_base %lx",
                     (uint64_t)txs_csr->cfg_timer_static.hbm_base());
-    SDK_TRACE_DEBUG("timer hash depth %u",
-                    txs_csr->cfg_timer_static.tmr_hsh_depth());
-    SDK_TRACE_DEBUG("timer wheel depth %u",
-                    txs_csr->cfg_timer_static.tmr_wheel_depth());
+    SDK_TRACE_DEBUG("timer hash depth %lu",
+                    (uint64_t)txs_csr->cfg_timer_static.tmr_hsh_depth());
+    SDK_TRACE_DEBUG("timer wheel depth %lu",
+                    (uint64_t)txs_csr->cfg_timer_static.tmr_wheel_depth());
     txs_csr->cfg_timer_static.hbm_base(timer_key_hbm_base_addr);
     txs_csr->cfg_timer_static.tmr_hsh_depth(key_lines - 1);
     txs_csr->cfg_timer_static.tmr_wheel_depth(CAPRI_TIMER_WHEEL_DEPTH - 1);
@@ -568,12 +568,12 @@ capri_timer_init_helper (uint32_t key_lines)
 
     // TODO:remove
     txs_csr->cfg_timer_static.read();
-    SDK_TRACE_DEBUG("hbm_base %llx",
+    SDK_TRACE_DEBUG("hbm_base %lx",
                     (uint64_t)txs_csr->cfg_timer_static.hbm_base());
-    SDK_TRACE_DEBUG("timer hash depth %u",
-                    txs_csr->cfg_timer_static.tmr_hsh_depth());
-    SDK_TRACE_DEBUG("timer wheel depth %u",
-                    txs_csr->cfg_timer_static.tmr_wheel_depth());
+    SDK_TRACE_DEBUG("timer hash depth %lu",
+                    (uint64_t)txs_csr->cfg_timer_static.tmr_hsh_depth());
+    SDK_TRACE_DEBUG("timer wheel depth %lu",
+                    (uint64_t)txs_csr->cfg_timer_static.tmr_wheel_depth());
 
     // initialize timer wheel to 0
 #if 0
@@ -902,7 +902,7 @@ capri_table_csr_cache_inval_init (void)
         (uint32_t *)sdk::lib::pal_mem_map(CSR_CACHE_INVAL_TXDMA_REG_ADDR, 0x4);
     csr_cache_inval_rxdma_va =
         (uint32_t *)sdk::lib::pal_mem_map(CSR_CACHE_INVAL_RXDMA_REG_ADDR, 0x4);
-    SDK_TRACE_DEBUG("CSR cache inval ing 0x%llx, egr 0x%llx, txdma 0x%llx, rxdma 0x%llx",
+    SDK_TRACE_DEBUG("CSR cache inval ing 0x%lx, egr 0x%lx, txdma 0x%lx, rxdma 0x%lx",
                     (mem_addr_t)csr_cache_inval_ingress_va,
                     (mem_addr_t)csr_cache_inval_egress_va,
                     (mem_addr_t)csr_cache_inval_txdma_va,

@@ -229,7 +229,7 @@ HbmHashHintGroup::inter_hg_str(HbmHashEntry *h_entry,
 void
 HbmHashHintGroup::print_hg()
 {
-    SDK_TRACE_DEBUG("  HG:: hint_bits:%#x, num_anchors:%d, num_fes:%d",
+    SDK_TRACE_DEBUG("  HG:: hint_bits:%#x, num_anchors:%lu, num_fes:%lu",
             hint_bits_, anchor_list_.size(), hbm_hash_entry_list_.size());
     std::list<HbmHashEntry*>::iterator itr;
     HbmHashEntry *tmp_fe = NULL;

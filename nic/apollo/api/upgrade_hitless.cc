@@ -46,7 +46,7 @@ backup_stateful_obj_cb (void *obj, void *info)
     if (ret != SDK_RET_OK) {
         api::g_upg_state->set_backup_status(false);
         PDS_TRACE_ERR("Backup stateful obj id %u failed for key %s, err %u",
-                      obj_id, keystr, ret);
+                      obj_id, keystr.c_str(), ret);
         return true; // stop the walk
     }
     // position mem by incrementing it by size for next obj

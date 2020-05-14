@@ -63,7 +63,7 @@ route_table_impl::factory(pds_route_table_spec_t *spec) {
         if (spec->route_info->num_routes >
             route_table_impl_db()->v4_table_size()) {
             PDS_TRACE_ERR("No. of IPv4 routes %u in the route table %s "
-                          "exceeded max supported scale %u",
+                          "exceeded max supported scale %lu",
                           spec->route_info->num_routes, spec->key.str(),
                           route_table_impl_db()->v4_table_size());
             return NULL;
@@ -72,7 +72,7 @@ route_table_impl::factory(pds_route_table_spec_t *spec) {
         if (spec->route_info->num_routes >
             route_table_impl_db()->v6_table_size()) {
             PDS_TRACE_ERR("No. of IPv6 routes %u in the route table %s "
-                          "exceeded max supported scale %u",
+                          "exceeded max supported scale %lu",
                           spec->route_info->num_routes, spec->key.str(),
                           route_table_impl_db()->v6_table_size());
             return NULL;
@@ -329,7 +329,8 @@ route_table_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
                                                         false);
         if (ret != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to reserve %u entries in DNAT table for "
-                          "route table %s, err %u", spec->key.str(), ret);
+                          "route table %s, err %u", num_dnat_entries_,
+                           spec->key.str(), ret);
             return ret;
         }
     }

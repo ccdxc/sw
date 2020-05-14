@@ -61,7 +61,7 @@ read_hbmerrcause_table (const hbmerrcause_t *entry, uint64_t nwl_base_addr,
     sdk::asic::asic_reg_read(nwl_base_addr + entry->offset,
                              &reg_value, 1, true);
     if (reg_value && logging) {
-        SDK_HMON_TRACE_ERR("ECCERR::reading register %x value is %d %s %d",
+        SDK_HMON_TRACE_ERR("ECCERR::reading register %lx value is %u %s %u",
                             nwl_base_addr + entry->offset, reg_value,
                             entry->message.c_str(), channel);
         return true;
@@ -77,7 +77,7 @@ read_cattrip_reg (uint64_t nwl_base_addr, uint8_t channel)
             DDR_CSR_APB_CPU0_DFI_STAT_DFI_CATTRIP_BYTE_ADDRESS,
             &reg_value, 1, true);
     if (reg_value) {
-        SDK_HMON_TRACE_ERR("CRITCATTRIP::reading register %x value is %d %s %d",
+        SDK_HMON_TRACE_ERR("CRITCATTRIP::reading register %lx value is %u %s %u",
                            nwl_base_addr +
                            DDR_CSR_APB_CPU0_DFI_STAT_DFI_CATTRIP_BYTE_ADDRESS,
                            reg_value,

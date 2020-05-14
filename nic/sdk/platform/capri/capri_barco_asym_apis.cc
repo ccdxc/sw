@@ -84,7 +84,7 @@ do {                                                                            
     if (pad_size) {                                                                         \
         if (sdk::asic::asic_mem_write(curr_ptr, zero_array, pad_size)) {                    \
             SDK_TRACE_ERR(CAPRI_BARCO_API_NAME                                              \
-                    " Failed to write pad for ECC param " #param " into ilist memory @ 0x%llx", (uint64_t) curr_ptr); \
+                    " Failed to write pad for ECC param " #param " into ilist memory @ 0x%lx", (uint64_t) curr_ptr); \
             ret = SDK_RET_INVALID_ARG;                                                      \
             goto cleanup;                                                                   \
         }                                                                                   \
@@ -92,7 +92,7 @@ do {                                                                            
     }                                                                                       \
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)param, key_size)) {                   \
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME                                                  \
-                " Failed to write ECC param " #param " into ilist memory @ 0x%llx", (uint64_t) curr_ptr); \
+                " Failed to write ECC param " #param " into ilist memory @ 0x%lx", (uint64_t) curr_ptr); \
         ret = SDK_RET_INVALID_ARG;                                                          \
         goto cleanup;                                                                       \
     }                                                                                       \
@@ -176,7 +176,7 @@ capri_barco_asym_ecc_point_mul (uint16_t key_size, uint8_t *p, uint8_t *n,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME " Failed to allocate memory for ilist DMA Descr1");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME " Allocated memory for ilist DMA Descr1 @ 0x%llx",
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME " Allocated memory for ilist DMA Descr1 @ 0x%lx",
                     ilist_dma_descr_addr1);
     if (operand_size > 64) {
         ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
@@ -185,7 +185,7 @@ capri_barco_asym_ecc_point_mul (uint16_t key_size, uint8_t *p, uint8_t *n,
             SDK_TRACE_ERR(CAPRI_BARCO_API_NAME " Failed to allocate memory for ilist DMA Descr2");
             goto cleanup;
         }
-        SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME " Allocated memory for ilist DMA Descr2 @ 0x%llx",
+        SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME " Allocated memory for ilist DMA Descr2 @ 0x%lx",
                         ilist_dma_descr_addr2);
     }
 
@@ -195,7 +195,7 @@ capri_barco_asym_ecc_point_mul (uint16_t key_size, uint8_t *p, uint8_t *n,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME " Failed to allocate memory for olist DMA Descr");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME " Allocated memory for olist DMA Descr @ 0x%llx",
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME " Allocated memory for olist DMA Descr @ 0x%lx",
                     olist_dma_descr_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
@@ -204,7 +204,7 @@ capri_barco_asym_ecc_point_mul (uint16_t key_size, uint8_t *p, uint8_t *n,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME " Failed to allocate memory for ilist1 content");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME " Allocated memory for input mem1 @ 0x%llx",
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME " Allocated memory for input mem1 @ 0x%lx",
                     ilist_mem_addr1);
 
     if (operand_size > 64) {
@@ -214,7 +214,7 @@ capri_barco_asym_ecc_point_mul (uint16_t key_size, uint8_t *p, uint8_t *n,
             SDK_TRACE_ERR(CAPRI_BARCO_API_NAME " Failed to allocate memory for ilist2 content");
             goto cleanup;
         }
-        SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME " Allocated memory for input mem2 @ 0x%llx",
+        SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME " Allocated memory for input mem2 @ 0x%lx",
                         ilist_mem_addr2);
     }
 
@@ -224,7 +224,7 @@ capri_barco_asym_ecc_point_mul (uint16_t key_size, uint8_t *p, uint8_t *n,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME " Failed to allocate memory for olist content");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME " Allocated memory for output mem @ 0x%llx",
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME " Allocated memory for output mem @ 0x%lx",
                     olist_mem_addr);
 
     /* Copy the input to the ilist memory */
@@ -252,7 +252,7 @@ capri_barco_asym_ecc_point_mul (uint16_t key_size, uint8_t *p, uint8_t *n,
         if (sdk::asic::asic_mem_write(ilist_dma_descr_addr1,
                                       (uint8_t*)&ilist_dma_descr,
                                       sizeof(ilist_dma_descr))) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME " Failed to write ilist DMA Descr1 @ 0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME " Failed to write ilist DMA Descr1 @ 0x%lx",
                           (uint64_t) ilist_dma_descr_addr1);
             ret = SDK_RET_INVALID_ARG;
             goto cleanup;
@@ -280,7 +280,7 @@ capri_barco_asym_ecc_point_mul (uint16_t key_size, uint8_t *p, uint8_t *n,
         if (sdk::asic::asic_mem_write(ilist_dma_descr_addr2,
                                       (uint8_t*)&ilist_dma_descr,
                                       sizeof(ilist_dma_descr))) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME " Failed to write ilist DMA Descr2 @ 0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME " Failed to write ilist DMA Descr2 @ 0x%lx",
                           (uint64_t) ilist_dma_descr_addr2);
             ret = SDK_RET_INVALID_ARG;
             goto cleanup;
@@ -299,7 +299,7 @@ capri_barco_asym_ecc_point_mul (uint16_t key_size, uint8_t *p, uint8_t *n,
         if (sdk::asic::asic_mem_write(ilist_dma_descr_addr1,
                                       (uint8_t*)&ilist_dma_descr,
                                       sizeof(ilist_dma_descr))) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME " Failed to write ilist DMA Descr1 @ 0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME " Failed to write ilist DMA Descr1 @ 0x%lx",
                           (uint64_t) ilist_dma_descr_addr1);
             ret = SDK_RET_INVALID_ARG;
             goto cleanup;
@@ -319,7 +319,7 @@ capri_barco_asym_ecc_point_mul (uint16_t key_size, uint8_t *p, uint8_t *n,
     if (sdk::asic::asic_mem_write(olist_dma_descr_addr,
                                   (uint8_t*)&olist_dma_descr,
                                   sizeof(olist_dma_descr))) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME " Failed to write olist DMA Descr @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME " Failed to write olist DMA Descr @ 0x%lx",
                       (uint64_t) olist_dma_descr_addr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -357,7 +357,7 @@ capri_barco_asym_ecc_point_mul (uint16_t key_size, uint8_t *p, uint8_t *n,
         goto cleanup;
     }
     if (status != 0) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Operation failed with status 0x%lx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Operation failed with status 0x%x",
                       status);
         ret = SDK_RET_ERR;
         goto cleanup;
@@ -366,14 +366,14 @@ capri_barco_asym_ecc_point_mul (uint16_t key_size, uint8_t *p, uint8_t *n,
     /* Copy out the results */
     if (sdk::asic::asic_mem_read(olist_mem_addr + pad_size,
                                  (uint8_t*)x3, key_size)) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME " Failed to read x3 output from memory @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME " Failed to read x3 output from memory @ 0x%lx",
                       (uint64_t) olist_mem_addr + pad_size);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
     if (sdk::asic::asic_mem_read(olist_mem_addr + operand_size + pad_size,
                                  (uint8_t*)y3, key_size)) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME " Failed to read y3 output from memory @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME " Failed to read y3 output from memory @ 0x%lx",
                       (uint64_t) (olist_mem_addr + operand_size + pad_size));
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -387,7 +387,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                    olist_mem_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME " Failed to free memory for olist content:0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME " Failed to free memory for olist content:0x%lx",
                     olist_mem_addr);
         }
     }
@@ -396,7 +396,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                    ilist_mem_addr2);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME " Failed to free memory for ilist2 content:0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME " Failed to free memory for ilist2 content:0x%lx",
                     ilist_mem_addr2);
         }
     }
@@ -405,7 +405,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                    ilist_mem_addr1);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME " Failed to free memory for ilist1 content:0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME " Failed to free memory for ilist1 content:0x%lx",
                           ilist_mem_addr1);
         }
     }
@@ -414,7 +414,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                    olist_dma_descr_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME " Failed to free memory for olist DMA Descr: 0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME " Failed to free memory for olist DMA Descr: 0x%lx",
                           olist_dma_descr_addr);
         }
     }
@@ -423,7 +423,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                    ilist_dma_descr_addr2);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME " Failed to free memory for ilist DMA Descr2: 0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME " Failed to free memory for ilist DMA Descr2: 0x%lx",
                           ilist_dma_descr_addr2);
         }
     }
@@ -432,7 +432,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                    ilist_dma_descr_addr1);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME " Failed to free memory for ilist DMA Descr1: 0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME " Failed to free memory for ilist DMA Descr1: 0x%lx",
                           ilist_dma_descr_addr1);
         }
     }
@@ -480,55 +480,55 @@ capri_barco_asym_ecdsa_p256_setup_priv_key (uint8_t *p, uint8_t *n,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for key param");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key param @ 0x%llx",
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key param @ 0x%lx",
                         key_param_addr);
 
     curr_ptr = key_param_addr;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)p, 32)) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param p into key memory @ 0x%llx", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param p into key memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)n, 32)) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param n into key memory @ 0x%llx", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param n into key memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)xg, 32)) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param xg into key memory @ 0x%llx", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param xg into key memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)yg, 32)) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param yg into key memory @ 0x%llx", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param yg into key memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)a, 32)) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param a into key memory @ 0x%llx", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param a into key memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)b, 32)) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param b into key memory @ 0x%llx", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param b into key memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)da, 32)) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param da into key memory @ 0x%llx", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param da into key memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -540,7 +540,7 @@ capri_barco_asym_ecdsa_p256_setup_priv_key (uint8_t *p, uint8_t *n,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for key DMA Descr");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ 0x%llx", key_dma_descr_addr);
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ 0x%lx", key_dma_descr_addr);
 
     /* Setup key DMA descriptor */
     key_dma_descr.address = key_param_addr;
@@ -555,7 +555,7 @@ capri_barco_asym_ecdsa_p256_setup_priv_key (uint8_t *p, uint8_t *n,
     if (sdk::asic::asic_mem_write(key_dma_descr_addr,
                                   (uint8_t*)&key_dma_descr,
                                   sizeof(key_dma_descr))) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key DMA Descr @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key DMA Descr @ 0x%lx",
                       (uint64_t) key_dma_descr_addr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -594,7 +594,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                    key_dma_descr_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key DMA Descr: 0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key DMA Descr: 0x%lx",
                           key_dma_descr_addr);
         }
     }
@@ -603,7 +603,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                    key_param_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key param :0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key param :0x%lx",
                           key_param_addr);
         }
     }
@@ -649,7 +649,7 @@ capri_barco_asym_ecdsa_p256_sig_gen (int32_t key_idx, uint8_t *p, uint8_t *n,
         ecc_p256_key_idx = key_idx;
     }
 
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Key @ 0x%llx", ecc_p256_key_idx);
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Key @ %d", ecc_p256_key_idx);
 
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
@@ -658,7 +658,7 @@ capri_barco_asym_ecdsa_p256_sig_gen (int32_t key_idx, uint8_t *p, uint8_t *n,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for ilist DMA Descr");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ 0x%llx",
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ 0x%lx",
                     ilist_dma_descr_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
@@ -667,7 +667,7 @@ capri_barco_asym_ecdsa_p256_sig_gen (int32_t key_idx, uint8_t *p, uint8_t *n,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for olist DMA Descr");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for olist DMA Descr @ 0x%llx",
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for olist DMA Descr @ 0x%lx",
                     olist_dma_descr_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
@@ -676,7 +676,7 @@ capri_barco_asym_ecdsa_p256_sig_gen (int32_t key_idx, uint8_t *p, uint8_t *n,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for ilist content");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for input mem @ 0x%llx",
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for input mem @ 0x%lx",
                     ilist_mem_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
@@ -685,14 +685,14 @@ capri_barco_asym_ecdsa_p256_sig_gen (int32_t key_idx, uint8_t *p, uint8_t *n,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for olist content");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for output mem @ 0x%llx",
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for output mem @ 0x%lx",
                     olist_mem_addr);
 
     /* Copy the input to the ilist memory */
     curr_ptr = ilist_mem_addr;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)k, 32)) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param k into ilist memory @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param k into ilist memory @ 0x%lx",
                       (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -700,7 +700,7 @@ capri_barco_asym_ecdsa_p256_sig_gen (int32_t key_idx, uint8_t *p, uint8_t *n,
     curr_ptr += 32;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)h, 32)) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param h into ilist memory @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param h into ilist memory @ 0x%lx",
                       (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -720,7 +720,7 @@ capri_barco_asym_ecdsa_p256_sig_gen (int32_t key_idx, uint8_t *p, uint8_t *n,
     if (sdk::asic::asic_mem_write(ilist_dma_descr_addr,
                                   (uint8_t*)&ilist_dma_descr,
                                   sizeof(ilist_dma_descr))) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ilist DMA Descr @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ilist DMA Descr @ 0x%lx",
                       (uint64_t) ilist_dma_descr_addr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -739,7 +739,7 @@ capri_barco_asym_ecdsa_p256_sig_gen (int32_t key_idx, uint8_t *p, uint8_t *n,
     if (sdk::asic::asic_mem_write(olist_dma_descr_addr,
                                   (uint8_t*)&olist_dma_descr,
                                   sizeof(olist_dma_descr))) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write olist DMA Descr @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write olist DMA Descr @ 0x%lx",
                       (uint64_t) olist_dma_descr_addr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -769,13 +769,13 @@ capri_barco_asym_ecdsa_p256_sig_gen (int32_t key_idx, uint8_t *p, uint8_t *n,
 
     if (sdk::asic::asic_mem_read(asym_req_descr.status_addr,
                                  (uint8_t*)&status, sizeof(status))) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to retrieve operation status @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to retrieve operation status @ 0x%lx",
                       (uint64_t) asym_req_descr.status_addr);
         ret = SDK_RET_ERR;
         goto cleanup;
     }
     if (status != 0) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Operation failed with status 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Operation failed with status 0x%x",
                       status);
         ret = SDK_RET_ERR;
         goto cleanup;
@@ -783,13 +783,13 @@ capri_barco_asym_ecdsa_p256_sig_gen (int32_t key_idx, uint8_t *p, uint8_t *n,
 
     /* Copy out the results */
     if (sdk::asic::asic_mem_read(olist_mem_addr, (uint8_t*)r, 32)) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to read r output from memory @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to read r output from memory @ 0x%lx",
                       (uint64_t) olist_mem_addr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
     if (sdk::asic::asic_mem_read(olist_mem_addr + 32, (uint8_t*)s, 32)) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to read s output from memory @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to read s output from memory @ 0x%lx",
                       (uint64_t) (olist_mem_addr + 32));
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -803,7 +803,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                    olist_mem_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for olist content:0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for olist content:0x%lx",
                           olist_mem_addr);
         }
     }
@@ -812,7 +812,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                    ilist_mem_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("ECC Point Mul P256: Failed to free memory for ilist content:0x%llx",
+            SDK_TRACE_ERR("ECC Point Mul P256: Failed to free memory for ilist content:0x%lx",
                           ilist_mem_addr);
         }
     }
@@ -821,7 +821,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                    olist_dma_descr_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for olist DMA Descr: 0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for olist DMA Descr: 0x%lx",
                           olist_dma_descr_addr);
         }
     }
@@ -830,7 +830,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                    ilist_dma_descr_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for ilist DMA Descr: 0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for ilist DMA Descr: 0x%lx",
                           ilist_dma_descr_addr);
         }
     }
@@ -885,61 +885,61 @@ capri_barco_asym_ecdsa_p256_sig_verify (uint8_t *p, uint8_t *n,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for key param");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key param @ 0x%llx", key_param_addr);
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key param @ 0x%lx", key_param_addr);
 
     curr_ptr = key_param_addr;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)p, 32)) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param p into key memory @ 0x%llx", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param p into key memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)n, 32)) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param n into key memory @ 0x%llx", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param n into key memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)xg, 32)) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param xg into key memory @ 0x%llx", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param xg into key memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)yg, 32)) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param yg into key memory @ 0x%llx", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param yg into key memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)a, 32)) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param a into key memory @ 0x%llx", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param a into key memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)b, 32)) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param b into key memory @ 0x%llx", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param b into key memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)xq, 32)) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param xq into key memory @ 0x%llx", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param xq into key memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)yq, 32)) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param yq into key memory @ 0x%llx", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param yq into key memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -951,7 +951,7 @@ capri_barco_asym_ecdsa_p256_sig_verify (uint8_t *p, uint8_t *n,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for key DMA Descr");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key DMA Descr @ 0x%llx", key_dma_descr_addr);
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key DMA Descr @ 0x%lx", key_dma_descr_addr);
 
     /* Setup key DMA descriptor */
     key_dma_descr.address = key_param_addr;
@@ -966,7 +966,7 @@ capri_barco_asym_ecdsa_p256_sig_verify (uint8_t *p, uint8_t *n,
     if (sdk::asic::asic_mem_write(key_dma_descr_addr,
                                   (uint8_t*)&key_dma_descr,
                                   sizeof(key_dma_descr))) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key DMA Descr @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key DMA Descr @ 0x%lx",
                       (uint64_t) key_dma_descr_addr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -1000,7 +1000,7 @@ capri_barco_asym_ecdsa_p256_sig_verify (uint8_t *p, uint8_t *n,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for ilist DMA Descr");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ 0x%llx", ilist_dma_descr_addr);
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ 0x%lx", ilist_dma_descr_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                 NULL, &ilist_mem_addr);
@@ -1008,7 +1008,7 @@ capri_barco_asym_ecdsa_p256_sig_verify (uint8_t *p, uint8_t *n,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for ilist content");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for input mem @ 0x%llx", ilist_mem_addr);
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for input mem @ 0x%lx", ilist_mem_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                 NULL, &olist_mem_addr);
@@ -1016,27 +1016,27 @@ capri_barco_asym_ecdsa_p256_sig_verify (uint8_t *p, uint8_t *n,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for olist content");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for output mem @ 0x%llx", olist_mem_addr);
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for output mem @ 0x%lx", olist_mem_addr);
 
     /* Copy the input to the ilist memory */
     curr_ptr = ilist_mem_addr;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)r, 32)) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param r into ilist memory @ 0x%llx", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param r into ilist memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)s, 32)) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param s into ilist memory @ 0x%llx", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param s into ilist memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)h, 32)) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param h into ilist memory @ 0x%llx", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ECC param h into ilist memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -1055,7 +1055,7 @@ capri_barco_asym_ecdsa_p256_sig_verify (uint8_t *p, uint8_t *n,
     if (sdk::asic::asic_mem_write(ilist_dma_descr_addr,
                                   (uint8_t*)&ilist_dma_descr,
                                   sizeof(ilist_dma_descr))) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ilist DMA Descr @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ilist DMA Descr @ 0x%lx",
                       (uint64_t) ilist_dma_descr_addr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -1085,13 +1085,13 @@ capri_barco_asym_ecdsa_p256_sig_verify (uint8_t *p, uint8_t *n,
 
     if (sdk::asic::asic_mem_read(asym_req_descr.status_addr,
                                  (uint8_t*)&status, sizeof(status))) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to retrieve operation status @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to retrieve operation status @ 0x%lx",
                 (uint64_t) asym_req_descr.status_addr);
         ret = SDK_RET_ERR;
         goto cleanup;
     }
     if (status != 0) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Operation failed with status 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Operation failed with status 0x%x",
                 status);
         ret = SDK_RET_ERR;
         goto cleanup;
@@ -1107,7 +1107,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                    olist_mem_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for olist content:0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for olist content:0x%lx",
                           olist_mem_addr);
         }
     }
@@ -1116,7 +1116,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                    ilist_mem_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("ECC Point Mul P256: Failed to free memory for ilist content:0x%llx",
+            SDK_TRACE_ERR("ECC Point Mul P256: Failed to free memory for ilist content:0x%lx",
                           ilist_mem_addr);
         }
     }
@@ -1125,7 +1125,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                    ilist_dma_descr_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for ilist DMA Descr: 0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for ilist DMA Descr: 0x%lx",
                           ilist_dma_descr_addr);
         }
     }
@@ -1141,7 +1141,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                    key_dma_descr_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key DMA Descr: 0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key DMA Descr: 0x%lx",
                           key_dma_descr_addr);
         }
     }
@@ -1150,7 +1150,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                    key_param_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key param :0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key param :0x%lx",
                           key_param_addr);
         }
     }
@@ -1187,19 +1187,19 @@ capri_barco_asym_rsa2k_setup_sig_gen_priv_key (uint8_t *n, uint8_t *d,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for key param");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key param @ 0x%llx", key_param_addr);
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key param @ 0x%lx", key_param_addr);
 
     curr_ptr = key_param_addr;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)n, 256)) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param n into key memory @ 0x%llx", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param n into key memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 256;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)d, 256)) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param d into key memory @ 0x%llx", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param d into key memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -1211,7 +1211,7 @@ capri_barco_asym_rsa2k_setup_sig_gen_priv_key (uint8_t *n, uint8_t *d,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for key DMA Descr");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key DMA Descr @ 0x%llx", key_dma_descr_addr);
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key DMA Descr @ 0x%lx", key_dma_descr_addr);
 
     /* Setup key DMA descriptor */
     key_dma_descr.address = key_param_addr;
@@ -1225,7 +1225,7 @@ capri_barco_asym_rsa2k_setup_sig_gen_priv_key (uint8_t *n, uint8_t *d,
     key_dma_descr.length = (curr_ptr - key_param_addr);
     if (sdk::asic::asic_mem_write(key_dma_descr_addr, (uint8_t*)&key_dma_descr,
                                   sizeof(key_dma_descr))) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key DMA Descr @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key DMA Descr @ 0x%lx",
                       (uint64_t) key_dma_descr_addr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -1263,7 +1263,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                    key_dma_descr_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key DMA Descr: 0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key DMA Descr: 0x%lx",
                           key_dma_descr_addr);
         }
     }
@@ -1272,7 +1272,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                    key_param_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key param :0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key param :0x%lx",
                           key_param_addr);
         }
     }
@@ -1313,19 +1313,19 @@ capri_barco_asym_rsa_setup_priv_key (uint16_t key_size, uint8_t *n, uint8_t *d,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for key param2");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key param @ 0x%llx, 0x%llx", key_param_addr1, key_param_addr2);
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key param @ 0x%lx, 0x%lx", key_param_addr1, key_param_addr2);
 
     curr_ptr = key_param_addr1;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)n, key_size)) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param n into key memory @ 0x%llx", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param n into key memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
 
     curr_ptr = key_param_addr2;
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)d, key_size)) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param d into key memory @ 0x%llx", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param d into key memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -1342,7 +1342,7 @@ capri_barco_asym_rsa_setup_priv_key (uint16_t key_size, uint8_t *n, uint8_t *d,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for key DMA Descr2");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key DMA Descr @ 0x%llx, 0x%llx", key_dma_descr_addr1, key_dma_descr_addr2);
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key DMA Descr @ 0x%lx, 0x%lx", key_dma_descr_addr1, key_dma_descr_addr2);
 
     /* Setup key DMA descriptor 1 */
     key_dma_descr.address = key_param_addr1;
@@ -1357,7 +1357,7 @@ capri_barco_asym_rsa_setup_priv_key (uint16_t key_size, uint8_t *n, uint8_t *d,
     if (sdk::asic::asic_mem_write(key_dma_descr_addr1,
                                   (uint8_t*)&key_dma_descr,
                                   sizeof(key_dma_descr))) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key DMA Descr1 @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key DMA Descr1 @ 0x%lx",
                       (uint64_t) key_dma_descr_addr1);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -1376,7 +1376,7 @@ capri_barco_asym_rsa_setup_priv_key (uint16_t key_size, uint8_t *n, uint8_t *d,
     if (sdk::asic::asic_mem_write(key_dma_descr_addr2,
                                   (uint8_t*)&key_dma_descr,
                                   sizeof(key_dma_descr))) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key DMA Descr @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key DMA Descr @ 0x%lx",
                       (uint64_t) key_dma_descr_addr2);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -1413,14 +1413,14 @@ cleanup:
     if (key_dma_descr_addr2) {
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR, key_dma_descr_addr2);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key DMA Descr: 0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key DMA Descr: 0x%lx",
                           key_dma_descr_addr2);
         }
     }
     if (key_dma_descr_addr1) {
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR, key_dma_descr_addr1);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key DMA Descr: 0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key DMA Descr: 0x%lx",
                           key_dma_descr_addr1);
         }
     }
@@ -1428,14 +1428,14 @@ cleanup:
     if (key_param_addr2) {
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B, key_param_addr2);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key param :0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key param :0x%lx",
                           key_param_addr2);
         }
     }
     if (key_param_addr1) {
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B, key_param_addr2);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key param :0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key param :0x%lx",
                           key_param_addr1);
         }
     }
@@ -1479,13 +1479,13 @@ capri_barco_asym_rsa2k_encrypt (uint8_t *n, uint8_t *e,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for key param");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key param @ 0x%llx",
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key param @ 0x%lx",
                     key_param_addr);
 
     curr_ptr = key_param_addr;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)n, 256)) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param n into key memory @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param n into key memory @ 0x%lx",
                       (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -1493,7 +1493,7 @@ capri_barco_asym_rsa2k_encrypt (uint8_t *n, uint8_t *e,
     curr_ptr += 256;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)e, 256)) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param e into key memory @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param e into key memory @ 0x%lx",
                       (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -1506,7 +1506,7 @@ capri_barco_asym_rsa2k_encrypt (uint8_t *n, uint8_t *e,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for key DMA Descr");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key DMA Descr @ 0x%llx", key_dma_descr_addr);
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key DMA Descr @ 0x%lx", key_dma_descr_addr);
 
     /* Setup key DMA descriptor */
     key_dma_descr.address = key_param_addr;
@@ -1521,7 +1521,7 @@ capri_barco_asym_rsa2k_encrypt (uint8_t *n, uint8_t *e,
     if (sdk::asic::asic_mem_write(key_dma_descr_addr,
                                   (uint8_t*)&key_dma_descr,
                                   sizeof(key_dma_descr))) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key DMA Descr @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key DMA Descr @ 0x%lx",
                       (uint64_t) key_dma_descr_addr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -1532,7 +1532,7 @@ capri_barco_asym_rsa2k_encrypt (uint8_t *n, uint8_t *e,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate key descriptor");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated Key Descr @ 0x%llx",
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated Key Descr @ %d",
                     ecc_p256_key_idx);
 
     asym_key.key_param_list = key_dma_descr_addr;
@@ -1545,7 +1545,7 @@ capri_barco_asym_rsa2k_encrypt (uint8_t *n, uint8_t *e,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key: %d", ecc_p256_key_idx);
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Setup key @ 0x%llx", ecc_p256_key_idx);
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Setup key @ %d", ecc_p256_key_idx);
 
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
@@ -1554,7 +1554,7 @@ capri_barco_asym_rsa2k_encrypt (uint8_t *n, uint8_t *e,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for ilist DMA Descr");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ 0x%llx",
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ 0x%lx",
                     ilist_dma_descr_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
@@ -1563,7 +1563,7 @@ capri_barco_asym_rsa2k_encrypt (uint8_t *n, uint8_t *e,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for olist DMA Descr");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for olist DMA Descr @ 0x%llx",
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for olist DMA Descr @ 0x%lx",
                     olist_dma_descr_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
@@ -1572,7 +1572,7 @@ capri_barco_asym_rsa2k_encrypt (uint8_t *n, uint8_t *e,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for ilist content");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for input mem @ 0x%llx",
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for input mem @ 0x%lx",
                     ilist_mem_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
@@ -1581,14 +1581,14 @@ capri_barco_asym_rsa2k_encrypt (uint8_t *n, uint8_t *e,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for olist content");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for output mem @ 0x%llx",
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for output mem @ 0x%lx",
                     olist_mem_addr);
 
     /* Copy the input to the ilist memory */
     curr_ptr = ilist_mem_addr;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)m, 256)) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param m into ilist memory @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param m into ilist memory @ 0x%lx",
                       (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -1607,7 +1607,7 @@ capri_barco_asym_rsa2k_encrypt (uint8_t *n, uint8_t *e,
     ilist_dma_descr.length = (curr_ptr - ilist_mem_addr);
     if (sdk::asic::asic_mem_write(ilist_dma_descr_addr, (uint8_t*)&ilist_dma_descr,
                 sizeof(ilist_dma_descr))) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ilist DMA Descr @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ilist DMA Descr @ 0x%lx",
                 (uint64_t) ilist_dma_descr_addr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -1626,7 +1626,7 @@ capri_barco_asym_rsa2k_encrypt (uint8_t *n, uint8_t *e,
     if (sdk::asic::asic_mem_write(olist_dma_descr_addr,
                                   (uint8_t*)&olist_dma_descr,
                                   sizeof(olist_dma_descr))) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write olist DMA Descr @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write olist DMA Descr @ 0x%lx",
                 (uint64_t) olist_dma_descr_addr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -1655,13 +1655,13 @@ capri_barco_asym_rsa2k_encrypt (uint8_t *n, uint8_t *e,
     capri_barco_wait_for_resp(req_tag, async_en, unique_key);
 
     if (sdk::asic::asic_mem_read(asym_req_descr.status_addr, (uint8_t*)&status, sizeof(status))) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to retrieve operation status @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to retrieve operation status @ 0x%lx",
                 (uint64_t) asym_req_descr.status_addr);
         ret = SDK_RET_ERR;
         goto cleanup;
     }
     if (status != 0) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Operation failed with status 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Operation failed with status 0x%x",
                 status);
         ret = SDK_RET_ERR;
         goto cleanup;
@@ -1669,7 +1669,7 @@ capri_barco_asym_rsa2k_encrypt (uint8_t *n, uint8_t *e,
     else {
         /* Copy out the results */
         if (sdk::asic::asic_mem_read(olist_mem_addr, (uint8_t*)c, 256)) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to read output c from memory @ 0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to read output c from memory @ 0x%lx",
                     (uint64_t) olist_mem_addr);
             ret = SDK_RET_INVALID_ARG;
             goto cleanup;
@@ -1684,7 +1684,7 @@ cleanup:
     if (olist_mem_addr) {
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B, olist_mem_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for olist content:0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for olist content:0x%lx",
                     olist_mem_addr);
         }
     }
@@ -1692,7 +1692,7 @@ cleanup:
     if (ilist_mem_addr) {
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B, ilist_mem_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("ECC Point Mul P256: Failed to free memory for ilist content:0x%llx",
+            SDK_TRACE_ERR("ECC Point Mul P256: Failed to free memory for ilist content:0x%lx",
                     ilist_mem_addr);
         }
     }
@@ -1700,7 +1700,7 @@ cleanup:
     if (olist_dma_descr_addr) {
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR, olist_dma_descr_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for olist DMA Descr: 0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for olist DMA Descr: 0x%lx",
                     olist_dma_descr_addr);
         }
     }
@@ -1708,7 +1708,7 @@ cleanup:
     if (ilist_dma_descr_addr) {
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR, ilist_dma_descr_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for ilist DMA Descr: 0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for ilist DMA Descr: 0x%lx",
                     ilist_dma_descr_addr);
         }
     }
@@ -1723,7 +1723,7 @@ cleanup:
     if (key_dma_descr_addr) {
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR, key_dma_descr_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key DMA Descr: 0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key DMA Descr: 0x%lx",
                     key_dma_descr_addr);
         }
     }
@@ -1731,7 +1731,7 @@ cleanup:
     if (key_param_addr) {
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B, key_param_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key param :0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key param :0x%lx",
                     key_param_addr);
         }
     }
@@ -1775,26 +1775,26 @@ capri_barco_asym_rsa_encrypt (uint16_t key_size, uint8_t *n, uint8_t *e,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for key param1");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key param1 @ 0x%llx", key_param_addr1);
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key param1 @ 0x%lx", key_param_addr1);
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
             NULL, &key_param_addr2);
     if (ret != SDK_RET_OK) {
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for key param2");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key param2 @ 0x%llx", key_param_addr2);
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key param2 @ 0x%lx", key_param_addr2);
 
     curr_ptr = key_param_addr1;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)n, key_size)) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param n into key memory @ 0x%llx", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param n into key memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
 
     curr_ptr = key_param_addr2;
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)e, key_size)) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param e into key memory @ 0x%llx", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param e into key memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -1805,7 +1805,7 @@ capri_barco_asym_rsa_encrypt (uint16_t key_size, uint8_t *n, uint8_t *e,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for key DMA Descr1");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key DMA Descr1 @ 0x%llx", key_dma_descr_addr1);
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key DMA Descr1 @ 0x%lx", key_dma_descr_addr1);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
             NULL, &key_dma_descr_addr2);
@@ -1813,7 +1813,7 @@ capri_barco_asym_rsa_encrypt (uint16_t key_size, uint8_t *n, uint8_t *e,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for key DMA Descr2");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key DMA Descr2 @ 0x%llx", key_dma_descr_addr2);
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key DMA Descr2 @ 0x%lx", key_dma_descr_addr2);
 
     /* Setup key DMA descriptor 1 */
     key_dma_descr.address = key_param_addr1;
@@ -1827,7 +1827,7 @@ capri_barco_asym_rsa_encrypt (uint16_t key_size, uint8_t *n, uint8_t *e,
     key_dma_descr.length = (key_size);
     if (sdk::asic::asic_mem_write(key_dma_descr_addr1, (uint8_t*)&key_dma_descr,
                 sizeof(key_dma_descr))) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key DMA Descr1 @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key DMA Descr1 @ 0x%lx",
                 (uint64_t) key_dma_descr_addr1);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -1845,7 +1845,7 @@ capri_barco_asym_rsa_encrypt (uint16_t key_size, uint8_t *n, uint8_t *e,
     key_dma_descr.length = (key_size);
     if (sdk::asic::asic_mem_write(key_dma_descr_addr2, (uint8_t*)&key_dma_descr,
                 sizeof(key_dma_descr))) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key DMA Descr2 @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key DMA Descr2 @ 0x%lx",
                 (uint64_t) key_dma_descr_addr2);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -1877,7 +1877,7 @@ capri_barco_asym_rsa_encrypt (uint16_t key_size, uint8_t *n, uint8_t *e,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for ilist DMA Descr");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ 0x%llx", ilist_dma_descr_addr);
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ 0x%lx", ilist_dma_descr_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
             NULL, &olist_dma_descr_addr);
@@ -1885,7 +1885,7 @@ capri_barco_asym_rsa_encrypt (uint16_t key_size, uint8_t *n, uint8_t *e,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for olist DMA Descr");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for olist DMA Descr @ 0x%llx", olist_dma_descr_addr);
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for olist DMA Descr @ 0x%lx", olist_dma_descr_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
             NULL, &ilist_mem_addr);
@@ -1893,7 +1893,7 @@ capri_barco_asym_rsa_encrypt (uint16_t key_size, uint8_t *n, uint8_t *e,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for ilist content");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for input mem @ 0x%llx", ilist_mem_addr);
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for input mem @ 0x%lx", ilist_mem_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
             NULL, &olist_mem_addr);
@@ -1901,7 +1901,7 @@ capri_barco_asym_rsa_encrypt (uint16_t key_size, uint8_t *n, uint8_t *e,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for olist content");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for output mem @ 0x%llx", olist_mem_addr);
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for output mem @ 0x%lx", olist_mem_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
             NULL, &status_mem_addr);
@@ -1909,13 +1909,13 @@ capri_barco_asym_rsa_encrypt (uint16_t key_size, uint8_t *n, uint8_t *e,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for status output");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for output mem @ 0x%llx", status_mem_addr);
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for output mem @ 0x%lx", status_mem_addr);
 
     /* Copy the input to the ilist memory */
     curr_ptr = ilist_mem_addr;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)m, key_size)) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param m into ilist memory @ 0x%llx", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param m into ilist memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -1932,7 +1932,7 @@ capri_barco_asym_rsa_encrypt (uint16_t key_size, uint8_t *n, uint8_t *e,
     ilist_dma_descr.length = (key_size);
     if (sdk::asic::asic_mem_write(ilist_dma_descr_addr, (uint8_t*)&ilist_dma_descr,
                 sizeof(ilist_dma_descr))) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ilist DMA Descr @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ilist DMA Descr @ 0x%lx",
                 (uint64_t) ilist_dma_descr_addr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -1950,7 +1950,7 @@ capri_barco_asym_rsa_encrypt (uint16_t key_size, uint8_t *n, uint8_t *e,
     olist_dma_descr.length = (key_size); /* cipher text */
     if (sdk::asic::asic_mem_write(olist_dma_descr_addr, (uint8_t*)&olist_dma_descr,
                 sizeof(olist_dma_descr))) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write olist DMA Descr @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write olist DMA Descr @ 0x%lx",
                 (uint64_t) olist_dma_descr_addr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -1978,13 +1978,13 @@ capri_barco_asym_rsa_encrypt (uint16_t key_size, uint8_t *n, uint8_t *e,
 
     if (sdk::asic::asic_mem_read(asym_req_descr.status_addr,
                                  (uint8_t*)&status, sizeof(status))) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to retrieve operation status @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to retrieve operation status @ 0x%lx",
                 (uint64_t) asym_req_descr.status_addr);
         ret = SDK_RET_ERR;
         goto cleanup;
     }
     if (status != 0) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Operation failed with status 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Operation failed with status 0x%x",
                 status);
         ret = SDK_RET_ERR;
         goto cleanup;
@@ -1992,7 +1992,7 @@ capri_barco_asym_rsa_encrypt (uint16_t key_size, uint8_t *n, uint8_t *e,
     else {
         /* Copy out the results */
         if (sdk::asic::asic_mem_read(olist_mem_addr, (uint8_t*)c, key_size)) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to read output c from memory @ 0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to read output c from memory @ 0x%lx",
                     (uint64_t) olist_mem_addr);
             ret = SDK_RET_INVALID_ARG;
             goto cleanup;
@@ -2007,7 +2007,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                    status_mem_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for status content:0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for status content:0x%lx",
                     status_mem_addr);
         }
     }
@@ -2016,7 +2016,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                    olist_mem_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for olist content:0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for olist content:0x%lx",
                     olist_mem_addr);
         }
     }
@@ -2025,7 +2025,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                    ilist_mem_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("ECC Point Mul P256: Failed to free memory for ilist content:0x%llx",
+            SDK_TRACE_ERR("ECC Point Mul P256: Failed to free memory for ilist content:0x%lx",
                     ilist_mem_addr);
         }
     }
@@ -2034,7 +2034,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                    olist_dma_descr_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for olist DMA Descr: 0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for olist DMA Descr: 0x%lx",
                     olist_dma_descr_addr);
         }
     }
@@ -2043,7 +2043,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                    ilist_dma_descr_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for ilist DMA Descr: 0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for ilist DMA Descr: 0x%lx",
                     ilist_dma_descr_addr);
         }
     }
@@ -2059,7 +2059,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                    key_dma_descr_addr2);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key DMA Descr2: 0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key DMA Descr2: 0x%lx",
                           key_dma_descr_addr2);
         }
     }
@@ -2068,7 +2068,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                    key_dma_descr_addr1);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key DMA Descr1: 0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key DMA Descr1: 0x%lx",
                           key_dma_descr_addr1);
         }
     }
@@ -2077,7 +2077,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                    key_param_addr2);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key param2 :0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key param2 :0x%lx",
                           key_param_addr2);
         }
     }
@@ -2086,7 +2086,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                    key_param_addr1);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key param1 :0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key param1 :0x%lx",
                           key_param_addr1);
         }
     }
@@ -2127,19 +2127,19 @@ capri_barco_asym_rsa2k_decrypt (uint8_t *n, uint8_t *d, uint8_t *c,  uint8_t *m)
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for key param");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key param @ 0x%llx", key_param_addr);
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key param @ 0x%lx", key_param_addr);
 
     curr_ptr = key_param_addr;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)n, 256)) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param n into key memory @ 0x%llx", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param n into key memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 256;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)d, 256)) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param d into key memory @ 0x%llx", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param d into key memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -2151,7 +2151,7 @@ capri_barco_asym_rsa2k_decrypt (uint8_t *n, uint8_t *d, uint8_t *c,  uint8_t *m)
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for key DMA Descr");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key DMA Descr @ 0x%llx", key_dma_descr_addr);
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key DMA Descr @ 0x%lx", key_dma_descr_addr);
 
     /* Setup key DMA descriptor */
     key_dma_descr.address = key_param_addr;
@@ -2165,7 +2165,7 @@ capri_barco_asym_rsa2k_decrypt (uint8_t *n, uint8_t *d, uint8_t *c,  uint8_t *m)
     key_dma_descr.length = (curr_ptr - key_param_addr);
     if (sdk::asic::asic_mem_write(key_dma_descr_addr, (uint8_t*)&key_dma_descr,
                 sizeof(key_dma_descr))) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key DMA Descr @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key DMA Descr @ 0x%lx",
                 (uint64_t) key_dma_descr_addr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -2198,7 +2198,7 @@ capri_barco_asym_rsa2k_decrypt (uint8_t *n, uint8_t *d, uint8_t *c,  uint8_t *m)
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for ilist DMA Descr");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ 0x%llx", ilist_dma_descr_addr);
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ 0x%lx", ilist_dma_descr_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
             NULL, &olist_dma_descr_addr);
@@ -2206,7 +2206,7 @@ capri_barco_asym_rsa2k_decrypt (uint8_t *n, uint8_t *d, uint8_t *c,  uint8_t *m)
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for olist DMA Descr");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for olist DMA Descr @ 0x%llx", olist_dma_descr_addr);
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for olist DMA Descr @ 0x%lx", olist_dma_descr_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
             NULL, &ilist_mem_addr);
@@ -2214,7 +2214,7 @@ capri_barco_asym_rsa2k_decrypt (uint8_t *n, uint8_t *d, uint8_t *c,  uint8_t *m)
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for ilist content");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for input mem @ 0x%llx", ilist_mem_addr);
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for input mem @ 0x%lx", ilist_mem_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
             NULL, &olist_mem_addr);
@@ -2222,13 +2222,13 @@ capri_barco_asym_rsa2k_decrypt (uint8_t *n, uint8_t *d, uint8_t *c,  uint8_t *m)
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for olist content");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for output mem @ 0x%llx", olist_mem_addr);
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for output mem @ 0x%lx", olist_mem_addr);
 
     /* Copy the input to the ilist memory */
     curr_ptr = ilist_mem_addr;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)c, 256)) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param c into ilist memory @ 0x%llx", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param c into ilist memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -2246,7 +2246,7 @@ capri_barco_asym_rsa2k_decrypt (uint8_t *n, uint8_t *d, uint8_t *c,  uint8_t *m)
     ilist_dma_descr.length = (curr_ptr - ilist_mem_addr);
     if (sdk::asic::asic_mem_write(ilist_dma_descr_addr, (uint8_t*)&ilist_dma_descr,
                 sizeof(ilist_dma_descr))) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ilist DMA Descr @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ilist DMA Descr @ 0x%lx",
                 (uint64_t) ilist_dma_descr_addr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -2264,7 +2264,7 @@ capri_barco_asym_rsa2k_decrypt (uint8_t *n, uint8_t *d, uint8_t *c,  uint8_t *m)
     olist_dma_descr.length = (1 * 256); /* plain text */
     if (sdk::asic::asic_mem_write(olist_dma_descr_addr, (uint8_t*)&olist_dma_descr,
                 sizeof(olist_dma_descr))) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write olist DMA Descr @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write olist DMA Descr @ 0x%lx",
                 (uint64_t) olist_dma_descr_addr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -2292,13 +2292,13 @@ capri_barco_asym_rsa2k_decrypt (uint8_t *n, uint8_t *d, uint8_t *c,  uint8_t *m)
     }
     if (sdk::asic::asic_mem_read(asym_req_descr.status_addr,
                                  (uint8_t*)&status, sizeof(status))) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to retrieve operation status @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to retrieve operation status @ 0x%lx",
                 (uint64_t) asym_req_descr.status_addr);
         ret = SDK_RET_ERR;
         goto cleanup;
     }
     if (status != 0) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Operation failed with status 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Operation failed with status 0x%x",
                 status);
         ret = SDK_RET_ERR;
         goto cleanup;
@@ -2306,7 +2306,7 @@ capri_barco_asym_rsa2k_decrypt (uint8_t *n, uint8_t *d, uint8_t *c,  uint8_t *m)
     else {
         /* Copy out the results */
         if (sdk::asic::asic_mem_read(olist_mem_addr, (uint8_t*)m, 256)) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to read output m from memory @ 0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to read output m from memory @ 0x%lx",
                     (uint64_t) olist_mem_addr);
             ret = SDK_RET_INVALID_ARG;
             goto cleanup;
@@ -2320,7 +2320,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                    olist_mem_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for olist content:0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for olist content:0x%lx",
                           olist_mem_addr);
         }
     }
@@ -2329,7 +2329,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                    ilist_mem_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("ECC Point Mul P256: Failed to free memory for ilist content:0x%llx",
+            SDK_TRACE_ERR("ECC Point Mul P256: Failed to free memory for ilist content:0x%lx",
                           ilist_mem_addr);
         }
     }
@@ -2338,7 +2338,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                    olist_dma_descr_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for olist DMA Descr: 0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for olist DMA Descr: 0x%lx",
                           olist_dma_descr_addr);
         }
     }
@@ -2347,7 +2347,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                    ilist_dma_descr_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for ilist DMA Descr: 0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for ilist DMA Descr: 0x%lx",
                           ilist_dma_descr_addr);
         }
     }
@@ -2363,7 +2363,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                    key_dma_descr_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key DMA Descr: 0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key DMA Descr: 0x%lx",
                           key_dma_descr_addr);
         }
     }
@@ -2372,7 +2372,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                    key_param_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key param :0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key param :0x%lx",
                           key_param_addr);
         }
     }
@@ -2418,7 +2418,7 @@ capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key (uint8_t *p, uint8_t *q,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for key param 1");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key param 1 @ 0x%llx",
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key param 1 @ 0x%lx",
                     key_param_addr1);
     /* Key Param fragment 2 */
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
@@ -2427,7 +2427,7 @@ capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key (uint8_t *p, uint8_t *q,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for key param 2");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key param 2 @ 0x%llx", key_param_addr2);
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key param 2 @ 0x%lx", key_param_addr2);
     /* Key Param fragment 3 */
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                 NULL, &key_param_addr3);
@@ -2435,7 +2435,7 @@ capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key (uint8_t *p, uint8_t *q,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for key param 3");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key param 3 @ 0x%llx",
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key param 3 @ 0x%lx",
                     key_param_addr3);
 
     /* Allocate key DMA descriptor 1 */
@@ -2445,7 +2445,7 @@ capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key (uint8_t *p, uint8_t *q,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for key DMA Descr1");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key DMA Descr1 @ 0x%llx",
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key DMA Descr1 @ 0x%lx",
                     key_dma_descr_addr1);
 
     /* Allocate key DMA descriptor 2 */
@@ -2455,7 +2455,7 @@ capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key (uint8_t *p, uint8_t *q,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for key DMA Descr2");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key DMA Descr2 @ 0x%llx",
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key DMA Descr2 @ 0x%lx",
                     key_dma_descr_addr2);
 
     /* Allocate key DMA descriptor 3 */
@@ -2465,14 +2465,14 @@ capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key (uint8_t *p, uint8_t *q,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for key DMA Descr3");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key DMA Descr3 @ 0x%llx",
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key DMA Descr3 @ 0x%lx",
                     key_dma_descr_addr3);
 
     /* Setup params in the key memory 1 */
     curr_ptr = key_param_addr1;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)p, 256)) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param p into key memory @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param p into key memory @ 0x%lx",
                       (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -2480,7 +2480,7 @@ capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key (uint8_t *p, uint8_t *q,
     curr_ptr += 256;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)q, 256)) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param q into key memory @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param q into key memory @ 0x%lx",
                       (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -2498,7 +2498,7 @@ capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key (uint8_t *p, uint8_t *q,
     key_dma_descr.length = (curr_ptr - key_param_addr1);
     if (sdk::asic::asic_mem_write(key_dma_descr_addr1, (uint8_t*)&key_dma_descr,
                                   sizeof(key_dma_descr))) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key DMA Descr @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key DMA Descr @ 0x%lx",
                       (uint64_t) key_dma_descr_addr1);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -2508,7 +2508,7 @@ capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key (uint8_t *p, uint8_t *q,
     curr_ptr = key_param_addr2;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)dp, 256)) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param dp into key memory @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param dp into key memory @ 0x%lx",
                       (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -2516,7 +2516,7 @@ capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key (uint8_t *p, uint8_t *q,
     curr_ptr += 256;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)dq, 256)) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param dq into key memory @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param dq into key memory @ 0x%lx",
                       (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -2535,7 +2535,7 @@ capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key (uint8_t *p, uint8_t *q,
     key_dma_descr.length = (curr_ptr - key_param_addr2);
     if (sdk::asic::asic_mem_write(key_dma_descr_addr2, (uint8_t*)&key_dma_descr,
                                   sizeof(key_dma_descr))) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key DMA Descr @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key DMA Descr @ 0x%lx",
                       (uint64_t) key_dma_descr_addr2);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -2545,7 +2545,7 @@ capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key (uint8_t *p, uint8_t *q,
     curr_ptr = key_param_addr3;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)qinv, 256)) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param qinv into key memory @ 0x%llx", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param qinv into key memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -2563,7 +2563,7 @@ capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key (uint8_t *p, uint8_t *q,
     key_dma_descr.length = (curr_ptr - key_param_addr3);
     if (sdk::asic::asic_mem_write(key_dma_descr_addr3, (uint8_t*)&key_dma_descr,
                                   sizeof(key_dma_descr))) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key DMA Descr @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key DMA Descr @ 0x%lx",
                       (uint64_t) key_dma_descr_addr3);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -2601,7 +2601,7 @@ cleanup:
     if (key_dma_descr_addr3) {
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR, key_dma_descr_addr3);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key DMA Descr: 0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key DMA Descr: 0x%lx",
                           key_dma_descr_addr3);
         }
     }
@@ -2609,7 +2609,7 @@ cleanup:
     if (key_dma_descr_addr2) {
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR, key_dma_descr_addr2);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key DMA Descr: 0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key DMA Descr: 0x%lx",
                           key_dma_descr_addr2);
         }
     }
@@ -2617,7 +2617,7 @@ cleanup:
     if (key_dma_descr_addr1) {
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR, key_dma_descr_addr1);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key DMA Descr: 0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key DMA Descr: 0x%lx",
                           key_dma_descr_addr1);
         }
     }
@@ -2626,7 +2626,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                    key_param_addr3);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key param :0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key param :0x%lx",
                     key_param_addr3);
         }
     }
@@ -2635,7 +2635,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                    key_param_addr2);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key param :0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key param :0x%lx",
                     key_param_addr2);
         }
     }
@@ -2644,7 +2644,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                    key_param_addr1);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key param :0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key param :0x%lx",
                     key_param_addr1);
         }
     }
@@ -2689,7 +2689,7 @@ capri_barco_asym_rsa2k_crt_decrypt (int32_t key_idx, uint8_t *p, uint8_t *q,
         ecc_p256_key_idx = key_idx;
     }
 
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "key @ 0x%llx", ecc_p256_key_idx);
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "key @ %d", ecc_p256_key_idx);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
             NULL, &ilist_dma_descr_addr);
@@ -2697,7 +2697,7 @@ capri_barco_asym_rsa2k_crt_decrypt (int32_t key_idx, uint8_t *p, uint8_t *q,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for ilist DMA Descr");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ 0x%llx", ilist_dma_descr_addr);
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ 0x%lx", ilist_dma_descr_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
             NULL, &olist_dma_descr_addr);
@@ -2705,7 +2705,7 @@ capri_barco_asym_rsa2k_crt_decrypt (int32_t key_idx, uint8_t *p, uint8_t *q,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for olist DMA Descr");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for olist DMA Descr @ 0x%llx", olist_dma_descr_addr);
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for olist DMA Descr @ 0x%lx", olist_dma_descr_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
             NULL, &ilist_mem_addr);
@@ -2713,7 +2713,7 @@ capri_barco_asym_rsa2k_crt_decrypt (int32_t key_idx, uint8_t *p, uint8_t *q,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for ilist content");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for input mem @ 0x%llx", ilist_mem_addr);
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for input mem @ 0x%lx", ilist_mem_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
             NULL, &olist_mem_addr);
@@ -2721,13 +2721,13 @@ capri_barco_asym_rsa2k_crt_decrypt (int32_t key_idx, uint8_t *p, uint8_t *q,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for olist content");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for output mem @ 0x%llx", olist_mem_addr);
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for output mem @ 0x%lx", olist_mem_addr);
 
     /* Copy the input to the ilist memory */
     curr_ptr = ilist_mem_addr;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)c, 256)) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param c into ilist memory @ 0x%llx", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param c into ilist memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -2745,7 +2745,7 @@ capri_barco_asym_rsa2k_crt_decrypt (int32_t key_idx, uint8_t *p, uint8_t *q,
     ilist_dma_descr.length = (curr_ptr - ilist_mem_addr);
     if (sdk::asic::asic_mem_write(ilist_dma_descr_addr, (uint8_t*)&ilist_dma_descr,
                 sizeof(ilist_dma_descr))) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ilist DMA Descr @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ilist DMA Descr @ 0x%lx",
                 (uint64_t) ilist_dma_descr_addr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -2763,7 +2763,7 @@ capri_barco_asym_rsa2k_crt_decrypt (int32_t key_idx, uint8_t *p, uint8_t *q,
     olist_dma_descr.length = (1 * 256); /* plain text */
     if (sdk::asic::asic_mem_write(olist_dma_descr_addr, (uint8_t*)&olist_dma_descr,
                 sizeof(olist_dma_descr))) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write olist DMA Descr @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write olist DMA Descr @ 0x%lx",
                 (uint64_t) olist_dma_descr_addr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -2790,13 +2790,13 @@ capri_barco_asym_rsa2k_crt_decrypt (int32_t key_idx, uint8_t *p, uint8_t *q,
 
     if (sdk::asic::asic_mem_read(asym_req_descr.status_addr,
                                  (uint8_t*)&status, sizeof(status))) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to retrieve operation status @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to retrieve operation status @ 0x%lx",
                 (uint64_t) asym_req_descr.status_addr);
         ret = SDK_RET_ERR;
         goto cleanup;
     }
     if (status != 0) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Operation failed with status 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Operation failed with status 0x%x",
                 status);
         ret = SDK_RET_ERR;
         goto cleanup;
@@ -2804,7 +2804,7 @@ capri_barco_asym_rsa2k_crt_decrypt (int32_t key_idx, uint8_t *p, uint8_t *q,
     else {
         /* Copy out the results */
         if (sdk::asic::asic_mem_read(olist_mem_addr, (uint8_t*)m, 256)) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to read output m from memory @ 0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to read output m from memory @ 0x%lx",
                     (uint64_t) olist_mem_addr);
             ret = SDK_RET_INVALID_ARG;
             goto cleanup;
@@ -2819,7 +2819,7 @@ cleanup:
     if (olist_mem_addr) {
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B, olist_mem_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for olist content:0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for olist content:0x%lx",
                     olist_mem_addr);
         }
     }
@@ -2827,7 +2827,7 @@ cleanup:
     if (ilist_mem_addr) {
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B, ilist_mem_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("ECC Point Mul P256: Failed to free memory for ilist content:0x%llx",
+            SDK_TRACE_ERR("ECC Point Mul P256: Failed to free memory for ilist content:0x%lx",
                     ilist_mem_addr);
         }
     }
@@ -2835,7 +2835,7 @@ cleanup:
     if (olist_dma_descr_addr) {
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR, olist_dma_descr_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for olist DMA Descr: 0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for olist DMA Descr: 0x%lx",
                     olist_dma_descr_addr);
         }
     }
@@ -2843,7 +2843,7 @@ cleanup:
     if (ilist_dma_descr_addr) {
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR, ilist_dma_descr_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for ilist DMA Descr: 0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for ilist DMA Descr: 0x%lx",
                     ilist_dma_descr_addr);
         }
     }
@@ -2885,7 +2885,7 @@ capri_barco_asym_rsa2k_sig_gen (int32_t key_idx, uint8_t *n, uint8_t *d,
         ecc_p256_key_idx = key_idx;
     }
 
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "key @ 0x%llx", ecc_p256_key_idx);
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "key @ %d", ecc_p256_key_idx);
 
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
@@ -2894,7 +2894,7 @@ capri_barco_asym_rsa2k_sig_gen (int32_t key_idx, uint8_t *n, uint8_t *d,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for ilist DMA Descr");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ 0x%llx", ilist_dma_descr_addr);
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ 0x%lx", ilist_dma_descr_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
             NULL, &olist_dma_descr_addr);
@@ -2902,7 +2902,7 @@ capri_barco_asym_rsa2k_sig_gen (int32_t key_idx, uint8_t *n, uint8_t *d,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for olist DMA Descr");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for olist DMA Descr @ 0x%llx", olist_dma_descr_addr);
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for olist DMA Descr @ 0x%lx", olist_dma_descr_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
             NULL, &ilist_mem_addr);
@@ -2910,7 +2910,7 @@ capri_barco_asym_rsa2k_sig_gen (int32_t key_idx, uint8_t *n, uint8_t *d,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for ilist content");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for input mem @ 0x%llx", ilist_mem_addr);
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for input mem @ 0x%lx", ilist_mem_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
             NULL, &olist_mem_addr);
@@ -2918,13 +2918,13 @@ capri_barco_asym_rsa2k_sig_gen (int32_t key_idx, uint8_t *n, uint8_t *d,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for olist content");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for output mem @ 0x%llx", olist_mem_addr);
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for output mem @ 0x%lx", olist_mem_addr);
 
     /* Copy the input to the ilist memory */
     curr_ptr = ilist_mem_addr;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)h, 256)) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param h into ilist memory @ 0x%llx", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param h into ilist memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -2943,7 +2943,7 @@ capri_barco_asym_rsa2k_sig_gen (int32_t key_idx, uint8_t *n, uint8_t *d,
     if (sdk::asic::asic_mem_write(ilist_dma_descr_addr,
                                   (uint8_t*)&ilist_dma_descr,
                                   sizeof(ilist_dma_descr))) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ilist DMA Descr @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ilist DMA Descr @ 0x%lx",
                 (uint64_t) ilist_dma_descr_addr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -2962,7 +2962,7 @@ capri_barco_asym_rsa2k_sig_gen (int32_t key_idx, uint8_t *n, uint8_t *d,
     if (sdk::asic::asic_mem_write(olist_dma_descr_addr,
                                   (uint8_t*)&olist_dma_descr,
                                   sizeof(olist_dma_descr))) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write olist DMA Descr @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write olist DMA Descr @ 0x%lx",
                 (uint64_t) olist_dma_descr_addr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -2991,13 +2991,13 @@ capri_barco_asym_rsa2k_sig_gen (int32_t key_idx, uint8_t *n, uint8_t *d,
     if (sdk::asic::asic_mem_read(asym_req_descr.status_addr,
                                  (uint8_t*)&status,
                                  sizeof(status))) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to retrieve operation status @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to retrieve operation status @ 0x%lx",
                 (uint64_t) asym_req_descr.status_addr);
         ret = SDK_RET_ERR;
         goto cleanup;
     }
     if (status != 0) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Operation failed with status 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Operation failed with status 0x%x",
                 status);
         ret = SDK_RET_ERR;
         goto cleanup;
@@ -3005,7 +3005,7 @@ capri_barco_asym_rsa2k_sig_gen (int32_t key_idx, uint8_t *n, uint8_t *d,
     else {
         /* Copy out the results */
         if (sdk::asic::asic_mem_read(olist_mem_addr, (uint8_t*)s, 256)) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to read output s from memory @ 0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to read output s from memory @ 0x%lx",
                     (uint64_t) olist_mem_addr);
             ret = SDK_RET_INVALID_ARG;
             goto cleanup;
@@ -3020,7 +3020,7 @@ cleanup:
     if (olist_mem_addr) {
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B, olist_mem_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for olist content:0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for olist content:0x%lx",
                     olist_mem_addr);
         }
     }
@@ -3028,7 +3028,7 @@ cleanup:
     if (ilist_mem_addr) {
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B, ilist_mem_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("ECC Point Mul P256: Failed to free memory for ilist content:0x%llx",
+            SDK_TRACE_ERR("ECC Point Mul P256: Failed to free memory for ilist content:0x%lx",
                     ilist_mem_addr);
         }
     }
@@ -3036,7 +3036,7 @@ cleanup:
     if (olist_dma_descr_addr) {
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR, olist_dma_descr_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for olist DMA Descr: 0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for olist DMA Descr: 0x%lx",
                     olist_dma_descr_addr);
         }
     }
@@ -3044,7 +3044,7 @@ cleanup:
     if (ilist_dma_descr_addr) {
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR, ilist_dma_descr_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for ilist DMA Descr: 0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for ilist DMA Descr: 0x%lx",
                     ilist_dma_descr_addr);
         }
     }
@@ -3085,7 +3085,7 @@ capri_barco_asym_rsa_sig_gen (uint16_t key_size, int32_t key_idx,
         ecc_p256_key_idx = key_idx;
     }
 
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "key @ 0x%llx", ecc_p256_key_idx);
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "key @ %d", ecc_p256_key_idx);
 
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
@@ -3094,7 +3094,7 @@ capri_barco_asym_rsa_sig_gen (uint16_t key_size, int32_t key_idx,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for ilist DMA Descr");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ 0x%llx", ilist_dma_descr_addr);
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ 0x%lx", ilist_dma_descr_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
             NULL, &olist_dma_descr_addr);
@@ -3102,7 +3102,7 @@ capri_barco_asym_rsa_sig_gen (uint16_t key_size, int32_t key_idx,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for olist DMA Descr");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for olist DMA Descr @ 0x%llx", olist_dma_descr_addr);
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for olist DMA Descr @ 0x%lx", olist_dma_descr_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
             NULL, &ilist_mem_addr);
@@ -3110,7 +3110,7 @@ capri_barco_asym_rsa_sig_gen (uint16_t key_size, int32_t key_idx,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for ilist content");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for input mem @ 0x%llx", ilist_mem_addr);
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for input mem @ 0x%lx", ilist_mem_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
             NULL, &olist_mem_addr);
@@ -3118,7 +3118,7 @@ capri_barco_asym_rsa_sig_gen (uint16_t key_size, int32_t key_idx,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for olist content");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for output mem @ 0x%llx", olist_mem_addr);
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for output mem @ 0x%lx", olist_mem_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
             NULL, &status_mem_addr);
@@ -3126,13 +3126,13 @@ capri_barco_asym_rsa_sig_gen (uint16_t key_size, int32_t key_idx,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for status content");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for status mem @ 0x%llx", status_mem_addr);
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for status mem @ 0x%lx", status_mem_addr);
 
     /* Copy the input to the ilist memory */
     curr_ptr = ilist_mem_addr;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)h, key_size)) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param h into ilist memory @ 0x%llx", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param h into ilist memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -3151,7 +3151,7 @@ capri_barco_asym_rsa_sig_gen (uint16_t key_size, int32_t key_idx,
     if (sdk::asic::asic_mem_write(ilist_dma_descr_addr,
                                   (uint8_t*)&ilist_dma_descr,
                                   sizeof(ilist_dma_descr))) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ilist DMA Descr @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ilist DMA Descr @ 0x%lx",
                 (uint64_t) ilist_dma_descr_addr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -3170,7 +3170,7 @@ capri_barco_asym_rsa_sig_gen (uint16_t key_size, int32_t key_idx,
     if (sdk::asic::asic_mem_write(olist_dma_descr_addr,
                                   (uint8_t*)&olist_dma_descr,
                                   sizeof(olist_dma_descr))) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write olist DMA Descr @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write olist DMA Descr @ 0x%lx",
                 (uint64_t) olist_dma_descr_addr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -3198,13 +3198,13 @@ capri_barco_asym_rsa_sig_gen (uint16_t key_size, int32_t key_idx,
 
     if (sdk::asic::asic_mem_read(asym_req_descr.status_addr,
                                  (uint8_t*)&status, sizeof(status))) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to retrieve operation status @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to retrieve operation status @ 0x%lx",
                 (uint64_t) asym_req_descr.status_addr);
         ret = SDK_RET_ERR;
         goto cleanup;
     }
     if (status != 0) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Operation failed with status 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Operation failed with status 0x%x",
                 status);
         ret = SDK_RET_ERR;
         goto cleanup;
@@ -3212,7 +3212,7 @@ capri_barco_asym_rsa_sig_gen (uint16_t key_size, int32_t key_idx,
     else {
         /* Copy out the results */
         if (sdk::asic::asic_mem_read(olist_mem_addr, (uint8_t*)s, key_size)) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to read output s from memory @ 0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to read output s from memory @ 0x%lx",
                     (uint64_t) olist_mem_addr);
             ret = SDK_RET_INVALID_ARG;
             goto cleanup;
@@ -3226,7 +3226,7 @@ cleanup:
     if (status_mem_addr) {
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B, status_mem_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for status content:0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for status content:0x%lx",
                     status_mem_addr);
         }
     }
@@ -3234,7 +3234,7 @@ cleanup:
     if (olist_mem_addr) {
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B, olist_mem_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for olist content:0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for olist content:0x%lx",
                     olist_mem_addr);
         }
     }
@@ -3242,7 +3242,7 @@ cleanup:
     if (ilist_mem_addr) {
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B, ilist_mem_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for ilist content:0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for ilist content:0x%lx",
                     ilist_mem_addr);
         }
     }
@@ -3250,7 +3250,7 @@ cleanup:
     if (olist_dma_descr_addr) {
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR, olist_dma_descr_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for olist DMA Descr: 0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for olist DMA Descr: 0x%lx",
                     olist_dma_descr_addr);
         }
     }
@@ -3258,7 +3258,7 @@ cleanup:
     if (ilist_dma_descr_addr) {
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR, ilist_dma_descr_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for ilist DMA Descr: 0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for ilist DMA Descr: 0x%lx",
                     ilist_dma_descr_addr);
         }
     }
@@ -3301,13 +3301,13 @@ capri_barco_asym_rsa2k_sig_verify (uint8_t *n, uint8_t *e,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for key param");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key param @ 0x%llx",
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key param @ 0x%lx",
                     key_param_addr);
 
     curr_ptr = key_param_addr;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)n, 256)) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param n into key memory @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param n into key memory @ 0x%lx",
                       (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -3315,7 +3315,7 @@ capri_barco_asym_rsa2k_sig_verify (uint8_t *n, uint8_t *e,
     curr_ptr += 256;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)e, 256)) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param e into key memory @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param e into key memory @ 0x%lx",
                       (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -3328,7 +3328,7 @@ capri_barco_asym_rsa2k_sig_verify (uint8_t *n, uint8_t *e,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for key DMA Descr");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key DMA Descr @ 0x%llx",
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for key DMA Descr @ 0x%lx",
                     key_dma_descr_addr);
 
     /* Setup key DMA descriptor */
@@ -3343,7 +3343,7 @@ capri_barco_asym_rsa2k_sig_verify (uint8_t *n, uint8_t *e,
     key_dma_descr.length = (curr_ptr - key_param_addr);
     if (sdk::asic::asic_mem_write(key_dma_descr_addr, (uint8_t*)&key_dma_descr,
                 sizeof(key_dma_descr))) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key DMA Descr @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write key DMA Descr @ 0x%lx",
                       (uint64_t) key_dma_descr_addr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -3377,7 +3377,7 @@ capri_barco_asym_rsa2k_sig_verify (uint8_t *n, uint8_t *e,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for ilist DMA Descr");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ 0x%llx",
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ 0x%lx",
                     ilist_dma_descr_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
@@ -3386,7 +3386,7 @@ capri_barco_asym_rsa2k_sig_verify (uint8_t *n, uint8_t *e,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for ilist content");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for input mem @ 0x%llx",
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for input mem @ 0x%lx",
                     ilist_mem_addr);
 
     ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
@@ -3395,14 +3395,14 @@ capri_barco_asym_rsa2k_sig_verify (uint8_t *n, uint8_t *e,
         SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to allocate memory for olist content");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for output mem @ 0x%llx",
+    SDK_TRACE_DEBUG(CAPRI_BARCO_API_NAME "Allocated memory for output mem @ 0x%lx",
                     olist_mem_addr);
 
     /* Copy the input to the ilist memory */
     curr_ptr = ilist_mem_addr;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)s, 256)) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param s into ilist memory @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param s into ilist memory @ 0x%lx",
                       (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -3410,7 +3410,7 @@ capri_barco_asym_rsa2k_sig_verify (uint8_t *n, uint8_t *e,
     curr_ptr += 256;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)h, 256)) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param h into ilist memory @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write RSA param h into ilist memory @ 0x%lx",
                       (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -3430,7 +3430,7 @@ capri_barco_asym_rsa2k_sig_verify (uint8_t *n, uint8_t *e,
     if (sdk::asic::asic_mem_write(ilist_dma_descr_addr,
                                   (uint8_t*)&ilist_dma_descr,
                                   sizeof(ilist_dma_descr))) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ilist DMA Descr @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to write ilist DMA Descr @ 0x%lx",
                       (uint64_t) ilist_dma_descr_addr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -3460,13 +3460,13 @@ capri_barco_asym_rsa2k_sig_verify (uint8_t *n, uint8_t *e,
     }
     if (sdk::asic::asic_mem_read(asym_req_descr.status_addr,
                                  (uint8_t*)&status, sizeof(status))) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to retrieve operation status @ 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to retrieve operation status @ 0x%lx",
                       (uint64_t) asym_req_descr.status_addr);
         ret = SDK_RET_ERR;
         goto cleanup;
     }
     if (status != 0) {
-        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Operation failed with status 0x%llx",
+        SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Operation failed with status 0x%x",
                 status);
         ret = SDK_RET_ERR;
         goto cleanup;
@@ -3480,7 +3480,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                    olist_mem_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for olist content:0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for olist content:0x%lx",
                           olist_mem_addr);
         }
     }
@@ -3489,7 +3489,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                    ilist_mem_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("ECC Point Mul P256: Failed to free memory for ilist content:0x%llx",
+            SDK_TRACE_ERR("ECC Point Mul P256: Failed to free memory for ilist content:0x%lx",
                           ilist_mem_addr);
         }
     }
@@ -3498,7 +3498,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                    ilist_dma_descr_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for ilist DMA Descr: 0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for ilist DMA Descr: 0x%lx",
                           ilist_dma_descr_addr);
         }
     }
@@ -3514,7 +3514,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                    key_dma_descr_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key DMA Descr: 0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key DMA Descr: 0x%lx",
                           key_dma_descr_addr);
         }
     }
@@ -3523,7 +3523,7 @@ cleanup:
         ret = capri_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                    key_param_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key param :0x%llx",
+            SDK_TRACE_ERR(CAPRI_BARCO_API_NAME "Failed to free memory for key param :0x%lx",
                           key_param_addr);
         }
     }

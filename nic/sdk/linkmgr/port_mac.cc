@@ -217,7 +217,7 @@ mac_cfg_haps (const char *cfg_path)
 
     while (fscanf(fp, "%" PRIx32 "%" PRIx32 "%" PRIx32,
                   &addrh, &addrl, &data) != EOF) {
-        WRITE_REG_BASE(chip, addrl, data);
+        WRITE_REG_BASE(chip, (uint64_t)addrl, data);
     }
 
     data = 0x1140;

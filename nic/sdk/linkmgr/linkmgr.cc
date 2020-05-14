@@ -321,7 +321,7 @@ port_bringup_timer_cb (sdk::event_thread::timer_t *timer)
             port_p->port_enable();
         } else {
             // TODO notify upper layers?
-            SDK_TRACE_DEBUG("Max retries: %d reached for port: %d",
+            SDK_TRACE_DEBUG("Max retries %d reached for port %d",
                             MAX_PORT_LINKUP_RETRIES, port_p->port_num());
         }
     } else {
@@ -418,9 +418,9 @@ linkmgr_event_thread_init (void *ctxt)
         int rev_id   = sdk::linkmgr::serdes_fns.serdes_get_rev(sbus_addr);
 
         if (build_id != exp_build_id || rev_id != exp_rev_id) {
-            SDK_TRACE_DEBUG("sbus_addr: 0x%x,"
-                            " build_id: 0x%x, exp_build_id: 0x%x,"
-                            " rev_id: 0x%x, exp_rev_id: 0x%x",
+            SDK_TRACE_DEBUG("sbus_addr 0x%x,"
+                            " build_id 0x%x, exp_build_id 0x%x,"
+                            " rev_id 0x%x, exp_rev_id 0x%x",
                             sbus_addr, build_id, exp_build_id,
                             rev_id, exp_rev_id);
             // TODO fail if no match
@@ -428,7 +428,7 @@ linkmgr_event_thread_init (void *ctxt)
 
         sdk::linkmgr::serdes_fns.serdes_spico_status(sbus_addr);
 
-        SDK_TRACE_DEBUG("sbus_addr: 0x%x, spico_crc: %d",
+        SDK_TRACE_DEBUG("sbus_addr 0x%x, spico_crc %d",
                         sbus_addr,
                         sdk::linkmgr::serdes_fns.serdes_spico_crc(sbus_addr));
     }
@@ -603,9 +603,9 @@ validate_speed_lanes (port_speed_t speed, uint32_t num_lanes)
     }
 
     if (valid == false) {
-        SDK_TRACE_ERR("Invalid speed and lanes config."
-                      " num_lanes: %d, speed: %d",
-                      num_lanes, speed);
+        SDK_TRACE_ERR("Invalid speed and lanes config,"
+                      " num_lanes %u, speed %u",
+                      num_lanes, static_cast<uint32_t>(speed));
     }
 
     return valid;
@@ -646,16 +646,16 @@ port_update_xcvr_event (void *pd_p, xcvr_event_info_t *xcvr_event_info)
 
     sdk_ret = port_get(pd_p, &port_args);
     if (sdk_ret != SDK_RET_OK) {
-        SDK_TRACE_ERR("Failed to get pd for port, err: %u", sdk_ret);
+        SDK_TRACE_ERR("Failed to get pd for port, err %u", sdk_ret);
         return sdk_ret;
     }
 
     int phy_port =
         sdk::lib::catalog::logical_port_to_phy_port(port_args.port_num);
 
-    SDK_TRACE_DEBUG("port: %u, phy_port: %u, xcvr_event_port: %u, "
-                    "xcvr_state: %u, user_admin: %u, admin: %u, "
-                    "AN_cfg: %u, AN_enable: %u, num_lanes_cfg: %u",
+    SDK_TRACE_DEBUG("port %u, phy_port %u, xcvr_event_port %u, "
+                    "xcvr_state %u, user_admin %u, admin %u, "
+                    "AN_cfg %u, AN_enable %u, num_lanes_cfg %u",
                     port_args.port_num, phy_port, xcvr_event_info->phy_port,
                     static_cast<uint32_t>(xcvr_event_info->state),
                     static_cast<uint32_t>(port_args.user_admin_state),
@@ -673,8 +673,8 @@ port_update_xcvr_event (void *pd_p, xcvr_event_info_t *xcvr_event_info)
         port_args.cable_type   = xcvr_event_info->cable_type;
         port_args.port_an_args = xcvr_event_info->port_an_args;
 
-        SDK_TRACE_DEBUG("port: %u, phy_port: %u, "
-                        "user_cap: %u, fec_ability: %u, fec_request: %u",
+        SDK_TRACE_DEBUG("port %u, phy_port %u, "
+                        "user_cap %u, fec_ability %u, fec_request %u",
                         port_args.port_num,
                         phy_port,
                         port_args.port_an_args->user_cap,
@@ -699,7 +699,7 @@ port_update_xcvr_event (void *pd_p, xcvr_event_info_t *xcvr_event_info)
         sdk_ret = port_update(pd_p, &port_args);
 
         if (sdk_ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("Failed to update for port: %u, err: %u",
+            SDK_TRACE_ERR("Failed to update for port %u, err %u",
                           port_args.port_num, sdk_ret);
         }
     } else if (xcvr_event_info->state == xcvr_state_t::XCVR_REMOVED) {
@@ -710,7 +710,7 @@ port_update_xcvr_event (void *pd_p, xcvr_event_info_t *xcvr_event_info)
             sdk_ret = port_update(pd_p, &port_args);
 
             if (sdk_ret != SDK_RET_OK) {
-                SDK_TRACE_ERR("Faileu to upuate for port: %u, err: %u",
+                SDK_TRACE_ERR("Failed to update for port %u, err %u",
                               port_args.port_num, sdk_ret);
             }
         }
@@ -758,8 +758,8 @@ port_args_set_by_xcvr_state_ (int phy_port, port_speed_t *port_speed,
 
         default:
             *fec_type = port_fec_type_t::PORT_FEC_TYPE_NONE;
-            SDK_TRACE_ERR("Invalid port speed %u for phy_port %u",
-                          *port_speed, phy_port);
+            SDK_TRACE_ERR("Invalid port speed %u for phy_port %d",
+                          static_cast<uint32_t>(*port_speed), phy_port);
             return SDK_RET_ERR;
     }
     return SDK_RET_OK;
@@ -796,9 +796,9 @@ port_args_set_by_xcvr_state (port_args_t *port_args)
             }
             port_args->port_an_args =
                             sdk::platform::xcvr_get_an_args(phy_port - 1);
-           SDK_TRACE_DEBUG("port : %u, phy_port : %u, user_cap : %u "
-                           "fec ability : %u, fec request : %u, "
-                           "cable_type : %u", port_args->port_num,
+           SDK_TRACE_DEBUG("port  %u, phy_port  %u, user_cap  %u "
+                           "fec ability  %u, fec request  %u, "
+                           "cable_type  %u", port_args->port_num,
                            phy_port, port_args->port_an_args->user_cap,
                            port_args->port_an_args->fec_ability,
                            port_args->port_an_args->fec_request,
@@ -847,7 +847,7 @@ port_args_set_by_xcvr_state (port_args_t *port_args)
                             "derived_fec_type %u, toggle_fec %u",
                             port_args->port_num, port_args->auto_neg_enable,
                             port_args->toggle_neg_mode,
-                            port_args->derived_fec_type,
+                            static_cast<uint32_t>(port_args->derived_fec_type),
                             port_args->toggle_fec_mode);
 
         } else {
@@ -864,12 +864,12 @@ static bool
 validate_port_create (port_args_t *args)
 {
     if (args->port_type == port_type_t::PORT_TYPE_NONE) {
-        SDK_TRACE_ERR("Invalid port type for port: %d", args->port_num);
+        SDK_TRACE_ERR("Invalid port type for port %d", args->port_num);
         return false;
     }
 
     if (args->port_speed == port_speed_t::PORT_SPEED_NONE) {
-        SDK_TRACE_ERR("Invalid port speed for port: %d", args->port_num);
+        SDK_TRACE_ERR("Invalid port speed for port %d", args->port_num);
         return false;
     }
 
@@ -1023,7 +1023,7 @@ static bool
 validate_port_update (port *port_p, port_args_t *args)
 {
     if (args->port_type != port_p->port_type()) {
-        SDK_TRACE_ERR("port_type update not supported for port: %d",
+        SDK_TRACE_ERR("port_type update not supported for port %d",
                         args->port_num);
         return false;
     }
@@ -1031,7 +1031,7 @@ validate_port_update (port *port_p, port_args_t *args)
     // TODO skip num_lanes check to support auto speed set for QSA
 #if 0
     if (args->num_lanes != port_p->num_lanes()) {
-        SDK_TRACE_ERR("num_lanes update not supported for port: %d",
+        SDK_TRACE_ERR("num_lanes update not supported for port %d",
                         args->port_num);
         return false;
     }
@@ -1068,8 +1068,9 @@ port_update (void *pd_p, port_args_t *args)
 
     if (args->port_speed != port_speed_t::PORT_SPEED_NONE &&
         args->port_speed != port_p->port_speed()) {
-        SDK_TRACE_DEBUG("speed updated. new: %d, old: %d",
-                        args->port_speed, port_p->port_speed());
+        SDK_TRACE_DEBUG("speed updated, new %d, old %d",
+                        static_cast<int>(args->port_speed),
+                        static_cast<int>(port_p->port_speed()));
 
         port_p->port_deinit();
         port_p->set_port_speed(args->port_speed);
@@ -1078,8 +1079,9 @@ port_update (void *pd_p, port_args_t *args)
 
     if (args->admin_state != port_admin_state_t::PORT_ADMIN_STATE_NONE &&
         args->admin_state != port_p->admin_state()) {
-        SDK_TRACE_DEBUG("admin_state updated. new: %d, old: %d",
-                        args->admin_state, port_p->admin_state());
+        SDK_TRACE_DEBUG("admin_state updated, new %d, old %d",
+                        static_cast<int>(args->admin_state),
+                        static_cast<int>(port_p->admin_state()));
 
         // Do not update admin_state here
         // port_disable following configured=true will update it
@@ -1088,14 +1090,15 @@ port_update (void *pd_p, port_args_t *args)
 
     if (args->user_admin_state != port_admin_state_t::PORT_ADMIN_STATE_NONE &&
         args->user_admin_state != port_p->user_admin_state()) {
-        SDK_TRACE_DEBUG("user_admin_state updated. new: %d, old: %d",
-                        args->user_admin_state, port_p->user_admin_state());
+        SDK_TRACE_DEBUG("user_admin_state updated, new %d, old %d",
+                        static_cast<int>(args->user_admin_state),
+                        static_cast<int>(port_p->user_admin_state()));
         port_p->set_user_admin_state(args->user_admin_state);
     }
 
     if (args->cable_type != cable_type_t::CABLE_TYPE_NONE &&
         args->cable_type != port_p->cable_type()) {
-        SDK_TRACE_DEBUG("cable_type updated. new: %d, old: %d",
+        SDK_TRACE_DEBUG("cable_type updated, new %d, old %d",
                         args->cable_type, port_p->cable_type());
         port_p->set_cable_type(args->cable_type);
         configured = true;
@@ -1103,8 +1106,9 @@ port_update (void *pd_p, port_args_t *args)
 
     // FEC_TYPE_NONE is valid
     if (args->user_fec_type != port_p->user_fec_type()) {
-        SDK_TRACE_DEBUG("fec updated. new: %d, old: %d",
-                        args->user_fec_type, port_p->user_fec_type());
+        SDK_TRACE_DEBUG("fec updated, new %d, old %d",
+                        static_cast<int>(args->user_fec_type),
+                        static_cast<int>(port_p->user_fec_type()));
         port_p->set_user_fec_type(args->user_fec_type);
         configured = true;
     }
@@ -1114,14 +1118,14 @@ port_update (void *pd_p, port_args_t *args)
     // MTU 0 is invalid
     if (args->mtu != 0 &&
         args->mtu != port_p->mtu()) {
-        SDK_TRACE_DEBUG("mtu updated. new: %d, old: %d",
+        SDK_TRACE_DEBUG("mtu updated, new %d, old %d",
                         args->mtu, port_p->mtu());
         port_p->set_mtu(args->mtu);
         configured = true;
     }
 
     if (args->debounce_time != port_p->debounce_time()) {
-        SDK_TRACE_DEBUG("Debounce updated. new: %d, old: %d",
+        SDK_TRACE_DEBUG("Debounce updated, new %d, old %d",
                         args->debounce_time, port_p->debounce_time());
         port_p->set_debounce_time(args->debounce_time);
         configured = true;
@@ -1131,7 +1135,7 @@ port_update (void *pd_p, port_args_t *args)
     // check auto_neg_enable only if toggle_neg_mode is false
     if (args->toggle_neg_mode == false) {
         if (args->auto_neg_enable != port_p->auto_neg_enable()) {
-            SDK_TRACE_DEBUG("AN updated. new: %d, old: %d",
+            SDK_TRACE_DEBUG("AN updated, new %d, old %d",
                             args->auto_neg_enable, port_p->auto_neg_enable());
             port_p->set_auto_neg_enable(args->auto_neg_enable);
             configured = true;
@@ -1141,14 +1145,14 @@ port_update (void *pd_p, port_args_t *args)
 
     // TODO required?
     // if (args->toggle_neg_mode != port_p->toggle_neg_mode()) {
-    //     SDK_TRACE_DEBUG("port %u toggle neg mode updated. new: %d, old: %d",
+    //     SDK_TRACE_DEBUG("port %u toggle neg mode updated, new %d, old %d",
     //                     args->port_num, args->toggle_neg_mode, port_p->toggle_neg_mode());
     //     port_p->set_toggle_neg_mode(args->toggle_neg_mode);
     //     configured = true;
     // }
 
     if (args->auto_neg_cfg != port_p->auto_neg_cfg()) {
-        SDK_TRACE_DEBUG("AN cfg updated. new: %d, old: %d",
+        SDK_TRACE_DEBUG("AN cfg updated, new %d, old %d",
                         args->auto_neg_cfg, port_p->auto_neg_cfg());
         port_p->set_auto_neg_cfg(args->auto_neg_cfg);
         configured = true;
@@ -1156,14 +1160,14 @@ port_update (void *pd_p, port_args_t *args)
 
     // TODO update num_lanes to support auto speed set for QSA
     if (args->num_lanes != port_p->num_lanes()) {
-        SDK_TRACE_DEBUG("num_lanes updated. new: %d, old: %d",
+        SDK_TRACE_DEBUG("num_lanes updated, new %d, old %d",
                         args->num_lanes, port_p->num_lanes());
         port_p->set_num_lanes(args->num_lanes);
         configured = true;
     }
 
     if (args->num_lanes_cfg != port_p->num_lanes_cfg()) {
-        SDK_TRACE_DEBUG("num_lanes_cfg updated. new: %d, old: %d",
+        SDK_TRACE_DEBUG("num_lanes_cfg updated, new %d, old %d",
                         args->num_lanes_cfg, port_p->num_lanes_cfg());
         port_p->set_num_lanes_cfg(args->num_lanes_cfg);
         configured = true;
@@ -1171,7 +1175,7 @@ port_update (void *pd_p, port_args_t *args)
 
     if (args->loopback_mode != port_p->loopback_mode()) {
         SDK_TRACE_DEBUG(
-            "loopback updated. new: %s, old: %s",
+            "Loopback updated, new %s, old %s",
             args->loopback_mode ==
                 port_loopback_mode_t::PORT_LOOPBACK_MODE_MAC? "mac" :
             args->loopback_mode ==
@@ -1186,21 +1190,22 @@ port_update (void *pd_p, port_args_t *args)
     }
 
     if (args->pause != port_p->pause()) {
-        SDK_TRACE_DEBUG("Pause updated. new: %d, old: %d",
-                        args->pause, port_p->pause());
+        SDK_TRACE_DEBUG("Pause updated, new %d, old %d",
+                        static_cast<int>(args->pause),
+                        static_cast<int>(port_p->pause()));
         port_p->set_pause(args->pause);
         configured = true;
     }
 
     if (args->tx_pause_enable != port_p->tx_pause_enable()) {
-        SDK_TRACE_DEBUG("Tx Pause updated. new: %d, old: %d",
+        SDK_TRACE_DEBUG("Tx Pause updated, new %d, old %d",
                         args->tx_pause_enable, port_p->tx_pause_enable());
         port_p->set_tx_pause_enable(args->tx_pause_enable);
         configured = true;
     }
 
     if (args->rx_pause_enable != port_p->rx_pause_enable()) {
-        SDK_TRACE_DEBUG("Rx Pause updated. new: %d, old: %d",
+        SDK_TRACE_DEBUG("Rx Pause updated, new %d, old %d",
                         args->rx_pause_enable, port_p->rx_pause_enable());
         port_p->set_rx_pause_enable(args->rx_pause_enable);
         configured = true;
@@ -1403,7 +1408,7 @@ start_aacs_server (int port)
     int sched_policy = SCHED_OTHER;
 
     if (aacs_server_port_num != -1) {
-        SDK_TRACE_DEBUG("AACS server already started on port: %d",
+        SDK_TRACE_DEBUG("AACS server already started on port %d",
                         aacs_server_port_num);
         return SDK_RET_OK;
     }
@@ -1472,7 +1477,7 @@ port_stats_addr (uint32_t ifindex)
     port_stats_base = g_linkmgr_cfg.mempartition->start_addr(ASIC_HBM_REG_PORT_STATS);
 
     if ((port_stats_base == 0) || (port_stats_base == INVALID_MEM_ADDRESS)) {
-        SDK_TRACE_ERR("port %s stats_init port_stats_base 0x%llx port stats not supported",
+        SDK_TRACE_ERR("port %s stats_init port_stats_base 0x%lx port stats not supported",
                       eth_ifindex_to_str(ifindex).c_str(), port_stats_base);
         return INVALID_MEM_ADDRESS;
     }

@@ -41,7 +41,7 @@ void tep_obj_t::update_store (state_t* state, bool op_delete)
     if (!op_delete) {
         state->tep_store().add_upd(this->key(), this);
         PDS_TRACE_DEBUG ("Add TEP %s to store: hal_tep_idx_ %d, "
-                         "underlay pathset %d hal_oecmp_idx_ %ld", 
+                         "underlay pathset %d hal_oecmp_idx_ %u", 
                          ipaddr2str(&prop_.tep_ip), prop_.hal_tep_idx,
                          prop_.ms_upathset, hal_oecmp_idx_guard->idx());
     } else { 

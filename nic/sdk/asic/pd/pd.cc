@@ -95,7 +95,7 @@ asicpd_p4plus_table_mpu_base_init (p4pd_cfg_t *p4pd_cfg)
 
             // action base is in byte and 64B aligned
             action_rxdma_asm_base >>= 6;
-            SDK_TRACE_DEBUG("program name %s, action name %s, action pc 0x%x",
+            SDK_TRACE_DEBUG("program name %s, action name %s, action pc 0x%lx",
                             progname, action_name, action_rxdma_asm_base);
             asicpd_set_action_rxdma_asm_base(i, j, action_rxdma_asm_base);
         }
@@ -120,7 +120,7 @@ asicpd_p4plus_table_mpu_base_init (p4pd_cfg_t *p4pd_cfg)
 
             /* Action base is in byte and 64B aligned... */
             action_txdma_asm_base>>= 6;
-            SDK_TRACE_DEBUG("program name %s, action name %s, action pc 0x%x",
+            SDK_TRACE_DEBUG("program name %s, action name %s, action pc 0x%lx",
                             progname, action_name, action_txdma_asm_base);
             asicpd_set_action_txdma_asm_base(i, j, action_txdma_asm_base);
         }
@@ -174,7 +174,7 @@ asicpd_table_mpu_base_init (p4pd_cfg_t *p4pd_cfg)
             // action base is in byte and 64B aligned
             SDK_ASSERT((action_asm_base & 0x3f) == 0);
             action_asm_base >>= 6;
-            SDK_TRACE_DEBUG("program name %s, action name %s, action pc 0x%x",
+            SDK_TRACE_DEBUG("program name %s, action name %s, action pc 0x%lx",
                             progname, action_name, action_asm_base);
             asicpd_set_action_asm_base(i, j, action_asm_base);
         }
@@ -188,7 +188,7 @@ asicpd_table_mpu_base_init (p4pd_cfg_t *p4pd_cfg)
         SDK_ASSERT((table_asm_err_offset[i] & 0x3f) == 0);
 
         table_asm_err_offset[i] >>= 6;
-        SDK_TRACE_DEBUG("program name %s, action name %s, action pc 0x%x",
+        SDK_TRACE_DEBUG("program name %s, action name %s, action pc 0x%lx",
                         progname, action_name, table_asm_err_offset[i]);
     }
 
@@ -275,7 +275,7 @@ asicpd_set_hbm_table_base_addr (int tableid, int stage_tableid,
     if (tableid >= 0) {
         va = (mem_addr_t)sdk::lib::pal_mem_map(start_offset, size);
         SDK_TRACE_DEBUG(
-            " PA 0x%llx, VA 0x%lx, SZ %llu", start_offset, va, size);
+            " PA 0x%lx, VA 0x%lx, SZ %lu", start_offset, va, size);
         SDK_TRACE_DEBUG(
             " Cache 0x%x(%s%s%s%s%s)", cache,
             cache & P4_TBL_CACHE_INGRESS ? "Ingress/" : "",
@@ -429,9 +429,9 @@ asicpd_tbl_eng_cfg_get (p4pd_pipeline_t pipeline, p4_tbl_eng_cfg_t *cfg,
                     SDK_TRACE_INFO("pipeline %s, tblname %s, tableid %u, stage %u, "
                                    "stage-tableid %u, thread %u, mem %lx, ntbl %d",
                                    pipeline == P4_PIPELINE_INGRESS ? "ingress" : "egress",
-                                   j, tbl_ctx.tablename,
+                                   tbl_ctx.tablename,
                                    tbl_ctx.tableid, tbl_ctx.stage,
-                                   tbl_ctx.thread_table_id[j],
+                                   tbl_ctx.thread_table_id[j], j,
                                    (long)cfg[ntbls].mem_offset, ntbls);
 
                     cfg[ntbls].tableid = tbl_ctx.tableid;

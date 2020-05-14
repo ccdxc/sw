@@ -115,7 +115,7 @@ init_pse_engine (void)
 #else
     eng_path = "/nic/lib/libtls_pse.so";
 #endif
-    SDK_TRACE_DEBUG("Loading pensando engine from path: %s", eng_path);
+    SDK_TRACE_DEBUG("Loading pensando engine from path %s", eng_path);
 
     if(!ENGINE_ctrl_cmd_string(engine, "SO_PATH", eng_path, 0)) {
        SDK_TRACE_ERR("SSL: SO_PATH pensando engine load failed!!");
@@ -128,12 +128,12 @@ init_pse_engine (void)
     }
 
     if(!ENGINE_ctrl_cmd_string(engine, "LOAD", NULL, 0)) {
-        SDK_TRACE_ERR("ENGINE LOAD_ADD failed, err: %s",
+        SDK_TRACE_ERR("ENGINE LOAD_ADD failed, err %s",
             ERR_error_string(ERR_get_error(), NULL));
         return SDK_RET_ERR;
     }
     int ret = ENGINE_init(engine);
-    SDK_TRACE_DEBUG("Successfully loaded OpenSSL Engine: %s init result: %d",
+    SDK_TRACE_DEBUG("Successfully loaded OpenSSL Engine: %s init result %d",
                             ENGINE_get_name(engine), ret);
 
     ENGINE_set_default_EC(engine);
@@ -300,14 +300,14 @@ capri_barco_asym_fips_rsa_sig_gen (uint16_t key_size, int32_t key_idx,
     }
     if ((ossl_ret = EVP_PKEY_sign_init(ctx)) <= 0) {
         /* Error */
-        SDK_TRACE_ERR("Failed to init EVP_PKEY_CTX, ret:%d", ossl_ret);
+        SDK_TRACE_ERR("Failed to init EVP_PKEY_CTX, ret %d", ossl_ret);
         ret = SDK_RET_ERR;
         goto cleanup;
     }
     if ((ossl_ret = EVP_PKEY_CTX_set_rsa_padding(ctx,
                                                  RSA_PKCS1_PADDING)) <= 0) {
         /* Error */
-        SDK_TRACE_ERR("Failed to setup padding scheme in EVP_PKEY_CTX, ret:%d",
+        SDK_TRACE_ERR("Failed to setup padding scheme in EVP_PKEY_CTX, ret %d",
                       ossl_ret);
         ret = SDK_RET_ERR;
         goto cleanup;
@@ -335,7 +335,7 @@ capri_barco_asym_fips_rsa_sig_gen (uint16_t key_size, int32_t key_idx,
     }
     if ((ossl_ret = EVP_PKEY_CTX_set_signature_md(ctx, md)) <= 0) {
         /* Error */
-        SDK_TRACE_ERR("Failed to setup hash scheme in EVP_PKEY_CTX, ret:%d",
+        SDK_TRACE_ERR("Failed to setup hash scheme in EVP_PKEY_CTX, ret %d",
                       ossl_ret);
         ret = SDK_RET_ERR;
         goto cleanup;
@@ -344,11 +344,11 @@ capri_barco_asym_fips_rsa_sig_gen (uint16_t key_size, int32_t key_idx,
     /* Determine buffer length */
     if ((ossl_ret = EVP_PKEY_sign(ctx, NULL, &siglen, msg, msg_len)) <= 0) {
         /* Error */
-        SDK_TRACE_ERR("Failed to determine sig len, ret:%d", ossl_ret);
+        SDK_TRACE_ERR("Failed to determine sig len, ret %d", ossl_ret);
         ret = SDK_RET_ERR;
         goto cleanup;
     }
-    SDK_TRACE_INFO("Sig Len: %d", siglen);
+    SDK_TRACE_INFO("Sig Len %lu", siglen);
 
     CAPRI_BARCO_API_PARAM_HEXDUMP("Msg", (char*)msg, msg_len);
     /* Compute the digest of the message */
@@ -357,14 +357,14 @@ capri_barco_asym_fips_rsa_sig_gen (uint16_t key_size, int32_t key_idx,
         ret = SDK_RET_ERR;
         goto cleanup;
     }
-    SDK_TRACE_INFO("Computed message digest of len: %d", digest_len);
+    SDK_TRACE_INFO("Computed message digest of len %d", digest_len);
     CAPRI_BARCO_API_PARAM_HEXDUMP("Msg Digest", digest, digest_len);
 
     if ((ossl_ret = EVP_PKEY_sign(ctx, s, &siglen,
                                   (const unsigned char*) digest,
                                   digest_len)) <= 0) {
         /* Error */
-        SDK_TRACE_ERR("Failed to generate sig, ret:%d", ossl_ret);
+        SDK_TRACE_ERR("Failed to generate sig, ret %d", ossl_ret);
         ret = SDK_RET_ERR;
         goto cleanup;
     }
@@ -421,14 +421,14 @@ capri_barco_asym_fips_rsa_sig_verify (uint16_t key_size, uint8_t *n,
     }
     if ((ossl_ret = EVP_PKEY_verify_init(ctx)) <= 0) {
         /* Error */
-        SDK_TRACE_ERR("Failed to init EVP_PKEY_CTX, ret:%d", ossl_ret);
+        SDK_TRACE_ERR("Failed to init EVP_PKEY_CTX, ret %d", ossl_ret);
         ret = SDK_RET_ERR;
         goto cleanup;
     }
     if ((ossl_ret = EVP_PKEY_CTX_set_rsa_padding(ctx,
                                                  RSA_PKCS1_PADDING)) <= 0) {
         /* Error */
-        SDK_TRACE_ERR("Failed to setup padding scheme in EVP_PKEY_CTX, ret:%d",
+        SDK_TRACE_ERR("Failed to setup padding scheme in EVP_PKEY_CTX, ret %d",
                       ossl_ret);
         ret = SDK_RET_ERR;
         goto cleanup;
@@ -456,7 +456,7 @@ capri_barco_asym_fips_rsa_sig_verify (uint16_t key_size, uint8_t *n,
     }
     if ((ossl_ret = EVP_PKEY_CTX_set_signature_md(ctx, md)) <= 0) {
         /* Error */
-        SDK_TRACE_ERR("Failed to setup hash scheme in EVP_PKEY_CTX, ret:%d",
+        SDK_TRACE_ERR("Failed to setup hash scheme in EVP_PKEY_CTX, ret %d",
                       ossl_ret);
         ret = SDK_RET_ERR;
         goto cleanup;
@@ -469,14 +469,14 @@ capri_barco_asym_fips_rsa_sig_verify (uint16_t key_size, uint8_t *n,
         ret = SDK_RET_ERR;
         goto cleanup;
     }
-    SDK_TRACE_INFO("Computed message digest of len: %d", digest_len);
+    SDK_TRACE_INFO("Computed message digest of len %d", digest_len);
     CAPRI_BARCO_API_PARAM_HEXDUMP("Msg Digest", digest, digest_len);
 
     if ((ossl_ret = EVP_PKEY_verify(ctx, s, key_size,
                                     (const unsigned char*) digest,
                                     digest_len)) <= 0) {
         /* Error */
-        SDK_TRACE_ERR("Failed to verify sig, ret:%d", ossl_ret);
+        SDK_TRACE_ERR("Failed to verify sig, ret %d", ossl_ret);
         ret = SDK_RET_ERR;
         goto cleanup;
     }

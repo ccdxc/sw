@@ -447,7 +447,8 @@ mapping_impl::reserve_public_ip_mapping_resources_(mapping_entry *mapping,
     mapping_public_ip_hdl_ = tparams.handle;
     PDS_TRACE_DEBUG("Rsvd public IP hdl 0x%lx in LOCAL_MAPPING table, "
                     "public IP handle in 0x%lx in MAPPING table",
-                    local_mapping_public_ip_hdl_, mapping_public_ip_hdl_);
+                    local_mapping_public_ip_hdl_.tou64(),
+                    mapping_public_ip_hdl_.tou64());
     return ret;
 }
 
@@ -480,8 +481,8 @@ mapping_impl::reserve_nat_resources_(mapping_entry *mapping, vnic_entry *vnic,
                       vnic->key().str(), ret);
         return ret;
     }
-    PDS_TRACE_DEBUG("Rsvd public IP NAT handle 0x%lx, overlay IP NAT "
-                    "handle 0x%lx", to_public_ip_nat_idx_,
+    PDS_TRACE_DEBUG("Rsvd public IP NAT handle 0x%x, overlay IP NAT "
+                    "handle 0x%x", to_public_ip_nat_idx_,
                     to_overlay_ip_nat_idx_);
     return ret;
 }
@@ -655,7 +656,8 @@ mapping_impl::reserve_local_mapping_resources_(mapping_entry *mapping,
     mapping_hdl_ = tparams.handle;
 
     PDS_TRACE_DEBUG("Rsvd LOCAL_MAPPING handle 0x%lx, MAPPING handle 0x%lx",
-                    local_mapping_overlay_ip_hdl_, mapping_hdl_);
+                    local_mapping_overlay_ip_hdl_.tou64(),
+                    mapping_hdl_.tou64());
 
     // reserve rxdma resources (for tag support), if any
     ret = reserve_rxdma_mapping_tag_resources_(vpc, true, mapping, spec);
@@ -963,7 +965,7 @@ mapping_impl::nuke_resources(api_base *api_obj) {
             ret = vpc->release_class_id(class_id_[i], mapping->is_local());
             if (unlikely(ret != SDK_RET_OK)) {
                 PDS_TRACE_ERR("Failed to free classid %u allocated to remote "
-                              "mapping %s, err %u",
+                              "mapping %s, err %u", class_id_[i],
                               api_obj->key2str().c_str(), ret);
                 // continue freeing the resources
             }
@@ -1148,7 +1150,7 @@ mapping_impl::release_local_mapping_resources_(api_base *api_obj) {
             ret = vpc->release_class_id(class_id_[i], true);
             if (unlikely(ret != SDK_RET_OK)) {
                 PDS_TRACE_ERR("Failed to free classid %u allocated to local "
-                              "mapping %s, err %u",
+                              "mapping %s, err %u", class_id_[i],
                               api_obj->key2str().c_str(), ret);
                 // continue freeing the resources
             }
@@ -1203,7 +1205,7 @@ mapping_impl::release_remote_mapping_resources_(api_base *api_obj) {
             ret = vpc->release_class_id(class_id_[i], false);
             if (unlikely(ret != SDK_RET_OK)) {
                 PDS_TRACE_ERR("Failed to free classid %u allocated to remote "
-                              "mapping %s, err %u",
+                              "mapping %s, err %u", class_id_[i],
                               api_obj->key2str().c_str(), ret);
                 // continue freeing the resources
             }

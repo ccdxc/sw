@@ -85,7 +85,7 @@ static bool
 pal_default_is_qsfp_port_present(int port_no)
 {
     
-    SDK_TRACE_DEBUG("PAL default is_qsfp_port_present.");
+    SDK_TRACE_DEBUG("PAL default is_qsfp_port_present");
     return false;
 }
 
@@ -93,7 +93,7 @@ static pal_ret_t
 pal_default_qsfp_set_port(int port_no)
 {
 
-    SDK_TRACE_DEBUG("PAL default qsfp_set_port %lx", port_no);
+    SDK_TRACE_DEBUG("PAL default qsfp_set_port %d", port_no);
     return PAL_RET_OK;
 }
 
@@ -101,7 +101,7 @@ static pal_ret_t
 pal_default_qsfp_reset_port(int port_no)
 {
 
-    SDK_TRACE_DEBUG("PAL default qsfp_reset_port %lx", port_no);
+    SDK_TRACE_DEBUG("PAL default qsfp_reset_port %d", port_no);
     return PAL_RET_OK;
 }
 
@@ -109,7 +109,7 @@ static pal_ret_t
 pal_default_qsfp_set_low_power_mode(int port_no)
 {
 
-    SDK_TRACE_DEBUG("PAL default qsfp_set_low_power_mode %lx", port_no);
+    SDK_TRACE_DEBUG("PAL default qsfp_set_low_power_mode %d", port_no);
     return PAL_RET_OK;
 }
 
@@ -117,7 +117,7 @@ static pal_ret_t
 pal_default_qsfp_reset_low_power_mode(int port_no)
 {
 
-    SDK_TRACE_DEBUG("PAL default qsfp_set_low_power_mode %lx", port_no);
+    SDK_TRACE_DEBUG("PAL default qsfp_set_low_power_mode %d", port_no);
     return PAL_RET_OK;
 }
 

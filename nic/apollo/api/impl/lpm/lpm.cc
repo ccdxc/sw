@@ -24,7 +24,7 @@ lpm_build_tree (lpm_itable_t *itable, uint32_t default_nh, uint32_t max_routes,
     uint32_t            nstages, nkeys_per_table;
 
     PDS_TRACE_DEBUG("Building LPM tree type %u, interval count %u, "
-                    "default nh %u, max routes %u, root addr 0x%llx, "
+                    "default nh %u, max routes %u, root addr 0x%lx, "
                     "LPM block size %u", itable->tree_type,
                     itable->num_intervals, default_nh, max_routes,
                     lpm_tree_root_addr, lpm_mem_size);
@@ -97,7 +97,7 @@ lpm_tree_create (route_table_t *route_table, itree_type_t type,
     SDK_ASSERT(route_table->num_routes <= route_table->max_routes);
 
     PDS_TRACE_DEBUG("Creating LPM tree type %u, route count %u, "
-                    "default nh %u, max routes %u, root addr 0x%llx, "
+                    "default nh %u, max routes %u, root addr 0x%lx, "
                     "LPM block size %u", type, route_table->num_routes,
                     route_table->default_nhid, route_table->max_routes,
                     lpm_tree_root_addr, lpm_mem_size);

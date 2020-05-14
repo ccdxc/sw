@@ -151,7 +151,7 @@ NBB_BYTE li_integ_subcomp_t::irb_delete(NBB_ULONG irb_ifindex) {
 // Software interface (Loopback and Dummy LIFs)
 //-------------------------------------------------
 NBB_BYTE li_integ_subcomp_t::softwif_add_update(ATG_LIPI_SOFTWIF_ADD_UPDATE* swif_add_upd_ips) {
-    PDS_TRACE_INFO("Loopback interface create IfIndex 0x%lx Ifname %s SwType %d",
+    PDS_TRACE_INFO("Loopback interface create IfIndex 0x%x Ifname %s SwType %u",
                    swif_add_upd_ips->id.if_index, swif_add_upd_ips->id.if_name,
                    swif_add_upd_ips->softwif_type);
     return ATG_OK;
@@ -160,7 +160,7 @@ NBB_BYTE li_integ_subcomp_t::softwif_add_update(ATG_LIPI_SOFTWIF_ADD_UPDATE* swi
 NBB_BYTE li_integ_subcomp_t::softwif_delete(NBB_ULONG if_index,
                                             const NBB_CHAR (&if_name) [ATG_LIPI_NAME_MAX_LEN],
                                             NBB_ULONG softwif_type) {
-    PDS_TRACE_INFO("Loopback interface delete IfIndex 0x%lx Ifname %s SwType %d",
+    PDS_TRACE_INFO("Loopback interface delete IfIndex 0x%x Ifname %s SwType %u",
                    if_index, if_name, softwif_type);
     return ATG_OK;
 }

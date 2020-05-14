@@ -105,12 +105,12 @@ process_deleted_objects (learn_entry_list_t *del_objects)
             SDK_ASSERT(false);
         }
         if (ret != SDK_RET_OK) {
-            PDS_TRACE_DEBUG("Failed to process deleted object list of size %u,"
+            PDS_TRACE_DEBUG("Failed to process deleted object list of size %lu,"
                             " return code %u", del_objects->size(), ret);
             return ret;
         }
     }
-    PDS_TRACE_DEBUG("Processed deleted object list of size %u, return code %u",
+    PDS_TRACE_DEBUG("Processed deleted object list of size %lu, return code %u",
                     del_objects->size(), ret);
     return SDK_RET_OK;
 }

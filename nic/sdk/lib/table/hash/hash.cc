@@ -318,7 +318,7 @@ hash::insert_withid(void *key, void *data, uint32_t index, void *key_mask)
     } else {
         if (otcam_) {
             otcam_id = get_otcam_id_from_hash_idx_(index);
-            SDK_TRACE_DEBUG("otcam insert at: {}", otcam_id);
+            SDK_TRACE_DEBUG("otcam insert at: %u", otcam_id);
             if (key_mask == NULL) {
                 key_mask = SDK_MALLOC(SDK_MEM_ALLOC_HASH_SW_KEY_MASK_INS,
                                       swkey_len_);

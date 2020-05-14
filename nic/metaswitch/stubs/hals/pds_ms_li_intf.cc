@@ -27,7 +27,7 @@ static int fetch_port_fault_status (ms_ifindex_t &ifindex) {
     pds_if_info_t info = {0};
 
     if (PDS_MOCK_MODE()) {
-        PDS_TRACE_DEBUG ("MS If 0x%lx: PDS MOCK MODE", ifindex);
+        PDS_TRACE_DEBUG ("MS If 0x%x: PDS MOCK MODE", ifindex);
         return ATG_FRI_FAULT_NONE;
     }
 
@@ -42,15 +42,15 @@ static int fetch_port_fault_status (ms_ifindex_t &ifindex) {
         return ATG_FRI_FAULT_NONE;
     }
     if (info.status.state == PDS_IF_STATE_DOWN) {
-        PDS_TRACE_DEBUG("MS If 0x%lx: Port DOWN", ifindex);
+        PDS_TRACE_DEBUG("MS If 0x%x: Port DOWN", ifindex);
         return ATG_FRI_FAULT_PRESENT;
     } else if (info.status.state == PDS_IF_STATE_UP) {
-        PDS_TRACE_DEBUG("MS If 0x%lx: Port UP", ifindex);
+        PDS_TRACE_DEBUG("MS If 0x%x: Port UP", ifindex);
         return ATG_FRI_FAULT_NONE;
     }
 
     /* Invalid state. Should not come here. Indicate fault */
-    PDS_TRACE_DEBUG("MS If 0x%lx: Port state invalid", ifindex);
+    PDS_TRACE_DEBUG("MS If 0x%x: Port state invalid", ifindex);
     return ATG_FRI_FAULT_PRESENT;
 }
 
@@ -96,7 +96,7 @@ bool li_intf_t::cache_new_obj_in_cookie_(void) {
         phy_port_prop.hal_created = true;
         phy_port_prop.admin_state = ips_info_.admin_state;
         phy_port_prop.switchport = ips_info_.switchport;
-        PDS_TRACE_DEBUG ("MS If 0x%lx: Admin State %d, Switchport %d",
+        PDS_TRACE_DEBUG ("MS If 0x%x: Admin State %d, Switchport %d",
                          ips_info_.ifindex, ips_info_.admin_state,
                          ips_info_.switchport);
 
@@ -104,7 +104,7 @@ bool li_intf_t::cache_new_obj_in_cookie_(void) {
         ntl::Frl &frl = li::Fte::get().get_frl();
         fw = frl.create_fri_worker(ips_info_.ifindex);
         phy_port_prop.fri_worker = fw;
-        PDS_TRACE_DEBUG("MS If 0x%lx: Created FRI worker", ips_info_.ifindex);
+        PDS_TRACE_DEBUG("MS If 0x%x: Created FRI worker", ips_info_.ifindex);
         // Set the initial interface state. The port event subscribe is already
         // done by this point. Any events after creating worker and setting
         // initial state is handled by the port event callback
@@ -114,13 +114,13 @@ bool li_intf_t::cache_new_obj_in_cookie_(void) {
 
     } else if (ips_info_.admin_state_updated || ips_info_.switchport_updated) {
         if (ips_info_.admin_state_updated) {
-            PDS_TRACE_DEBUG ("MS If 0x%lx: Admin State change to %d",
+            PDS_TRACE_DEBUG ("MS If 0x%x: Admin State change to %d",
                              ips_info_.ifindex, ips_info_.admin_state);
             // Update the new admin state in the new If object
             phy_port_prop.admin_state = ips_info_.admin_state;
         }
         if (ips_info_.switchport_updated) {
-            PDS_TRACE_DEBUG ("MS If 0x%lx: Switchport State change to %d",
+            PDS_TRACE_DEBUG ("MS If 0x%x: Switchport State change to %d",
                              ips_info_.ifindex, ips_info_.switchport);
             // Update the new admin state in the new If object
             phy_port_prop.switchport = ips_info_.switchport;
@@ -128,7 +128,7 @@ bool li_intf_t::cache_new_obj_in_cookie_(void) {
     } else {
         // Update request but no change in the fields we are
         // interested in
-        PDS_TRACE_DEBUG("MS If 0x%lx: No-op update", ips_info_.ifindex);
+        PDS_TRACE_DEBUG("MS If 0x%x: No-op update", ips_info_.ifindex);
         return false;
     }
     // Update the local store info context so that the make_pds_spec
@@ -235,13 +235,13 @@ NBB_BYTE li_intf_t::handle_add_upd_ips(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd_ip
         fetch_store_info_(state_ctxt.state());
 
         if (op_create_) {
-            PDS_TRACE_INFO ("MS If 0x%lx: Create IPS", ips_info_.ifindex);
+            PDS_TRACE_INFO ("MS If 0x%x: Create IPS", ips_info_.ifindex);
         } else {
-            PDS_TRACE_INFO ("MS If 0x%lx: Update IPS", ips_info_.ifindex);
+            PDS_TRACE_INFO ("MS If 0x%x: Update IPS", ips_info_.ifindex);
         }
         if (unlikely(!cache_new_obj_in_cookie_())) {
             // No change
-            PDS_TRACE_DEBUG ("MS If 0x%lx: No-op IPS", ips_info_.ifindex);
+            PDS_TRACE_DEBUG ("MS If 0x%x: No-op IPS", ips_info_.ifindex);
             return rc;
         }
 
@@ -299,7 +299,7 @@ NBB_BYTE li_intf_t::handle_add_upd_ips(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd_ip
                     .append(std::to_string(ips_info_.ifindex))
                     .append(" err=").append(std::to_string(ret)));
     }
-    PDS_TRACE_DEBUG ("MS If 0x%lx: Add/Upd PDS Batch commit successful",
+    PDS_TRACE_DEBUG ("MS If 0x%x: Add/Upd PDS Batch commit successful",
                      ips_info_.ifindex);
     if (PDS_MOCK_MODE()) {
         // Call the HAL callback in PDS mock mode
@@ -321,7 +321,7 @@ void li_intf_t::handle_delete(NBB_ULONG ifindex) {
     // if there is a subsequent create from MS.
 
     ips_info_.ifindex = ifindex;
-    PDS_TRACE_INFO ("MS If 0x%lx: Delete IPS no-op", ips_info_.ifindex);
+    PDS_TRACE_INFO ("MS If 0x%x: Delete IPS no-op", ips_info_.ifindex);
 }
 
 sdk_ret_t li_intf_t::update_pds_ipaddr(NBB_ULONG ms_ifindex) {
@@ -337,11 +337,11 @@ sdk_ret_t li_intf_t::update_pds_ipaddr(NBB_ULONG ms_ifindex) {
         }
         auto& phy_port_prop = if_obj->phy_port_properties();
         if (!phy_port_prop.hal_created) {
-            PDS_TRACE_DEBUG("MS IfIndex 0x Ignore IP Update before HAL Create", 
+            PDS_TRACE_DEBUG("MS IfIndex 0x%x Ignore IP Update before HAL Create", 
                             ms_ifindex);
             return SDK_RET_OK;
         }
-        PDS_TRACE_DEBUG("MS IfIndex 0x IP update", ms_ifindex);
+        PDS_TRACE_DEBUG("MS IfIndex 0x%x IP update", ms_ifindex);
 
         ips_info_.ifindex = ms_ifindex;
         store_info_.phy_port_if_obj = if_obj;

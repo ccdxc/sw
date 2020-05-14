@@ -233,7 +233,7 @@ mem_hash_hint_table::tail_(mem_hash_api_context *ctx,
 
     ret = static_cast<mem_hash_table_bucket*>(tctx->bucket)->find_last_hint_(tctx);
     if (ret == SDK_RET_OK) {
-        MEMHASH_TRACE_VERBOSE("%s: find_last_hint_ Ctx: [%s]", tctx->idstr(),
+        MEMHASH_TRACE_VERBOSE("%s: find_last_hint_ Ctx: [%s], ret:%d", tctx->idstr(),
                               tctx->metastr(), ret);
         // We have found a valid hint, recursively find the tail of this node
         ret = tail_(tctx, retctx);;
@@ -399,7 +399,7 @@ mem_hash_hint_table::validate_(mem_hash_api_context *ctx) {
     sdk_table_stats_t ts;
     ctx->table_stats->get(&ts);
     if (ts.collisions != indexer_->num_indices_allocated()) {
-        MEMHASH_TRACE_ERR("Hint count mismatch table_stats:%d indexer_stats:%d",
+        MEMHASH_TRACE_ERR("Hint count mismatch table_stats:%lu indexer_stats:%lu",
                           ts.collisions, indexer_->num_indices_allocated());
         return SDK_RET_ERR;
     }

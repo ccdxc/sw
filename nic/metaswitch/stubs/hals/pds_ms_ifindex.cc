@@ -106,7 +106,7 @@ ms_to_lnx_ifindex (NBB_LONG ms_ifindex, NBB_ULONG location)
     // Linux ifindex is cached in the store at the time 
     // of L3 interface creation
     auto lnx_ifindex = phy_port_if_obj->phy_port_properties().lnx_ifindex;
-    PDS_TRACE_VERBOSE ("MS UserExit: MS IfIndex 0x%lx -> Linux IfIndex %ld", 
+    PDS_TRACE_VERBOSE ("MS UserExit: MS IfIndex %d -> Linux IfIndex %u", 
                        ms_ifindex, lnx_ifindex);
     return lnx_ifindex; 
 }
@@ -139,10 +139,10 @@ lnx_to_ms_ifindex (NBB_LONG lnx_ifindex, NBB_ULONG location)
         });
 
     if (found) {
-        PDS_TRACE_VERBOSE("MS UserExit: Lnx IfIndex %ld -> MS IfIndex 0x%lx", 
+        PDS_TRACE_VERBOSE("MS UserExit: Lnx IfIndex %d -> MS IfIndex %d", 
                           lnx_ifindex, ms_ifindex);
     } else {
-        PDS_TRACE_VERBOSE("MS UserExit: Lnx IfIndex 0x%lx -> "
+        PDS_TRACE_VERBOSE("MS UserExit: Lnx IfIndex 0x%x -> "
                           "Ms IfIndex conversion Failed", lnx_ifindex);
     }
     return ms_ifindex; 

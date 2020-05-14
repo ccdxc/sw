@@ -470,7 +470,7 @@ route::read(pds_route_info_t *info) {
                                    ROUTE_INFO_SIZE(0));
     if (unlikely(route_table_info.spec.route_info == NULL)) {
         PDS_TRACE_ERR("Failed to allocate route table %s memory for "
-                      "route %s read", key_.route_table_id,
+                      "route %s read", key_.route_table_id.str(),
                       key_.route_id.str());
         return SDK_RET_OOM;
     }
@@ -487,7 +487,7 @@ route::read(pds_route_info_t *info) {
                                   ROUTE_INFO_SIZE(num_routes));
     if (unlikely(route_table_info.spec.route_info == NULL)) {
         PDS_TRACE_ERR("Failed to allocate route table %s memory for "
-                      "route %s read", key_.route_table_id,
+                      "route %s read", key_.route_table_id.str(),
                       key_.route_id.str());
         return SDK_RET_OOM;
     }

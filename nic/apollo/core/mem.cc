@@ -135,7 +135,7 @@ slab_delay_delete_cb (void *timer, uint32_t slab_id, void *elem)
         break;
 
     default:
-        PDS_TRACE_ERR("Unknown slab id {}", slab_id);
+        PDS_TRACE_ERR("Unknown slab id %u", slab_id);
         SDK_ASSERT(false);
     }
     return;
@@ -160,7 +160,7 @@ delay_delete_to_slab (uint32_t slab_id, void *elem)
     void    *timer_ctxt;
 
     if (slab_id >= PDS_SLAB_ID_MAX) {
-        PDS_TRACE_ERR("Unexpected slab id {}", slab_id);
+        PDS_TRACE_ERR("Unexpected slab id %u", slab_id);
         return sdk::SDK_RET_INVALID_ARG;
     }
     if (g_delay_delete && sdk::lib::periodic_thread_is_running()) {

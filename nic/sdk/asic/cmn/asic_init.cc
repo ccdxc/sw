@@ -75,7 +75,7 @@ asic_pgm_init (asic_cfg_t *cfg)
         }
         ret = asic_load_config((char *)full_path.c_str());
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("Failed to load config %s", full_path);
+            SDK_TRACE_ERR("Failed to load config %s", full_path.c_str());
             return ret;
         }
     }
@@ -113,7 +113,7 @@ asic_asm_init (asic_cfg_t *cfg, bool write_to_mem)
         }
 
         base_addr = asic_get_mem_addr(cfg->asm_cfg[i].base_addr.c_str());
-        SDK_TRACE_DEBUG("base addr 0x%llx", base_addr);
+        SDK_TRACE_DEBUG("base addr 0x%lx", base_addr);
         iret = sdk::p4::p4_load_mpu_programs(cfg->asm_cfg[i].name.c_str(),
            (char *)full_path.c_str(),
            base_addr,
@@ -126,7 +126,7 @@ asic_asm_init (asic_cfg_t *cfg, bool write_to_mem)
            SDK_FREE(SDK_MEM_ALLOC_PD, symbols);
 
        if (iret != 0) {
-          SDK_TRACE_ERR("Failed to load program %s", full_path);
+          SDK_TRACE_ERR("Failed to load program %s", full_path.c_str());
           return SDK_RET_ERR;
        }
    }

@@ -460,7 +460,7 @@ vpc_update (pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
         auto state_ctxt = state_t::thread_context();
         auto vpc_obj = state_ctxt.state()->vpc_store().get(vrf_id);
         if (vpc_obj == nullptr) {
-            PDS_TRACE_ERR("VPC update for unknown VRF %d", spec->key.id);
+            PDS_TRACE_ERR("VPC update for unknown VRF %s", spec->key.str());
             return SDK_RET_ENTRY_NOT_FOUND;
         }
         // Update the cached vpc spec with the new info

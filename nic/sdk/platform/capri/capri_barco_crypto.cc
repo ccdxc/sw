@@ -149,7 +149,7 @@ capri_barco_init_key (uint32_t key_idx, uint64_t key_addr)
     memset(&key_desc, 0, sizeof(capri_barco_key_desc_t));
     key_desc.key_address = key_addr;
     if (asic_mem_write(key_desc_addr, (uint8_t*)&key_desc, sizeof(key_desc))) {
-        SDK_TRACE_ERR("Failed to write Barco descriptor @ 0x%llx",
+        SDK_TRACE_ERR("Failed to write Barco descriptor @ 0x%lx",
                       (uint64_t) key_desc_addr);
         return SDK_RET_INVALID_ARG;
     }
@@ -166,10 +166,10 @@ capri_barco_setup_key (uint32_t key_idx, crypto_key_type_t key_type,
     uint32_t                cbkey_type;
 
     key_desc_addr = key_desc_array_base + (key_idx * BARCO_CRYPTO_KEY_DESC_SZ);
-    SDK_TRACE_DEBUG("capri_barco_setup_key: key_desc_addr=0x%llx key_idx=%d",
+    SDK_TRACE_DEBUG("capri_barco_setup_key: key_desc_addr=0x%lx key_idx=%u",
                     key_desc_addr, key_idx);
     if (asic_mem_read(key_desc_addr, (uint8_t*)&key_desc, sizeof(key_desc))) {
-        SDK_TRACE_ERR("Failed to read Barco descriptor @ 0x%llx",
+        SDK_TRACE_ERR("Failed to read Barco descriptor @ 0x%lx",
                       (uint64_t) key_desc_addr);
         return SDK_RET_INVALID_ARG;
     }
@@ -202,19 +202,19 @@ capri_barco_setup_key (uint32_t key_idx, crypto_key_type_t key_type,
 
     key_desc.key_type = cbkey_type;
     key_addr = key_desc.key_address;
-    SDK_TRACE_DEBUG("capri_barco_setup_key key_addr=0x%llx",
+    SDK_TRACE_DEBUG("capri_barco_setup_key key_addr=0x%lx",
                     (uint64_t)key_addr);
     /* Write back key descriptor */
     if (asic_mem_write(key_desc_addr, (uint8_t*)&key_desc, sizeof(key_desc))) {
-        SDK_TRACE_ERR("Failed to write Barco descriptor @ 0x%llx",
+        SDK_TRACE_ERR("Failed to write Barco descriptor @ 0x%lx",
                       (uint64_t) key_desc_addr);
         return SDK_RET_INVALID_ARG;
     }
     SDK_TRACE_DEBUG("capri_barco_setup_key key=%s",
-                    barco_hex_dump(key,key_size));
+                    barco_hex_dump(key,key_size).c_str());
     /* Write key memory */
     if (asic_mem_write(key_addr, key, key_size)) {
-        SDK_TRACE_ERR("Failed to write key @ 0x%llx", (uint64_t) key_addr);
+        SDK_TRACE_ERR("Failed to write key @ 0x%lx", (uint64_t) key_addr);
         return SDK_RET_INVALID_ARG;
     }
     return SDK_RET_OK;
@@ -231,7 +231,7 @@ capri_barco_read_key (uint32_t key_idx, crypto_key_type_t *key_type,
 
     key_desc_addr = key_desc_array_base + (key_idx * BARCO_CRYPTO_KEY_DESC_SZ);
     if (asic_mem_read(key_desc_addr, (uint8_t*)&key_desc, sizeof(key_desc))) {
-        SDK_TRACE_ERR("Failed to read Barco descriptor @ 0x%llx",
+        SDK_TRACE_ERR("Failed to read Barco descriptor @ 0x%lx",
                       (uint64_t) key_desc_addr);
         return SDK_RET_INVALID_ARG;
     }
@@ -276,7 +276,7 @@ capri_barco_read_key (uint32_t key_idx, crypto_key_type_t *key_type,
 
     key_addr = key_desc.key_address;
     if (asic_mem_read(key_addr, key, *key_size)) {
-        SDK_TRACE_ERR("Failed to read key @ 0x%llx", (uint64_t) key_addr);
+        SDK_TRACE_ERR("Failed to read key @ 0x%lx", (uint64_t) key_addr);
         return SDK_RET_INVALID_ARG;
     }
 
@@ -363,7 +363,7 @@ capri_barco_crypto_init_tls_pad_table (void)
     uint8_t  tls_pad_bytes[asic_get_mem_size_kb(ASIC_HBM_REG_TLS_PROXY_PAD_TABLE) * 1024], i, j;
     uint64_t tls_pad_base_addr = 0;
 
-    SDK_TRACE_DEBUG("Initializing TLS-proxy Pad Bytes table of size 0x%llx", sizeof(tls_pad_bytes));
+    SDK_TRACE_DEBUG("Initializing TLS-proxy Pad Bytes table of size 0x%lx", sizeof(tls_pad_bytes));
     bzero(tls_pad_bytes, sizeof(tls_pad_bytes));
 
     /*
@@ -433,7 +433,7 @@ capri_barco_asym_read_key (int32_t key_idx, capri_barco_asym_key_desc_t *key)
     }
 
     if (asic_mem_read(key_desc_addr, (uint8_t*)&key, sizeof(*key))) {
-        SDK_TRACE_ERR("Failed to read Barco Asym key descriptor from 0x%llx",
+        SDK_TRACE_ERR("Failed to read Barco Asym key descriptor from 0x%lx",
                       (uint64_t) key_desc_addr);
         return SDK_RET_INVALID_ARG;
     }
@@ -450,17 +450,17 @@ capri_barco_asym_write_key(int32_t key_idx, capri_barco_asym_key_desc_t *key)
     ret = capri_barco_res_get_by_id(CRYPTO_BARCO_RES_ASYM_KEY_DESCR, key_idx,
                                     &key_desc_addr);
     if (ret  != SDK_RET_OK) {
-        SDK_TRACE_ERR("AsymKey Write: Failed to retrieve the address from key index: %d",
+        SDK_TRACE_ERR("AsymKey Write: Failed to retrieve the address from key index: %u",
                       key_idx);
         return ret;
     }
 
     if (asic_mem_write(key_desc_addr, (uint8_t*)key, sizeof(*key))) {
-        SDK_TRACE_ERR("Failed to write Barco Asym key descriptor @ 0x%llx",
+        SDK_TRACE_ERR("Failed to write Barco Asym key descriptor @ 0x%lx",
                       (uint64_t) key_desc_addr);
         return SDK_RET_INVALID_ARG;
     }
-    SDK_TRACE_DEBUG("AsymKey Write: Setup key @ 0x%llx", key_desc_addr);
+    SDK_TRACE_DEBUG("AsymKey Write: Setup key @ 0x%lx", key_desc_addr);
 
     return ret;
 }

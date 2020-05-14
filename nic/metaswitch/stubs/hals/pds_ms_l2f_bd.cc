@@ -201,7 +201,7 @@ NBB_BYTE l2f_bd_t::handle_add_upd_ips(ATG_BDPI_UPDATE_BD* bd_add_upd_ips) {
         }
         store_info_.bd_obj->properties().fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
         store_info_.bd_obj->properties().fabric_encap.val.vnid = ips_info_.vnid;
-        PDS_TRACE_INFO("MS BD %d UUID %s %s IPS VNI %ld", ips_info_.bd_id,
+        PDS_TRACE_INFO("MS BD %u UUID %s %s IPS VNI %u", ips_info_.bd_id,
                        store_info_.bd_obj->properties().subnet.str(),
                        (op_create_) ? "Create" : "Update",
                        store_info_.bd_obj->properties().fabric_encap.val.vnid);
@@ -221,9 +221,9 @@ NBB_BYTE l2f_bd_t::handle_add_upd_ips(ATG_BDPI_UPDATE_BD* bd_add_upd_ips) {
             // ----------------------------------------------------------------
             if (!pds_status && l_op_create) {
                 // Create failed - Erase the BD Obj saved in store
-                PDS_TRACE_DEBUG ("MS BD %d: Create failed "
+                PDS_TRACE_DEBUG ("MS BD %u: Create failed "
                                  "- delete store obj ",
-                                 bd_add_upd_ips->bd_id);
+                                 bd_add_upd_ips->bd_id.bd_id);
                 // Enter thread-safe context to access/modify global state
                 auto state_ctxt = state_t::thread_context();
                 state_ctxt.state()->bd_store().erase(bd_add_upd_ips->bd_id.bd_id);
@@ -243,8 +243,8 @@ NBB_BYTE l2f_bd_t::handle_add_upd_ips(ATG_BDPI_UPDATE_BD* bd_add_upd_ips) {
             do {
             auto bdpi_join = get_l2f_bdpi_join();
             if (bdpi_join == nullptr) {
-                PDS_TRACE_ERR("Failed to find BDPI join to return BD %d AddUpd IPS",
-                              bd_add_upd_ips->bd_id);
+                PDS_TRACE_ERR("Failed to find BDPI join to return BD %u AddUpd IPS",
+                              bd_add_upd_ips->bd_id.bd_id);
                 break;
             }
             auto& bd_store = bdpi_join->get_bd_store();
@@ -263,14 +263,14 @@ NBB_BYTE l2f_bd_t::handle_add_upd_ips(ATG_BDPI_UPDATE_BD* bd_add_upd_ips) {
                 bdpi_join->send_ips_reply(&bd_add_upd_ips->ips_hdr);
             } else {
                 if (pds_status) {
-                    PDS_TRACE_DEBUG("MS BD %d: Send Async IPS "
+                    PDS_TRACE_DEBUG("MS BD %u: Send Async IPS "
                                     "Reply success stateful mode",
-                                    bd_add_upd_ips->bd_id);
+                                    bd_add_upd_ips->bd_id.bd_id);
                     (*it)->update_complete(ATG_OK);
                 } else {
-                    PDS_TRACE_DEBUG("MS BD %d: Send Async IPS "
+                    PDS_TRACE_DEBUG("MS BD %u: Send Async IPS "
                                     "Reply failure stateful mode",
-                                    bd_add_upd_ips->bd_id);
+                                    bd_add_upd_ips->bd_id.bd_id);
                     (*it)->update_failed(ATG_UNSUCCESSFUL);
                 }
             }

@@ -134,7 +134,7 @@ configure_static_tracking_route_ (ip_addr_t& destip,
         if (!stop) {
             release_ip_track_obj_(destip);
         }
-        PDS_TRACE_ERR ("Dest IP track %s internal route %s failed %d",
+        PDS_TRACE_ERR ("Dest IP track %s internal route %s failed %s",
                         ipaddr2str(&destip), (stop) ? "delete" : "create",
                         pds_ms_api_ret_str(ret));
     } else {

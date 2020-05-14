@@ -58,7 +58,7 @@ capri_default_config_init (asic_cfg_t *cfg)
         full_path =  std::string(cfg->cfg_path) + "/init_bins/" +
             cfg->default_config_dir + "/init_" + std::to_string(i) + "_bin";
 
-        SDK_TRACE_DEBUG("Init phase %d Binaries dir: %s", i, full_path.c_str());
+        SDK_TRACE_DEBUG("Init phase %d Binaries dir %s", i, full_path.c_str());
 
         // Check if directory is present
         if (access(full_path.c_str(), R_OK) < 0) {
@@ -98,7 +98,7 @@ capri_pgm_init (void)
         }
         ret = sdk::asic::asic_load_config((char *)full_path.c_str());
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("Failed to load config %s", full_path);
+            SDK_TRACE_ERR("Failed to load config %s", full_path.c_str());
             return ret;
         }
     }
@@ -396,28 +396,28 @@ capri_init (asic_cfg_t *cfg)
 
     ret = capri_state_pd_init(cfg);
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
-                            "capri_state_pd_init failure, err : %d", ret);
+                            "capri_state_pd_init failure, err %d", ret);
 
     ret = capri_table_rw_init(cfg);
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
-                            "capri_tbl_rw_init failure, err : %d", ret);
+                            "capri_tbl_rw_init failure, err %d", ret);
 
     ret = sdk::asic::asic_hbm_regions_init(cfg);
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
-                            "Asic HBM region init failure, err : %d", ret);
+                            "Asic HBM region init failure, err %d", ret);
 
     ret = capri_block_init(cfg);
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
-                            "Capri block region init failure, err : %d", ret);
+                            "Capri block region init failure, err %d", ret);
 
     ret = capri_cache_init(cfg);
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
-                            "Capri cache init failure, err : %d", ret);
+                            "Capri cache init failure, err %d", ret);
 
     // do asic init before overwriting with the default configs
     ret = capri_tm_asic_init();
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
-                            "Capri TM ASIC init failure, err : %d", ret);
+                            "Capri TM ASIC init failure, err %d", ret);
 
     // Call PXB/PCIE init only in MODEL and RTL simulation
     // This will be done by PCIe manager for the actual chip
@@ -425,34 +425,34 @@ capri_init (asic_cfg_t *cfg)
         cfg->platform == platform_type_t::PLATFORM_TYPE_RTL) {
         ret = capri_pxb_pcie_init();
         SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
-                                "PXB/PCIE init failure, err : %d", ret);
+                                "PXB/PCIE init failure, err %d", ret);
     }
 
     ret = capri_tm_init(cfg->catalog,
                         &cfg->device_profile->qos_profile);
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
-                            "Capri TM init failure, err : %d", ret);
+                            "Capri TM init failure, err %d", ret);
 
     ret = capri_repl_init(cfg);
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
-                            "Capri replication init failure, err : %d", ret);
+                            "Capri replication init failure, err %d", ret);
 
     ret = capri_barco_crypto_init(cfg->platform);
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
-                            "Capri barco crypto init failure, err : {}", ret);
+                            "Capri barco crypto init failure, err %d", ret);
 
     // TODO: It's not clear why this is needed here
     ret = capri_quiesce_init();
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
-                            "Capri quiesce init failure, err : %d", ret);
+                            "Capri quiesce init failure, err %d", ret);
 
     ret = capri_prd_init();
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
-                            "Capri PRD init failure, err : %d", ret);
+                            "Capri PRD init failure, err %d", ret);
 
     ret = capri_txs_scheduler_init(cfg->admin_cos, cfg);
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
-                             "Capri scheduler init failure, err : %d", ret);
+                             "Capri scheduler init failure, err %d", ret);
 
     if (cfg->completion_func) {
         cfg->completion_func(sdk::SDK_STATUS_ASIC_INIT_DONE);

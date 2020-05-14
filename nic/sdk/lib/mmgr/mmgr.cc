@@ -521,7 +521,7 @@ mmgr::splay_r(tnode_ptr_t *root, uint64_t key)
 void
 mmgr::preorder_ltree_walk(tnode_t *node) const {
     if (node != NULL) {
-        SDK_TRACE_DEBUG("key = %llu ", node->key);
+        SDK_TRACE_DEBUG("key = %lu ", node->key);
         preorder_ltree_walk(TO_TNODE_PTR(node->left));
         preorder_ltree_walk(TO_TNODE_PTR(node->right));
         SDK_TRACE_DEBUG("\n");
@@ -588,7 +588,7 @@ mmgr::level_walk(tnode_t *node, uint32_t level, bool ptree) const
         if (ptree) {
             SDK_TRACE_DEBUG("%p ", offset2ptr(node->key));
         } else {
-            SDK_TRACE_DEBUG("%u ", node->key);
+            SDK_TRACE_DEBUG("%lu ", node->key);
         }
     } else if (level > 0) {
         level_walk(TO_TNODE_PTR(node->left), level - 1, ptree);

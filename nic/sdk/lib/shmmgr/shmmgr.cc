@@ -169,9 +169,9 @@ shmmgr::exists(const char *name, void *baseaddr)
         //return segment.check_sanity();
         return true;
     } catch (const boost::interprocess::interprocess_exception &ex) {
-        SDK_TRACE_DEBUG("shmmgr bip exception : ",  ex.what());
+        SDK_TRACE_DEBUG("bip exception, %s",  ex.what());
     } catch (const std::exception &ex) {
-        SDK_TRACE_DEBUG("shmmgr general exception : ",  ex.what());
+        SDK_TRACE_DEBUG("general exception, %s",  ex.what());
     }
     return false;
 }
@@ -268,7 +268,7 @@ shmmgr::segment_find(const char *name, bool create, std::size_t size) {
     } else {
         SDK_ASSERT(state != NULL);
         if (size && state->size < size) {
-            SDK_TRACE_ERR("Shmmgr, find size is not valid, allocated %u, requested %u",
+            SDK_TRACE_ERR("Shmmgr, find size is not valid, allocated %lu, requested %lu",
                           state->size, size);
         } else {
             addr = (void *)((uint64_t)state - state->offset);

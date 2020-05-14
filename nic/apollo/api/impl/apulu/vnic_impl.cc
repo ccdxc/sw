@@ -438,7 +438,7 @@ vnic_impl::program_rxdma_vnic_info_(vnic_entry *vnic, vpc_entry *vpc,
         if (rtable) {
             v4_lpm_addr =
                 ((impl::route_table_impl *)(rtable->impl()))->lpm_root_addr();
-            PDS_TRACE_DEBUG("IPv4 lpm root addr 0x%llx", v4_lpm_addr);
+            PDS_TRACE_DEBUG("IPv4 lpm root addr 0x%lx", v4_lpm_addr);
             populate_rxdma_vnic_info_policy_root_(&vnic_info_data, 0, v4_lpm_addr);
         }
     }
@@ -452,7 +452,7 @@ vnic_impl::program_rxdma_vnic_info_(vnic_entry *vnic, vpc_entry *vpc,
         sec_policy = policy_find(&policy_key);
         if (sec_policy) {
             addr = ((impl::security_policy_impl *)(sec_policy->impl()))->security_policy_root_addr();
-            PDS_TRACE_DEBUG("IPv4 subnet ing policy root addr 0x%llx", addr);
+            PDS_TRACE_DEBUG("IPv4 subnet ing policy root addr 0x%lx", addr);
             populate_rxdma_vnic_info_policy_root_(&vnic_info_data, i++, addr);
         }
     }
@@ -463,7 +463,7 @@ vnic_impl::program_rxdma_vnic_info_(vnic_entry *vnic, vpc_entry *vpc,
         sec_policy = policy_find(&policy_key);
         PDS_TRACE_ERR("Looking for policy %s", policy_key.str());
         addr = ((impl::security_policy_impl *)(sec_policy->impl()))->security_policy_root_addr();
-        PDS_TRACE_DEBUG("IPv4 vnic ing policy root addr 0x%llx", addr);
+        PDS_TRACE_DEBUG("IPv4 vnic ing policy root addr 0x%lx", addr);
         populate_rxdma_vnic_info_policy_root_(&vnic_info_data, i++, addr);
     }
 
@@ -496,7 +496,7 @@ vnic_impl::program_rxdma_vnic_info_(vnic_entry *vnic, vpc_entry *vpc,
         if (rtable) {
             v6_lpm_addr =
                 ((impl::route_table_impl *)(rtable->impl()))->lpm_root_addr();
-            PDS_TRACE_DEBUG("IPv6 lpm root addr 0x%llx", v6_lpm_addr);
+            PDS_TRACE_DEBUG("IPv6 lpm root addr 0x%lx", v6_lpm_addr);
             populate_rxdma_vnic_info_policy_root_(&vnic_info_data, 0, v6_lpm_addr);
         }
     }
@@ -509,7 +509,7 @@ vnic_impl::program_rxdma_vnic_info_(vnic_entry *vnic, vpc_entry *vpc,
         sec_policy = policy_find(&policy_key);
         if (sec_policy) {
             addr = ((impl::security_policy_impl *) (sec_policy->impl()))->security_policy_root_addr();
-            PDS_TRACE_DEBUG("IPv6 subnet ing policy root addr 0x%llx", addr);
+            PDS_TRACE_DEBUG("IPv6 subnet ing policy root addr 0x%lx", addr);
             populate_rxdma_vnic_info_policy_root_(&vnic_info_data, i++, addr);
         }
     }
@@ -519,7 +519,7 @@ vnic_impl::program_rxdma_vnic_info_(vnic_entry *vnic, vpc_entry *vpc,
         policy_key = vnic->ing_v6_policy(j);
         sec_policy = policy_find(&policy_key);
         addr = ((impl::security_policy_impl *)(sec_policy->impl()))->security_policy_root_addr();
-        PDS_TRACE_DEBUG("IPv6 vnic ing policy root addr 0x%llx", addr);
+        PDS_TRACE_DEBUG("IPv6 vnic ing policy root addr 0x%lx", addr);
         populate_rxdma_vnic_info_policy_root_(&vnic_info_data, i++, addr);
     }
 
@@ -551,7 +551,7 @@ vnic_impl::program_rxdma_vnic_info_(vnic_entry *vnic, vpc_entry *vpc,
         policy_key = vnic->egr_v4_policy(j);
         sec_policy = policy_find(&policy_key);
         addr = ((impl::security_policy_impl *)(sec_policy->impl()))->security_policy_root_addr();
-        PDS_TRACE_DEBUG("IPv4 vnic egr policy root addr 0x%llx", addr);
+        PDS_TRACE_DEBUG("IPv4 vnic egr policy root addr 0x%lx", addr);
         populate_rxdma_vnic_info_policy_root_(&vnic_info_data, i++, addr);
     }
 
@@ -561,7 +561,7 @@ vnic_impl::program_rxdma_vnic_info_(vnic_entry *vnic, vpc_entry *vpc,
         sec_policy = policy_find(&policy_key);
         if (sec_policy) {
             addr = ((impl::security_policy_impl *) (sec_policy->impl()))->security_policy_root_addr();
-            PDS_TRACE_DEBUG("IPv4 subnet egr policy root addr 0x%llx", addr);
+            PDS_TRACE_DEBUG("IPv4 subnet egr policy root addr 0x%lx", addr);
             populate_rxdma_vnic_info_policy_root_(&vnic_info_data, i++, addr);
         }
     }
@@ -592,7 +592,7 @@ vnic_impl::program_rxdma_vnic_info_(vnic_entry *vnic, vpc_entry *vpc,
         policy_key =  vnic->egr_v6_policy(j);
         sec_policy = policy_find(&policy_key);
         addr = ((impl::security_policy_impl *)(sec_policy->impl()))->security_policy_root_addr();
-        PDS_TRACE_DEBUG("IPv6 vnic egr policy root addr 0x%llx", addr);
+        PDS_TRACE_DEBUG("IPv6 vnic egr policy root addr 0x%lx", addr);
         populate_rxdma_vnic_info_policy_root_(&vnic_info_data, i++, addr);
     }
 
@@ -602,7 +602,7 @@ vnic_impl::program_rxdma_vnic_info_(vnic_entry *vnic, vpc_entry *vpc,
         sec_policy = policy_find(&policy_key);
         if (sec_policy) {
             addr = ((impl::security_policy_impl *) (sec_policy->impl()))->security_policy_root_addr();
-            PDS_TRACE_DEBUG("IPv6 subnet egr policy root addr 0x%llx", addr);
+            PDS_TRACE_DEBUG("IPv6 subnet egr policy root addr 0x%lx", addr);
             populate_rxdma_vnic_info_policy_root_(&vnic_info_data, i++, addr);
         }
     }

@@ -57,7 +57,7 @@ subnet_impl::factory(pds_subnet_spec_t *spec) {
     if (spec->fabric_encap.type != PDS_ENCAP_TYPE_VXLAN) {
         PDS_TRACE_ERR("Unknown fabric encap type %u, value %u - only VxLAN "
                       "fabric encap is supported", spec->fabric_encap.type,
-                      spec->fabric_encap.val);
+                      spec->fabric_encap.val.value);
         return NULL;
     }
     impl = subnet_impl_db()->alloc();
@@ -653,7 +653,7 @@ subnet_impl::activate_update_(pds_epoch_t epoch, subnet_entry *subnet,
     subnet_impl *orig_impl = (subnet_impl *)orig_subnet->impl();
 
     spec = &obj_ctxt->api_params->subnet_spec;
-    PDS_TRACE_DEBUG("Activating subnet %s, update host if %s, upd bmap 0x%x",
+    PDS_TRACE_DEBUG("Activating subnet %s, update host if %s, upd bmap 0x%lx",
                     spec->key.str(), spec->host_if.str(), obj_ctxt->upd_bmap);
     vpc = vpc_find(&spec->vpc);
     if (vpc == NULL) {

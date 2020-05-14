@@ -176,7 +176,7 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
     ret = nexthop_impl_db()->nh_idxr()->alloc(&nh_idx_);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to allocate nexthop entries for oob "
-                      "lif %s id %u, err %u", name_, key_, ret);
+                      "lif %s id %s, err %u", name_, key_.str(), ret);
         return ret;
     }
 
@@ -186,8 +186,8 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
             g_pds_state.catalogue()->ifindex_to_tm_port(pinned_if_idx_);
     ret = nexthop_info_entry.write(nh_idx_);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to program NEXTHOP table for oob lif %u "
-                      "at idx %u", key_, nh_idx_);
+        PDS_TRACE_ERR("Failed to program NEXTHOP table for oob lif %s "
+                      "at idx %u", key_.str(), nh_idx_);
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
     }
@@ -271,8 +271,8 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
     nexthop_info_entry.port = TM_PORT_DMA;
     ret = nexthop_info_entry.write(nh_idx_);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to program NEXTHOP table for oob lif %u "
-                      "at idx %u", key_, nh_idx_); //nh_idx_ + 1);
+        PDS_TRACE_ERR("Failed to program NEXTHOP table for oob lif %s "
+                      "at idx %u", key_.str(), nh_idx_); //nh_idx_ + 1);
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
     }
@@ -294,7 +294,7 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
     p4pd_ret = p4pd_entry_install(P4TBL_ID_NACL, nacl_idx, &key, &mask, &data);
     if (p4pd_ret != P4PD_SUCCESS) {
         PDS_TRACE_ERR("Failed to program NACL entry for uplink %u to "
-                      "oob lif %u", pinned_if_idx_, key_);
+                      "oob lif %s", pinned_if_idx_, key_.str());
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
     } else {
@@ -303,7 +303,7 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
                         key.capri_intrinsic_lif);
     }
 
-    PDS_TRACE_DEBUG("nacl lif %u -> nh type %u, idx %u, nh lif %u, port %u",
+    PDS_TRACE_DEBUG("nacl lif %u -> nh type %u, idx %u, nh lif %lu, port %lu",
                     key.capri_intrinsic_lif, NEXTHOP_TYPE_NEXTHOP,
                     nh_idx_, nexthop_info_entry.lif,
                     //nh_idx_ + 1, nexthop_info_entry.lif,
@@ -311,8 +311,8 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
 
     // allocate vnic h/w id for this lif
     if ((ret = vnic_impl_db()->vnic_idxr()->alloc(&idx)) != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to allocate vnic h/w id for lif %u, err %u",
-                      key_, ret);
+        PDS_TRACE_ERR("Failed to allocate vnic h/w id for lif %s, err %u",
+                      key_.str(), ret);
         return ret;
     }
     // program the LIF table
@@ -355,7 +355,7 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
     ret = nexthop_impl_db()->nh_idxr()->alloc(&nh_idx_);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to allocate nexthop entries for inband "
-                      "lif %s, id %u, err %u", name_, key_, ret);
+                      "lif %s, id %s, err %u", name_, key_.str(), ret);
         return ret;
     }
 
@@ -365,8 +365,8 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
         g_pds_state.catalogue()->ifindex_to_tm_port(pinned_if_idx_);
     ret = nexthop_info_entry.write(nh_idx_);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to program NEXTHOP table for inb lif %u at "
-                      "idx %u", key_, nh_idx_);
+        PDS_TRACE_ERR("Failed to program NEXTHOP table for inb lif %s at "
+                      "idx %u", key_.str(), nh_idx_);
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
     }
@@ -434,7 +434,7 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
                         nacl_idx, key.key_metadata_ktype,
                         key.capri_intrinsic_lif);
     }
-    PDS_TRACE_DEBUG("nacl lif %u -> nh type %u, idx %u, nh lif %u, port %u",
+    PDS_TRACE_DEBUG("nacl lif %u -> nh type %u, idx %u, nh lif %lu, port %lu",
                     key.capri_intrinsic_lif, NEXTHOP_TYPE_NEXTHOP, nh_idx_,
                     nexthop_info_entry.lif, nexthop_info_entry.port);
 
@@ -453,8 +453,8 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
     nexthop_info_entry.port = TM_PORT_DMA;
     ret = nexthop_info_entry.write(nh_idx_);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to program NEXTHOP table for oob lif %u "
-                      "at idx %u", key_, nh_idx_); //nh_idx_ + 1);
+        PDS_TRACE_ERR("Failed to program NEXTHOP table for oob lif %s "
+                      "at idx %u", key_.str(), nh_idx_); //nh_idx_ + 1);
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
     }
@@ -486,7 +486,7 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
                         nacl_idx, key.key_metadata_ktype,
                         key.capri_intrinsic_lif);
     }
-    PDS_TRACE_DEBUG("nacl lif %u -> nh type %u, idx %u, nh lif %u, port %u",
+    PDS_TRACE_DEBUG("nacl lif %u -> nh type %u, idx %u, nh lif %lu, port %lu",
                     key.capri_intrinsic_lif, NEXTHOP_TYPE_NEXTHOP,
                     nh_idx_, nexthop_info_entry.lif,
                     //nh_idx_ + 1, nexthop_info_entry.lif,
@@ -557,7 +557,7 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     ret = nexthop_impl_db()->nh_idxr()->alloc(&nh_idx_);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to allocate nexthop entry for flow miss, "
-                      "lif %s, id %u, err %u", name_, key_, ret);
+                      "lif %s, id %s, err %u", name_, key_.str(), ret);
         return ret;
     }
 

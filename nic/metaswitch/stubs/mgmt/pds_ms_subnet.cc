@@ -656,7 +656,7 @@ populate_lim_irb_if_cfg_spec (pds_subnet_spec_t          *subnet_spec,
     auto vrf_id = ((vpc_uuid_obj_t*)uuid_obj)->ms_id();
     vrf_name = std::to_string (vrf_id);
 
-    PDS_TRACE_DEBUG("IRB Interface:: VRF ID: %d MSIfIndex: 0x%X VRF name %s len %d",
+    PDS_TRACE_DEBUG("IRB Interface:: VRF ID: %u MSIfIndex: 0x%X VRF name %s len %lu",
                     vrf_id, if_index, vrf_name.c_str(), vrf_name.length());
 
     req.set_entityindex (PDS_MS_LIM_ENT_INDEX);

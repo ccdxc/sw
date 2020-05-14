@@ -45,7 +45,7 @@ checkprocess(monprocess_t *process) {
 
     it = monprocess_map.find(process->pid);
     if (it == monprocess_map.end()) {
-        SDK_HMON_TRACE_ERR("%s(%u): RSS: %f MB, VSZ: %f MB",
+        SDK_HMON_TRACE_ERR("%s(%u): RSS %f MB, VSZ %f MB",
                 process->command.c_str(), process->pid, (double)process->rss / 1024.0,
                 (double)process->vsz / 1024.0);
         monprocess_map[process->pid] = *process;
@@ -60,8 +60,8 @@ checkprocess(monprocess_t *process) {
             if (process->rss_change >= PROCESS_CHANGE_THRESHOLD &&
                 process->vsz_change >= PROCESS_CHANGE_THRESHOLD) {
                 //log the change in RSS
-                SDK_HMON_TRACE_ERR("%s(%u):RSS: %f MB (+%f MB), " \
-                           "VSZ: %f MB (+%f MB)",
+                SDK_HMON_TRACE_ERR("%s(%u):RSS %f MB (+%f MB), " \
+                           "VSZ %f MB (+%f MB)",
                             process->command.c_str(), process->pid,
                             (double)process->rss / 1024.0,
                             (double)process->rss_change / 1024.0,
@@ -72,7 +72,7 @@ checkprocess(monprocess_t *process) {
                 process->vsz_change = 0;
             } else if (process->rss_change >= PROCESS_CHANGE_THRESHOLD) {
                 //log the change in RSS
-                SDK_HMON_TRACE_ERR("%s(%u):RSS: %fMB (+%fMB)",
+                SDK_HMON_TRACE_ERR("%s(%u):RSS %fMB (+%fMB)",
                             process->command.c_str(), process->pid,
                             (double)process->rss / 1024.0,
                             (double)process->rss_change / 1024.0);
@@ -80,7 +80,7 @@ checkprocess(monprocess_t *process) {
                 process->rss_change = 0;
             } else if (process->vsz_change >= PROCESS_CHANGE_THRESHOLD) {
                 //log the change in vsz
-                SDK_HMON_TRACE_ERR("%s(%u):VSZ: %fMB (+%fMB)",
+                SDK_HMON_TRACE_ERR("%s(%u):VSZ %fMB (+%fMB)",
                             process->command.c_str(), process->pid,
                             (double)process->vsz / 1024.0,
                             (double)process->vsz_change / 1024.0);
@@ -247,8 +247,7 @@ monitorfreememory (uint64_t *total_mem, uint64_t *available_mem,
                     curr_memory < CRITICAL_MEMORY_THRESHOLD) {
                     int status = system("/nic/tools/sysmondebug.sh");
                     if (status) {
-                        SDK_HMON_TRACE_ERR("Unable to run debug script",
-                            (double)curr_memory / 1024.0);
+                        SDK_HMON_TRACE_ERR("Unable to run debug script");
                     } else {
                         SDK_HMON_TRACE_ERR("Available memory is %f MB, run debug script",
                             (double)curr_memory / 1024.0);

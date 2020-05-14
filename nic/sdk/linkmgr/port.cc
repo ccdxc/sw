@@ -1889,7 +1889,7 @@ port::port_mac_stats_init(void)
     if (this->port_stats_base_addr_ == INVALID_MEM_ADDRESS) {
         return SDK_RET_ERR;
     }
-    SDK_TRACE_DEBUG("port %u stats_init, port_stats_base_addr_ = 0x%llx",
+    SDK_TRACE_DEBUG("port %u stats_init, port_stats_base_addr_ = 0x%lx",
                     this->port_num_, this->port_stats_base_addr_);
     return SDK_RET_OK;
 }
@@ -1915,7 +1915,7 @@ port::port_mac_stats_publish(uint64_t *stats_data)
 
     ret = sdk::asic::asic_mem_write(this->port_stats_base_addr_, (uint8_t *) stats_data, len);
     if (ret != SDK_RET_OK) {
-        SDK_TRACE_DEBUG("port %u stats_publish port_stats_base_addr_ = 0x%llx asic_mem_write failed ret = 0x%x",
+        SDK_TRACE_DEBUG("port %u stats_publish port_stats_base_addr_ = 0x%lx asic_mem_write failed ret = 0x%x",
                          this->port_num_, this->port_stats_base_addr_, ret);
     }
     return ret;

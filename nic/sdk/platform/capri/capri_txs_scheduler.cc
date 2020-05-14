@@ -57,12 +57,12 @@ capri_txs_timer_init_hsh_depth (uint32_t key_lines)
         g_capri_state_pd->mempartition()->start_addr(MEM_REGION_TIMERS_NAME);
 
     txs_csr->cfg_timer_static.read();
-    SDK_TRACE_DEBUG("hbm_base 0x%llx",
+    SDK_TRACE_DEBUG("hbm_base 0x%lx",
                     (uint64_t)txs_csr->cfg_timer_static.hbm_base());
-    SDK_TRACE_DEBUG("timer hash depth %u",
-                    txs_csr->cfg_timer_static.tmr_hsh_depth());
-    SDK_TRACE_DEBUG("timer wheel depth %u",
-                    txs_csr->cfg_timer_static.tmr_wheel_depth());
+    SDK_TRACE_DEBUG("timer hash depth %lu",
+                    (uint64_t)txs_csr->cfg_timer_static.tmr_hsh_depth());
+    SDK_TRACE_DEBUG("timer wheel depth %lu",
+                    (uint64_t)txs_csr->cfg_timer_static.tmr_wheel_depth());
     txs_csr->cfg_timer_static.hbm_base(timer_key_hbm_base_addr);
     txs_csr->cfg_timer_static.tmr_hsh_depth(key_lines - 1);
     txs_csr->cfg_timer_static.tmr_wheel_depth(CAPRI_TIMER_WHEEL_DEPTH - 1);
@@ -308,7 +308,7 @@ capri_txs_scheduler_init (uint32_t admin_cos, asic_cfg_t *capri_cfg)
     txs_csr.cfg_scheduler_dbg.fifo_mode_thr(0);
     txs_csr.cfg_scheduler_dbg.write();
 
-    SDK_TRACE_DEBUG("Set hbm base addr for TXS sched to 0x%lx, dtdm_lo_map 0x%lx, dtdm_hi_map 0x%lx",
+    SDK_TRACE_DEBUG("Set hbm base addr for TXS sched to 0x%lx, dtdm_lo_map 0x%x, dtdm_hi_map 0x%x",
                     txs_sched_hbm_base_addr, dtdm_lo_map, dtdm_hi_map);
     return SDK_RET_OK;
 }
@@ -364,7 +364,7 @@ capri_txs_scheduler_lif_params_update (uint32_t hw_lif_id,
     }
 
     SDK_TRACE_DEBUG("Programmed sched-table-offset %u and entries-per-cos %u"
-                    "and cos-bmp 0x%lx for hw-lif-id %u",
+                    "and cos-bmp 0x%x for hw-lif-id %u",
                     txs_hw_params->sched_table_offset,
                      txs_hw_params->num_entries_per_cos, lif_cos_bmp,
                      hw_lif_id);

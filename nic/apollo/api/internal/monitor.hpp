@@ -135,12 +135,12 @@ interrupt_event_cb (const intr_reg_t *reg, const intr_field_t *field)
     case INTR_SEV_TYPE_ERR:
         if (field->count == 1) {
             // log to onetime interrupt error
-            PDS_INTR_TRACE_ERR("name: %s_%s, count: %u, severity: %s, desc: %s",
+            PDS_INTR_TRACE_ERR("name %s_%s, count %lu, severity %s, desc %s",
                 reg->name, field->name, field->count,
                 get_severity_str(field->severity).c_str(), field->desc);
         }
         // log in hmon error
-        PDS_HMON_TRACE_ERR("name: %s_%s, count: %u, severity: %s, desc: %s",
+        PDS_HMON_TRACE_ERR("name %s_%s, count %lu, severity %s, desc %s",
             reg->name, field->name, field->count,
             get_severity_str(field->severity).c_str(), field->desc);
         break;

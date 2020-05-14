@@ -126,14 +126,14 @@ api_obj_add_to_deps (api_op_t api_op,
                      uint64_t upd_bmap) {
     api_obj_ctxt_t *octxt;
 
-    PDS_TRACE_DEBUG("Adding %s to AoL, api op %u, upd bmap 0x%x",
+    PDS_TRACE_DEBUG("Adding %s to AoL, api op %u, upd bmap 0x%lx",
                     api_obj_b->key2str().c_str(), api_op, upd_bmap);
     octxt = g_api_engine.add_to_deps_list(api_op,
                                           obj_id_a, api_obj_a,
                                           obj_id_b, api_obj_b,
                                           upd_bmap);
     if (octxt) {
-        PDS_TRACE_DEBUG("Triggering recursive update on %s, update bmap 0x%x",
+        PDS_TRACE_DEBUG("Triggering recursive update on %s, update bmap 0x%lx",
                         api_obj_b->key2str().c_str(), octxt->upd_bmap);
         api_obj_b->add_deps(octxt);
     }
@@ -1171,7 +1171,7 @@ api_engine::batch_commit_phase1_(void) {
     batch_ctxt_.num_msgs = 0;
     // pre process the APIs by walking over the stashed API contexts to form
     // dirty object list
-    PDS_TRACE_INFO("Preprocess stage start, epoch %u, API count %u",
+    PDS_TRACE_INFO("Preprocess stage start, epoch %u, API count %lu",
                    batch_ctxt_.epoch,  batch_ctxt_.api_ctxts->size());
     ret = pre_process_stage_();
     PDS_TRACE_INFO("Preprocess stage end, epoch %u, result %u",
@@ -1179,7 +1179,7 @@ api_engine::batch_commit_phase1_(void) {
     if (ret != SDK_RET_OK) {
         goto error;
     }
-    PDS_TRACE_INFO("Dirty object list size %u, Dirty object map size %u",
+    PDS_TRACE_INFO("Dirty object list size %lu, Dirty object map size %lu",
                    batch_ctxt_.dol.size(), batch_ctxt_.dom.size());
 
     // walk over the dirty object list and compute the objects that could be
@@ -1192,7 +1192,7 @@ api_engine::batch_commit_phase1_(void) {
     if (ret != SDK_RET_OK) {
         goto error;
     }
-    PDS_TRACE_INFO("Dependency object list size %u, map size %u",
+    PDS_TRACE_INFO("Dependency object list size %lu, map size %lu",
                    batch_ctxt_.aol.size(), batch_ctxt_.aom.size());
 
     // we have to promote container objects in the dependent object list

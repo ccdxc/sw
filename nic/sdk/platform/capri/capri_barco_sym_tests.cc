@@ -292,7 +292,7 @@ capri_barco_sym_hash_sha_test (CryptoApiHashType hash_type, bool generate)
        return ret;
     }
 
-    SDK_TRACE_DEBUG("Running %s-%s test on data: 0x%llx, data-len: %d:, key: 0x%llx, key-len: %d\n",
+    SDK_TRACE_DEBUG("Running %s-%s test on data %s, data-len %d, key %s, key-len %d\n",
                     CryptoApiHashType_Name(hash_type),
                     generate ? "generate" : "verify",
                     input_data, input_datalen,

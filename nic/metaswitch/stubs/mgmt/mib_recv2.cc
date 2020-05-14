@@ -235,7 +235,7 @@ NBB_VOID sms_rcv_amb_trap(AMB_TRAP *v_amb_trap NBB_CCXT_T NBB_CXT)
       /***********************************************************************/
       /* Unrecognized trap type.                                             */
       /***********************************************************************/
-      PDS_TRACE_DEBUG ("Unrecognized trap type 0x%lx\n", v_amb_trap->trap_type);
+      PDS_TRACE_DEBUG ("Unrecognized trap type 0x%x\n", v_amb_trap->trap_type);
   }
 
   NBB_TRC_EXIT();

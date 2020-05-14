@@ -172,7 +172,7 @@ service_lif_upg_verify (uint32_t lif_id, const char *cfg_path)
         return SDK_RET_ERR;
     }
 
-    PDS_TRACE_DEBUG("Moving qstate addr 0x%lx, pc offset %u, to offset %u",
+    PDS_TRACE_DEBUG("Moving qstate addr 0x%lx, pc offset %lu, to offset %u",
                     qstate.hbm_address, lif_qstate.pc, pgm_offset);
 
     rv = sdk::asic::read_qstate(qstate.hbm_address + sizeof(lifqstate_t),
@@ -190,7 +190,7 @@ service_lif_upg_verify (uint32_t lif_id, const char *cfg_path)
         return SDK_RET_ERR;
     }
 
-    PDS_TRACE_DEBUG("Moving qstate addr 0x%lx, pc offset %u, to offset %u",
+    PDS_TRACE_DEBUG("Moving qstate addr 0x%lx, pc offset %lu, to offset %u",
                     qstate.hbm_address + sizeof(lifqstate_t), lif_qstate.pc, pgm_offset);
 
     // save the qstate hbm address

@@ -366,7 +366,7 @@ indexer::compute_num_indices_allocated(void)
 		}
 	}
 
-        SDK_TRACE_DEBUG("Usage internal : %d Usage computed: %d", usage_, usage);
+        SDK_TRACE_DEBUG("Usage internal : %lu Usage computed: %u", usage_, usage);
         SDK_ASSERT(usage_ == usage);
 	return usage;
 }

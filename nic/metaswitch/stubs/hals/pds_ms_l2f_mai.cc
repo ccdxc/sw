@@ -300,7 +300,7 @@ NBB_BYTE l2f_mai_t::handle_add_upd_mac(ATG_BDPI_UPDATE_FDB_MAC* update_fdb_mac) 
     cookie_t *cookie = nullptr;
     parse_ips_info_(update_fdb_mac);
 
-    PDS_TRACE_INFO("L2F FDB ADD BD %d MAC %s Num TEPs %d First-TEP %s",
+    PDS_TRACE_INFO("L2F FDB ADD BD %d MAC %s Num TEPs %lu First-TEP %s",
                    ips_info_.bd_id, macaddr2str(ips_info_.mac_address),
                    ips_info_.tep_ip_list.size(),
                    ipaddr2str(&(*ips_info_.tep_ip_list.begin())));
@@ -353,8 +353,8 @@ NBB_BYTE l2f_mai_t::handle_add_upd_mac(ATG_BDPI_UPDATE_FDB_MAC* update_fdb_mac) 
                 do {
                     auto bdpi_join = get_l2f_bdpi_join();
                     if (bdpi_join == nullptr) {
-                        PDS_TRACE_ERR("Failed to find BDPI join to return BD %d AddUpd IPS",
-                                      update_fdb_mac->bd_id);
+                        PDS_TRACE_ERR("Failed to find BDPI join to return BD %u AddUpd IPS",
+                                      update_fdb_mac->bd_id.bd_id);
                         break;
                     }
                     auto& fdb_store = bdpi_join->get_fdb_mac_store();

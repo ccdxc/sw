@@ -30,7 +30,7 @@ capri_pxb_pcie_init (void)
         pxb_csr.dhs_itr_pcihdrt.entry[i].valid(1);
         pxb_csr.dhs_itr_pcihdrt.entry[i].write();
     }
-    SDK_TRACE_DEBUG("Initializing PCIE Atomic Region/Page as 0x%x/0x%x\n",
+    SDK_TRACE_DEBUG("Initializing PCIE Atomic Region/Page as 0x%lx/0x%lx\n",
                     CAPRI_PCIE_ATOMIC_REGION_ID, CAPRI_PCIE_ATOMIC_PAGE_ID);
 
     // axi addressing formula :

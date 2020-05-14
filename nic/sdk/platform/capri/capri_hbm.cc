@@ -41,7 +41,7 @@ cap_nx_block_read(uint32_t chip, uint64_t addr, int size,
     uint32_t data = 0x0;
     if (sdk::asic::asic_reg_read(addr, &data, 1, false /*read_thru*/) !=
                                  SDK_RET_OK) {
-        SDK_TRACE_ERR("NX read failed. addr: %llx", addr);
+        SDK_TRACE_ERR("NX read failed, addr 0x%lx", addr);
     }
     return data;
 }
@@ -364,7 +364,7 @@ capri_hbm_cache_regions_init (asic_cfg_t *cfg)
                 ((p4ig_reg.start_offset + p4ig_reg.size) !=
                  (reg->start_offset))) {
                 SDK_TRACE_DEBUG("Programming %s to P4IG cache(region 1), "
-                                "start=%lx size=%u index=%u", reg->mem_reg_name,
+                                "start=%lx size=%lu index=%u", reg->mem_reg_name,
                                 cfg->mempartition->addr(reg->start_offset),
                                 reg->size, p4ig_filter_idx);
                 p4ig_reg.start_offset = reg->start_offset;
@@ -375,7 +375,7 @@ capri_hbm_cache_regions_init (asic_cfg_t *cfg)
             } else {
                 p4ig_reg.size += reg->size;
                 SDK_TRACE_DEBUG("Programming %s to P4IG cache(region 1) (merge), "
-                                "start=%lx size=%u index=%u", reg->mem_reg_name,
+                                "start=%lx size=%lu index=%u", reg->mem_reg_name,
                                 cfg->mempartition->addr(p4ig_reg.start_offset),
                                 p4ig_reg.size, p4ig_filter_idx - 1);
                 capri_hbm_cache_program_region(&p4ig_reg, 1,
@@ -388,7 +388,7 @@ capri_hbm_cache_regions_init (asic_cfg_t *cfg)
                 ((p4eg_reg.start_offset + p4eg_reg.size) !=
                  (reg->start_offset))) {
                 SDK_TRACE_DEBUG("Programming %s to P4EG cache(region 2), "
-                                "start=%lx size=%u index=%u", reg->mem_reg_name,
+                                "start=%lx size=%lu index=%u", reg->mem_reg_name,
                                 cfg->mempartition->addr(reg->start_offset),
                                 reg->size, p4eg_filter_idx);
                 p4eg_reg.start_offset = reg->start_offset;
@@ -399,7 +399,7 @@ capri_hbm_cache_regions_init (asic_cfg_t *cfg)
             } else {
                 p4eg_reg.size += reg->size;
                 SDK_TRACE_DEBUG("Programming %s to P4EG cache(region 2) (merge), "
-                                "start=%lx size=%u index=%u", reg->mem_reg_name,
+                                "start=%lx size=%lu index=%u", reg->mem_reg_name,
                                 cfg->mempartition->addr(p4eg_reg.start_offset),
                                 p4eg_reg.size, p4eg_filter_idx - 1);
                 capri_hbm_cache_program_region(&p4eg_reg, 2,
@@ -412,7 +412,7 @@ capri_hbm_cache_regions_init (asic_cfg_t *cfg)
                 ((p4plus_txdma_reg.start_offset + p4plus_txdma_reg.size) !=
                  (reg->start_offset))) {
                 SDK_TRACE_DEBUG("Programming %s to P4PLUS TXDMA cache(region 3), "
-                                "start=%lx size=%u index=%u", reg->mem_reg_name,
+                                "start=%lx size=%lu index=%u", reg->mem_reg_name,
                                 cfg->mempartition->addr(reg->start_offset),
                                 reg->size, p4plus_txdma_filter_idx);
                 p4plus_txdma_reg.start_offset = reg->start_offset;
@@ -423,7 +423,7 @@ capri_hbm_cache_regions_init (asic_cfg_t *cfg)
             } else {
                 p4plus_txdma_reg.size += reg->size;
                 SDK_TRACE_DEBUG("Programming %s to P4PLUS TXDMA cache(region 3) (merge), "
-                                "start=%lx size=%u index=%u", reg->mem_reg_name,
+                                "start=%lx size=%lu index=%u", reg->mem_reg_name,
                                 cfg->mempartition->addr(p4plus_txdma_reg.start_offset),
                                 p4plus_txdma_reg.size,
                                 p4plus_txdma_filter_idx - 1);
@@ -437,7 +437,7 @@ capri_hbm_cache_regions_init (asic_cfg_t *cfg)
             if ((p4plus_rxdma_reg.start_offset == 0) ||
                 ((p4plus_rxdma_reg.start_offset + p4plus_rxdma_reg.size) != (reg->start_offset))) {
                 SDK_TRACE_DEBUG("Programming %s to P4PLUS RXDMA cache(region 0), "
-                                "start=%lx size=%u index=%u", reg->mem_reg_name,
+                                "start=%lx size=%lu index=%u", reg->mem_reg_name,
                                 cfg->mempartition->addr(reg->start_offset),
                                 reg->size, p4plus_rxdma_filter_idx);
                 p4plus_rxdma_reg.start_offset = reg->start_offset;
@@ -448,7 +448,7 @@ capri_hbm_cache_regions_init (asic_cfg_t *cfg)
             } else {
                 p4plus_rxdma_reg.size += reg->size;
                 SDK_TRACE_DEBUG("Programming %s to P4PLUS RXDMA cache(region 0) (merge), "
-                                "start=%lx size=%u index=%u", reg->mem_reg_name,
+                                "start=%lx size=%lu index=%u", reg->mem_reg_name,
                                 cfg->mempartition->addr(p4plus_rxdma_reg.start_offset),
                                 p4plus_rxdma_reg.size,
                                 p4plus_rxdma_filter_idx - 1);
@@ -460,14 +460,14 @@ capri_hbm_cache_regions_init (asic_cfg_t *cfg)
 
         if (is_region_cache_pipe_p4plus_pciedb(reg)) {
             SDK_TRACE_DEBUG("Programming %s to PCIE, "
-                            "start=%lx size=%u index=%u", reg->mem_reg_name,
+                            "start=%lx size=%lu index=%u", reg->mem_reg_name,
                             cfg->mempartition->addr(reg->start_offset),
                             reg->size, p4plus_pcie_filter_idx);
             capri_hbm_cache_program_pcie(reg, p4plus_pcie_filter_idx);
             p4plus_pcie_filter_idx++;
 
             SDK_TRACE_DEBUG("Programming %s to Doorbell, "
-                            "start=%lx size=%u index=%u", reg->mem_reg_name,
+                            "start=%lx size=%lu index=%u", reg->mem_reg_name,
                             cfg->mempartition->addr(reg->start_offset),
                             reg->size, p4plus_db_filter_idx);
             capri_hbm_cache_program_db(reg, p4plus_db_filter_idx);
@@ -500,7 +500,7 @@ capri_tpc_bw_mon_rd_get (uint64_t *maxv, uint64_t *avrg)
     *maxv = pics_csr.sta_axi_bw_mon_rd_bandwidth.maxv().convert_to<uint64_t>();
     *avrg = pics_csr.sta_axi_bw_mon_rd_bandwidth.avrg().convert_to<uint64_t>();
 
-    SDK_TRACE_DEBUG("TXDMA AVG_RD: %llu, MAX_RD: %llu", *avrg, *maxv);
+    SDK_TRACE_DEBUG("TXDMA AVG_RD %lu, MAX_RD %lu", *avrg, *maxv);
 
     return SDK_RET_OK;
 }
@@ -516,7 +516,7 @@ capri_tpc_bw_mon_wr_get (uint64_t *maxv, uint64_t *avrg)
     *maxv = pics_csr.sta_axi_bw_mon_wr_bandwidth.maxv().convert_to<uint64_t>();
     *avrg = pics_csr.sta_axi_bw_mon_wr_bandwidth.avrg().convert_to<uint64_t>();
 
-    SDK_TRACE_DEBUG("TXDMA AVG_WR: %llu, MAX_WR: %llu", *avrg, *maxv);
+    SDK_TRACE_DEBUG("TXDMA AVG_WR %lu, MAX_WR %lu", *avrg, *maxv);
 
     return SDK_RET_OK;
 }
@@ -532,7 +532,7 @@ capri_rpc_bw_mon_rd_get (uint64_t *maxv, uint64_t *avrg)
     *maxv = pics_csr.sta_axi_bw_mon_rd_bandwidth.maxv().convert_to<uint64_t>();
     *avrg = pics_csr.sta_axi_bw_mon_rd_bandwidth.avrg().convert_to<uint64_t>();
 
-    SDK_TRACE_DEBUG("RXDMA AVG_RD: %llu, MAX_RD: %llu", *avrg, *maxv);
+    SDK_TRACE_DEBUG("RXDMA AVG_RD %lu, MAX_RD %lu", *avrg, *maxv);
 
     return SDK_RET_OK;
 }
@@ -548,7 +548,7 @@ capri_rpc_bw_mon_wr_get (uint64_t *maxv, uint64_t *avrg)
     *maxv = pics_csr.sta_axi_bw_mon_wr_bandwidth.maxv().convert_to<uint64_t>();
     *avrg = pics_csr.sta_axi_bw_mon_wr_bandwidth.avrg().convert_to<uint64_t>();
 
-    SDK_TRACE_DEBUG("RXDMA AVG_WR: %llu, MAX_WR: %llu", *avrg, *maxv);
+    SDK_TRACE_DEBUG("RXDMA AVG_WR %lu, MAX_WR %lu", *avrg, *maxv);
 
     return SDK_RET_OK;
 }
@@ -624,8 +624,8 @@ populate_hbm_bw (uint64_t max_rd, uint64_t max_wr,
     hbm_bw->avg.write = (avg_wr *
                          (num_bits * capri_freq)/1000.0f) / window_size;
 
-    SDK_TRACE_DEBUG("AVG_RD: %llu, AVG_WR: %llu, "
-                    "MAX_RD: %llu, MAX_WR: %llu",
+    SDK_TRACE_DEBUG("AVG_RD %f, AVG_WR %f, "
+                    "MAX_RD %f, MAX_WR %f",
                     hbm_bw->avg.read, hbm_bw->avg.write,
                     hbm_bw->max.read, hbm_bw->max.write);
 }
@@ -739,8 +739,8 @@ capri_hbm_bw (uint32_t samples, uint32_t u_sleep, bool ms_pcie,
     if (capri_freq == 0) {
         capri_freq = capri_freq_get();
         capri_set_hbm_bw_window(window_size);
-        SDK_TRACE_DEBUG("HBM BW mon window size set to: 0x%x", window_size);
-        SDK_TRACE_DEBUG("capri freq: %u", capri_freq);
+        SDK_TRACE_DEBUG("HBM BW mon window size set to 0x%x", window_size);
+        SDK_TRACE_DEBUG("capri freq %u", capri_freq);
     }
 
     capri_clear_hbm_bw(0);
@@ -762,9 +762,9 @@ capri_hbm_bw (uint32_t samples, uint32_t u_sleep, bool ms_pcie,
         hbm_bw->clk_diff = clk_diff;
         capri_tpc_bw_mon_rd_get(&max_rd, &avg_rd);
         capri_tpc_bw_mon_wr_get(&max_wr, &avg_wr);
-        SDK_TRACE_DEBUG("CLK_DIFF: %llu, TXDMA BW "
-                        "AVG_RD: %llu, AVG_WR: %llu, "
-                        "MAX_RD: %llu, MAX_WR: %llu",
+        SDK_TRACE_DEBUG("CLK_DIFF %lu, TXDMA BW "
+                        "AVG_RD %lu, AVG_WR %lu, "
+                        "MAX_RD %lu, MAX_WR %lu",
                         clk_diff,
                         avg_rd, avg_wr,
                         max_rd, max_wr);
@@ -775,9 +775,9 @@ capri_hbm_bw (uint32_t samples, uint32_t u_sleep, bool ms_pcie,
         hbm_bw->clk_diff = clk_diff;
         capri_rpc_bw_mon_rd_get(&max_rd, &avg_rd);
         capri_rpc_bw_mon_wr_get(&max_wr, &avg_wr);
-        SDK_TRACE_DEBUG("CLK_DIFF: %llu, RXDMA BW "
-                        "AVG_RD: %llu, AVG_WR: %llu, "
-                        "MAX_RD: %llu, MAX_WR: %llu",
+        SDK_TRACE_DEBUG("CLK_DIFF %lu, RXDMA BW "
+                        "AVG_RD %lu, AVG_WR %lu, "
+                        "MAX_RD %lu, MAX_WR %lu",
                         clk_diff,
                         avg_rd, avg_wr,
                         max_rd, max_wr);
@@ -788,9 +788,9 @@ capri_hbm_bw (uint32_t samples, uint32_t u_sleep, bool ms_pcie,
         hbm_bw->clk_diff = clk_diff;
         capri_ms_bw_mon_rd_get(&max_rd, &avg_rd);
         capri_ms_bw_mon_wr_get(&max_wr, &avg_wr);
-        SDK_TRACE_DEBUG("CLK_DIFF: %llu, MS BW "
-                        "AVG_RD: %llu, AVG_WR: %llu, "
-                        "MAX_RD: %llu, MAX_WR: %llu",
+        SDK_TRACE_DEBUG("CLK_DIFF %lu, MS BW "
+                        "AVG_RD %lu, AVG_WR %lu, "
+                        "MAX_RD %lu, MAX_WR %lu",
                         clk_diff,
                         avg_rd, avg_wr,
                         max_rd, max_wr);
@@ -801,9 +801,9 @@ capri_hbm_bw (uint32_t samples, uint32_t u_sleep, bool ms_pcie,
         hbm_bw->clk_diff = clk_diff;
         capri_pxb_bw_mon_rd_get(&max_rd, &avg_rd);
         capri_pxb_bw_mon_wr_get(&max_wr, &avg_wr);
-        SDK_TRACE_DEBUG("CLK_DIFF: %llu, PCIE BW "
-                        "AVG_RD: %llu, AVG_WR: %llu, "
-                        "MAX_RD: %llu, MAX_WR: %llu",
+        SDK_TRACE_DEBUG("CLK_DIFF %lu, PCIE BW "
+                        "AVG_RD %lu, AVG_WR %lu, "
+                        "MAX_RD %lu, MAX_WR %lu",
                         clk_diff,
                         avg_rd, avg_wr,
                         max_rd, max_wr);
@@ -827,8 +827,8 @@ capri_hbm_bw (uint32_t samples, uint32_t u_sleep, bool ms_pcie,
 
         hbm_bw->avg.read  = avg_rd;
         hbm_bw->avg.write = avg_wr;
-        SDK_TRACE_DEBUG("CLK_DIFF: %llu, PB BW "
-                        "AVG_RD: %llu, AVG_WR: %llu",
+        SDK_TRACE_DEBUG("CLK_DIFF %lu, PB BW "
+                        "AVG_RD %lu, AVG_WR %lu",
                         clk_diff,
                         avg_rd, avg_wr);
 

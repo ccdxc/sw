@@ -82,7 +82,7 @@ devapi_impl::lif_create(lif_info_t *info) {
         return sdk::SDK_RET_OOM;
     }
     lif_impl_db()->insert(lif);
-    PDS_TRACE_DEBUG("Inserted lif %u %s %u %s",
+    PDS_TRACE_DEBUG("Inserted lif %lu %s %u %s",
                     info->lif_id, info->name, info->type,
                     macaddr2str(info->mac));
     // register for lif metrics
@@ -107,7 +107,7 @@ devapi_impl::lif_init(lif_info_t *info) {
 
     lif = lif_impl_db()->find((pds_lif_id_t *)&info->lif_id);
     if (unlikely(lif == NULL)) {
-        PDS_TRACE_ERR("Lif %u not found", info->lif_id);
+        PDS_TRACE_ERR("Lif %lu not found", info->lif_id);
         return sdk::SDK_RET_ENTRY_NOT_FOUND;
     }
     lif_spec_from_info(spec, info);
@@ -115,13 +115,13 @@ devapi_impl::lif_init(lif_info_t *info) {
     lif_program_tx_scheduler(info);
     ret = lif->create(&spec);
     if (ret == SDK_RET_OK) {
-        PDS_TRACE_DEBUG("Created lif %s, id %u %s %u %s",
+        PDS_TRACE_DEBUG("Created lif %s, id %lu %s %u %s",
                         spec.key.str(), info->lif_id, info->name, info->type,
                         macaddr2str(info->mac));
         lif->set_tx_sched_info(info->tx_sched_table_offset,
                                info->tx_sched_num_table_entries);
     } else {
-        PDS_TRACE_ERR("lif %s create failed!, id %u %s %u %s ret %u",
+        PDS_TRACE_ERR("lif %s create failed!, id %lu %s %u %s ret %u",
                         spec.key.str(), info->lif_id, info->name, info->type,
                         macaddr2str(info->mac),
                         ret);
@@ -645,11 +645,11 @@ devapi_impl::lif_get_qcount_(lif_info_t *info) {
          if (qinfo.size < 1) {
              continue;
          }
-         PDS_TRACE_DEBUG("Queue type_num %lu, entries %lu, purpose %lu",
+         PDS_TRACE_DEBUG("Queue type_num %u, entries %u, purpose %u",
                          qinfo.type_num, qinfo.entries, qinfo.purpose);
          qcount += pow(2, qinfo.entries);
      }
-     PDS_TRACE_DEBUG("Lifid %u, qcount %lu", info->lif_id, qcount);
+     PDS_TRACE_DEBUG("Lifid %lu, qcount %u", info->lif_id, qcount);
      return qcount;
 }
 

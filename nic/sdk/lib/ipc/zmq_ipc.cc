@@ -237,8 +237,8 @@ zmq_ipc_endpoint::send_msg(ipc_msg_type_t type, uint32_t recipient,
 
     rc = zmq_send(this->zsocket_, &preamble, sizeof(preamble), ZMQ_SNDMORE);
     assert(rc != -1);
-    SDK_TRACE_DEBUG("0x%x: Sent message: type: %u, sender: %u, recipient: %u, "
-                    "msg_code: %u, serial: %u, cookie: 0x%x, pointer: %d, "
+    SDK_TRACE_DEBUG("0x%lx: Sent message: type: %u, sender: %u, recipient: %u, "
+                    "msg_code: %u, serial: %u, cookie: 0x%p, pointer: %d, "
                     "real_length: %zu, crc32: %u, tag: %u",
                     pthread_self(),
                     preamble.type, preamble.sender, preamble.recipient,
@@ -269,8 +269,8 @@ zmq_ipc_endpoint::recv_msg(zmq_ipc_user_msg_ptr msg) {
     rc = zmq_recv(this->zsocket_, preamble, sizeof(*preamble), 0);
     assert(rc == sizeof(*preamble));
 
-    SDK_TRACE_DEBUG("0x%x: Received message: type: %u, sender: %u, recipient: %u, "
-                    "msg_code: %u, serial: %u, cookie: 0x%x, pointer: %d, "
+    SDK_TRACE_DEBUG("0x%lx: Received message: type: %u, sender: %u, recipient: %u, "
+                    "msg_code: %u, serial: %u, cookie: 0x%p, pointer: %d, "
                     "real_length: %zu, crc32: %u, tag: %u",
                     pthread_self(),
                     preamble->type, preamble->sender, preamble->recipient,
@@ -312,12 +312,12 @@ zmq_ipc_server::zmq_ipc_server(uint32_t id) {
     this->zsocket_ = zmq_socket(g_zmq_ctx, ZMQ_ROUTER);
     rc = zmq_bind(this->zsocket_, ipc_path_external(id).c_str());
     assert(rc == 0);
-    SDK_TRACE_DEBUG("0x%x: listening on %s", pthread_self(),
+    SDK_TRACE_DEBUG("0x%lx: listening on %s", pthread_self(),
                     ipc_path_external(id).c_str());
 
     rc = zmq_bind(this->zsocket_, ipc_path_internal(id).c_str());
     assert(rc == 0);
-    SDK_TRACE_DEBUG("0x%x: listening on %s", pthread_self(),
+    SDK_TRACE_DEBUG("0x%lx: listening on %s", pthread_self(),
                     ipc_path_internal(id).c_str());
 
     // Release ZMQ LOCK
@@ -332,7 +332,7 @@ zmq_ipc_server::zmq_ipc_server(uint32_t id) {
 }
 
 void zmq_ipc_server::subscribe(uint32_t msg_code) {
-    SDK_TRACE_DEBUG("0x%x: subscribe: client: %u msg_code: %u",
+    SDK_TRACE_DEBUG("0x%lx: subscribe: client: %u msg_code: %u",
                     pthread_self(), this->id_, msg_code);
     subscribers::instance()->set(msg_code, this->id_);
 }
@@ -465,7 +465,7 @@ zmq_ipc_client::connect_(uint32_t recipient) {
     this->zunlock();
 
     
-    SDK_TRACE_DEBUG("0x%x: connecting to %s", pthread_self(), path.c_str());
+    SDK_TRACE_DEBUG("0x%lx: connecting to %s", pthread_self(), path.c_str());
     assert(rc != -1);
 }
 

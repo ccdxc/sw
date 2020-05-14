@@ -32,10 +32,10 @@ hal_callback (sdk_ret_t status, const void *cookie)
     SDK_ASSERT(cookie_ptr->objs.empty());
 #endif
     if (status != SDK_RET_OK) {
-        PDS_TRACE_ERR("Async PDS HAL callback failure status %d, cookie 0x%lx",
+        PDS_TRACE_ERR("Async PDS HAL callback failure status %d, cookie %p",
                       status, cookie);
     } else {
-        PDS_TRACE_VERBOSE("Async PDS HAL callback success, cookie 0x%lx", cookie);
+        PDS_TRACE_VERBOSE("Async PDS HAL callback success, cookie %p", cookie);
         auto state_ctxt = state_t::thread_context();
         auto& objs = cookie_ptr->objs;
         if (objs.size() > 0) {PDS_TRACE_DEBUG ("Committing object(s) to store:");}
@@ -93,10 +93,11 @@ handle_port_event (core::port_event_info_t &portev)
     }
     if (worker != nullptr) {
         PDS_TRACE_DEBUG("Sending intf fault indication, event %u",
-                         portev.event);
+                         static_cast<uint32_t>(portev.event));
         frl.send_fault_ind(worker, &fault_state);
     } else {
-        PDS_TRACE_DEBUG("No intf FRL worker, event %u", portev.event);
+        PDS_TRACE_DEBUG("No intf FRL worker, event %u",
+                         static_cast<uint32_t>(portev.event));
     }
 
     NBS_RELEASE_SHARED_DATA();
@@ -111,8 +112,8 @@ handle_learn_event (core::event_t *event)
 {
     static ip_addr_t zero_ip = { 0 };
 
-    PDS_TRACE_DEBUG("Got learn event %u, VPC %s Subnet %s Ifindex 0x%lx "
-                    "IpAddr %s MacAddr %s", event->event_id,
+    PDS_TRACE_DEBUG("Got learn event %u, VPC %s Subnet %s Ifindex 0x%x "
+                    "IpAddr %s MacAddr %s", (uint32_t)event->event_id,
                     event->learn.vpc.str(), event->learn.subnet.str(),
                     event->learn.ifindex, ipaddr2str(&event->learn.ip_addr),
                      macaddr2str(event->learn.mac_addr));
@@ -173,7 +174,7 @@ hal_event_callback (sdk::ipc::ipc_msg_ptr msg, const void *ctx)
 void
 ipc_init_cb (int fd, sdk::ipc::handler_ms_cb cb, void *ctx)
 {
-    PDS_TRACE_DEBUG("ipc init callback, fd 0x%lx", fd);
+    PDS_TRACE_DEBUG("ipc init callback, fd %d", fd);
     // Register SDK ipc infra fd with metaswitch. Metaswitch calls the callback
     // function in the context of the nbase thread when there is any event
     // pending on the fd

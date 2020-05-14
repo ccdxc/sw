@@ -112,11 +112,11 @@ ring::init(ring_meta_t *meta, mpartition *mpartition) {
              virt_obj_base_addr_ = (uint64_t)sdk::lib::pal_mem_map(
                      obj_base_addr_, meta_.num_slots * meta_.obj_size);
             if (!virt_obj_base_addr_) {
-                SDK_TRACE_ERR("Failed to mmap the OBJ Ring:%s",
+                SDK_TRACE_ERR("Failed to mmap the OBJ Ring %s",
                    meta_.hbm_reg_name.c_str());
                 return SDK_RET_NO_RESOURCE;
             } else {
-                SDK_TRACE_ERR("mmap the OBJ Ring %d phy {:#x} @ virt {:#x}",
+                SDK_TRACE_ERR("mmap the OBJ Ring 0x%lx phy  @ virt 0x%lx",
                    obj_base_addr_, virt_obj_base_addr_);
             }
         }
@@ -152,7 +152,7 @@ inline void ring::move_to_next_elem()
 #endif
     }
 
-    SDK_TRACE_DEBUG("updated pc_index queue: index: {} virt-slot-addr: {:#x} addr: {:#x}: valid_bit: {:#x}",
+    SDK_TRACE_DEBUG("updated pc_index queue, index %u, virt-slot-addr 0x%lx, addr 0x%lx, valid_bit 0x%lx",
                     prod_cons_idx_, (uint64_t)virt_slot_addr_,
                     slot_addr_, valid_bit_val_);
     return;
@@ -187,7 +187,7 @@ sdk_ret_t ring::poll(ring_msg_batch_t *msg_batch)
 
         // Mask off valid bit
         msg_data &= ~RING_MSG_VALID_BIT_MASK;
-        SDK_TRACE_DEBUG("msg_data: {:#x}", msg_data);
+        SDK_TRACE_DEBUG("msg_data %lu", msg_data);
 
         /*
          * ASSUMPTION: Each elem in ring is just one dword.
@@ -210,7 +210,7 @@ sdk_ret_t ring::poll(ring_msg_batch_t *msg_batch)
      * reduce CSR-write overheads.
      */
     if (msg_cnt && !(sem_write_batch++ % RING_SEM_CI_BATCH_SIZE) && sem_addr_) {
-        SDK_TRACE_DEBUG("updating CI: addr {:#x}, ci: {}",
+        SDK_TRACE_DEBUG("updating CI, addr 0x%lx, ci %u",
 		    sem_addr_,
 			prod_cons_idx_);
 	    if ((ret = sdk::asic::asic_reg_write(sem_addr_, &prod_cons_idx_, 1,
@@ -220,7 +220,7 @@ sdk_ret_t ring::poll(ring_msg_batch_t *msg_batch)
 	    }
     }
 
-    SDK_TRACE_DEBUG("Process batch: total-msgs {}", msg_cnt);
+    SDK_TRACE_DEBUG("Process batch, total-msgs %lu", msg_cnt);
 
     batch->msg_cnt = msg_cnt;
 

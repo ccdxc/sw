@@ -159,7 +159,7 @@ port_num_lanes_speed (uint32_t speed, uint32_t *num_lanes)
 
     case 0:
     default:
-        SDK_TRACE_ERR("Invalid speed {}", speed);
+        SDK_TRACE_ERR("Invalid speed %u", speed);
         return SDK_RET_ERR;
     }
     return SDK_RET_OK;

@@ -207,7 +207,7 @@ catalog_init (pds_init_params_t *params)
     // for datapath, load 4G HBM profile on systems with 2G data path memory
     if (api::g_pds_state.platform_type() == platform_type_t::PLATFORM_TYPE_HW) {
         datapath_mem = pal_mem_get_phys_totalsize();
-        PDS_TRACE_DEBUG("Datapath memory  %llu(0x%llx) bytes",
+        PDS_TRACE_DEBUG("Datapath memory  %lu(0x%lx) bytes",
                         datapath_mem, datapath_mem);
         if (datapath_mem == 0x80000000) { //2G
             mem_str = "4g";

@@ -181,7 +181,7 @@ slab::alloc_block_(void)
                                            raw_block_sz_);
     }
     if (block == NULL) {
-        SDK_TRACE_ERR("Failed to allocate block for slab %s",
+        SDK_TRACE_ERR("Failed to allocate block for slab %s, slab id %u",
                       name_, slab_id_);
         return NULL;
     }

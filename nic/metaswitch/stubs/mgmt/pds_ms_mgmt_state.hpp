@@ -92,7 +92,7 @@ public:
             std::chrono::system_clock::now().time_since_epoch().count();
         std::mt19937 rand(seed);
         epoch_ = rand();
-        PDS_TRACE_DEBUG("Using random epoch: %ld", epoch_);
+        PDS_TRACE_DEBUG("Using random epoch: %u", epoch_);
     }
 
     static void create(void) { 
@@ -165,13 +165,13 @@ public:
     void set_rt_pending_add(const uint8_t *rt_str, rt_type_e type,
                              pend_rt_t::ms_id_t id) {
         PDS_TRACE_DEBUG("Push RT %s (type=%d, id=%d) to add list",
-                         rt_str, type, id);
+                         rt_str, static_cast<uint32_t>(type), id);
         rt_pending_add_.emplace_back(rt_str, type, id);
     }
     void set_rt_pending_delete(const uint8_t *rt_str, rt_type_e type,
                              pend_rt_t::ms_id_t id) {
         PDS_TRACE_DEBUG("Push RT %s (type=%d, id=%d) to del list",
-                         rt_str, type, id);
+                         rt_str, static_cast<uint32_t>(type), id);
         rt_pending_delete_.emplace_back(rt_str, type, id);
     }
     void clear_rt_pending() {

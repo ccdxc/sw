@@ -240,7 +240,7 @@ eventmgr::subscribe(event_id_t event_id, void *lctxt) {
         // listener is new to us
         listener_state = listener_alloc_init_(lctxt);
         if (listener_state == NULL) {
-            SDK_TRACE_ERR("Failed to allocate listener state, context 0x%lx",
+            SDK_TRACE_ERR("Failed to allocate listener state, context %p",
                           lctxt);
             return SDK_RET_OOM;
         }
@@ -249,7 +249,7 @@ eventmgr::subscribe(event_id_t event_id, void *lctxt) {
         // lookup for the event state
         event_state = (event_state_t *)event_map_->lookup(&event_id);
         if (event_state == NULL) {
-            SDK_TRACE_DEBUG("First subscription to event %u, listener 0x%lx",
+            SDK_TRACE_DEBUG("First subscription to event %u, listener %p",
                             event_id, lctxt);
             event_state = event_state_alloc_init_(event_id);
             if (event_state == NULL) {
@@ -261,7 +261,7 @@ eventmgr::subscribe(event_id_t event_id, void *lctxt) {
     } else {
         // check if listener already subscribed to this event
         if (listener_state->event_bmap & (1 << event_id)) {
-            SDK_TRACE_DEBUG("Listener 0x%lx already subscribed to event %u",
+            SDK_TRACE_DEBUG("Listener %p already subscribed to event %u",
                             lctxt, event_id);
             return SDK_RET_OK;
         }
@@ -269,7 +269,7 @@ eventmgr::subscribe(event_id_t event_id, void *lctxt) {
         // lookup for the event state
         event_state = (event_state_t *)event_map_->lookup(&event_id);
         if (event_state == NULL) {
-            SDK_TRACE_DEBUG("First subscription to event %u, listener 0x%lx",
+            SDK_TRACE_DEBUG("First subscription to event %u, listener %p",
                             event_id, lctxt);
             event_state = event_state_alloc_init_(event_id);
             if (event_state == NULL) {
@@ -311,7 +311,7 @@ eventmgr::subscribe(event_id_t event_id, void *lctxt) {
     }
     listener_state->event_bmap |= (1 << event_id);
     SDK_SPINLOCK_UNLOCK(&event_state->slock);
-    SDK_TRACE_DEBUG("Listener 0x%lx successfully registered for event %u",
+    SDK_TRACE_DEBUG("Listener %p successfully registered for event %u",
                     lctxt, event_id);
 
     return SDK_RET_OK;
@@ -338,7 +338,7 @@ eventmgr::unsubscribe_(event_state_t *event_state,
     dllist_for_each_safe(curr, next, &event_state->lctxt_head) {
         event_lstate = dllist_entry(curr, event_listener_state_t, lentry);
         if (event_lstate->lctxt == listener_state->lctxt) {
-            SDK_TRACE_DEBUG("Unsubscribed listener 0x%lx from event %u",
+            SDK_TRACE_DEBUG("Unsubscribed listener %p from event %u",
                             listener_state->lctxt, event_state->event_id);
             sdk::lib::dllist_del(&event_lstate->lentry);
             event_listener_state_slab_->free(event_lstate);
@@ -367,7 +367,7 @@ eventmgr::unsubscribe(event_id_t event_id, void *lctxt) {
 
     listener_state = (listener_state_t *)listener_map_->lookup(&lctxt);
     if (listener_state == NULL) {
-        SDK_TRACE_DEBUG("Unknown listener 0x%lx", lctxt);
+        SDK_TRACE_DEBUG("Unknown listener %p", lctxt);
         return SDK_RET_ENTRY_NOT_FOUND;
     }
 
@@ -376,7 +376,7 @@ eventmgr::unsubscribe(event_id_t event_id, void *lctxt) {
         return SDK_RET_INVALID_OP;
     }
 
-    SDK_TRACE_DEBUG("Unsubscribing listener 0x%lx from event %u",
+    SDK_TRACE_DEBUG("Unsubscribing listener %p from event %u",
                     listener_state->lctxt, event_state->event_id);
     SDK_SPINLOCK_LOCK(&event_state->slock);
     unsubscribe_(event_state, listener_state);
@@ -391,7 +391,7 @@ eventmgr::is_listener_active(void *lctxt)
 
     listener_state = (listener_state_t *)listener_map_->lookup(&lctxt);
     if (listener_state == NULL) {
-        SDK_TRACE_DEBUG("Unknown listener 0x%lx", lctxt);
+        SDK_TRACE_DEBUG("Unknown listener %p", lctxt);
         return false;
     }
     if (listener_state->event_bmap) {
@@ -407,7 +407,7 @@ eventmgr::unsubscribe_listener(void *lctxt) {
     event_state_t *event_state;
     listener_state_t *listener_state;
 
-    SDK_TRACE_DEBUG("Unsubscribing listener 0x%lx from all events", lctxt);
+    SDK_TRACE_DEBUG("Unsubscribing listener %p from all events", lctxt);
     listener_state = (listener_state_t *)listener_map_->remove(&lctxt);
     if (listener_state == NULL) {
         SDK_TRACE_ERR("Listener not found");
@@ -427,7 +427,7 @@ eventmgr::unsubscribe_listener(void *lctxt) {
             event_bmap >>= 1;
             continue;
         }
-        SDK_TRACE_DEBUG("Unsubscribing listener 0x%lx from event %u",
+        SDK_TRACE_DEBUG("Unsubscribing listener %p from event %u",
                         listener_state->lctxt, event_state->event_id);
         SDK_SPINLOCK_LOCK(&event_state->slock);
         unsubscribe_(event_state, listener_state);

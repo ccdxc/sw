@@ -407,7 +407,7 @@ capri_barco_asym_key_array_init (void)
     hese.dhs_crypto_ctl.pk_axi_status.fld(0x3c0);
     hese.dhs_crypto_ctl.pk_axi_status.write();
 
-    SDK_TRACE_DEBUG("Barco Asym Key Descriptor Array of count %d setup @ 0x%llx",
+    SDK_TRACE_DEBUG("Barco Asym Key Descriptor Array of count %u setup @ 0x%lx",
                     asym_key_array_key_count, asym_key_array_base);
 
     return ret;
@@ -459,7 +459,7 @@ capri_barco_asym_init (capri_barco_ring_t *barco_ring)
     //hens.dhs_crypto_ctl.pk_consumer_idx.fld(barco_ring->consumer_idx);
     //hens.dhs_crypto_ctl.pk_consumer_idx.write();
 
-    SDK_TRACE_DEBUG("Barco ring \"%s\" base setup @ 0x%llx, descriptor count %d",
+    SDK_TRACE_DEBUG("Barco ring \"%s\" base setup @ 0x%lx, descriptor count %u",
                     barco_ring->ring_name, barco_ring->ring_base,
                     barco_ring->ring_size);
 
@@ -476,14 +476,14 @@ capri_barco_asym_poller (capri_barco_ring_t *barco_ring, uint32_t req_tag)
     if (sdk::asic::asic_mem_read(barco_ring->opaque_tag_addr,
                                  (uint8_t*)&curr_opaque_tag,
                                  sizeof(curr_opaque_tag))) {
-        SDK_TRACE_ERR("Poll:%s: Failed to retrieve current opaque tag value @ 0x%llx",
+        SDK_TRACE_ERR("Poll:%s: Failed to retrieve current opaque tag value @ 0x%lx",
                       barco_ring->ring_name,
                       (uint64_t) barco_ring->opaque_tag_addr);
         return FALSE;
     }
     else {
         if ((int32_t(curr_opaque_tag - req_tag)) > 0) {
-            SDK_TRACE_DEBUG("Poll:%s: Check for req: %d: Retrieved opaque tag addr: 0x%llx value: %d",
+            SDK_TRACE_DEBUG("Poll:%s: Check for req: %d: Retrieved opaque tag addr: 0x%lx value: %u",
                             barco_ring->ring_name,
                             req_tag, barco_ring->opaque_tag_addr,
                             curr_opaque_tag);
@@ -510,7 +510,7 @@ capri_barco_asym_queue_request(struct capri_barco_ring_s *barco_ring,
 
     if (sdk::asic::asic_mem_write(slot_addr, (uint8_t*)req,
                                   barco_ring->descriptor_size)) {
-        SDK_TRACE_ERR("Failed to write descriptor entry for %s  @ 0x%llx",
+        SDK_TRACE_ERR("Failed to write descriptor entry for %s  @ 0x%lx",
                       barco_ring->ring_name,
                       (uint64_t) slot_addr);
         ret = SDK_RET_INVALID_ARG;
@@ -561,7 +561,7 @@ capri_barco_xts0_key_array_init (void)
 
     hese.dhs_crypto_ctl.xts_enc_key_array_size.fld(key_array_key_count);
     hese.dhs_crypto_ctl.xts_enc_key_array_size.write();
-    SDK_TRACE_DEBUG("Barco xts Key Descriptor Array of count %d setup @ 0x%llx",
+    SDK_TRACE_DEBUG("Barco xts Key Descriptor Array of count %u setup @ 0x%lx",
             key_array_key_count, key_array_base);
 
     return ret;
@@ -613,7 +613,7 @@ capri_barco_xts0_init (capri_barco_ring_t *barco_ring)
     //hens.dhs_crypto_ctl.xts_enc_consumer_idx.fld(barco_ring->consumer_idx);
     //hens.dhs_crypto_ctl.xts_enc_consumer_idx.write();
 
-    SDK_TRACE_DEBUG("Barco ring \"%s\" base setup @ 0x%llx, descriptor count %d",
+    SDK_TRACE_DEBUG("Barco ring \"%s\" base setup @ 0x%lx, descriptor count %u",
                     barco_ring->ring_name, barco_ring->ring_base,
                     barco_ring->ring_size);
 
@@ -656,7 +656,7 @@ capri_barco_xts1_key_array_init (void)
 
     hese.dhs_crypto_ctl.xts_key_array_size.fld(key_array_key_count);
     hese.dhs_crypto_ctl.xts_key_array_size.write();
-    SDK_TRACE_DEBUG("Barco xts Key Descriptor Array of count %d setup @ 0x%llx",
+    SDK_TRACE_DEBUG("Barco xts Key Descriptor Array of count %u setup @ 0x%lx",
             key_array_key_count, key_array_base);
 
     return ret;
@@ -708,7 +708,7 @@ capri_barco_xts1_init (capri_barco_ring_t *barco_ring)
     //hens.dhs_crypto_ctl.xts_consumer_idx.fld(barco_ring->consumer_idx);
     //hens.dhs_crypto_ctl.xts_consumer_idx.write();
 
-    SDK_TRACE_DEBUG("Barco ring \"%s\" base setup @ 0x%llx, descriptor count %d",
+    SDK_TRACE_DEBUG("Barco ring \"%s\" base setup @ 0x%lx, descriptor count %u",
                     barco_ring->ring_name,
                     barco_ring->ring_base, barco_ring->ring_size);
 
@@ -765,7 +765,7 @@ capri_barco_mpp0_key_array_init (void)
     mpse.dhs_crypto_ctl.mpp0_axi_status.fld(0x3c0);
     mpse.dhs_crypto_ctl.mpp0_axi_status.write();
 
-    SDK_TRACE_DEBUG("Barco MPP0 Key Descriptor Array of count %d setup @ 0x%llx",
+    SDK_TRACE_DEBUG("Barco MPP0 Key Descriptor Array of count %u setup @ 0x%lx",
                     key_array_key_count, key_array_base);
 
     return ret;
@@ -821,7 +821,7 @@ capri_barco_mpp0_init (capri_barco_ring_t *barco_ring)
     //mpns.dhs_crypto_ctl.mpp0_consumer_idx.fld(barco_ring->consumer_idx);
     //mpns.dhs_crypto_ctl.mpp0_consumer_idx.write();
 
-    SDK_TRACE_DEBUG("Barco ring \"%s\" base setup @ 0x%llx, descriptor count %d",
+    SDK_TRACE_DEBUG("Barco ring \"%s\" base setup @ 0x%lx, descriptor count %u",
                     barco_ring->ring_name, barco_ring->ring_base,
                     barco_ring->ring_size);
 
@@ -837,7 +837,7 @@ capri_barco_mpp_poller (capri_barco_ring_t *barco_ring, uint32_t req_tag)
     if (sdk::asic::asic_mem_read(barco_ring->opaque_tag_addr,
                                  (uint8_t*)&curr_opaque_tag,
                                  sizeof(curr_opaque_tag))) {
-        SDK_TRACE_ERR("Poll:%s: Failed to retrieve current opaque tag value @ 0x%llx",
+        SDK_TRACE_ERR("Poll:%s: Failed to retrieve current opaque tag value @ 0x%lx",
                       barco_ring->ring_name,
                       (uint64_t) barco_ring->opaque_tag_addr);
         return FALSE;
@@ -898,7 +898,7 @@ capri_barco_mpp_queue_request (struct capri_barco_ring_s *barco_ring,
 
     if (sdk::asic::asic_mem_write(slot_addr, (uint8_t*)req,
                                   barco_ring->descriptor_size)) {
-        SDK_TRACE_ERR("Failed to write MPP Req descriptor entry for %s  @ 0x%llx",
+        SDK_TRACE_ERR("Failed to write MPP Req descriptor entry for %s  @ 0x%lx",
                       barco_ring->ring_name, (uint64_t) slot_addr);
         ret = SDK_RET_INVALID_ARG;
     }
@@ -959,7 +959,7 @@ capri_barco_mpp1_key_array_init (void)
     mpse.dhs_crypto_ctl.mpp1_axi_status.fld(0x3c0);
     mpse.dhs_crypto_ctl.mpp1_axi_status.write();
 
-    SDK_TRACE_DEBUG("Barco MPP1 Key Descriptor Array of count %d setup @ 0x%llx",
+    SDK_TRACE_DEBUG("Barco MPP1 Key Descriptor Array of count %u setup @ 0x%lx",
                     key_array_key_count, key_array_base);
 
     return ret;
@@ -1010,7 +1010,7 @@ capri_barco_mpp1_init (capri_barco_ring_t *barco_ring)
     //mpns.dhs_crypto_ctl.mpp1_consumer_idx.fld(barco_ring->consumer_idx);
     //mpns.dhs_crypto_ctl.mpp1_consumer_idx.write();
 
-    SDK_TRACE_DEBUG("Barco ring \"%s\" base setup @ 0x%llx, descriptor count %d",
+    SDK_TRACE_DEBUG("Barco ring \"%s\" base setup @ 0x%lx, descriptor count %u",
                     barco_ring->ring_name, barco_ring->ring_base,
                     barco_ring->ring_size);
 
@@ -1060,7 +1060,7 @@ capri_barco_mpp2_key_array_init (void)
     mpse.dhs_crypto_ctl.mpp2_axi_status.fld(0x3c0);
     mpse.dhs_crypto_ctl.mpp2_axi_status.write();
 
-    SDK_TRACE_DEBUG("Barco MPP2 Key Descriptor Array of count %d setup @ 0x%llx",
+    SDK_TRACE_DEBUG("Barco MPP2 Key Descriptor Array of count %d setup @ 0x%lx",
                     key_array_key_count, key_array_base);
 
     return ret;
@@ -1111,7 +1111,7 @@ capri_barco_mpp2_init (capri_barco_ring_t *barco_ring)
     //mpns.dhs_crypto_ctl.mpp2_consumer_idx.fld(barco_ring->consumer_idx);
     //mpns.dhs_crypto_ctl.mpp2_consumer_idx.write();
 
-    SDK_TRACE_DEBUG("Barco ring \"%s\" base setup @ 0x%llx, descriptor count %d",
+    SDK_TRACE_DEBUG("Barco ring \"%s\" base setup @ 0x%lx, descriptor count %u",
                     barco_ring->ring_name, barco_ring->ring_base,
                     barco_ring->ring_size);
 
@@ -1161,7 +1161,7 @@ capri_barco_mpp3_key_array_init(void)
     mpse.dhs_crypto_ctl.mpp3_axi_status.fld(0x3c0);
     mpse.dhs_crypto_ctl.mpp3_axi_status.write();
 
-    SDK_TRACE_DEBUG("Barco MPP3 Key Descriptor Array of count %d setup @ 0x%llx",
+    SDK_TRACE_DEBUG("Barco MPP3 Key Descriptor Array of count %d setup @ 0x%lx",
                     key_array_key_count, key_array_base);
 
     return ret;
@@ -1212,7 +1212,7 @@ capri_barco_mpp3_init (capri_barco_ring_t *barco_ring)
     //mpns.dhs_crypto_ctl.mpp3_consumer_idx.fld(barco_ring->consumer_idx);
     //mpns.dhs_crypto_ctl.mpp3_consumer_idx.write();
 
-    SDK_TRACE_DEBUG("Barco ring \"%s\" base setup @ 0x%llx, descriptor count %d",
+    SDK_TRACE_DEBUG("Barco ring \"%s\" base setup @ 0x%lx, descriptor count %u",
                     barco_ring->ring_name, barco_ring->ring_base,
                     barco_ring->ring_size);
 
@@ -1264,7 +1264,7 @@ capri_barco_gcm0_key_array_init (void)
     hese.dhs_crypto_ctl.gcm0_axi_status.fld(0x3c0);
     hese.dhs_crypto_ctl.gcm0_axi_status.write();
 
-    SDK_TRACE_DEBUG("Barco gcm0 Key Descriptor Array of count %d setup @ 0x%llx",
+    SDK_TRACE_DEBUG("Barco gcm0 Key Descriptor Array of count %u setup @ 0x%lx",
             key_array_key_count, key_array_base);
 
     return ret;
@@ -1326,7 +1326,7 @@ capri_barco_gcm0_poller (capri_barco_ring_t *barco_ring, uint32_t req_tag)
     if (sdk::asic::asic_mem_read(barco_ring->opaque_tag_addr,
                                  (uint8_t*)&curr_opaque_tag,
                                  sizeof(curr_opaque_tag))) {
-        SDK_TRACE_ERR("Poll:%s: Failed to retrieve current opaque tag value @ 0x%llx",
+        SDK_TRACE_ERR("Poll:%s: Failed to retrieve current opaque tag value @ 0x%lx",
                       barco_ring->ring_name,
                       (uint64_t) barco_ring->opaque_tag_addr);
         return FALSE;
@@ -1389,7 +1389,7 @@ capri_barco_gcm0_queue_request (struct capri_barco_ring_s *barco_ring,
 
     if (sdk::asic::asic_mem_write(slot_addr, (uint8_t*)req,
                                   barco_ring->descriptor_size)) {
-        SDK_TRACE_ERR("Failed to write MPP Req descriptor entry for %s  @ 0x%llx",
+        SDK_TRACE_ERR("Failed to write MPP Req descriptor entry for %s  @ 0x%lx",
                 barco_ring->ring_name,
                 (uint64_t) slot_addr);
         ret = SDK_RET_INVALID_ARG;
@@ -1454,7 +1454,7 @@ capri_barco_gcm1_key_array_init (void)
     hese.dhs_crypto_ctl.gcm1_axi_status.fld(0x3c0);
     hese.dhs_crypto_ctl.gcm1_axi_status.write();
 
-    SDK_TRACE_DEBUG("Barco gcm1 Key Descriptor Array of count %d setup @ 0x%llx",
+    SDK_TRACE_DEBUG("Barco gcm1 Key Descriptor Array of count %u setup @ 0x%lx",
                     key_array_key_count, key_array_base);
 
     return ret;
@@ -1582,7 +1582,7 @@ capri_barco_cp_init (capri_barco_ring_t *barco_ring)
     hens.dhs_crypto_ctl.cp_cfg_q_pd_idx.write();
     barco_ring->producer_idx_addr = hens.dhs_crypto_ctl.cp_cfg_q_pd_idx.get_offset();
 
-    SDK_TRACE_DEBUG("Barco compression ring \"%s\" base setup @ 0x%llx, descriptor count %d",
+    SDK_TRACE_DEBUG("Barco compression ring \"%s\" base setup @ 0x%lx, descriptor count %u",
             barco_ring->ring_name, barco_ring->ring_base, barco_ring->ring_size);
 
     return SDK_RET_OK;
@@ -1630,7 +1630,7 @@ capri_barco_cp_hot_init (capri_barco_ring_t *barco_ring)
     hens.dhs_crypto_ctl.cp_cfg_hotq_pd_idx.write();
     barco_ring->producer_idx_addr = hens.dhs_crypto_ctl.cp_cfg_hotq_pd_idx.get_offset();
 
-    SDK_TRACE_DEBUG("Barco compression hot ring \"%s\" base setup @ 0x%llx, descriptor count %d",
+    SDK_TRACE_DEBUG("Barco compression hot ring \"%s\" base setup @ 0x%lx, descriptor count %u",
                     barco_ring->ring_name, barco_ring->ring_base,
                     barco_ring->ring_size);
 
@@ -1719,7 +1719,7 @@ capri_barco_dc_init (capri_barco_ring_t *barco_ring)
     hens.dhs_crypto_ctl.dc_cfg_q_pd_idx.write();
     barco_ring->producer_idx_addr = hens.dhs_crypto_ctl.dc_cfg_q_pd_idx.get_offset();
 
-    SDK_TRACE_DEBUG("Barco decompression ring \"%s\" base setup @ 0x%llx, descriptor count %d",
+    SDK_TRACE_DEBUG("Barco decompression ring \"%s\" base setup @ 0x%lx, descriptor count %u",
             barco_ring->ring_name, barco_ring->ring_base, barco_ring->ring_size);
 
     return SDK_RET_OK;
@@ -1768,7 +1768,7 @@ capri_barco_dc_hot_init (capri_barco_ring_t *barco_ring)
     barco_ring->producer_idx_addr =
         hens.dhs_crypto_ctl.dc_cfg_hotq_pd_idx.get_offset();
 
-    SDK_TRACE_DEBUG("Barco decompression hot ring \"%s\" base setup @ 0x%llx, descriptor count %d",
+    SDK_TRACE_DEBUG("Barco decompression hot ring \"%s\" base setup @ 0x%lx, descriptor count %u",
                     barco_ring->ring_name, barco_ring->ring_base,
                     barco_ring->ring_size);
 
@@ -1791,13 +1791,13 @@ capri_barco_gcm1_poller (capri_barco_ring_t *barco_ring, uint32_t req_tag)
     if (sdk::asic::asic_mem_read(barco_ring->opaque_tag_addr,
                                  (uint8_t*)&curr_opaque_tag,
                                  sizeof(curr_opaque_tag))) {
-        SDK_TRACE_ERR("Poll:%s: Failed to retrieve current opaque tag value @ 0x%llx",
+        SDK_TRACE_ERR("Poll:%s: Failed to retrieve current opaque tag value @ 0x%lx",
                       barco_ring->ring_name,
                       (uint64_t) barco_ring->opaque_tag_addr);
         return FALSE;
     }
     else {
-        SDK_TRACE_DEBUG("Poll:%s: Retrievd opaque tag value: %s",
+        SDK_TRACE_DEBUG("Poll:%s: Retrievd opaque tag value: %u",
                         barco_ring->ring_name,
                         curr_opaque_tag);
         /* TODO: Handle wraparounds */
@@ -1856,7 +1856,7 @@ capri_barco_gcm1_queue_request (struct capri_barco_ring_s *barco_ring,
 
     if (sdk::asic::asic_mem_write(slot_addr, (uint8_t*)req,
                                   barco_ring->descriptor_size)) {
-        SDK_TRACE_ERR("Failed to write MPP Req descriptor entry for %s  @ 0x%llx",
+        SDK_TRACE_ERR("Failed to write MPP Req descriptor entry for %s  @ 0x%lx",
                       barco_ring->ring_name, (uint64_t) slot_addr);
         ret = SDK_RET_INVALID_ARG;
     }
@@ -1942,16 +1942,16 @@ capri_barco_rings_init (platform_type_t platform)
                 sdk::asic::asic_get_mem_addr(ASIC_HBM_REG_OPAQUE_TAG) +
                 get_opaque_tag_offset((barco_rings_t)idx);
 
-            SDK_TRACE_DEBUG("Ring: %s: Allocated opaque tag @ 0x%llx",
+            SDK_TRACE_DEBUG("Ring: %s: Allocated opaque tag @ 0x%lx",
                             barco_rings[idx].ring_name, opa_tag_addr);
             if(sdk::asic::asic_mem_write(opa_tag_addr,
                                          (uint8_t *)&opa_tag_def_val,
                                          sizeof(opa_tag_def_val))) {
-                SDK_TRACE_ERR("Ring: %s: Failed to initialized opaque tag @ 0x%llx",
+                SDK_TRACE_ERR("Ring: %s: Failed to initialized opaque tag @ 0x%lx",
                               barco_rings[idx].ring_name, opa_tag_addr);
                 return SDK_RET_HW_PROGRAM_ERR;
             }
-            SDK_TRACE_DEBUG("Ring: %s: initialized opaque tag to 0 @ 0x%llx",
+            SDK_TRACE_DEBUG("Ring: %s: initialized opaque tag to 0 @ 0x%lx",
                             barco_rings[idx].ring_name, opa_tag_addr);
 
             barco_rings[idx].opaque_tag_addr = opa_tag_addr;
@@ -1968,11 +1968,11 @@ capri_barco_rings_init (platform_type_t platform)
             if(sdk::asic::asic_mem_write(shadow_pndx_addr,
                                          (uint8_t *)&shadow_pndx_def_val,
                                          shadow_pndx_size)) {
-                SDK_TRACE_ERR("Ring: %s: Failed to initialize shadow pndx @ 0x%llx",
+                SDK_TRACE_ERR("Ring: %s: Failed to initialize shadow pndx @ 0x%lx",
                               barco_rings[idx].ring_name, shadow_pndx_addr);
                 return SDK_RET_HW_PROGRAM_ERR;
             }
-            SDK_TRACE_DEBUG("Ring: %s: initialized shadow pndx to 0 @ 0x%llx",
+            SDK_TRACE_DEBUG("Ring: %s: initialized shadow pndx to 0 @ 0x%lx",
                             barco_rings[idx].ring_name, shadow_pndx_addr);
             shadow_pndx_addr += shadow_pndx_size;
             shadow_pndx_total -= shadow_pndx_size;
@@ -2052,13 +2052,13 @@ capri_barco_symm_req_descr_get (barco_rings_t ring_type, uint32_t slot_index,
     uint8_t  value[barco_ring->descriptor_size];
     uint32_t index = (slot_index % barco_ring->ring_size);
     slot_addr = barco_ring->ring_base + (index * barco_ring->descriptor_size);
-    SDK_TRACE_DEBUG("%s@%d: Ring base 0x%llx, slot_addr 0x%llx, read size %d",
+    SDK_TRACE_DEBUG("%s@%u: Ring base 0x%lx, slot_addr 0x%lx, read size %u",
                     barco_ring->ring_name, barco_ring->ring_size,
                     barco_ring->ring_base, (uint64_t) slot_addr,
                     barco_ring->descriptor_size);
 
     if (sdk::asic::asic_mem_read(slot_addr, value, sizeof(value))) {
-        SDK_TRACE_ERR("%s@0x%llx: Failed to read Symmetric request descriptor entry",
+        SDK_TRACE_ERR("%s@0x%lx: Failed to read Symmetric request descriptor entry",
                       barco_ring->ring_name, (uint64_t) slot_addr);
         return SDK_RET_INVALID_ARG;
     }
@@ -2083,13 +2083,13 @@ capri_barco_symm_req_descr_get (barco_rings_t ring_type, uint32_t slot_index,
         if(sdk::asic::asic_mem_read(req_descr->iv_address,
                                     (uint8_t*)&symm_req_descr->salt,
                                     sizeof(symm_req_descr->salt))) {
-           SDK_TRACE_ERR("%s@0x%llx: Failed to read the Salt information from HBM",
+           SDK_TRACE_ERR("%s@0x%lx: Failed to read the Salt information from HBM",
                          barco_ring->ring_name, (uint64_t) req_descr->iv_address);
         }
         if(sdk::asic::asic_mem_read(req_descr->iv_address + 4,
                                     (uint8_t*)&symm_req_descr->explicit_iv,
                                     sizeof(symm_req_descr->explicit_iv))) {
-            SDK_TRACE_ERR("%s@0x%llx: Failed to read the explicit IV information from HBM",
+            SDK_TRACE_ERR("%s@0x%lx: Failed to read the explicit IV information from HBM",
                           barco_ring->ring_name,
                           (uint64_t) (req_descr->iv_address + 4));
         }
@@ -2098,7 +2098,7 @@ capri_barco_symm_req_descr_get (barco_rings_t ring_type, uint32_t slot_index,
         if(sdk::asic::asic_mem_read(req_descr->status_addr,
                                     (uint8_t*)&symm_req_descr->barco_status,
                                     sizeof(symm_req_descr->barco_status))) {
-            SDK_TRACE_ERR("%s@0x%llx: Failed to read the Barco Status information from HBM",
+            SDK_TRACE_ERR("%s@0x%lx: Failed to read the Barco Status information from HBM",
                           barco_ring->ring_name,
                           (uint64_t) req_descr->status_addr);
         }

@@ -248,7 +248,7 @@ asic_impl::pb_stats (debug::pb_stats_get_cb_t cb, void *ctxt)
         memset(&tm_debug_stats, 0, sizeof(tm_debug_stats));
         ret = asicpd_tm_debug_stats_get(tm_port, &tm_debug_stats, false);
         if (ret != SDK_RET_OK) {
-            PDS_TRACE_ERR("Get PB stats failed for port {}", tm_port);
+            PDS_TRACE_ERR("Get PB stats failed for port %u", tm_port);
             continue;
         }
         memcpy(&pb_stats.stats, &tm_debug_stats, sizeof(tm_debug_stats));

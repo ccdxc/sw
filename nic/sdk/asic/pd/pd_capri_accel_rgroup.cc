@@ -224,7 +224,7 @@ accel_shadow_pndx_write (uint8_t ring_type, uint32_t val)
         assert(meta.pndx_size <= sizeof(val));
         if (sdk::asic::asic_mem_write(meta.shadow_pndx_addr, (uint8_t *)&val,
                                 meta.pndx_size)) {
-            SDK_TRACE_ERR("Failed to write shadow pndx @ {:x} size {}",
+            SDK_TRACE_ERR("Failed to write shadow pndx @ 0x%lx size %u",
                           meta.shadow_pndx_addr, meta.pndx_size);
             return SDK_RET_HW_PROGRAM_ERR; /* TBD-REBASE: SDK_RET_HW_FAIL */
         }
@@ -354,7 +354,7 @@ asicpd_accel_rgroup_add (const char *rgroup_name, uint64_t metrics_mem_addr,
 
     if (metrics_mem_size) {
         if (metrics_mem_size < ACCEL_METRICS_MEM_OFFSET(accel_max_rings, 0)) {
-            SDK_TRACE_ERR("rgroup {} metrics_mem_size {} too small",
+            SDK_TRACE_ERR("rgroup %s metrics_mem_size %u too small",
                           rgroup_name, metrics_mem_size);
             ret_val = SDK_RET_INVALID_ARG;
             goto done;
@@ -364,7 +364,7 @@ asicpd_accel_rgroup_add (const char *rgroup_name, uint64_t metrics_mem_addr,
     rgroup = new (std::nothrow) accel_rgroup_t(metrics_mem_addr,
                                                metrics_mem_size);
     if (!rgroup) {
-        SDK_TRACE_ERR("Failed to allocate rgroup {}", rgroup_name);
+        SDK_TRACE_ERR("Failed to allocate rgroup %s", rgroup_name);
         ret_val = SDK_RET_OOM;
         goto done;
     }

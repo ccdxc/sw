@@ -256,7 +256,7 @@ backup_objs (void)
     sdk_ret_t ret;
 
     dev_info = g_devmgr->GetEthDevStateInfo();
-    PDS_TRACE_DEBUG("Saving %u objects of EthDevInfo", dev_info.size());
+    PDS_TRACE_DEBUG("Saving %lu objects of EthDevInfo", dev_info.size());
 
     meta[NICMGR_BKUP_OBJ_DEVINFO_ID].obj_id = NICMGR_BKUP_OBJ_DEVINFO_ID;
     meta[NICMGR_BKUP_OBJ_DEVINFO_ID].obj_count = dev_info.size();
@@ -273,7 +273,7 @@ backup_objs (void)
     }
 
     up_links = g_devmgr->GetUplinks();
-    PDS_TRACE_DEBUG("Saving %u objects of uplinkinfo", up_links.size());
+    PDS_TRACE_DEBUG("Saving %lu objects of uplinkinfo", up_links.size());
 
     meta[NICMGR_BKUP_OBJ_UPLINKINFO_ID].obj_id = NICMGR_BKUP_OBJ_UPLINKINFO_ID;
     meta[NICMGR_BKUP_OBJ_UPLINKINFO_ID].obj_count = up_links.size();

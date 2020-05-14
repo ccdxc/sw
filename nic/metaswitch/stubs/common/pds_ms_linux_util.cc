@@ -35,7 +35,7 @@ get_linux_intf_mac_addr (const std::string& if_name, mac_addr_t& if_mac)
     bool ret = false;
 
     if (getifaddrs(&ifaddr) == -1) {
-        PDS_TRACE_ERR ("Failed to get MAC address for %s", if_name);
+        PDS_TRACE_ERR ("Failed to get MAC address for %s", if_name.c_str());
         return false;
     }
 
@@ -264,7 +264,7 @@ netlink_rcv_main (fd_guard_t fdg, uint32_t pid, uint64_t seq)
             auto nle = (struct nlmsgerr *) NLMSG_DATA(nlhdr);
             nlhdr = &(nle->msg);
             if (!((nlhdr->nlmsg_seq == seq) && (nlhdr->nlmsg_pid == pid))) {
-                PDS_TRACE_VERBOSE("Netlink Recv unknown msg pid %ld seq %lld exp pid %ld seq %lld",
+                PDS_TRACE_VERBOSE("Netlink Recv unknown msg pid %u seq %u exp pid %u seq %lu",
                                    nlhdr->nlmsg_pid, nlhdr->nlmsg_seq, pid, seq);
                 continue;
             }

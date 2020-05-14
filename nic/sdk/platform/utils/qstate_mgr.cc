@@ -34,11 +34,11 @@ qstate_mgr::init(const char *qstate_info_file, shmmgr *mmgr)
         qstate_info_t    qsinfo = {0};
 
         if (lifid2qsinfo_.find(lifid) != lifid2qsinfo_.end()) {
-            SDK_TRACE_ERR("lifid %l info exists already !! duplicate ??", lifid);
+            SDK_TRACE_ERR("lifid %lu info exists already !! duplicate ??", lifid);
             return false;
         }
         if (hwlifid2qsinfo_.find(hwlifid) != hwlifid2qsinfo_.end()) {
-            SDK_TRACE_ERR("hwlifid %l info exists already !! duplicate ??", hwlifid);
+            SDK_TRACE_ERR("hwlifid %lu info exists already !! duplicate ??", hwlifid);
             return false;
         }
 
@@ -52,7 +52,8 @@ qstate_mgr::init(const char *qstate_info_file, shmmgr *mmgr)
             qsinfo.qsize[qtype] = (uint32_t) std::stol(qsize_s);
             qsinfo.qaddr[qtype] = (uint64_t) std::stol(qaddr_s);
             SDK_TRACE_DEBUG("added lifid %s hwlifid %s, qtype %s qsize %s addr %s",
-                            lifid_s, hwlifid_s, qtype_s, qsize_s, qaddr_s);
+                            lifid_s.c_str(), hwlifid_s.c_str(), qtype_s.c_str(),
+                            qsize_s.c_str(), qaddr_s.c_str());
         }
 
         lifid2qsinfo_[lifid] = qsinfo;

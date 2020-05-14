@@ -121,7 +121,7 @@ capri_get_qstate_map (lif_qstate_t *qstate, T *entry)
     CAPRI_GET_QSTATE_MAP_ENTRY(6);
     CAPRI_GET_QSTATE_MAP_ENTRY(7);
 
-    SDK_TRACE_DEBUG("Lif: %lu, Qstate map: hbm_addr: %llu, hint_cos: %lu, "
+    SDK_TRACE_DEBUG("Lif: %u, Qstate map: hbm_addr: %lu, hint_cos: %u, "
                     "e0: %u,%u, e1: %u,%u, e2: %u,%u, e3: %u,%u, "
                     "e4: %u,%u, e5: %u,%u, e6: %u,%u, e7: %u,%u",
                     qstate->lif_id, qstate->hbm_address, qstate->hint_cos,

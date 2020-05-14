@@ -137,7 +137,7 @@ log::init(const char *name, uint64_t cpu_mask, log_mode_e log_mode,
         logger_ = std::make_shared<spdlog::logger>(name, dist_sink);
     }
     if (logger_) {
-        logger_->set_pattern("%L [%Y-%m-%d %H:%M:%S.%e%z] %v");
+        logger_->set_pattern("%L [%Y-%m-%d %H:%M:%S.%e%z] (%t) %v");
         if (syslogger) {
             logger_->set_level(syslog_level_to_spdlog_level(syslog_level));
         } else {

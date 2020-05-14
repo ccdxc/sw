@@ -172,20 +172,20 @@ policer_to_token_rate (policer_t *policer, uint64_t refresh_interval_us,
     uint64_t    rate_tokens;
 
     if (rate_per_sec > UINT64_MAX/refresh_interval_us) {
-        SDK_TRACE_ERR("Policer rate %u is too high", rate_per_sec);
+        SDK_TRACE_ERR("Policer rate %lu is too high", rate_per_sec);
         return SDK_RET_INVALID_ARG;
     }
     rate_tokens = (refresh_interval_us * rate_per_sec)/1000000;
 
     if (rate_tokens == 0) {
-        SDK_TRACE_ERR("Policer rate %u too low for refresh interval %uus",
+        SDK_TRACE_ERR("Policer rate %lu too low for refresh interval %luus",
                       rate_per_sec, refresh_interval_us);
         return SDK_RET_INVALID_ARG;
     }
 
     if ((burst + rate_tokens) > max_policer_tokens_per_interval) {
-        SDK_TRACE_ERR("Policer rate %u is too high for "
-                      "refresh interval %uus",
+        SDK_TRACE_ERR("Policer rate %lu is too high for "
+                      "refresh interval %luus",
                       rate_per_sec, refresh_interval_us);
         return SDK_RET_INVALID_ARG;
     }

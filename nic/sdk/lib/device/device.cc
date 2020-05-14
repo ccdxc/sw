@@ -109,7 +109,7 @@ device::populate_qos_profile(std::string qos_profile_name) {
                                 "qos_profile_" + qos_profile_name + ".json";
 
     if (access(profile_fname.c_str(), R_OK) < 0) {
-        SDK_TRACE_DEBUG("Device config profile: {} not found",
+        SDK_TRACE_DEBUG("Device config profile: %s not found",
                         profile_fname.c_str());
         return SDK_RET_ERR;
     }

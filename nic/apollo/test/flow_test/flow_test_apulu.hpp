@@ -868,13 +868,13 @@ public:
     void print_flow_stats(sdk_table_api_stats_t *api_stats,
                           sdk_table_stats_t *table_stats) {
         SDK_TRACE_DEBUG(
-                "insert %u, insert_duplicate %u, insert_fail %u, "
-                "remove %u, remove_not_found %u, remove_fail %u, "
-                "update %u, update_fail %u, "
-                "get %u, get_fail %u, "
-                "reserve %u, reserver_fail %u, "
-                "release %u, release_fail %u, "
-                "entries %u, collisions %u",
+                "insert %lu, insert_duplicate %lu, insert_fail %lu, "
+                "remove %lu, remove_not_found %lu, remove_fail %lu, "
+                "update %lu, update_fail %lu, "
+                "get %lu, get_fail %lu, "
+                "reserve %lu, reserver_fail %lu, "
+                "release %lu, release_fail %lu, "
+                "entries %lu, collisions %lu",
                 api_stats->insert,
                 api_stats->insert_duplicate,
                 api_stats->insert_fail,

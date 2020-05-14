@@ -1042,7 +1042,7 @@ program_lif_table (uint16_t lif_hw_id, uint8_t lif_type, uint16_t vpc_hw_id,
     lif_actiondata_t lif_data;
 
     PDS_TRACE_DEBUG("Programming LIF table at idx %u, vpc hw id %u, "
-                    "bd hw id %u, vnic hw id %u", lif_hw_id, vpc_hw_id,
+                    "bd hw id %u, vnic hw id %u mac addr %s", lif_hw_id, vpc_hw_id,
                     bd_hw_id, vnic_hw_id, macaddr2str(vr_mac));
 
     p4pd_ret = p4pd_global_entry_read(P4TBL_ID_LIF, lif_hw_id,
