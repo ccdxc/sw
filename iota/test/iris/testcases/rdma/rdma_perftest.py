@@ -454,6 +454,28 @@ def Trigger(tc):
     tc.resp = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp)
     return api.types.status.SUCCESS
 
+def grep_qps(tc):
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    for n in tc.nodes:
+        for intf in api.GetNaplesHostInterfaces(n):
+            if tc.os == host.OS_TYPE_LINUX:
+                pci = host.GetNaplesPci(n, intf)
+                if pci is None:
+                    continue
+            else:
+                sysctl = host.GetNaplesSysctl(intf)
+
+            if tc.os == host.OS_TYPE_LINUX:
+                cmd = ("grep qpid /sys/kernel/debug/ionic/{}/lif0/rdma/qp/*/info"
+                       .format(pci))
+            else:
+                cmd = ("sysctl dev.{}.rdma.qp | grep qpid".format(sysctl))
+            api.Trigger_AddHostCommand(req, n, cmd)
+
+    resp = api.Trigger(req)
+    for cmd in resp.commands:
+        api.PrintCommandResults(cmd)
+
 def Verify(tc):
     if tc.resp is None:
         return api.types.status.FAILURE
@@ -533,6 +555,9 @@ def Verify(tc):
                 api.Logger.info("ERROR: Mismatch in send or ack count")
                 result = api.types.status.FAILURE
                 break
+
+    # Hunting for cases in which stale QPs are left behind
+    grep_qps(tc)
 
     return result
 

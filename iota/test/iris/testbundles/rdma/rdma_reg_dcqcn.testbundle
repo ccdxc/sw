@@ -23,11 +23,6 @@ testcases:
         args    :
             type: remote_only
 
-    -   name    : Intf_Mtu
-        testcase: testcases.rdma.intf_mtu
-        args    :
-            type: remote_only
-
     -   name    : QoS_Switch_Config
         testcase: testcases.qos.qos_switch_config
         args    :
@@ -35,6 +30,11 @@ testcases:
             intf_qos: False
             pause_enable: True
             pause_type: 0
+
+    -   name    : Intf_Mtu
+        testcase: testcases.rdma.intf_mtu
+        args    :
+            type: remote_only
 
     #=======================================
     # Ping Pong

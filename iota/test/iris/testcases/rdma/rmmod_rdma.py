@@ -14,9 +14,7 @@ def Setup(tc):
 def grep_objs(tc):
     robjs = [('qp', '-e qpid -e state'),
              ('cq', '-e cqid -e eqid'),
-             ('mr', '-e mrid -e length'),
-             ('eq', '-e eqid -e irq'),
-             ('aq', '-e aqid -e eqid')]
+             ('mr', '-e mrid -e length')]
 
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     for n in tc.nodes:

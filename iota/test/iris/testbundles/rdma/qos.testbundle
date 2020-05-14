@@ -29,7 +29,7 @@ testcases:
             type: remote_only
 
     #=======================================
-    # PCP Tests 
+    # PCP Tests
     #=======================================
     -   name    : QoS_Switch_Config_Pfc_Pcp
         testcase: testcases.qos.qos_switch_config
@@ -132,4 +132,3 @@ testcases:
         testcase: testcases.rdma.rmmod_rdma
         args    :
             type: remote_only
-
