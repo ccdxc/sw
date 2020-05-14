@@ -1,26 +1,20 @@
-import { AfterViewInit, Component, EventEmitter, Input, OnInit, Output, ViewEncapsulation, OnDestroy, ViewChild, ChangeDetectorRef } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, Component, EventEmitter, Input, OnDestroy, OnInit, Output, ViewEncapsulation } from '@angular/core';
+import { AbstractControl, FormArray, FormGroup, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { Animations } from '@app/animations';
-import { BaseComponent } from '@app/components/base/base.component';
-import { ToolbarButton } from '@app/models/frontend/shared/toolbar.interface';
-import { ControllerService } from '@app/services/controller.service';
-import { UIConfigsService } from '@app/services/uiconfigs.service';
-import { ClusterService } from '@app/services/generated/cluster.service';
-import { ClusterHost, IClusterHost } from '@sdk/v1/models/generated/cluster/cluster-host.model';
-import { ClusterDistributedServiceCardID } from '@sdk/v1/models/generated/cluster/cluster-distributed-service-card-id.model';
-import { SelectItem, MultiSelect } from 'primeng/primeng';
 import { Utility } from '@app/common/Utility';
-import { required, patternValidator } from '@sdk/v1/utils/validators';
-import { FormGroup, FormArray, ValidatorFn, AbstractControl } from '@angular/forms';
-import { IApiStatus } from '@sdk/v1/models/generated/cluster';
-import { CreationForm } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { TableCol } from '@app/components/shared/tableviewedit';
-import { ClusterDistributedServiceCard } from '@sdk/v1/models/generated/cluster';
-import { HttpEventUtility } from '@app/common/HttpEventUtility';
-import { IClusterAutoMsgDistributedServiceCardWatchHelper } from '@sdk/v1/models/generated/cluster';
+import { CreationForm } from '@app/components/shared/tableviewedit/tableviewedit.component';
+import { ControllerService } from '@app/services/controller.service';
+import { ClusterService } from '@app/services/generated/cluster.service';
 import { StagingService } from '@app/services/generated/staging.service';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { ClusterDistributedServiceCard, IApiStatus } from '@sdk/v1/models/generated/cluster';
+import { ClusterDistributedServiceCardID } from '@sdk/v1/models/generated/cluster/cluster-distributed-service-card-id.model';
+import { ClusterHost, IClusterHost } from '@sdk/v1/models/generated/cluster/cluster-host.model';
 import { StagingBuffer, StagingCommitAction } from '@sdk/v1/models/generated/staging';
-import { map, switchMap, tap, catchError, buffer } from 'rxjs/operators';
-import { Observable, forkJoin, throwError } from 'rxjs';
+import { patternValidator } from '@sdk/v1/utils/validators';
+import { forkJoin, Observable, throwError } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 
 
 export interface DSCIDuiModel {
@@ -28,12 +22,20 @@ export interface DSCIDuiModel {
 }
 /**
  * NewhostComponent extends CreationForm
- * It enable adding and updating host object.  User must specify to use "ID" or "MAC" in UI-html
+ * It enables adding and updating host object.  User must specify to use "ID" or "MAC" in UI-html
  * Internally, 'radioValue' holds the selected value (ID or MAC)
  *
  *  postNgInit() -> getPreSelectedDistributedServiceCardID() // when in edit mode, we compute the radio value from data
  *
  * In createObjct() and updateObject(), we clean up data using clearOtherRadios()
+ */
+/**
+ * Host edit logic 2020-05-13
+ *
+ * Server does not allow user to change DSC already assigned to a host.
+ * If host already has two DSCs. User can only delete the host, but can not change DSCs.
+ *
+ * If a host has only one DSC, user can add another DSC.
  */
 
 /*
@@ -57,7 +59,8 @@ Host{
   templateUrl: './newhost.component.html',
   styleUrls: ['./newhost.component.scss'],
   animations: [Animations],
-  encapsulation: ViewEncapsulation.None
+  encapsulation: ViewEncapsulation.None,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NewhostComponent extends CreationForm<IClusterHost, ClusterHost> implements OnInit, AfterViewInit, OnDestroy {
 
@@ -70,7 +73,7 @@ export class NewhostComponent extends CreationForm<IClusterHost, ClusterHost> im
   @Input() isInline: boolean = false;
   @Input() existingObjects: IClusterHost[] = [];
   @Input() objectData: IClusterHost;
-  @Input() dataObjects: ClusterDistributedServiceCard[] = [];
+  @Input() naplesWithoutHosts: ClusterDistributedServiceCard[] = [];
   @Input() notAdmittedCount: number = 0;
   @Output() formClose: EventEmitter<any> = new EventEmitter();
 
@@ -89,8 +92,6 @@ export class NewhostComponent extends CreationForm<IClusterHost, ClusterHost> im
     { field: 'add_host', header: 'Add Host', class: '', sortable: true, width: 60 },
   ];
 
-  naplesEventUtility: HttpEventUtility<ClusterDistributedServiceCard>;
-  naples: ReadonlyArray<ClusterDistributedServiceCard> = [];
   objectMap: any = {};
 
   constructor(protected _controllerService: ControllerService,
@@ -137,29 +138,124 @@ export class NewhostComponent extends CreationForm<IClusterHost, ClusterHost> im
     this.setValidators(this.newObject);
   }
 
+  /**
+   * Set input validator
+   *   - new host.meta.name must be unique
+   *   - set validator to host.spec.dscs ( id or mac-address fields)
+   * @param newObject
+   */
   setValidators(newObject: ClusterHost) {
     newObject.$formGroup.get(['meta', 'name']).setValidators([
       this.newObject.$formGroup.get(['meta', 'name']).validator,
       this.isNewHostNameValid(this.existingObjects)]);
     for (let i = 0; i < this.radioValues.length; i++) {
-      this.setDSCValidator(newObject, 0);
+      this.setDSCValidator(newObject, i);
     }
   }
 
   shouldRadioButtonBeChecked(smartNICIDOption, index): boolean {
-    const control  = this.newObject.$formGroup.get(['spec', 'dscs', index, smartNICIDOption]);
+    const control = this.newObject.$formGroup.get(['spec', 'dscs', index, smartNICIDOption]);
     return (control && control.value);
   }
 
+  /**
+   * Set validator to host.spcc.dscs[index]
+   *
+   * host.spcc.dscs[index]['mac-address'] has to be unique across all hosts
+   * host.spcc.dscs[index]['id'] has to be unique across all hosts
+   *
+   * Within one host,  dscs[i] and dscs[j] can not have duplicate values id/mac-addrsess
+   * "dscs": // this is wrong (two dsc share the mac-address/id values within one host)
+   *     [
+   *        {
+   *          "mac-address": “00ae.cd00.0009”  // id : abc
+   *        },
+   *        {
+   *         “mac-address“  "00ae.cd00.0009"   // id : abc
+   *         }
+   *     ]
+   * @param newObject
+   * @param index
+   */
   private setDSCValidator(newObject: ClusterHost, index: number) {
     newObject.$formGroup.get(['spec', 'dscs', index, 'mac-address']).setValidators([
-      patternValidator(Utility.MACADDRESS_REGEX, NewhostComponent.MACADDRESS_MESSAGE)
+      patternValidator(Utility.MACADDRESS_REGEX, NewhostComponent.MACADDRESS_MESSAGE),
+      this.dscMacValidator(this.existingObjects, index)
     ]);
+    newObject.$formGroup.get(['spec', 'dscs', index, 'id']).setValidators([
+      this.dscIDValidator(this.existingObjects, index)
+    ]);
+  }
+
+  dscIDValidator(hosts: IClusterHost[], dscIndex: number): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      if (this.isDSCIdOccupied(control.value, hosts) || this.isDSCIdOrMacDuplicateWithinHost(control.value, 'id', dscIndex)) {
+        return {
+          objectname: {
+            required: true,
+            message: 'DSC ID is already assigned to a host'
+          }
+        };
+      }
+      return null;
+    };
+  }
+
+  dscMacValidator(hosts: IClusterHost[], dscIndex: number): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      if (this.isDSCMacOccupied(control.value, hosts) || this.isDSCIdOrMacDuplicateWithinHost(control.value, 'mac-address', dscIndex)) {
+        return {
+          objectname: {
+            required: true,
+            message: 'DSC MAC address is already assigned to a host'
+          }
+        };
+      }
+      return null;
+    };
+  }
+
+  isDSCIdOrMacDuplicateWithinHost(input: string, field: string, dscIndex: number): boolean {
+    const target = this.newHostForm.get(['spec', 'dscs', dscIndex]).value;
+    const len = this.newHostForm.get(['spec', 'dscs'])['length'];
+    if (len <= 1) {
+      return false;
+    }
+    for (let i = 0; i < len; i++) {
+      if (dscIndex !== i) {
+        const dscObject = this.newHostForm.get(['spec', 'dscs', i]).value;
+        if (dscObject[field] && dscObject[field] === input) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  /**
+   *
+   * @param inputvalue
+   * @param hosts
+   * @param field
+   */
+  isDSCIdOrMacOccupied(inputvalue: string, hosts: IClusterHost[], field: string): boolean {
+    const matchedDSCs = hosts.findIndex(host => {
+      return host.spec.dscs.findIndex(dsc => dsc[field] === inputvalue) > -1;
+    });
+    return (matchedDSCs > -1);
+  }
+
+  isDSCIdOccupied(dscId: string, hosts: IClusterHost[]): boolean {
+    return this.isDSCIdOrMacOccupied(dscId, hosts, 'id');
+  }
+
+  isDSCMacOccupied(mac: string, hosts: IClusterHost[]): boolean {
+    return this.isDSCIdOrMacOccupied(mac, hosts, 'mac-address');
   }
 
   processNaples() {
     this.objectMap = {};
-    for (const dsc of this.dataObjects) {
+    for (const dsc of this.naplesWithoutHosts) {
       if (!dsc.status.host) {
         const newHost = new ClusterHost();
         this.addDSCID(newHost);
@@ -227,7 +323,7 @@ export class NewhostComponent extends CreationForm<IClusterHost, ClusterHost> im
     // updates the form
     const smartNICIDs = newObject.$formGroup.get(['spec', 'dscs']) as FormArray;
     const clusterDistributedServiceCardID: ClusterDistributedServiceCardID = new ClusterDistributedServiceCardID();
-    smartNICIDs.insert(0, clusterDistributedServiceCardID.$formGroup);
+    smartNICIDs.push(clusterDistributedServiceCardID.$formGroup);
     this.radioValues.push('');
   }
 
@@ -235,9 +331,11 @@ export class NewhostComponent extends CreationForm<IClusterHost, ClusterHost> im
     // changes value of radio to the one the user has selected
     this.radioValues[index] = $event.value;
     if (this.radioValues[index] === 'id') {
-      this.newHostForm.get(['spec', 'dscs', index, 'mac-address']).setValue(null);
+      this.newHostForm.get(['spec', 'dscs', index, 'mac-address']).setValue(null);  // clear value
+      this.newHostForm.get(['spec', 'dscs', index, 'mac-address']).setErrors(null); // clear validation error
     } else {
       this.newHostForm.get(['spec', 'dscs', index, 'id']).setValue(null);
+      this.newHostForm.get(['spec', 'dscs', index, 'id']).setErrors(null);
     }
   }
 
@@ -314,6 +412,7 @@ export class NewhostComponent extends CreationForm<IClusterHost, ClusterHost> im
     return Utility.isModelNameUniqueValidator(existingObjects, 'newHost-name');
   }
 
+
   getClassName(): string {
     return this.constructor.name;
   }
@@ -361,7 +460,7 @@ export class NewhostComponent extends CreationForm<IClusterHost, ClusterHost> im
   updateObject(newObject: IClusterHost, oldObject: IClusterHost): Observable<{ body: IClusterHost | IApiStatus | Error; statusCode: number; }> {
     // const host: IClusterHost = this.clearOtherRadios();
     if (newObject && newObject.spec && newObject.spec.dscs && newObject.spec.dscs.length > 0 &&
-        newObject.spec.dscs[0]) {
+      newObject.spec.dscs[0]) {
       if (oldObject && oldObject.spec && oldObject.spec.dscs) {
         oldObject.spec.dscs.push(newObject.spec.dscs[0]);
       }
@@ -379,6 +478,11 @@ export class NewhostComponent extends CreationForm<IClusterHost, ClusterHost> im
 
   getObjectValues(): IClusterHost {
     return this.newObject.getFormGroupValues();
+  }
+
+  onSaveFailure(isCreate: boolean) {
+    // reset original value
+    this.newObject.setFormGroupValuesToBeModelValues();
   }
 
   commitStagingBuffer(buffername: string): Observable<any> {
@@ -478,12 +582,12 @@ export class NewhostComponent extends CreationForm<IClusterHost, ClusterHost> im
     return this.createButtonTooltip;
   }
 
-  getFieldTooltip(): string  {
+  getFieldTooltip(): string {
     // TODO: 2020-03-24 host update is not supported. This api is not fully tested.
     const dscLen = this.newHostForm.get(['spec', 'dscs'])['length']; // spec.dsc is a formarray
-    for (let i = 0; i < dscLen ; i++) {
+    for (let i = 0; i < dscLen; i++) {
       for (let j = 0; j < this.radioValues.length; j++) {
-        const control = this.newHostForm.get(['spec', 'dscs', i,  this.radioValues[j]]);
+        const control = this.newHostForm.get(['spec', 'dscs', i, this.radioValues[j]]);
         if (control && Utility.isEmpty(control.value)) {
           return `${this.radioValues[j]} field is empty`;
         }
@@ -500,11 +604,8 @@ export class NewhostComponent extends CreationForm<IClusterHost, ClusterHost> im
    * When user call + to add a new  DSC
    */
   addDSC() {
-    const tempTargets = this.newHostForm.get(['spec', 'dscs']) as FormArray;
-    const newFormGroup: FormGroup = new ClusterDistributedServiceCardID().$formGroup;
-    tempTargets.push(newFormGroup);
-    this.radioValues.push('');
-    this.setDSCValidator(this.newObject, this.radioValues.length - 1);
+    this.addDSCID(this.newObject);
+    this.setValidators(this.newObject);
   }
 
   /**

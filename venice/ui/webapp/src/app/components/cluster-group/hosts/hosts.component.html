@@ -58,7 +58,7 @@
 <ng-template #createTemplate>
   <app-newhost (formClose)="creationFormClose()"
                fxFlex="grow" [existingObjects]='dataObjects' [notAdmittedCount]="notAdmittedCount"
-               [dataObjects]="naplesWithoutHosts">
+               [naplesWithoutHosts]="naplesWithoutHosts">
   </app-newhost>
 </ng-template>
 
@@ -126,10 +126,13 @@
   <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px"
        *ngIf="!(rowData._ui['processedWorkloads'] && rowData._ui['processedWorkloads'].length > 0)">
     <!-- 2020-01-08 backend does not support host edit. Enable it 202004-08  -->
-    <mat-icon matTooltip="Edit host" *roleGuard="'clusterhost_update'"
-              class="global-table-action-icon"
-              (click)="expandRowRequest($event, rowData)">edit
-    </mat-icon>
+    <ng-container *ngIf="rowData.spec.dscs && rowData.spec.dscs.length!=2">
+      <mat-icon matTooltip="Edit host" *roleGuard="'clusterhost_update'"
+                class="global-table-action-icon"
+                (click)="expandRowRequest($event, rowData)">edit
+      </mat-icon>
+    </ng-container>
+
 
     <mat-icon matTooltip="Delete host" *roleGuard="'clusterhost_delete'"
               class="global-table-action-icon"
@@ -140,5 +143,6 @@
 
 <ng-template #expandTemplate let-rowData let-columns="columns">
   <app-newhost [style.width]="'100%'" [objectData]="rowData" [isInline]="true"
+               [existingObjects]='dataObjects'
                (formClose)="closeRowExpand()" fxFlex="none"></app-newhost>
 </ng-template>

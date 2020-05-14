@@ -1958,9 +1958,9 @@ export class Utility {
     return inputString; // For inputString: '2020-02-14', '13:28:30', 'abc'
   }
 
-  public static isModelNameUniqueValidator(existingTechSupportRequest: any[], objectname: string): ValidatorFn {
+  public static isModelNameUniqueValidator(existingVeniceObjects: any[], objectname: string): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
-      if (this.isNameAlreadyExist(control.value, existingTechSupportRequest)) {
+      if (this.isNameAlreadyExist(control.value, existingVeniceObjects)) {
         return {
           objectname: {
             required: true,
