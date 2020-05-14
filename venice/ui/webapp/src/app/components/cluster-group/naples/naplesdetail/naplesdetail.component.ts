@@ -363,10 +363,12 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
       this.processInterfacesStats(this.interfaceTopos.lif.upper);
       this.processInterfacesStats(this.interfaceTopos.lif.lower);
 
-      if (this.interfaceTopos.pif.length > 0) {
-        this.mouseOverInterface = this.interfaceTopos.pif[0].name;
-      } else if (this.interfaceTopos.lif.upper.length > 0) {
-        this.mouseOverInterface = this.interfaceTopos.lif.upper[0].name;
+      if (!this.mouseOverInterface) {
+        if (this.interfaceTopos.pif.length > 0) {
+          this.mouseOverInterface = this.interfaceTopos.pif[0].name;
+        } else if (this.interfaceTopos.lif.upper.length > 0) {
+          this.mouseOverInterface = this.interfaceTopos.lif.upper[0].name;
+        }
       }
     }
   }

@@ -388,8 +388,8 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
       },
       tooltips: {
         enabled: true,
-        intersect: false,
-        mode: 'index',
+        intersect: true,
+        mode: 'nearest',
         titleFontFamily: 'Fira Sans Condensed',
         bodyFontFamily: 'Fira Sans Condensed'
       },
@@ -688,7 +688,7 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
           const data = MetricsUtility.transformToChartjsTimeSeries(s, field);
           const dataset: ChartDataSets = {
             data: data,
-            pointRadius: 0,
+            pointRadius: 2,
             lineTension: 0,
             fill: false,
             sourceID: source.id,

@@ -79,6 +79,8 @@ export class TelemetrycharteditComponent extends BaseComponent implements OnInit
 
   isToShowDebugMetric: boolean = false;
 
+  previousSelectedValue = null;
+
   constructor(protected controllerService: ControllerService,
     protected clusterService: ClusterService,
     protected authService: AuthService,
@@ -202,22 +204,40 @@ export class TelemetrycharteditComponent extends BaseComponent implements OnInit
     return 'Interfaces';
     }
     return 'DSCs';
-    }
+  }
 
   // check how may cards selected before we submit this event to the transformer
   onCardValuesChanged (event: any, transform: any) {
+    const metaData = this.getMeasurementMetadata(transform.measurement);
+    const selectType = (metaData && metaData.objectKind === 'NetworkInterface') ?
+        'Network Interface' : 'DSC';
+    const headMsg = 'Failed adding ' + selectType + ' to the chart';
+    const errorMsg = 'The metrics chart allows a maximum of ' + TelemetrychartComponent.MAX_LEGEND_EDIT_MODE +
+      ' plot lines. This is calculated by the number of selected fields multiplied by the number of selected ' +
+      selectType + 's.';
     const values = Utility.formatRepeaterData(event);
-    if (values && values[0] && values[0].valueFormControl &&
-        values[0].valueFormControl.length > 10) {
+    if (transform.fields && transform.fields.length > 0 && values && values[0] &&
+        values[0].valueFormControl && values[0].valueFormControl.length *
+        transform.fields.length > TelemetrychartComponent.MAX_LEGEND_EDIT_MODE) {
       this._controllerService.invokeConfirm({
-        header: 'Failed adding DSC to the chart',
-        message: 'Only a maximum of 10 DSCs can be selected to show on the chart.',
+        header: headMsg,
+        message: errorMsg,
         acceptLabel: 'Close',
         acceptVisible: true,
         rejectVisible: false,
-        accept: () => {}
+        accept: () => {
+          if (transform.formArray && transform.formArray.controls &&
+              transform.formArray.controls.length > 0 &&  transform.formArray.controls[0]) {
+            transform.formArray.controls[0].setValue(this.previousSelectedValue);
+            this.chart.dataSources = Utility.getLodash().cloneDeep(this.chart.dataSources);
+          }
+        }
       });
       return;
+    }
+    if (transform.formArray && transform.formArray.controls &&
+        transform.formArray.controls.length > 0 &&  transform.formArray.controls[0]) {
+      this.previousSelectedValue = transform.formArray.controls[0].value;
     }
     transform.valueChange(event);
   }
