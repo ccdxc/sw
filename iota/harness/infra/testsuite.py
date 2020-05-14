@@ -92,7 +92,7 @@ class TestSuite:
         self.__images = self.__load_image_manifest()
         self.__pipelines = getattr(spec.meta, "pipelines",[])
         self.__defaultNicMode = getattr(spec.meta, "nicmode", types.nicModes.CLASSIC)
-        self.__defaultNicPipeline = None
+        self.__defaultNicPipeline = GlobalOptions.pipeline
         return
 
     def Abort(self):

@@ -444,16 +444,16 @@ class Node(object):
         if not types.NicModes.valid(mode.upper()):
             raise ValueError("mode {0} is not valid".format(mode))
         nics = []
-        for name,nic in self.GetDevices():
+        for name,nic in self.GetDevices().items():
             if nic.GetMode() == mode:
                 nics.append(nic)
         return nics
 
     def GetNicsByPipeline(self, pipeline):
-        if not types.Pipelines.valid(pipeline.upper()):
+        if not types.pipelines.valid(pipeline.upper()):
             raise ValueError("pipeline {0} is not valid".format(pipeline))
         nics = []
-        for name,nic in self.GetDevices():
+        for name,nic in self.GetDevices().items():
             if nic.GetNaplesPipeline() == pipeline:
                 nics.append(nic)
         return nics
@@ -930,6 +930,16 @@ class Topology(object):
 
     def Nodes(self):
         return self.__nodes.values()
+
+    def GetNicsByPipeline(self, pipeline):
+        if not types.pipelines.valid(pipeline.upper()):
+            raise ValueError("pipeline {0} is not valid".format(pipeline))
+        nics = []
+        for node in self.Nodes():
+            for name,nic in node.GetDevices().items():
+                if nic.GetNaplesPipeline() == pipeline:
+                    nics.append(nic)
+        return nics
 
     def IpmiNodes(self, node_names, ipmiMethod, useNcsi=False):
         if ipmiMethod not in self.IpmiMethods:
