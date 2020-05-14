@@ -2,6 +2,8 @@
 
 import copy
 import inspect
+import random
+
 from collections import defaultdict
 
 from infra.common.logging import logger
@@ -660,3 +662,125 @@ class ConfigClientBase(base.ConfigClientBase):
             logger.info(f"{oper} {len(cfgObjects)} {self.ObjType.name} Objects FAILED in {node}")
             return False
         return True
+
+class MappingObjectBase(ConfigObjectBase):
+    def __init__(self, objtype, node):
+        super().__init__(objtype, node)
+        self.Tags = []
+        self.TagBase = None
+        self.MaxTags = 5
+
+    def RemoveTag(self, spec=None):
+        tag = getattr(spec, "tag", None) if spec else None
+        if tag:
+            self.Tags.remove(tag)
+        elif self.Tags:
+            tag = self.Tags.pop()
+        else:
+            logger.error(f"{self} Tags empty")
+            return None
+        logger.info(f"{self}: Removed the Tag {tag}")
+        self.Show()
+        return tag if utils.UpdateObject(self) else None
+
+    def AppendTag(self, spec=None):
+        tag = getattr(spec, "tag", None) if spec else None
+        if len(self.Tags) >= self.MaxTags:
+            logger.error(f"{self} Tags full")
+            return None
+        if tag:
+            pass
+        elif self.Tags:
+            tag = self.Tags[-1]+1
+        else:
+            tag = self.TagBase if self.TagBase else self.GetNextTag()
+        self.Tags.append(tag)
+        logger.info(f"{self}: Appended the Tag {tag}")
+        self.Show()
+        return tag if utils.UpdateObject(self) else None
+
+    def ReplaceTag(self, spec):
+        tags = getattr(spec, "tags", None)
+        if not tags:
+            return None
+        old_list = self.Tags
+        self.Tags = tags
+        self.Show()
+        return old_list if utils.UpdateObject(self) else None
+
+    def GenerateTags(self, tag_enabled, tags_type, no_of_tags, tags=None):
+        def __unique_tags():
+            assert(no_of_tags<=self.MaxTags)
+            flag = True
+            for i in range(no_of_tags):
+                tag = self.GetNextTag()
+                if flag:
+                    self.TagBase = tag
+                    flag = False
+                self.Tags.append(tag)
+
+        def __overlapping_tags():
+            assert(no_of_tags<=self.MaxTags)
+            self.TagBase = self.GetNextTag()
+            self.Tags = list(range(self.TagBase, self.TagBase + no_of_tags))
+
+        def __specific_tags():
+            assert(len(tags)<=self.MaxTags)
+            self.Tags = tags
+
+        def __random_tags():
+            assert(no_of_tags<=self.MaxTags)
+            r = range(1,0xffffffff)
+            for i in range(no_of_tags):
+                self.Tags.append(random.choice(r))
+
+        def __default_tags():
+            assert(0)
+
+        tags_switcher = {
+            "overlapping" : __overlapping_tags,
+            "unique"      : __unique_tags,
+            "specific"    : __specific_tags,
+            "random"      : __random_tags,
+        }
+        if not tag_enabled:
+            return
+        return tags_switcher.get(tags_type, __default_tags)()
+
+class MappingClientBase(ConfigClientBase):
+    def __init__(self, objtype, maxlimit=0):
+        super().__init__(objtype, maxlimit)
+        self.v6tags = defaultdict(dict)
+        self.v4tags = defaultdict(dict)
+        return
+
+    def GetTags(self, node, af="v4"):
+        return self.v4tags[node] if af == "v4" else self.v6tags[node]
+
+    def PopulateTagCache(self, obj, tags=None):
+        node = obj.Node
+        tag_dict = self.v4tags[node] if obj.AddrFamily == "IPV4" else self.v6tags[node]
+        tags = tags if tags else obj.Tags
+        for tag in tags:
+            tag_dict.setdefault(tag, []).append(obj)
+        self.ShowTagCache(obj.Node)
+        return True
+
+    def DelTagCache(self, obj, tags=None):
+        node = obj.Node
+        tag_dict = self.v4tags[node] if obj.AddrFamily == "IPV4" else self.v6tags[node]
+        tags = tags if tags else obj.Tags
+        for tag in tags:
+            tag_list = tag_dict.get(tag, None)
+            if not tag_list or obj not in tag_list:
+                logger.error(f"Cound not find the {obj} in Tag List")
+                return False
+            tag_list.remove(obj)
+            if not tag_list:
+                del tag_dict[tag]
+        return True
+
+    def ShowTagCache(self, node, af="v4"):
+        tag_dict = self.v4tags[node] if af == "v4" else self.v6tags[node]
+        for tag, prefixes in tag_dict.items():
+            logger.info(f"{self.GetObjectType().name}{af} and value {tag} {prefixes}")

@@ -100,6 +100,22 @@ modules:
         - policy    : filter://AddrFamily=IPV4,OverlapType=none
 
   - module          :
+      name          : REPLACE_TAGS
+      spec          : rfc_tag_crud.testspec
+      args          :
+        - object    : localmapping
+          operation : ReplaceTag
+          fields    :
+            tags    :
+              - 1
+              - 100
+              - 1000
+              - 99999
+              - 245543
+      iterate       :
+        - policy    : filter://AddrFamily=IPV4,OverlapType=none
+
+  - module          :
       name          : DELETE_LMAP
       spec          : rfc_tag_crud.testspec
       args          :

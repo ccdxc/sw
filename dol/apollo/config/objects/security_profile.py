@@ -159,8 +159,7 @@ class SecurityProfileObject(base.ConfigObjectBase):
             # Trigger the update on policy so that correct default FW action
             # is inherited from security profile.
             for policy in PolicyClient.Objects(self.Node):
-                policy.SetDirty(True)
-                assert(policy.CommitUpdate())
+                assert(utils.UpdateObject(policy))
         return True
 
 class SecurityProfileObjectClient(base.ConfigClientBase):

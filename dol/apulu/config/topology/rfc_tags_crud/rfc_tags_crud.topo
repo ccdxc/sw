@@ -70,11 +70,14 @@ node:
               v6egrpolicycount : 2        # default 0
               vnic:
                 - count   : 1             # VNICs per subnet
-                  ipcount : 2             # Local IP mapping per vnic
                   public  : false
                   policy  : false         # security policy at vnic level (0 - 2)
                   tagged  : false         # true or false (default true)
-                  tag     : true
+                  lmap    :
+                    - tag      : true
+                      tag_type : random
+                    - tag      : true
+                      tag_type : unique
               rmap:                       # Remote IP mappings per subnet
                 - count : 1
                   tag   : true

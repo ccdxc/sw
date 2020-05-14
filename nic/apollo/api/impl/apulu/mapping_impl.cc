@@ -2342,8 +2342,7 @@ mapping_impl::read_remote_mapping_(vpc_entry *vpc, subnet_entry *subnet,
     }
     spec->fabric_encap.val.vnid = bd_data.bd_info.vni;
     spec->fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
-    // TODO: tag support
-    spec->num_tags = 0;
+
     status->subnet_hw_id = mapping_data.egress_bd_id;
     subnet_impl *impl = subnet_impl_db()->find(status->subnet_hw_id);
     if (impl) {
@@ -2407,8 +2406,6 @@ mapping_impl::read_local_mapping_(vpc_entry *vpc, subnet_entry *subnet,
         status->public_ip_nat_idx = to_public_ip_nat_idx_;
         status->overlay_ip_nat_idx = to_overlay_ip_nat_idx_;
     }
-    // TODO: tag support
-    spec->num_tags = 0;
 
     return SDK_RET_OK;
 }

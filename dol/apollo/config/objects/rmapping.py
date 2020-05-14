@@ -15,10 +15,9 @@ import apollo.config.objects.base as base
 import apollo.config.topo as topo
 import ipaddress
 
-class RemoteMappingObject(base.ConfigObjectBase):
+class RemoteMappingObject(base.MappingObjectBase):
     tagbase  = 1
-    def __init__(self, node, parent, spec, tunobj, ipversion, count, l2=False, \
-                 tag_enabled = False):
+    def __init__(self, node, parent, spec, tunobj, ipversion, count, l2=False):
         super().__init__(api.ObjectTypes.RMAPPING, node)
         parent.AddChild(self)
         if 'origin' in spec:
@@ -33,8 +32,6 @@ class RemoteMappingObject(base.ConfigObjectBase):
         self.GID('RemoteMapping%d'%self.MappingId)
         self.UUID = utils.PdsUuid(self.MappingId, self.ObjType)
         self.SUBNET = parent
-        self.TagBase = None
-        self.TagEnabled = tag_enabled
         if l2:
             self.TypeL2 = True
         else:
@@ -65,18 +62,13 @@ class RemoteMappingObject(base.ConfigObjectBase):
             self.AddrFamily = 'IPV4'
             if self.SUBNET.V4RouteTable:
                 self.HasDefaultRoute = self.SUBNET.V4RouteTable.HasDefaultRoute
-        # creating overlapping tags, i.e make sure some tags has more than 
-        # one prefix
-        self.Tags = []
-        self.TagBase = None
-        self.MaxTags = 5
-        if tag_enabled == True:
-            if hasattr(spec, "rtags"):
-                self.Tags = getattr(spec, "rtags")
-                assert(len(self.Tags) <= self.MaxTags)
-            else:
-                self.TagBase = self.__get_tag_base()
-                self.Tags = list(range(self.TagBase, self.TagBase + self.MaxTags))
+
+        # Handle tags generation
+        tag_enabled = spec.get("tag", False)
+        tag_type    = spec.get("tag_type", "overlapping")
+        no_of_tags  = spec.get("no_of_tags", 5)
+        tags        = spec.get("tags", [])
+        self.GenerateTags(tag_enabled, tag_type, no_of_tags, tags)
 
         # Provider IP can be v4 or v6
         self.ProviderIPAddr, self.TunFamily = EzAccessStoreClient[node].GetProviderIPAddr(count)
@@ -91,7 +83,7 @@ class RemoteMappingObject(base.ConfigObjectBase):
         self.Show()
         return
 
-    def __get_tag_base(self):
+    def GetNextTag(self):
         if self.AddrFamily == 'IPV6':
             return next(ResmgrClient[self.Node].RemoteMappingV6TagIdAllocator)
         else:
@@ -116,6 +108,21 @@ class RemoteMappingObject(base.ConfigObjectBase):
     def PopulateKey(self, grpcmsg):
         grpcmsg.Id.append(self.GetKey())
         return
+
+    def RemoveTag(self, spec=None):
+        tag = super().RemoveTag(spec)
+        return client.DelTagCache(self, tags=[tag]) if tag else False
+
+    def AppendTag(self, spec=None):
+        tag = super().AppendTag(spec)
+        return client.PopulateTagCache(self, tags=[tag]) if tag else False
+
+    def ReplaceTag(self, spec):
+        tags = super().ReplaceTag(spec)
+        if tags:
+            return client.PopulateTagCache(self) if client.DelTagCache(self, tags) else False
+        else:
+            return False
 
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
@@ -145,6 +152,8 @@ class RemoteMappingObject(base.ConfigObjectBase):
             return False
         if spec.MACAddr != self.MACAddr.getnum():
             return False
+        if not utils.ValidateTagsList(self.Tags, spec.Tags):
+            logger.error(f"Failed to validate the Tags for {self}")
         return True
 
     def GetDependees(self, node):
@@ -198,19 +207,17 @@ class RemoteMappingObject(base.ConfigObjectBase):
         client.DeleteObjFromDict(self)
         return True
 
-class RemoteMappingObjectClient(base.ConfigClientBase):
+class RemoteMappingObjectClient(base.MappingClientBase):
     def __init__(self):
-        super().__init__(api.ObjectTypes.RMAPPING, Resmgr.MAX_RMAPPING)
+        base.MappingClientBase.__init__(self, api.ObjectTypes.RMAPPING, Resmgr.MAX_RMAPPING)
         self.__rmap_objs = defaultdict(dict)
-        self.v6tags = defaultdict(dict)
-        self.v4tags = defaultdict(dict)
         return
 
     def GetRmappingV6Tags(self, node):
-        return self.v6tags[node]
+        return self.GetTags(node, af="v6")
 
     def GetRmappingV4Tags(self, node):
-        return self.v4tags[node]
+        return self.GetTags(node, af="v4")
 
     def GetRMapObjByEpKey(self, node, ip, vpcid):
         return self.__rmap_objs[node].get((ip, vpcid), None)
@@ -283,17 +290,8 @@ class RemoteMappingObjectClient(base.ConfigClientBase):
             return False
         return True
 
-    def __populate_tag_cache(self, node, obj, af="v4"):
-        tag_dict = self.v4tags[node] if af == "v4" else self.v6tags[node]
-        if obj.TypeL2:
-            return
-        for tag in obj.Tags:
-            tag_dict.setdefault(tag, []).append(obj)
-        for tag, prefixes in tag_dict.items():
-            logger.info(f"rtag{af} and value {tag} {prefixes}")
-
     def GenerateObj(self, node, parent, rmap_dict, ipversion, count=0, \
-                    l2=False, tag_enabled=False):
+                    l2=False):
         if utils.IsPipelineApulu():
             tunnelAllocator = ResmgrClient[node].UnderlayTunAllocator
         else:
@@ -301,11 +299,11 @@ class RemoteMappingObjectClient(base.ConfigClientBase):
 
         tunobj = tunnelAllocator.rrnext()
         obj = RemoteMappingObject(node, parent, rmap_dict, tunobj, ipversion, \
-        count, l2, tag_enabled)
+                                  count, l2)
         self.Objs[node].update({obj.MappingId: obj})
         if not l2:
             self.__rmap_objs[node].update({(obj.IP, obj.SUBNET.VPC.UUID.GetUuid()): obj})
-            self.__populate_tag_cache(node, obj, af="v6" if ipversion == utils.IP_VERSION_6 else "v4")
+            self.PopulateTagCache(obj)
         return
 
     def GenerateObjects(self, node, parent, subnet_spec_obj):
@@ -325,20 +323,19 @@ class RemoteMappingObjectClient(base.ConfigClientBase):
             c = 0
             v6c = 0
             v4c = 0
-            tag_enabled = hasattr(rmap_spec_obj, 'tag')
             while c < rmap_spec_obj.count:
                 if isV6Stack:
                     self.GenerateObj(node, parent, rmap_spec_obj.__dict__, \
-                    utils.IP_VERSION_6, v6c, False, tag_enabled)
+                    utils.IP_VERSION_6, v6c, False)
                     v6c = v6c + 1
                 if c < rmap_spec_obj.count and isV4Stack:
                     self.GenerateObj(node, parent, rmap_spec_obj.__dict__, \
-                    utils.IP_VERSION_4, v4c, False, tag_enabled)
+                    utils.IP_VERSION_4, v4c, False)
                     c = c + 1
                     v4c = v4c + 1
                     if l2:
                         self.GenerateObj(node, parent, rmap_spec_obj.__dict__, \
-                        utils.IP_VERSION_4, v4c, True, tag_enabled)
+                        utils.IP_VERSION_4, v4c, True)
         return
 
     def ReadObjects(self, node):
