@@ -30,7 +30,6 @@ void WriteToEventLog(PVOID IoObject, ULONG Signature, NTSTATUS Status, PCWSTR ws
 #define EvLogError(fmt,...)				EvLogMsg(EVLOGTYPE_ERROR, fmt, ##__VA_ARGS__)
 #define EvLogWarning(fmt,...)			EvLogMsg(EVLOGTYPE_WARNING, fmt, ##__VA_ARGS__)
 #define EvLogInformational(fmt,...)		EvLogMsg(EVLOGTYPE_INFORMATIONAL, fmt, ##__VA_ARGS__)
-#define EvLogSuccess(fmt,...)			EvLogMsg(EVLOGTYPE_SUCCESS, fmt, ##__VA_ARGS__)
 #define EvLogStatus(status, fmt,...)	(NT_SUCCESS(status)) ?  EvLogInformational("SUCCESS: " fmt, ##__VA_ARGS__) : EvLogError("0x%x " fmt, status, ##__VA_ARGS__)
 
 #endif

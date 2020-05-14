@@ -1042,7 +1042,7 @@ ionic_lif_init(struct lif *lif)
     RtlSetBit(&lif->state, LIF_INITED);
     RtlSetBit(&lif->state, LIF_F_FW_READY);
 
-    EvLogSuccess("%wZ - Initialized Lif %d", lif->ionic->name, lif->index);
+    EvLogInformational("%wZ - Initialized Lif %d", lif->ionic->name, lif->index);
 
     return NDIS_STATUS_SUCCESS;
 
