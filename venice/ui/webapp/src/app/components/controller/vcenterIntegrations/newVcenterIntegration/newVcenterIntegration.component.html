@@ -19,7 +19,7 @@
                spellcheck="false" type="text"
                pInputText appFloatLabel="Name">
       </span>
-      <div fxFlex="10px"></div>
+      <div fxFlex="15px"></div>
       <span formGroupName="spec" [ngClass]="{requiredField: isUriRequired()}">
         <input fxFlex="nogrow" formControlName="uri" class="newVcenter-input" appErrorTooltip
                spellcheck="false" type="text"
@@ -44,7 +44,6 @@
                        boxStyleClass="newVcenter-dcnames-boxes" [toolTip]="DCNAMES_TOOLTIP">
         </app-formchips>
       </span>
-      <div fxFlex="10px"></div>
       <app-fieldcontainer fieldTitle="Credential">
         <div fxflex="nogrow" fxLayout="column" class="newVcenter-cred-box"
              [formGroup]="newObject.$formGroup.get(['spec','credentials'])">
@@ -70,18 +69,31 @@
                        appErrorTooltip spellcheck="false" appFloatLabel="User Name"
                        type="text" pInputText>
               </span>
-              <div fxFlex="10px"></div>
+              <div fxFlex="15px"></div>
               <span
                     [ngClass]="{requiredField: isPasswordRequired()}">
                 <input fxFlex="nogrow" class="newVcenter-input" formControlName="password"
                        appErrorTooltip spellcheck="false" appFloatLabel="Password"
                        type="password" pInputText>
               </span>
-              <div fxFlex="10px"></div>
+              <div fxFlex="15px"></div>
               <span [ngClass]="{requiredField: isConfirmPwdRequired()}">
                 <input fxFlex="nogrow" class="newVcenter-input" formControlName="confirmPassword"
                        appErrorTooltip spellcheck="false" appFloatLabel="Confirm Password"
                        type="password" pInputText>
+              </span>
+              <div fxFlex="10px"></div>
+              <span fxFlex="none" fxLayout="column">
+                <span class="newVcenter-toggle-label">Disable Server Authentication</span>
+                <p-inputSwitch class="newVcenter-toggle" appendTo="body"
+                               [appErrorTooltip]="'DisableServerAuthentication flag can be used when a client does not want to authenticate a server.'"
+                               formControlName="disable-server-authentication"></p-inputSwitch>
+              </span>
+              <div fxFlex="10px"></div>
+              <span class="textarea">
+                <textarea fxFlex="100" formControlName="ca-data" class="newVcenter-textarea"
+                          appErrorTooltip spellcheck="false" type="text" pInputTextarea
+                          autoResize="autoResize" appFloatLabel="CA Bundle"></textarea>
               </span>
             </div>
             <div fxLayout="column" *ngSwitchCase="'token'" [@slideInOut]>

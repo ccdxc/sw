@@ -52,6 +52,9 @@ export class NewVcenterIntegrationComponent extends CreationForm<IOrchestrationO
     this.newObject.$formGroup.get(['spec', 'credentials', 'auth-type']).setValue(
       MonitoringExternalCred_auth_type['username-password']
     );
+    if (!this.isInline) {
+      this.newObject.$formGroup.get(['spec', 'credentials', 'disable-server-authentication']).setValue(true);
+    }
     this.setValidators(this.newObject);
     if (this.isInline) {
       this.processVcenterIntegration();
