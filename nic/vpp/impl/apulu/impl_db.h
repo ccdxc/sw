@@ -84,6 +84,7 @@ pds_impl_db_##obj##_entry_t * pds_impl_db_##obj##_get(type hw_id);
 
 pds_impl_db_device_entry_t * pds_impl_db_device_get(void);
 int pds_impl_db_vr_ip_mac_get (uint16_t subnet, uint32_t *vr_ip, uint8_t **vr_mac);
+int pds_impl_db_vr_ip_get (uint16_t subnet, uint32_t *vr_ip);
 
 #ifdef __cplusplus
 }

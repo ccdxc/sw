@@ -447,19 +447,40 @@ int
 pds_dhcp_client_tx_callback (vlib_main_t * vm, vlib_buffer_t *b)
 {
     udp_header_t *u0;
+    dhcp_header_t *d0;
     ip4_header_t *ip0;
+    dhcp_option_t *o, *end;
     u32 vrip=0, old0, new0;
     ip_csum_t sum0;
-    u16 vnic_id;
+    u16 vnic_id, subnet_id = 0;
+    u32 vr_ip = 0;
+    dhcp_relay_policy_t *policy = NULL;
 
     ip0 = vlib_buffer_get_current(b);
     u0 = (udp_header_t *)(ip0 + 1);
+    d0 = (dhcp_header_t *) (u0 + 1);
 
     // extract vnic and subnet info
     vnic_id = vnet_buffer(b)->pds_dhcp_data.vnic_id;
+    pds_vnic_subnet_get(vnic_id, &subnet_id);
+    policy = pds_dhcp_relay_policy_find(subnet_id);
     vnet_buffer(b)->pds_tx_data.ether_type = 0;
     vnet_buffer(b)->pds_tx_data.vnic_id = vnic_id;
     vnet_buffer(b)->pds_tx_data.nh_id = 0;
+
+    if (policy && policy->local_server) {
+        // In the DHCP proxy case, overwrite dhcp server identifier with vrip
+        o = d0->options;
+        end = (void *) vlib_buffer_get_tail (b);
+        while (o->option != DHCP_PACKET_OPTION_END && o < end) {
+            if (o->option == 54) {
+                pds_impl_db_vr_ip_get(subnet_id, &vr_ip);
+                *(u32 *)o->data = clib_host_to_net_u32(vr_ip);
+                break;
+            }
+            o = (dhcp_option_t *) (o->data + o->length);
+        }
+    }
 
     // set dest port
     u0->checksum = 0;

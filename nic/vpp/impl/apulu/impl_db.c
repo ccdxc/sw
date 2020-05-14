@@ -209,6 +209,17 @@ pds_impl_db_vr_ip_mac_get (uint16_t subnet, uint32_t *vr_ip, uint8_t **vr_mac)
 }
 
 int
+pds_impl_db_vr_ip_get (uint16_t subnet, uint32_t *vr_ip)
+{
+    pds_impl_db_subnet_entry_t *entry = pds_impl_db_subnet_get(subnet);
+    if (PREDICT_FALSE(!entry)) {
+        return -1;
+    }
+    *vr_ip = entry->vr_ip.ip4.data_u32;
+    return 0;
+}
+
+int
 pds_impl_db_device_set (const u8 *mac, const u8 *ip, u8 ip4,
                         u8 overlay_routing_en, u16 mapping_prio)
 {

@@ -16,6 +16,11 @@ int pds_impl_db_vr_ip_mac_get (uint16_t subnet, uint32_t *vr_ip, uint8_t **vr_ma
     return -1;
 }
 
+int pds_impl_db_vr_ip_get (uint16_t subnet, uint32_t *vr_ip)
+{
+    return -1;
+}
+
 #ifdef __cplusplus
 }
 #endif
