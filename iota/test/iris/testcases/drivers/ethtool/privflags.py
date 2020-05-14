@@ -47,7 +47,7 @@ def __checkDebugStatsDefault(host, intf):
     if "sw-dbg-stats: on" in cmd.stdout:
         api.Logger.error("sw-dbg-stats on by default interface %s" % intf)
         return api.types.status.FAILURE
-    else if "sw-dbg-stats: off" not in cmd.stdout:
+    elif "sw-dbg-stats: off" not in cmd.stdout:
         api.Logger.info("sw-dbg-stats not available on interface %s" % intf)
         return api.types.status.UNAVAIL
 
@@ -159,7 +159,7 @@ def Trigger(tc):
     for i in intfs:
         ret = __checkDebugStatsDefault(hosts[0], i)
         if ret == api.types.status.UNAVAIL:
-            ret = api.types.status.SUCCESS:
+            ret = api.types.status.SUCCESS
             continue
 
         if ret == api.types.status.SUCCESS:
