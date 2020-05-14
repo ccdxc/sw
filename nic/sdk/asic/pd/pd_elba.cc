@@ -22,7 +22,11 @@
 #include "lib/utils/time_profile.hpp"
 #include "platform/utils/mpartition.hpp"
 #include "platform/elba/elba_toeplitz.hpp"
-
+#include "include/sdk/crypto_apis.hpp"
+#include "platform/elba/elba_barco_rings.hpp"
+#include "platform/elba/elba_barco_sym_apis.hpp"
+#include "platform/elba/elba_barco_asym_apis.hpp"
+#include "platform/elba/elba_barco_crypto.hpp"
 // TODO: move out pipeline related code out of sdk
 #if defined(APOLLO) || defined(ARTEMIS) || defined(APULU) || defined(ATHENA)
 #include "gen/p4gen/p4plus_rxdma/include/p4plus_rxdma_p4pd.h"

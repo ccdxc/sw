@@ -6,6 +6,7 @@
 #include "platform/elba/elba_tm_rw.hpp"
 #include "platform/elba/elba_txs_scheduler.hpp"
 #include "platform/elba/elba_quiesce.hpp"
+#include "platform/elba/elba_barco_crypto.hpp"
 #include "nic/sdk/asic/rw/asicrw.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "include/sdk/mem.hpp"
@@ -449,6 +450,10 @@ elba_init (asic_cfg_t *cfg)
     ret = elba_repl_init(cfg);
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
                             "Elba replication init failure, err : %d", ret);
+
+    ret = elba_barco_crypto_init(cfg->platform);
+    SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
+                            "Elba barco crypto init failure, err : %d", ret);
 
 #if 0
     if (!cfg->loader_info_file.empty()) {

@@ -1,3 +1,5 @@
+// {C} Copyright 2020 Pensando Systems Inc. All rights reserved
+
 #ifndef __ELBA_BARCO_RINGS_HPP__
 #define __ELBA_BARCO_RINGS_HPP__
 
@@ -9,10 +11,10 @@ namespace sdk {
 namespace platform {
 namespace elba {
 
-    /* FIXME: These definitions used by the storage offload code are a dupliate of
-     * what's already defined in capri_barco_rings.hpp. The storage code needs to migrate to
-     * the common definitions and the following needs to be removed
-     */
+/* FIXME: These definitions used by the storage offload code are a dupliate of
+ * what's already defined in capri_barco_rings.hpp. The storage code needs to migrate to
+ * the common definitions and the following needs to be removed
+ */
 
 typedef struct barco_symm_descr_s {
     uint64_t                ilist_addr;
@@ -75,7 +77,6 @@ typedef enum barco_rings_e {
 } barco_rings_t;
 
 /* Asymmetric engine related definitions */
-
 typedef struct barco_asym_descriptor_s {
     uint64_t                input_list_addr;
     uint64_t                output_list_addr;
@@ -166,7 +167,6 @@ typedef struct barco_sym_msg_descriptor_s {
 }  __attribute__((__packed__)) barco_sym_msg_descriptor_t;
 
 /* Barco Asym DMA Descriptor allocator */
-
 sdk_ret_t pd_crypto_asym_dma_descr_alloc(uint64_t *asym_dma_descr);
 sdk_ret_t pd_crypto_asym_dma_descr_free(uint64_t asym_dma_descr);
 sdk_ret_t pd_crypto_asym_dma_descr_init(void);
@@ -229,7 +229,7 @@ sdk_ret_t elba_barco_asym_req_descr_get(uint32_t slot_index,
                                         barco_asym_descr_t *asym_req_descr);
 sdk_ret_t elba_barco_symm_req_descr_get(barco_rings_t ring_type,
                                         uint32_t slot_index,
-					 barco_symm_descr_t *symm_req_descr);
+                                        barco_symm_descr_t *symm_req_descr);
 sdk_ret_t elba_barco_ring_meta_get(barco_rings_t ring_type,
                                    uint32_t *pi, uint32_t *ci);
 
@@ -251,7 +251,7 @@ typedef struct elba_barco_user_cb_t_ {
  */
 static inline void
 elba_barco_req_enqueue (elba_barco_ring_t *barco_ring,
-			 void *user_ctx, barco_response_cb cb)
+             void *user_ctx, barco_response_cb cb)
 {
     barco_ring->user_cb[barco_ring->producer_idx].user_ctx = user_ctx;
     barco_ring->user_cb[barco_ring->producer_idx].resp_handler = cb;
@@ -346,4 +346,4 @@ using sdk::platform::elba::barco_asym_dma_descriptor_t;
 using sdk::platform::elba::barco_symm_req_descriptor_t;
 using sdk::platform::elba::barco_sym_msg_descriptor_t;
 
-#endif /* __ELBA_BARCO_RINGS_HPP__ */
+#endif // __ELBA_BARCO_RINGS_HPP__
