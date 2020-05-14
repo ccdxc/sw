@@ -36,6 +36,9 @@
 #define LIF_NAME_MAX_SZ			8
 #define MAX_VLAN_TAG 			4095
 
+/* Firmware minimum timeout. */
+#define IONIC_FW_MIN_TIMEOUT		(25 * 60)
+
 #define IONIC_GET_PCP(ifp) ((ifp->if_pcp == IFNET_PCP_NONE) ? 0 : ifp->if_pcp)
 
 struct ionic_adminq_stats {
@@ -497,6 +500,7 @@ int ionic_firmware_update(struct ionic_lif *lif, const void *const fw_data, size
 int ionic_lif_reset_stats(struct ionic_lif *lif);
 
 extern int ionic_devcmd_timeout;
+extern int ionic_fw_update_timeout;
 extern int ionic_rx_stride;
 extern int ionic_tx_stride;
 extern int ionic_rx_sg_size;

@@ -186,36 +186,36 @@ ionic_pci_init(struct pci_dev *pdev)
 {
 	struct device *dev = &pdev->dev;
 	struct ionic *ionic = pci_get_drvdata(pdev);
-	int err;
+	int error;
 
 	pci_set_master(pdev);
 	pci_enable_device(pdev);
 
-	err = pci_request_regions(pdev, DRV_NAME);
-	if (err) {
+	error = pci_request_regions(pdev, DRV_NAME);
+	if (error) {
 		IONIC_DEV_ERROR(dev, "Cannot request PCI regions, aborting\n");
-		return (err);
+		return (error);
 	}
 
-	err = pci_enable_io(pdev->dev.bsddev, SYS_RES_MEMORY);
-	if (err) {
+	error = pci_enable_io(pdev->dev.bsddev, SYS_RES_MEMORY);
+	if (error) {
 		IONIC_DEV_ERROR(dev, "Cannot enable PCI device, aborting\n");
 		pci_release_regions(pdev);
-		return (err);
+		return (error);
 	}
 
 	/* Set DMA mask for RDMA device. */
-	err = ionic_set_dma_mask(ionic);
-	if (err) {
+	error = ionic_set_dma_mask(ionic);
+	if (error) {
 		IONIC_DEV_ERROR(dev, "Cannot set DMA mask, aborting\n");
 		pci_release_regions(pdev);
-		return (err);
+		return (error);
 	}
 
-	err = ionic_map_bars(ionic);
-	if (err) {
+	error = ionic_map_bars(ionic);
+	if (error) {
 		pci_release_regions(pdev);
-		return (err);
+		return (error);
 	}
 
 	return (0);
@@ -226,6 +226,7 @@ ionic_pci_deinit(struct pci_dev *pdev)
 {
 
 	pci_release_regions(pdev);
+	pci_clear_master(pdev);
 }
 
 /*
@@ -283,7 +284,7 @@ ionic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 {
 	struct device *dev = &pdev->dev;
 	struct ionic *ionic;
-	int err;
+	int error;
 
 	ionic = malloc(sizeof(*ionic), M_IONIC, M_WAITOK | M_ZERO);
 	if (!ionic)
@@ -297,92 +298,98 @@ ionic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 
 	ionic->is_mgmt_nic = ent->device == PCI_DEVICE_ID_PENSANDO_IONIC_ETH_MGMT;
 
-	err = ionic_pci_init(pdev);
-	if (err) {
-		goto err_out_unmap_bars;
+	error = ionic_pci_init(pdev);
+	if (error) {
+		goto err_out_clear_devdata;
 	}
 
 	snprintf(ionic->sx_name, sizeof(ionic->sx_name), "ionic-%s", device_get_nameunit(dev->bsddev));
 	IONIC_DEV_LOCK_INIT(ionic);
+
 	/* Configure the device */
-	err = ionic_dev_setup(ionic);
-	if (err) {
-		IONIC_DEV_ERROR(dev, "Cannot setup device, aborting\n");
+	error = ionic_dev_setup(ionic);
+	if (error) {
+		IONIC_DEV_ERROR(dev, "Cannot setup device, error: %d\n", error);
 		goto err_out_unmap_bars;
 	}
 
-	err = ionic_identify(ionic);
-	if (err) {
-		IONIC_DEV_ERROR(dev, "Cannot identify device, aborting\n");
+	error = ionic_reset(ionic);
+	if (error) {
+		IONIC_DEV_ERROR(dev, "Failed to reset device, error: %d\n", error);
+		goto err_out_unmap_bars;
+	}
+	error = ionic_identify(ionic);
+	if (error) {
+		IONIC_DEV_ERROR(dev, "Cannot identify device, error: %d\n", error);
 		goto err_out_unmap_bars;
 	}
 
-	err = ionic_init(ionic);
-	if (err) {
-		IONIC_DEV_ERROR(dev, "Cannot init device, aborting\n");
+	error = ionic_init(ionic);
+	if (error) {
+		IONIC_DEV_ERROR(dev, "Cannot init device, error: %d\n", error);
 		goto err_out_unmap_bars;
 	}
 
 	/* Configure the ports */
-	err = ionic_port_identify(ionic);
-	if (err) {
-		dev_err(dev, "Cannot identify port: %d, aborting\n", err);
+	error = ionic_port_identify(ionic);
+	if (error) {
+		dev_err(dev, "Cannot identify port, error: %d\n", error);
 		goto err_out_unmap_bars;
 	}
 
-	err = ionic_port_init(ionic);
-	if (err) {
-		dev_err(dev, "Cannot init port: %d, aborting\n", err);
+	error = ionic_port_init(ionic);
+	if (error) {
+		dev_err(dev, "Cannot init port, error: %d\n", error);
 		goto err_out_unmap_bars;
 	}
 
 	/* Qos */
-	err = ionic_qos_init(ionic);
-	if (err) {
-		dev_err(dev, "Cannot identify qos configuration: %d, aborting\n", err);
+	error = ionic_qos_init(ionic);
+	if (error) {
+		dev_err(dev, "Cannot identify qos configuration, error: %d\n", error);
 		goto err_out_unmap_bars;
 	}
 
 	/* Configure LIFs */
-	err = ionic_lif_identify(ionic);
-	if (err) {
-		dev_err(dev, "Cannot identify LIFs: %d, aborting\n", err);
+	error = ionic_lif_identify(ionic);
+	if (error) {
+		dev_err(dev, "Cannot identify LIFs, error: %d\n", error);
 		goto err_out_unmap_bars;
 	}
 
-	err = ionic_txq_identify(ionic, 1);
-	if (err) {
-		dev_err(dev, "Cannot identify txq v1, falling back to v0: err %d\n", err);
+	error = ionic_txq_identify(ionic, 1);
+	if (error) {
+		dev_err(dev, "Cannot identify txq v1, falling back to v0: error: %d\n", error);
 	}
 
-	err = ionic_lifs_size(ionic);
-	if (err) {
-		IONIC_DEV_ERROR(dev, "Cannot size LIFs, aborting\n");
+	error = ionic_lifs_size(ionic);
+	if (error) {
+		IONIC_DEV_ERROR(dev, "Cannot size LIFs, error: %d\n", error);
 		goto err_out_unmap_bars;
 	}
 
-	err = ionic_lifs_alloc(ionic);
-	if (err) {
-		IONIC_DEV_ERROR(dev, "Cannot allocate LIFs, aborting\n");
+	error = ionic_lifs_alloc(ionic);
+	if (error) {
+		IONIC_DEV_ERROR(dev, "Cannot allocate LIFs, error: %d\n", error);
 		goto err_out_free_lifs;
 	}
 
-	err = ionic_lifs_init(ionic);
-	if (err) {
-		IONIC_DEV_ERROR(dev, "Cannot init LIFs, aborting\n");
+	error = ionic_lifs_init(ionic);
+	if (error) {
+		IONIC_DEV_ERROR(dev, "Cannot init LIFs, error: %d\n", error);
 		goto err_out_deinit_lifs;
 	}
 
-	err = ionic_lifs_register(ionic);
-	if (err) {
-		IONIC_DEV_ERROR(dev, "Cannot register LIFs, aborting\n");
+	error = ionic_lifs_register(ionic);
+	if (error) {
+		IONIC_DEV_ERROR(dev, "Cannot register LIFs, error: %d\n", error);
 		goto err_out_deinit_lifs;
 	}
 
 	/* Configure command and firmware watchdogs */
-	err = ionic_wdog_init(ionic);
-	if (err) {
-		 IONIC_DEV_ERROR(dev, "Cannot start device watchdogs\n");
+	error = ionic_wdog_init(ionic);
+	if (error) {
+		 IONIC_DEV_ERROR(dev, "Cannot start device watchdogs, error: %d\n", error);
 	}
 
 	pci_save_state(pdev->dev.bsddev);
@@ -397,12 +404,14 @@ err_out_free_lifs:
 err_out_unmap_bars:
 	ionic_unmap_bars(ionic);
 	ionic_pci_deinit(pdev);
+	IONIC_DEV_LOCK_DESTROY(ionic);
+err_out_clear_devdata:
 	pci_set_drvdata(pdev, NULL);
 
 	free(ionic->idev.cmb_inuse, M_IONIC);
 	free(ionic, M_IONIC);
 
-	return (err);
+	return (error);
 }
 
 static void

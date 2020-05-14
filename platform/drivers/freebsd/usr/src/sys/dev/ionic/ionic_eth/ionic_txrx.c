@@ -75,11 +75,15 @@ TUNABLE_INT("hw.ionic.max_queues", &ionic_max_queues);
 SYSCTL_INT(_hw_ionic, OID_AUTO, max_queues, CTLFLAG_RDTUN,
     &ionic_max_queues, 0, "Number of Queues");
 
-/* XXX: 60 seconds for firmware update */
-int ionic_devcmd_timeout = 60;
+int ionic_devcmd_timeout = 5;
 TUNABLE_INT("hw.ionic.devcmd_timeout", &ionic_devcmd_timeout);
 SYSCTL_INT(_hw_ionic, OID_AUTO, devcmd_timeout, CTLFLAG_RWTUN,
-    &ionic_devcmd_timeout, 0, "Timeout in seconds for devcmd");
+    &ionic_devcmd_timeout, 0, "Timeout in seconds for dev and admin cmd");
+
+int ionic_fw_update_timeout = IONIC_FW_MIN_TIMEOUT;
+TUNABLE_INT("hw.ionic.fw_update_timeout", &ionic_fw_update_timeout);
+SYSCTL_INT(_hw_ionic, OID_AUTO, fw_update_timeout, CTLFLAG_RWTUN,
+    &ionic_fw_update_timeout, 0, "Timeout in seconds for firmware update");
 
 int ionic_enable_msix = 1;
 TUNABLE_INT("hw.ionic.enable_msix", &ionic_enable_msix);
@@ -3623,7 +3627,7 @@ ionic_firmware_update2(struct ionic_lif *lif)
 		return (0);
 	}
 
-	time = jiffies;
+	time = jiffies / HZ;
 	if ((fw = firmware_get("ionic_fw")) == NULL) {
 		IONIC_NETDEV_ERROR(ifp, "Could not find firmware image\n");
 		return (ENOENT);
@@ -3639,7 +3643,7 @@ ionic_firmware_update2(struct ionic_lif *lif)
 		    ionic_fw_update_ver);
 	}
 
-	if_printf(ifp, "firmware update took %ld secs\n", (jiffies - time)/HZ);
+	if_printf(ifp, "firmware update took %ld secs\n", (jiffies / HZ - time));
 	firmware_put(fw, FIRMWARE_UNLOAD);
 
 	return (err);

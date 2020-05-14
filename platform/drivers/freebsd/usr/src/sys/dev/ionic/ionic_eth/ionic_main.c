@@ -430,7 +430,7 @@ ionic_adminq_post_wait(struct ionic_lif *lif, struct ionic_admin_ctx *ctx)
 	struct ionic_adminq *adminq = lif->adminq;
 	struct ifnet *ifp = lif->netdev;
 	struct ionic_dev *idev = &lif->ionic->idev;
-	int err, remaining, processed;
+	int err, remaining, processed, timeout;
 	const char *name;
 
 	KASSERT(IONIC_LIF_LOCK_OWNED(lif), ("%s lif not locked", lif->name));
@@ -447,8 +447,20 @@ ionic_adminq_post_wait(struct ionic_lif *lif, struct ionic_admin_ctx *ctx)
 		return (err);
 	}
 
+	if ((ctx->cmd.cmd.opcode == IONIC_CMD_FW_DOWNLOAD) ||
+		(ctx->cmd.cmd.opcode == IONIC_CMD_FW_CONTROL)) {
+		timeout = ionic_fw_update_timeout;
+		if (timeout < IONIC_FW_MIN_TIMEOUT) {
+			if_printf(ifp, "Firmware timeout: %d is low, using default value\n", timeout);
+			timeout = IONIC_FW_MIN_TIMEOUT;
+			ionic_fw_update_timeout = timeout;
+		}
+	} else {
+		timeout = ionic_devcmd_timeout;
+	}
+
 	remaining = wait_for_completion_timeout(&ctx->work,
-						ionic_devcmd_timeout * HZ);
+						timeout * HZ);
 	if (remaining == 0) {
 		/* Check again in case the interrupt was missed */
 		IONIC_ADMIN_LOCK(adminq);
