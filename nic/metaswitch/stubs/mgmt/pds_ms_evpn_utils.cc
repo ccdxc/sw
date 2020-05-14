@@ -563,6 +563,9 @@ evpn_ip_vrf_pre_set (EvpnIpVrfSpec &req,
             req.set_routermac(std::string(
                 reinterpret_cast< char const* >(spec->vr_mac), ETH_ADDR_LEN));
         } // end of state context
+        // Set to false to prevent the type-2 host routes from being programmed
+        // into the per-VRF routing table
+        req.set_pgmhostroutes(false);
     } else {
         // Non Venice case
         // TODO: spec uuid doesnt match with subnet uuid. need to key-map

@@ -18,6 +18,14 @@ using ms_hw_tbl_id_t = uint32_t; // Used as DP correlator in MS
 
 #define PDS_MS_ECMP_INVALID_INDEX 0
 
+#define MS_LIST_GET_FIRST(ips, list_ptr, list_type) \
+       (list_type*) \
+            NTL_OFF_LIST_TRAVERSE((ips), (list_ptr), NULL)
+
+#define MS_LIST_GET_NEXT(ips, list_ptr, cur_obj, list_type) \
+       (list_type*) \
+            NTL_OFF_LIST_TRAVERSE((ips), (list_ptr), cur_obj)
+
 }
 
 #endif

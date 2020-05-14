@@ -6,6 +6,7 @@
 #ifndef __PDS_MS_BD_STORE_HPP__
 #define __PDS_MS_BD_STORE_HPP__
 
+#include "nic/metaswitch/stubs/common/pds_ms_hal_wait_state.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_mac_store.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_defs.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_object_store.hpp"
@@ -47,6 +48,26 @@ private:
 };
 
 class bd_store_t : public obj_store_t <ms_bd_id_t, bd_obj_t> {
+public:
+    bool add_upd(const ms_bd_id_t& key, bd_obj_t* obj) {
+        auto create = obj_store_t<ms_bd_id_t, bd_obj_t>::add_upd(key, obj);
+        if (create) {
+            hal_wait_state_t::add_bd_id(key);
+        }
+        return create;
+    }
+    bool add_upd(const ms_bd_id_t& key, std::unique_ptr<bd_obj_t>&& obj) {
+        auto create = obj_store_t<ms_bd_id_t, bd_obj_t>::add_upd(key, std::move(obj));
+        if (create) {
+            hal_wait_state_t::add_bd_id(key);
+        }
+        return create;
+    }
+    bool erase(const ms_bd_id_t& key) {
+        // Notify gRPC thread before erasing store
+        hal_wait_state_t::del_bd_id(key);
+        return obj_store_t<ms_bd_id_t, bd_obj_t>::erase(key);
+    }
 };
 
 void bd_slab_init (slab_uptr_t slabs[], sdk::lib::slab_id_t slab_id);

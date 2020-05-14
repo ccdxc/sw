@@ -72,7 +72,7 @@ void li_vrf_t::parse_ips_info_(ATG_LIPI_VRF_ADD_UPDATE* vrf_add_upd_ips) {
 void li_vrf_t::fetch_store_info_(pds_ms::state_t* state) {
     store_info_.vpc_obj = state->vpc_store().get(ips_info_.vrf_id);
     if (likely(store_info_.vpc_obj != nullptr) && !op_delete_) {
-        op_create_ = !store_info_.vpc_obj->properties().hal_created;
+        op_create_ = !store_info_.vpc_obj->hal_created();
     }
 }
 
@@ -234,7 +234,7 @@ NBB_BYTE li_vrf_t::handle_add_upd_ips(ATG_LIPI_VRF_ADD_UPDATE* vrf_add_upd_ips) 
                 auto state_ctxt = pds_ms::state_t::thread_context();
                 auto vpc_obj = state_ctxt.state()->vpc_store().get(l_vrf_id);
                 if (vpc_obj != nullptr) {
-                    vpc_obj->properties().hal_created = false;
+                    vpc_obj->set_hal_created(false);
                 }
             }
             if (unlikely(ips_mock)) return; // UT
@@ -287,7 +287,7 @@ NBB_BYTE li_vrf_t::handle_add_upd_ips(ATG_LIPI_VRF_ADD_UPDATE* vrf_add_upd_ips) 
         // Set the HAL created flag into the Store to ensure that subsequent
         // updates are sent to HAL as PDS updates rather than PDS creates
         if (op_create_) {
-            store_info_.vpc_obj->properties().hal_created = true;
+            store_info_.vpc_obj->set_hal_created();
         }
     } // End of state thread_context
       // Do Not access/modify global state after this
@@ -314,7 +314,7 @@ sdk_ret_t li_vrf_t::update_pds_synch(state_t::context_t&& in_state_ctxt,
         ips_info_.vrf_id = vpc_obj->properties().vrf_id;
         store_info_.vpc_obj = vpc_obj;
 
-        if (unlikely(!store_info_.vpc_obj->properties().hal_created)) {
+        if (unlikely(!store_info_.vpc_obj->hal_created())) {
             // LI VRF has not created the VPC in PDS HAL yet.
             // When the PDS Create is pushed, LI VRF will use the latest cached
             // VPC spec
@@ -357,13 +357,14 @@ void li_vrf_t::handle_delete(const NBB_BYTE* vrf_name, NBB_ULONG vrf_name_len) {
     ips_info_.vrf_id = vrfname_2_vrfid(vrf_name, vrf_name_len);
 
     pds_obj_key_t vpc_uuid = {0};
+    cookie_t* cookie = nullptr;
 
     { // Enter thread-safe context to access/modify global state
         auto state_ctxt = pds_ms::state_t::thread_context();
         fetch_store_info_(state_ctxt.state());
 
         if(store_info_.vpc_obj == nullptr ||
-           !store_info_.vpc_obj->properties().hal_created) {
+           !store_info_.vpc_obj->hal_created()) {
             PDS_TRACE_INFO ("Delete IPS for unknown MS VRF %d", ips_info_.vrf_id);
             return;
         }
@@ -379,40 +380,48 @@ void li_vrf_t::handle_delete(const NBB_BYTE* vrf_name, NBB_ULONG vrf_name_len) {
         // Cannot add VPC Delete to an existing batch
         state_ctxt.state()->flush_outstanding_pds_batch();
 
-        // Ensure that VPC is actually deleted before releasing the VPC UUID
-        if (store_info_.vpc_obj->properties().spec_invalid) {
-            PDS_TRACE_DEBUG ("MS VRF %d UUID %s Release", ips_info_.vrf_id, vpc_uuid.str());
-            auto mgmt_ctxt = mgmt_state_t::thread_context();
-            mgmt_ctxt.state()->remove_uuid(vpc_uuid);
+        auto vrf_id = ips_info_.vrf_id;
+        cookie_uptr_->send_ips_reply = 
+            [vrf_id, vpc_uuid] (bool pds_status, bool test) -> void {
+                // ----------------------------------------------------------------
+                // This block is executed asynchronously when PDS response is rcvd
+                // ----------------------------------------------------------------
+                PDS_TRACE_DEBUG("+++++++  VPC %s MS VRF %d Delete: Rcvd Async PDS"
+                                " response %s +++++++++",
+                                vpc_uuid.str(), vrf_id,
+                                (pds_status) ? "Success" : "Failure");
+            };
+
+        // All processing complete, only batch commit remains - 
+        // safe to release the cookie_uptr_ unique_ptr
+        cookie = cookie_uptr_.release();
+        auto ret = learn::api_batch_commit(pds_bctxt_guard.release());
+        if (unlikely (ret != SDK_RET_OK)) {
+            delete cookie;
+            PDS_TRACE_ERR ("Batch commit failed for delete MS VRF %d err=%d",
+                           ips_info_.vrf_id, ret);
+            hal_wait_state_t::del_vrf_id(ips_info_.vrf_id);
+            return;
         }
+        PDS_TRACE_DEBUG ("MS VRF %d: Delete PDS Batch commit successful", ips_info_.vrf_id);
+
         // Delete the VRF route table
         state_ctxt.state()->route_table_store().erase(make_pds_rttable_key_());
-        state_ctxt.state()->vpc_store().erase(ips_info_.vrf_id);
+
+        // Ensure that VPC is actually deleted before releasing the VPC UUID
+        if (store_info_.vpc_obj->properties().spec_invalid) {
+            PDS_TRACE_DEBUG ("MS VRF %d VPC UUID %s Release",
+                             ips_info_.vrf_id, vpc_uuid.str());
+            auto mgmt_ctxt = mgmt_state_t::thread_context();
+            mgmt_ctxt.state()->remove_uuid(vpc_uuid);
+
+            state_ctxt.state()->vpc_store().erase(ips_info_.vrf_id);
+        } else {
+            // Internal VRF delete triggered by MS
+            store_info_.vpc_obj->set_hal_created(false);
+        }
     } // End of state thread_context
       // Do Not access/modify global state after this
-
-    auto vrf_id = ips_info_.vrf_id;
-    cookie_uptr_->send_ips_reply = 
-        [vrf_id, vpc_uuid] (bool pds_status, bool test) -> void {
-            // ----------------------------------------------------------------
-            // This block is executed asynchronously when PDS response is rcvd
-            // ----------------------------------------------------------------
-            PDS_TRACE_DEBUG("+++++++  VPC %s MS VRF %d Delete: Rcvd Async PDS"
-                            " response %s +++++++++",
-                            vpc_uuid.str(), vrf_id,
-                            (pds_status) ? "Success" : "Failure");
-        };
-    // All processing complete, only batch commit remains - 
-    // safe to release the cookie_uptr_ unique_ptr
-    auto cookie = cookie_uptr_.release();
-    auto ret = learn::api_batch_commit(pds_bctxt_guard.release());
-    if (unlikely (ret != SDK_RET_OK)) {
-        delete cookie;
-        throw Error(std::string("Batch commit failed for delete MS VRF ")
-                    .append(std::to_string(ips_info_.vrf_id))
-                    .append(" err=").append(std::to_string(ret)));
-    }
-    PDS_TRACE_DEBUG ("MS VRF %d: Delete PDS Batch commit successful", ips_info_.vrf_id);
 }
 
 sdk_ret_t

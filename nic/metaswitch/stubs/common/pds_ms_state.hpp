@@ -28,6 +28,7 @@
 #include <mutex>
 #include <memory>
 #include <unordered_set>
+#include <condition_variable>
 
 #define PDS_BATCH_PARAMS_EPOCH  1
 #define PDS_BATCH_PARAMS_ASYNC  true
@@ -91,7 +92,6 @@ public:
     // global stub state. Automatic release when the context goes
     // out of scope. Direct external access to Stub state without
     // a context is prohibited.
-    // Calling this more than once from the same thread will deadlock.
     static context_t thread_context(void) {
         SDK_ASSERT(g_state_ != nullptr);
         return context_t(g_mtx_, g_state_);
@@ -221,6 +221,7 @@ std::pair<ip_addr_t,bool>
 state_indirect_ps_lookup_and_map_dpcorr (state_t* state,
                                          ms_ps_id_t indirect_pathset,
                                          ms_hw_tbl_id_t direct_ps_dpcorr);
+
 } // End namespace
 
 #endif

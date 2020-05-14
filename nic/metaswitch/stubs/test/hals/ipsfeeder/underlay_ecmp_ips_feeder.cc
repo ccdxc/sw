@@ -100,6 +100,7 @@ underlay_ecmp_ips_feeder_t::generate_add_upd_ips(void) {
     // generate_ips_header (add_upd); 
     NBB_CORR_PUT_VALUE(add_update_ips->pathset_id, pathset_id);
     add_update_ips->cascaded = ATG_YES;
+    add_update_ips->max_num_next_hop_objects = 2;
 
     bool reset_bh = false;
     if (bh) {

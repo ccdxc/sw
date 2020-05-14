@@ -208,6 +208,14 @@ fi
 echo "Originate EVPN Type 5 route from "$CONTAINER"2"
 
 docker exec -it "$CONTAINER"2 sh -c "python /sw/nic/third-party/metaswitch/code/comn/tools/mibapi/metaswitch/cam/mib.py set localhost rtmRedistTable rtmRedistFteIndex=2 rtmRedistEntryId=10 rtmRedistRowStatus=createAndGo rtmRedistAdminStat=adminStatusUp  rtmRedistInfoSrc=atgQcProtStatic  rtmRedistInfoDest=atgQcProtBgp rtmRedistDestInstFlt=true rtmRedistDestInst=2  rtmRedistRedistFlag=true"
+docker exec -it "$CONTAINER"2 sh -c "python /sw/nic/third-party/metaswitch/code/comn/tools/mibapi/metaswitch/cam/mib.py set localhost limL3InterfaceAddressTable \
+                                     limEntEntityIndex=1 \
+                                     limL3InterfaceAddressIfIndex=1073823745 \
+                                     limL3InterfaceAddressIPAddrType=inetwkAddrTypeIpv4 \
+                                     limL3InterfaceAddressIPAddress=12.0.0.254 \
+                                     limL3InterfaceAddressRowStatus=rowCreateAndGo \
+                                     limL3InterfaceAddressAdminStatus=adminStatusUp \
+                                     limL3InterfaceAddressPrefixLen=24"
 
 docker exec -it "$CONTAINER"2 sh -c "python /sw/nic/third-party/metaswitch/code/comn/tools/mibapi/metaswitch/cam/mib.py set localhost rtmStaticRtTable rtmStaticRtFteIndex=2 rtmStaticRtDestAddrType=inetwkAddrTypeIpv4 rtmStaticRtDestAddr=0x80100000 rtmStaticRtDestLen=16 rtmStaticRtNextHopType=inetwkAddrTypeIpv4 rtmStaticRtNextHop=0x0c00000f rtmStaticRtIfIndex=0 rtmStaticRtRowStatus=createAndGo rtmStaticRtAdminStat=adminStatusUp rtmStaticRtOverride=true rtmStaticRtAdminDist=150"
 
@@ -215,6 +223,14 @@ if [ $RR == 0 ]; then
     echo "Originate EVPN Type 5 route from "$CONTAINER"3"
 
     docker exec -it "$CONTAINER"3 sh -c "python /sw/nic/third-party/metaswitch/code/comn/tools/mibapi/metaswitch/cam/mib.py set localhost rtmRedistTable rtmRedistFteIndex=2 rtmRedistEntryId=10 rtmRedistRowStatus=createAndGo rtmRedistAdminStat=adminStatusUp  rtmRedistInfoSrc=atgQcProtStatic  rtmRedistInfoDest=atgQcProtBgp rtmRedistDestInstFlt=true rtmRedistDestInst=2  rtmRedistRedistFlag=true"
+    docker exec -it "$CONTAINER"3 sh -c "python /sw/nic/third-party/metaswitch/code/comn/tools/mibapi/metaswitch/cam/mib.py set localhost limL3InterfaceAddressTable \
+                                     limEntEntityIndex=1 \
+                                     limL3InterfaceAddressIfIndex=1073823745 \
+                                     limL3InterfaceAddressIPAddrType=inetwkAddrTypeIpv4 \
+                                     limL3InterfaceAddressIPAddress=12.0.0.254 \
+                                     limL3InterfaceAddressRowStatus=rowCreateAndGo \
+                                     limL3InterfaceAddressAdminStatus=adminStatusUp \
+                                     limL3InterfaceAddressPrefixLen=24"
 
     docker exec -it "$CONTAINER"3 sh -c "python /sw/nic/third-party/metaswitch/code/comn/tools/mibapi/metaswitch/cam/mib.py set localhost rtmStaticRtTable rtmStaticRtFteIndex=2 rtmStaticRtDestAddrType=inetwkAddrTypeIpv4 rtmStaticRtDestAddr=0x80100000 rtmStaticRtDestLen=16 rtmStaticRtNextHopType=inetwkAddrTypeIpv4 rtmStaticRtNextHop=0x0c00000e rtmStaticRtIfIndex=0 rtmStaticRtRowStatus=createAndGo rtmStaticRtAdminStat=adminStatusUp rtmStaticRtOverride=true rtmStaticRtAdminDist=150"
 fi

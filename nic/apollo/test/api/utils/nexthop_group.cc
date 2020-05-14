@@ -116,6 +116,8 @@ bool nh_spec_compare(pds_nexthop_spec_t spec1, pds_nexthop_spec_t spec2)
         if (spec1.tep != spec2.tep)
             return false;
         break;
+    case PDS_NH_TYPE_BLACKHOLE:
+        break;
     default:
         assert(0);
         break;

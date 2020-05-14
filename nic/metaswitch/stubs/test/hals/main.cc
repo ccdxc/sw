@@ -238,14 +238,14 @@ TEST_F(pds_ms_hals_test, underlay_ecmp_test) {
     // Valid -> BH
     std::cout << "=== Valid -> BH test ===" << std::endl;
     underlay_ecmp_input->set_bh();
-    test_output->expect_delete();
+    test_output->expect_update();
     test_input->trigger_update();
     test_output->validate();
 
     // BH -> Valid
     std::cout << "=== BH -> Valid test ===" << std::endl;
     underlay_ecmp_input->reset_bh();
-    test_output->expect_create();
+    test_output->expect_update();
     test_input->trigger_update();
     test_output->validate();
 
@@ -444,7 +444,7 @@ TEST(pds_ms_ip_track_test, crud_test) {
     track.addr.v4_addr = 0x0a000001;
     track.af = IP_AF_IPV4;
   
-   int repeat = 2000; 
+   int repeat = 2000;
     for (int i=0; i< repeat; ++i) { 
         pds_ms::ip_track_add(track, OBJ_ID_MIRROR_SESSION);
         track.addr.v4_addr += 1;

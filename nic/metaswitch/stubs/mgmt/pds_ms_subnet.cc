@@ -6,6 +6,7 @@
 #include "nic/metaswitch/stubs/mgmt/pds_ms_uuid_obj.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/mgmt/pds_ms_internal_utils_gen.hpp"
 #include "gen/proto/internal.pb.h"
+#include "nic/metaswitch/stubs/common/pds_ms_hal_wait_state.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_state.hpp"
@@ -417,7 +418,7 @@ subnet_delete (pds_obj_key_t &key, pds_batch_ctxt_t bctxt)
 {
     types::ApiStatus ret_status;
     ms_bd_id_t bd_id = 0;
-    bool delete_completed = false;
+    bool marked_for_del = false;
     pds_subnet_spec_t *spec;
 
     // lock to allow only one grpc thread processing at a time
@@ -442,6 +443,7 @@ subnet_delete (pds_obj_key_t &key, pds_batch_ctxt_t bctxt)
     
         // Mark as deleted so that L2F stub can release the Subnet UUID
         cache_subnet_spec (spec, bd_id, pds_ms_subnet_cache_op_t::MARK_DEL);
+        marked_for_del = true;
 
         ret_status = process_subnet_update (spec, bd_id, AMB_ROW_DESTROY);
         if (ret_status != types::ApiStatus::API_STATUS_OK) {
@@ -452,7 +454,13 @@ subnet_delete (pds_obj_key_t &key, pds_batch_ctxt_t bctxt)
                            spec->key.str(), bd_id, ret_status);
             return pds_ms_api_to_sdk_ret (ret_status);
         }
-        delete_completed = true;
+
+        PDS_TRACE_DEBUG ("subnet %s bd %d delete wait for batch commit to HAL",
+                         spec->key.str(), bd_id);
+        // Block until the Subnet is deleted from the HAL from the stub
+        hal_wait_state_t::wait ([bd_id] () -> bool {
+            return (!hal_wait_state_t::has_bd_id_non_reentrant_(bd_id));
+        });
 
         mgmt_reset_vni(spec->fabric_encap.val.vnid);
         if (cache_subnet_spec (spec, bd_id, pds_ms_subnet_cache_op_t::COMMIT_DEL)) {
@@ -469,7 +477,7 @@ subnet_delete (pds_obj_key_t &key, pds_batch_ctxt_t bctxt)
     } catch (const Error& e) {
         PDS_TRACE_ERR ("Subnet %s deletion failed %s",
                         spec->key.str(), e.what());
-        if (bd_id != 0 && !delete_completed) {
+        if (bd_id != 0 && !marked_for_del) {
             cache_subnet_spec (spec, bd_id,
                                pds_ms_subnet_cache_op_t::REVERT_MARK_DEL);
         }
@@ -478,60 +486,88 @@ subnet_delete (pds_obj_key_t &key, pds_batch_ctxt_t bctxt)
     return SDK_RET_OK;
 }
 
-static void
-parse_subnet_update (pds_subnet_spec_t *spec, ms_bd_id_t bd_id,
+static bool
+parse_subnet_update (pds_subnet_spec_t *old_spec, ms_bd_id_t bd_id,
                      subnet_upd_flags_t& ms_upd_flags)
 {
     bool fastpath = false;
+
     // Enter thread-safe context to access/modify global state
     auto state_ctxt = state_t::thread_context();
     auto subnet_obj = state_ctxt.state()->subnet_store().get(bd_id);
     if (subnet_obj == nullptr) {
         throw Error(std::string("Store lookup failed for subnet ")
-                    .append(spec->key.str()).append(" bd ")
+                    .append(old_spec->key.str()).append(" bd ")
                     .append(std::to_string(bd_id)), SDK_RET_ENTRY_NOT_FOUND);
     }
 
-    auto& state_pds_spec = subnet_obj->spec();
-    if (memcmp (&state_pds_spec.fabric_encap, &spec->fabric_encap,
+    // Make a copy to identify diff
+    auto state_pds_spec = subnet_obj->spec();
+
+    if (memcmp (&state_pds_spec.fabric_encap, &old_spec->fabric_encap,
                 sizeof(state_pds_spec.fabric_encap)) != 0) {
         ms_upd_flags.bd = true;
-        PDS_TRACE_INFO("Subnet %s BD %d VNI change - Old %d New %d",
-                       spec->key.str(), bd_id,
+        PDS_TRACE_INFO("Subnet %s BD %d VNI change - New %d Old %d",
+                       old_spec->key.str(), bd_id,
                        state_pds_spec.fabric_encap.val.vnid,
-                       spec->fabric_encap.val.vnid);
-        state_pds_spec.fabric_encap = spec->fabric_encap;
+                       old_spec->fabric_encap.val.vnid);
+        state_pds_spec.fabric_encap = old_spec->fabric_encap;
     }
-    if (state_pds_spec.host_if != spec->host_if) {
+    if (state_pds_spec.host_if != old_spec->host_if) {
         ms_upd_flags.bd_if = true;
-        PDS_TRACE_INFO("Subnet %s BD %d Host If change - Old %s New %s",
-                       spec->key.str(), bd_id, state_pds_spec.host_if.str(),
-                       spec->host_if.str());
-        ms_upd_flags.prev_host_if = state_pds_spec.host_if;
-        state_pds_spec.host_if = spec->host_if;
+        PDS_TRACE_INFO("Subnet %s BD %d Host If change - New %s Old %s",
+                       old_spec->key.str(), bd_id, state_pds_spec.host_if.str(),
+                       old_spec->host_if.str());
+        ms_upd_flags.prev_host_if = old_spec->host_if;
+        state_pds_spec.host_if = old_spec->host_if;
     }
 
     // Diff in any other property needs to be driven through fastpath
-    if (memcmp(&state_pds_spec, spec, sizeof(*spec)) != 0) {
+    if (memcmp(&state_pds_spec, old_spec, sizeof(*old_spec)) != 0) {
         PDS_TRACE_INFO("Subnet %s BD %d fastpath parameter change",
-                       spec->key.str(), bd_id);
+                       old_spec->key.str(), bd_id);
         fastpath = true;
     }
-    // Update the cached subnet spec with the new info
-    state_pds_spec = *spec;
 
     if (fastpath) {
         // Stub takes care of sequencing if create has not yet been
         // received from MS.
+        // State lock is released within this before the HAL batch commit
+        // to avoid holding the state lock during synchronous commit
         auto ret = l2f_bd_update_pds_synch(std::move(state_ctxt),
                                            bd_id, subnet_obj);
         // Do not state_ctxt has been released above
         // Do not access global state beyond this
         if (ret != SDK_RET_OK) {
             throw Error(std::string("Failed to update fastpath fields for Subnet ")
-                        .append(spec->key.str()).append(" BD ")
+                        .append(old_spec->key.str()).append(" BD ")
                         .append(std::to_string(bd_id)), ret);
         }
+    }
+    return fastpath;
+}
+
+static pds_subnet_spec_t
+cache_update_subnet_spec_ (pds_subnet_spec_t& spec, ms_bd_id_t bd_id)
+{
+    auto state_ctxt = state_t::thread_context();
+    auto subnet_obj = state_ctxt.state()->subnet_store().get(bd_id);
+    auto old = subnet_obj->spec();
+    subnet_obj->spec() = spec;
+    return old;
+}
+
+static void
+revert_subnet_update_ (pds_subnet_spec_t& old_subnet_spec, ms_bd_id_t bd_id,
+                       bool fastpath)
+{
+    auto state_ctxt = state_t::thread_context();
+    auto subnet_obj = state_ctxt.state()->subnet_store().get(bd_id);
+    subnet_obj->spec() = old_subnet_spec; 
+    if (fastpath) {
+        PDS_TRACE_ERR ("Subnet %s Reverting fastpath update",
+                       old_subnet_spec.key.str());
+        l2f_bd_update_pds_synch(std::move(state_ctxt), bd_id, subnet_obj);
     }
 }
 
@@ -540,7 +576,10 @@ subnet_update (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
 {
     subnet_upd_flags_t  ms_upd_flags;
     types::ApiStatus ret_status;
-    ms_bd_id_t bd_id;
+    ms_bd_id_t bd_id = 0;
+    bool fastpath = false;
+    bool cache_updated = false;
+    pds_subnet_spec_t old_subnet_spec;
 
     // lock to allow only one grpc thread processing at a time
     std::lock_guard<std::mutex> lck(pds_ms::mgmt_state_t::grpc_lock());
@@ -548,23 +587,34 @@ subnet_update (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
     try {
         // Guard to release all pending UUIDs in case of any failures
         mgmt_uuid_guard_t uuid_guard;
-
         bd_id = subnet_uuid_2_idx_fetch(spec->key, false);
-        parse_subnet_update(spec, bd_id, ms_upd_flags);
+
+        // Update subnet spec in cache before fastpath commit
+        // or MS CTM transaction commit
+        old_subnet_spec = cache_update_subnet_spec_(*spec, bd_id);
+        cache_updated = true;
+
+        // Sort out fastpath/slowpath field changes -
+        // complete synchronous batch commit to HAL for fastpath fields
+        fastpath = parse_subnet_update(&old_subnet_spec, bd_id, ms_upd_flags);
 
         if (ms_upd_flags) {
             ret_status = process_subnet_field_update(spec, ms_upd_flags, bd_id);
             if (ret_status != types::ApiStatus::API_STATUS_OK) {
                 PDS_TRACE_ERR ("Failed to process subnet %s field update err %d",
                                spec->key.str(), ret_status);
+                revert_subnet_update_(old_subnet_spec, bd_id, fastpath);
                 return pds_ms_api_to_sdk_ret (ret_status);
             }
             PDS_TRACE_DEBUG ("Subnet %s field update successfully processed",
                              spec->key.str());
         }
     } catch (const Error& e) {
-        PDS_TRACE_ERR ("Subnet %s update failed %s",
-                        spec->key.str(), e.what());
+        PDS_TRACE_ERR ("Subnet %s BD %d update failed %s",
+                        spec->key.str(), bd_id, e.what());
+        if (cache_updated) {
+            revert_subnet_update_(old_subnet_spec, bd_id, fastpath);
+        }
         return e.rc();
     }
 
@@ -642,7 +692,9 @@ create_irb_if (pds_subnet_spec_t *subnet_spec, uint32_t bd_id,
     pds_ms_set_liminterfacecfgspec_amb_lim_if_cfg(lim_if_spec, row_status,
                                                   PDS_MS_CTM_GRPC_CORRELATOR,
                                                   FALSE);
-
+    // IRB IP Address must not be configured to avoid the generation of
+    // type-2 routes for the GW IP
+#if 0
     // Configure IRB IP Address
     ip_prefix_t ip_prefix;
     ip_prefix.len = subnet_spec->v4_prefix.len;
@@ -654,6 +706,7 @@ create_irb_if (pds_subnet_spec_t *subnet_spec, uint32_t bd_id,
     pds_ms_set_liminterfaceaddrspec_amb_lim_l3_if_addr(lim_addr_spec,row_status,
                                                        PDS_MS_CTM_GRPC_CORRELATOR,
                                                        FALSE);
+#endif
 }
 
 };    // namespace pds_ms

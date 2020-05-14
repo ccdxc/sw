@@ -33,11 +33,11 @@ public:
     }
 
     void trigger_delete(void) override {
-        pds_ms::vpc_delete(vpc_spec.key, 0);
         // TODO Fix - VPC delete is currently not calling MS HAL stub VRF delete
        vrf_input_params_t::trigger_delete();
        auto vrf_str = std::to_string(vrf_id);
        pds_ms::li_is()->vrf_delete((const NBB_BYTE*) vrf_str.c_str(), vrf_str.length());
+        pds_ms::vpc_delete(vpc_spec.key, 0);
     }
 
     void trigger_update(void) override {

@@ -3,6 +3,7 @@
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_utils.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_ctm.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/mgmt/pds_ms_internal_utils_gen.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_hal_wait_state.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_vpc_store.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_state.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_util.hpp"
@@ -94,7 +95,7 @@ populate_lim_vrf_spec (ms_vrf_id_t vrf_id,
 
 static bool
 pds_cache_vpc_spec (pds_vpc_spec_t *vpc_spec, ms_vrf_id_t vrf_id,
-                              bool op_delete)
+                    bool op_delete)
 {
     bool cleanup = true;
     auto state_ctxt = pds_ms::state_t::thread_context();
@@ -102,7 +103,7 @@ pds_cache_vpc_spec (pds_vpc_spec_t *vpc_spec, ms_vrf_id_t vrf_id,
     if (op_delete) {
         auto vpc_obj = state_ctxt.state()->vpc_store().get(vrf_id);
         if (vpc_obj == nullptr) {return cleanup;}
-        if (vpc_obj->properties().hal_created) {
+        if (vpc_obj->hal_created()) {
             PDS_TRACE_DEBUG("VPC %d already created in HAL - marking for delete",
                             vrf_id);
             vpc_obj->properties().spec_invalid = true;
@@ -360,17 +361,16 @@ static bool vpc_has_subnets (const pds_obj_key_t& vpc_uuid)
 sdk_ret_t
 vpc_delete (pds_obj_key_t &key, pds_batch_ctxt_t bctxt)
 {
-    types::ApiStatus ret_status;
-    pds_vpc_spec_t *spec;
-
     // lock to allow only one grpc thread processing at a time
     std::lock_guard<std::mutex> lck(pds_ms::mgmt_state_t::grpc_lock());
     try {
         // Guard to release all pending UUIDs in case of any failures
         mgmt_uuid_guard_t uuid_guard;
 
+        pds_vpc_spec_t *spec = nullptr;
         ms_vrf_id_t vrf_id;
         mib_idx_t   rtm_index;
+
         std::tie(vrf_id, rtm_index) = vpc_uuid_2_idx_fetch(key, true);
         {
             auto state_ctxt = state_t::thread_context();
@@ -393,14 +393,20 @@ vpc_delete (pds_obj_key_t &key, pds_batch_ctxt_t bctxt)
                            spec->key.str());
             return SDK_RET_INVALID_OP;
         }
-        ret_status = process_vpc_update (vrf_id, rtm_index, AMB_ROW_DESTROY);
+        auto ret_status = process_vpc_update (vrf_id, rtm_index, AMB_ROW_DESTROY);
         if (ret_status != types::ApiStatus::API_STATUS_OK) {
             PDS_TRACE_ERR ("Failed to process VPC %s VRF %d delete (error=%d)",
                            spec->key.str(), vrf_id, ret_status);
             return pds_ms_api_to_sdk_ret (ret_status);
         }
-        PDS_TRACE_DEBUG ("VPC %s VRF %d delete is successfully processed",
+
+        PDS_TRACE_DEBUG ("VPC %s VRF %d delete wait for batch commit to HAL",
                          spec->key.str(), vrf_id);
+        // Block until the VPC is deleted from the HAL from the stub
+        hal_wait_state_t::wait ([vrf_id] () -> bool {
+            return (!hal_wait_state_t::has_vrf_id_non_reentrant_(vrf_id));
+        });
+
         // Remove cached VPC spec, after successful reply from MS
         mgmt_reset_vni(spec->fabric_encap.val.vnid);
         if (pds_cache_vpc_spec(spec, vrf_id, true)) {
@@ -411,9 +417,18 @@ vpc_delete (pds_obj_key_t &key, pds_batch_ctxt_t bctxt)
             auto mgmt_ctxt = mgmt_state_t::thread_context();
             mgmt_ctxt.state()->remove_uuid(spec->key);
         }
+        PDS_TRACE_DEBUG ("VPC %s VRF %d delete is successfully processed",
+                         spec->key.str(), vrf_id);
 
     } catch (const Error& e) {
-        PDS_TRACE_ERR ("VPC %s deletion failed %s", spec->key.str(), e.what());
+        if (!mgmt_state_t::thread_context().state()->overlay_routing_en() &&
+            e.rc() == SDK_RET_ENTRY_NOT_FOUND) {
+            // Its valid to not have tenant VPC entries in
+            // Overlay routing disabled mode
+            PDS_TRACE_INFO ("VPC %s not found", key.str());
+        } else {
+            PDS_TRACE_ERR ("VPC %s deletion failed %s", key.str(), e.what());
+        }
         return e.rc();
     }
     return SDK_RET_OK;

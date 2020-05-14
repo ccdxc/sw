@@ -83,10 +83,10 @@ void l2f_integ_subcomp_t::delete_fdb_mac(l2f::FdbMacKey *key) {
     }
 }
 
-NBB_ULONG l2f_integ_subcomp_t::add_upd_mac_ip(ATG_MAI_MAC_IP_ID *mac_ip_id,
+NBB_ULONG l2f_integ_subcomp_t::add_upd_mac_ip(ATG_MAI_UPDATE_MAC_IP *mac_ip_id,
                                               NBB_BYTE sticky)
 {
-    if (mac_ip_id->ip_address.length ==0) {
+    if (mac_ip_id->mac_ip_id.ip_address.length ==0) {
         return ATG_OK;
     }
     try {

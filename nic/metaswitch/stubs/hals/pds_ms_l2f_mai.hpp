@@ -33,7 +33,7 @@ class l2f_mai_t {
 public:    
    NBB_BYTE handle_add_upd_mac(ATG_BDPI_UPDATE_FDB_MAC* fdb_add_upd);
    void handle_delete_mac(l2f::FdbMacKey *key);
-   void handle_add_upd_ip(const ATG_MAI_MAC_IP_ID* ip_add_upd);
+   void handle_add_upd_ip(ATG_MAI_UPDATE_MAC_IP* ip_add_upd);
    void handle_delete_ip(const ATG_MAI_MAC_IP_ID* ip_add_upd);
    void batch_pds_mapping_del_spec(bd_obj_t* bd_obj, const mac_addr_t& mac,
                                    pds_batch_ctxt_t bctxt);
@@ -49,9 +49,6 @@ private:
     };
     struct store_info_t {
         bd_obj_t*       bd_obj = nullptr;
-        mac_obj_t*      mac_obj = nullptr;
-        subnet_obj_t*   subnet_obj = nullptr;
-        std::vector<tep_obj_t*>  tep_obj_list;
         ms_hw_tbl_id_t  hal_oecmp_idx; 
     };
 
@@ -68,6 +65,7 @@ private:
     void fetch_store_info_(state_t* state);
     void resolve_teps_(state_t* state);
     void parse_ips_info_(ATG_BDPI_UPDATE_FDB_MAC* bd_add_upd);
+    void parse_ips_info_(ATG_MAI_UPDATE_MAC_IP* mai_ip_id);
     void parse_ips_info_(const ATG_MAI_MAC_IP_ID* mai_ip_id);
     void add_pds_mapping_spec_(pds_batch_ctxt_t bctxt);
     pds_remote_mapping_spec_t make_pds_mapping_spec_(void);

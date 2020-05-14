@@ -4,6 +4,7 @@
 //---------------------------------------------------------------
 
 #include "nic/metaswitch/stubs/common/pds_ms_state.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_hal_wait_state.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_state_init.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_cookie.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_error.hpp"
@@ -61,6 +62,7 @@ state_init (void)
 {
     try {
         state_t::create();
+        hal_wait_state_t::create();
     } catch (Error& e) {
         PDS_TRACE_ERR("Initialization failed - %s", e.what());
         return false;
@@ -73,6 +75,7 @@ void
 state_destroy (void)
 {
     state_t::destroy();
+    hal_wait_state_t::destroy();
 }
 
 void state_store_commit_objs (state_t::context_t& state_ctxt,
@@ -185,6 +188,4 @@ state_indirect_ps_lookup_and_map_dpcorr (state_t* state,
     return std::pair<ip_addr_t,bool> (indirect_ps_obj->destip(),
                                       indirect_ps_obj->is_ms_evpn_tep_ip());
 }
-
-
 } // End namespace

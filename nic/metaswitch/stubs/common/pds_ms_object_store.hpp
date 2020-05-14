@@ -22,11 +22,15 @@ class obj_store_t {
 public:
     // Object allocated from slab elsewhere
     // Just copy the pointer into the store
-    void add_upd(const KEY& key, OBJECT* obj) {
-        store_[key] = std::unique_ptr<OBJECT>(obj);
+    bool add_upd(const KEY& key, OBJECT* obj) {
+        bool create = (store_.find(key) == store_.end());
+        store_[key] = std::unique_ptr<OBJECT>(obj);  
+        return create;
     }
-    void add_upd(const KEY& key, std::unique_ptr<OBJECT>&& obj) {
-        store_[key] = std::move(obj);
+    bool add_upd(const KEY& key, std::unique_ptr<OBJECT>&& obj) {
+        bool create = (store_.find(key) == store_.end());
+        store_[key] = std::move(obj);  
+        return create;
     }
     // Return true if anything is erased
     bool erase(const KEY& key) {

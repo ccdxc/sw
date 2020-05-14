@@ -40,12 +40,6 @@ public:
         }
     } __PACK__; // Need to pack to get consistent hash code
     key_t  key;
-    bool hal_created = false;
-    // Temporary list of Type 2 IP addresses associated with this MAC
-    // that MS programmed out-of-seq before the MAC itself
-    std::vector<ip_addr_t> out_of_seq_ip;
-    // Using a Set for easier comparison when Overlay ECMP is supported
-    std::set<ip_addr_t> tep_ip_list;
     mac_obj_t(const key_t& k) : key(k) {};
 };
 

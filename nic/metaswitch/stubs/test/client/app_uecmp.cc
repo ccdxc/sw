@@ -83,7 +83,6 @@ static void create_device_proto_grpc () {
     device_spec.device_ip_addr.addr.v4_addr = (g_test_conf_.local_lo_ip_addr);
     device_spec.gateway_ip_addr.af          = types::IP_AF_INET;
     device_spec.gateway_ip_addr.addr.v4_addr = g_test_conf_.local_lo_ip_addr;
-
     pds_device_api_spec_to_proto (request.mutable_request(), &device_spec);
 
     printf ("Pushing Device Proto...\n");
@@ -431,6 +430,25 @@ static void create_subnet_proto_grpc (uint32_t subnet_id) {
     }
 }
 
+static void delete_subnet_proto_grpc (uint32_t subnet_id) {
+    SubnetDeleteRequest   request;
+    SubnetDeleteResponse  response;
+    ClientContext   context;
+    Status          ret_status;
+
+    request.mutable_batchctxt()->set_batchcookie(1);
+
+    request.add_id(pds_ms::msidx2pdsobjkey(subnet_id).id, PDS_MAX_KEY_LEN);
+    printf ("Pushing Subnet Del proto...\n");
+    ret_status = g_subnet_stub_->SubnetDelete(&context, request, &response);
+    if (!ret_status.ok() || (response.apistatus(0) != types::API_STATUS_OK)) {
+        printf("%s failed! ret_status=%d (%s) response.status=%d\n",
+                __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
+                response.apistatus(0));
+        exit(1);
+    }
+}
+
 static void create_underlay_vpc_proto_grpc () {
     VPCRequest      request;
     VPCResponse     response;
@@ -667,12 +685,24 @@ int main(int argc, char** argv)
         }
         printf ("Testapp Config Init is successful!\n");
         return 0;
-    } else if (argc == 2) {
+    } else if (argc >= 2) {
         if (!strcmp(argv[1], "peer_status")) {
             get_peer_status_all();
             return 0;
         } else if (!strcmp (argv[1], "evpn_mac_ip")) {
             get_evpn_mac_ip_all();
+            return 0;
+        } else if (!strcmp (argv[1], "mac-move")) {
+            create_l2f_test_mac_ip_proto_grpc(1, 0);
+            return 0;
+        } else if (!strcmp (argv[1], "subnet-del")) {
+#if 0
+            if (argc < 3 || (!strcmp(argv[2], "no-evi-del"))) {
+                delete_evpn_evi_rt_proto_grpc();
+                delete_evpn_evi_proto_grpc();
+            }
+#endif
+            delete_subnet_proto_grpc(1);
             return 0;
         }
     }

@@ -24,30 +24,31 @@ void underlay_ecmp_pds_mock_t::generate_addupd_specs(const underlay_ecmp_input_p
     auto op = (op_create_) ? API_OP_CREATE : API_OP_UPDATE;
 
     test::api::nexthop_group_feeder nhgroup_feeder;
-    uint32_t num_nh; 
-    if (!op_create_) {
-        num_nh = input.nexthops.size() * 2;
-    } else {
-        num_nh = input.nexthops.size();
-    }
+    uint32_t num_nh = 2; 
     nhgroup_feeder.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP,
                         num_nh, // Num Nexthops
                         pds_ms::msidx2pdsobjkey(input.pathset_id, true),  // ID
                         PDS_MAX_NEXTHOP_GROUP);
-    int i = 0;
-    for (auto& nh: input.nexthops) {
-        nhgroup_feeder.spec.nexthops[i].l3_if  =
-            pds_ms::msidx2pdsobjkey(nh.l3_ifindex);
-        memcpy (nhgroup_feeder.spec.nexthops[i].underlay_mac,
-                nh.l3_dest_mac.m_mac, ETH_ADDR_LEN);
-        ++i;
-    }
-    if (!op_create_) {
+
+    if (input.bh) {
+        nhgroup_feeder.spec.nexthops[0].type = PDS_NH_TYPE_BLACKHOLE;
+        nhgroup_feeder.spec.nexthops[1].type = PDS_NH_TYPE_BLACKHOLE;
+    } else {
+        int i = 0;
         for (auto& nh: input.nexthops) {
-            nhgroup_feeder.spec.nexthops[i].l3_if =
+            nhgroup_feeder.spec.nexthops[i].l3_if  =
                 pds_ms::msidx2pdsobjkey(nh.l3_ifindex);
-            memcpy (nhgroup_feeder.spec.nexthops[i].underlay_mac, nh.l3_dest_mac.m_mac, ETH_ADDR_LEN);
+            memcpy (nhgroup_feeder.spec.nexthops[i].underlay_mac,
+                    nh.l3_dest_mac.m_mac, ETH_ADDR_LEN);
             ++i;
+        }
+        if (i < num_nh) {
+            for (auto& nh: input.nexthops) {
+                nhgroup_feeder.spec.nexthops[i].l3_if =
+                    pds_ms::msidx2pdsobjkey(nh.l3_ifindex);
+                memcpy (nhgroup_feeder.spec.nexthops[i].underlay_mac, nh.l3_dest_mac.m_mac, ETH_ADDR_LEN);
+                ++i;
+            }
         }
     }
     pds_batch.emplace_back (OBJ_ID_NEXTHOP_GROUP, op);

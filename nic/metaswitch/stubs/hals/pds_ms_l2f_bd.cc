@@ -324,6 +324,7 @@ void l2f_bd_t::handle_delete(NBB_ULONG bd_id) {
     // in a synchronous fashion for deletes so that it is in sync
     // if there is a subsequent create from MS.
 
+    cookie_t* cookie = nullptr;
     ips_info_.bd_id = bd_id;
     pds_obj_key_t  subnet_uuid = {0};
 
@@ -349,6 +350,42 @@ void l2f_bd_t::handle_delete(NBB_ULONG bd_id) {
         // Cannot add Subnet Delete to an existing batch
         state_ctxt.state()->flush_outstanding_pds_batch();
 
+        auto l_bd_id = ips_info_.bd_id; 
+        cookie_uptr_->send_ips_reply = 
+            [l_bd_id, subnet_uuid] (bool pds_status, bool ips_mock) -> void {
+                // ----------------------------------------------------------------
+                // This block is executed asynchronously when PDS response is rcvd
+                // ----------------------------------------------------------------
+                PDS_TRACE_DEBUG("++++++++++ Subnet %s MS BD %d Delete: Rcvd Async"
+                                " PDS response %s +++++++++++++",
+                                subnet_uuid.str(), l_bd_id,
+                                (pds_status) ? "Success" : "Failure");
+            };
+
+        // All processing complete, only batch commit remains - 
+        // safe to release the cookie_uptr_ unique_ptr
+        cookie = cookie_uptr_.release();
+        if (pds_bctxt_guard.remote_mac_batch) {
+            auto ret = learn::api_batch_commit(pds_bctxt_guard.remote_mac_batch.release());
+            if (unlikely (ret != SDK_RET_OK)) {
+                delete cookie;
+                throw Error(std::string("Batch commit failed for deleting remote MACs"
+                                        " as part of delete MS BD ")
+                            .append(std::to_string(bd_id))
+                            .append(" err=").append(std::to_string(ret)));
+            }
+            PDS_TRACE_DEBUG ("MS BD %d: Delete PDS Batch commit successful"
+                             " for remote MACs on BD ", bd_id);
+        }
+        auto ret = learn::api_batch_commit(pds_bctxt_guard.subnet_batch.release());
+        if (unlikely (ret != SDK_RET_OK)) {
+            delete cookie;
+            throw Error(std::string("Batch commit failed for delete MS BD ")
+                        .append(std::to_string(bd_id))
+                        .append(" err=").append(std::to_string(ret)));
+        }
+        PDS_TRACE_DEBUG ("MS BD %d: Delete PDS Batch commit successful", bd_id);
+
         // Ensure that Subnet is actually deleted before releasing the UUID
         // For Subnet VNI change, MS internally deletes existing BD and
         // creates a new BD for the same subnet
@@ -367,47 +404,13 @@ void l2f_bd_t::handle_delete(NBB_ULONG bd_id) {
         } else {
             store_info_.subnet_obj->properties().hal_created = false;
         }
+
         // Remove the BD Obj from store
         // All remote MACs should have been walked and delete spec
         // added to the batch before this
         state_ctxt.state()->bd_store().erase(ips_info_.bd_id);
     } // End of state thread_context
       // Do Not access/modify global state after this
-
-    auto l_bd_id = ips_info_.bd_id; 
-    cookie_uptr_->send_ips_reply = 
-        [l_bd_id, subnet_uuid] (bool pds_status, bool ips_mock) -> void {
-            // ----------------------------------------------------------------
-            // This block is executed asynchronously when PDS response is rcvd
-            // ----------------------------------------------------------------
-            PDS_TRACE_DEBUG("++++++++++ Subnet %s MS BD %d Delete: Rcvd Async"
-                            " PDS response %s +++++++++++++",
-                            subnet_uuid.str(), l_bd_id,
-                            (pds_status) ? "Success" : "Failure");
-        };
-    // All processing complete, only batch commit remains - 
-    // safe to release the cookie_uptr_ unique_ptr
-    auto cookie = cookie_uptr_.release();
-    if (pds_bctxt_guard.remote_mac_batch) {
-        auto ret = learn::api_batch_commit(pds_bctxt_guard.remote_mac_batch.release());
-        if (unlikely (ret != SDK_RET_OK)) {
-            delete cookie;
-            throw Error(std::string("Batch commit failed for deleting remote MACs"
-                                    " as part of delete MS BD ")
-                        .append(std::to_string(bd_id))
-                        .append(" err=").append(std::to_string(ret)));
-        }
-        PDS_TRACE_DEBUG ("MS BD %d: Delete PDS Batch commit successful"
-                         " for remote MACs on BD ", bd_id);
-    }
-    auto ret = learn::api_batch_commit(pds_bctxt_guard.subnet_batch.release());
-    if (unlikely (ret != SDK_RET_OK)) {
-        delete cookie;
-        throw Error(std::string("Batch commit failed for delete MS BD ")
-                    .append(std::to_string(bd_id))
-                    .append(" err=").append(std::to_string(ret)));
-    }
-    PDS_TRACE_DEBUG ("MS BD %d: Delete PDS Batch commit successful", bd_id);
 
     if (PDS_MOCK_MODE()) {
         // Call the HAL callback in PDS mock mode

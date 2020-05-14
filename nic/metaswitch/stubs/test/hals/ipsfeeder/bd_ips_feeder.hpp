@@ -8,6 +8,7 @@
 #include "nic/metaswitch/stubs/common/pds_ms_util.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_defs.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_state.hpp"
 #include <l2f_c_includes.hpp>
 #include "nic/metaswitch/stubs/hals/pds_ms_l2f.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_l2f_bd.hpp"
@@ -43,15 +44,15 @@ public:
         pds_ms::subnet_create(&subnet_spec, 0);
         auto add_upd = generate_add_upd_ips();
         l2f_is.add_upd_bd(&add_upd);
-        subnet_uuids.insert(subnet_spec.key);
+        subnet_uuids.insert(std::make_pair(add_upd.bd_id.bd_id,
+                                           subnet_spec.key));
     }
 
     void trigger_delete(void) override {
         bd_input_params_t::trigger_delete();
-        pds_ms::subnet_delete(subnet_spec.key, 0);
         ATG_L2_BD_ID ms_bd_id = {ATG_L2_BRIDGE_DOMAIN_EVPN, bd_id, 0};
         l2f_is.delete_bd(&ms_bd_id, NBB_CORRELATOR{0});
-        subnet_uuids.erase(subnet_spec.key);
+        pds_ms::subnet_delete(subnet_spec.key, 0);
     }
 
     void trigger_update(void) override {
@@ -87,23 +88,19 @@ public:
         // Delete the VPC created as a pre-req
         std::cout << " ====== Cleanup ========" << std::endl;
         for (auto& subnet_uuid: subnet_uuids) {
-            pds_subnet_spec_t subnet_spec = {0};
-            subnet_spec.key = subnet_uuid;
-            pds_ms::subnet_delete(subnet_spec.key, 0);
+            pds_ms::state_t::thread_context().state()->bd_store().erase(subnet_uuid.first);
+            pds_ms::subnet_delete(subnet_uuid.second, 0);
         }
-        pds_ms::vpc_delete(vpc_spec.key, 0);
         // TODO Fix - currently VPC delete is not calling HAL stub VRF delete
        auto state_ctxt = pds_ms::state_t::thread_context(); 
-       auto vpc_obj = state_ctxt.state()->vpc_store().get(vrf_id);
-       if (vpc_obj->properties().spec_invalid) {
-           std::cout << "Erasing VPC from store" << std::endl;
-           state_ctxt.state()->vpc_store().erase(vrf_id);
-           state_ctxt.state()->route_table_store()
-               .erase(pds_ms::msidx2pdsobjkey(vrf_id));
-       }
+       std::cout << "Erasing VPC from store" << std::endl;
+       state_ctxt.state()->vpc_store().erase(vrf_id);
+       state_ctxt.state()->route_table_store()
+           .erase(pds_ms::msidx2pdsobjkey(vrf_id));
+       pds_ms::vpc_delete(vpc_spec.key, 0);
     }
 private:
-    std::unordered_set<pds_obj_key_t, pds_obj_key_hash> subnet_uuids;
+    std::unordered_map<pds_ms::ms_bd_id_t, pds_obj_key_t> subnet_uuids;
 };
 
 } // End Namespace

@@ -212,9 +212,11 @@ message EvpnIpVrfSpec {
   bytes   RD     = 4 [(venice.pdsaFields) = {Field:"route_distinguisher"}];
 
   // Internal only
-  string VRFName = 1000 [(venice.pdsaFields) = {Field:"vrf_name", SetKeyOidIndex: "AMB_EVPN_IP_VRF_NAME_INDEX", SetKeyOidLenIndex: "AMB_EVPN_IP_VRF_NAME_LEN_INDEX", GetKeyOidIndex: "AMB_EVPN_IP_VRF_NAME_INDEX", GetKeyOidLenIndex: "AMB_EVPN_IP_VRF_NAME_LEN_INDEX", IsInternalField: true}];
+  string VRFName     = 1000 [(venice.pdsaFields) = {Field:"vrf_name", SetKeyOidIndex: "AMB_EVPN_IP_VRF_NAME_INDEX", SetKeyOidLenIndex: "AMB_EVPN_IP_VRF_NAME_LEN_INDEX", GetKeyOidIndex: "AMB_EVPN_IP_VRF_NAME_INDEX", GetKeyOidLenIndex: "AMB_EVPN_IP_VRF_NAME_LEN_INDEX", IsInternalField: true}];
   // VPC VR Mac
-  bytes RouterMAC = 1001 [(venice.pdsaFields) = {Field:"routers_mac", IsInternalField: true}];
+  bytes RouterMAC    = 1001 [(venice.pdsaFields) = {Field:"routers_mac", IsInternalField: true}];
+  // Program Host Routes
+  bool PgmHostRoutes = 1002 [(venice.pdsaFields) = {Field:"pgm_host_routes", IsInternalField: true}];
 }
 
 // operational status of EVPN IP VRF, if any

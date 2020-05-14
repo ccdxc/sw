@@ -150,62 +150,61 @@ l2f_local_mac_ip_del (const pds_obj_key_t& subnet_key, const ip_addr_t& ip,
     local_mac_ip_del_(bd_id, mac, ip);
 }
 
-#define BDPI_GET_FIRST_LBL_INTF(ips, list_ptr) \
-       (ATG_BDPI_LABELLED_INTERFACE*) \
-            NTL_OFF_LIST_TRAVERSE((ips), (list_ptr), NULL)
-
-#define BDPI_GET_NEXT_LBL_INTF(ips, list_ptr, cur_obj) \
-       (ATG_BDPI_LABELLED_INTERFACE*) \
-            NTL_OFF_LIST_TRAVERSE((ips), (list_ptr), cur_obj)
-
 void l2f_mai_t::parse_ips_info_(ATG_BDPI_UPDATE_FDB_MAC* fdb_mac) {
     ips_info_.bd_id = fdb_mac->bd_id.bd_id;
     MAC_ADDR_COPY(ips_info_.mac_address, fdb_mac->mac_address);
     ips_info_.has_ip = false;
 
     auto list_p = &fdb_mac->labelled_interfaces;
-    for (auto lbl_intf = BDPI_GET_FIRST_LBL_INTF(fdb_mac, list_p);
+    for (auto lbl_intf = MS_LIST_GET_FIRST(fdb_mac, list_p,
+                                           ATG_BDPI_LABELLED_INTERFACE);
          lbl_intf != NULL;
-         lbl_intf = BDPI_GET_NEXT_LBL_INTF(fdb_mac, list_p, lbl_intf)) {
+         lbl_intf = MS_LIST_GET_NEXT(fdb_mac, list_p, lbl_intf,
+                                     ATG_BDPI_LABELLED_INTERFACE)) {
         ip_addr_t tep_ip;
         ms_to_pds_ipaddr(lbl_intf->dest_address, &tep_ip);
         ips_info_.tep_ip_list.emplace(tep_ip);
     }
 }
 
-void l2f_mai_t::parse_ips_info_(const ATG_MAI_MAC_IP_ID* mai_ip) {
-    ips_info_.bd_id = mai_ip->bd_id.bd_id;
-    MAC_ADDR_COPY(ips_info_.mac_address, mai_ip->mac_address);
-    ms_to_pds_ipaddr(mai_ip->ip_address, &ips_info_.ip_address);
+void l2f_mai_t::parse_ips_info_(ATG_MAI_UPDATE_MAC_IP* mai_ip) {
+    const ATG_MAI_MAC_IP_ID* mac_ip_id = &(mai_ip->mac_ip_id);
+
+    ips_info_.bd_id = mac_ip_id->bd_id.bd_id;
+    MAC_ADDR_COPY(ips_info_.mac_address, mac_ip_id->mac_address);
+    ms_to_pds_ipaddr(mac_ip_id->ip_address, &ips_info_.ip_address);
+    ips_info_.has_ip = true;
+
+    auto list_p = &mai_ip->vxlan_ports;
+    for (auto vxlan_port = MS_LIST_GET_FIRST(mai_ip, list_p,
+                                           ATG_MAI_VXLAN_PORT_INFO);
+         vxlan_port != NULL;
+         vxlan_port = MS_LIST_GET_NEXT(mai_ip, list_p, vxlan_port,
+                                     ATG_MAI_VXLAN_PORT_INFO)) {
+        ip_addr_t tep_ip;
+        ms_to_pds_ipaddr(vxlan_port->dest_address, &tep_ip);
+        ips_info_.tep_ip_list.emplace(tep_ip);
+    }
+}
+
+void l2f_mai_t::parse_ips_info_(const ATG_MAI_MAC_IP_ID* mac_ip_id) {
+
+    ips_info_.bd_id = mac_ip_id->bd_id.bd_id;
+    MAC_ADDR_COPY(ips_info_.mac_address, mac_ip_id->mac_address);
+    ms_to_pds_ipaddr(mac_ip_id->ip_address, &ips_info_.ip_address);
     ips_info_.has_ip = true;
 }
 
 void l2f_mai_t::fetch_store_info_(state_t* state) {
     store_info_.bd_obj = state->bd_store().get(ips_info_.bd_id);
     SDK_ASSERT(store_info_.bd_obj != nullptr);
-    if (ips_info_.has_ip || !op_delete_) {
-        store_info_.mac_obj = store_info_.bd_obj->mac_store().get
-            (mac_obj_t::key_t(ips_info_.bd_id, ips_info_.mac_address));
-        store_info_.subnet_obj = state->subnet_store().get(ips_info_.bd_id);
-    }
 }
 
 void l2f_mai_t::resolve_teps_(state_t* state) {
-    if (!ips_info_.has_ip) {
-        // FDB update - copy the new destination TEP(s)
-        // TODO: Handle Overlay ECMP update
-        // For now assuming only a single TEP and overwriting previous
-        // Associated MAC IPs will be deleted - so no need to modify them here
-        store_info_.mac_obj->tep_ip_list = ips_info_.tep_ip_list;
-    }
-    for (auto& tep_ip: store_info_.mac_obj->tep_ip_list) {
-        auto tep_obj = state->tep_store().get(tep_ip);
-        SDK_ASSERT(tep_obj != nullptr);
-        store_info_.tep_obj_list.push_back(tep_obj);
-    }
+    SDK_ASSERT(!ips_info_.tep_ip_list.empty());
     // For now assuming only a single TEP to get ECMP index
-    store_info_.hal_oecmp_idx =
-        store_info_.tep_obj_list.back()->hal_oecmp_idx_guard->idx();
+    auto tep_obj = state->tep_store().get(*ips_info_.tep_ip_list.begin());
+    store_info_.hal_oecmp_idx = tep_obj->hal_oecmp_idx_guard->idx();
 }
 
 pds_mapping_key_t l2f_mai_t::make_pds_mapping_key_(void) {
@@ -229,7 +228,7 @@ pds_remote_mapping_spec_t l2f_mai_t::make_pds_mapping_spec_(void) {
     // TODO: fix this !!!
     //spec.key = ; // generate uuid on the fly
     spec.skey = make_pds_mapping_key_();
-    spec.subnet = store_info_.subnet_obj->spec().key;
+    spec.subnet = store_info_.bd_obj->properties().subnet;
     spec.nh_type = PDS_NH_TYPE_OVERLAY_ECMP;
     spec.nh_group = msidx2pdsobjkey(store_info_.hal_oecmp_idx);
     if(ips_info_.has_ip) {
@@ -306,57 +305,20 @@ NBB_BYTE l2f_mai_t::handle_add_upd_mac(ATG_BDPI_UPDATE_FDB_MAC* update_fdb_mac) 
                    ips_info_.tep_ip_list.size(),
                    ipaddr2str(&(*ips_info_.tep_ip_list.begin())));
 
-    //----------------------------------------------------------------------
-    // Unlike other stub integration components, MAI integration comp
-    // adds the Remote MAC to the store immediately without waiting for
-    // async HAL response since the MAC store is accessed for MAI IP updates
-    // from Metaswitch which can happen in parallel
-    //----------------------------------------------------------------------
-
     // Clean up local MAC from MS store so that any subsequent
     // move is not ignored
     ip_addr_t zero_ip = {0};
     local_mac_ip_del_(ips_info_.bd_id, ips_info_.mac_address, zero_ip);
+    op_create_ = true;
 
     { // Enter thread-safe context to access/modify global state
         auto state_ctxt = state_t::thread_context();
-        fetch_store_info_(state_ctxt.state());
 
-        if (store_info_.subnet_obj == nullptr) {
-            PDS_TRACE_DEBUG("Missing Subnet Obj for MAI BD %d MAC %s add-upd",
-                            ips_info_.bd_id, macaddr2str(ips_info_.mac_address));
-            return rc;
-        }
-        if (store_info_.mac_obj == nullptr) {
-            // New FDB entry - Populate cache
-            mac_obj_t::key_t key (ips_info_.bd_id, ips_info_.mac_address);
-            std::unique_ptr<mac_obj_t> mac_obj_uptr
-                (new mac_obj_t(key));
-            store_info_.mac_obj = mac_obj_uptr.get();
-            store_info_.bd_obj->mac_store().
-                add_upd(key, std::move(mac_obj_uptr));
-            op_create_ = true;
-        } else if (!store_info_.mac_obj->hal_created) {
-            // MAC store obj could have been created internally
-            // when MS MAI Stub sent IP out-of-seq before MAC.
-            // Create everything now
-            op_create_ = true;
-        }
+        fetch_store_info_(state_ctxt.state());
         resolve_teps_(state_ctxt.state());
 
         cookie_uptr_.reset(new cookie_t);
         pds_bctxt_guard = make_batch_pds_spec_();
-
-        // Check if there are IP addresses associated
-        // Add to batch
-        for (auto ip_address: store_info_.mac_obj->out_of_seq_ip) {
-            ips_info_.ip_address = ip_address;
-            ips_info_.has_ip = true;
-            PDS_TRACE_DEBUG("PDS Create Remote Mapping for out-of-seq IP %s",
-                            ipaddr2str(&ip_address));
-            add_pds_mapping_spec_(pds_bctxt_guard.get());
-        }
-        ips_info_.has_ip = false;
 
         auto l_bd_id = ips_info_.bd_id;
         auto l_op_create = op_create_;
@@ -378,9 +340,7 @@ NBB_BYTE l2f_mai_t::handle_add_upd_mac(ATG_BDPI_UPDATE_FDB_MAC* update_fdb_mac) 
                         auto bd_obj = state_ctxt.state()->bd_store().
                             get(update_fdb_mac->bd_id.bd_id);
                         if (!bd_obj) break;
-                        auto mac_obj = bd_obj->mac_store().get({l_bd_id, l_mac});
-                        if (!mac_obj) break;
-                        mac_obj->hal_created = false;
+                        bd_obj->mac_store().erase({l_bd_id, l_mac});
                     } while(0);
                 }
 
@@ -445,14 +405,26 @@ NBB_BYTE l2f_mai_t::handle_add_upd_mac(ATG_BDPI_UPDATE_FDB_MAC* update_fdb_mac) 
                         .append(" err ").append(std::to_string(ret)));
         }
 
-        store_info_.mac_obj->out_of_seq_ip.clear();
-        if (op_create_) {store_info_.mac_obj->hal_created = true;}
+        auto mac_obj = store_info_.bd_obj->mac_store().get
+            ({ips_info_.bd_id, ips_info_.mac_address});
+
+        if (mac_obj == nullptr) {
+            // New FDB entry - Populate cache
+            mac_obj_t::key_t key (ips_info_.bd_id, ips_info_.mac_address);
+            store_info_.bd_obj->mac_store().
+                add_upd(key, new mac_obj_t(key));
+
+            PDS_TRACE_DEBUG("MS BD %d MAC %s TEP %s Create PDS Batch commit successful",
+                            ips_info_.bd_id, macaddr2str(ips_info_.mac_address),
+                            ipaddr2str(&(*ips_info_.tep_ip_list.begin())));
+       } else {
+            PDS_TRACE_DEBUG("MS BD %d MAC %s TEP %s Update PDS Batch commit successful",
+                            ips_info_.bd_id, macaddr2str(ips_info_.mac_address),
+                            ipaddr2str(&(*ips_info_.tep_ip_list.begin())));
+       }
     } // End of state thread_context
       // Do Not access/modify global state after this
 
-    PDS_TRACE_DEBUG("MS BD %d MAC %s TEP %s Add PDS Batch commit successful",
-                    ips_info_.bd_id, macaddr2str(ips_info_.mac_address),
-                    ipaddr2str(&(*ips_info_.tep_ip_list.begin())));
     if (PDS_MOCK_MODE()) {
         // Call the HAL callback in PDS mock mode
         std::thread cb(pds_ms::hal_callback, SDK_RET_OK, cookie);
@@ -513,11 +485,11 @@ void l2f_mai_t::handle_delete_mac(l2f::FdbMacKey *key) {
                     l_bd_id, macaddr2str(l_mac));
 }
 
-void l2f_mai_t::handle_add_upd_ip(const ATG_MAI_MAC_IP_ID* mai_ip_id) {
+void l2f_mai_t::handle_add_upd_ip(ATG_MAI_UPDATE_MAC_IP* mac_ip_id) {
     pds_batch_ctxt_guard_t  pds_bctxt_guard;
     ip_addr_t  l_tep_ip;
 
-    parse_ips_info_(mai_ip_id);
+    parse_ips_info_(mac_ip_id);
 
     PDS_TRACE_INFO("L2F MAC IP ADD BD %d IP %s MAC %s",
                    ips_info_.bd_id, ipaddr2str(&ips_info_.ip_address),
@@ -528,47 +500,20 @@ void l2f_mai_t::handle_add_upd_ip(const ATG_MAI_MAC_IP_ID* mai_ip_id) {
     local_mac_ip_del_(ips_info_.bd_id, ips_info_.mac_address,
                       ips_info_.ip_address);
 
+    // Cannot detect Update of existing Remote Mapping IP entry
+    // Learn accepts Create for existing Remote Mapping entries
+    op_create_ = true;
+
     { // Enter thread-safe context to access/modify global state
         auto state_ctxt = state_t::thread_context();
+
         fetch_store_info_(state_ctxt.state());
-
-        if (store_info_.subnet_obj == nullptr) {
-            PDS_TRACE_DEBUG("Missing Subnet Obj for MAI BD %d IP %s MAC %s add-upd",
-                            ips_info_.bd_id, ipaddr2str(&ips_info_.ip_address),
-                            macaddr2str(ips_info_.mac_address));
-            return;
-        }
-        // Check out-of-seq: IP ahead of MAC from MS L2F stub
-        if (store_info_.mac_obj == nullptr) {
-            // MAC FDB entry does not exist for this IP - cache now
-            // and revisit later when MAC is received from Metaswitch
-            PDS_TRACE_DEBUG("Saving out-of-seq IP %s MAC %s(unknown) for later",
-                            ipaddr2str(&ips_info_.ip_address),
-                            macaddr2str(ips_info_.mac_address));
-            mac_obj_t::key_t key (ips_info_.bd_id, ips_info_.mac_address);
-            std::unique_ptr<mac_obj_t> mac_obj_uptr (new mac_obj_t (key));
-            store_info_.mac_obj = mac_obj_uptr.get();
-            store_info_.bd_obj->mac_store().
-                add_upd(key, std::move(mac_obj_uptr));
-            store_info_.mac_obj->out_of_seq_ip.push_back(ips_info_.ip_address);
-            return;
-        } else if (store_info_.mac_obj->tep_ip_list.empty()) {
-            PDS_TRACE_DEBUG("Saving out-of-seq IP %s MAC %s for later",
-                            ipaddr2str(&ips_info_.ip_address),
-                            macaddr2str(ips_info_.mac_address));
-            store_info_.mac_obj->out_of_seq_ip.push_back(ips_info_.ip_address);
-            return;
-        }
-
-        // Cannot detect Update of existing Remote Mapping IP entry
-        // PDS HAL accepts Create for existing Remote Mapping entries
-        op_create_ = true;
-
         resolve_teps_(state_ctxt.state());
-        cookie_uptr_.reset(new cookie_t);
 
+        cookie_uptr_.reset(new cookie_t);
         pds_bctxt_guard = make_batch_pds_spec_();
-        l_tep_ip = *(store_info_.mac_obj->tep_ip_list.begin());
+
+        l_tep_ip = *(ips_info_.tep_ip_list.begin());
     } // End of state thread_context
       // Do Not access/modify global state after this
 
@@ -602,12 +547,12 @@ void l2f_mai_t::handle_add_upd_ip(const ATG_MAI_MAC_IP_ID* mai_ip_id) {
                     l_bd_id, ipaddr2str(&l_ip), ipaddr2str(&l_tep_ip));
 }
 
-void l2f_mai_t::handle_delete_ip(const ATG_MAI_MAC_IP_ID* mai_ip_id) {
+void l2f_mai_t::handle_delete_ip(const ATG_MAI_MAC_IP_ID* mac_ip_id) {
     pds_batch_ctxt_guard_t  pds_bctxt_guard;
     op_delete_ = true;
 
     // Populate IPS info
-    parse_ips_info_(mai_ip_id);
+    parse_ips_info_(mac_ip_id);
 
     PDS_TRACE_INFO("L2F MAI IP DEL BD %d IP %s", ips_info_.bd_id,
                    ipaddr2str(&ips_info_.ip_address));

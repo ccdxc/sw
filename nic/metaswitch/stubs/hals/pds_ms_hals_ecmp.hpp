@@ -29,7 +29,8 @@ using pds_ms::cookie_t;
 using pds_ms::pds_batch_ctxt_guard_t;
 
 enum pds_ms_nh_type_t {
-    PDS_MS_NH_DEST_PORT = 0,
+    PDS_MS_NH_DEST_MIN = 0,
+    PDS_MS_NH_DEST_PORT = PDS_MS_NH_DEST_MIN,
     PDS_MS_NH_DEST_NH,
     PDS_MS_NH_DEST_BH,
     PDS_MS_NH_DEST_MAX
@@ -43,12 +44,8 @@ public:
     enum class op_type_e {
         IGNORE,
         CREATE,
-        BH_TO_VALID,
-        UPDATE_ADD,
-        UPDATE_DEL,
-        UPDATE_REPLACE,
-        DELETE,
-        VALID_TO_BH
+        UPDATE,
+        DELETE
     };
     enum class ps_type_e {
         UNKNOWN,
@@ -70,6 +67,7 @@ public:
         uint32_t       nh_add_count[PDS_MS_NH_DEST_MAX] = {0};
         uint32_t       nh_del_count[PDS_MS_NH_DEST_MAX] = {0};
         ps_type_e      ps_type;
+        ATG_NHPI_ADD_UPDATE_ECMP *ips = nullptr;
     };
     struct store_info_t {
         pathset_obj_t*   pathset_obj = nullptr;
@@ -86,6 +84,7 @@ private:
     pds_batch_ctxt_guard_t make_batch_pds_spec_(state_t::context_t& state_ctxt);
     bool parse_ips_info_(ATG_NHPI_ADD_UPDATE_ECMP* nh_add_upd);
     void fetch_store_info_(state_t* state);
+    void identify_ps_type_(void);
     pds_nexthop_group_spec_t make_pds_nhgroup_spec_(state_t::context_t& state_ctxt);
     void make_pds_underlay_nhgroup_spec_ (pds_nexthop_group_spec_t&,
                                           state_t::context_t& state_ctxt);
@@ -94,6 +93,7 @@ private:
     pds_obj_key_t make_pds_nhgroup_key_(void);
     NBB_BYTE handle_indirect_ps_update_(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips);
     void calculate_op_(void);
+    void send_delete_to_hal_(state_t::context_t& state_ctxt);
 };
 
 } // End namespace

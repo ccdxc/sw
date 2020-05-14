@@ -865,9 +865,14 @@ func NewBGPNLRIPrefixStatus(in *pds.BGPNLRIPrefixStatus) *ShadowBGPNLRIPrefixSta
 
 func dumpExtComm(in [][]byte) []string {
 	var r []string
+	first := true
 	for _, b := range in {
 		v := dumpRt(b)
 		if v != "" {
+			if !first {
+				r = append(r, "\n                             ")
+			}
+			first = false
 			r = append(r, v)
 		}
 	}
@@ -985,9 +990,22 @@ type ShadowEvpnIpVrfRtSpec struct {
 	*pds.EvpnIpVrfRtSpec
 }
 
+func dumpRtrMac(in []byte) string {
+	inStr := dumpNonHexBytes(in)
+	inStrSlice := strings.Split(inStr, " ")
+	str := strings.Join(inStrSlice, ":")
+	return fmt.Sprintf("RouterMAC: %v", str[:len(str)-1])
+}
+
 func dumpRt(in []byte) string {
 	rt := ""
-	if len(in) != 8 || int(in[1]) != 2 {
+	if len(in) != 8 {
+		return rt
+	}
+	if int(in[1]) == 3 && int(in[0]) == 6 {
+		return dumpRtrMac(in[2:])
+	}
+	if int(in[1]) != 2 {
 		return rt
 	}
 	inStr := dumpNonHexBytes(in)

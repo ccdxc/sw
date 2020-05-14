@@ -7,6 +7,7 @@
 #define __PDS_MS_ERR_HPP__
 
 #include <stdexcept>
+#include "nic/sdk/include/sdk/base.hpp"
 
 namespace pds_ms {
 

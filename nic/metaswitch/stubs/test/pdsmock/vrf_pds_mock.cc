@@ -56,7 +56,7 @@ void vrf_pds_mock_t::validate_()
         ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_COOKIE_SLAB_ID) , (uint32_t)0);
         auto vrf_obj = state->vpc_store().get(((vrf_input_params_t*)test_params()->test_input)->vrf_id);
         ASSERT_FALSE (vrf_obj == nullptr);
-        ASSERT_FALSE (vrf_obj->properties().hal_created);
+        ASSERT_FALSE (vrf_obj->hal_created());
         return;
     }
 
@@ -96,7 +96,7 @@ void vrf_pds_mock_t::validate_()
         ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_COOKIE_SLAB_ID) , (uint32_t)0);
         auto vrf_obj = state->vpc_store().get(((vrf_input_params_t*)test_params()->test_input)->vrf_id);
         ASSERT_FALSE (vrf_obj == nullptr);
-        ASSERT_FALSE (vrf_obj->properties().hal_created);
+        ASSERT_FALSE (vrf_obj->hal_created());
         return;
     }
 
@@ -108,7 +108,7 @@ void vrf_pds_mock_t::validate_()
         std::cout << "Fetching VRF for " <<  ((vrf_input_params_t*)test_params()->test_input)->vrf_id << std::endl;
         auto vrf_obj = state->vpc_store().get(((vrf_input_params_t*)test_params()->test_input)->vrf_id);
         ASSERT_FALSE (vrf_obj == nullptr);
-        ASSERT_TRUE (vrf_obj->properties().hal_created);
+        ASSERT_TRUE (vrf_obj->hal_created());
     }
     ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_VPC_SLAB_ID) , (uint32_t)num_vrf_objs_);
     ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_RTTABLE_SLAB_ID) , (uint32_t)num_route_tbl_objs_);

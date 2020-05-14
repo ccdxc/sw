@@ -30,7 +30,7 @@ public:
 
     NBB_BYTE add_upd_fdb_mac(ATG_BDPI_UPDATE_FDB_MAC *update_fdb_mac); 
     void delete_fdb_mac(l2f::FdbMacKey *key) ;
-    NBB_ULONG add_upd_mac_ip(ATG_MAI_MAC_IP_ID *mac_ip_id,
+    NBB_ULONG add_upd_mac_ip(ATG_MAI_UPDATE_MAC_IP *mac_ip_id,
                                      NBB_BYTE sticky);
 
     void delete_mac_ip(const ATG_MAI_MAC_IP_ID *mac_ip_id,
