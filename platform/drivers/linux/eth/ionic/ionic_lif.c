@@ -2851,6 +2851,7 @@ static void ionic_lif_handle_fw_up(struct ionic_lif *lif)
 	dev_info(ionic->dev, "FW Up: restarting LIFs\n");
 
 	ionic_init_devinfo(ionic);
+	ionic_port_init(ionic);
 	err = ionic_qcqs_alloc(lif);
 	if (!err)
 		err = ionic_lifs_init(ionic);
@@ -3079,7 +3080,16 @@ static int ionic_station_set(struct ionic_lif *lif)
 	if (is_zero_ether_addr(ctx.comp.lif_getattr.mac))
 		return 0;
 
-	if (!ether_addr_equal(ctx.comp.lif_getattr.mac, netdev->dev_addr)) {
+	if (!is_zero_ether_addr(netdev->dev_addr)) {
+		/* If the netdev mac is non-zero and doesn't match the default
+		 * device address, it was set by something earlier and we're
+		 * likely here again after a fw-upgrade reset.  We need to be
+		 * sure the netdev mac is in our filter list.
+		 */
+		if (!ether_addr_equal(ctx.comp.lif_getattr.mac, netdev->dev_addr))
+			ionic_lif_addr(lif, netdev->dev_addr, true);
+	} else {
+		/* Update the netdev mac with the device's mac */
 		memcpy(addr.sa_data, ctx.comp.lif_getattr.mac, netdev->addr_len);
 		addr.sa_family = AF_INET;
 		err = eth_prepare_mac_addr_change(netdev, &addr);
@@ -3088,13 +3098,6 @@ static int ionic_station_set(struct ionic_lif *lif)
 				    addr.sa_data);
 			return 0;
 		}
-
-		if (!is_zero_ether_addr(netdev->dev_addr)) {
-			netdev_dbg(lif->netdev, "deleting station MAC addr %pM\n",
-				   netdev->dev_addr);
-			ionic_lif_addr(lif, netdev->dev_addr, false);
-		}
-
 		eth_commit_mac_addr_change(netdev, &addr);
 	}
 
