@@ -152,6 +152,8 @@ func (d *PenDVS) AddPenPGWithVlan(pgName string, networkMeta api.ObjectMeta, pri
 
 	penPG.NetworkMeta = networkMeta
 
+	d.Log.Infof("adding PG %s ( %s ) for network %s", penPG.PgName, penPG.PgRef.Value, networkMeta.Name)
+
 	err = d.probe.TagObjAsManaged(penPG.PgRef)
 	if err != nil {
 		d.Log.Errorf("Failed to tag PG %s as managed, %s", pgName, err)

@@ -55,7 +55,7 @@ func TestMain(m *testing.M) {
 func setup() {
 	var err error
 	// api server
-	apiSrv, apiSrvAddr, err = serviceutils.StartAPIServer(apisrvURL, "authnmgr_test", logger)
+	apiSrv, apiSrvAddr, err = serviceutils.StartAPIServer(apisrvURL, "authnmgr_test", logger, []string{})
 	if err != nil {
 		panic("Unable to start API Server")
 	}

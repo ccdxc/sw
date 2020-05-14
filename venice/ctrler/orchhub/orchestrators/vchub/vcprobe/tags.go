@@ -229,7 +229,10 @@ func (t *tagsProbe) TagObjsAsManaged(refs []types.ManagedObjectReference) error 
 		})
 	}
 
-	t.Log.Debugf("Tagging objects %v as pensando managed", refs)
+	t.Log.Infof("Tagging objects %v as pensando managed", refs)
+	if len(refs) == 0 {
+		return nil
+	}
 	return tc.AttachTagToMultipleObjects(t.ClientCtx, id, moRefs)
 }
 
@@ -257,9 +260,12 @@ func (t *tagsProbe) GetPensandoTagsOnObjects(refs []types.ManagedObjectReference
 
 	// Convert tags
 	// Map of kind -> objID -> tags
+	// Add entries for objects with no tags
+	presentMap := map[string]bool{}
 	resMap := map[string](KindTagMapEntry){}
 
 	for _, attachedTag := range attachedTags {
+		presentMap[attachedTag.ObjectID.Reference().Value] = true
 		kind := attachedTag.ObjectID.Reference().Type
 		id := attachedTag.ObjectID.Reference().Value
 
@@ -278,6 +284,18 @@ func (t *tagsProbe) GetPensandoTagsOnObjects(refs []types.ManagedObjectReference
 			}
 		}
 		kindMap[id] = tags
+	}
+	for _, ref := range refs {
+		if _, ok := presentMap[ref.Value]; !ok {
+			kind := ref.Type
+			id := ref.Value
+			kindMap, ok := resMap[kind]
+			if !ok {
+				kindMap = KindTagMapEntry{}
+				resMap[kind] = kindMap
+			}
+			kindMap[id] = []string{}
+		}
 	}
 	t.Log.Debugf("Retrieved tags %+v", resMap)
 
@@ -374,6 +392,51 @@ func (t *tagsProbe) RemoveTag(ref types.ManagedObjectReference, tagName string) 
 		return fmt.Errorf("Failed to remove tag, no entry for tag %s", tagName)
 	}
 	return tc.DetachTag(t.ClientCtx, tagID, ref)
+}
+
+// GetWriteTags returns the write tags and their IDs
+func (t *tagsProbe) GetWriteTags() map[string]string {
+	t.writeLock.Lock()
+	defer t.writeLock.Unlock()
+	copyMap := map[string]string{}
+	for k, v := range t.writeTagInfo {
+		copyMap[k] = v
+	}
+	return copyMap
+}
+
+// SetWriteTags sets write tag to ID map
+func (t *tagsProbe) SetWriteTags(input map[string]string) {
+	t.writeLock.Lock()
+	defer t.writeLock.Unlock()
+	copyMap := map[string]string{}
+	for k, v := range input {
+		copyMap[k] = v
+	}
+	t.writeTagInfo = copyMap
+	return
+}
+
+// DestroyTags removes all pensando created tags
+func (t *tagsProbe) DestroyTags() error {
+	t.writeLock.Lock()
+	defer t.writeLock.Unlock()
+	catID, ok := t.writeTagInfo[defs.VCTagCategory]
+	if !ok {
+		return fmt.Errorf("Failed to remove tag, no entry for tag %s", defs.VCTagCategory)
+	}
+
+	_, err := t.retry(func() (interface{}, error) {
+		tc := t.GetTagClientWithRLock()
+		defer t.ReleaseClientsRLock()
+		err := tc.DeleteCategory(t.ClientCtx, &tags.Category{ID: catID})
+		if err != nil {
+			t.Log.Errorf("Failed to delete category, %s", err)
+		}
+		return nil, err
+	}, "delCat", 500*time.Millisecond, 5)
+
+	return err
 }
 
 // RemoveTagObjVlan has worse performance than removeTag. Use RemoveTag if possible.
@@ -725,7 +788,7 @@ func (t *tagsProbe) retry(fn func() (interface{}, error), operName string, delay
 		select {
 		case <-ctx.Done():
 			return nil, err
-		case <-time.After(retryDelay):
+		case <-time.After(delay):
 		}
 	}
 	return nil, err

@@ -170,7 +170,7 @@ func (tInfo *testInfo) setup(t *testing.T) error {
 	tInfo.updateResolver(globals.Spyglass, tInfo.fdrAddr)
 
 	// start API server
-	tInfo.apiServer, tInfo.apiServerAddr, err = serviceutils.StartAPIServer(":0", t.Name(), tInfo.l)
+	tInfo.apiServer, tInfo.apiServerAddr, err = serviceutils.StartAPIServer(":0", t.Name(), tInfo.l, []string{})
 	if err != nil {
 		return err
 	}
@@ -410,7 +410,7 @@ func TestSpyglassErrorHandling(t *testing.T) {
 
 	// restart API server
 	tInfo.l.Info("Restating API Server")
-	tInfo.apiServer, tInfo.apiServerAddr, err = serviceutils.StartAPIServer(":0", t.Name(), tInfo.l)
+	tInfo.apiServer, tInfo.apiServerAddr, err = serviceutils.StartAPIServer(":0", t.Name(), tInfo.l, []string{})
 	AssertOk(t, err, "Failed to start api server")
 	tInfo.updateResolver(globals.APIServer, tInfo.apiServerAddr)
 

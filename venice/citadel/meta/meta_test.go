@@ -529,7 +529,7 @@ func TestGetMetastoreURLs(t *testing.T) {
 	}
 	defer evtsRecorder.Close()
 
-	srv, addr, err := serviceutils.StartAPIServer("localhost:0", t.Name(), log.WithContext("test", t.Name()))
+	srv, addr, err := serviceutils.StartAPIServer("localhost:0", t.Name(), log.WithContext("test", t.Name()), []string{})
 	AssertOk(t, err, "failed to create API server, err: %v", err)
 	defer srv.Stop()
 

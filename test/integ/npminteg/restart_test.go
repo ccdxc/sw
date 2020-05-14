@@ -63,7 +63,7 @@ func (it *integTestSuite) TestNpmApiServerRestart(c *C) {
 	log.Infof("================ Stopped API server. Restarting ==============")
 
 	// restart API server
-	it.apiSrv, _, err = serviceutils.StartAPIServer(integTestApisrvURL, "npm-integ-test", it.logger)
+	it.apiSrv, _, err = serviceutils.StartAPIServer(integTestApisrvURL, "npm-integ-test", it.logger, []string{})
 	c.Assert(err, check.IsNil)
 	it.apisrvClient, err = apiclient.NewGrpcAPIClient("integ_test", globals.APIServer, it.logger, rpckit.WithBalancer(balancer.New(it.resolverClient)))
 	c.Assert(err, check.IsNil)
@@ -117,7 +117,7 @@ func (it *integTestSuite) TestNpmApiServerRestart(c *C) {
 	it.apiSrv.Stop()
 	it.apisrvClient.Close()
 	time.Sleep(time.Millisecond * 10)
-	it.apiSrv, _, err = serviceutils.StartAPIServer(integTestApisrvURL, "npm-integ-test2", it.logger)
+	it.apiSrv, _, err = serviceutils.StartAPIServer(integTestApisrvURL, "npm-integ-test2", it.logger, []string{})
 	c.Assert(err, check.IsNil)
 	it.apisrvClient, err = apiclient.NewGrpcAPIClient("integ_test", globals.APIServer, it.logger, rpckit.WithBalancer(balancer.New(it.resolverClient)))
 	c.Assert(err, check.IsNil)
@@ -166,7 +166,7 @@ func (it *integTestSuite) TestNpmApiServerRestart(c *C) {
 	it.apiSrv.Stop()
 	it.apisrvClient.Close()
 	time.Sleep(time.Millisecond * 10)
-	it.apiSrv, _, err = serviceutils.StartAPIServer(integTestApisrvURL, "npm-integ-test", it.logger)
+	it.apiSrv, _, err = serviceutils.StartAPIServer(integTestApisrvURL, "npm-integ-test", it.logger, []string{})
 	c.Assert(err, check.IsNil)
 	it.apisrvClient, err = apiclient.NewGrpcAPIClient("integ_test", globals.APIServer, it.logger, rpckit.WithBalancer(balancer.New(it.resolverClient)))
 	c.Assert(err, check.IsNil)

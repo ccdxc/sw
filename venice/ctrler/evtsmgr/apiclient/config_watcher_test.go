@@ -11,7 +11,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/venice/apiserver"
-	"github.com/pensando/sw/venice/cmd/types/protos"
+	types "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr/memdb"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/events/recorder"
@@ -38,7 +38,7 @@ func setup(t *testing.T) (*ConfigWatcher, apiserver.Server) {
 	mr := mockresolver.New()
 
 	// create API server
-	apiServer, apiServerURL, err := serviceutils.StartAPIServer("", t.Name(), tLogger)
+	apiServer, apiServerURL, err := serviceutils.StartAPIServer("", t.Name(), tLogger, []string{})
 	AssertOk(t, err, "failed to create API Server")
 	mr.AddServiceInstance(&types.ServiceInstance{
 		TypeMeta: api.TypeMeta{

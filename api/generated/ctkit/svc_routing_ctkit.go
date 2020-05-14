@@ -178,7 +178,7 @@ func (ct *ctrlerCtx) handleNeighborEventNoResolver(evt *kvstore.WatchEvent) erro
 				err = neighborHandler.OnNeighborCreate(ctrlCtx.obj)
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					ct.delObject(kind, ctrlCtx.GetKey())
 					return err
 				}
@@ -202,7 +202,7 @@ func (ct *ctrlerCtx) handleNeighborEventNoResolver(evt *kvstore.WatchEvent) erro
 				ctrlCtx.obj.Neighbor = *eobj
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					return err
 				}
 
@@ -221,7 +221,7 @@ func (ct *ctrlerCtx) handleNeighborEventNoResolver(evt *kvstore.WatchEvent) erro
 			err = neighborHandler.OnNeighborDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 			}
 			ct.delObject(kind, ctrlCtx.GetKey())
 			return nil
@@ -317,7 +317,7 @@ func (ctx *neighborCtx) WorkFunc(context context.Context) error {
 		err = neighborHandler.OnNeighborCreate(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Updated:
@@ -330,7 +330,7 @@ func (ctx *neighborCtx) WorkFunc(context context.Context) error {
 		err = neighborHandler.OnNeighborUpdate(ctx.obj, &p)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Deleted:
@@ -338,7 +338,7 @@ func (ctx *neighborCtx) WorkFunc(context context.Context) error {
 		err = neighborHandler.OnNeighborDelete(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 		}
 	}
 	ct.resolveObject(ctx.event, ctx)
@@ -415,7 +415,7 @@ func (ct *ctrlerCtx) handleNeighborEventParallelWithNoResolver(evt *kvstore.Watc
 					err = neighborHandler.OnNeighborCreate(eobj)
 					eobj.Unlock()
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj.GetObjectMeta(), err)
 						ct.delObject(kind, workCtx.GetKey())
 					}
 				} else {
@@ -430,7 +430,7 @@ func (ct *ctrlerCtx) handleNeighborEventParallelWithNoResolver(evt *kvstore.Watc
 
 					err = neighborHandler.OnNeighborUpdate(obj, &p)
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 					} else {
 						workCtx.obj.Neighbor = p
 					}
@@ -456,7 +456,7 @@ func (ct *ctrlerCtx) handleNeighborEventParallelWithNoResolver(evt *kvstore.Watc
 				err = neighborHandler.OnNeighborDelete(obj)
 				obj.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 				}
 				ct.delObject(kind, workCtx.GetKey())
 				return nil
@@ -602,7 +602,9 @@ func (ct *ctrlerCtx) runNeighborWatcher() {
 				ct.Unlock()
 
 				// perform a diff with API server and local cache
-				time.Sleep(time.Millisecond * 100)
+				// Sleeping to give time for other apiclient's to reconnect
+				// before calling reconnect handler
+				time.Sleep(time.Second)
 				ct.diffNeighbor(apicl)
 				neighborHandler.OnNeighborReconnect()
 
@@ -643,7 +645,7 @@ func (ct *ctrlerCtx) WatchNeighbor(handler NeighborHandler) error {
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if ok {
 		return fmt.Errorf("Neighbor watcher already exists")
@@ -666,7 +668,7 @@ func (ct *ctrlerCtx) StopWatchNeighbor(handler NeighborHandler) error {
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if !ok {
 		return fmt.Errorf("Neighbor watcher does not exist")
@@ -675,7 +677,9 @@ func (ct *ctrlerCtx) StopWatchNeighbor(handler NeighborHandler) error {
 	ct.Lock()
 	cancel, _ := ct.watchCancel[kind]
 	cancel()
-	delete(ct.watchers, kind)
+	if _, ok := ct.watchers[kind]; ok {
+		delete(ct.watchers, kind)
+	}
 	delete(ct.watchCancel, kind)
 	ct.Unlock()
 
@@ -693,7 +697,9 @@ type NeighborAPI interface {
 	Delete(obj *routing.Neighbor) error
 	Find(meta *api.ObjectMeta) (*Neighbor, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Neighbor, error)
+	ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*routing.Neighbor, error)
 	Watch(handler NeighborHandler) error
+	ClearCache(handler NeighborHandler)
 	StopWatch(handler NeighborHandler) error
 }
 
@@ -851,6 +857,30 @@ func (api *neighborAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([
 	return objlist, nil
 }
 
+// ApisrvList returns a list of all Neighbor objects from apiserver
+func (api *neighborAPI) ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*routing.Neighbor, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.RoutingV1().Neighbor().List(context.Background(), opts)
+	}
+
+	// List from local cache
+	ctkitObjs, err := api.List(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	var ret []*routing.Neighbor
+	for _, obj := range ctkitObjs {
+		ret = append(ret, &obj.Neighbor)
+	}
+	return ret, nil
+}
+
 // Watch sets up a event handlers for Neighbor object
 func (api *neighborAPI) Watch(handler NeighborHandler) error {
 	api.ct.startWorkerPool("Neighbor")
@@ -863,6 +893,11 @@ func (api *neighborAPI) StopWatch(handler NeighborHandler) error {
 	api.ct.workPools["Neighbor"].Stop()
 	api.ct.Unlock()
 	return api.ct.StopWatchNeighbor(handler)
+}
+
+// ClearCache removes all Neighbor objects in ctkit
+func (api *neighborAPI) ClearCache(handler NeighborHandler) {
+	api.ct.delKind("Neighbor")
 }
 
 // Neighbor returns NeighborAPI

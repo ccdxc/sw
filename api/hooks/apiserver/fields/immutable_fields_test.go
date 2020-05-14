@@ -402,7 +402,7 @@ func TestRegisterImmutableFieldsServiceHooks(t *testing.T) {
 	recorder.Override(mock.NewRecorder("apiserver_test", logger))
 
 	// Start ApiServer to trigger invocation of RegisterImmutableFieldsServiceHooks
-	srv, addr, err := serviceutils.StartAPIServer("localhost:0", "immutable_fields_test", logger)
+	srv, addr, err := serviceutils.StartAPIServer("localhost:0", "immutable_fields_test", logger, []string{})
 	AssertOk(t, err, "Error initializing ApiServer")
 	defer srv.Stop()
 

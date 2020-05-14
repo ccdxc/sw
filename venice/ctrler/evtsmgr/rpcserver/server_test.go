@@ -10,21 +10,21 @@ import (
 	"testing"
 	"time"
 
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/api/generated/monitoring"
 	emgrpc "github.com/pensando/sw/nic/agent/protos/evtprotos"
 	"github.com/pensando/sw/venice/apiserver"
-	"github.com/pensando/sw/venice/cmd/types/protos"
+	types "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr/alertengine"
 	eapiclient "github.com/pensando/sw/venice/ctrler/evtsmgr/apiclient"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr/memdb"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/elastic"
-	"github.com/pensando/sw/venice/utils/elastic/mock/server"
+	mock "github.com/pensando/sw/venice/utils/elastic/mock/server"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	mockevtsrecorder "github.com/pensando/sw/venice/utils/events/recorder/mock"
 	"github.com/pensando/sw/venice/utils/log"
@@ -56,7 +56,7 @@ func setup(t *testing.T) (*mock.ElasticServer, apiserver.Server, *RPCServer, *rp
 	mr := mockresolver.New()
 
 	// create API server
-	apiServer, apiServerURL, err := serviceutils.StartAPIServer("", t.Name(), tLogger.WithContext("submodule", globals.APIServer))
+	apiServer, apiServerURL, err := serviceutils.StartAPIServer("", t.Name(), tLogger.WithContext("submodule", globals.APIServer), []string{})
 	AssertOk(t, err, "failed to start API server")
 	Assert(t, !utils.IsEmpty(apiServerURL), "empty API server URL")
 

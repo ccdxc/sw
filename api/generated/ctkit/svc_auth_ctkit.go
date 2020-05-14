@@ -178,7 +178,7 @@ func (ct *ctrlerCtx) handleUserEventNoResolver(evt *kvstore.WatchEvent) error {
 				err = userHandler.OnUserCreate(ctrlCtx.obj)
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					ct.delObject(kind, ctrlCtx.GetKey())
 					return err
 				}
@@ -202,7 +202,7 @@ func (ct *ctrlerCtx) handleUserEventNoResolver(evt *kvstore.WatchEvent) error {
 				ctrlCtx.obj.User = *eobj
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					return err
 				}
 
@@ -221,7 +221,7 @@ func (ct *ctrlerCtx) handleUserEventNoResolver(evt *kvstore.WatchEvent) error {
 			err = userHandler.OnUserDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 			}
 			ct.delObject(kind, ctrlCtx.GetKey())
 			return nil
@@ -317,7 +317,7 @@ func (ctx *userCtx) WorkFunc(context context.Context) error {
 		err = userHandler.OnUserCreate(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Updated:
@@ -330,7 +330,7 @@ func (ctx *userCtx) WorkFunc(context context.Context) error {
 		err = userHandler.OnUserUpdate(ctx.obj, &p)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Deleted:
@@ -338,7 +338,7 @@ func (ctx *userCtx) WorkFunc(context context.Context) error {
 		err = userHandler.OnUserDelete(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 		}
 	}
 	ct.resolveObject(ctx.event, ctx)
@@ -415,7 +415,7 @@ func (ct *ctrlerCtx) handleUserEventParallelWithNoResolver(evt *kvstore.WatchEve
 					err = userHandler.OnUserCreate(eobj)
 					eobj.Unlock()
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj.GetObjectMeta(), err)
 						ct.delObject(kind, workCtx.GetKey())
 					}
 				} else {
@@ -430,7 +430,7 @@ func (ct *ctrlerCtx) handleUserEventParallelWithNoResolver(evt *kvstore.WatchEve
 
 					err = userHandler.OnUserUpdate(obj, &p)
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 					} else {
 						workCtx.obj.User = p
 					}
@@ -456,7 +456,7 @@ func (ct *ctrlerCtx) handleUserEventParallelWithNoResolver(evt *kvstore.WatchEve
 				err = userHandler.OnUserDelete(obj)
 				obj.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 				}
 				ct.delObject(kind, workCtx.GetKey())
 				return nil
@@ -602,7 +602,9 @@ func (ct *ctrlerCtx) runUserWatcher() {
 				ct.Unlock()
 
 				// perform a diff with API server and local cache
-				time.Sleep(time.Millisecond * 100)
+				// Sleeping to give time for other apiclient's to reconnect
+				// before calling reconnect handler
+				time.Sleep(time.Second)
 				ct.diffUser(apicl)
 				userHandler.OnUserReconnect()
 
@@ -643,7 +645,7 @@ func (ct *ctrlerCtx) WatchUser(handler UserHandler) error {
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if ok {
 		return fmt.Errorf("User watcher already exists")
@@ -666,7 +668,7 @@ func (ct *ctrlerCtx) StopWatchUser(handler UserHandler) error {
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if !ok {
 		return fmt.Errorf("User watcher does not exist")
@@ -675,7 +677,9 @@ func (ct *ctrlerCtx) StopWatchUser(handler UserHandler) error {
 	ct.Lock()
 	cancel, _ := ct.watchCancel[kind]
 	cancel()
-	delete(ct.watchers, kind)
+	if _, ok := ct.watchers[kind]; ok {
+		delete(ct.watchers, kind)
+	}
 	delete(ct.watchCancel, kind)
 	ct.Unlock()
 
@@ -693,7 +697,9 @@ type UserAPI interface {
 	Delete(obj *auth.User) error
 	Find(meta *api.ObjectMeta) (*User, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*User, error)
+	ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*auth.User, error)
 	Watch(handler UserHandler) error
+	ClearCache(handler UserHandler)
 	StopWatch(handler UserHandler) error
 	PasswordChange(obj *auth.PasswordChangeRequest) (*auth.User, error)
 	RegisterLocalPasswordChangeHandler(fn func(*auth.PasswordChangeRequest) (*auth.User, error))
@@ -870,6 +876,30 @@ func (api *userAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*Us
 	return objlist, nil
 }
 
+// ApisrvList returns a list of all User objects from apiserver
+func (api *userAPI) ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*auth.User, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.AuthV1().User().List(context.Background(), opts)
+	}
+
+	// List from local cache
+	ctkitObjs, err := api.List(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	var ret []*auth.User
+	for _, obj := range ctkitObjs {
+		ret = append(ret, &obj.User)
+	}
+	return ret, nil
+}
+
 // Watch sets up a event handlers for User object
 func (api *userAPI) Watch(handler UserHandler) error {
 	api.ct.startWorkerPool("User")
@@ -882,6 +912,11 @@ func (api *userAPI) StopWatch(handler UserHandler) error {
 	api.ct.workPools["User"].Stop()
 	api.ct.Unlock()
 	return api.ct.StopWatchUser(handler)
+}
+
+// ClearCache removes all User objects in ctkit
+func (api *userAPI) ClearCache(handler UserHandler) {
+	api.ct.delKind("User")
 }
 
 // PasswordChange is an API action
@@ -1197,7 +1232,7 @@ func (ct *ctrlerCtx) handleAuthenticationPolicyEventNoResolver(evt *kvstore.Watc
 				err = authenticationpolicyHandler.OnAuthenticationPolicyCreate(ctrlCtx.obj)
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					ct.delObject(kind, ctrlCtx.GetKey())
 					return err
 				}
@@ -1221,7 +1256,7 @@ func (ct *ctrlerCtx) handleAuthenticationPolicyEventNoResolver(evt *kvstore.Watc
 				ctrlCtx.obj.AuthenticationPolicy = *eobj
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					return err
 				}
 
@@ -1240,7 +1275,7 @@ func (ct *ctrlerCtx) handleAuthenticationPolicyEventNoResolver(evt *kvstore.Watc
 			err = authenticationpolicyHandler.OnAuthenticationPolicyDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 			}
 			ct.delObject(kind, ctrlCtx.GetKey())
 			return nil
@@ -1336,7 +1371,7 @@ func (ctx *authenticationpolicyCtx) WorkFunc(context context.Context) error {
 		err = authenticationpolicyHandler.OnAuthenticationPolicyCreate(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Updated:
@@ -1349,7 +1384,7 @@ func (ctx *authenticationpolicyCtx) WorkFunc(context context.Context) error {
 		err = authenticationpolicyHandler.OnAuthenticationPolicyUpdate(ctx.obj, &p)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Deleted:
@@ -1357,7 +1392,7 @@ func (ctx *authenticationpolicyCtx) WorkFunc(context context.Context) error {
 		err = authenticationpolicyHandler.OnAuthenticationPolicyDelete(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 		}
 	}
 	ct.resolveObject(ctx.event, ctx)
@@ -1434,7 +1469,7 @@ func (ct *ctrlerCtx) handleAuthenticationPolicyEventParallelWithNoResolver(evt *
 					err = authenticationpolicyHandler.OnAuthenticationPolicyCreate(eobj)
 					eobj.Unlock()
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj.GetObjectMeta(), err)
 						ct.delObject(kind, workCtx.GetKey())
 					}
 				} else {
@@ -1449,7 +1484,7 @@ func (ct *ctrlerCtx) handleAuthenticationPolicyEventParallelWithNoResolver(evt *
 
 					err = authenticationpolicyHandler.OnAuthenticationPolicyUpdate(obj, &p)
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 					} else {
 						workCtx.obj.AuthenticationPolicy = p
 					}
@@ -1475,7 +1510,7 @@ func (ct *ctrlerCtx) handleAuthenticationPolicyEventParallelWithNoResolver(evt *
 				err = authenticationpolicyHandler.OnAuthenticationPolicyDelete(obj)
 				obj.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 				}
 				ct.delObject(kind, workCtx.GetKey())
 				return nil
@@ -1621,7 +1656,9 @@ func (ct *ctrlerCtx) runAuthenticationPolicyWatcher() {
 				ct.Unlock()
 
 				// perform a diff with API server and local cache
-				time.Sleep(time.Millisecond * 100)
+				// Sleeping to give time for other apiclient's to reconnect
+				// before calling reconnect handler
+				time.Sleep(time.Second)
 				ct.diffAuthenticationPolicy(apicl)
 				authenticationpolicyHandler.OnAuthenticationPolicyReconnect()
 
@@ -1662,7 +1699,7 @@ func (ct *ctrlerCtx) WatchAuthenticationPolicy(handler AuthenticationPolicyHandl
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if ok {
 		return fmt.Errorf("AuthenticationPolicy watcher already exists")
@@ -1685,7 +1722,7 @@ func (ct *ctrlerCtx) StopWatchAuthenticationPolicy(handler AuthenticationPolicyH
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if !ok {
 		return fmt.Errorf("AuthenticationPolicy watcher does not exist")
@@ -1694,7 +1731,9 @@ func (ct *ctrlerCtx) StopWatchAuthenticationPolicy(handler AuthenticationPolicyH
 	ct.Lock()
 	cancel, _ := ct.watchCancel[kind]
 	cancel()
-	delete(ct.watchers, kind)
+	if _, ok := ct.watchers[kind]; ok {
+		delete(ct.watchers, kind)
+	}
 	delete(ct.watchCancel, kind)
 	ct.Unlock()
 
@@ -1712,7 +1751,9 @@ type AuthenticationPolicyAPI interface {
 	Delete(obj *auth.AuthenticationPolicy) error
 	Find(meta *api.ObjectMeta) (*AuthenticationPolicy, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*AuthenticationPolicy, error)
+	ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*auth.AuthenticationPolicy, error)
 	Watch(handler AuthenticationPolicyHandler) error
+	ClearCache(handler AuthenticationPolicyHandler)
 	StopWatch(handler AuthenticationPolicyHandler) error
 	LdapConnectionCheck(obj *auth.AuthenticationPolicy) (*auth.AuthenticationPolicy, error)
 	RegisterLocalLdapConnectionCheckHandler(fn func(*auth.AuthenticationPolicy) (*auth.AuthenticationPolicy, error))
@@ -1889,6 +1930,30 @@ func (api *authenticationpolicyAPI) List(ctx context.Context, opts *api.ListWatc
 	return objlist, nil
 }
 
+// ApisrvList returns a list of all AuthenticationPolicy objects from apiserver
+func (api *authenticationpolicyAPI) ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*auth.AuthenticationPolicy, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.AuthV1().AuthenticationPolicy().List(context.Background(), opts)
+	}
+
+	// List from local cache
+	ctkitObjs, err := api.List(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	var ret []*auth.AuthenticationPolicy
+	for _, obj := range ctkitObjs {
+		ret = append(ret, &obj.AuthenticationPolicy)
+	}
+	return ret, nil
+}
+
 // Watch sets up a event handlers for AuthenticationPolicy object
 func (api *authenticationpolicyAPI) Watch(handler AuthenticationPolicyHandler) error {
 	api.ct.startWorkerPool("AuthenticationPolicy")
@@ -1901,6 +1966,11 @@ func (api *authenticationpolicyAPI) StopWatch(handler AuthenticationPolicyHandle
 	api.ct.workPools["AuthenticationPolicy"].Stop()
 	api.ct.Unlock()
 	return api.ct.StopWatchAuthenticationPolicy(handler)
+}
+
+// ClearCache removes all AuthenticationPolicy objects in ctkit
+func (api *authenticationpolicyAPI) ClearCache(handler AuthenticationPolicyHandler) {
+	api.ct.delKind("AuthenticationPolicy")
 }
 
 // LdapConnectionCheck is an API action
@@ -2212,7 +2282,7 @@ func (ct *ctrlerCtx) handleRoleEventNoResolver(evt *kvstore.WatchEvent) error {
 				err = roleHandler.OnRoleCreate(ctrlCtx.obj)
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					ct.delObject(kind, ctrlCtx.GetKey())
 					return err
 				}
@@ -2236,7 +2306,7 @@ func (ct *ctrlerCtx) handleRoleEventNoResolver(evt *kvstore.WatchEvent) error {
 				ctrlCtx.obj.Role = *eobj
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					return err
 				}
 
@@ -2255,7 +2325,7 @@ func (ct *ctrlerCtx) handleRoleEventNoResolver(evt *kvstore.WatchEvent) error {
 			err = roleHandler.OnRoleDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 			}
 			ct.delObject(kind, ctrlCtx.GetKey())
 			return nil
@@ -2351,7 +2421,7 @@ func (ctx *roleCtx) WorkFunc(context context.Context) error {
 		err = roleHandler.OnRoleCreate(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Updated:
@@ -2364,7 +2434,7 @@ func (ctx *roleCtx) WorkFunc(context context.Context) error {
 		err = roleHandler.OnRoleUpdate(ctx.obj, &p)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Deleted:
@@ -2372,7 +2442,7 @@ func (ctx *roleCtx) WorkFunc(context context.Context) error {
 		err = roleHandler.OnRoleDelete(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 		}
 	}
 	ct.resolveObject(ctx.event, ctx)
@@ -2445,7 +2515,7 @@ func (ct *ctrlerCtx) handleRoleEventParallelWithNoResolver(evt *kvstore.WatchEve
 					err = roleHandler.OnRoleCreate(eobj)
 					eobj.Unlock()
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj.GetObjectMeta(), err)
 						ct.delObject(kind, workCtx.GetKey())
 					}
 				} else {
@@ -2460,7 +2530,7 @@ func (ct *ctrlerCtx) handleRoleEventParallelWithNoResolver(evt *kvstore.WatchEve
 
 					err = roleHandler.OnRoleUpdate(obj, &p)
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 					} else {
 						workCtx.obj.Role = p
 					}
@@ -2486,7 +2556,7 @@ func (ct *ctrlerCtx) handleRoleEventParallelWithNoResolver(evt *kvstore.WatchEve
 				err = roleHandler.OnRoleDelete(obj)
 				obj.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 				}
 				ct.delObject(kind, workCtx.GetKey())
 				return nil
@@ -2632,7 +2702,9 @@ func (ct *ctrlerCtx) runRoleWatcher() {
 				ct.Unlock()
 
 				// perform a diff with API server and local cache
-				time.Sleep(time.Millisecond * 100)
+				// Sleeping to give time for other apiclient's to reconnect
+				// before calling reconnect handler
+				time.Sleep(time.Second)
 				ct.diffRole(apicl)
 				roleHandler.OnRoleReconnect()
 
@@ -2673,7 +2745,7 @@ func (ct *ctrlerCtx) WatchRole(handler RoleHandler) error {
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if ok {
 		return fmt.Errorf("Role watcher already exists")
@@ -2696,7 +2768,7 @@ func (ct *ctrlerCtx) StopWatchRole(handler RoleHandler) error {
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if !ok {
 		return fmt.Errorf("Role watcher does not exist")
@@ -2705,7 +2777,9 @@ func (ct *ctrlerCtx) StopWatchRole(handler RoleHandler) error {
 	ct.Lock()
 	cancel, _ := ct.watchCancel[kind]
 	cancel()
-	delete(ct.watchers, kind)
+	if _, ok := ct.watchers[kind]; ok {
+		delete(ct.watchers, kind)
+	}
 	delete(ct.watchCancel, kind)
 	ct.Unlock()
 
@@ -2723,7 +2797,9 @@ type RoleAPI interface {
 	Delete(obj *auth.Role) error
 	Find(meta *api.ObjectMeta) (*Role, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Role, error)
+	ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*auth.Role, error)
 	Watch(handler RoleHandler) error
+	ClearCache(handler RoleHandler)
 	StopWatch(handler RoleHandler) error
 }
 
@@ -2881,6 +2957,30 @@ func (api *roleAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*Ro
 	return objlist, nil
 }
 
+// ApisrvList returns a list of all Role objects from apiserver
+func (api *roleAPI) ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*auth.Role, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.AuthV1().Role().List(context.Background(), opts)
+	}
+
+	// List from local cache
+	ctkitObjs, err := api.List(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	var ret []*auth.Role
+	for _, obj := range ctkitObjs {
+		ret = append(ret, &obj.Role)
+	}
+	return ret, nil
+}
+
 // Watch sets up a event handlers for Role object
 func (api *roleAPI) Watch(handler RoleHandler) error {
 	api.ct.startWorkerPool("Role")
@@ -2893,6 +2993,11 @@ func (api *roleAPI) StopWatch(handler RoleHandler) error {
 	api.ct.workPools["Role"].Stop()
 	api.ct.Unlock()
 	return api.ct.StopWatchRole(handler)
+}
+
+// ClearCache removes all Role objects in ctkit
+func (api *roleAPI) ClearCache(handler RoleHandler) {
+	api.ct.delKind("Role")
 }
 
 // Role returns RoleAPI
@@ -3051,7 +3156,7 @@ func (ct *ctrlerCtx) handleRoleBindingEventNoResolver(evt *kvstore.WatchEvent) e
 				err = rolebindingHandler.OnRoleBindingCreate(ctrlCtx.obj)
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					ct.delObject(kind, ctrlCtx.GetKey())
 					return err
 				}
@@ -3075,7 +3180,7 @@ func (ct *ctrlerCtx) handleRoleBindingEventNoResolver(evt *kvstore.WatchEvent) e
 				ctrlCtx.obj.RoleBinding = *eobj
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					return err
 				}
 
@@ -3094,7 +3199,7 @@ func (ct *ctrlerCtx) handleRoleBindingEventNoResolver(evt *kvstore.WatchEvent) e
 			err = rolebindingHandler.OnRoleBindingDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 			}
 			ct.delObject(kind, ctrlCtx.GetKey())
 			return nil
@@ -3190,7 +3295,7 @@ func (ctx *rolebindingCtx) WorkFunc(context context.Context) error {
 		err = rolebindingHandler.OnRoleBindingCreate(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Updated:
@@ -3203,7 +3308,7 @@ func (ctx *rolebindingCtx) WorkFunc(context context.Context) error {
 		err = rolebindingHandler.OnRoleBindingUpdate(ctx.obj, &p)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Deleted:
@@ -3211,7 +3316,7 @@ func (ctx *rolebindingCtx) WorkFunc(context context.Context) error {
 		err = rolebindingHandler.OnRoleBindingDelete(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 		}
 	}
 	ct.resolveObject(ctx.event, ctx)
@@ -3284,7 +3389,7 @@ func (ct *ctrlerCtx) handleRoleBindingEventParallelWithNoResolver(evt *kvstore.W
 					err = rolebindingHandler.OnRoleBindingCreate(eobj)
 					eobj.Unlock()
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj.GetObjectMeta(), err)
 						ct.delObject(kind, workCtx.GetKey())
 					}
 				} else {
@@ -3299,7 +3404,7 @@ func (ct *ctrlerCtx) handleRoleBindingEventParallelWithNoResolver(evt *kvstore.W
 
 					err = rolebindingHandler.OnRoleBindingUpdate(obj, &p)
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 					} else {
 						workCtx.obj.RoleBinding = p
 					}
@@ -3325,7 +3430,7 @@ func (ct *ctrlerCtx) handleRoleBindingEventParallelWithNoResolver(evt *kvstore.W
 				err = rolebindingHandler.OnRoleBindingDelete(obj)
 				obj.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 				}
 				ct.delObject(kind, workCtx.GetKey())
 				return nil
@@ -3471,7 +3576,9 @@ func (ct *ctrlerCtx) runRoleBindingWatcher() {
 				ct.Unlock()
 
 				// perform a diff with API server and local cache
-				time.Sleep(time.Millisecond * 100)
+				// Sleeping to give time for other apiclient's to reconnect
+				// before calling reconnect handler
+				time.Sleep(time.Second)
 				ct.diffRoleBinding(apicl)
 				rolebindingHandler.OnRoleBindingReconnect()
 
@@ -3512,7 +3619,7 @@ func (ct *ctrlerCtx) WatchRoleBinding(handler RoleBindingHandler) error {
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if ok {
 		return fmt.Errorf("RoleBinding watcher already exists")
@@ -3535,7 +3642,7 @@ func (ct *ctrlerCtx) StopWatchRoleBinding(handler RoleBindingHandler) error {
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if !ok {
 		return fmt.Errorf("RoleBinding watcher does not exist")
@@ -3544,7 +3651,9 @@ func (ct *ctrlerCtx) StopWatchRoleBinding(handler RoleBindingHandler) error {
 	ct.Lock()
 	cancel, _ := ct.watchCancel[kind]
 	cancel()
-	delete(ct.watchers, kind)
+	if _, ok := ct.watchers[kind]; ok {
+		delete(ct.watchers, kind)
+	}
 	delete(ct.watchCancel, kind)
 	ct.Unlock()
 
@@ -3562,7 +3671,9 @@ type RoleBindingAPI interface {
 	Delete(obj *auth.RoleBinding) error
 	Find(meta *api.ObjectMeta) (*RoleBinding, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*RoleBinding, error)
+	ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*auth.RoleBinding, error)
 	Watch(handler RoleBindingHandler) error
+	ClearCache(handler RoleBindingHandler)
 	StopWatch(handler RoleBindingHandler) error
 }
 
@@ -3720,6 +3831,30 @@ func (api *rolebindingAPI) List(ctx context.Context, opts *api.ListWatchOptions)
 	return objlist, nil
 }
 
+// ApisrvList returns a list of all RoleBinding objects from apiserver
+func (api *rolebindingAPI) ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*auth.RoleBinding, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.AuthV1().RoleBinding().List(context.Background(), opts)
+	}
+
+	// List from local cache
+	ctkitObjs, err := api.List(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	var ret []*auth.RoleBinding
+	for _, obj := range ctkitObjs {
+		ret = append(ret, &obj.RoleBinding)
+	}
+	return ret, nil
+}
+
 // Watch sets up a event handlers for RoleBinding object
 func (api *rolebindingAPI) Watch(handler RoleBindingHandler) error {
 	api.ct.startWorkerPool("RoleBinding")
@@ -3732,6 +3867,11 @@ func (api *rolebindingAPI) StopWatch(handler RoleBindingHandler) error {
 	api.ct.workPools["RoleBinding"].Stop()
 	api.ct.Unlock()
 	return api.ct.StopWatchRoleBinding(handler)
+}
+
+// ClearCache removes all RoleBinding objects in ctkit
+func (api *rolebindingAPI) ClearCache(handler RoleBindingHandler) {
+	api.ct.delKind("RoleBinding")
 }
 
 // RoleBinding returns RoleBindingAPI
@@ -3890,7 +4030,7 @@ func (ct *ctrlerCtx) handleUserPreferenceEventNoResolver(evt *kvstore.WatchEvent
 				err = userpreferenceHandler.OnUserPreferenceCreate(ctrlCtx.obj)
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					ct.delObject(kind, ctrlCtx.GetKey())
 					return err
 				}
@@ -3914,7 +4054,7 @@ func (ct *ctrlerCtx) handleUserPreferenceEventNoResolver(evt *kvstore.WatchEvent
 				ctrlCtx.obj.UserPreference = *eobj
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					return err
 				}
 
@@ -3933,7 +4073,7 @@ func (ct *ctrlerCtx) handleUserPreferenceEventNoResolver(evt *kvstore.WatchEvent
 			err = userpreferenceHandler.OnUserPreferenceDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 			}
 			ct.delObject(kind, ctrlCtx.GetKey())
 			return nil
@@ -4029,7 +4169,7 @@ func (ctx *userpreferenceCtx) WorkFunc(context context.Context) error {
 		err = userpreferenceHandler.OnUserPreferenceCreate(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Updated:
@@ -4042,7 +4182,7 @@ func (ctx *userpreferenceCtx) WorkFunc(context context.Context) error {
 		err = userpreferenceHandler.OnUserPreferenceUpdate(ctx.obj, &p)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Deleted:
@@ -4050,7 +4190,7 @@ func (ctx *userpreferenceCtx) WorkFunc(context context.Context) error {
 		err = userpreferenceHandler.OnUserPreferenceDelete(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 		}
 	}
 	ct.resolveObject(ctx.event, ctx)
@@ -4123,7 +4263,7 @@ func (ct *ctrlerCtx) handleUserPreferenceEventParallelWithNoResolver(evt *kvstor
 					err = userpreferenceHandler.OnUserPreferenceCreate(eobj)
 					eobj.Unlock()
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj.GetObjectMeta(), err)
 						ct.delObject(kind, workCtx.GetKey())
 					}
 				} else {
@@ -4138,7 +4278,7 @@ func (ct *ctrlerCtx) handleUserPreferenceEventParallelWithNoResolver(evt *kvstor
 
 					err = userpreferenceHandler.OnUserPreferenceUpdate(obj, &p)
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 					} else {
 						workCtx.obj.UserPreference = p
 					}
@@ -4164,7 +4304,7 @@ func (ct *ctrlerCtx) handleUserPreferenceEventParallelWithNoResolver(evt *kvstor
 				err = userpreferenceHandler.OnUserPreferenceDelete(obj)
 				obj.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 				}
 				ct.delObject(kind, workCtx.GetKey())
 				return nil
@@ -4310,7 +4450,9 @@ func (ct *ctrlerCtx) runUserPreferenceWatcher() {
 				ct.Unlock()
 
 				// perform a diff with API server and local cache
-				time.Sleep(time.Millisecond * 100)
+				// Sleeping to give time for other apiclient's to reconnect
+				// before calling reconnect handler
+				time.Sleep(time.Second)
 				ct.diffUserPreference(apicl)
 				userpreferenceHandler.OnUserPreferenceReconnect()
 
@@ -4351,7 +4493,7 @@ func (ct *ctrlerCtx) WatchUserPreference(handler UserPreferenceHandler) error {
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if ok {
 		return fmt.Errorf("UserPreference watcher already exists")
@@ -4374,7 +4516,7 @@ func (ct *ctrlerCtx) StopWatchUserPreference(handler UserPreferenceHandler) erro
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if !ok {
 		return fmt.Errorf("UserPreference watcher does not exist")
@@ -4383,7 +4525,9 @@ func (ct *ctrlerCtx) StopWatchUserPreference(handler UserPreferenceHandler) erro
 	ct.Lock()
 	cancel, _ := ct.watchCancel[kind]
 	cancel()
-	delete(ct.watchers, kind)
+	if _, ok := ct.watchers[kind]; ok {
+		delete(ct.watchers, kind)
+	}
 	delete(ct.watchCancel, kind)
 	ct.Unlock()
 
@@ -4401,7 +4545,9 @@ type UserPreferenceAPI interface {
 	Delete(obj *auth.UserPreference) error
 	Find(meta *api.ObjectMeta) (*UserPreference, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*UserPreference, error)
+	ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*auth.UserPreference, error)
 	Watch(handler UserPreferenceHandler) error
+	ClearCache(handler UserPreferenceHandler)
 	StopWatch(handler UserPreferenceHandler) error
 }
 
@@ -4559,6 +4705,30 @@ func (api *userpreferenceAPI) List(ctx context.Context, opts *api.ListWatchOptio
 	return objlist, nil
 }
 
+// ApisrvList returns a list of all UserPreference objects from apiserver
+func (api *userpreferenceAPI) ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*auth.UserPreference, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.AuthV1().UserPreference().List(context.Background(), opts)
+	}
+
+	// List from local cache
+	ctkitObjs, err := api.List(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	var ret []*auth.UserPreference
+	for _, obj := range ctkitObjs {
+		ret = append(ret, &obj.UserPreference)
+	}
+	return ret, nil
+}
+
 // Watch sets up a event handlers for UserPreference object
 func (api *userpreferenceAPI) Watch(handler UserPreferenceHandler) error {
 	api.ct.startWorkerPool("UserPreference")
@@ -4571,6 +4741,11 @@ func (api *userpreferenceAPI) StopWatch(handler UserPreferenceHandler) error {
 	api.ct.workPools["UserPreference"].Stop()
 	api.ct.Unlock()
 	return api.ct.StopWatchUserPreference(handler)
+}
+
+// ClearCache removes all UserPreference objects in ctkit
+func (api *userpreferenceAPI) ClearCache(handler UserPreferenceHandler) {
+	api.ct.delKind("UserPreference")
 }
 
 // UserPreference returns UserPreferenceAPI

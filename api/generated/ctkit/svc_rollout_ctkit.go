@@ -174,7 +174,7 @@ func (ct *ctrlerCtx) handleRolloutEventNoResolver(evt *kvstore.WatchEvent) error
 				err = rolloutHandler.OnRolloutCreate(ctrlCtx.obj)
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					ct.delObject(kind, ctrlCtx.GetKey())
 					return err
 				}
@@ -198,7 +198,7 @@ func (ct *ctrlerCtx) handleRolloutEventNoResolver(evt *kvstore.WatchEvent) error
 				ctrlCtx.obj.Rollout = *eobj
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					return err
 				}
 
@@ -217,7 +217,7 @@ func (ct *ctrlerCtx) handleRolloutEventNoResolver(evt *kvstore.WatchEvent) error
 			err = rolloutHandler.OnRolloutDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 			}
 			ct.delObject(kind, ctrlCtx.GetKey())
 			return nil
@@ -313,7 +313,7 @@ func (ctx *rolloutCtx) WorkFunc(context context.Context) error {
 		err = rolloutHandler.OnRolloutCreate(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Updated:
@@ -326,7 +326,7 @@ func (ctx *rolloutCtx) WorkFunc(context context.Context) error {
 		err = rolloutHandler.OnRolloutUpdate(ctx.obj, &p)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Deleted:
@@ -334,7 +334,7 @@ func (ctx *rolloutCtx) WorkFunc(context context.Context) error {
 		err = rolloutHandler.OnRolloutDelete(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 		}
 	}
 	ct.resolveObject(ctx.event, ctx)
@@ -407,7 +407,7 @@ func (ct *ctrlerCtx) handleRolloutEventParallelWithNoResolver(evt *kvstore.Watch
 					err = rolloutHandler.OnRolloutCreate(eobj)
 					eobj.Unlock()
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj.GetObjectMeta(), err)
 						ct.delObject(kind, workCtx.GetKey())
 					}
 				} else {
@@ -422,7 +422,7 @@ func (ct *ctrlerCtx) handleRolloutEventParallelWithNoResolver(evt *kvstore.Watch
 
 					err = rolloutHandler.OnRolloutUpdate(obj, &p)
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 					} else {
 						workCtx.obj.Rollout = p
 					}
@@ -448,7 +448,7 @@ func (ct *ctrlerCtx) handleRolloutEventParallelWithNoResolver(evt *kvstore.Watch
 				err = rolloutHandler.OnRolloutDelete(obj)
 				obj.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 				}
 				ct.delObject(kind, workCtx.GetKey())
 				return nil
@@ -594,7 +594,9 @@ func (ct *ctrlerCtx) runRolloutWatcher() {
 				ct.Unlock()
 
 				// perform a diff with API server and local cache
-				time.Sleep(time.Millisecond * 100)
+				// Sleeping to give time for other apiclient's to reconnect
+				// before calling reconnect handler
+				time.Sleep(time.Second)
 				ct.diffRollout(apicl)
 				rolloutHandler.OnRolloutReconnect()
 
@@ -635,7 +637,7 @@ func (ct *ctrlerCtx) WatchRollout(handler RolloutHandler) error {
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if ok {
 		return fmt.Errorf("Rollout watcher already exists")
@@ -658,7 +660,7 @@ func (ct *ctrlerCtx) StopWatchRollout(handler RolloutHandler) error {
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if !ok {
 		return fmt.Errorf("Rollout watcher does not exist")
@@ -667,7 +669,9 @@ func (ct *ctrlerCtx) StopWatchRollout(handler RolloutHandler) error {
 	ct.Lock()
 	cancel, _ := ct.watchCancel[kind]
 	cancel()
-	delete(ct.watchers, kind)
+	if _, ok := ct.watchers[kind]; ok {
+		delete(ct.watchers, kind)
+	}
 	delete(ct.watchCancel, kind)
 	ct.Unlock()
 
@@ -685,7 +689,9 @@ type RolloutAPI interface {
 	Delete(obj *rollout.Rollout) error
 	Find(meta *api.ObjectMeta) (*Rollout, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Rollout, error)
+	ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*rollout.Rollout, error)
 	Watch(handler RolloutHandler) error
+	ClearCache(handler RolloutHandler)
 	StopWatch(handler RolloutHandler) error
 	CreateRollout(obj *rollout.Rollout) (*rollout.Rollout, error)
 	RegisterLocalCreateRolloutHandler(fn func(*rollout.Rollout) (*rollout.Rollout, error))
@@ -868,6 +874,30 @@ func (api *rolloutAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]
 	return objlist, nil
 }
 
+// ApisrvList returns a list of all Rollout objects from apiserver
+func (api *rolloutAPI) ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*rollout.Rollout, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.RolloutV1().Rollout().List(context.Background(), opts)
+	}
+
+	// List from local cache
+	ctkitObjs, err := api.List(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	var ret []*rollout.Rollout
+	for _, obj := range ctkitObjs {
+		ret = append(ret, &obj.Rollout)
+	}
+	return ret, nil
+}
+
 // Watch sets up a event handlers for Rollout object
 func (api *rolloutAPI) Watch(handler RolloutHandler) error {
 	api.ct.startWorkerPool("Rollout")
@@ -880,6 +910,11 @@ func (api *rolloutAPI) StopWatch(handler RolloutHandler) error {
 	api.ct.workPools["Rollout"].Stop()
 	api.ct.Unlock()
 	return api.ct.StopWatchRollout(handler)
+}
+
+// ClearCache removes all Rollout objects in ctkit
+func (api *rolloutAPI) ClearCache(handler RolloutHandler) {
+	api.ct.delKind("Rollout")
 }
 
 // CreateRollout is an API action
@@ -1242,7 +1277,7 @@ func (ct *ctrlerCtx) handleRolloutActionEventNoResolver(evt *kvstore.WatchEvent)
 				err = rolloutactionHandler.OnRolloutActionCreate(ctrlCtx.obj)
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					ct.delObject(kind, ctrlCtx.GetKey())
 					return err
 				}
@@ -1266,7 +1301,7 @@ func (ct *ctrlerCtx) handleRolloutActionEventNoResolver(evt *kvstore.WatchEvent)
 				ctrlCtx.obj.RolloutAction = *eobj
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					return err
 				}
 
@@ -1285,7 +1320,7 @@ func (ct *ctrlerCtx) handleRolloutActionEventNoResolver(evt *kvstore.WatchEvent)
 			err = rolloutactionHandler.OnRolloutActionDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 			}
 			ct.delObject(kind, ctrlCtx.GetKey())
 			return nil
@@ -1381,7 +1416,7 @@ func (ctx *rolloutactionCtx) WorkFunc(context context.Context) error {
 		err = rolloutactionHandler.OnRolloutActionCreate(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Updated:
@@ -1394,7 +1429,7 @@ func (ctx *rolloutactionCtx) WorkFunc(context context.Context) error {
 		err = rolloutactionHandler.OnRolloutActionUpdate(ctx.obj, &p)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Deleted:
@@ -1402,7 +1437,7 @@ func (ctx *rolloutactionCtx) WorkFunc(context context.Context) error {
 		err = rolloutactionHandler.OnRolloutActionDelete(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 		}
 	}
 	ct.resolveObject(ctx.event, ctx)
@@ -1475,7 +1510,7 @@ func (ct *ctrlerCtx) handleRolloutActionEventParallelWithNoResolver(evt *kvstore
 					err = rolloutactionHandler.OnRolloutActionCreate(eobj)
 					eobj.Unlock()
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj.GetObjectMeta(), err)
 						ct.delObject(kind, workCtx.GetKey())
 					}
 				} else {
@@ -1490,7 +1525,7 @@ func (ct *ctrlerCtx) handleRolloutActionEventParallelWithNoResolver(evt *kvstore
 
 					err = rolloutactionHandler.OnRolloutActionUpdate(obj, &p)
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 					} else {
 						workCtx.obj.RolloutAction = p
 					}
@@ -1516,7 +1551,7 @@ func (ct *ctrlerCtx) handleRolloutActionEventParallelWithNoResolver(evt *kvstore
 				err = rolloutactionHandler.OnRolloutActionDelete(obj)
 				obj.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 				}
 				ct.delObject(kind, workCtx.GetKey())
 				return nil
@@ -1662,7 +1697,9 @@ func (ct *ctrlerCtx) runRolloutActionWatcher() {
 				ct.Unlock()
 
 				// perform a diff with API server and local cache
-				time.Sleep(time.Millisecond * 100)
+				// Sleeping to give time for other apiclient's to reconnect
+				// before calling reconnect handler
+				time.Sleep(time.Second)
 				ct.diffRolloutAction(apicl)
 				rolloutactionHandler.OnRolloutActionReconnect()
 
@@ -1703,7 +1740,7 @@ func (ct *ctrlerCtx) WatchRolloutAction(handler RolloutActionHandler) error {
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if ok {
 		return fmt.Errorf("RolloutAction watcher already exists")
@@ -1726,7 +1763,7 @@ func (ct *ctrlerCtx) StopWatchRolloutAction(handler RolloutActionHandler) error 
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if !ok {
 		return fmt.Errorf("RolloutAction watcher does not exist")
@@ -1735,7 +1772,9 @@ func (ct *ctrlerCtx) StopWatchRolloutAction(handler RolloutActionHandler) error 
 	ct.Lock()
 	cancel, _ := ct.watchCancel[kind]
 	cancel()
-	delete(ct.watchers, kind)
+	if _, ok := ct.watchers[kind]; ok {
+		delete(ct.watchers, kind)
+	}
 	delete(ct.watchCancel, kind)
 	ct.Unlock()
 
@@ -1753,7 +1792,9 @@ type RolloutActionAPI interface {
 	Delete(obj *rollout.RolloutAction) error
 	Find(meta *api.ObjectMeta) (*RolloutAction, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*RolloutAction, error)
+	ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*rollout.RolloutAction, error)
 	Watch(handler RolloutActionHandler) error
+	ClearCache(handler RolloutActionHandler)
 	StopWatch(handler RolloutActionHandler) error
 }
 
@@ -1911,6 +1952,30 @@ func (api *rolloutactionAPI) List(ctx context.Context, opts *api.ListWatchOption
 	return objlist, nil
 }
 
+// ApisrvList returns a list of all RolloutAction objects from apiserver
+func (api *rolloutactionAPI) ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*rollout.RolloutAction, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.RolloutV1().RolloutAction().List(context.Background(), opts)
+	}
+
+	// List from local cache
+	ctkitObjs, err := api.List(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	var ret []*rollout.RolloutAction
+	for _, obj := range ctkitObjs {
+		ret = append(ret, &obj.RolloutAction)
+	}
+	return ret, nil
+}
+
 // Watch sets up a event handlers for RolloutAction object
 func (api *rolloutactionAPI) Watch(handler RolloutActionHandler) error {
 	api.ct.startWorkerPool("RolloutAction")
@@ -1923,6 +1988,11 @@ func (api *rolloutactionAPI) StopWatch(handler RolloutActionHandler) error {
 	api.ct.workPools["RolloutAction"].Stop()
 	api.ct.Unlock()
 	return api.ct.StopWatchRolloutAction(handler)
+}
+
+// ClearCache removes all RolloutAction objects in ctkit
+func (api *rolloutactionAPI) ClearCache(handler RolloutActionHandler) {
+	api.ct.delKind("RolloutAction")
 }
 
 // RolloutAction returns RolloutActionAPI

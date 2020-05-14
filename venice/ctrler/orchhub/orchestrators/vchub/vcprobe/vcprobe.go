@@ -64,10 +64,13 @@ type TagsProbeInf interface {
 	RemoveTagObjVlan(ref types.ManagedObjectReference) error
 	RemoveTag(ref types.ManagedObjectReference, tagName string) error
 	RemovePensandoTags(ref types.ManagedObjectReference) []error
+	DestroyTags() error
 
 	// Utility
 	IsManagedTag(tag string) bool
 	IsVlanTag(tag string) (int, bool)
+	GetWriteTags() map[string]string
+	SetWriteTags(map[string]string)
 }
 
 // IsPGConfigEqual checks whether the create config is equal to the existing config
@@ -298,7 +301,7 @@ func (v *VCProbe) StopWatchForDC(dcName, dcID string) {
 func (v *VCProbe) StartWatchForDC(dcName, dcID string) {
 	v.dcCtxMapLock.Lock()
 	defer v.dcCtxMapLock.Unlock()
-	if _, ok := v.dcCtxMap[dcID]; ok {
+	if ctxEntry, ok := v.dcCtxMap[dcID]; ok && ctxEntry.ctx.Err() == nil {
 		v.Log.Infof("DC watchers already running for DC %s", dcName)
 		// watchers already exist
 		return

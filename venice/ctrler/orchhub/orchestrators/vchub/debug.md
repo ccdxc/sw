@@ -3,6 +3,19 @@
 ### URL 
 `{{server}}/configs/diagnostics/v1/modules/<MODULE-ID>/Debug`
 
+### Change log level
+payload:
+```
+{
+ 	"query": "action",
+ 	"parameters": {
+ 	  "action": "logLevel",
+		"level": LOG_LEVEL
+  }
+}
+```
+
+
 ### State Debug Info
 
 payload:

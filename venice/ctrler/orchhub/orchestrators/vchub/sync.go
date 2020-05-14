@@ -469,7 +469,7 @@ func (v *VCHub) syncVMs(workloads []*ctkit.Workload, dc mo.Datacenter, vms []mo.
 				// We have an assignment for this vnic that is different, change the override to the right value
 				err := penDvs.SetVlanOverride(port, vlan, workloadName, macStr)
 				if err != nil {
-					v.Log.Errorf("Failed to set vlan override. DC %s DVS %s port %s vlan %s. Err %s", penDvs.DcName, penDvs.DvsName, port, vlan)
+					v.Log.Errorf("Failed to set vlan override. DC %s DVS %s port %s vlan %s. Err %s", penDvs.DcName, penDvs.DvsName, port, vlan, err)
 					continue // Don't delete from overrides as it has the wrong vlan still. We'll try to reset the vlan completely
 				}
 			}

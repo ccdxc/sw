@@ -17,7 +17,7 @@ import (
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/citadel/broker/mock"
 	"github.com/pensando/sw/venice/citadel/query"
-	"github.com/pensando/sw/venice/cmd/types/protos"
+	types "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr/memdb"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr/statsalertmgr/alertengine"
 	"github.com/pensando/sw/venice/globals"
@@ -165,7 +165,7 @@ func startServers(t *testing.T) (apiserver.Server, *query.Server, *mock.MockInf,
 	mr := mockresolver.New()
 
 	// create API server
-	apiServer, apiServerURL, err := serviceutils.StartAPIServer("", t.Name(), tLogger)
+	apiServer, apiServerURL, err := serviceutils.StartAPIServer("", t.Name(), tLogger, []string{})
 	if err != nil {
 		return nil, nil, nil, nil, err
 	}

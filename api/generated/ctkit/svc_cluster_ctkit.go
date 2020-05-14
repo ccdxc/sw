@@ -178,7 +178,7 @@ func (ct *ctrlerCtx) handleClusterEventNoResolver(evt *kvstore.WatchEvent) error
 				err = clusterHandler.OnClusterCreate(ctrlCtx.obj)
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					ct.delObject(kind, ctrlCtx.GetKey())
 					return err
 				}
@@ -202,7 +202,7 @@ func (ct *ctrlerCtx) handleClusterEventNoResolver(evt *kvstore.WatchEvent) error
 				ctrlCtx.obj.Cluster = *eobj
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					return err
 				}
 
@@ -221,7 +221,7 @@ func (ct *ctrlerCtx) handleClusterEventNoResolver(evt *kvstore.WatchEvent) error
 			err = clusterHandler.OnClusterDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 			}
 			ct.delObject(kind, ctrlCtx.GetKey())
 			return nil
@@ -317,7 +317,7 @@ func (ctx *clusterCtx) WorkFunc(context context.Context) error {
 		err = clusterHandler.OnClusterCreate(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Updated:
@@ -330,7 +330,7 @@ func (ctx *clusterCtx) WorkFunc(context context.Context) error {
 		err = clusterHandler.OnClusterUpdate(ctx.obj, &p)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Deleted:
@@ -338,7 +338,7 @@ func (ctx *clusterCtx) WorkFunc(context context.Context) error {
 		err = clusterHandler.OnClusterDelete(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 		}
 	}
 	ct.resolveObject(ctx.event, ctx)
@@ -415,7 +415,7 @@ func (ct *ctrlerCtx) handleClusterEventParallelWithNoResolver(evt *kvstore.Watch
 					err = clusterHandler.OnClusterCreate(eobj)
 					eobj.Unlock()
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj.GetObjectMeta(), err)
 						ct.delObject(kind, workCtx.GetKey())
 					}
 				} else {
@@ -430,7 +430,7 @@ func (ct *ctrlerCtx) handleClusterEventParallelWithNoResolver(evt *kvstore.Watch
 
 					err = clusterHandler.OnClusterUpdate(obj, &p)
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 					} else {
 						workCtx.obj.Cluster = p
 					}
@@ -456,7 +456,7 @@ func (ct *ctrlerCtx) handleClusterEventParallelWithNoResolver(evt *kvstore.Watch
 				err = clusterHandler.OnClusterDelete(obj)
 				obj.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 				}
 				ct.delObject(kind, workCtx.GetKey())
 				return nil
@@ -602,7 +602,9 @@ func (ct *ctrlerCtx) runClusterWatcher() {
 				ct.Unlock()
 
 				// perform a diff with API server and local cache
-				time.Sleep(time.Millisecond * 100)
+				// Sleeping to give time for other apiclient's to reconnect
+				// before calling reconnect handler
+				time.Sleep(time.Second)
 				ct.diffCluster(apicl)
 				clusterHandler.OnClusterReconnect()
 
@@ -643,7 +645,7 @@ func (ct *ctrlerCtx) WatchCluster(handler ClusterHandler) error {
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if ok {
 		return fmt.Errorf("Cluster watcher already exists")
@@ -666,7 +668,7 @@ func (ct *ctrlerCtx) StopWatchCluster(handler ClusterHandler) error {
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if !ok {
 		return fmt.Errorf("Cluster watcher does not exist")
@@ -675,7 +677,9 @@ func (ct *ctrlerCtx) StopWatchCluster(handler ClusterHandler) error {
 	ct.Lock()
 	cancel, _ := ct.watchCancel[kind]
 	cancel()
-	delete(ct.watchers, kind)
+	if _, ok := ct.watchers[kind]; ok {
+		delete(ct.watchers, kind)
+	}
 	delete(ct.watchCancel, kind)
 	ct.Unlock()
 
@@ -693,7 +697,9 @@ type ClusterAPI interface {
 	Delete(obj *cluster.Cluster) error
 	Find(meta *api.ObjectMeta) (*Cluster, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Cluster, error)
+	ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*cluster.Cluster, error)
 	Watch(handler ClusterHandler) error
+	ClearCache(handler ClusterHandler)
 	StopWatch(handler ClusterHandler) error
 	AuthBootstrapComplete(obj *cluster.ClusterAuthBootstrapRequest) (*cluster.Cluster, error)
 	RegisterLocalAuthBootstrapCompleteHandler(fn func(*cluster.ClusterAuthBootstrapRequest) (*cluster.Cluster, error))
@@ -864,6 +870,30 @@ func (api *clusterAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]
 	return objlist, nil
 }
 
+// ApisrvList returns a list of all Cluster objects from apiserver
+func (api *clusterAPI) ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*cluster.Cluster, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.ClusterV1().Cluster().List(context.Background(), opts)
+	}
+
+	// List from local cache
+	ctkitObjs, err := api.List(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	var ret []*cluster.Cluster
+	for _, obj := range ctkitObjs {
+		ret = append(ret, &obj.Cluster)
+	}
+	return ret, nil
+}
+
 // Watch sets up a event handlers for Cluster object
 func (api *clusterAPI) Watch(handler ClusterHandler) error {
 	api.ct.startWorkerPool("Cluster")
@@ -876,6 +906,11 @@ func (api *clusterAPI) StopWatch(handler ClusterHandler) error {
 	api.ct.workPools["Cluster"].Stop()
 	api.ct.Unlock()
 	return api.ct.StopWatchCluster(handler)
+}
+
+// ClearCache removes all Cluster objects in ctkit
+func (api *clusterAPI) ClearCache(handler ClusterHandler) {
+	api.ct.delKind("Cluster")
 }
 
 // AuthBootstrapComplete is an API action
@@ -1136,7 +1171,7 @@ func (ct *ctrlerCtx) handleNodeEventNoResolver(evt *kvstore.WatchEvent) error {
 				err = nodeHandler.OnNodeCreate(ctrlCtx.obj)
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					ct.delObject(kind, ctrlCtx.GetKey())
 					return err
 				}
@@ -1160,7 +1195,7 @@ func (ct *ctrlerCtx) handleNodeEventNoResolver(evt *kvstore.WatchEvent) error {
 				ctrlCtx.obj.Node = *eobj
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					return err
 				}
 
@@ -1179,7 +1214,7 @@ func (ct *ctrlerCtx) handleNodeEventNoResolver(evt *kvstore.WatchEvent) error {
 			err = nodeHandler.OnNodeDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 			}
 			ct.delObject(kind, ctrlCtx.GetKey())
 			return nil
@@ -1275,7 +1310,7 @@ func (ctx *nodeCtx) WorkFunc(context context.Context) error {
 		err = nodeHandler.OnNodeCreate(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Updated:
@@ -1288,7 +1323,7 @@ func (ctx *nodeCtx) WorkFunc(context context.Context) error {
 		err = nodeHandler.OnNodeUpdate(ctx.obj, &p)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Deleted:
@@ -1296,7 +1331,7 @@ func (ctx *nodeCtx) WorkFunc(context context.Context) error {
 		err = nodeHandler.OnNodeDelete(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 		}
 	}
 	ct.resolveObject(ctx.event, ctx)
@@ -1369,7 +1404,7 @@ func (ct *ctrlerCtx) handleNodeEventParallelWithNoResolver(evt *kvstore.WatchEve
 					err = nodeHandler.OnNodeCreate(eobj)
 					eobj.Unlock()
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj.GetObjectMeta(), err)
 						ct.delObject(kind, workCtx.GetKey())
 					}
 				} else {
@@ -1384,7 +1419,7 @@ func (ct *ctrlerCtx) handleNodeEventParallelWithNoResolver(evt *kvstore.WatchEve
 
 					err = nodeHandler.OnNodeUpdate(obj, &p)
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 					} else {
 						workCtx.obj.Node = p
 					}
@@ -1410,7 +1445,7 @@ func (ct *ctrlerCtx) handleNodeEventParallelWithNoResolver(evt *kvstore.WatchEve
 				err = nodeHandler.OnNodeDelete(obj)
 				obj.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 				}
 				ct.delObject(kind, workCtx.GetKey())
 				return nil
@@ -1556,7 +1591,9 @@ func (ct *ctrlerCtx) runNodeWatcher() {
 				ct.Unlock()
 
 				// perform a diff with API server and local cache
-				time.Sleep(time.Millisecond * 100)
+				// Sleeping to give time for other apiclient's to reconnect
+				// before calling reconnect handler
+				time.Sleep(time.Second)
 				ct.diffNode(apicl)
 				nodeHandler.OnNodeReconnect()
 
@@ -1597,7 +1634,7 @@ func (ct *ctrlerCtx) WatchNode(handler NodeHandler) error {
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if ok {
 		return fmt.Errorf("Node watcher already exists")
@@ -1620,7 +1657,7 @@ func (ct *ctrlerCtx) StopWatchNode(handler NodeHandler) error {
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if !ok {
 		return fmt.Errorf("Node watcher does not exist")
@@ -1629,7 +1666,9 @@ func (ct *ctrlerCtx) StopWatchNode(handler NodeHandler) error {
 	ct.Lock()
 	cancel, _ := ct.watchCancel[kind]
 	cancel()
-	delete(ct.watchers, kind)
+	if _, ok := ct.watchers[kind]; ok {
+		delete(ct.watchers, kind)
+	}
 	delete(ct.watchCancel, kind)
 	ct.Unlock()
 
@@ -1647,7 +1686,9 @@ type NodeAPI interface {
 	Delete(obj *cluster.Node) error
 	Find(meta *api.ObjectMeta) (*Node, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Node, error)
+	ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*cluster.Node, error)
 	Watch(handler NodeHandler) error
+	ClearCache(handler NodeHandler)
 	StopWatch(handler NodeHandler) error
 }
 
@@ -1805,6 +1846,30 @@ func (api *nodeAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*No
 	return objlist, nil
 }
 
+// ApisrvList returns a list of all Node objects from apiserver
+func (api *nodeAPI) ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*cluster.Node, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.ClusterV1().Node().List(context.Background(), opts)
+	}
+
+	// List from local cache
+	ctkitObjs, err := api.List(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	var ret []*cluster.Node
+	for _, obj := range ctkitObjs {
+		ret = append(ret, &obj.Node)
+	}
+	return ret, nil
+}
+
 // Watch sets up a event handlers for Node object
 func (api *nodeAPI) Watch(handler NodeHandler) error {
 	api.ct.startWorkerPool("Node")
@@ -1817,6 +1882,11 @@ func (api *nodeAPI) StopWatch(handler NodeHandler) error {
 	api.ct.workPools["Node"].Stop()
 	api.ct.Unlock()
 	return api.ct.StopWatchNode(handler)
+}
+
+// ClearCache removes all Node objects in ctkit
+func (api *nodeAPI) ClearCache(handler NodeHandler) {
+	api.ct.delKind("Node")
 }
 
 // Node returns NodeAPI
@@ -1975,7 +2045,7 @@ func (ct *ctrlerCtx) handleHostEventNoResolver(evt *kvstore.WatchEvent) error {
 				err = hostHandler.OnHostCreate(ctrlCtx.obj)
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					ct.delObject(kind, ctrlCtx.GetKey())
 					return err
 				}
@@ -1999,7 +2069,7 @@ func (ct *ctrlerCtx) handleHostEventNoResolver(evt *kvstore.WatchEvent) error {
 				ctrlCtx.obj.Host = *eobj
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					return err
 				}
 
@@ -2018,7 +2088,7 @@ func (ct *ctrlerCtx) handleHostEventNoResolver(evt *kvstore.WatchEvent) error {
 			err = hostHandler.OnHostDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 			}
 			ct.delObject(kind, ctrlCtx.GetKey())
 			return nil
@@ -2114,7 +2184,7 @@ func (ctx *hostCtx) WorkFunc(context context.Context) error {
 		err = hostHandler.OnHostCreate(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Updated:
@@ -2127,7 +2197,7 @@ func (ctx *hostCtx) WorkFunc(context context.Context) error {
 		err = hostHandler.OnHostUpdate(ctx.obj, &p)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Deleted:
@@ -2135,7 +2205,7 @@ func (ctx *hostCtx) WorkFunc(context context.Context) error {
 		err = hostHandler.OnHostDelete(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 		}
 	}
 	ct.resolveObject(ctx.event, ctx)
@@ -2208,7 +2278,7 @@ func (ct *ctrlerCtx) handleHostEventParallelWithNoResolver(evt *kvstore.WatchEve
 					err = hostHandler.OnHostCreate(eobj)
 					eobj.Unlock()
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj.GetObjectMeta(), err)
 						ct.delObject(kind, workCtx.GetKey())
 					}
 				} else {
@@ -2223,7 +2293,7 @@ func (ct *ctrlerCtx) handleHostEventParallelWithNoResolver(evt *kvstore.WatchEve
 
 					err = hostHandler.OnHostUpdate(obj, &p)
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 					} else {
 						workCtx.obj.Host = p
 					}
@@ -2249,7 +2319,7 @@ func (ct *ctrlerCtx) handleHostEventParallelWithNoResolver(evt *kvstore.WatchEve
 				err = hostHandler.OnHostDelete(obj)
 				obj.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 				}
 				ct.delObject(kind, workCtx.GetKey())
 				return nil
@@ -2395,7 +2465,9 @@ func (ct *ctrlerCtx) runHostWatcher() {
 				ct.Unlock()
 
 				// perform a diff with API server and local cache
-				time.Sleep(time.Millisecond * 100)
+				// Sleeping to give time for other apiclient's to reconnect
+				// before calling reconnect handler
+				time.Sleep(time.Second)
 				ct.diffHost(apicl)
 				hostHandler.OnHostReconnect()
 
@@ -2436,7 +2508,7 @@ func (ct *ctrlerCtx) WatchHost(handler HostHandler) error {
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if ok {
 		return fmt.Errorf("Host watcher already exists")
@@ -2459,7 +2531,7 @@ func (ct *ctrlerCtx) StopWatchHost(handler HostHandler) error {
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if !ok {
 		return fmt.Errorf("Host watcher does not exist")
@@ -2468,7 +2540,9 @@ func (ct *ctrlerCtx) StopWatchHost(handler HostHandler) error {
 	ct.Lock()
 	cancel, _ := ct.watchCancel[kind]
 	cancel()
-	delete(ct.watchers, kind)
+	if _, ok := ct.watchers[kind]; ok {
+		delete(ct.watchers, kind)
+	}
 	delete(ct.watchCancel, kind)
 	ct.Unlock()
 
@@ -2486,7 +2560,9 @@ type HostAPI interface {
 	Delete(obj *cluster.Host) error
 	Find(meta *api.ObjectMeta) (*Host, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Host, error)
+	ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*cluster.Host, error)
 	Watch(handler HostHandler) error
+	ClearCache(handler HostHandler)
 	StopWatch(handler HostHandler) error
 }
 
@@ -2644,6 +2720,30 @@ func (api *hostAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*Ho
 	return objlist, nil
 }
 
+// ApisrvList returns a list of all Host objects from apiserver
+func (api *hostAPI) ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*cluster.Host, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.ClusterV1().Host().List(context.Background(), opts)
+	}
+
+	// List from local cache
+	ctkitObjs, err := api.List(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	var ret []*cluster.Host
+	for _, obj := range ctkitObjs {
+		ret = append(ret, &obj.Host)
+	}
+	return ret, nil
+}
+
 // Watch sets up a event handlers for Host object
 func (api *hostAPI) Watch(handler HostHandler) error {
 	api.ct.startWorkerPool("Host")
@@ -2656,6 +2756,11 @@ func (api *hostAPI) StopWatch(handler HostHandler) error {
 	api.ct.workPools["Host"].Stop()
 	api.ct.Unlock()
 	return api.ct.StopWatchHost(handler)
+}
+
+// ClearCache removes all Host objects in ctkit
+func (api *hostAPI) ClearCache(handler HostHandler) {
+	api.ct.delKind("Host")
 }
 
 // Host returns HostAPI
@@ -2814,7 +2919,7 @@ func (ct *ctrlerCtx) handleDistributedServiceCardEventNoResolver(evt *kvstore.Wa
 				err = distributedservicecardHandler.OnDistributedServiceCardCreate(ctrlCtx.obj)
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					ct.delObject(kind, ctrlCtx.GetKey())
 					return err
 				}
@@ -2838,7 +2943,7 @@ func (ct *ctrlerCtx) handleDistributedServiceCardEventNoResolver(evt *kvstore.Wa
 				ctrlCtx.obj.DistributedServiceCard = *eobj
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					return err
 				}
 
@@ -2857,7 +2962,7 @@ func (ct *ctrlerCtx) handleDistributedServiceCardEventNoResolver(evt *kvstore.Wa
 			err = distributedservicecardHandler.OnDistributedServiceCardDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 			}
 			ct.delObject(kind, ctrlCtx.GetKey())
 			return nil
@@ -2953,7 +3058,7 @@ func (ctx *distributedservicecardCtx) WorkFunc(context context.Context) error {
 		err = distributedservicecardHandler.OnDistributedServiceCardCreate(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Updated:
@@ -2966,7 +3071,7 @@ func (ctx *distributedservicecardCtx) WorkFunc(context context.Context) error {
 		err = distributedservicecardHandler.OnDistributedServiceCardUpdate(ctx.obj, &p)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Deleted:
@@ -2974,7 +3079,7 @@ func (ctx *distributedservicecardCtx) WorkFunc(context context.Context) error {
 		err = distributedservicecardHandler.OnDistributedServiceCardDelete(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 		}
 	}
 	ct.resolveObject(ctx.event, ctx)
@@ -3047,7 +3152,7 @@ func (ct *ctrlerCtx) handleDistributedServiceCardEventParallelWithNoResolver(evt
 					err = distributedservicecardHandler.OnDistributedServiceCardCreate(eobj)
 					eobj.Unlock()
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj.GetObjectMeta(), err)
 						ct.delObject(kind, workCtx.GetKey())
 					}
 				} else {
@@ -3062,7 +3167,7 @@ func (ct *ctrlerCtx) handleDistributedServiceCardEventParallelWithNoResolver(evt
 
 					err = distributedservicecardHandler.OnDistributedServiceCardUpdate(obj, &p)
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 					} else {
 						workCtx.obj.DistributedServiceCard = p
 					}
@@ -3088,7 +3193,7 @@ func (ct *ctrlerCtx) handleDistributedServiceCardEventParallelWithNoResolver(evt
 				err = distributedservicecardHandler.OnDistributedServiceCardDelete(obj)
 				obj.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 				}
 				ct.delObject(kind, workCtx.GetKey())
 				return nil
@@ -3234,7 +3339,9 @@ func (ct *ctrlerCtx) runDistributedServiceCardWatcher() {
 				ct.Unlock()
 
 				// perform a diff with API server and local cache
-				time.Sleep(time.Millisecond * 100)
+				// Sleeping to give time for other apiclient's to reconnect
+				// before calling reconnect handler
+				time.Sleep(time.Second)
 				ct.diffDistributedServiceCard(apicl)
 				distributedservicecardHandler.OnDistributedServiceCardReconnect()
 
@@ -3275,7 +3382,7 @@ func (ct *ctrlerCtx) WatchDistributedServiceCard(handler DistributedServiceCardH
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if ok {
 		return fmt.Errorf("DistributedServiceCard watcher already exists")
@@ -3298,7 +3405,7 @@ func (ct *ctrlerCtx) StopWatchDistributedServiceCard(handler DistributedServiceC
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if !ok {
 		return fmt.Errorf("DistributedServiceCard watcher does not exist")
@@ -3307,7 +3414,9 @@ func (ct *ctrlerCtx) StopWatchDistributedServiceCard(handler DistributedServiceC
 	ct.Lock()
 	cancel, _ := ct.watchCancel[kind]
 	cancel()
-	delete(ct.watchers, kind)
+	if _, ok := ct.watchers[kind]; ok {
+		delete(ct.watchers, kind)
+	}
 	delete(ct.watchCancel, kind)
 	ct.Unlock()
 
@@ -3325,7 +3434,9 @@ type DistributedServiceCardAPI interface {
 	Delete(obj *cluster.DistributedServiceCard) error
 	Find(meta *api.ObjectMeta) (*DistributedServiceCard, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*DistributedServiceCard, error)
+	ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*cluster.DistributedServiceCard, error)
 	Watch(handler DistributedServiceCardHandler) error
+	ClearCache(handler DistributedServiceCardHandler)
 	StopWatch(handler DistributedServiceCardHandler) error
 }
 
@@ -3483,6 +3594,30 @@ func (api *distributedservicecardAPI) List(ctx context.Context, opts *api.ListWa
 	return objlist, nil
 }
 
+// ApisrvList returns a list of all DistributedServiceCard objects from apiserver
+func (api *distributedservicecardAPI) ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*cluster.DistributedServiceCard, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.ClusterV1().DistributedServiceCard().List(context.Background(), opts)
+	}
+
+	// List from local cache
+	ctkitObjs, err := api.List(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	var ret []*cluster.DistributedServiceCard
+	for _, obj := range ctkitObjs {
+		ret = append(ret, &obj.DistributedServiceCard)
+	}
+	return ret, nil
+}
+
 // Watch sets up a event handlers for DistributedServiceCard object
 func (api *distributedservicecardAPI) Watch(handler DistributedServiceCardHandler) error {
 	api.ct.startWorkerPool("DistributedServiceCard")
@@ -3495,6 +3630,11 @@ func (api *distributedservicecardAPI) StopWatch(handler DistributedServiceCardHa
 	api.ct.workPools["DistributedServiceCard"].Stop()
 	api.ct.Unlock()
 	return api.ct.StopWatchDistributedServiceCard(handler)
+}
+
+// ClearCache removes all DistributedServiceCard objects in ctkit
+func (api *distributedservicecardAPI) ClearCache(handler DistributedServiceCardHandler) {
+	api.ct.delKind("DistributedServiceCard")
 }
 
 // DistributedServiceCard returns DistributedServiceCardAPI
@@ -3653,7 +3793,7 @@ func (ct *ctrlerCtx) handleTenantEventNoResolver(evt *kvstore.WatchEvent) error 
 				err = tenantHandler.OnTenantCreate(ctrlCtx.obj)
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					ct.delObject(kind, ctrlCtx.GetKey())
 					return err
 				}
@@ -3677,7 +3817,7 @@ func (ct *ctrlerCtx) handleTenantEventNoResolver(evt *kvstore.WatchEvent) error 
 				ctrlCtx.obj.Tenant = *eobj
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					return err
 				}
 
@@ -3696,7 +3836,7 @@ func (ct *ctrlerCtx) handleTenantEventNoResolver(evt *kvstore.WatchEvent) error 
 			err = tenantHandler.OnTenantDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 			}
 			ct.delObject(kind, ctrlCtx.GetKey())
 			return nil
@@ -3792,7 +3932,7 @@ func (ctx *tenantCtx) WorkFunc(context context.Context) error {
 		err = tenantHandler.OnTenantCreate(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Updated:
@@ -3805,7 +3945,7 @@ func (ctx *tenantCtx) WorkFunc(context context.Context) error {
 		err = tenantHandler.OnTenantUpdate(ctx.obj, &p)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Deleted:
@@ -3813,7 +3953,7 @@ func (ctx *tenantCtx) WorkFunc(context context.Context) error {
 		err = tenantHandler.OnTenantDelete(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 		}
 	}
 	ct.resolveObject(ctx.event, ctx)
@@ -3886,7 +4026,7 @@ func (ct *ctrlerCtx) handleTenantEventParallelWithNoResolver(evt *kvstore.WatchE
 					err = tenantHandler.OnTenantCreate(eobj)
 					eobj.Unlock()
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj.GetObjectMeta(), err)
 						ct.delObject(kind, workCtx.GetKey())
 					}
 				} else {
@@ -3901,7 +4041,7 @@ func (ct *ctrlerCtx) handleTenantEventParallelWithNoResolver(evt *kvstore.WatchE
 
 					err = tenantHandler.OnTenantUpdate(obj, &p)
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 					} else {
 						workCtx.obj.Tenant = p
 					}
@@ -3927,7 +4067,7 @@ func (ct *ctrlerCtx) handleTenantEventParallelWithNoResolver(evt *kvstore.WatchE
 				err = tenantHandler.OnTenantDelete(obj)
 				obj.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 				}
 				ct.delObject(kind, workCtx.GetKey())
 				return nil
@@ -4073,7 +4213,9 @@ func (ct *ctrlerCtx) runTenantWatcher() {
 				ct.Unlock()
 
 				// perform a diff with API server and local cache
-				time.Sleep(time.Millisecond * 100)
+				// Sleeping to give time for other apiclient's to reconnect
+				// before calling reconnect handler
+				time.Sleep(time.Second)
 				ct.diffTenant(apicl)
 				tenantHandler.OnTenantReconnect()
 
@@ -4114,7 +4256,7 @@ func (ct *ctrlerCtx) WatchTenant(handler TenantHandler) error {
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if ok {
 		return fmt.Errorf("Tenant watcher already exists")
@@ -4137,7 +4279,7 @@ func (ct *ctrlerCtx) StopWatchTenant(handler TenantHandler) error {
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if !ok {
 		return fmt.Errorf("Tenant watcher does not exist")
@@ -4146,7 +4288,9 @@ func (ct *ctrlerCtx) StopWatchTenant(handler TenantHandler) error {
 	ct.Lock()
 	cancel, _ := ct.watchCancel[kind]
 	cancel()
-	delete(ct.watchers, kind)
+	if _, ok := ct.watchers[kind]; ok {
+		delete(ct.watchers, kind)
+	}
 	delete(ct.watchCancel, kind)
 	ct.Unlock()
 
@@ -4164,7 +4308,9 @@ type TenantAPI interface {
 	Delete(obj *cluster.Tenant) error
 	Find(meta *api.ObjectMeta) (*Tenant, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Tenant, error)
+	ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*cluster.Tenant, error)
 	Watch(handler TenantHandler) error
+	ClearCache(handler TenantHandler)
 	StopWatch(handler TenantHandler) error
 }
 
@@ -4322,6 +4468,30 @@ func (api *tenantAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*
 	return objlist, nil
 }
 
+// ApisrvList returns a list of all Tenant objects from apiserver
+func (api *tenantAPI) ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*cluster.Tenant, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.ClusterV1().Tenant().List(context.Background(), opts)
+	}
+
+	// List from local cache
+	ctkitObjs, err := api.List(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	var ret []*cluster.Tenant
+	for _, obj := range ctkitObjs {
+		ret = append(ret, &obj.Tenant)
+	}
+	return ret, nil
+}
+
 // Watch sets up a event handlers for Tenant object
 func (api *tenantAPI) Watch(handler TenantHandler) error {
 	api.ct.startWorkerPool("Tenant")
@@ -4334,6 +4504,11 @@ func (api *tenantAPI) StopWatch(handler TenantHandler) error {
 	api.ct.workPools["Tenant"].Stop()
 	api.ct.Unlock()
 	return api.ct.StopWatchTenant(handler)
+}
+
+// ClearCache removes all Tenant objects in ctkit
+func (api *tenantAPI) ClearCache(handler TenantHandler) {
+	api.ct.delKind("Tenant")
 }
 
 // Tenant returns TenantAPI
@@ -4492,7 +4667,7 @@ func (ct *ctrlerCtx) handleVersionEventNoResolver(evt *kvstore.WatchEvent) error
 				err = versionHandler.OnVersionCreate(ctrlCtx.obj)
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					ct.delObject(kind, ctrlCtx.GetKey())
 					return err
 				}
@@ -4516,7 +4691,7 @@ func (ct *ctrlerCtx) handleVersionEventNoResolver(evt *kvstore.WatchEvent) error
 				ctrlCtx.obj.Version = *eobj
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					return err
 				}
 
@@ -4535,7 +4710,7 @@ func (ct *ctrlerCtx) handleVersionEventNoResolver(evt *kvstore.WatchEvent) error
 			err = versionHandler.OnVersionDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 			}
 			ct.delObject(kind, ctrlCtx.GetKey())
 			return nil
@@ -4631,7 +4806,7 @@ func (ctx *versionCtx) WorkFunc(context context.Context) error {
 		err = versionHandler.OnVersionCreate(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Updated:
@@ -4644,7 +4819,7 @@ func (ctx *versionCtx) WorkFunc(context context.Context) error {
 		err = versionHandler.OnVersionUpdate(ctx.obj, &p)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Deleted:
@@ -4652,7 +4827,7 @@ func (ctx *versionCtx) WorkFunc(context context.Context) error {
 		err = versionHandler.OnVersionDelete(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 		}
 	}
 	ct.resolveObject(ctx.event, ctx)
@@ -4725,7 +4900,7 @@ func (ct *ctrlerCtx) handleVersionEventParallelWithNoResolver(evt *kvstore.Watch
 					err = versionHandler.OnVersionCreate(eobj)
 					eobj.Unlock()
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj.GetObjectMeta(), err)
 						ct.delObject(kind, workCtx.GetKey())
 					}
 				} else {
@@ -4740,7 +4915,7 @@ func (ct *ctrlerCtx) handleVersionEventParallelWithNoResolver(evt *kvstore.Watch
 
 					err = versionHandler.OnVersionUpdate(obj, &p)
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 					} else {
 						workCtx.obj.Version = p
 					}
@@ -4766,7 +4941,7 @@ func (ct *ctrlerCtx) handleVersionEventParallelWithNoResolver(evt *kvstore.Watch
 				err = versionHandler.OnVersionDelete(obj)
 				obj.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 				}
 				ct.delObject(kind, workCtx.GetKey())
 				return nil
@@ -4912,7 +5087,9 @@ func (ct *ctrlerCtx) runVersionWatcher() {
 				ct.Unlock()
 
 				// perform a diff with API server and local cache
-				time.Sleep(time.Millisecond * 100)
+				// Sleeping to give time for other apiclient's to reconnect
+				// before calling reconnect handler
+				time.Sleep(time.Second)
 				ct.diffVersion(apicl)
 				versionHandler.OnVersionReconnect()
 
@@ -4953,7 +5130,7 @@ func (ct *ctrlerCtx) WatchVersion(handler VersionHandler) error {
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if ok {
 		return fmt.Errorf("Version watcher already exists")
@@ -4976,7 +5153,7 @@ func (ct *ctrlerCtx) StopWatchVersion(handler VersionHandler) error {
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if !ok {
 		return fmt.Errorf("Version watcher does not exist")
@@ -4985,7 +5162,9 @@ func (ct *ctrlerCtx) StopWatchVersion(handler VersionHandler) error {
 	ct.Lock()
 	cancel, _ := ct.watchCancel[kind]
 	cancel()
-	delete(ct.watchers, kind)
+	if _, ok := ct.watchers[kind]; ok {
+		delete(ct.watchers, kind)
+	}
 	delete(ct.watchCancel, kind)
 	ct.Unlock()
 
@@ -5003,7 +5182,9 @@ type VersionAPI interface {
 	Delete(obj *cluster.Version) error
 	Find(meta *api.ObjectMeta) (*Version, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Version, error)
+	ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*cluster.Version, error)
 	Watch(handler VersionHandler) error
+	ClearCache(handler VersionHandler)
 	StopWatch(handler VersionHandler) error
 }
 
@@ -5161,6 +5342,30 @@ func (api *versionAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]
 	return objlist, nil
 }
 
+// ApisrvList returns a list of all Version objects from apiserver
+func (api *versionAPI) ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*cluster.Version, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.ClusterV1().Version().List(context.Background(), opts)
+	}
+
+	// List from local cache
+	ctkitObjs, err := api.List(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	var ret []*cluster.Version
+	for _, obj := range ctkitObjs {
+		ret = append(ret, &obj.Version)
+	}
+	return ret, nil
+}
+
 // Watch sets up a event handlers for Version object
 func (api *versionAPI) Watch(handler VersionHandler) error {
 	api.ct.startWorkerPool("Version")
@@ -5173,6 +5378,11 @@ func (api *versionAPI) StopWatch(handler VersionHandler) error {
 	api.ct.workPools["Version"].Stop()
 	api.ct.Unlock()
 	return api.ct.StopWatchVersion(handler)
+}
+
+// ClearCache removes all Version objects in ctkit
+func (api *versionAPI) ClearCache(handler VersionHandler) {
+	api.ct.delKind("Version")
 }
 
 // Version returns VersionAPI
@@ -5331,7 +5541,7 @@ func (ct *ctrlerCtx) handleConfigurationSnapshotEventNoResolver(evt *kvstore.Wat
 				err = configurationsnapshotHandler.OnConfigurationSnapshotCreate(ctrlCtx.obj)
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					ct.delObject(kind, ctrlCtx.GetKey())
 					return err
 				}
@@ -5355,7 +5565,7 @@ func (ct *ctrlerCtx) handleConfigurationSnapshotEventNoResolver(evt *kvstore.Wat
 				ctrlCtx.obj.ConfigurationSnapshot = *eobj
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					return err
 				}
 
@@ -5374,7 +5584,7 @@ func (ct *ctrlerCtx) handleConfigurationSnapshotEventNoResolver(evt *kvstore.Wat
 			err = configurationsnapshotHandler.OnConfigurationSnapshotDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 			}
 			ct.delObject(kind, ctrlCtx.GetKey())
 			return nil
@@ -5470,7 +5680,7 @@ func (ctx *configurationsnapshotCtx) WorkFunc(context context.Context) error {
 		err = configurationsnapshotHandler.OnConfigurationSnapshotCreate(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Updated:
@@ -5483,7 +5693,7 @@ func (ctx *configurationsnapshotCtx) WorkFunc(context context.Context) error {
 		err = configurationsnapshotHandler.OnConfigurationSnapshotUpdate(ctx.obj, &p)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Deleted:
@@ -5491,7 +5701,7 @@ func (ctx *configurationsnapshotCtx) WorkFunc(context context.Context) error {
 		err = configurationsnapshotHandler.OnConfigurationSnapshotDelete(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 		}
 	}
 	ct.resolveObject(ctx.event, ctx)
@@ -5564,7 +5774,7 @@ func (ct *ctrlerCtx) handleConfigurationSnapshotEventParallelWithNoResolver(evt 
 					err = configurationsnapshotHandler.OnConfigurationSnapshotCreate(eobj)
 					eobj.Unlock()
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj.GetObjectMeta(), err)
 						ct.delObject(kind, workCtx.GetKey())
 					}
 				} else {
@@ -5579,7 +5789,7 @@ func (ct *ctrlerCtx) handleConfigurationSnapshotEventParallelWithNoResolver(evt 
 
 					err = configurationsnapshotHandler.OnConfigurationSnapshotUpdate(obj, &p)
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 					} else {
 						workCtx.obj.ConfigurationSnapshot = p
 					}
@@ -5605,7 +5815,7 @@ func (ct *ctrlerCtx) handleConfigurationSnapshotEventParallelWithNoResolver(evt 
 				err = configurationsnapshotHandler.OnConfigurationSnapshotDelete(obj)
 				obj.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 				}
 				ct.delObject(kind, workCtx.GetKey())
 				return nil
@@ -5751,7 +5961,9 @@ func (ct *ctrlerCtx) runConfigurationSnapshotWatcher() {
 				ct.Unlock()
 
 				// perform a diff with API server and local cache
-				time.Sleep(time.Millisecond * 100)
+				// Sleeping to give time for other apiclient's to reconnect
+				// before calling reconnect handler
+				time.Sleep(time.Second)
 				ct.diffConfigurationSnapshot(apicl)
 				configurationsnapshotHandler.OnConfigurationSnapshotReconnect()
 
@@ -5792,7 +6004,7 @@ func (ct *ctrlerCtx) WatchConfigurationSnapshot(handler ConfigurationSnapshotHan
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if ok {
 		return fmt.Errorf("ConfigurationSnapshot watcher already exists")
@@ -5815,7 +6027,7 @@ func (ct *ctrlerCtx) StopWatchConfigurationSnapshot(handler ConfigurationSnapsho
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if !ok {
 		return fmt.Errorf("ConfigurationSnapshot watcher does not exist")
@@ -5824,7 +6036,9 @@ func (ct *ctrlerCtx) StopWatchConfigurationSnapshot(handler ConfigurationSnapsho
 	ct.Lock()
 	cancel, _ := ct.watchCancel[kind]
 	cancel()
-	delete(ct.watchers, kind)
+	if _, ok := ct.watchers[kind]; ok {
+		delete(ct.watchers, kind)
+	}
 	delete(ct.watchCancel, kind)
 	ct.Unlock()
 
@@ -5842,7 +6056,9 @@ type ConfigurationSnapshotAPI interface {
 	Delete(obj *cluster.ConfigurationSnapshot) error
 	Find(meta *api.ObjectMeta) (*ConfigurationSnapshot, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*ConfigurationSnapshot, error)
+	ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*cluster.ConfigurationSnapshot, error)
 	Watch(handler ConfigurationSnapshotHandler) error
+	ClearCache(handler ConfigurationSnapshotHandler)
 	StopWatch(handler ConfigurationSnapshotHandler) error
 	Save(obj *cluster.ConfigurationSnapshotRequest) (*cluster.ConfigurationSnapshot, error)
 	RegisterLocalSaveHandler(fn func(*cluster.ConfigurationSnapshotRequest) (*cluster.ConfigurationSnapshot, error))
@@ -6007,6 +6223,30 @@ func (api *configurationsnapshotAPI) List(ctx context.Context, opts *api.ListWat
 	return objlist, nil
 }
 
+// ApisrvList returns a list of all ConfigurationSnapshot objects from apiserver
+func (api *configurationsnapshotAPI) ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*cluster.ConfigurationSnapshot, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.ClusterV1().ConfigurationSnapshot().List(context.Background(), opts)
+	}
+
+	// List from local cache
+	ctkitObjs, err := api.List(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	var ret []*cluster.ConfigurationSnapshot
+	for _, obj := range ctkitObjs {
+		ret = append(ret, &obj.ConfigurationSnapshot)
+	}
+	return ret, nil
+}
+
 // Watch sets up a event handlers for ConfigurationSnapshot object
 func (api *configurationsnapshotAPI) Watch(handler ConfigurationSnapshotHandler) error {
 	api.ct.startWorkerPool("ConfigurationSnapshot")
@@ -6019,6 +6259,11 @@ func (api *configurationsnapshotAPI) StopWatch(handler ConfigurationSnapshotHand
 	api.ct.workPools["ConfigurationSnapshot"].Stop()
 	api.ct.Unlock()
 	return api.ct.StopWatchConfigurationSnapshot(handler)
+}
+
+// ClearCache removes all ConfigurationSnapshot objects in ctkit
+func (api *configurationsnapshotAPI) ClearCache(handler ConfigurationSnapshotHandler) {
+	api.ct.delKind("ConfigurationSnapshot")
 }
 
 // Save is an API action
@@ -6228,7 +6473,7 @@ func (ct *ctrlerCtx) handleSnapshotRestoreEventNoResolver(evt *kvstore.WatchEven
 				err = snapshotrestoreHandler.OnSnapshotRestoreCreate(ctrlCtx.obj)
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					ct.delObject(kind, ctrlCtx.GetKey())
 					return err
 				}
@@ -6252,7 +6497,7 @@ func (ct *ctrlerCtx) handleSnapshotRestoreEventNoResolver(evt *kvstore.WatchEven
 				ctrlCtx.obj.SnapshotRestore = *eobj
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					return err
 				}
 
@@ -6271,7 +6516,7 @@ func (ct *ctrlerCtx) handleSnapshotRestoreEventNoResolver(evt *kvstore.WatchEven
 			err = snapshotrestoreHandler.OnSnapshotRestoreDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 			}
 			ct.delObject(kind, ctrlCtx.GetKey())
 			return nil
@@ -6367,7 +6612,7 @@ func (ctx *snapshotrestoreCtx) WorkFunc(context context.Context) error {
 		err = snapshotrestoreHandler.OnSnapshotRestoreCreate(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Updated:
@@ -6380,7 +6625,7 @@ func (ctx *snapshotrestoreCtx) WorkFunc(context context.Context) error {
 		err = snapshotrestoreHandler.OnSnapshotRestoreUpdate(ctx.obj, &p)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Deleted:
@@ -6388,7 +6633,7 @@ func (ctx *snapshotrestoreCtx) WorkFunc(context context.Context) error {
 		err = snapshotrestoreHandler.OnSnapshotRestoreDelete(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 		}
 	}
 	ct.resolveObject(ctx.event, ctx)
@@ -6461,7 +6706,7 @@ func (ct *ctrlerCtx) handleSnapshotRestoreEventParallelWithNoResolver(evt *kvsto
 					err = snapshotrestoreHandler.OnSnapshotRestoreCreate(eobj)
 					eobj.Unlock()
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj.GetObjectMeta(), err)
 						ct.delObject(kind, workCtx.GetKey())
 					}
 				} else {
@@ -6476,7 +6721,7 @@ func (ct *ctrlerCtx) handleSnapshotRestoreEventParallelWithNoResolver(evt *kvsto
 
 					err = snapshotrestoreHandler.OnSnapshotRestoreUpdate(obj, &p)
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 					} else {
 						workCtx.obj.SnapshotRestore = p
 					}
@@ -6502,7 +6747,7 @@ func (ct *ctrlerCtx) handleSnapshotRestoreEventParallelWithNoResolver(evt *kvsto
 				err = snapshotrestoreHandler.OnSnapshotRestoreDelete(obj)
 				obj.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 				}
 				ct.delObject(kind, workCtx.GetKey())
 				return nil
@@ -6648,7 +6893,9 @@ func (ct *ctrlerCtx) runSnapshotRestoreWatcher() {
 				ct.Unlock()
 
 				// perform a diff with API server and local cache
-				time.Sleep(time.Millisecond * 100)
+				// Sleeping to give time for other apiclient's to reconnect
+				// before calling reconnect handler
+				time.Sleep(time.Second)
 				ct.diffSnapshotRestore(apicl)
 				snapshotrestoreHandler.OnSnapshotRestoreReconnect()
 
@@ -6689,7 +6936,7 @@ func (ct *ctrlerCtx) WatchSnapshotRestore(handler SnapshotRestoreHandler) error 
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if ok {
 		return fmt.Errorf("SnapshotRestore watcher already exists")
@@ -6712,7 +6959,7 @@ func (ct *ctrlerCtx) StopWatchSnapshotRestore(handler SnapshotRestoreHandler) er
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if !ok {
 		return fmt.Errorf("SnapshotRestore watcher does not exist")
@@ -6721,7 +6968,9 @@ func (ct *ctrlerCtx) StopWatchSnapshotRestore(handler SnapshotRestoreHandler) er
 	ct.Lock()
 	cancel, _ := ct.watchCancel[kind]
 	cancel()
-	delete(ct.watchers, kind)
+	if _, ok := ct.watchers[kind]; ok {
+		delete(ct.watchers, kind)
+	}
 	delete(ct.watchCancel, kind)
 	ct.Unlock()
 
@@ -6739,7 +6988,9 @@ type SnapshotRestoreAPI interface {
 	Delete(obj *cluster.SnapshotRestore) error
 	Find(meta *api.ObjectMeta) (*SnapshotRestore, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*SnapshotRestore, error)
+	ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*cluster.SnapshotRestore, error)
 	Watch(handler SnapshotRestoreHandler) error
+	ClearCache(handler SnapshotRestoreHandler)
 	StopWatch(handler SnapshotRestoreHandler) error
 	Restore(obj *cluster.SnapshotRestore) (*cluster.SnapshotRestore, error)
 	RegisterLocalRestoreHandler(fn func(*cluster.SnapshotRestore) (*cluster.SnapshotRestore, error))
@@ -6904,6 +7155,30 @@ func (api *snapshotrestoreAPI) List(ctx context.Context, opts *api.ListWatchOpti
 	return objlist, nil
 }
 
+// ApisrvList returns a list of all SnapshotRestore objects from apiserver
+func (api *snapshotrestoreAPI) ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*cluster.SnapshotRestore, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.ClusterV1().SnapshotRestore().List(context.Background(), opts)
+	}
+
+	// List from local cache
+	ctkitObjs, err := api.List(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	var ret []*cluster.SnapshotRestore
+	for _, obj := range ctkitObjs {
+		ret = append(ret, &obj.SnapshotRestore)
+	}
+	return ret, nil
+}
+
 // Watch sets up a event handlers for SnapshotRestore object
 func (api *snapshotrestoreAPI) Watch(handler SnapshotRestoreHandler) error {
 	api.ct.startWorkerPool("SnapshotRestore")
@@ -6916,6 +7191,11 @@ func (api *snapshotrestoreAPI) StopWatch(handler SnapshotRestoreHandler) error {
 	api.ct.workPools["SnapshotRestore"].Stop()
 	api.ct.Unlock()
 	return api.ct.StopWatchSnapshotRestore(handler)
+}
+
+// ClearCache removes all SnapshotRestore objects in ctkit
+func (api *snapshotrestoreAPI) ClearCache(handler SnapshotRestoreHandler) {
+	api.ct.delKind("SnapshotRestore")
 }
 
 // Restore is an API action
@@ -7125,7 +7405,7 @@ func (ct *ctrlerCtx) handleLicenseEventNoResolver(evt *kvstore.WatchEvent) error
 				err = licenseHandler.OnLicenseCreate(ctrlCtx.obj)
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					ct.delObject(kind, ctrlCtx.GetKey())
 					return err
 				}
@@ -7149,7 +7429,7 @@ func (ct *ctrlerCtx) handleLicenseEventNoResolver(evt *kvstore.WatchEvent) error
 				ctrlCtx.obj.License = *eobj
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					return err
 				}
 
@@ -7168,7 +7448,7 @@ func (ct *ctrlerCtx) handleLicenseEventNoResolver(evt *kvstore.WatchEvent) error
 			err = licenseHandler.OnLicenseDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 			}
 			ct.delObject(kind, ctrlCtx.GetKey())
 			return nil
@@ -7264,7 +7544,7 @@ func (ctx *licenseCtx) WorkFunc(context context.Context) error {
 		err = licenseHandler.OnLicenseCreate(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Updated:
@@ -7277,7 +7557,7 @@ func (ctx *licenseCtx) WorkFunc(context context.Context) error {
 		err = licenseHandler.OnLicenseUpdate(ctx.obj, &p)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Deleted:
@@ -7285,7 +7565,7 @@ func (ctx *licenseCtx) WorkFunc(context context.Context) error {
 		err = licenseHandler.OnLicenseDelete(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 		}
 	}
 	ct.resolveObject(ctx.event, ctx)
@@ -7358,7 +7638,7 @@ func (ct *ctrlerCtx) handleLicenseEventParallelWithNoResolver(evt *kvstore.Watch
 					err = licenseHandler.OnLicenseCreate(eobj)
 					eobj.Unlock()
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj.GetObjectMeta(), err)
 						ct.delObject(kind, workCtx.GetKey())
 					}
 				} else {
@@ -7373,7 +7653,7 @@ func (ct *ctrlerCtx) handleLicenseEventParallelWithNoResolver(evt *kvstore.Watch
 
 					err = licenseHandler.OnLicenseUpdate(obj, &p)
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 					} else {
 						workCtx.obj.License = p
 					}
@@ -7399,7 +7679,7 @@ func (ct *ctrlerCtx) handleLicenseEventParallelWithNoResolver(evt *kvstore.Watch
 				err = licenseHandler.OnLicenseDelete(obj)
 				obj.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 				}
 				ct.delObject(kind, workCtx.GetKey())
 				return nil
@@ -7545,7 +7825,9 @@ func (ct *ctrlerCtx) runLicenseWatcher() {
 				ct.Unlock()
 
 				// perform a diff with API server and local cache
-				time.Sleep(time.Millisecond * 100)
+				// Sleeping to give time for other apiclient's to reconnect
+				// before calling reconnect handler
+				time.Sleep(time.Second)
 				ct.diffLicense(apicl)
 				licenseHandler.OnLicenseReconnect()
 
@@ -7586,7 +7868,7 @@ func (ct *ctrlerCtx) WatchLicense(handler LicenseHandler) error {
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if ok {
 		return fmt.Errorf("License watcher already exists")
@@ -7609,7 +7891,7 @@ func (ct *ctrlerCtx) StopWatchLicense(handler LicenseHandler) error {
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if !ok {
 		return fmt.Errorf("License watcher does not exist")
@@ -7618,7 +7900,9 @@ func (ct *ctrlerCtx) StopWatchLicense(handler LicenseHandler) error {
 	ct.Lock()
 	cancel, _ := ct.watchCancel[kind]
 	cancel()
-	delete(ct.watchers, kind)
+	if _, ok := ct.watchers[kind]; ok {
+		delete(ct.watchers, kind)
+	}
 	delete(ct.watchCancel, kind)
 	ct.Unlock()
 
@@ -7636,7 +7920,9 @@ type LicenseAPI interface {
 	Delete(obj *cluster.License) error
 	Find(meta *api.ObjectMeta) (*License, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*License, error)
+	ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*cluster.License, error)
 	Watch(handler LicenseHandler) error
+	ClearCache(handler LicenseHandler)
 	StopWatch(handler LicenseHandler) error
 }
 
@@ -7794,6 +8080,30 @@ func (api *licenseAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]
 	return objlist, nil
 }
 
+// ApisrvList returns a list of all License objects from apiserver
+func (api *licenseAPI) ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*cluster.License, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.ClusterV1().License().List(context.Background(), opts)
+	}
+
+	// List from local cache
+	ctkitObjs, err := api.List(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	var ret []*cluster.License
+	for _, obj := range ctkitObjs {
+		ret = append(ret, &obj.License)
+	}
+	return ret, nil
+}
+
 // Watch sets up a event handlers for License object
 func (api *licenseAPI) Watch(handler LicenseHandler) error {
 	api.ct.startWorkerPool("License")
@@ -7806,6 +8116,11 @@ func (api *licenseAPI) StopWatch(handler LicenseHandler) error {
 	api.ct.workPools["License"].Stop()
 	api.ct.Unlock()
 	return api.ct.StopWatchLicense(handler)
+}
+
+// ClearCache removes all License objects in ctkit
+func (api *licenseAPI) ClearCache(handler LicenseHandler) {
+	api.ct.delKind("License")
 }
 
 // License returns LicenseAPI
@@ -7964,7 +8279,7 @@ func (ct *ctrlerCtx) handleDSCProfileEventNoResolver(evt *kvstore.WatchEvent) er
 				err = dscprofileHandler.OnDSCProfileCreate(ctrlCtx.obj)
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					ct.delObject(kind, ctrlCtx.GetKey())
 					return err
 				}
@@ -7988,7 +8303,7 @@ func (ct *ctrlerCtx) handleDSCProfileEventNoResolver(evt *kvstore.WatchEvent) er
 				ctrlCtx.obj.DSCProfile = *eobj
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					return err
 				}
 
@@ -8007,7 +8322,7 @@ func (ct *ctrlerCtx) handleDSCProfileEventNoResolver(evt *kvstore.WatchEvent) er
 			err = dscprofileHandler.OnDSCProfileDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 			}
 			ct.delObject(kind, ctrlCtx.GetKey())
 			return nil
@@ -8103,7 +8418,7 @@ func (ctx *dscprofileCtx) WorkFunc(context context.Context) error {
 		err = dscprofileHandler.OnDSCProfileCreate(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Updated:
@@ -8116,7 +8431,7 @@ func (ctx *dscprofileCtx) WorkFunc(context context.Context) error {
 		err = dscprofileHandler.OnDSCProfileUpdate(ctx.obj, &p)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Deleted:
@@ -8124,7 +8439,7 @@ func (ctx *dscprofileCtx) WorkFunc(context context.Context) error {
 		err = dscprofileHandler.OnDSCProfileDelete(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 		}
 	}
 	ct.resolveObject(ctx.event, ctx)
@@ -8197,7 +8512,7 @@ func (ct *ctrlerCtx) handleDSCProfileEventParallelWithNoResolver(evt *kvstore.Wa
 					err = dscprofileHandler.OnDSCProfileCreate(eobj)
 					eobj.Unlock()
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj.GetObjectMeta(), err)
 						ct.delObject(kind, workCtx.GetKey())
 					}
 				} else {
@@ -8212,7 +8527,7 @@ func (ct *ctrlerCtx) handleDSCProfileEventParallelWithNoResolver(evt *kvstore.Wa
 
 					err = dscprofileHandler.OnDSCProfileUpdate(obj, &p)
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 					} else {
 						workCtx.obj.DSCProfile = p
 					}
@@ -8238,7 +8553,7 @@ func (ct *ctrlerCtx) handleDSCProfileEventParallelWithNoResolver(evt *kvstore.Wa
 				err = dscprofileHandler.OnDSCProfileDelete(obj)
 				obj.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 				}
 				ct.delObject(kind, workCtx.GetKey())
 				return nil
@@ -8384,7 +8699,9 @@ func (ct *ctrlerCtx) runDSCProfileWatcher() {
 				ct.Unlock()
 
 				// perform a diff with API server and local cache
-				time.Sleep(time.Millisecond * 100)
+				// Sleeping to give time for other apiclient's to reconnect
+				// before calling reconnect handler
+				time.Sleep(time.Second)
 				ct.diffDSCProfile(apicl)
 				dscprofileHandler.OnDSCProfileReconnect()
 
@@ -8425,7 +8742,7 @@ func (ct *ctrlerCtx) WatchDSCProfile(handler DSCProfileHandler) error {
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if ok {
 		return fmt.Errorf("DSCProfile watcher already exists")
@@ -8448,7 +8765,7 @@ func (ct *ctrlerCtx) StopWatchDSCProfile(handler DSCProfileHandler) error {
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if !ok {
 		return fmt.Errorf("DSCProfile watcher does not exist")
@@ -8457,7 +8774,9 @@ func (ct *ctrlerCtx) StopWatchDSCProfile(handler DSCProfileHandler) error {
 	ct.Lock()
 	cancel, _ := ct.watchCancel[kind]
 	cancel()
-	delete(ct.watchers, kind)
+	if _, ok := ct.watchers[kind]; ok {
+		delete(ct.watchers, kind)
+	}
 	delete(ct.watchCancel, kind)
 	ct.Unlock()
 
@@ -8475,7 +8794,9 @@ type DSCProfileAPI interface {
 	Delete(obj *cluster.DSCProfile) error
 	Find(meta *api.ObjectMeta) (*DSCProfile, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*DSCProfile, error)
+	ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*cluster.DSCProfile, error)
 	Watch(handler DSCProfileHandler) error
+	ClearCache(handler DSCProfileHandler)
 	StopWatch(handler DSCProfileHandler) error
 }
 
@@ -8633,6 +8954,30 @@ func (api *dscprofileAPI) List(ctx context.Context, opts *api.ListWatchOptions) 
 	return objlist, nil
 }
 
+// ApisrvList returns a list of all DSCProfile objects from apiserver
+func (api *dscprofileAPI) ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*cluster.DSCProfile, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.ClusterV1().DSCProfile().List(context.Background(), opts)
+	}
+
+	// List from local cache
+	ctkitObjs, err := api.List(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	var ret []*cluster.DSCProfile
+	for _, obj := range ctkitObjs {
+		ret = append(ret, &obj.DSCProfile)
+	}
+	return ret, nil
+}
+
 // Watch sets up a event handlers for DSCProfile object
 func (api *dscprofileAPI) Watch(handler DSCProfileHandler) error {
 	api.ct.startWorkerPool("DSCProfile")
@@ -8645,6 +8990,11 @@ func (api *dscprofileAPI) StopWatch(handler DSCProfileHandler) error {
 	api.ct.workPools["DSCProfile"].Stop()
 	api.ct.Unlock()
 	return api.ct.StopWatchDSCProfile(handler)
+}
+
+// ClearCache removes all DSCProfile objects in ctkit
+func (api *dscprofileAPI) ClearCache(handler DSCProfileHandler) {
+	api.ct.delKind("DSCProfile")
 }
 
 // DSCProfile returns DSCProfileAPI

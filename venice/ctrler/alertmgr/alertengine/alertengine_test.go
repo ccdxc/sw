@@ -102,7 +102,7 @@ func (m *mockMonitoringV1) Watch(ctx context.Context, options *api.ListWatchOpti
 func setup(t *testing.T) {
 	// Create logger, API server and mock resolver.
 	logger := logger.WithContext("t_name", t.Name())
-	apiServ, apiServerURL, err := serviceutils.StartAPIServer("", t.Name(), logger)
+	apiServ, apiServerURL, err := serviceutils.StartAPIServer("", t.Name(), logger, []string{})
 	AssertOk(t, err, "failed to create API Server")
 	apiServer = apiServ
 	mr := mockresolver.New()

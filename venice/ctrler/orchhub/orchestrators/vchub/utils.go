@@ -64,6 +64,11 @@ func addNameLabel(labels map[string]string, name string) {
 	labels[NameKey] = name
 }
 
+func getNameLabel(labels map[string]string) (string, bool) {
+	name, ok := labels[NameKey]
+	return name, ok
+}
+
 // CreatePGName creates the PG name
 func CreatePGName(networkName string) string {
 	return fmt.Sprintf("%s%s", defs.DefaultPGPrefix, networkName)

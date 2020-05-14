@@ -157,7 +157,7 @@ func (t *tInfo) teardown() {
 
 func (t *tInfo) startAPIServer(clusterName string) error {
 	var err error
-	t.apiServer, t.apiServerAddr, err = serviceutils.StartAPIServer(testURL, clusterName, t.logger)
+	t.apiServer, t.apiServerAddr, err = serviceutils.StartAPIServer(testURL, clusterName, t.logger, []string{})
 	if err != nil {
 		return err
 	}

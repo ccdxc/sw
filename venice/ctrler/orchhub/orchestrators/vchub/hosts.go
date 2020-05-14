@@ -92,10 +92,6 @@ func (v *VCHub) handleHost(m defs.VCEventMsg) {
 			v.processHostConfig(prop, m.DcID, m.DcName, hostObj)
 		case defs.HostPropName:
 			dispName = prop.Val.(string)
-			// Try to update vmkworkloadname incase we did not get the name info
-			// during create
-			penDC.addHostNameKey(dispName, m.Key)
-			v.updateVmkWorkloadLabels(hostObj.Name, m.DcName, dispName)
 			addNameLabel(hostObj.Labels, dispName)
 		default:
 			v.Log.Errorf("host prop change %s - not handled", prop.Name)
@@ -109,9 +105,13 @@ func (v *VCHub) handleHost(m defs.VCEventMsg) {
 		v.hostRemovedFromDVS(existingHost)
 	}
 
-	if dispName == "" {
+	if dispName == "" && existingHost != nil {
 		// see if received it before config property
-		dispName, _ = penDC.findHostNameByKey(m.Key)
+		dispName, _ = getNameLabel(hostObj.Labels)
+	}
+	if dispName != "" {
+		penDC.addHostNameKey(dispName, m.Key)
+		v.updateVmkWorkloadLabels(hostObj.Name, m.DcName, dispName)
 	}
 
 	if existingHost == nil {

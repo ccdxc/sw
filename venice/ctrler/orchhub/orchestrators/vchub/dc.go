@@ -59,6 +59,8 @@ func (v *VCHub) NewPenDC(dcName, dcID string) (*PenDC, error) {
 		}
 		v.DcID2NameMap[dcID] = dcName
 
+		v.Log.Infof("adding dc %s ( %s )", dcName, dcID)
+
 		err := v.probe.TagObjAsManaged(dcRef)
 		if err != nil {
 			v.Log.Errorf("Failed to tag DC as managed, %s", err)
@@ -96,12 +98,18 @@ func (v *VCHub) RemovePenDC(dcName string) {
 
 	// Stop watcher for this DC
 	v.probe.StopWatchForDC(dcName, existingDC.dcRef.Value)
+	// Remove tag on DC
 
 	existingDC.Lock()
-	dvsName := CreateDVSName(dcName)
-	err := v.probe.RemovePenDVS(dcName, dvsName, 5)
-	if err != nil {
-		v.Log.Errorf("failed to delete DVS %v from DC %v. Err : %v", dvsName, dcName, err)
+	for dvsName, dvs := range existingDC.DvsMap {
+		err := v.probe.RemovePenDVS(dcName, dvsName, 5)
+		if err != nil {
+			v.Log.Errorf("failed to delete DVS %v from DC %v. Err : %v", dvsName, dcName, err)
+			err := v.probe.RemoveTagObjManaged(dvs.DvsRef)
+			if err != nil {
+				v.Log.Errorf("failed to remove managed tag from %v in DC %v. Err : %v", dvsName, dcName, err)
+			}
+		}
 	}
 	existingDC.Unlock()
 
@@ -133,11 +141,16 @@ func (v *VCHub) RemovePenDC(dcName string) {
 	delete(v.State.DcIDMap, existingDC.Name)
 	v.State.DcMapLock.Unlock()
 
-	v.State.DvsMapLock.Lock()
-	if _, ok := v.State.DvsIDMap[dvsName]; ok {
-		delete(v.State.DvsIDMap, dvsName)
+	existingDC.Lock()
+	for dvsName := range existingDC.DvsMap {
+		v.State.DvsMapLock.Lock()
+		if _, ok := v.State.DvsIDMap[dvsName]; ok {
+			delete(v.State.DvsIDMap, dvsName)
+		}
+		v.State.DvsMapLock.Unlock()
 	}
-	v.State.DvsMapLock.Unlock()
+	existingDC.Unlock()
+
 	return
 }
 
@@ -262,6 +275,7 @@ func (d *PenDC) getRemainingPGAllocations(dvsName string) map[string]int {
 func (d *PenDC) addHostNameKey(name, key string) {
 	d.Lock()
 	defer d.Unlock()
+	d.Log.Infof("DC %v: Adding host %v:%v to DC", d.Name, name, key)
 	d.HostName2Key[name] = key
 }
 

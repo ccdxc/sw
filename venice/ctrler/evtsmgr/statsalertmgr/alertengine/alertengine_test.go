@@ -12,7 +12,7 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/venice/apiserver"
-	"github.com/pensando/sw/venice/cmd/types/protos"
+	types "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr/memdb"
 	samtypes "github.com/pensando/sw/venice/ctrler/evtsmgr/statsalertmgr/types"
 	"github.com/pensando/sw/venice/globals"
@@ -469,7 +469,7 @@ func setup(t *testing.T) (*memdb.MemDb, apiserver.Server, apiclient.Services, re
 	mr := mockresolver.New()
 
 	// create API server & client
-	apiServer, apiServerURL, err := serviceutils.StartAPIServer("", t.Name(), tLogger)
+	apiServer, apiServerURL, err := serviceutils.StartAPIServer("", t.Name(), tLogger, []string{})
 	if err != nil {
 		return nil, nil, nil, mr, tLogger, err
 	}

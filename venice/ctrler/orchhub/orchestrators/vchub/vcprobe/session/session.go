@@ -354,6 +354,14 @@ func (s *Session) PeriodicSessionCheck(wg *sync.WaitGroup) {
 				}
 			}
 		}
+		// Set status to unknown
+		// Status will be updated to either success or failure after login attempt
+		evt := ConnectionState{
+			orchestration.OrchestratorStatus_Unknown.String(),
+			nil,
+		}
+		s.ConnUpdate <- evt
+
 		// Logout, stop watchers and retry
 		// Lock will not be released until
 		// we re-establish the client, or the ctx is cancelled

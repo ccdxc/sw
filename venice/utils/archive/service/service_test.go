@@ -49,7 +49,7 @@ func (ti *tInfo) setup() {
 	recorder.Override(mockevtsrecorder.NewRecorder(clientName, ti.logger))
 
 	// api server
-	ti.apiSrv, ti.apiSrvAddr, err = serviceutils.StartAPIServer("localhost:0", clientName, ti.logger)
+	ti.apiSrv, ti.apiSrvAddr, err = serviceutils.StartAPIServer("localhost:0", clientName, ti.logger, []string{})
 	if err != nil {
 		panic("Unable to start API Server")
 	}

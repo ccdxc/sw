@@ -76,7 +76,7 @@ func veniceExporterSetup(t *testing.T) (*mockes.ElasticServer, apiserver.Server,
 	ms.Start()
 
 	// start API server
-	apiServer, apiServerURL, err := serviceutils.StartAPIServer("", t.Name(), logger.WithContext("submodule", globals.APIServer))
+	apiServer, apiServerURL, err := serviceutils.StartAPIServer("", t.Name(), logger.WithContext("submodule", globals.APIServer), []string{})
 	AssertOk(t, err, "failed to start API server")
 
 	mockCtrl := gomock.NewController(t)

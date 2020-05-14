@@ -14,7 +14,7 @@ import (
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/citadel/broker/mock"
 	"github.com/pensando/sw/venice/citadel/query"
-	"github.com/pensando/sw/venice/cmd/types/protos"
+	types "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr/memdb"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/events/recorder"
@@ -110,7 +110,7 @@ func setup(t *testing.T) (*memdb.MemDb, *mockresolver.ResolverClient, apiserver.
 	mr := mockresolver.New()
 
 	// create API server
-	apiServer, apiServerURL, err := serviceutils.StartAPIServer("", t.Name(), tLogger)
+	apiServer, apiServerURL, err := serviceutils.StartAPIServer("", t.Name(), tLogger, []string{})
 	if err != nil {
 		return nil, nil, nil, nil, nil, tLogger, err
 	}

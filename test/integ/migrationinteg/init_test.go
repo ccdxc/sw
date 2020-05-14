@@ -114,7 +114,7 @@ func (it *migrationTestSuite) SetUpSuite(c *C) {
 	})
 
 	// Create API Server
-	it.apiSrv, it.apiSrvAddr, err = serviceutils.StartAPIServer(integTestApisrvURL, "npm-integ-test", logger.WithContext("submodule", "pen-apiserver"))
+	it.apiSrv, it.apiSrvAddr, err = serviceutils.StartAPIServer(integTestApisrvURL, "npm-integ-test", logger.WithContext("submodule", "pen-apiserver"), []string{})
 	c.Assert(err, check.IsNil)
 
 	// Create NPM
@@ -231,7 +231,7 @@ func (it *migrationTestSuite) restartAPIServer() error {
 	time.Sleep(1 * time.Second)
 	var err error
 
-	it.apiSrv, _, err = serviceutils.StartAPIServer(integTestApisrvURL, "npm-integ-test", it.logger)
+	it.apiSrv, _, err = serviceutils.StartAPIServer(integTestApisrvURL, "npm-integ-test", it.logger, []string{})
 	if err != nil {
 		log.Errorf("Failed to start API server. Err : %v", err)
 		return err

@@ -260,7 +260,6 @@ func TestTagSync(t *testing.T) {
 	AssertEventually(t, func() (bool, interface{}) {
 		evts := tagSyncEventRecorder.GetEvents()
 		for _, evt := range evts {
-			logger.Errorf("ERROR %s", evt)
 			if evt.EventType == eventtypes.ORCH_ALREADY_MANAGED.String() {
 				if strings.Contains(evt.Message, tag.Name) && strings.Contains(evt.Message, defaultTestParams.TestDCName) {
 					return true, nil
@@ -269,5 +268,49 @@ func TestTagSync(t *testing.T) {
 		}
 		return false, nil
 	}, "Already managed event was not generated")
+
+	// Shutting down vchub should delete category
+	vchub.Destroy(true)
+
+	// Verify tags are gone
+	_, err = tagClient.GetCategory(context.Background(), defs.VCTagCategory)
+	Assert(t, err != nil, "Category should not exist")
+
+	// Recreate category and add pensando managed tag to DC
+	tagCategory := &tags.Category{
+		Name:        defs.VCTagCategory,
+		Description: defs.VCTagCategoryDescription,
+		Cardinality: "MULTIPLE",
+	}
+	catID, err := tagClient.CreateCategory(context.Background(), tagCategory)
+	tag = &tags.Tag{
+		Name:        defs.CreateVCTagManagedTag("randomCluster"),
+		Description: defs.VCTagManagedDescription,
+		CategoryID:  catID,
+	}
+	tagID, err := tagClient.CreateTag(context.Background(), tag)
+	tagSyncEventRecorder.ClearEvents()
+
+	tagClient.AttachTag(context.Background(), tagID, dc1.Obj.Reference())
+
+	vchub = LaunchVCHub(sm, orchConfig, logger, WithTagSyncDelay(2*time.Second))
+
+	AssertEventually(t, func() (bool, interface{}) {
+		tags, err := tagClient.GetAttachedTags(context.Background(), dc1.Obj.Reference())
+		if err != nil {
+			return false, err
+		}
+		for _, t := range tags {
+			if t.ID == tagID {
+				return false, fmt.Errorf("dc1 still has old managed tag")
+			}
+		}
+		return true, nil
+	}, "Old tag was never removed")
+
+	evts := tagSyncEventRecorder.GetEvents()
+	for _, evt := range evts {
+		Assert(t, evt.EventType == eventtypes.ORCH_ALREADY_MANAGED.String(), "should not have raised event")
+	}
 
 }

@@ -859,6 +859,23 @@ func (ct *ctrlerCtx) delObject(kind, key string) error {
 	return nil
 }
 
+func (ct *ctrlerCtx) delKind(kind string) error {
+	ct.Lock()
+	defer ct.Unlock()
+
+	ks, ok := ct.kinds[kind]
+	if !ok {
+		return fmt.Errorf("kind %s not found", kind)
+	}
+
+	ks.Lock()
+	ct.stats.Counter(kind + "_Objects").Set(0)
+	ks.objects = make(map[string]apiintf.CtkitObject)
+	ks.Unlock()
+
+	return nil
+}
+
 // RegisterDiagnosticsHandler registers a diagnostics query handler if RPC server is enabled. This should be called before grpc server is started
 func (ct *ctrlerCtx) RegisterDiagnosticsHandler(rpcMethod, query string, handler diag.Handler) {
 	if ct.diagSvc != nil {

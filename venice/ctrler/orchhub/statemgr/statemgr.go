@@ -178,10 +178,10 @@ func (s *Statemgr) startWatchers() error {
 		return fmt.Errorf("Error establishing watch on cluster. Err: %v", err)
 	}
 
-	// err = s.ctrler.SnapshotRestore().Watch(s)
-	// if err != nil {
-	// 	return fmt.Errorf("Error establishing watch on orchestrator. Err: %v", err)
-	// }
+	err = s.ctrler.SnapshotRestore().Watch(s)
+	if err != nil {
+		return fmt.Errorf("Error establishing watch on orchestrator. Err: %v", err)
+	}
 
 	err = s.ctrler.Network().Watch(s)
 	if err != nil {
@@ -227,4 +227,82 @@ func (s *Statemgr) FindObject(kind, tenant, ns, name string) (runtime.Object, er
 
 	// find it in db
 	return s.ctrler.FindObject(kind, &ometa)
+}
+
+// StopWatchersOnRestore stops watchers for objects affected by snaphost restore
+func (s *Statemgr) StopWatchersOnRestore() {
+	s.logger.Infof("Stopping watchers...")
+	err := s.ctrler.Network().StopWatch(s)
+	if err != nil {
+		s.logger.Errorf("Failed to stop watch on network. Err: %v", err)
+	}
+
+	err = s.ctrler.DSCProfile().StopWatch(s)
+	if err != nil {
+		s.logger.Errorf("Failed to stop watch on DSC Profiles. Err: %v", err)
+	}
+
+	err = s.ctrler.DistributedServiceCard().StopWatch(s)
+	if err != nil {
+		s.logger.Errorf("Failed to stop watch on dsc. Err: %v", err)
+	}
+
+	err = s.ctrler.Host().StopWatch(s)
+	if err != nil {
+		s.logger.Errorf("Failed to stop watch on host. Err: %v", err)
+	}
+
+	err = s.ctrler.Workload().StopWatch(s)
+	if err != nil {
+		s.logger.Errorf("Failed to stop watch on workload. Err: %v", err)
+	}
+
+	err = s.ctrler.Orchestrator().StopWatch(s)
+	if err != nil {
+		s.logger.Errorf("Failed to stop watch on orchestrator. Err: %v", err)
+	}
+	s.logger.Infof("watchers stopped")
+}
+
+// RestartWatchersOnRestore restarts watchers for objects stopped during StopWatchersOnRestore
+func (s *Statemgr) RestartWatchersOnRestore() {
+	s.logger.Infof("Restarting watchers...")
+	// Remove internal cache for these objects.
+	s.ctrler.Network().ClearCache(s)
+	s.ctrler.DSCProfile().ClearCache(s)
+	s.ctrler.DistributedServiceCard().ClearCache(s)
+	s.ctrler.Host().ClearCache(s)
+	s.ctrler.Workload().ClearCache(s)
+	s.ctrler.Orchestrator().ClearCache(s)
+
+	err := s.ctrler.Network().Watch(s)
+	if err != nil {
+		s.logger.Errorf("Error establishing watch on network. Err: %v", err)
+	}
+
+	err = s.ctrler.DSCProfile().Watch(s)
+	if err != nil {
+		s.logger.Errorf("Error establishing watch on DSC Profiles. Err: %v", err)
+	}
+
+	err = s.ctrler.DistributedServiceCard().Watch(s)
+	if err != nil {
+		s.logger.Errorf("Error establishing watch on dsc. Err: %v", err)
+	}
+
+	err = s.ctrler.Host().Watch(s)
+	if err != nil {
+		s.logger.Errorf("Error establishing watch on host. Err: %v", err)
+	}
+
+	err = s.ctrler.Workload().Watch(s)
+	if err != nil {
+		s.logger.Errorf("Error establishing watch on workload. Err: %v", err)
+	}
+
+	err = s.ctrler.Orchestrator().Watch(s)
+	if err != nil {
+		s.logger.Errorf("Error establishing watch on orchestrator. Err: %v", err)
+	}
+	s.logger.Infof("Watchers restarted")
 }

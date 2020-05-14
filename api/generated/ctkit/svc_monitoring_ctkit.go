@@ -178,7 +178,7 @@ func (ct *ctrlerCtx) handleEventPolicyEventNoResolver(evt *kvstore.WatchEvent) e
 				err = eventpolicyHandler.OnEventPolicyCreate(ctrlCtx.obj)
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					ct.delObject(kind, ctrlCtx.GetKey())
 					return err
 				}
@@ -202,7 +202,7 @@ func (ct *ctrlerCtx) handleEventPolicyEventNoResolver(evt *kvstore.WatchEvent) e
 				ctrlCtx.obj.EventPolicy = *eobj
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					return err
 				}
 
@@ -221,7 +221,7 @@ func (ct *ctrlerCtx) handleEventPolicyEventNoResolver(evt *kvstore.WatchEvent) e
 			err = eventpolicyHandler.OnEventPolicyDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 			}
 			ct.delObject(kind, ctrlCtx.GetKey())
 			return nil
@@ -317,7 +317,7 @@ func (ctx *eventpolicyCtx) WorkFunc(context context.Context) error {
 		err = eventpolicyHandler.OnEventPolicyCreate(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Updated:
@@ -330,7 +330,7 @@ func (ctx *eventpolicyCtx) WorkFunc(context context.Context) error {
 		err = eventpolicyHandler.OnEventPolicyUpdate(ctx.obj, &p)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Deleted:
@@ -338,7 +338,7 @@ func (ctx *eventpolicyCtx) WorkFunc(context context.Context) error {
 		err = eventpolicyHandler.OnEventPolicyDelete(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 		}
 	}
 	ct.resolveObject(ctx.event, ctx)
@@ -415,7 +415,7 @@ func (ct *ctrlerCtx) handleEventPolicyEventParallelWithNoResolver(evt *kvstore.W
 					err = eventpolicyHandler.OnEventPolicyCreate(eobj)
 					eobj.Unlock()
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj.GetObjectMeta(), err)
 						ct.delObject(kind, workCtx.GetKey())
 					}
 				} else {
@@ -430,7 +430,7 @@ func (ct *ctrlerCtx) handleEventPolicyEventParallelWithNoResolver(evt *kvstore.W
 
 					err = eventpolicyHandler.OnEventPolicyUpdate(obj, &p)
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 					} else {
 						workCtx.obj.EventPolicy = p
 					}
@@ -456,7 +456,7 @@ func (ct *ctrlerCtx) handleEventPolicyEventParallelWithNoResolver(evt *kvstore.W
 				err = eventpolicyHandler.OnEventPolicyDelete(obj)
 				obj.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 				}
 				ct.delObject(kind, workCtx.GetKey())
 				return nil
@@ -602,7 +602,9 @@ func (ct *ctrlerCtx) runEventPolicyWatcher() {
 				ct.Unlock()
 
 				// perform a diff with API server and local cache
-				time.Sleep(time.Millisecond * 100)
+				// Sleeping to give time for other apiclient's to reconnect
+				// before calling reconnect handler
+				time.Sleep(time.Second)
 				ct.diffEventPolicy(apicl)
 				eventpolicyHandler.OnEventPolicyReconnect()
 
@@ -643,7 +645,7 @@ func (ct *ctrlerCtx) WatchEventPolicy(handler EventPolicyHandler) error {
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if ok {
 		return fmt.Errorf("EventPolicy watcher already exists")
@@ -666,7 +668,7 @@ func (ct *ctrlerCtx) StopWatchEventPolicy(handler EventPolicyHandler) error {
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if !ok {
 		return fmt.Errorf("EventPolicy watcher does not exist")
@@ -675,7 +677,9 @@ func (ct *ctrlerCtx) StopWatchEventPolicy(handler EventPolicyHandler) error {
 	ct.Lock()
 	cancel, _ := ct.watchCancel[kind]
 	cancel()
-	delete(ct.watchers, kind)
+	if _, ok := ct.watchers[kind]; ok {
+		delete(ct.watchers, kind)
+	}
 	delete(ct.watchCancel, kind)
 	ct.Unlock()
 
@@ -693,7 +697,9 @@ type EventPolicyAPI interface {
 	Delete(obj *monitoring.EventPolicy) error
 	Find(meta *api.ObjectMeta) (*EventPolicy, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*EventPolicy, error)
+	ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*monitoring.EventPolicy, error)
 	Watch(handler EventPolicyHandler) error
+	ClearCache(handler EventPolicyHandler)
 	StopWatch(handler EventPolicyHandler) error
 }
 
@@ -851,6 +857,30 @@ func (api *eventpolicyAPI) List(ctx context.Context, opts *api.ListWatchOptions)
 	return objlist, nil
 }
 
+// ApisrvList returns a list of all EventPolicy objects from apiserver
+func (api *eventpolicyAPI) ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*monitoring.EventPolicy, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.MonitoringV1().EventPolicy().List(context.Background(), opts)
+	}
+
+	// List from local cache
+	ctkitObjs, err := api.List(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	var ret []*monitoring.EventPolicy
+	for _, obj := range ctkitObjs {
+		ret = append(ret, &obj.EventPolicy)
+	}
+	return ret, nil
+}
+
 // Watch sets up a event handlers for EventPolicy object
 func (api *eventpolicyAPI) Watch(handler EventPolicyHandler) error {
 	api.ct.startWorkerPool("EventPolicy")
@@ -863,6 +893,11 @@ func (api *eventpolicyAPI) StopWatch(handler EventPolicyHandler) error {
 	api.ct.workPools["EventPolicy"].Stop()
 	api.ct.Unlock()
 	return api.ct.StopWatchEventPolicy(handler)
+}
+
+// ClearCache removes all EventPolicy objects in ctkit
+func (api *eventpolicyAPI) ClearCache(handler EventPolicyHandler) {
+	api.ct.delKind("EventPolicy")
 }
 
 // EventPolicy returns EventPolicyAPI
@@ -1025,7 +1060,7 @@ func (ct *ctrlerCtx) handleFwlogPolicyEventNoResolver(evt *kvstore.WatchEvent) e
 				err = fwlogpolicyHandler.OnFwlogPolicyCreate(ctrlCtx.obj)
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					ct.delObject(kind, ctrlCtx.GetKey())
 					return err
 				}
@@ -1049,7 +1084,7 @@ func (ct *ctrlerCtx) handleFwlogPolicyEventNoResolver(evt *kvstore.WatchEvent) e
 				ctrlCtx.obj.FwlogPolicy = *eobj
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					return err
 				}
 
@@ -1068,7 +1103,7 @@ func (ct *ctrlerCtx) handleFwlogPolicyEventNoResolver(evt *kvstore.WatchEvent) e
 			err = fwlogpolicyHandler.OnFwlogPolicyDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 			}
 			ct.delObject(kind, ctrlCtx.GetKey())
 			return nil
@@ -1164,7 +1199,7 @@ func (ctx *fwlogpolicyCtx) WorkFunc(context context.Context) error {
 		err = fwlogpolicyHandler.OnFwlogPolicyCreate(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Updated:
@@ -1177,7 +1212,7 @@ func (ctx *fwlogpolicyCtx) WorkFunc(context context.Context) error {
 		err = fwlogpolicyHandler.OnFwlogPolicyUpdate(ctx.obj, &p)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Deleted:
@@ -1185,7 +1220,7 @@ func (ctx *fwlogpolicyCtx) WorkFunc(context context.Context) error {
 		err = fwlogpolicyHandler.OnFwlogPolicyDelete(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 		}
 	}
 	ct.resolveObject(ctx.event, ctx)
@@ -1262,7 +1297,7 @@ func (ct *ctrlerCtx) handleFwlogPolicyEventParallelWithNoResolver(evt *kvstore.W
 					err = fwlogpolicyHandler.OnFwlogPolicyCreate(eobj)
 					eobj.Unlock()
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj.GetObjectMeta(), err)
 						ct.delObject(kind, workCtx.GetKey())
 					}
 				} else {
@@ -1277,7 +1312,7 @@ func (ct *ctrlerCtx) handleFwlogPolicyEventParallelWithNoResolver(evt *kvstore.W
 
 					err = fwlogpolicyHandler.OnFwlogPolicyUpdate(obj, &p)
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 					} else {
 						workCtx.obj.FwlogPolicy = p
 					}
@@ -1303,7 +1338,7 @@ func (ct *ctrlerCtx) handleFwlogPolicyEventParallelWithNoResolver(evt *kvstore.W
 				err = fwlogpolicyHandler.OnFwlogPolicyDelete(obj)
 				obj.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 				}
 				ct.delObject(kind, workCtx.GetKey())
 				return nil
@@ -1449,7 +1484,9 @@ func (ct *ctrlerCtx) runFwlogPolicyWatcher() {
 				ct.Unlock()
 
 				// perform a diff with API server and local cache
-				time.Sleep(time.Millisecond * 100)
+				// Sleeping to give time for other apiclient's to reconnect
+				// before calling reconnect handler
+				time.Sleep(time.Second)
 				ct.diffFwlogPolicy(apicl)
 				fwlogpolicyHandler.OnFwlogPolicyReconnect()
 
@@ -1490,7 +1527,7 @@ func (ct *ctrlerCtx) WatchFwlogPolicy(handler FwlogPolicyHandler) error {
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if ok {
 		return fmt.Errorf("FwlogPolicy watcher already exists")
@@ -1513,7 +1550,7 @@ func (ct *ctrlerCtx) StopWatchFwlogPolicy(handler FwlogPolicyHandler) error {
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if !ok {
 		return fmt.Errorf("FwlogPolicy watcher does not exist")
@@ -1522,7 +1559,9 @@ func (ct *ctrlerCtx) StopWatchFwlogPolicy(handler FwlogPolicyHandler) error {
 	ct.Lock()
 	cancel, _ := ct.watchCancel[kind]
 	cancel()
-	delete(ct.watchers, kind)
+	if _, ok := ct.watchers[kind]; ok {
+		delete(ct.watchers, kind)
+	}
 	delete(ct.watchCancel, kind)
 	ct.Unlock()
 
@@ -1540,7 +1579,9 @@ type FwlogPolicyAPI interface {
 	Delete(obj *monitoring.FwlogPolicy) error
 	Find(meta *api.ObjectMeta) (*FwlogPolicy, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*FwlogPolicy, error)
+	ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*monitoring.FwlogPolicy, error)
 	Watch(handler FwlogPolicyHandler) error
+	ClearCache(handler FwlogPolicyHandler)
 	StopWatch(handler FwlogPolicyHandler) error
 }
 
@@ -1698,6 +1739,30 @@ func (api *fwlogpolicyAPI) List(ctx context.Context, opts *api.ListWatchOptions)
 	return objlist, nil
 }
 
+// ApisrvList returns a list of all FwlogPolicy objects from apiserver
+func (api *fwlogpolicyAPI) ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*monitoring.FwlogPolicy, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.MonitoringV1().FwlogPolicy().List(context.Background(), opts)
+	}
+
+	// List from local cache
+	ctkitObjs, err := api.List(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	var ret []*monitoring.FwlogPolicy
+	for _, obj := range ctkitObjs {
+		ret = append(ret, &obj.FwlogPolicy)
+	}
+	return ret, nil
+}
+
 // Watch sets up a event handlers for FwlogPolicy object
 func (api *fwlogpolicyAPI) Watch(handler FwlogPolicyHandler) error {
 	api.ct.startWorkerPool("FwlogPolicy")
@@ -1710,6 +1775,11 @@ func (api *fwlogpolicyAPI) StopWatch(handler FwlogPolicyHandler) error {
 	api.ct.workPools["FwlogPolicy"].Stop()
 	api.ct.Unlock()
 	return api.ct.StopWatchFwlogPolicy(handler)
+}
+
+// ClearCache removes all FwlogPolicy objects in ctkit
+func (api *fwlogpolicyAPI) ClearCache(handler FwlogPolicyHandler) {
+	api.ct.delKind("FwlogPolicy")
 }
 
 // FwlogPolicy returns FwlogPolicyAPI
@@ -1872,7 +1942,7 @@ func (ct *ctrlerCtx) handleFlowExportPolicyEventNoResolver(evt *kvstore.WatchEve
 				err = flowexportpolicyHandler.OnFlowExportPolicyCreate(ctrlCtx.obj)
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					ct.delObject(kind, ctrlCtx.GetKey())
 					return err
 				}
@@ -1896,7 +1966,7 @@ func (ct *ctrlerCtx) handleFlowExportPolicyEventNoResolver(evt *kvstore.WatchEve
 				ctrlCtx.obj.FlowExportPolicy = *eobj
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					return err
 				}
 
@@ -1915,7 +1985,7 @@ func (ct *ctrlerCtx) handleFlowExportPolicyEventNoResolver(evt *kvstore.WatchEve
 			err = flowexportpolicyHandler.OnFlowExportPolicyDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 			}
 			ct.delObject(kind, ctrlCtx.GetKey())
 			return nil
@@ -2011,7 +2081,7 @@ func (ctx *flowexportpolicyCtx) WorkFunc(context context.Context) error {
 		err = flowexportpolicyHandler.OnFlowExportPolicyCreate(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Updated:
@@ -2024,7 +2094,7 @@ func (ctx *flowexportpolicyCtx) WorkFunc(context context.Context) error {
 		err = flowexportpolicyHandler.OnFlowExportPolicyUpdate(ctx.obj, &p)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Deleted:
@@ -2032,7 +2102,7 @@ func (ctx *flowexportpolicyCtx) WorkFunc(context context.Context) error {
 		err = flowexportpolicyHandler.OnFlowExportPolicyDelete(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 		}
 	}
 	ct.resolveObject(ctx.event, ctx)
@@ -2109,7 +2179,7 @@ func (ct *ctrlerCtx) handleFlowExportPolicyEventParallelWithNoResolver(evt *kvst
 					err = flowexportpolicyHandler.OnFlowExportPolicyCreate(eobj)
 					eobj.Unlock()
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj.GetObjectMeta(), err)
 						ct.delObject(kind, workCtx.GetKey())
 					}
 				} else {
@@ -2124,7 +2194,7 @@ func (ct *ctrlerCtx) handleFlowExportPolicyEventParallelWithNoResolver(evt *kvst
 
 					err = flowexportpolicyHandler.OnFlowExportPolicyUpdate(obj, &p)
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 					} else {
 						workCtx.obj.FlowExportPolicy = p
 					}
@@ -2150,7 +2220,7 @@ func (ct *ctrlerCtx) handleFlowExportPolicyEventParallelWithNoResolver(evt *kvst
 				err = flowexportpolicyHandler.OnFlowExportPolicyDelete(obj)
 				obj.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 				}
 				ct.delObject(kind, workCtx.GetKey())
 				return nil
@@ -2296,7 +2366,9 @@ func (ct *ctrlerCtx) runFlowExportPolicyWatcher() {
 				ct.Unlock()
 
 				// perform a diff with API server and local cache
-				time.Sleep(time.Millisecond * 100)
+				// Sleeping to give time for other apiclient's to reconnect
+				// before calling reconnect handler
+				time.Sleep(time.Second)
 				ct.diffFlowExportPolicy(apicl)
 				flowexportpolicyHandler.OnFlowExportPolicyReconnect()
 
@@ -2337,7 +2409,7 @@ func (ct *ctrlerCtx) WatchFlowExportPolicy(handler FlowExportPolicyHandler) erro
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if ok {
 		return fmt.Errorf("FlowExportPolicy watcher already exists")
@@ -2360,7 +2432,7 @@ func (ct *ctrlerCtx) StopWatchFlowExportPolicy(handler FlowExportPolicyHandler) 
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if !ok {
 		return fmt.Errorf("FlowExportPolicy watcher does not exist")
@@ -2369,7 +2441,9 @@ func (ct *ctrlerCtx) StopWatchFlowExportPolicy(handler FlowExportPolicyHandler) 
 	ct.Lock()
 	cancel, _ := ct.watchCancel[kind]
 	cancel()
-	delete(ct.watchers, kind)
+	if _, ok := ct.watchers[kind]; ok {
+		delete(ct.watchers, kind)
+	}
 	delete(ct.watchCancel, kind)
 	ct.Unlock()
 
@@ -2387,7 +2461,9 @@ type FlowExportPolicyAPI interface {
 	Delete(obj *monitoring.FlowExportPolicy) error
 	Find(meta *api.ObjectMeta) (*FlowExportPolicy, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*FlowExportPolicy, error)
+	ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*monitoring.FlowExportPolicy, error)
 	Watch(handler FlowExportPolicyHandler) error
+	ClearCache(handler FlowExportPolicyHandler)
 	StopWatch(handler FlowExportPolicyHandler) error
 }
 
@@ -2545,6 +2621,30 @@ func (api *flowexportpolicyAPI) List(ctx context.Context, opts *api.ListWatchOpt
 	return objlist, nil
 }
 
+// ApisrvList returns a list of all FlowExportPolicy objects from apiserver
+func (api *flowexportpolicyAPI) ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*monitoring.FlowExportPolicy, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.MonitoringV1().FlowExportPolicy().List(context.Background(), opts)
+	}
+
+	// List from local cache
+	ctkitObjs, err := api.List(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	var ret []*monitoring.FlowExportPolicy
+	for _, obj := range ctkitObjs {
+		ret = append(ret, &obj.FlowExportPolicy)
+	}
+	return ret, nil
+}
+
 // Watch sets up a event handlers for FlowExportPolicy object
 func (api *flowexportpolicyAPI) Watch(handler FlowExportPolicyHandler) error {
 	api.ct.startWorkerPool("FlowExportPolicy")
@@ -2557,6 +2657,11 @@ func (api *flowexportpolicyAPI) StopWatch(handler FlowExportPolicyHandler) error
 	api.ct.workPools["FlowExportPolicy"].Stop()
 	api.ct.Unlock()
 	return api.ct.StopWatchFlowExportPolicy(handler)
+}
+
+// ClearCache removes all FlowExportPolicy objects in ctkit
+func (api *flowexportpolicyAPI) ClearCache(handler FlowExportPolicyHandler) {
+	api.ct.delKind("FlowExportPolicy")
 }
 
 // FlowExportPolicy returns FlowExportPolicyAPI
@@ -2715,7 +2820,7 @@ func (ct *ctrlerCtx) handleAlertEventNoResolver(evt *kvstore.WatchEvent) error {
 				err = alertHandler.OnAlertCreate(ctrlCtx.obj)
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					ct.delObject(kind, ctrlCtx.GetKey())
 					return err
 				}
@@ -2739,7 +2844,7 @@ func (ct *ctrlerCtx) handleAlertEventNoResolver(evt *kvstore.WatchEvent) error {
 				ctrlCtx.obj.Alert = *eobj
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					return err
 				}
 
@@ -2758,7 +2863,7 @@ func (ct *ctrlerCtx) handleAlertEventNoResolver(evt *kvstore.WatchEvent) error {
 			err = alertHandler.OnAlertDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 			}
 			ct.delObject(kind, ctrlCtx.GetKey())
 			return nil
@@ -2854,7 +2959,7 @@ func (ctx *alertCtx) WorkFunc(context context.Context) error {
 		err = alertHandler.OnAlertCreate(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Updated:
@@ -2867,7 +2972,7 @@ func (ctx *alertCtx) WorkFunc(context context.Context) error {
 		err = alertHandler.OnAlertUpdate(ctx.obj, &p)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Deleted:
@@ -2875,7 +2980,7 @@ func (ctx *alertCtx) WorkFunc(context context.Context) error {
 		err = alertHandler.OnAlertDelete(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 		}
 	}
 	ct.resolveObject(ctx.event, ctx)
@@ -2948,7 +3053,7 @@ func (ct *ctrlerCtx) handleAlertEventParallelWithNoResolver(evt *kvstore.WatchEv
 					err = alertHandler.OnAlertCreate(eobj)
 					eobj.Unlock()
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj.GetObjectMeta(), err)
 						ct.delObject(kind, workCtx.GetKey())
 					}
 				} else {
@@ -2963,7 +3068,7 @@ func (ct *ctrlerCtx) handleAlertEventParallelWithNoResolver(evt *kvstore.WatchEv
 
 					err = alertHandler.OnAlertUpdate(obj, &p)
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 					} else {
 						workCtx.obj.Alert = p
 					}
@@ -2989,7 +3094,7 @@ func (ct *ctrlerCtx) handleAlertEventParallelWithNoResolver(evt *kvstore.WatchEv
 				err = alertHandler.OnAlertDelete(obj)
 				obj.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 				}
 				ct.delObject(kind, workCtx.GetKey())
 				return nil
@@ -3135,7 +3240,9 @@ func (ct *ctrlerCtx) runAlertWatcher() {
 				ct.Unlock()
 
 				// perform a diff with API server and local cache
-				time.Sleep(time.Millisecond * 100)
+				// Sleeping to give time for other apiclient's to reconnect
+				// before calling reconnect handler
+				time.Sleep(time.Second)
 				ct.diffAlert(apicl)
 				alertHandler.OnAlertReconnect()
 
@@ -3176,7 +3283,7 @@ func (ct *ctrlerCtx) WatchAlert(handler AlertHandler) error {
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if ok {
 		return fmt.Errorf("Alert watcher already exists")
@@ -3199,7 +3306,7 @@ func (ct *ctrlerCtx) StopWatchAlert(handler AlertHandler) error {
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if !ok {
 		return fmt.Errorf("Alert watcher does not exist")
@@ -3208,7 +3315,9 @@ func (ct *ctrlerCtx) StopWatchAlert(handler AlertHandler) error {
 	ct.Lock()
 	cancel, _ := ct.watchCancel[kind]
 	cancel()
-	delete(ct.watchers, kind)
+	if _, ok := ct.watchers[kind]; ok {
+		delete(ct.watchers, kind)
+	}
 	delete(ct.watchCancel, kind)
 	ct.Unlock()
 
@@ -3226,7 +3335,9 @@ type AlertAPI interface {
 	Delete(obj *monitoring.Alert) error
 	Find(meta *api.ObjectMeta) (*Alert, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Alert, error)
+	ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*monitoring.Alert, error)
 	Watch(handler AlertHandler) error
+	ClearCache(handler AlertHandler)
 	StopWatch(handler AlertHandler) error
 }
 
@@ -3384,6 +3495,30 @@ func (api *alertAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*A
 	return objlist, nil
 }
 
+// ApisrvList returns a list of all Alert objects from apiserver
+func (api *alertAPI) ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*monitoring.Alert, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.MonitoringV1().Alert().List(context.Background(), opts)
+	}
+
+	// List from local cache
+	ctkitObjs, err := api.List(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	var ret []*monitoring.Alert
+	for _, obj := range ctkitObjs {
+		ret = append(ret, &obj.Alert)
+	}
+	return ret, nil
+}
+
 // Watch sets up a event handlers for Alert object
 func (api *alertAPI) Watch(handler AlertHandler) error {
 	api.ct.startWorkerPool("Alert")
@@ -3396,6 +3531,11 @@ func (api *alertAPI) StopWatch(handler AlertHandler) error {
 	api.ct.workPools["Alert"].Stop()
 	api.ct.Unlock()
 	return api.ct.StopWatchAlert(handler)
+}
+
+// ClearCache removes all Alert objects in ctkit
+func (api *alertAPI) ClearCache(handler AlertHandler) {
+	api.ct.delKind("Alert")
 }
 
 // Alert returns AlertAPI
@@ -3554,7 +3694,7 @@ func (ct *ctrlerCtx) handleAlertPolicyEventNoResolver(evt *kvstore.WatchEvent) e
 				err = alertpolicyHandler.OnAlertPolicyCreate(ctrlCtx.obj)
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					ct.delObject(kind, ctrlCtx.GetKey())
 					return err
 				}
@@ -3578,7 +3718,7 @@ func (ct *ctrlerCtx) handleAlertPolicyEventNoResolver(evt *kvstore.WatchEvent) e
 				ctrlCtx.obj.AlertPolicy = *eobj
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					return err
 				}
 
@@ -3597,7 +3737,7 @@ func (ct *ctrlerCtx) handleAlertPolicyEventNoResolver(evt *kvstore.WatchEvent) e
 			err = alertpolicyHandler.OnAlertPolicyDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 			}
 			ct.delObject(kind, ctrlCtx.GetKey())
 			return nil
@@ -3693,7 +3833,7 @@ func (ctx *alertpolicyCtx) WorkFunc(context context.Context) error {
 		err = alertpolicyHandler.OnAlertPolicyCreate(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Updated:
@@ -3706,7 +3846,7 @@ func (ctx *alertpolicyCtx) WorkFunc(context context.Context) error {
 		err = alertpolicyHandler.OnAlertPolicyUpdate(ctx.obj, &p)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Deleted:
@@ -3714,7 +3854,7 @@ func (ctx *alertpolicyCtx) WorkFunc(context context.Context) error {
 		err = alertpolicyHandler.OnAlertPolicyDelete(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 		}
 	}
 	ct.resolveObject(ctx.event, ctx)
@@ -3787,7 +3927,7 @@ func (ct *ctrlerCtx) handleAlertPolicyEventParallelWithNoResolver(evt *kvstore.W
 					err = alertpolicyHandler.OnAlertPolicyCreate(eobj)
 					eobj.Unlock()
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj.GetObjectMeta(), err)
 						ct.delObject(kind, workCtx.GetKey())
 					}
 				} else {
@@ -3802,7 +3942,7 @@ func (ct *ctrlerCtx) handleAlertPolicyEventParallelWithNoResolver(evt *kvstore.W
 
 					err = alertpolicyHandler.OnAlertPolicyUpdate(obj, &p)
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 					} else {
 						workCtx.obj.AlertPolicy = p
 					}
@@ -3828,7 +3968,7 @@ func (ct *ctrlerCtx) handleAlertPolicyEventParallelWithNoResolver(evt *kvstore.W
 				err = alertpolicyHandler.OnAlertPolicyDelete(obj)
 				obj.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 				}
 				ct.delObject(kind, workCtx.GetKey())
 				return nil
@@ -3974,7 +4114,9 @@ func (ct *ctrlerCtx) runAlertPolicyWatcher() {
 				ct.Unlock()
 
 				// perform a diff with API server and local cache
-				time.Sleep(time.Millisecond * 100)
+				// Sleeping to give time for other apiclient's to reconnect
+				// before calling reconnect handler
+				time.Sleep(time.Second)
 				ct.diffAlertPolicy(apicl)
 				alertpolicyHandler.OnAlertPolicyReconnect()
 
@@ -4015,7 +4157,7 @@ func (ct *ctrlerCtx) WatchAlertPolicy(handler AlertPolicyHandler) error {
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if ok {
 		return fmt.Errorf("AlertPolicy watcher already exists")
@@ -4038,7 +4180,7 @@ func (ct *ctrlerCtx) StopWatchAlertPolicy(handler AlertPolicyHandler) error {
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if !ok {
 		return fmt.Errorf("AlertPolicy watcher does not exist")
@@ -4047,7 +4189,9 @@ func (ct *ctrlerCtx) StopWatchAlertPolicy(handler AlertPolicyHandler) error {
 	ct.Lock()
 	cancel, _ := ct.watchCancel[kind]
 	cancel()
-	delete(ct.watchers, kind)
+	if _, ok := ct.watchers[kind]; ok {
+		delete(ct.watchers, kind)
+	}
 	delete(ct.watchCancel, kind)
 	ct.Unlock()
 
@@ -4065,7 +4209,9 @@ type AlertPolicyAPI interface {
 	Delete(obj *monitoring.AlertPolicy) error
 	Find(meta *api.ObjectMeta) (*AlertPolicy, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*AlertPolicy, error)
+	ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*monitoring.AlertPolicy, error)
 	Watch(handler AlertPolicyHandler) error
+	ClearCache(handler AlertPolicyHandler)
 	StopWatch(handler AlertPolicyHandler) error
 }
 
@@ -4223,6 +4369,30 @@ func (api *alertpolicyAPI) List(ctx context.Context, opts *api.ListWatchOptions)
 	return objlist, nil
 }
 
+// ApisrvList returns a list of all AlertPolicy objects from apiserver
+func (api *alertpolicyAPI) ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*monitoring.AlertPolicy, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.MonitoringV1().AlertPolicy().List(context.Background(), opts)
+	}
+
+	// List from local cache
+	ctkitObjs, err := api.List(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	var ret []*monitoring.AlertPolicy
+	for _, obj := range ctkitObjs {
+		ret = append(ret, &obj.AlertPolicy)
+	}
+	return ret, nil
+}
+
 // Watch sets up a event handlers for AlertPolicy object
 func (api *alertpolicyAPI) Watch(handler AlertPolicyHandler) error {
 	api.ct.startWorkerPool("AlertPolicy")
@@ -4235,6 +4405,11 @@ func (api *alertpolicyAPI) StopWatch(handler AlertPolicyHandler) error {
 	api.ct.workPools["AlertPolicy"].Stop()
 	api.ct.Unlock()
 	return api.ct.StopWatchAlertPolicy(handler)
+}
+
+// ClearCache removes all AlertPolicy objects in ctkit
+func (api *alertpolicyAPI) ClearCache(handler AlertPolicyHandler) {
+	api.ct.delKind("AlertPolicy")
 }
 
 // AlertPolicy returns AlertPolicyAPI
@@ -4393,7 +4568,7 @@ func (ct *ctrlerCtx) handleStatsAlertPolicyEventNoResolver(evt *kvstore.WatchEve
 				err = statsalertpolicyHandler.OnStatsAlertPolicyCreate(ctrlCtx.obj)
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					ct.delObject(kind, ctrlCtx.GetKey())
 					return err
 				}
@@ -4417,7 +4592,7 @@ func (ct *ctrlerCtx) handleStatsAlertPolicyEventNoResolver(evt *kvstore.WatchEve
 				ctrlCtx.obj.StatsAlertPolicy = *eobj
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					return err
 				}
 
@@ -4436,7 +4611,7 @@ func (ct *ctrlerCtx) handleStatsAlertPolicyEventNoResolver(evt *kvstore.WatchEve
 			err = statsalertpolicyHandler.OnStatsAlertPolicyDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 			}
 			ct.delObject(kind, ctrlCtx.GetKey())
 			return nil
@@ -4532,7 +4707,7 @@ func (ctx *statsalertpolicyCtx) WorkFunc(context context.Context) error {
 		err = statsalertpolicyHandler.OnStatsAlertPolicyCreate(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Updated:
@@ -4545,7 +4720,7 @@ func (ctx *statsalertpolicyCtx) WorkFunc(context context.Context) error {
 		err = statsalertpolicyHandler.OnStatsAlertPolicyUpdate(ctx.obj, &p)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Deleted:
@@ -4553,7 +4728,7 @@ func (ctx *statsalertpolicyCtx) WorkFunc(context context.Context) error {
 		err = statsalertpolicyHandler.OnStatsAlertPolicyDelete(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 		}
 	}
 	ct.resolveObject(ctx.event, ctx)
@@ -4626,7 +4801,7 @@ func (ct *ctrlerCtx) handleStatsAlertPolicyEventParallelWithNoResolver(evt *kvst
 					err = statsalertpolicyHandler.OnStatsAlertPolicyCreate(eobj)
 					eobj.Unlock()
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj.GetObjectMeta(), err)
 						ct.delObject(kind, workCtx.GetKey())
 					}
 				} else {
@@ -4641,7 +4816,7 @@ func (ct *ctrlerCtx) handleStatsAlertPolicyEventParallelWithNoResolver(evt *kvst
 
 					err = statsalertpolicyHandler.OnStatsAlertPolicyUpdate(obj, &p)
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 					} else {
 						workCtx.obj.StatsAlertPolicy = p
 					}
@@ -4667,7 +4842,7 @@ func (ct *ctrlerCtx) handleStatsAlertPolicyEventParallelWithNoResolver(evt *kvst
 				err = statsalertpolicyHandler.OnStatsAlertPolicyDelete(obj)
 				obj.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 				}
 				ct.delObject(kind, workCtx.GetKey())
 				return nil
@@ -4813,7 +4988,9 @@ func (ct *ctrlerCtx) runStatsAlertPolicyWatcher() {
 				ct.Unlock()
 
 				// perform a diff with API server and local cache
-				time.Sleep(time.Millisecond * 100)
+				// Sleeping to give time for other apiclient's to reconnect
+				// before calling reconnect handler
+				time.Sleep(time.Second)
 				ct.diffStatsAlertPolicy(apicl)
 				statsalertpolicyHandler.OnStatsAlertPolicyReconnect()
 
@@ -4854,7 +5031,7 @@ func (ct *ctrlerCtx) WatchStatsAlertPolicy(handler StatsAlertPolicyHandler) erro
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if ok {
 		return fmt.Errorf("StatsAlertPolicy watcher already exists")
@@ -4877,7 +5054,7 @@ func (ct *ctrlerCtx) StopWatchStatsAlertPolicy(handler StatsAlertPolicyHandler) 
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if !ok {
 		return fmt.Errorf("StatsAlertPolicy watcher does not exist")
@@ -4886,7 +5063,9 @@ func (ct *ctrlerCtx) StopWatchStatsAlertPolicy(handler StatsAlertPolicyHandler) 
 	ct.Lock()
 	cancel, _ := ct.watchCancel[kind]
 	cancel()
-	delete(ct.watchers, kind)
+	if _, ok := ct.watchers[kind]; ok {
+		delete(ct.watchers, kind)
+	}
 	delete(ct.watchCancel, kind)
 	ct.Unlock()
 
@@ -4904,7 +5083,9 @@ type StatsAlertPolicyAPI interface {
 	Delete(obj *monitoring.StatsAlertPolicy) error
 	Find(meta *api.ObjectMeta) (*StatsAlertPolicy, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*StatsAlertPolicy, error)
+	ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*monitoring.StatsAlertPolicy, error)
 	Watch(handler StatsAlertPolicyHandler) error
+	ClearCache(handler StatsAlertPolicyHandler)
 	StopWatch(handler StatsAlertPolicyHandler) error
 }
 
@@ -5062,6 +5243,30 @@ func (api *statsalertpolicyAPI) List(ctx context.Context, opts *api.ListWatchOpt
 	return objlist, nil
 }
 
+// ApisrvList returns a list of all StatsAlertPolicy objects from apiserver
+func (api *statsalertpolicyAPI) ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*monitoring.StatsAlertPolicy, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.MonitoringV1().StatsAlertPolicy().List(context.Background(), opts)
+	}
+
+	// List from local cache
+	ctkitObjs, err := api.List(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	var ret []*monitoring.StatsAlertPolicy
+	for _, obj := range ctkitObjs {
+		ret = append(ret, &obj.StatsAlertPolicy)
+	}
+	return ret, nil
+}
+
 // Watch sets up a event handlers for StatsAlertPolicy object
 func (api *statsalertpolicyAPI) Watch(handler StatsAlertPolicyHandler) error {
 	api.ct.startWorkerPool("StatsAlertPolicy")
@@ -5074,6 +5279,11 @@ func (api *statsalertpolicyAPI) StopWatch(handler StatsAlertPolicyHandler) error
 	api.ct.workPools["StatsAlertPolicy"].Stop()
 	api.ct.Unlock()
 	return api.ct.StopWatchStatsAlertPolicy(handler)
+}
+
+// ClearCache removes all StatsAlertPolicy objects in ctkit
+func (api *statsalertpolicyAPI) ClearCache(handler StatsAlertPolicyHandler) {
+	api.ct.delKind("StatsAlertPolicy")
 }
 
 // StatsAlertPolicy returns StatsAlertPolicyAPI
@@ -5236,7 +5446,7 @@ func (ct *ctrlerCtx) handleAlertDestinationEventNoResolver(evt *kvstore.WatchEve
 				err = alertdestinationHandler.OnAlertDestinationCreate(ctrlCtx.obj)
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					ct.delObject(kind, ctrlCtx.GetKey())
 					return err
 				}
@@ -5260,7 +5470,7 @@ func (ct *ctrlerCtx) handleAlertDestinationEventNoResolver(evt *kvstore.WatchEve
 				ctrlCtx.obj.AlertDestination = *eobj
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					return err
 				}
 
@@ -5279,7 +5489,7 @@ func (ct *ctrlerCtx) handleAlertDestinationEventNoResolver(evt *kvstore.WatchEve
 			err = alertdestinationHandler.OnAlertDestinationDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 			}
 			ct.delObject(kind, ctrlCtx.GetKey())
 			return nil
@@ -5375,7 +5585,7 @@ func (ctx *alertdestinationCtx) WorkFunc(context context.Context) error {
 		err = alertdestinationHandler.OnAlertDestinationCreate(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Updated:
@@ -5388,7 +5598,7 @@ func (ctx *alertdestinationCtx) WorkFunc(context context.Context) error {
 		err = alertdestinationHandler.OnAlertDestinationUpdate(ctx.obj, &p)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Deleted:
@@ -5396,7 +5606,7 @@ func (ctx *alertdestinationCtx) WorkFunc(context context.Context) error {
 		err = alertdestinationHandler.OnAlertDestinationDelete(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 		}
 	}
 	ct.resolveObject(ctx.event, ctx)
@@ -5473,7 +5683,7 @@ func (ct *ctrlerCtx) handleAlertDestinationEventParallelWithNoResolver(evt *kvst
 					err = alertdestinationHandler.OnAlertDestinationCreate(eobj)
 					eobj.Unlock()
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj.GetObjectMeta(), err)
 						ct.delObject(kind, workCtx.GetKey())
 					}
 				} else {
@@ -5488,7 +5698,7 @@ func (ct *ctrlerCtx) handleAlertDestinationEventParallelWithNoResolver(evt *kvst
 
 					err = alertdestinationHandler.OnAlertDestinationUpdate(obj, &p)
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 					} else {
 						workCtx.obj.AlertDestination = p
 					}
@@ -5514,7 +5724,7 @@ func (ct *ctrlerCtx) handleAlertDestinationEventParallelWithNoResolver(evt *kvst
 				err = alertdestinationHandler.OnAlertDestinationDelete(obj)
 				obj.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 				}
 				ct.delObject(kind, workCtx.GetKey())
 				return nil
@@ -5660,7 +5870,9 @@ func (ct *ctrlerCtx) runAlertDestinationWatcher() {
 				ct.Unlock()
 
 				// perform a diff with API server and local cache
-				time.Sleep(time.Millisecond * 100)
+				// Sleeping to give time for other apiclient's to reconnect
+				// before calling reconnect handler
+				time.Sleep(time.Second)
 				ct.diffAlertDestination(apicl)
 				alertdestinationHandler.OnAlertDestinationReconnect()
 
@@ -5701,7 +5913,7 @@ func (ct *ctrlerCtx) WatchAlertDestination(handler AlertDestinationHandler) erro
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if ok {
 		return fmt.Errorf("AlertDestination watcher already exists")
@@ -5724,7 +5936,7 @@ func (ct *ctrlerCtx) StopWatchAlertDestination(handler AlertDestinationHandler) 
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if !ok {
 		return fmt.Errorf("AlertDestination watcher does not exist")
@@ -5733,7 +5945,9 @@ func (ct *ctrlerCtx) StopWatchAlertDestination(handler AlertDestinationHandler) 
 	ct.Lock()
 	cancel, _ := ct.watchCancel[kind]
 	cancel()
-	delete(ct.watchers, kind)
+	if _, ok := ct.watchers[kind]; ok {
+		delete(ct.watchers, kind)
+	}
 	delete(ct.watchCancel, kind)
 	ct.Unlock()
 
@@ -5751,7 +5965,9 @@ type AlertDestinationAPI interface {
 	Delete(obj *monitoring.AlertDestination) error
 	Find(meta *api.ObjectMeta) (*AlertDestination, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*AlertDestination, error)
+	ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*monitoring.AlertDestination, error)
 	Watch(handler AlertDestinationHandler) error
+	ClearCache(handler AlertDestinationHandler)
 	StopWatch(handler AlertDestinationHandler) error
 }
 
@@ -5909,6 +6125,30 @@ func (api *alertdestinationAPI) List(ctx context.Context, opts *api.ListWatchOpt
 	return objlist, nil
 }
 
+// ApisrvList returns a list of all AlertDestination objects from apiserver
+func (api *alertdestinationAPI) ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*monitoring.AlertDestination, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.MonitoringV1().AlertDestination().List(context.Background(), opts)
+	}
+
+	// List from local cache
+	ctkitObjs, err := api.List(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	var ret []*monitoring.AlertDestination
+	for _, obj := range ctkitObjs {
+		ret = append(ret, &obj.AlertDestination)
+	}
+	return ret, nil
+}
+
 // Watch sets up a event handlers for AlertDestination object
 func (api *alertdestinationAPI) Watch(handler AlertDestinationHandler) error {
 	api.ct.startWorkerPool("AlertDestination")
@@ -5921,6 +6161,11 @@ func (api *alertdestinationAPI) StopWatch(handler AlertDestinationHandler) error
 	api.ct.workPools["AlertDestination"].Stop()
 	api.ct.Unlock()
 	return api.ct.StopWatchAlertDestination(handler)
+}
+
+// ClearCache removes all AlertDestination objects in ctkit
+func (api *alertdestinationAPI) ClearCache(handler AlertDestinationHandler) {
+	api.ct.delKind("AlertDestination")
 }
 
 // AlertDestination returns AlertDestinationAPI
@@ -6079,7 +6324,7 @@ func (ct *ctrlerCtx) handleMirrorSessionEventNoResolver(evt *kvstore.WatchEvent)
 				err = mirrorsessionHandler.OnMirrorSessionCreate(ctrlCtx.obj)
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					ct.delObject(kind, ctrlCtx.GetKey())
 					return err
 				}
@@ -6103,7 +6348,7 @@ func (ct *ctrlerCtx) handleMirrorSessionEventNoResolver(evt *kvstore.WatchEvent)
 				ctrlCtx.obj.MirrorSession = *eobj
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					return err
 				}
 
@@ -6122,7 +6367,7 @@ func (ct *ctrlerCtx) handleMirrorSessionEventNoResolver(evt *kvstore.WatchEvent)
 			err = mirrorsessionHandler.OnMirrorSessionDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 			}
 			ct.delObject(kind, ctrlCtx.GetKey())
 			return nil
@@ -6218,7 +6463,7 @@ func (ctx *mirrorsessionCtx) WorkFunc(context context.Context) error {
 		err = mirrorsessionHandler.OnMirrorSessionCreate(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Updated:
@@ -6231,7 +6476,7 @@ func (ctx *mirrorsessionCtx) WorkFunc(context context.Context) error {
 		err = mirrorsessionHandler.OnMirrorSessionUpdate(ctx.obj, &p)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Deleted:
@@ -6239,7 +6484,7 @@ func (ctx *mirrorsessionCtx) WorkFunc(context context.Context) error {
 		err = mirrorsessionHandler.OnMirrorSessionDelete(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 		}
 	}
 	ct.resolveObject(ctx.event, ctx)
@@ -6312,7 +6557,7 @@ func (ct *ctrlerCtx) handleMirrorSessionEventParallelWithNoResolver(evt *kvstore
 					err = mirrorsessionHandler.OnMirrorSessionCreate(eobj)
 					eobj.Unlock()
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj.GetObjectMeta(), err)
 						ct.delObject(kind, workCtx.GetKey())
 					}
 				} else {
@@ -6327,7 +6572,7 @@ func (ct *ctrlerCtx) handleMirrorSessionEventParallelWithNoResolver(evt *kvstore
 
 					err = mirrorsessionHandler.OnMirrorSessionUpdate(obj, &p)
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 					} else {
 						workCtx.obj.MirrorSession = p
 					}
@@ -6353,7 +6598,7 @@ func (ct *ctrlerCtx) handleMirrorSessionEventParallelWithNoResolver(evt *kvstore
 				err = mirrorsessionHandler.OnMirrorSessionDelete(obj)
 				obj.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 				}
 				ct.delObject(kind, workCtx.GetKey())
 				return nil
@@ -6499,7 +6744,9 @@ func (ct *ctrlerCtx) runMirrorSessionWatcher() {
 				ct.Unlock()
 
 				// perform a diff with API server and local cache
-				time.Sleep(time.Millisecond * 100)
+				// Sleeping to give time for other apiclient's to reconnect
+				// before calling reconnect handler
+				time.Sleep(time.Second)
 				ct.diffMirrorSession(apicl)
 				mirrorsessionHandler.OnMirrorSessionReconnect()
 
@@ -6540,7 +6787,7 @@ func (ct *ctrlerCtx) WatchMirrorSession(handler MirrorSessionHandler) error {
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if ok {
 		return fmt.Errorf("MirrorSession watcher already exists")
@@ -6563,7 +6810,7 @@ func (ct *ctrlerCtx) StopWatchMirrorSession(handler MirrorSessionHandler) error 
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if !ok {
 		return fmt.Errorf("MirrorSession watcher does not exist")
@@ -6572,7 +6819,9 @@ func (ct *ctrlerCtx) StopWatchMirrorSession(handler MirrorSessionHandler) error 
 	ct.Lock()
 	cancel, _ := ct.watchCancel[kind]
 	cancel()
-	delete(ct.watchers, kind)
+	if _, ok := ct.watchers[kind]; ok {
+		delete(ct.watchers, kind)
+	}
 	delete(ct.watchCancel, kind)
 	ct.Unlock()
 
@@ -6590,7 +6839,9 @@ type MirrorSessionAPI interface {
 	Delete(obj *monitoring.MirrorSession) error
 	Find(meta *api.ObjectMeta) (*MirrorSession, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*MirrorSession, error)
+	ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*monitoring.MirrorSession, error)
 	Watch(handler MirrorSessionHandler) error
+	ClearCache(handler MirrorSessionHandler)
 	StopWatch(handler MirrorSessionHandler) error
 }
 
@@ -6748,6 +6999,30 @@ func (api *mirrorsessionAPI) List(ctx context.Context, opts *api.ListWatchOption
 	return objlist, nil
 }
 
+// ApisrvList returns a list of all MirrorSession objects from apiserver
+func (api *mirrorsessionAPI) ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*monitoring.MirrorSession, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.MonitoringV1().MirrorSession().List(context.Background(), opts)
+	}
+
+	// List from local cache
+	ctkitObjs, err := api.List(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	var ret []*monitoring.MirrorSession
+	for _, obj := range ctkitObjs {
+		ret = append(ret, &obj.MirrorSession)
+	}
+	return ret, nil
+}
+
 // Watch sets up a event handlers for MirrorSession object
 func (api *mirrorsessionAPI) Watch(handler MirrorSessionHandler) error {
 	api.ct.startWorkerPool("MirrorSession")
@@ -6760,6 +7035,11 @@ func (api *mirrorsessionAPI) StopWatch(handler MirrorSessionHandler) error {
 	api.ct.workPools["MirrorSession"].Stop()
 	api.ct.Unlock()
 	return api.ct.StopWatchMirrorSession(handler)
+}
+
+// ClearCache removes all MirrorSession objects in ctkit
+func (api *mirrorsessionAPI) ClearCache(handler MirrorSessionHandler) {
+	api.ct.delKind("MirrorSession")
 }
 
 // MirrorSession returns MirrorSessionAPI
@@ -6918,7 +7198,7 @@ func (ct *ctrlerCtx) handleTroubleshootingSessionEventNoResolver(evt *kvstore.Wa
 				err = troubleshootingsessionHandler.OnTroubleshootingSessionCreate(ctrlCtx.obj)
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					ct.delObject(kind, ctrlCtx.GetKey())
 					return err
 				}
@@ -6942,7 +7222,7 @@ func (ct *ctrlerCtx) handleTroubleshootingSessionEventNoResolver(evt *kvstore.Wa
 				ctrlCtx.obj.TroubleshootingSession = *eobj
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					return err
 				}
 
@@ -6961,7 +7241,7 @@ func (ct *ctrlerCtx) handleTroubleshootingSessionEventNoResolver(evt *kvstore.Wa
 			err = troubleshootingsessionHandler.OnTroubleshootingSessionDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 			}
 			ct.delObject(kind, ctrlCtx.GetKey())
 			return nil
@@ -7057,7 +7337,7 @@ func (ctx *troubleshootingsessionCtx) WorkFunc(context context.Context) error {
 		err = troubleshootingsessionHandler.OnTroubleshootingSessionCreate(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Updated:
@@ -7070,7 +7350,7 @@ func (ctx *troubleshootingsessionCtx) WorkFunc(context context.Context) error {
 		err = troubleshootingsessionHandler.OnTroubleshootingSessionUpdate(ctx.obj, &p)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Deleted:
@@ -7078,7 +7358,7 @@ func (ctx *troubleshootingsessionCtx) WorkFunc(context context.Context) error {
 		err = troubleshootingsessionHandler.OnTroubleshootingSessionDelete(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 		}
 	}
 	ct.resolveObject(ctx.event, ctx)
@@ -7151,7 +7431,7 @@ func (ct *ctrlerCtx) handleTroubleshootingSessionEventParallelWithNoResolver(evt
 					err = troubleshootingsessionHandler.OnTroubleshootingSessionCreate(eobj)
 					eobj.Unlock()
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj.GetObjectMeta(), err)
 						ct.delObject(kind, workCtx.GetKey())
 					}
 				} else {
@@ -7166,7 +7446,7 @@ func (ct *ctrlerCtx) handleTroubleshootingSessionEventParallelWithNoResolver(evt
 
 					err = troubleshootingsessionHandler.OnTroubleshootingSessionUpdate(obj, &p)
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 					} else {
 						workCtx.obj.TroubleshootingSession = p
 					}
@@ -7192,7 +7472,7 @@ func (ct *ctrlerCtx) handleTroubleshootingSessionEventParallelWithNoResolver(evt
 				err = troubleshootingsessionHandler.OnTroubleshootingSessionDelete(obj)
 				obj.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 				}
 				ct.delObject(kind, workCtx.GetKey())
 				return nil
@@ -7338,7 +7618,9 @@ func (ct *ctrlerCtx) runTroubleshootingSessionWatcher() {
 				ct.Unlock()
 
 				// perform a diff with API server and local cache
-				time.Sleep(time.Millisecond * 100)
+				// Sleeping to give time for other apiclient's to reconnect
+				// before calling reconnect handler
+				time.Sleep(time.Second)
 				ct.diffTroubleshootingSession(apicl)
 				troubleshootingsessionHandler.OnTroubleshootingSessionReconnect()
 
@@ -7379,7 +7661,7 @@ func (ct *ctrlerCtx) WatchTroubleshootingSession(handler TroubleshootingSessionH
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if ok {
 		return fmt.Errorf("TroubleshootingSession watcher already exists")
@@ -7402,7 +7684,7 @@ func (ct *ctrlerCtx) StopWatchTroubleshootingSession(handler TroubleshootingSess
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if !ok {
 		return fmt.Errorf("TroubleshootingSession watcher does not exist")
@@ -7411,7 +7693,9 @@ func (ct *ctrlerCtx) StopWatchTroubleshootingSession(handler TroubleshootingSess
 	ct.Lock()
 	cancel, _ := ct.watchCancel[kind]
 	cancel()
-	delete(ct.watchers, kind)
+	if _, ok := ct.watchers[kind]; ok {
+		delete(ct.watchers, kind)
+	}
 	delete(ct.watchCancel, kind)
 	ct.Unlock()
 
@@ -7429,7 +7713,9 @@ type TroubleshootingSessionAPI interface {
 	Delete(obj *monitoring.TroubleshootingSession) error
 	Find(meta *api.ObjectMeta) (*TroubleshootingSession, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*TroubleshootingSession, error)
+	ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*monitoring.TroubleshootingSession, error)
 	Watch(handler TroubleshootingSessionHandler) error
+	ClearCache(handler TroubleshootingSessionHandler)
 	StopWatch(handler TroubleshootingSessionHandler) error
 }
 
@@ -7587,6 +7873,30 @@ func (api *troubleshootingsessionAPI) List(ctx context.Context, opts *api.ListWa
 	return objlist, nil
 }
 
+// ApisrvList returns a list of all TroubleshootingSession objects from apiserver
+func (api *troubleshootingsessionAPI) ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*monitoring.TroubleshootingSession, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.MonitoringV1().TroubleshootingSession().List(context.Background(), opts)
+	}
+
+	// List from local cache
+	ctkitObjs, err := api.List(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	var ret []*monitoring.TroubleshootingSession
+	for _, obj := range ctkitObjs {
+		ret = append(ret, &obj.TroubleshootingSession)
+	}
+	return ret, nil
+}
+
 // Watch sets up a event handlers for TroubleshootingSession object
 func (api *troubleshootingsessionAPI) Watch(handler TroubleshootingSessionHandler) error {
 	api.ct.startWorkerPool("TroubleshootingSession")
@@ -7599,6 +7909,11 @@ func (api *troubleshootingsessionAPI) StopWatch(handler TroubleshootingSessionHa
 	api.ct.workPools["TroubleshootingSession"].Stop()
 	api.ct.Unlock()
 	return api.ct.StopWatchTroubleshootingSession(handler)
+}
+
+// ClearCache removes all TroubleshootingSession objects in ctkit
+func (api *troubleshootingsessionAPI) ClearCache(handler TroubleshootingSessionHandler) {
+	api.ct.delKind("TroubleshootingSession")
 }
 
 // TroubleshootingSession returns TroubleshootingSessionAPI
@@ -7757,7 +8072,7 @@ func (ct *ctrlerCtx) handleTechSupportRequestEventNoResolver(evt *kvstore.WatchE
 				err = techsupportrequestHandler.OnTechSupportRequestCreate(ctrlCtx.obj)
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					ct.delObject(kind, ctrlCtx.GetKey())
 					return err
 				}
@@ -7781,7 +8096,7 @@ func (ct *ctrlerCtx) handleTechSupportRequestEventNoResolver(evt *kvstore.WatchE
 				ctrlCtx.obj.TechSupportRequest = *eobj
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					return err
 				}
 
@@ -7800,7 +8115,7 @@ func (ct *ctrlerCtx) handleTechSupportRequestEventNoResolver(evt *kvstore.WatchE
 			err = techsupportrequestHandler.OnTechSupportRequestDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 			}
 			ct.delObject(kind, ctrlCtx.GetKey())
 			return nil
@@ -7896,7 +8211,7 @@ func (ctx *techsupportrequestCtx) WorkFunc(context context.Context) error {
 		err = techsupportrequestHandler.OnTechSupportRequestCreate(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Updated:
@@ -7909,7 +8224,7 @@ func (ctx *techsupportrequestCtx) WorkFunc(context context.Context) error {
 		err = techsupportrequestHandler.OnTechSupportRequestUpdate(ctx.obj, &p)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Deleted:
@@ -7917,7 +8232,7 @@ func (ctx *techsupportrequestCtx) WorkFunc(context context.Context) error {
 		err = techsupportrequestHandler.OnTechSupportRequestDelete(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 		}
 	}
 	ct.resolveObject(ctx.event, ctx)
@@ -7990,7 +8305,7 @@ func (ct *ctrlerCtx) handleTechSupportRequestEventParallelWithNoResolver(evt *kv
 					err = techsupportrequestHandler.OnTechSupportRequestCreate(eobj)
 					eobj.Unlock()
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj.GetObjectMeta(), err)
 						ct.delObject(kind, workCtx.GetKey())
 					}
 				} else {
@@ -8005,7 +8320,7 @@ func (ct *ctrlerCtx) handleTechSupportRequestEventParallelWithNoResolver(evt *kv
 
 					err = techsupportrequestHandler.OnTechSupportRequestUpdate(obj, &p)
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 					} else {
 						workCtx.obj.TechSupportRequest = p
 					}
@@ -8031,7 +8346,7 @@ func (ct *ctrlerCtx) handleTechSupportRequestEventParallelWithNoResolver(evt *kv
 				err = techsupportrequestHandler.OnTechSupportRequestDelete(obj)
 				obj.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 				}
 				ct.delObject(kind, workCtx.GetKey())
 				return nil
@@ -8177,7 +8492,9 @@ func (ct *ctrlerCtx) runTechSupportRequestWatcher() {
 				ct.Unlock()
 
 				// perform a diff with API server and local cache
-				time.Sleep(time.Millisecond * 100)
+				// Sleeping to give time for other apiclient's to reconnect
+				// before calling reconnect handler
+				time.Sleep(time.Second)
 				ct.diffTechSupportRequest(apicl)
 				techsupportrequestHandler.OnTechSupportRequestReconnect()
 
@@ -8218,7 +8535,7 @@ func (ct *ctrlerCtx) WatchTechSupportRequest(handler TechSupportRequestHandler) 
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if ok {
 		return fmt.Errorf("TechSupportRequest watcher already exists")
@@ -8241,7 +8558,7 @@ func (ct *ctrlerCtx) StopWatchTechSupportRequest(handler TechSupportRequestHandl
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if !ok {
 		return fmt.Errorf("TechSupportRequest watcher does not exist")
@@ -8250,7 +8567,9 @@ func (ct *ctrlerCtx) StopWatchTechSupportRequest(handler TechSupportRequestHandl
 	ct.Lock()
 	cancel, _ := ct.watchCancel[kind]
 	cancel()
-	delete(ct.watchers, kind)
+	if _, ok := ct.watchers[kind]; ok {
+		delete(ct.watchers, kind)
+	}
 	delete(ct.watchCancel, kind)
 	ct.Unlock()
 
@@ -8268,7 +8587,9 @@ type TechSupportRequestAPI interface {
 	Delete(obj *monitoring.TechSupportRequest) error
 	Find(meta *api.ObjectMeta) (*TechSupportRequest, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*TechSupportRequest, error)
+	ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*monitoring.TechSupportRequest, error)
 	Watch(handler TechSupportRequestHandler) error
+	ClearCache(handler TechSupportRequestHandler)
 	StopWatch(handler TechSupportRequestHandler) error
 }
 
@@ -8426,6 +8747,30 @@ func (api *techsupportrequestAPI) List(ctx context.Context, opts *api.ListWatchO
 	return objlist, nil
 }
 
+// ApisrvList returns a list of all TechSupportRequest objects from apiserver
+func (api *techsupportrequestAPI) ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*monitoring.TechSupportRequest, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.MonitoringV1().TechSupportRequest().List(context.Background(), opts)
+	}
+
+	// List from local cache
+	ctkitObjs, err := api.List(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	var ret []*monitoring.TechSupportRequest
+	for _, obj := range ctkitObjs {
+		ret = append(ret, &obj.TechSupportRequest)
+	}
+	return ret, nil
+}
+
 // Watch sets up a event handlers for TechSupportRequest object
 func (api *techsupportrequestAPI) Watch(handler TechSupportRequestHandler) error {
 	api.ct.startWorkerPool("TechSupportRequest")
@@ -8438,6 +8783,11 @@ func (api *techsupportrequestAPI) StopWatch(handler TechSupportRequestHandler) e
 	api.ct.workPools["TechSupportRequest"].Stop()
 	api.ct.Unlock()
 	return api.ct.StopWatchTechSupportRequest(handler)
+}
+
+// ClearCache removes all TechSupportRequest objects in ctkit
+func (api *techsupportrequestAPI) ClearCache(handler TechSupportRequestHandler) {
+	api.ct.delKind("TechSupportRequest")
 }
 
 // TechSupportRequest returns TechSupportRequestAPI
@@ -8596,7 +8946,7 @@ func (ct *ctrlerCtx) handleArchiveRequestEventNoResolver(evt *kvstore.WatchEvent
 				err = archiverequestHandler.OnArchiveRequestCreate(ctrlCtx.obj)
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					ct.delObject(kind, ctrlCtx.GetKey())
 					return err
 				}
@@ -8620,7 +8970,7 @@ func (ct *ctrlerCtx) handleArchiveRequestEventNoResolver(evt *kvstore.WatchEvent
 				ctrlCtx.obj.ArchiveRequest = *eobj
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					return err
 				}
 
@@ -8639,7 +8989,7 @@ func (ct *ctrlerCtx) handleArchiveRequestEventNoResolver(evt *kvstore.WatchEvent
 			err = archiverequestHandler.OnArchiveRequestDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 			}
 			ct.delObject(kind, ctrlCtx.GetKey())
 			return nil
@@ -8735,7 +9085,7 @@ func (ctx *archiverequestCtx) WorkFunc(context context.Context) error {
 		err = archiverequestHandler.OnArchiveRequestCreate(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Updated:
@@ -8748,7 +9098,7 @@ func (ctx *archiverequestCtx) WorkFunc(context context.Context) error {
 		err = archiverequestHandler.OnArchiveRequestUpdate(ctx.obj, &p)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Deleted:
@@ -8756,7 +9106,7 @@ func (ctx *archiverequestCtx) WorkFunc(context context.Context) error {
 		err = archiverequestHandler.OnArchiveRequestDelete(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 		}
 	}
 	ct.resolveObject(ctx.event, ctx)
@@ -8829,7 +9179,7 @@ func (ct *ctrlerCtx) handleArchiveRequestEventParallelWithNoResolver(evt *kvstor
 					err = archiverequestHandler.OnArchiveRequestCreate(eobj)
 					eobj.Unlock()
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj.GetObjectMeta(), err)
 						ct.delObject(kind, workCtx.GetKey())
 					}
 				} else {
@@ -8844,7 +9194,7 @@ func (ct *ctrlerCtx) handleArchiveRequestEventParallelWithNoResolver(evt *kvstor
 
 					err = archiverequestHandler.OnArchiveRequestUpdate(obj, &p)
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 					} else {
 						workCtx.obj.ArchiveRequest = p
 					}
@@ -8870,7 +9220,7 @@ func (ct *ctrlerCtx) handleArchiveRequestEventParallelWithNoResolver(evt *kvstor
 				err = archiverequestHandler.OnArchiveRequestDelete(obj)
 				obj.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 				}
 				ct.delObject(kind, workCtx.GetKey())
 				return nil
@@ -9016,7 +9366,9 @@ func (ct *ctrlerCtx) runArchiveRequestWatcher() {
 				ct.Unlock()
 
 				// perform a diff with API server and local cache
-				time.Sleep(time.Millisecond * 100)
+				// Sleeping to give time for other apiclient's to reconnect
+				// before calling reconnect handler
+				time.Sleep(time.Second)
 				ct.diffArchiveRequest(apicl)
 				archiverequestHandler.OnArchiveRequestReconnect()
 
@@ -9057,7 +9409,7 @@ func (ct *ctrlerCtx) WatchArchiveRequest(handler ArchiveRequestHandler) error {
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if ok {
 		return fmt.Errorf("ArchiveRequest watcher already exists")
@@ -9080,7 +9432,7 @@ func (ct *ctrlerCtx) StopWatchArchiveRequest(handler ArchiveRequestHandler) erro
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if !ok {
 		return fmt.Errorf("ArchiveRequest watcher does not exist")
@@ -9089,7 +9441,9 @@ func (ct *ctrlerCtx) StopWatchArchiveRequest(handler ArchiveRequestHandler) erro
 	ct.Lock()
 	cancel, _ := ct.watchCancel[kind]
 	cancel()
-	delete(ct.watchers, kind)
+	if _, ok := ct.watchers[kind]; ok {
+		delete(ct.watchers, kind)
+	}
 	delete(ct.watchCancel, kind)
 	ct.Unlock()
 
@@ -9107,7 +9461,9 @@ type ArchiveRequestAPI interface {
 	Delete(obj *monitoring.ArchiveRequest) error
 	Find(meta *api.ObjectMeta) (*ArchiveRequest, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*ArchiveRequest, error)
+	ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*monitoring.ArchiveRequest, error)
 	Watch(handler ArchiveRequestHandler) error
+	ClearCache(handler ArchiveRequestHandler)
 	StopWatch(handler ArchiveRequestHandler) error
 	Cancel(obj *monitoring.CancelArchiveRequest) (*monitoring.ArchiveRequest, error)
 	RegisterLocalCancelHandler(fn func(*monitoring.CancelArchiveRequest) (*monitoring.ArchiveRequest, error))
@@ -9272,6 +9628,30 @@ func (api *archiverequestAPI) List(ctx context.Context, opts *api.ListWatchOptio
 	return objlist, nil
 }
 
+// ApisrvList returns a list of all ArchiveRequest objects from apiserver
+func (api *archiverequestAPI) ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*monitoring.ArchiveRequest, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.MonitoringV1().ArchiveRequest().List(context.Background(), opts)
+	}
+
+	// List from local cache
+	ctkitObjs, err := api.List(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	var ret []*monitoring.ArchiveRequest
+	for _, obj := range ctkitObjs {
+		ret = append(ret, &obj.ArchiveRequest)
+	}
+	return ret, nil
+}
+
 // Watch sets up a event handlers for ArchiveRequest object
 func (api *archiverequestAPI) Watch(handler ArchiveRequestHandler) error {
 	api.ct.startWorkerPool("ArchiveRequest")
@@ -9284,6 +9664,11 @@ func (api *archiverequestAPI) StopWatch(handler ArchiveRequestHandler) error {
 	api.ct.workPools["ArchiveRequest"].Stop()
 	api.ct.Unlock()
 	return api.ct.StopWatchArchiveRequest(handler)
+}
+
+// ClearCache removes all ArchiveRequest objects in ctkit
+func (api *archiverequestAPI) ClearCache(handler ArchiveRequestHandler) {
+	api.ct.delKind("ArchiveRequest")
 }
 
 // Cancel is an API action
@@ -9497,7 +9882,7 @@ func (ct *ctrlerCtx) handleAuditPolicyEventNoResolver(evt *kvstore.WatchEvent) e
 				err = auditpolicyHandler.OnAuditPolicyCreate(ctrlCtx.obj)
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					ct.delObject(kind, ctrlCtx.GetKey())
 					return err
 				}
@@ -9521,7 +9906,7 @@ func (ct *ctrlerCtx) handleAuditPolicyEventNoResolver(evt *kvstore.WatchEvent) e
 				ctrlCtx.obj.AuditPolicy = *eobj
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					return err
 				}
 
@@ -9540,7 +9925,7 @@ func (ct *ctrlerCtx) handleAuditPolicyEventNoResolver(evt *kvstore.WatchEvent) e
 			err = auditpolicyHandler.OnAuditPolicyDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 			}
 			ct.delObject(kind, ctrlCtx.GetKey())
 			return nil
@@ -9636,7 +10021,7 @@ func (ctx *auditpolicyCtx) WorkFunc(context context.Context) error {
 		err = auditpolicyHandler.OnAuditPolicyCreate(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Updated:
@@ -9649,7 +10034,7 @@ func (ctx *auditpolicyCtx) WorkFunc(context context.Context) error {
 		err = auditpolicyHandler.OnAuditPolicyUpdate(ctx.obj, &p)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Deleted:
@@ -9657,7 +10042,7 @@ func (ctx *auditpolicyCtx) WorkFunc(context context.Context) error {
 		err = auditpolicyHandler.OnAuditPolicyDelete(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 		}
 	}
 	ct.resolveObject(ctx.event, ctx)
@@ -9734,7 +10119,7 @@ func (ct *ctrlerCtx) handleAuditPolicyEventParallelWithNoResolver(evt *kvstore.W
 					err = auditpolicyHandler.OnAuditPolicyCreate(eobj)
 					eobj.Unlock()
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj.GetObjectMeta(), err)
 						ct.delObject(kind, workCtx.GetKey())
 					}
 				} else {
@@ -9749,7 +10134,7 @@ func (ct *ctrlerCtx) handleAuditPolicyEventParallelWithNoResolver(evt *kvstore.W
 
 					err = auditpolicyHandler.OnAuditPolicyUpdate(obj, &p)
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 					} else {
 						workCtx.obj.AuditPolicy = p
 					}
@@ -9775,7 +10160,7 @@ func (ct *ctrlerCtx) handleAuditPolicyEventParallelWithNoResolver(evt *kvstore.W
 				err = auditpolicyHandler.OnAuditPolicyDelete(obj)
 				obj.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 				}
 				ct.delObject(kind, workCtx.GetKey())
 				return nil
@@ -9921,7 +10306,9 @@ func (ct *ctrlerCtx) runAuditPolicyWatcher() {
 				ct.Unlock()
 
 				// perform a diff with API server and local cache
-				time.Sleep(time.Millisecond * 100)
+				// Sleeping to give time for other apiclient's to reconnect
+				// before calling reconnect handler
+				time.Sleep(time.Second)
 				ct.diffAuditPolicy(apicl)
 				auditpolicyHandler.OnAuditPolicyReconnect()
 
@@ -9962,7 +10349,7 @@ func (ct *ctrlerCtx) WatchAuditPolicy(handler AuditPolicyHandler) error {
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if ok {
 		return fmt.Errorf("AuditPolicy watcher already exists")
@@ -9985,7 +10372,7 @@ func (ct *ctrlerCtx) StopWatchAuditPolicy(handler AuditPolicyHandler) error {
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if !ok {
 		return fmt.Errorf("AuditPolicy watcher does not exist")
@@ -9994,7 +10381,9 @@ func (ct *ctrlerCtx) StopWatchAuditPolicy(handler AuditPolicyHandler) error {
 	ct.Lock()
 	cancel, _ := ct.watchCancel[kind]
 	cancel()
-	delete(ct.watchers, kind)
+	if _, ok := ct.watchers[kind]; ok {
+		delete(ct.watchers, kind)
+	}
 	delete(ct.watchCancel, kind)
 	ct.Unlock()
 
@@ -10012,7 +10401,9 @@ type AuditPolicyAPI interface {
 	Delete(obj *monitoring.AuditPolicy) error
 	Find(meta *api.ObjectMeta) (*AuditPolicy, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*AuditPolicy, error)
+	ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*monitoring.AuditPolicy, error)
 	Watch(handler AuditPolicyHandler) error
+	ClearCache(handler AuditPolicyHandler)
 	StopWatch(handler AuditPolicyHandler) error
 }
 
@@ -10170,6 +10561,30 @@ func (api *auditpolicyAPI) List(ctx context.Context, opts *api.ListWatchOptions)
 	return objlist, nil
 }
 
+// ApisrvList returns a list of all AuditPolicy objects from apiserver
+func (api *auditpolicyAPI) ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*monitoring.AuditPolicy, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.MonitoringV1().AuditPolicy().List(context.Background(), opts)
+	}
+
+	// List from local cache
+	ctkitObjs, err := api.List(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	var ret []*monitoring.AuditPolicy
+	for _, obj := range ctkitObjs {
+		ret = append(ret, &obj.AuditPolicy)
+	}
+	return ret, nil
+}
+
 // Watch sets up a event handlers for AuditPolicy object
 func (api *auditpolicyAPI) Watch(handler AuditPolicyHandler) error {
 	api.ct.startWorkerPool("AuditPolicy")
@@ -10182,6 +10597,11 @@ func (api *auditpolicyAPI) StopWatch(handler AuditPolicyHandler) error {
 	api.ct.workPools["AuditPolicy"].Stop()
 	api.ct.Unlock()
 	return api.ct.StopWatchAuditPolicy(handler)
+}
+
+// ClearCache removes all AuditPolicy objects in ctkit
+func (api *auditpolicyAPI) ClearCache(handler AuditPolicyHandler) {
+	api.ct.delKind("AuditPolicy")
 }
 
 // AuditPolicy returns AuditPolicyAPI

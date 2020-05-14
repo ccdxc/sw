@@ -15,9 +15,9 @@ import (
 
 // MockInstanceManager is the mock instance manager state
 type MockInstanceManager struct {
-	watchCtx          context.Context
-	watchCancel       context.CancelFunc
-	instanceManagerCh chan *kvstore.WatchEvent
+	WatchCtx          context.Context
+	WatchCancel       context.CancelFunc
+	InstanceManagerCh chan *kvstore.WatchEvent
 }
 
 // NewMockInstanceManger Creates mock instance manager
@@ -25,9 +25,9 @@ func NewMockInstanceManger(instanceManagerCh chan *kvstore.WatchEvent) *MockInst
 	watchCtx, watchCancel := context.WithCancel(context.Background())
 
 	return &MockInstanceManager{
-		instanceManagerCh: instanceManagerCh,
-		watchCtx:          watchCtx,
-		watchCancel:       watchCancel,
+		InstanceManagerCh: instanceManagerCh,
+		WatchCtx:          watchCtx,
+		WatchCancel:       watchCancel,
 	}
 }
 

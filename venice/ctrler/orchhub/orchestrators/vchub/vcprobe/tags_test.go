@@ -300,7 +300,12 @@ func TestTagWriting(t *testing.T) {
 	// Start test
 	// vcp.StartWatchers()
 
-	time.Sleep(3 * time.Second)
+	AssertEventually(t, func() (bool, interface{}) {
+		if !vcp.IsSessionReady() {
+			return false, fmt.Errorf("Session not ready")
+		}
+		return true, nil
+	}, "Session is not Ready")
 
 	th := &testHelper{
 		t:       t,
@@ -342,11 +347,16 @@ func TestTagWriting(t *testing.T) {
 	err = th.tp.TagObjWithVlan(vm1.Reference(), 1000)
 	AssertOk(t, err, "failed to tag vm1 with vlan tag")
 
-	vlanTag := fmt.Sprintf("%s%d", defs.VCTagVlanPrefix, 1000)
+	err = th.tp.TagObjWithVlan(vm1.Reference(), 2000)
+	AssertOk(t, err, "failed to tag vm1 with vlan tag")
+
+	vlanTag1 := fmt.Sprintf("%s%d", defs.VCTagVlanPrefix, 1000)
 
 	expMap = map[string][]string{
 		vm1.Self.Value: []string{fmt.Sprintf("%s:%s", defs.VCTagCategory, defs.CreateVCTagManagedTag(state.ClusterID)),
-			fmt.Sprintf("%s:%s%d", defs.VCTagCategory, defs.VCTagVlanPrefix, 1000)},
+			fmt.Sprintf("%s:%s%d", defs.VCTagCategory, defs.VCTagVlanPrefix, 1000),
+			fmt.Sprintf("%s:%s%d", defs.VCTagCategory, defs.VCTagVlanPrefix, 2000),
+		},
 	}
 	th.verifyTags(expMap)
 
@@ -361,11 +371,13 @@ func TestTagWriting(t *testing.T) {
 	tagRes, err := th.tp.GetPensandoTagsOnObjects([]types.ManagedObjectReference{vm1.Reference(), vm2.Reference()})
 	AssertOk(t, err, "failed to get pensando managed tags")
 	kingTagEntry := tagRes[string(defs.VirtualMachine)]
-	AssertEquals(t, 2, len(kingTagEntry[vm1.Self.Value]), "Should have found 2 tags")
+	AssertEquals(t, 3, len(kingTagEntry[vm1.Self.Value]), "Should have found 3 tags")
 	AssertEquals(t, 1, len(kingTagEntry[vm2.Self.Value]), "Should have found 1 tag")
 
 	// Remove tags
-	err = th.tp.RemoveTag(vm1.Reference(), vlanTag)
+	err = th.tp.RemoveTag(vm1.Reference(), vlanTag1)
+	AssertOk(t, err, "failed to remove tag vlan ")
+	err = th.tp.RemoveTagObjVlan(vm1.Reference())
 	AssertOk(t, err, "failed to remove tag vlan ")
 
 	expMap = map[string][]string{
@@ -381,18 +393,29 @@ func TestTagWriting(t *testing.T) {
 	}
 	th.verifyTags(expMap)
 
+	// Switch tags into new client
+	vcp = NewVCProbe(storeCh, nil, state)
+	vcp.Start(true)
+	AssertEventually(t, func() (bool, interface{}) {
+		if !vcp.IsSessionReady() {
+			return false, fmt.Errorf("Session not ready")
+		}
+		return true, nil
+	}, "Session is not Ready")
+	vcp.SetWriteTags(th.tp.GetWriteTags())
+
 	// Test remove pensando tags
-	err = th.tp.TagObjAsManaged(vm1.Reference())
+	err = vcp.TagObjAsManaged(vm1.Reference())
 	AssertOk(t, err, "failed to tag vm1 as managed")
 
-	err = th.tp.TagObjWithVlan(vm1.Reference(), 1000)
+	err = vcp.TagObjWithVlan(vm1.Reference(), 1000)
 	AssertOk(t, err, "failed to tag vm1 with vlan tag")
 
-	errs := th.tp.RemovePensandoTags(vm1.Reference())
+	errs := vcp.RemovePensandoTags(vm1.Reference())
 	AssertEquals(t, 0, len(errs), "failed to remove all tags, errs %v", errs)
 
-	Assert(t, th.tp.IsManagedTag(defs.CreateVCTagManagedTag(state.ClusterID)), "isManagedTag utility function failed")
-	vlan, ok := th.tp.IsVlanTag(vlanTag)
+	Assert(t, vcp.IsManagedTag(defs.CreateVCTagManagedTag(state.ClusterID)), "isManagedTag utility function failed")
+	vlan, ok := vcp.IsVlanTag(vlanTag1)
 	Assert(t, ok, "isVlanTag utility function failed")
 	AssertEquals(t, 1000, vlan, "isVlanTag utility function failed")
 

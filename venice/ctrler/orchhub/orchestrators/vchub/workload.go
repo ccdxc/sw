@@ -332,6 +332,7 @@ func (v *VCHub) handleVMotionStart(m defs.VMotionStartMsg) {
 	if m.DstHostKey != "" {
 		hostKey = m.DstHostKey
 	} else if m.DstHostName != "" {
+		v.Log.Infof("Vmotion across DCs to %s:%s", m.DstDcName, m.DstHostName)
 		var destDC *PenDC
 		if m.DstDcName == "" {
 			v.Log.Errorf("Ignore VMotion Start event for VM %s - dest DC not specified", m.VMKey)

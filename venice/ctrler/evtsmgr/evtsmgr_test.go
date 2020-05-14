@@ -10,7 +10,7 @@ import (
 
 	gogoproto "github.com/gogo/protobuf/types"
 	"github.com/golang/mock/gomock"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/events"
@@ -18,7 +18,7 @@ import (
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/citadel/broker/mock"
 	"github.com/pensando/sw/venice/citadel/query"
-	"github.com/pensando/sw/venice/cmd/types/protos"
+	types "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/elastic"
 	mockes "github.com/pensando/sw/venice/utils/elastic/mock/server"
@@ -68,7 +68,7 @@ func setup(t *testing.T) (*mockes.ElasticServer, *mockresolver.ResolverClient, a
 	mr := mockresolver.New()
 
 	// create API server
-	apiServer, apiServerURL, err := serviceutils.StartAPIServer("", t.Name(), tLogger)
+	apiServer, apiServerURL, err := serviceutils.StartAPIServer("", t.Name(), tLogger, []string{})
 	if err != nil {
 		return nil, nil, nil, nil, tLogger, err
 	}

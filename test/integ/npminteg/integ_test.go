@@ -179,7 +179,7 @@ func (it *integTestSuite) SetUpSuite(c *C) {
 	//m.AddServiceInstance(&tsmSi)
 
 	// start API server
-	it.apiSrv, it.apiSrvAddr, err = serviceutils.StartAPIServer(integTestApisrvURL, "npm-integ-test", logger.WithContext("submodule", "pen-apiserver"))
+	it.apiSrv, it.apiSrvAddr, err = serviceutils.StartAPIServer(integTestApisrvURL, "npm-integ-test", logger.WithContext("submodule", "pen-apiserver"), []string{})
 	c.Assert(err, check.IsNil)
 
 	// populate the mock resolver with apiserver instance.

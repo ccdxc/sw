@@ -174,7 +174,7 @@ func (ct *ctrlerCtx) handleModuleEventNoResolver(evt *kvstore.WatchEvent) error 
 				err = moduleHandler.OnModuleCreate(ctrlCtx.obj)
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					ct.delObject(kind, ctrlCtx.GetKey())
 					return err
 				}
@@ -198,7 +198,7 @@ func (ct *ctrlerCtx) handleModuleEventNoResolver(evt *kvstore.WatchEvent) error 
 				ctrlCtx.obj.Module = *eobj
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					return err
 				}
 
@@ -217,7 +217,7 @@ func (ct *ctrlerCtx) handleModuleEventNoResolver(evt *kvstore.WatchEvent) error 
 			err = moduleHandler.OnModuleDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 			}
 			ct.delObject(kind, ctrlCtx.GetKey())
 			return nil
@@ -313,7 +313,7 @@ func (ctx *moduleCtx) WorkFunc(context context.Context) error {
 		err = moduleHandler.OnModuleCreate(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Updated:
@@ -326,7 +326,7 @@ func (ctx *moduleCtx) WorkFunc(context context.Context) error {
 		err = moduleHandler.OnModuleUpdate(ctx.obj, &p)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Deleted:
@@ -334,7 +334,7 @@ func (ctx *moduleCtx) WorkFunc(context context.Context) error {
 		err = moduleHandler.OnModuleDelete(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 		}
 	}
 	ct.resolveObject(ctx.event, ctx)
@@ -407,7 +407,7 @@ func (ct *ctrlerCtx) handleModuleEventParallelWithNoResolver(evt *kvstore.WatchE
 					err = moduleHandler.OnModuleCreate(eobj)
 					eobj.Unlock()
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj.GetObjectMeta(), err)
 						ct.delObject(kind, workCtx.GetKey())
 					}
 				} else {
@@ -422,7 +422,7 @@ func (ct *ctrlerCtx) handleModuleEventParallelWithNoResolver(evt *kvstore.WatchE
 
 					err = moduleHandler.OnModuleUpdate(obj, &p)
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 					} else {
 						workCtx.obj.Module = p
 					}
@@ -448,7 +448,7 @@ func (ct *ctrlerCtx) handleModuleEventParallelWithNoResolver(evt *kvstore.WatchE
 				err = moduleHandler.OnModuleDelete(obj)
 				obj.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 				}
 				ct.delObject(kind, workCtx.GetKey())
 				return nil
@@ -594,7 +594,9 @@ func (ct *ctrlerCtx) runModuleWatcher() {
 				ct.Unlock()
 
 				// perform a diff with API server and local cache
-				time.Sleep(time.Millisecond * 100)
+				// Sleeping to give time for other apiclient's to reconnect
+				// before calling reconnect handler
+				time.Sleep(time.Second)
 				ct.diffModule(apicl)
 				moduleHandler.OnModuleReconnect()
 
@@ -635,7 +637,7 @@ func (ct *ctrlerCtx) WatchModule(handler ModuleHandler) error {
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if ok {
 		return fmt.Errorf("Module watcher already exists")
@@ -658,7 +660,7 @@ func (ct *ctrlerCtx) StopWatchModule(handler ModuleHandler) error {
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if !ok {
 		return fmt.Errorf("Module watcher does not exist")
@@ -667,7 +669,9 @@ func (ct *ctrlerCtx) StopWatchModule(handler ModuleHandler) error {
 	ct.Lock()
 	cancel, _ := ct.watchCancel[kind]
 	cancel()
-	delete(ct.watchers, kind)
+	if _, ok := ct.watchers[kind]; ok {
+		delete(ct.watchers, kind)
+	}
 	delete(ct.watchCancel, kind)
 	ct.Unlock()
 
@@ -685,7 +689,9 @@ type ModuleAPI interface {
 	Delete(obj *diagnostics.Module) error
 	Find(meta *api.ObjectMeta) (*Module, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Module, error)
+	ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*diagnostics.Module, error)
 	Watch(handler ModuleHandler) error
+	ClearCache(handler ModuleHandler)
 	StopWatch(handler ModuleHandler) error
 	Debug(obj *diagnostics.DiagnosticsRequest) (*diagnostics.DiagnosticsResponse, error)
 	RegisterLocalDebugHandler(fn func(*diagnostics.DiagnosticsRequest) (*diagnostics.DiagnosticsResponse, error))
@@ -850,6 +856,30 @@ func (api *moduleAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*
 	return objlist, nil
 }
 
+// ApisrvList returns a list of all Module objects from apiserver
+func (api *moduleAPI) ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*diagnostics.Module, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.DiagnosticsV1().Module().List(context.Background(), opts)
+	}
+
+	// List from local cache
+	ctkitObjs, err := api.List(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	var ret []*diagnostics.Module
+	for _, obj := range ctkitObjs {
+		ret = append(ret, &obj.Module)
+	}
+	return ret, nil
+}
+
 // Watch sets up a event handlers for Module object
 func (api *moduleAPI) Watch(handler ModuleHandler) error {
 	api.ct.startWorkerPool("Module")
@@ -862,6 +892,11 @@ func (api *moduleAPI) StopWatch(handler ModuleHandler) error {
 	api.ct.workPools["Module"].Stop()
 	api.ct.Unlock()
 	return api.ct.StopWatchModule(handler)
+}
+
+// ClearCache removes all Module objects in ctkit
+func (api *moduleAPI) ClearCache(handler ModuleHandler) {
+	api.ct.delKind("Module")
 }
 
 // Debug is an API action

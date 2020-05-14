@@ -147,7 +147,7 @@ func (t *TestInfo) StartAPIServer() error {
 	// start API server
 	trace.Init("ApiServer")
 	var err error
-	t.APIServer, t.APIServerAddr, err = serviceutils.StartAPIServer(":0", t.Name, t.Logger)
+	t.APIServer, t.APIServerAddr, err = serviceutils.StartAPIServer(":0", t.Name, t.Logger, []string{})
 	if err != nil {
 		return err
 	}

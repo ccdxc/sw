@@ -178,6 +178,7 @@ func (d *PenDC) AddPenDVS() error {
 
 		d.DvsMap[dvsName] = penDVS
 	}
+	d.Log.Infof("adding dvs %s ( %s )", dvsName, dvs.Reference().Value)
 
 	penDVS.DvsRef = dvs.Reference()
 

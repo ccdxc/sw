@@ -62,7 +62,7 @@ func (m *mockCbs) processEventCb(event *kvstore.WatchEvent) error {
 }
 
 func TestWatcher(t *testing.T) {
-	apiSrv, apiSrvAddr, err := serviceutils.StartAPIServer(apisrvURL, t.Name(), logger)
+	apiSrv, apiSrvAddr, err := serviceutils.StartAPIServer(apisrvURL, t.Name(), logger, []string{})
 	AssertOk(t, err, "failed to create API server")
 	// wait for api server to stop
 	defer time.Sleep(time.Millisecond * 100)
@@ -116,7 +116,7 @@ func TestWatcher(t *testing.T) {
 }
 
 func TestStopStart(t *testing.T) {
-	apiSrv, apiSrvAddr, err := serviceutils.StartAPIServer(apisrvURL, t.Name(), logger)
+	apiSrv, apiSrvAddr, err := serviceutils.StartAPIServer(apisrvURL, t.Name(), logger, []string{})
 	AssertOk(t, err, "failed to create API server")
 	// wait for api server to stop
 	defer time.Sleep(time.Millisecond * 100)

@@ -51,7 +51,7 @@ func createAPIClient(apiSrvAddr string) apiclient.Services {
 }
 
 func TestWatcher(t *testing.T) {
-	apiSrv, apiSrvAddr, err := serviceutils.StartAPIServer(apisrvURL, t.Name(), logger)
+	apiSrv, apiSrvAddr, err := serviceutils.StartAPIServer(apisrvURL, t.Name(), logger, []string{})
 	AssertOk(t, err, "failed to create API server")
 	// wait for api server to stop
 	defer time.Sleep(time.Millisecond * 100)
@@ -192,7 +192,7 @@ func TestWatcherWithApiServerDown(t *testing.T) {
 	testCache.addRole(role)
 	_, ok := testCache.roles[role.GetTenant()][getKey(role.GetTenant(), role.GetName())]
 	Assert(t, ok, "role didn't get added to the cache")
-	apiSrv, apiSrvAddr, err := serviceutils.StartAPIServer(apisrvURL, t.Name(), logger)
+	apiSrv, apiSrvAddr, err := serviceutils.StartAPIServer(apisrvURL, t.Name(), logger, []string{})
 	AssertOk(t, err, "failed to start API server")
 	watcher := createWatcher(testCache, "watcher_test", apiSrvAddr)
 	defer watcher.stop()

@@ -174,7 +174,7 @@ func (ct *ctrlerCtx) handleBufferEventNoResolver(evt *kvstore.WatchEvent) error 
 				err = bufferHandler.OnBufferCreate(ctrlCtx.obj)
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					ct.delObject(kind, ctrlCtx.GetKey())
 					return err
 				}
@@ -198,7 +198,7 @@ func (ct *ctrlerCtx) handleBufferEventNoResolver(evt *kvstore.WatchEvent) error 
 				ctrlCtx.obj.Buffer = *eobj
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					return err
 				}
 
@@ -217,7 +217,7 @@ func (ct *ctrlerCtx) handleBufferEventNoResolver(evt *kvstore.WatchEvent) error 
 			err = bufferHandler.OnBufferDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 			}
 			ct.delObject(kind, ctrlCtx.GetKey())
 			return nil
@@ -313,7 +313,7 @@ func (ctx *bufferCtx) WorkFunc(context context.Context) error {
 		err = bufferHandler.OnBufferCreate(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Updated:
@@ -326,7 +326,7 @@ func (ctx *bufferCtx) WorkFunc(context context.Context) error {
 		err = bufferHandler.OnBufferUpdate(ctx.obj, &p)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Deleted:
@@ -334,7 +334,7 @@ func (ctx *bufferCtx) WorkFunc(context context.Context) error {
 		err = bufferHandler.OnBufferDelete(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 		}
 	}
 	ct.resolveObject(ctx.event, ctx)
@@ -407,7 +407,7 @@ func (ct *ctrlerCtx) handleBufferEventParallelWithNoResolver(evt *kvstore.WatchE
 					err = bufferHandler.OnBufferCreate(eobj)
 					eobj.Unlock()
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj.GetObjectMeta(), err)
 						ct.delObject(kind, workCtx.GetKey())
 					}
 				} else {
@@ -422,7 +422,7 @@ func (ct *ctrlerCtx) handleBufferEventParallelWithNoResolver(evt *kvstore.WatchE
 
 					err = bufferHandler.OnBufferUpdate(obj, &p)
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 					} else {
 						workCtx.obj.Buffer = p
 					}
@@ -448,7 +448,7 @@ func (ct *ctrlerCtx) handleBufferEventParallelWithNoResolver(evt *kvstore.WatchE
 				err = bufferHandler.OnBufferDelete(obj)
 				obj.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 				}
 				ct.delObject(kind, workCtx.GetKey())
 				return nil
@@ -594,7 +594,9 @@ func (ct *ctrlerCtx) runBufferWatcher() {
 				ct.Unlock()
 
 				// perform a diff with API server and local cache
-				time.Sleep(time.Millisecond * 100)
+				// Sleeping to give time for other apiclient's to reconnect
+				// before calling reconnect handler
+				time.Sleep(time.Second)
 				ct.diffBuffer(apicl)
 				bufferHandler.OnBufferReconnect()
 
@@ -635,7 +637,7 @@ func (ct *ctrlerCtx) WatchBuffer(handler BufferHandler) error {
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if ok {
 		return fmt.Errorf("Buffer watcher already exists")
@@ -658,7 +660,7 @@ func (ct *ctrlerCtx) StopWatchBuffer(handler BufferHandler) error {
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if !ok {
 		return fmt.Errorf("Buffer watcher does not exist")
@@ -667,7 +669,9 @@ func (ct *ctrlerCtx) StopWatchBuffer(handler BufferHandler) error {
 	ct.Lock()
 	cancel, _ := ct.watchCancel[kind]
 	cancel()
-	delete(ct.watchers, kind)
+	if _, ok := ct.watchers[kind]; ok {
+		delete(ct.watchers, kind)
+	}
 	delete(ct.watchCancel, kind)
 	ct.Unlock()
 
@@ -685,7 +689,9 @@ type BufferAPI interface {
 	Delete(obj *staging.Buffer) error
 	Find(meta *api.ObjectMeta) (*Buffer, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Buffer, error)
+	ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*staging.Buffer, error)
 	Watch(handler BufferHandler) error
+	ClearCache(handler BufferHandler)
 	StopWatch(handler BufferHandler) error
 	Commit(obj *staging.CommitAction) (*staging.CommitAction, error)
 	RegisterLocalCommitHandler(fn func(*staging.CommitAction) (*staging.CommitAction, error))
@@ -862,6 +868,30 @@ func (api *bufferAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*
 	return objlist, nil
 }
 
+// ApisrvList returns a list of all Buffer objects from apiserver
+func (api *bufferAPI) ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*staging.Buffer, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.StagingV1().Buffer().List(context.Background(), opts)
+	}
+
+	// List from local cache
+	ctkitObjs, err := api.List(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	var ret []*staging.Buffer
+	for _, obj := range ctkitObjs {
+		ret = append(ret, &obj.Buffer)
+	}
+	return ret, nil
+}
+
 // Watch sets up a event handlers for Buffer object
 func (api *bufferAPI) Watch(handler BufferHandler) error {
 	api.ct.startWorkerPool("Buffer")
@@ -874,6 +904,11 @@ func (api *bufferAPI) StopWatch(handler BufferHandler) error {
 	api.ct.workPools["Buffer"].Stop()
 	api.ct.Unlock()
 	return api.ct.StopWatchBuffer(handler)
+}
+
+// ClearCache removes all Buffer objects in ctkit
+func (api *bufferAPI) ClearCache(handler BufferHandler) {
+	api.ct.delKind("Buffer")
 }
 
 // Commit is an API action

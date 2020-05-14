@@ -15,7 +15,7 @@ import (
 
 	"github.com/pensando/sw/venice/utils/tsdb"
 
-	"github.com/pensando/sw/nic/agent/cmd/fakehal/hal"
+	fakehal "github.com/pensando/sw/nic/agent/cmd/fakehal/hal"
 
 	"github.com/pensando/netlink"
 	"golang.org/x/net/context"
@@ -28,7 +28,7 @@ import (
 	pencluster "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/nic/agent/dscagent"
 	agentTypes "github.com/pensando/sw/nic/agent/dscagent/types"
-	"github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
+	halproto "github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
 	"github.com/pensando/sw/nic/agent/ipc"
 	"github.com/pensando/sw/nic/agent/nmd"
 	nmdstate "github.com/pensando/sw/nic/agent/nmd/state"
@@ -48,7 +48,7 @@ import (
 	"github.com/pensando/sw/venice/citadel/collector"
 	"github.com/pensando/sw/venice/citadel/collector/rpcserver"
 	"github.com/pensando/sw/venice/citadel/data"
-	"github.com/pensando/sw/venice/citadel/http"
+	httpserver "github.com/pensando/sw/venice/citadel/http"
 	"github.com/pensando/sw/venice/citadel/meta"
 	"github.com/pensando/sw/venice/citadel/query"
 	cmdapi "github.com/pensando/sw/venice/cmd/apiclient"
@@ -60,7 +60,7 @@ import (
 	cmdsvc "github.com/pensando/sw/venice/cmd/services"
 	"github.com/pensando/sw/venice/cmd/services/mock"
 	cmdtypes "github.com/pensando/sw/venice/cmd/types"
-	"github.com/pensando/sw/venice/cmd/types/protos"
+	types "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr"
 	"github.com/pensando/sw/venice/ctrler/npm"
 	"github.com/pensando/sw/venice/ctrler/rollout"
@@ -962,7 +962,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *check.C) {
 	logConf := log.GetDefaultConfig("apisrv")
 	l = log.GetNewLogger(logConf)
 	// start API server
-	it.apiSrv, it.apiSrvAddr, err = serviceutils.StartAPIServer(integTestApisrvURL, c.TestName(), l)
+	it.apiSrv, it.apiSrvAddr, err = serviceutils.StartAPIServer(integTestApisrvURL, c.TestName(), l, []string{})
 	c.Assert(err, check.IsNil)
 
 	// Set feature flags to initialized

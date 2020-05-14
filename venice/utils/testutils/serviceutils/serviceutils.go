@@ -10,7 +10,7 @@ import (
 
 	"github.com/pensando/sw/api/cache"
 	"github.com/pensando/sw/venice/apiserver"
-	"github.com/pensando/sw/venice/apiserver/pkg"
+	apisrvpkg "github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
@@ -19,7 +19,7 @@ import (
 )
 
 // StartAPIServer helper function to start API server
-func StartAPIServer(serverAddr, clusterName string, logger log.Logger) (apiserver.Server, string, error) {
+func StartAPIServer(serverAddr, clusterName string, logger log.Logger, resolverURls []string) (apiserver.Server, string, error) {
 	logger.Info("starting API server ...")
 	if utils.IsEmpty(serverAddr) {
 		// find an available port
@@ -46,6 +46,7 @@ func StartAPIServer(serverAddr, clusterName string, logger log.Logger) (apiserve
 		GetOverlay:       cache.GetOverlay,
 		IsDryRun:         cache.IsDryRun,
 		AllowMultiTenant: true,
+		Resolvers:        resolverURls,
 	}
 
 	// create api server

@@ -107,10 +107,18 @@ func (v *VCHub) tagSync() {
 			} else if strings.HasPrefix(tag, defs.VCTagManagedDefault) {
 				objName := idToName[obj.Value]
 				v.Log.Errorf("Found tag %s from another PSM on our object %s %s, raising event...", tag, objName, obj.Value)
-				// Another Venice is/has managed this DC
-				evt := eventtypes.ORCH_ALREADY_MANAGED
-				msg := fmt.Sprintf("%v : Object %v is managed by multiple PSMs. Found tag %s on object.", v.State.OrchConfig.Name, objName, tag)
-				recorder.Event(evt, msg, v.State.OrchConfig)
+				// Cleanup ourselves first time we see this.
+				// If we see this tag again, we know that there is an active
+				// Venice writing back the tag
+				if !v.initialTagSyncDone {
+					// Delete tag from thi sobject
+					toDel[tag] = append(toDel[tag], obj)
+				} else {
+					// Another Venice is/has managed this DC
+					evt := eventtypes.ORCH_ALREADY_MANAGED
+					msg := fmt.Sprintf("%v : Object %v is managed by multiple PSMs. Found tag %s on object.", v.State.OrchConfig.Name, objName, tag)
+					recorder.Event(evt, msg, v.State.OrchConfig)
+				}
 			}
 			vlan, ok := v.probe.IsVlanTag(tag)
 			if ok {
@@ -137,7 +145,10 @@ func (v *VCHub) tagSync() {
 
 	v.Log.Debugf("Tagging as managed %v", toTagAsManaged)
 	// Pensando managed tag
-	v.probe.TagObjsAsManaged(toTagAsManaged)
+	err = v.probe.TagObjsAsManaged(toTagAsManaged)
+	if err != nil {
+		v.Log.Errorf("Failed to tag objects as managed, %s", err)
+	}
 
 	// Write missing vlan tags
 	for id, vlan := range vlanTagMap {
@@ -160,4 +171,5 @@ func (v *VCHub) tagSync() {
 			v.Log.Infof("Deleting tag %s on obj %s returned %s", tag, r.Value, err)
 		}
 	}
+	v.initialTagSyncDone = true
 }

@@ -174,7 +174,7 @@ func (ct *ctrlerCtx) handleBucketEventNoResolver(evt *kvstore.WatchEvent) error 
 				err = bucketHandler.OnBucketCreate(ctrlCtx.obj)
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					ct.delObject(kind, ctrlCtx.GetKey())
 					return err
 				}
@@ -198,7 +198,7 @@ func (ct *ctrlerCtx) handleBucketEventNoResolver(evt *kvstore.WatchEvent) error 
 				ctrlCtx.obj.Bucket = *eobj
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					return err
 				}
 
@@ -217,7 +217,7 @@ func (ct *ctrlerCtx) handleBucketEventNoResolver(evt *kvstore.WatchEvent) error 
 			err = bucketHandler.OnBucketDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 			}
 			ct.delObject(kind, ctrlCtx.GetKey())
 			return nil
@@ -313,7 +313,7 @@ func (ctx *bucketCtx) WorkFunc(context context.Context) error {
 		err = bucketHandler.OnBucketCreate(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Updated:
@@ -326,7 +326,7 @@ func (ctx *bucketCtx) WorkFunc(context context.Context) error {
 		err = bucketHandler.OnBucketUpdate(ctx.obj, &p)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Deleted:
@@ -334,7 +334,7 @@ func (ctx *bucketCtx) WorkFunc(context context.Context) error {
 		err = bucketHandler.OnBucketDelete(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 		}
 	}
 	ct.resolveObject(ctx.event, ctx)
@@ -407,7 +407,7 @@ func (ct *ctrlerCtx) handleBucketEventParallelWithNoResolver(evt *kvstore.WatchE
 					err = bucketHandler.OnBucketCreate(eobj)
 					eobj.Unlock()
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj.GetObjectMeta(), err)
 						ct.delObject(kind, workCtx.GetKey())
 					}
 				} else {
@@ -422,7 +422,7 @@ func (ct *ctrlerCtx) handleBucketEventParallelWithNoResolver(evt *kvstore.WatchE
 
 					err = bucketHandler.OnBucketUpdate(obj, &p)
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 					} else {
 						workCtx.obj.Bucket = p
 					}
@@ -448,7 +448,7 @@ func (ct *ctrlerCtx) handleBucketEventParallelWithNoResolver(evt *kvstore.WatchE
 				err = bucketHandler.OnBucketDelete(obj)
 				obj.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 				}
 				ct.delObject(kind, workCtx.GetKey())
 				return nil
@@ -594,7 +594,9 @@ func (ct *ctrlerCtx) runBucketWatcher() {
 				ct.Unlock()
 
 				// perform a diff with API server and local cache
-				time.Sleep(time.Millisecond * 100)
+				// Sleeping to give time for other apiclient's to reconnect
+				// before calling reconnect handler
+				time.Sleep(time.Second)
 				ct.diffBucket(apicl)
 				bucketHandler.OnBucketReconnect()
 
@@ -635,7 +637,7 @@ func (ct *ctrlerCtx) WatchBucket(handler BucketHandler) error {
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if ok {
 		return fmt.Errorf("Bucket watcher already exists")
@@ -658,7 +660,7 @@ func (ct *ctrlerCtx) StopWatchBucket(handler BucketHandler) error {
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if !ok {
 		return fmt.Errorf("Bucket watcher does not exist")
@@ -667,7 +669,9 @@ func (ct *ctrlerCtx) StopWatchBucket(handler BucketHandler) error {
 	ct.Lock()
 	cancel, _ := ct.watchCancel[kind]
 	cancel()
-	delete(ct.watchers, kind)
+	if _, ok := ct.watchers[kind]; ok {
+		delete(ct.watchers, kind)
+	}
 	delete(ct.watchCancel, kind)
 	ct.Unlock()
 
@@ -685,7 +689,9 @@ type BucketAPI interface {
 	Delete(obj *objstore.Bucket) error
 	Find(meta *api.ObjectMeta) (*Bucket, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Bucket, error)
+	ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*objstore.Bucket, error)
 	Watch(handler BucketHandler) error
+	ClearCache(handler BucketHandler)
 	StopWatch(handler BucketHandler) error
 }
 
@@ -843,6 +849,30 @@ func (api *bucketAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*
 	return objlist, nil
 }
 
+// ApisrvList returns a list of all Bucket objects from apiserver
+func (api *bucketAPI) ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*objstore.Bucket, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.ObjstoreV1().Bucket().List(context.Background(), opts)
+	}
+
+	// List from local cache
+	ctkitObjs, err := api.List(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	var ret []*objstore.Bucket
+	for _, obj := range ctkitObjs {
+		ret = append(ret, &obj.Bucket)
+	}
+	return ret, nil
+}
+
 // Watch sets up a event handlers for Bucket object
 func (api *bucketAPI) Watch(handler BucketHandler) error {
 	api.ct.startWorkerPool("Bucket")
@@ -855,6 +885,11 @@ func (api *bucketAPI) StopWatch(handler BucketHandler) error {
 	api.ct.workPools["Bucket"].Stop()
 	api.ct.Unlock()
 	return api.ct.StopWatchBucket(handler)
+}
+
+// ClearCache removes all Bucket objects in ctkit
+func (api *bucketAPI) ClearCache(handler BucketHandler) {
+	api.ct.delKind("Bucket")
 }
 
 // Bucket returns BucketAPI
@@ -1013,7 +1048,7 @@ func (ct *ctrlerCtx) handleObjectEventNoResolver(evt *kvstore.WatchEvent) error 
 				err = objectHandler.OnObjectCreate(ctrlCtx.obj)
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					ct.delObject(kind, ctrlCtx.GetKey())
 					return err
 				}
@@ -1037,7 +1072,7 @@ func (ct *ctrlerCtx) handleObjectEventNoResolver(evt *kvstore.WatchEvent) error 
 				ctrlCtx.obj.Object = *eobj
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					return err
 				}
 
@@ -1056,7 +1091,7 @@ func (ct *ctrlerCtx) handleObjectEventNoResolver(evt *kvstore.WatchEvent) error 
 			err = objectHandler.OnObjectDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 			}
 			ct.delObject(kind, ctrlCtx.GetKey())
 			return nil
@@ -1152,7 +1187,7 @@ func (ctx *objectCtx) WorkFunc(context context.Context) error {
 		err = objectHandler.OnObjectCreate(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Updated:
@@ -1165,7 +1200,7 @@ func (ctx *objectCtx) WorkFunc(context context.Context) error {
 		err = objectHandler.OnObjectUpdate(ctx.obj, &p)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Deleted:
@@ -1173,7 +1208,7 @@ func (ctx *objectCtx) WorkFunc(context context.Context) error {
 		err = objectHandler.OnObjectDelete(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 		}
 	}
 	ct.resolveObject(ctx.event, ctx)
@@ -1246,7 +1281,7 @@ func (ct *ctrlerCtx) handleObjectEventParallelWithNoResolver(evt *kvstore.WatchE
 					err = objectHandler.OnObjectCreate(eobj)
 					eobj.Unlock()
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj.GetObjectMeta(), err)
 						ct.delObject(kind, workCtx.GetKey())
 					}
 				} else {
@@ -1261,7 +1296,7 @@ func (ct *ctrlerCtx) handleObjectEventParallelWithNoResolver(evt *kvstore.WatchE
 
 					err = objectHandler.OnObjectUpdate(obj, &p)
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 					} else {
 						workCtx.obj.Object = p
 					}
@@ -1287,7 +1322,7 @@ func (ct *ctrlerCtx) handleObjectEventParallelWithNoResolver(evt *kvstore.WatchE
 				err = objectHandler.OnObjectDelete(obj)
 				obj.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 				}
 				ct.delObject(kind, workCtx.GetKey())
 				return nil
@@ -1433,7 +1468,9 @@ func (ct *ctrlerCtx) runObjectWatcher() {
 				ct.Unlock()
 
 				// perform a diff with API server and local cache
-				time.Sleep(time.Millisecond * 100)
+				// Sleeping to give time for other apiclient's to reconnect
+				// before calling reconnect handler
+				time.Sleep(time.Second)
 				ct.diffObject(apicl)
 				objectHandler.OnObjectReconnect()
 
@@ -1474,7 +1511,7 @@ func (ct *ctrlerCtx) WatchObject(handler ObjectHandler) error {
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if ok {
 		return fmt.Errorf("Object watcher already exists")
@@ -1497,7 +1534,7 @@ func (ct *ctrlerCtx) StopWatchObject(handler ObjectHandler) error {
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if !ok {
 		return fmt.Errorf("Object watcher does not exist")
@@ -1506,7 +1543,9 @@ func (ct *ctrlerCtx) StopWatchObject(handler ObjectHandler) error {
 	ct.Lock()
 	cancel, _ := ct.watchCancel[kind]
 	cancel()
-	delete(ct.watchers, kind)
+	if _, ok := ct.watchers[kind]; ok {
+		delete(ct.watchers, kind)
+	}
 	delete(ct.watchCancel, kind)
 	ct.Unlock()
 
@@ -1524,7 +1563,9 @@ type ObjectAPI interface {
 	Delete(obj *objstore.Object) error
 	Find(meta *api.ObjectMeta) (*Object, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Object, error)
+	ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*objstore.Object, error)
 	Watch(handler ObjectHandler) error
+	ClearCache(handler ObjectHandler)
 	StopWatch(handler ObjectHandler) error
 }
 
@@ -1682,6 +1723,30 @@ func (api *objectAPI) List(ctx context.Context, opts *api.ListWatchOptions) ([]*
 	return objlist, nil
 }
 
+// ApisrvList returns a list of all Object objects from apiserver
+func (api *objectAPI) ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*objstore.Object, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.ObjstoreV1().Object().List(context.Background(), opts)
+	}
+
+	// List from local cache
+	ctkitObjs, err := api.List(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	var ret []*objstore.Object
+	for _, obj := range ctkitObjs {
+		ret = append(ret, &obj.Object)
+	}
+	return ret, nil
+}
+
 // Watch sets up a event handlers for Object object
 func (api *objectAPI) Watch(handler ObjectHandler) error {
 	api.ct.startWorkerPool("Object")
@@ -1694,6 +1759,11 @@ func (api *objectAPI) StopWatch(handler ObjectHandler) error {
 	api.ct.workPools["Object"].Stop()
 	api.ct.Unlock()
 	return api.ct.StopWatchObject(handler)
+}
+
+// ClearCache removes all Object objects in ctkit
+func (api *objectAPI) ClearCache(handler ObjectHandler) {
+	api.ct.delKind("Object")
 }
 
 // Object returns ObjectAPI

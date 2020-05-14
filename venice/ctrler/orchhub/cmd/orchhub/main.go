@@ -44,11 +44,6 @@ func main() {
 			":"+globals.CMDResolverPort,
 			"comma separated list of resolver URLs <IP:port>",
 		)
-		vcList = flag.String(
-			"vcenter-list",
-			"",
-			"Comma separated list of vc URL of the form 'https://user:pass@ip:port'",
-		)
 		disableEvents = flag.Bool(
 			"no-events",
 			false,
@@ -102,7 +97,6 @@ func main() {
 	tsdb.Init(context.Background(), &tsdb.Opts{})
 
 	opts := orchhub.Opts{
-		VcList:    *vcList,
 		ListenURL: *listenURL,
 		Resolver:  r,
 		Logger:    pl,

@@ -167,6 +167,18 @@ func (mr *MockTagsProbeInfMockRecorder) RemovePensandoTags(ref interface{}) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemovePensandoTags", reflect.TypeOf((*MockTagsProbeInf)(nil).RemovePensandoTags), ref)
 }
 
+// DestroyTags mocks base method
+func (m *MockTagsProbeInf) DestroyTags() error {
+	ret := m.ctrl.Call(m, "DestroyTags")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DestroyTags indicates an expected call of DestroyTags
+func (mr *MockTagsProbeInfMockRecorder) DestroyTags() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DestroyTags", reflect.TypeOf((*MockTagsProbeInf)(nil).DestroyTags))
+}
+
 // IsManagedTag mocks base method
 func (m *MockTagsProbeInf) IsManagedTag(tag string) bool {
 	ret := m.ctrl.Call(m, "IsManagedTag", tag)
@@ -190,6 +202,28 @@ func (m *MockTagsProbeInf) IsVlanTag(tag string) (int, bool) {
 // IsVlanTag indicates an expected call of IsVlanTag
 func (mr *MockTagsProbeInfMockRecorder) IsVlanTag(tag interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsVlanTag", reflect.TypeOf((*MockTagsProbeInf)(nil).IsVlanTag), tag)
+}
+
+// GetWriteTags mocks base method
+func (m *MockTagsProbeInf) GetWriteTags() map[string]string {
+	ret := m.ctrl.Call(m, "GetWriteTags")
+	ret0, _ := ret[0].(map[string]string)
+	return ret0
+}
+
+// GetWriteTags indicates an expected call of GetWriteTags
+func (mr *MockTagsProbeInfMockRecorder) GetWriteTags() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetWriteTags", reflect.TypeOf((*MockTagsProbeInf)(nil).GetWriteTags))
+}
+
+// SetWriteTags mocks base method
+func (m *MockTagsProbeInf) SetWriteTags(arg0 map[string]string) {
+	m.ctrl.Call(m, "SetWriteTags", arg0)
+}
+
+// SetWriteTags indicates an expected call of SetWriteTags
+func (mr *MockTagsProbeInfMockRecorder) SetWriteTags(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetWriteTags", reflect.TypeOf((*MockTagsProbeInf)(nil).SetWriteTags), arg0)
 }
 
 // MockProbeInf is a mock of ProbeInf interface
@@ -677,6 +711,18 @@ func (mr *MockProbeInfMockRecorder) RemovePensandoTags(ref interface{}) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemovePensandoTags", reflect.TypeOf((*MockProbeInf)(nil).RemovePensandoTags), ref)
 }
 
+// DestroyTags mocks base method
+func (m *MockProbeInf) DestroyTags() error {
+	ret := m.ctrl.Call(m, "DestroyTags")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DestroyTags indicates an expected call of DestroyTags
+func (mr *MockProbeInfMockRecorder) DestroyTags() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DestroyTags", reflect.TypeOf((*MockProbeInf)(nil).DestroyTags))
+}
+
 // IsManagedTag mocks base method
 func (m *MockProbeInf) IsManagedTag(tag string) bool {
 	ret := m.ctrl.Call(m, "IsManagedTag", tag)
@@ -700,4 +746,26 @@ func (m *MockProbeInf) IsVlanTag(tag string) (int, bool) {
 // IsVlanTag indicates an expected call of IsVlanTag
 func (mr *MockProbeInfMockRecorder) IsVlanTag(tag interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsVlanTag", reflect.TypeOf((*MockProbeInf)(nil).IsVlanTag), tag)
+}
+
+// GetWriteTags mocks base method
+func (m *MockProbeInf) GetWriteTags() map[string]string {
+	ret := m.ctrl.Call(m, "GetWriteTags")
+	ret0, _ := ret[0].(map[string]string)
+	return ret0
+}
+
+// GetWriteTags indicates an expected call of GetWriteTags
+func (mr *MockProbeInfMockRecorder) GetWriteTags() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetWriteTags", reflect.TypeOf((*MockProbeInf)(nil).GetWriteTags))
+}
+
+// SetWriteTags mocks base method
+func (m *MockProbeInf) SetWriteTags(arg0 map[string]string) {
+	m.ctrl.Call(m, "SetWriteTags", arg0)
+}
+
+// SetWriteTags indicates an expected call of SetWriteTags
+func (mr *MockProbeInfMockRecorder) SetWriteTags(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetWriteTags", reflect.TypeOf((*MockProbeInf)(nil).SetWriteTags), arg0)
 }

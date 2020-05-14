@@ -28,8 +28,6 @@ const configWatcherQueueLen = 32
 
 // Opts specifies the config for OrchHub
 type Opts struct {
-	// Comma separated list of vc urls
-	VcList string
 	// URL to listen on
 	ListenURL string
 	// Logger to be used for logging.
@@ -44,8 +42,8 @@ type Opts struct {
 // OrchCtrler specifies the structure
 type OrchCtrler struct {
 	StateMgr    *statemgr.Statemgr // state manager
-	rpcServer   *rpcserver.OrchServer
-	instanceMgr *instanceManager.InstanceManager
+	RPCServer   *rpcserver.OrchServer
+	InstanceMgr *instanceManager.InstanceManager
 	restServer  *http.Server
 }
 
@@ -77,7 +75,7 @@ func NewOrchCtrler(opts Opts) (*OrchCtrler, error) {
 		return nil, err
 	}
 
-	instance, err := instanceManager.NewInstanceManager(stateMgr, opts.VcList, opts.Logger, instanceMgrCh, ctkitReconnectCh, opts.VCHubOpts)
+	instance, err := instanceManager.NewInstanceManager(stateMgr, opts.Logger, instanceMgrCh, ctkitReconnectCh, opts.VCHubOpts)
 	if instance == nil || err != nil {
 		opts.Logger.Errorf("Failed to create instance manager. Err : %v", err)
 	}
@@ -86,8 +84,8 @@ func NewOrchCtrler(opts Opts) (*OrchCtrler, error) {
 	opts.Logger.Infof("Instance manager is running")
 	ctrler := &OrchCtrler{
 		StateMgr:    stateMgr,
-		rpcServer:   server,
-		instanceMgr: instance,
+		RPCServer:   server,
+		InstanceMgr: instance,
 	}
 
 	router := mux.NewRouter()
@@ -111,7 +109,7 @@ func NewOrchCtrler(opts Opts) (*OrchCtrler, error) {
 
 // Stop stops orch hub
 func (o *OrchCtrler) Stop() {
-	o.rpcServer.StopServer()
+	o.RPCServer.StopServer()
 	o.StateMgr.Controller().Stop()
-	o.instanceMgr.Stop()
+	o.InstanceMgr.Stop()
 }

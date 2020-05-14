@@ -178,7 +178,7 @@ func (ct *ctrlerCtx) handleOrchestratorEventNoResolver(evt *kvstore.WatchEvent) 
 				err = orchestratorHandler.OnOrchestratorCreate(ctrlCtx.obj)
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					ct.delObject(kind, ctrlCtx.GetKey())
 					return err
 				}
@@ -202,7 +202,7 @@ func (ct *ctrlerCtx) handleOrchestratorEventNoResolver(evt *kvstore.WatchEvent) 
 				ctrlCtx.obj.Orchestrator = *eobj
 				ctrlCtx.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctrlCtx.obj.GetObjectMeta(), err)
 					return err
 				}
 
@@ -221,7 +221,7 @@ func (ct *ctrlerCtx) handleOrchestratorEventNoResolver(evt *kvstore.WatchEvent) 
 			err = orchestratorHandler.OnOrchestratorDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 			}
 			ct.delObject(kind, ctrlCtx.GetKey())
 			return nil
@@ -317,7 +317,7 @@ func (ctx *orchestratorCtx) WorkFunc(context context.Context) error {
 		err = orchestratorHandler.OnOrchestratorCreate(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Updated:
@@ -330,7 +330,7 @@ func (ctx *orchestratorCtx) WorkFunc(context context.Context) error {
 		err = orchestratorHandler.OnOrchestratorUpdate(ctx.obj, &p)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 			ctx.SetEvent(kvstore.Deleted)
 		}
 	case kvstore.Deleted:
@@ -338,7 +338,7 @@ func (ctx *orchestratorCtx) WorkFunc(context context.Context) error {
 		err = orchestratorHandler.OnOrchestratorDelete(ctx.obj)
 		ctx.obj.Unlock()
 		if err != nil {
-			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj, err)
+			ct.logger.Errorf("Error deleting %s %+v. Err: %v", kind, ctx.obj.GetObjectMeta(), err)
 		}
 	}
 	ct.resolveObject(ctx.event, ctx)
@@ -415,7 +415,7 @@ func (ct *ctrlerCtx) handleOrchestratorEventParallelWithNoResolver(evt *kvstore.
 					err = orchestratorHandler.OnOrchestratorCreate(eobj)
 					eobj.Unlock()
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, eobj.GetObjectMeta(), err)
 						ct.delObject(kind, workCtx.GetKey())
 					}
 				} else {
@@ -430,7 +430,7 @@ func (ct *ctrlerCtx) handleOrchestratorEventParallelWithNoResolver(evt *kvstore.
 
 					err = orchestratorHandler.OnOrchestratorUpdate(obj, &p)
 					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 					} else {
 						workCtx.obj.Orchestrator = p
 					}
@@ -456,7 +456,7 @@ func (ct *ctrlerCtx) handleOrchestratorEventParallelWithNoResolver(evt *kvstore.
 				err = orchestratorHandler.OnOrchestratorDelete(obj)
 				obj.Unlock()
 				if err != nil {
-					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj.GetObjectMeta(), err)
 				}
 				ct.delObject(kind, workCtx.GetKey())
 				return nil
@@ -602,7 +602,9 @@ func (ct *ctrlerCtx) runOrchestratorWatcher() {
 				ct.Unlock()
 
 				// perform a diff with API server and local cache
-				time.Sleep(time.Millisecond * 100)
+				// Sleeping to give time for other apiclient's to reconnect
+				// before calling reconnect handler
+				time.Sleep(time.Second)
 				ct.diffOrchestrator(apicl)
 				orchestratorHandler.OnOrchestratorReconnect()
 
@@ -643,7 +645,7 @@ func (ct *ctrlerCtx) WatchOrchestrator(handler OrchestratorHandler) error {
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if ok {
 		return fmt.Errorf("Orchestrator watcher already exists")
@@ -666,7 +668,7 @@ func (ct *ctrlerCtx) StopWatchOrchestrator(handler OrchestratorHandler) error {
 
 	// see if we already have a watcher
 	ct.Lock()
-	_, ok := ct.watchers[kind]
+	_, ok := ct.watchCancel[kind]
 	ct.Unlock()
 	if !ok {
 		return fmt.Errorf("Orchestrator watcher does not exist")
@@ -675,7 +677,9 @@ func (ct *ctrlerCtx) StopWatchOrchestrator(handler OrchestratorHandler) error {
 	ct.Lock()
 	cancel, _ := ct.watchCancel[kind]
 	cancel()
-	delete(ct.watchers, kind)
+	if _, ok := ct.watchers[kind]; ok {
+		delete(ct.watchers, kind)
+	}
 	delete(ct.watchCancel, kind)
 	ct.Unlock()
 
@@ -693,7 +697,9 @@ type OrchestratorAPI interface {
 	Delete(obj *orchestration.Orchestrator) error
 	Find(meta *api.ObjectMeta) (*Orchestrator, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Orchestrator, error)
+	ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*orchestration.Orchestrator, error)
 	Watch(handler OrchestratorHandler) error
+	ClearCache(handler OrchestratorHandler)
 	StopWatch(handler OrchestratorHandler) error
 }
 
@@ -851,6 +857,30 @@ func (api *orchestratorAPI) List(ctx context.Context, opts *api.ListWatchOptions
 	return objlist, nil
 }
 
+// ApisrvList returns a list of all Orchestrator objects from apiserver
+func (api *orchestratorAPI) ApisrvList(ctx context.Context, opts *api.ListWatchOptions) ([]*orchestration.Orchestrator, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.OrchestratorV1().Orchestrator().List(context.Background(), opts)
+	}
+
+	// List from local cache
+	ctkitObjs, err := api.List(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	var ret []*orchestration.Orchestrator
+	for _, obj := range ctkitObjs {
+		ret = append(ret, &obj.Orchestrator)
+	}
+	return ret, nil
+}
+
 // Watch sets up a event handlers for Orchestrator object
 func (api *orchestratorAPI) Watch(handler OrchestratorHandler) error {
 	api.ct.startWorkerPool("Orchestrator")
@@ -863,6 +893,11 @@ func (api *orchestratorAPI) StopWatch(handler OrchestratorHandler) error {
 	api.ct.workPools["Orchestrator"].Stop()
 	api.ct.Unlock()
 	return api.ct.StopWatchOrchestrator(handler)
+}
+
+// ClearCache removes all Orchestrator objects in ctkit
+func (api *orchestratorAPI) ClearCache(handler OrchestratorHandler) {
+	api.ct.delKind("Orchestrator")
 }
 
 // Orchestrator returns OrchestratorAPI

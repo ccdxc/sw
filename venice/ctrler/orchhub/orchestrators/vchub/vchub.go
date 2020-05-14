@@ -66,10 +66,11 @@ type VCHub struct {
 	processVeniceEvents     bool
 	processVeniceEventsLock sync.Mutex
 	// Opts is options used during creation of this instance
-	opts           []Option
-	useMockProbe   bool
-	tagSyncDelay   time.Duration
-	orchUpdateLock sync.Mutex
+	opts               []Option
+	useMockProbe       bool
+	tagSyncDelay       time.Duration
+	initialTagSyncDone bool
+	orchUpdateLock     sync.Mutex
 }
 
 // Option specifies optional values for vchub
@@ -215,7 +216,11 @@ func (v *VCHub) Destroy(delete bool) {
 		v.cancel = cancel
 
 		// Create new probe in write only mode (we don't start watchers or update vcenter status)
-		v.probe = vcprobe.NewVCProbe(nil, nil, v.State)
+		probe := vcprobe.NewVCProbe(nil, nil, v.State)
+
+		// Copy over tag info so it doesn't need to be fetched again
+		probe.SetWriteTags(v.probe.GetWriteTags())
+		v.probe = probe
 		v.probe.Start(true)
 
 		v.Log.Infof("Cleaning up state on VCenter.")
@@ -234,14 +239,15 @@ func (v *VCHub) Destroy(delete bool) {
 				}
 			}
 			v.deleteAllDVS()
+			v.probe.DestroyTags()
 			waitCh <- true
 		}()
 		// Timeout limit for vcenter cleanup
 		select {
 		case <-waitCh:
 			v.Log.Infof("VCenter cleanup finished")
-		case <-time.After(500 * time.Millisecond):
-			v.Log.Infof("Failed to cleanup vcenter within 500ms")
+		case <-time.After(5 * time.Second):
+			v.Log.Infof("Failed to cleanup vcenter within 5s")
 		}
 		v.cancel()
 		v.Wg.Wait()

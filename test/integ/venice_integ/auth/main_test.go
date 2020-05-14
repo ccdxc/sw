@@ -11,7 +11,7 @@ import (
 	testutils "github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apiserver"
-	"github.com/pensando/sw/venice/cmd/types/protos"
+	types "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/spyglass/finder"
 	esmock "github.com/pensando/sw/venice/utils/elastic/mock/server"
@@ -96,7 +96,7 @@ func (tInfo *tInfo) setup() error {
 
 	// start API server
 	trace.Init("ApiServer")
-	tInfo.apiServer, tInfo.apiServerAddr, err = serviceutils.StartAPIServer(":0", "AuthIntegTest", tInfo.l)
+	tInfo.apiServer, tInfo.apiServerAddr, err = serviceutils.StartAPIServer(":0", "AuthIntegTest", tInfo.l, []string{})
 	if err != nil {
 		return err
 	}

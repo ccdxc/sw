@@ -25,10 +25,10 @@ var (
 func (w *MockInstanceManager) watchOrchestratorConfig() {
 	for {
 		select {
-		case <-w.watchCtx.Done():
+		case <-w.WatchCtx.Done():
 			log.Info("Exiting watch for orchestration configuration")
 			return
-		case evt, ok := <-w.instanceManagerCh:
+		case evt, ok := <-w.InstanceManagerCh:
 			if ok {
 				log.Infof("Instance manager got event. %v", evt)
 			}
@@ -148,7 +148,7 @@ func TestClusterCreateList(t *testing.T) {
 	}
 
 	go im.watchOrchestratorConfig()
-	defer im.watchCancel()
+	defer im.WatchCancel()
 
 	clusterConfig := &cluster.Cluster{
 		ObjectMeta: api.ObjectMeta{
@@ -185,7 +185,7 @@ func TestNetworkCreateList(t *testing.T) {
 	}
 
 	go im.watchOrchestratorConfig()
-	defer im.watchCancel()
+	defer im.WatchCancel()
 
 	orch := GetOrchestratorConfig("myorchestrator", "user", "pass")
 	orchInfo := []*network.OrchestratorInfo{
@@ -291,7 +291,7 @@ func TestWorkloadCreateList(t *testing.T) {
 	}
 
 	go im.watchOrchestratorConfig()
-	defer im.watchCancel()
+	defer im.WatchCancel()
 
 	err = createWorkload(sm, "default", "prod-beef", nil)
 	Assert(t, (err == nil), "Workload could not be created")
@@ -375,7 +375,7 @@ func TestHostCreateList(t *testing.T) {
 	}
 
 	go im.watchOrchestratorConfig()
-	defer im.watchCancel()
+	defer im.WatchCancel()
 
 	prodMap := make(map[string]string)
 	prodMap[utils.OrchNameKey] = "prod"
@@ -472,7 +472,7 @@ func TestDistributedServiceCardCreateList(t *testing.T) {
 	}
 
 	go im.watchOrchestratorConfig()
-	defer im.watchCancel()
+	defer im.WatchCancel()
 
 	dscProfile := cluster.DSCProfile{
 		TypeMeta: api.TypeMeta{Kind: "DSCProfile"},
@@ -549,6 +549,56 @@ func TestDistributedServiceCardCreateList(t *testing.T) {
 	return
 }
 
+// createSnapshot utility function to create a snapshotRestore
+func createSnapshot(stateMgr *Statemgr) error {
+	// Orchestrator params
+	snapshot := cluster.SnapshotRestore{
+		TypeMeta: api.TypeMeta{Kind: "SnapshotRestore"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "OrchSnapshot",
+		},
+		Spec: cluster.SnapshotRestoreSpec{
+			SnapshotPath: "test",
+		},
+		Status: cluster.SnapshotRestoreStatus{
+			Status: cluster.SnapshotRestoreStatus_Unknown.String(),
+		},
+	}
+
+	return stateMgr.ctrler.SnapshotRestore().Create(&snapshot)
+}
+
+func TestSnapshotCreateList(t *testing.T) {
+	sm, im, err := NewMockStateManager()
+	if err != nil {
+		t.Fatalf("Failed creating state manager. Err : %v", err)
+		return
+	}
+
+	if im == nil {
+		t.Fatalf("Failed to create instance manger.")
+		return
+	}
+
+	go im.watchOrchestratorConfig()
+	defer im.WatchCancel()
+
+	err = createSnapshot(sm)
+	AssertOk(t, err, "Snapshot could not be created")
+
+	snapshots, err := sm.ctrler.SnapshotRestore().List(context.Background(), &api.ListWatchOptions{})
+	AssertOk(t, err, "failed to list snapshots")
+
+	err = sm.ctrler.SnapshotRestore().Update(&(snapshots[0].SnapshotRestore))
+	AssertOk(t, err, "failed to update")
+
+	err = sm.ctrler.SnapshotRestore().Delete(&(snapshots[0].SnapshotRestore))
+	AssertOk(t, err, "failed to delete")
+
+	// Increase test coverage
+	sm.OnSnapshotRestoreReconnect()
+}
+
 // createOrchestrator utility function to create a Orchestrator
 func createOrchestrator(stateMgr *Statemgr, tenant, name string, labels map[string]string) error {
 	// Orchestrator params
@@ -581,7 +631,7 @@ func TestOrchestratorCreateList(t *testing.T) {
 	}
 
 	go im.watchOrchestratorConfig()
-	defer im.watchCancel()
+	defer im.WatchCancel()
 
 	err = createOrchestrator(sm, "default", "prod-beef", nil)
 	AssertOk(t, err, "Orchestrator could not be created")
@@ -793,6 +843,21 @@ func TestWorkload(t *testing.T) {
 	np.Status.MigrationStatus = &workload.WorkloadMigrationStatus{Status: "DONE"}
 	err = sm.ctrler.Workload().Update(&np)
 	Assert(t, (err == nil), "Could not update workload object")
+}
+
+func TestStateMgr(t *testing.T) {
+	sm, _, err := NewMockStateManager()
+	if err != nil {
+		t.Fatalf("Failed creating state manager. Err : %v", err)
+		return
+	}
+	sm.startWatchers()
+
+	sm.StopWatchersOnRestore()
+	sm.ctrler.Network().StopWatch(sm)
+
+	sm.RestartWatchersOnRestore()
+	sm.ctrler.Network().StopWatch(sm)
 }
 
 func TestMain(m *testing.M) {
