@@ -16,6 +16,7 @@ import (
 	"github.com/pensando/sw/nic/agent/nevtsproxy/reader"
 	"github.com/pensando/sw/nic/agent/nevtsproxy/shm"
 	"github.com/pensando/sw/nic/agent/nevtsproxy/upg"
+	eputils "github.com/pensando/sw/nic/agent/nevtsproxy/utils"
 	delphiProto "github.com/pensando/sw/nic/agent/nmd/protos/delphi"
 	delphi "github.com/pensando/sw/nic/delphi/gosdk"
 	"github.com/pensando/sw/nic/delphi/gosdk/client_api"
@@ -66,6 +67,7 @@ type evtServices struct {
 	logger                   log.Logger             // logger
 	veniceExporterRegistered bool                   // whether events exporter to Venice is registered
 	nodeName                 string                 // NAPLES host/node name
+	mode                     string                 // NAPLES mode
 }
 
 // NAPLES Clients for all the south bound connections
@@ -133,7 +135,7 @@ func (n *nClient) handleVeniceCoordinates(obj *delphiProto.DistributedServiceCar
 		}
 		n.evtServices.resolverClient.UpdateServers(controllers)
 
-		if n.evtServices.running {
+		if n.evtServices.running && n.evtServices.mode == hostMode {
 			n.logger.Infof("changing mode to {%s}", networkMode)
 			n.evtServices.startNetworkModeServices()
 			return
@@ -142,7 +144,7 @@ func (n *nClient) handleVeniceCoordinates(obj *delphiProto.DistributedServiceCar
 		n.upgClient.RegisterEvtsProxy(n.evtServices.eps)
 	} else {
 		n.evtServices.nodeName = obj.GetDSCName() // use smart nic name for reporting events in host mode
-		if n.evtServices.running {
+		if n.evtServices.running && n.evtServices.mode == networkMode {
 			n.logger.Infof("changing mode to {%s}", hostMode)
 			n.evtServices.stopNetworkModeServices()
 			n.evtServices.resolverClient.UpdateServers([]string{})
@@ -205,6 +207,7 @@ func main() {
 			Name: globals.EvtsProxy,
 		}),
 		logger: logger,
+		mode:   hostMode,
 	}
 	defer es.stop()
 
@@ -232,6 +235,16 @@ func main() {
 
 	// Set up watches
 	delphiProto.DistributedServiceCardStatusWatch(delphiClient, nClient)
+
+	// Start events proxy in host mode
+	name, err := eputils.GetNaplesDefaultUUID()
+	if err != nil {
+		log.Fatalf("failed to get naples UUID, err: %v", err)
+	} else {
+		nClient.evtServices.nodeName = name
+	}
+	nClient.evtServices.start(hostMode, nClient.upgClient.IsUpgradeInProcess())
+	nClient.upgClient.RegisterEvtsProxy(nClient.evtServices.eps)
 
 	// run delphi thread in background
 	go delphiClient.Run()
@@ -390,6 +403,7 @@ func (e *evtServices) start(mode string, maintenanceMode bool) {
 	}()
 
 	e.running = true
+	e.mode = mode
 	e.logger.Infof("%s is running {%+v}", globals.EvtsProxy, e.eps)
 }
 
