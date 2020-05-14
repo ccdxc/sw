@@ -45,6 +45,7 @@ func (dn *DNode) CreateDatabase(ctx context.Context, req *tproto.DatabaseReq) (*
 	// set cluster default if duration is below minimum or unlimited (0)
 	if retentionPeriod < meta2.MinRetentionPolicyDuration {
 		retentionPeriod = dn.clusterCfg.RetentionPeriod
+		dn.logger.Infof("retention period is less than minimum requirement. Set to cluster cfg default %v", meta.DefaultRetentionPeriod)
 	}
 
 	rp := &meta2.RetentionPolicySpec{
@@ -459,6 +460,30 @@ func (dn *DNode) CreateRetentionPolicy(ctx context.Context, req *tproto.Retentio
 	return &resp, nil
 }
 
+// UpdateRetentionPolicy get retention policy from specific database
+func (dn *DNode) UpdateRetentionPolicy(ctx context.Context, req *tproto.RetentionPolicyReq) (*tproto.StatusResp, error) {
+	var resp tproto.StatusResp
+
+	dn.logger.Infof("%s Received UpdateRetentionPolicy req %+v", dn.nodeUUID, req)
+
+	// find the shard from shard id
+	val, ok := dn.tshards.Load(req.ReplicaID)
+	if !ok || val.(*TshardState).store == nil || req.ClusterType != meta.ClusterTypeTstore {
+		dn.logger.Errorf("Shard %d not found for cluster %s", req.ReplicaID, req.ClusterType)
+		jstr, _ := json.Marshal(dn.watcher.GetCluster(meta.ClusterTypeTstore))
+		dn.logger.Errorf("Nodemap: %s", jstr)
+		return &resp, errors.New("Shard not found")
+	}
+	shard := val.(*TshardState)
+
+	err := shard.store.UpdateRetentionPolicy(req.Database, req.RetentionName, req.RetentionPeriod)
+	if err != nil {
+		dn.logger.Errorf("Error update retention policy %v changed to duration %+v. Error: %+v", req.RetentionName, req.RetentionName, err)
+		return nil, err
+	}
+	return &resp, nil
+}
+
 // GetRetentionPolicy get retention policy from specific database
 func (dn *DNode) GetRetentionPolicy(ctx context.Context, req *tproto.RetentionPolicyReq) (*tproto.StatusResp, error) {
 	var resp tproto.StatusResp
@@ -475,10 +500,14 @@ func (dn *DNode) GetRetentionPolicy(ctx context.Context, req *tproto.RetentionPo
 	}
 	shard := val.(*TshardState)
 
-	rpList, err := shard.store.GetRetentionPolicy(req.Database)
+	rpInfoMap, err := shard.store.GetRetentionPolicy(req.Database)
 	if err != nil {
 		dn.logger.Errorf("Error get retention policy. Error: %+v", err)
 		return nil, err
+	}
+	rpList := []string{}
+	for rpName := range rpInfoMap {
+		rpList = append(rpList, rpName)
 	}
 	resp.Status = strings.Join(rpList, " ")
 	return &resp, nil

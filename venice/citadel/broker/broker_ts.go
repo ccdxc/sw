@@ -25,6 +25,10 @@ import (
 	"github.com/pensando/sw/venice/citadel/tproto"
 )
 
+const (
+	defaultRetentionPeriodInHours = 24
+)
+
 // createDatabaseInReplica creates the database in replica
 func (br *Broker) createDatabaseInReplica(ctx context.Context, database string, retention uint64, repl *meta.Replica) error {
 	var err error
@@ -699,8 +703,6 @@ func (br *Broker) ExecuteShowCmd(ctx context.Context, database string, qry strin
 
 // createRetentionPolicyInReplica create retention policy in replica
 func (br *Broker) createRetentionPolicyInReplica(ctx context.Context, database string, rpName string, rpPeriod uint64, repl *meta.Replica) error {
-	var err error
-
 	// retry creation if there are transient errors
 	for i := 0; i < numBrokerRetries; i++ {
 		// get the rpc client for the node
@@ -723,10 +725,7 @@ func (br *Broker) createRetentionPolicyInReplica(ctx context.Context, database s
 		dnclient := tproto.NewDataNodeClient(rpcClient)
 		resp, err := dnclient.CreateRetentionPolicy(ctx, &req)
 		if err == nil {
-			br.logger.Infof("=>created the retention policy in database %+v on node %+v.", database, repl.NodeUUID)
-			if resp.Status != "" {
-				br.logger.Infof("Receive response status: %+v", resp.Status)
-			}
+			br.logger.Infof("=>created the retention policy in database %+v on node %+v. Respond status: %v", database, repl.NodeUUID, resp.Status)
 			return nil
 		}
 
@@ -734,7 +733,7 @@ func (br *Broker) createRetentionPolicyInReplica(ctx context.Context, database s
 		time.Sleep(brokerRetryDelay)
 	}
 
-	return err
+	return fmt.Errorf("Failed to create retention policy %v", rpName)
 }
 
 // CreateRetentionPolicy creates retention policy in database
@@ -752,6 +751,63 @@ func (br *Broker) CreateRetentionPolicy(ctx context.Context, database string, rp
 			err := br.createRetentionPolicyInReplica(ctx, database, rpName, rpPeriod, repl)
 			if err != nil {
 				br.logger.Errorf("Error creating retention policy in replica %v. Err: %v", repl, err)
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// updateRetentionPolicyInReplica create retention policy in replica
+func (br *Broker) updateRetentionPolicyInReplica(ctx context.Context, database string, rpName string, rpPeriod uint64, repl *meta.Replica) error {
+	// retry creation if there are transient errors
+	for i := 0; i < numBrokerRetries; i++ {
+		// get the rpc client for the node
+		rpcClient, cerr := br.getRPCClient(repl.NodeUUID, meta.ClusterTypeTstore)
+		if cerr != nil {
+			return cerr
+		}
+
+		// req message
+		req := tproto.RetentionPolicyReq{
+			ClusterType:     meta.ClusterTypeTstore,
+			ReplicaID:       repl.ReplicaID,
+			ShardID:         repl.ShardID,
+			Database:        database,
+			RetentionName:   rpName,
+			RetentionPeriod: rpPeriod,
+		}
+
+		// make create retention policy call
+		dnclient := tproto.NewDataNodeClient(rpcClient)
+		resp, err := dnclient.UpdateRetentionPolicy(ctx, &req)
+		if err == nil {
+			br.logger.Infof("=>updated the retention policy to duration %v hours in database %+v on node %+v. Respond status: %v", req.RetentionPeriod, database, repl.NodeUUID, resp.Status)
+			return nil
+		}
+
+		br.logger.Warnf("Error updating the retention policy on node %+v. Err: %+v. Retrying..", repl.NodeUUID, err)
+		time.Sleep(brokerRetryDelay)
+	}
+
+	return fmt.Errorf("Failed to update retention policy %v", rpName)
+}
+
+// UpdateRetentionPolicy creates retention policy in database
+func (br *Broker) UpdateRetentionPolicy(ctx context.Context, database string, rpName string, rpPeriod uint64) error {
+	// get cluster
+	cl := br.GetCluster(meta.ClusterTypeTstore)
+	if cl == nil || cl.ShardMap == nil || len(cl.ShardMap.Shards) == 0 {
+		return errors.New("Shard map is empty")
+	}
+
+	// walk all shards
+	for _, shard := range cl.ShardMap.Shards {
+		// walk all replicas in the shard
+		for _, repl := range shard.Replicas {
+			err := br.updateRetentionPolicyInReplica(ctx, database, rpName, rpPeriod, repl)
+			if err != nil {
+				br.logger.Errorf("Error updating retention policy in replica %v. Err: %v", repl, err)
 				return err
 			}
 		}
@@ -819,8 +875,6 @@ func (br *Broker) GetRetentionPolicy(ctx context.Context, database string) ([]st
 
 // deleteRetentionPolicyInReplica delete retention policy in replica
 func (br *Broker) deleteRetentionPolicyInReplica(ctx context.Context, database string, rpName string, repl *meta.Replica) error {
-	var err error
-
 	// retry creation if there are transient errors
 	for i := 0; i < numBrokerRetries; i++ {
 		// get the rpc client for the node
@@ -842,10 +896,7 @@ func (br *Broker) deleteRetentionPolicyInReplica(ctx context.Context, database s
 		dnclient := tproto.NewDataNodeClient(rpcClient)
 		resp, err := dnclient.DeleteRetentionPolicy(ctx, &req)
 		if err == nil {
-			br.logger.Infof("=>deleted the retention policy in database %+v on node %+v.", database, repl.NodeUUID)
-			if resp.Status != "" {
-				br.logger.Infof("Receive response status: %+v", resp.Status)
-			}
+			br.logger.Infof("=>deleted the retention policy in database %+v on node %+v. Respond status: %v", database, repl.NodeUUID, resp.Status)
 			return nil
 		}
 
@@ -853,7 +904,7 @@ func (br *Broker) deleteRetentionPolicyInReplica(ctx context.Context, database s
 		time.Sleep(brokerRetryDelay)
 	}
 
-	return err
+	return fmt.Errorf("Failed to delete retention policy %v", rpName)
 }
 
 // DeleteRetentionPolicy delete retention policy in database
@@ -880,8 +931,6 @@ func (br *Broker) DeleteRetentionPolicy(ctx context.Context, database string, rp
 
 // createContinuousQueryInReplica creates the continuous query in replica
 func (br *Broker) createContinuousQueryInReplica(ctx context.Context, database string, cqName string, rpName string, rpPeriod uint64, query string, repl *meta.Replica) error {
-	var err error
-
 	// retry creation if there are transient errors
 	for i := 0; i < numBrokerRetries; i++ {
 		// get the rpc client for the node
@@ -905,10 +954,7 @@ func (br *Broker) createContinuousQueryInReplica(ctx context.Context, database s
 		dnclient := tproto.NewDataNodeClient(rpcClient)
 		resp, err := dnclient.CreateContinuousQuery(ctx, &req)
 		if err == nil {
-			br.logger.Infof("=>created the continuous query in database %+v on node %+v.", database, repl.NodeUUID)
-			if resp.Status != "" {
-				br.logger.Infof("Receive response status: %+v", resp.Status)
-			}
+			br.logger.Infof("=>created the continuous query in database %+v on node %+v. Respond status: %v", database, repl.NodeUUID, resp.Status)
 			return nil
 		}
 
@@ -916,7 +962,7 @@ func (br *Broker) createContinuousQueryInReplica(ctx context.Context, database s
 		time.Sleep(brokerRetryDelay)
 	}
 
-	return err
+	return fmt.Errorf("Failed to create continuous query %v", cqName)
 }
 
 // CreateContinuousQuery creates continuous query in database
@@ -1124,6 +1170,10 @@ func (br *Broker) continuousQueryWaitDB() {
 
 		for _, dbInfo := range databases {
 			if dbInfo.Name == "default" {
+				err := br.UpdateRetentionPolicy(br.cqCtx, "default", "default", defaultRetentionPeriodInHours)
+				if err != nil {
+					br.logger.Errorf("Error updating default retention policy to %v hours duration. Err: %v", defaultRetentionPeriodInHours, err)
+				}
 				if !br.cqRoutineCreated {
 					br.continuousQueryRoutine(br.cqCtx, "default")
 				}

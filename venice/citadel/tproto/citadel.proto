@@ -186,6 +186,7 @@ service DataNode {
     rpc PointsWrite (PointsWriteReq) returns (StatusResp) {};
     rpc ExecuteQuery(QueryReq) returns (QueryResp) {};
     rpc CreateRetentionPolicy(RetentionPolicyReq) returns (StatusResp) {};
+    rpc UpdateRetentionPolicy(RetentionPolicyReq) returns (StatusResp) {};
     rpc GetRetentionPolicy(RetentionPolicyReq) returns (StatusResp) {};
     rpc DeleteRetentionPolicy(RetentionPolicyReq) returns (StatusResp) {};
     rpc CreateContinuousQuery(ContinuousQueryReq) returns (StatusResp) {};

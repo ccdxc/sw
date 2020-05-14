@@ -69,6 +69,7 @@ func NewHTTPServer(listenURL string, broker *broker.Broker, dn *data.DNode, dbg 
 	r.HandleFunc("/cq", netutils.MakeHTTPHandler(netutils.RestAPIFunc(hsrv.readcqReqHandler))).Methods("GET")
 	r.HandleFunc("/cq", netutils.MakeHTTPHandler(netutils.RestAPIFunc(hsrv.deletecqReqHandler))).Methods("DELETE")
 	r.HandleFunc("/rp", netutils.MakeHTTPHandler(netutils.RestAPIFunc(hsrv.createrpReqHandler))).Methods("POST")
+	r.HandleFunc("/rp", netutils.MakeHTTPHandler(netutils.RestAPIFunc(hsrv.updaterpReqHandler))).Methods("PUT")
 	r.HandleFunc("/rp", netutils.MakeHTTPHandler(netutils.RestAPIFunc(hsrv.readrpReqHandler))).Methods("GET")
 	r.HandleFunc("/rp", netutils.MakeHTTPHandler(netutils.RestAPIFunc(hsrv.deleterpReqHandler))).Methods("DELETE")
 	r.HandleFunc("/healthz", netutils.MakeHTTPHandler(netutils.RestAPIFunc(hsrv.healthReqHandler))).Methods("GET")
@@ -281,6 +282,34 @@ func (hsrv *HTTPServer) createrpReqHandler(r *http.Request) (interface{}, error)
 	err = hsrv.broker.CreateRetentionPolicy(context.Background(), database, retentionName, period)
 	if err != nil {
 		log.Errorf("Error creating the retention policy %+v in database %+v. Err: %v", retentionName, database, err)
+		return nil, err
+	}
+
+	return nil, nil
+}
+
+// updaterpReqHandler creates retention policy
+func (hsrv *HTTPServer) updaterpReqHandler(r *http.Request) (interface{}, error) {
+	database := r.URL.Query().Get("db")
+	if database == "" {
+		database = globals.DefaultTenant
+	}
+	retentionName := r.URL.Query().Get("rp")
+	if retentionName == "" {
+		return nil, fmt.Errorf("empty rp for retention policy name")
+	}
+	retentionPeriod := r.URL.Query().Get("rptime")
+	if retentionName == "" {
+		return nil, fmt.Errorf("empty rptime for retention policy period")
+	}
+
+	period, err := strconv.ParseUint(retentionPeriod, 10, 64)
+	if err != nil {
+		return nil, fmt.Errorf("Error parse input retention period to uint64")
+	}
+	err = hsrv.broker.UpdateRetentionPolicy(context.Background(), database, retentionName, period)
+	if err != nil {
+		log.Errorf("Error updating the retention policy %+v in database %+v. Err: %v", retentionName, database, err)
 		return nil, err
 	}
 

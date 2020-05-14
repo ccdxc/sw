@@ -422,7 +422,7 @@ func tstoreBebchmark(t *testing.T, ts *Tstore) {
 	points := make([]models.Points, numIterations)
 	startTime := time.Now()
 	// pick a timestamp in the retention range, chose now() - 6 days
-	pointStartTime := int(startTime.UnixNano() - time.Duration(6*24*time.Hour).Nanoseconds())
+	pointStartTime := int(startTime.UnixNano() - time.Duration(0.5*24*time.Hour).Nanoseconds())
 
 	for iter := 0; iter < numIterations; iter++ {
 		// parse some points
@@ -648,11 +648,16 @@ func TestTstoreContinuousQueryWithNewRetentionPolicy(t *testing.T) {
 	// create new retention policy and make call on related api
 	err = ts.CreateRetentionPolicy("cqdb", "new_rp", 7*24)
 	AssertOk(t, err, "Failed to create retention policy for continuous query")
-	rpList, err := ts.GetRetentionPolicy("cqdb")
+	err = ts.UpdateRetentionPolicy("cqdb", "new_rp", 1*24)
+	AssertOk(t, err, "Failed to update retention policy for continuous query")
+	rpInfoMap, err := ts.GetRetentionPolicy("cqdb")
 	AssertOk(t, err, "Failed to get retention policy on database cqdb")
-	Assert(t, len(rpList) == 2, "Invalid number of retention policy. Get %v, expect 2.", len(rpList))
-	for _, rpName := range rpList {
+	Assert(t, len(rpInfoMap) == 2, "Invalid number of retention policy. Get %v, expect 2.", len(rpInfoMap))
+	for rpName, rpDuration := range rpInfoMap {
 		Assert(t, rpName == "default" || rpName == "new_rp", "Invalid name of obtained retention policy name. Get %v, expect default or new_rp", rpName)
+		if rpName == "new_rp" {
+			Assert(t, rpDuration == time.Duration(1*24)*time.Hour, "Incorrect retention duration obtained. Get %v Expect %v", rpDuration, time.Duration(1*24)*time.Hour)
+		}
 	}
 	existed, err := ts.CheckRetentionPolicy("cqdb", "new_rp")
 	AssertOk(t, err, "Failed to get retention policy in database")
@@ -700,8 +705,8 @@ func TestTstoreContinuousQueryWithNewRetentionPolicy(t *testing.T) {
 	// Mock error for retention policy related api
 	err = ts.CreateRetentionPolicy("unknowndb", "new_rp", 7*24)
 	Assert(t, err != nil, "Failed to raise error for creating retention policy on non-existed database")
-	rpList, err = ts.GetRetentionPolicy("unknowndb")
-	Assert(t, rpList == nil && err != nil, "Failed to raise error for trying to get retention policy on non-existed database")
+	rpInfoMap, err = ts.GetRetentionPolicy("unknowndb")
+	Assert(t, len(rpInfoMap) == 0 && err != nil, "Failed to raise error for trying to get retention policy on non-existed database")
 	existed, err = ts.CheckRetentionPolicy("uknowndb", "new_rp")
 	Assert(t, err != nil, "Failed to raise error for checking retention policy on non-existed database")
 	err = ts.DeleteRetentionPolicy("unknowndb", "new_rp")

@@ -165,7 +165,7 @@ const (
 	DefaultReplicaCount        = 2
 	DefaultNodeDeadInterval    = time.Second * 30
 	DefaultNodeTTL             = 30
-	DefaultRetentionPeriod     = 7 * 24 * time.Hour
+	DefaultRetentionPeriod     = 1 * 24 * time.Hour
 	DefaultRetentionPolicyName = "default"
 	DefaultMetaStoreRetry      = 180
 	DefaultMaxSyncMsgSize      = 20 * 1024 * 1024 // 20MB

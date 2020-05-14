@@ -383,17 +383,49 @@ func (ts *Tstore) CreateRetentionPolicy(database string, rpName string, duration
 	return err
 }
 
+// UpdateRetentionPolicy get retention policy for a specific database
+func (ts *Tstore) UpdateRetentionPolicy(database string, rpName string, rpDuration uint64) error {
+	dbInfo := ts.metaClient.Database(database)
+	if dbInfo == nil {
+		return fmt.Errorf("Error find database named %v", database)
+	}
+
+	rpInfoMap, err := ts.GetRetentionPolicy(database)
+	if err != nil {
+		log.Errorf("Error reading retention policy info in database %v. Err: %v", database, err)
+		return err
+	}
+	if _, ok := rpInfoMap[rpName]; !ok {
+		log.Errorf("Error cannot find retention policy %v in database %v", rpName, database)
+		return fmt.Errorf("Error cannot find retention policy %v in database %v", rpName, database)
+	}
+	newDuration := time.Duration(rpDuration) * time.Hour
+	if newDuration == rpInfoMap[rpName] {
+		log.Infof("Received new retention duration equal to pre-existing duraion. Skip update retention policy %v", rpName)
+		return nil
+	}
+	rpu := meta.RetentionPolicyUpdate{
+		Name:     &rpName,
+		Duration: &newDuration,
+	}
+	err = ts.metaClient.UpdateRetentionPolicy(database, rpName, &rpu, false)
+	if err != nil {
+		log.Errorf("Error updating retention policy %v to duration %v. Err: %v", rpName, rpDuration, err)
+	}
+	return err
+}
+
 // GetRetentionPolicy get retention policy for a specific database
-func (ts *Tstore) GetRetentionPolicy(database string) ([]string, error) {
+func (ts *Tstore) GetRetentionPolicy(database string) (map[string]time.Duration, error) {
 	dbInfo := ts.metaClient.Database(database)
 	if dbInfo == nil {
 		return nil, fmt.Errorf("Error find database named %v", database)
 	}
-	rpList := []string{}
+	rpInfoMap := map[string]time.Duration{}
 	for _, rpInfo := range dbInfo.RetentionPolicies {
-		rpList = append(rpList, rpInfo.Name)
+		rpInfoMap[rpInfo.Name] = rpInfo.Duration
 	}
-	return rpList, nil
+	return rpInfoMap, nil
 }
 
 // CheckRetentionPolicy check the existence of retention policy in specific database

@@ -414,6 +414,9 @@ func TestDataNodeWithContinuousQuery(t *testing.T) {
 		_, err = dnclient.CreateRetentionPolicy(context.Background(), rpReq)
 		AssertOk(t, err, "Failed to create new retention policy for continuous query")
 
+		_, err = dnclient.UpdateRetentionPolicy(context.Background(), rpReq)
+		AssertOk(t, err, "Failed to update existing retention policy for continuous query")
+
 		_, err = dnclient.CreateContinuousQuery(context.Background(), cqRequest)
 		AssertOk(t, err, "Failed to create continuous query")
 	}

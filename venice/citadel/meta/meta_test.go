@@ -117,6 +117,7 @@ func (f *fakeDataNode) DelReplicate(context.Context, *tproto.KeyMsg) (*tproto.St
 func (f *fakeDataNode) CreateContinuousQuery(context.Context, *tproto.ContinuousQueryReq) (*tproto.StatusResp, error) {
 	return nil, nil
 }
+
 func (f *fakeDataNode) GetContinuousQuery(context.Context, *tproto.DatabaseReq) (*tproto.StatusResp, error) {
 	return nil, nil
 }
@@ -127,6 +128,11 @@ func (f *fakeDataNode) DeleteContinuousQuery(context.Context, *tproto.Continuous
 func (f *fakeDataNode) CreateRetentionPolicy(context.Context, *tproto.RetentionPolicyReq) (*tproto.StatusResp, error) {
 	return nil, nil
 }
+
+func (f *fakeDataNode) UpdateRetentionPolicy(context.Context, *tproto.RetentionPolicyReq) (*tproto.StatusResp, error) {
+	return nil, nil
+}
+
 func (f *fakeDataNode) GetRetentionPolicy(context.Context, *tproto.RetentionPolicyReq) (*tproto.StatusResp, error) {
 	return nil, nil
 }
