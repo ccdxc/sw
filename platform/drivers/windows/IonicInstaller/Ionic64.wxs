@@ -85,15 +85,17 @@
     
       <Condition Message="Windows Server 20016 64 bit">VersionNT64 &gt;= 603</Condition>
         <Icon Id="Cmd.ico" SourceFile="BuildFiles\Cmd.ico" />
-  
-      <CustomAction Id="RegisterPerfCounters" Directory="INSTALLDIR" Execute="deferred" Impersonate="no" ExeCommand="cmd.exe /c &quot;lodctr /M:perf_counters.man&quot;" Return="check" />
-      <CustomAction Id="UnregisterPerfCounters" Directory="INSTALLDIR" Execute="deferred" Impersonate="no" ExeCommand="cmd.exe /c &quot;unlodctr /M:perf_counters.man&quot;" Return="check" />
+
+      <CustomAction Id="UnregisterPreviousPerfCounters" Directory="INSTALLDIR" Execute="deferred" Impersonate="no" ExeCommand="cmd.exe /c &quot;unlodctr /p:IonicPerfCounters&quot;" Return="ignore" />
+      <CustomAction Id="RegisterPerfCounters" Directory="INSTALLDIR" Execute="deferred" Impersonate="no" ExeCommand="cmd.exe /c &quot;lodctr /M:perf_counters.man&quot;" Return="ignore" />
+      <CustomAction Id="UnregisterPerfCounters" Directory="INSTALLDIR" Execute="deferred" Impersonate="no" ExeCommand="cmd.exe /c &quot;unlodctr /p:IonicPerfCounters&quot;" Return="ignore" />
       <CustomAction Id="SetMgmtIterfaces" Directory="INSTALLDIR" Execute="deferred" Impersonate="no" ExeCommand="powershell.exe -file setdsc.ps1" Return="check" />
 
       <InstallExecuteSequence>
-        <Custom Action="RegisterPerfCounters" After="InstallFiles">NOT Installed</Custom>
+        <Custom Action="UnregisterPreviousPerfCounters" After="InstallFiles">NOT Installed</Custom>
+        <Custom Action="RegisterPerfCounters" After="UnregisterPreviousPerfCounters">NOT Installed</Custom>
         <Custom Action="SetMgmtIterfaces" After="InstallFiles">NOT Installed</Custom>
-        <Custom Action="UnregisterPerfCounters" Before="RemoveFiles">(REMOVE~="ALL") AND (NOT UPGRADINGPRODUCTCODE)</Custom>
+        <Custom Action="UnregisterPerfCounters" Before="RemoveFiles">REMOVE="ALL"</Custom>
       </InstallExecuteSequence>
   </Fragment>
 <!--
