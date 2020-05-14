@@ -86,11 +86,8 @@ func TestSmartNICObjectPreCommitHooks(t *testing.T) {
 			Name: globals.DefaultDSCProfile,
 		},
 		Spec: cluster.DSCProfileSpec{
-			Features: cluster.FeatureSet{
-				InterVMServices: false,
-				Firewall:        false,
-				FlowAware:       false,
-			},
+			DeploymentTarget: "HOST",
+			FeatureSet:       "VIRTUALIZED",
 		},
 	}
 
@@ -252,25 +249,22 @@ func TestSmartNICObjectDSCProfilePreCommitHooks(t *testing.T) {
 
 	transparentFlowaware := cluster.DSCProfile{
 		Spec: cluster.DSCProfileSpec{
-			Features: cluster.FeatureSet{
-				FlowAware: true,
-			},
+			DeploymentTarget: "HOST",
+			FeatureSet:       "FLOWAWARE",
 		},
 	}
 
 	transparentBasenet := cluster.DSCProfile{
 		Spec: cluster.DSCProfileSpec{
-			Features: cluster.FeatureSet{},
+			DeploymentTarget: "HOST",
+			FeatureSet:       "SMARTNIC",
 		},
 	}
 
 	insertionEnforced := cluster.DSCProfile{
 		Spec: cluster.DSCProfileSpec{
-			Features: cluster.FeatureSet{
-				InterVMServices: true,
-				FlowAware:       true,
-				Firewall:        true,
-			},
+			DeploymentTarget: "VIRTUALIZED",
+			FeatureSet:       "FLOWAWARE_FIREWALL",
 		},
 	}
 

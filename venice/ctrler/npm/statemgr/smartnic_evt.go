@@ -5,6 +5,7 @@ package statemgr
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
@@ -61,8 +62,11 @@ func (sns *DistributedServiceCardState) isOrchestratorCompatible() bool {
 		return false
 	}
 
-	return dscProfileState.DSCProfile.Spec.Features.InterVMServices
+	if dscProfileState.DSCProfile.Spec.DeploymentTarget != cluster.DSCProfileSpec_VIRTUALIZED.String() || dscProfileState.DSCProfile.Spec.FeatureSet != cluster.DSCProfileSpec_FLOWAWARE_FIREWALL.String() {
+		return false
+	}
 
+	return true
 }
 
 //GetDistributedServiceCardWatchOptions gets options
@@ -524,7 +528,7 @@ func (sm *Statemgr) isDscEnforcednMode(nsnic *cluster.DistributedServiceCard) bo
 		return false
 	}
 
-	return profileState.DSCProfile.DSCProfile.Spec.Features.Firewall == true
+	return (strings.ToLower(profileState.DSCProfile.DSCProfile.Spec.DeploymentTarget) == strings.ToLower(cluster.DSCProfileSpec_VIRTUALIZED.String()) && strings.ToLower(profileState.DSCProfile.DSCProfile.Spec.FeatureSet) == strings.ToLower(cluster.DSCProfileSpec_FLOWAWARE_FIREWALL.String()))
 }
 
 // isDscEnforcednMode returns true if the DSC in insertion mode cluster
@@ -539,5 +543,6 @@ func (sm *Statemgr) isDscFlowawareMode(nsnic *cluster.DistributedServiceCard) bo
 		return false
 	}
 
-	return profileState.DSCProfile.DSCProfile.Spec.Features.FlowAware == true
+	return (strings.ToLower(profileState.DSCProfile.DSCProfile.Spec.DeploymentTarget) == strings.ToLower(cluster.DSCProfileSpec_HOST.String()) && strings.ToLower(profileState.DSCProfile.DSCProfile.Spec.FeatureSet) == strings.ToLower(cluster.DSCProfileSpec_FLOWAWARE.String()))
+
 }

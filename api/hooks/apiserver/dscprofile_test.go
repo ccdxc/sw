@@ -24,44 +24,32 @@ func TestDSCProfilePreCommitHooks(t *testing.T) {
 
 	transparentFlowaware := cluster.DSCProfile{
 		Spec: cluster.DSCProfileSpec{
-			Features: cluster.FeatureSet{
-				InterVMServices: false,
-				FlowAware:       true,
-				Firewall:        false,
-			},
+			DeploymentTarget: cluster.DSCProfileSpec_HOST.String(),
+			FeatureSet:       cluster.DSCProfileSpec_FLOWAWARE.String(),
 		},
 	}
 	transparentFlowaware.ResourceVersion = "15"
 
 	transparentBasenet := cluster.DSCProfile{
 		Spec: cluster.DSCProfileSpec{
-			Features: cluster.FeatureSet{
-				InterVMServices: false,
-				FlowAware:       false,
-				Firewall:        false,
-			},
+			DeploymentTarget: cluster.DSCProfileSpec_HOST.String(),
+			FeatureSet:       cluster.DSCProfileSpec_SMARTNIC.String(),
 		},
 	}
 	transparentBasenet.ResourceVersion = "15"
 
 	insertionEnforced := cluster.DSCProfile{
 		Spec: cluster.DSCProfileSpec{
-			Features: cluster.FeatureSet{
-				InterVMServices: true,
-				FlowAware:       true,
-				Firewall:        true,
-			},
+			DeploymentTarget: cluster.DSCProfileSpec_VIRTUALIZED.String(),
+			FeatureSet:       cluster.DSCProfileSpec_FLOWAWARE_FIREWALL.String(),
 		},
 	}
 	insertionEnforced.ResourceVersion = "15"
 
 	defaultProfile := cluster.DSCProfile{
 		Spec: cluster.DSCProfileSpec{
-			Features: cluster.FeatureSet{
-				InterVMServices: false,
-				FlowAware:       false,
-				Firewall:        false,
-			},
+			DeploymentTarget: "HOST",
+			FeatureSet:       "SMARTNIC",
 		},
 	}
 	defaultProfile.Name = "default"
@@ -90,42 +78,29 @@ func TestDSCProfilePreCommitHooks(t *testing.T) {
 	var sampleProfile cluster.DSCProfile
 	sampleProfile.Name = "sample"
 
-	sampleProfile.Spec.Features = cluster.FeatureSet{
-		InterVMServices: false,
-		FlowAware:       true,
-		Firewall:        true,
-	}
+	sampleProfile.Spec.DeploymentTarget = cluster.DSCProfileSpec_HOST.String()
+	sampleProfile.Spec.FeatureSet = cluster.DSCProfileSpec_FLOWAWARE_FIREWALL.String()
 
 	//valid profile create
 	_, _, err := hooks.DSCProfilePreCommitHook(context.TODO(), kvs, txns, "sample", apiintf.CreateOper, false, sampleProfile)
 	AssertOk(t, err, "DSCProfilePrecommitHook did error with valid parameters")
 
-	//Invalid profile create Insertion Basenet
-	sampleProfile.Spec.Features = cluster.FeatureSet{
-		InterVMServices: true,
-		FlowAware:       false,
-		Firewall:        false,
-	}
+	//Invalud profile create
+	sampleProfile.Spec.DeploymentTarget = cluster.DSCProfileSpec_VIRTUALIZED.String()
+	sampleProfile.Spec.FeatureSet = cluster.DSCProfileSpec_SMARTNIC.String()
 
 	_, _, err = hooks.DSCProfilePreCommitHook(context.TODO(), kvs, txns, "sample", apiintf.CreateOper, false, sampleProfile)
 	Assert(t, err != nil, "DSCProfilePrecommitHook did not return error with invalid parameters")
 
-	//Invalid profile create InsertionFlowaware
-	sampleProfile.Spec.Features = cluster.FeatureSet{
-		InterVMServices: true,
-		FlowAware:       true,
-		Firewall:        false,
-	}
+	sampleProfile.Spec.DeploymentTarget = cluster.DSCProfileSpec_VIRTUALIZED.String()
+	sampleProfile.Spec.FeatureSet = cluster.DSCProfileSpec_FLOWAWARE.String()
 
 	_, _, err = hooks.DSCProfilePreCommitHook(context.TODO(), kvs, txns, "sample", apiintf.CreateOper, false, sampleProfile)
 	Assert(t, err != nil, "DSCProfilePrecommitHook did not return error with invalid parameters")
 
-	//Valid profile create/update Insertion/Enforced
-	sampleProfile.Spec.Features = cluster.FeatureSet{
-		InterVMServices: true,
-		FlowAware:       true,
-		Firewall:        true,
-	}
+	//Valid profile create/update
+	sampleProfile.Spec.DeploymentTarget = cluster.DSCProfileSpec_VIRTUALIZED.String()
+	sampleProfile.Spec.FeatureSet = cluster.DSCProfileSpec_FLOWAWARE_FIREWALL.String()
 
 	_, _, err = hooks.DSCProfilePreCommitHook(context.TODO(), kvs, txns, "sample", apiintf.CreateOper, false, sampleProfile)
 	AssertOk(t, err, "DSCProfilePrecommitHook did return error with valid parameters")
@@ -136,12 +111,8 @@ func TestDSCProfilePreCommitHooks(t *testing.T) {
 	_, _, err = hooks.DSCProfilePreCommitHook(context.TODO(), kvs, txns, "transparent_flowaware", apiintf.UpdateOper, false, sampleProfile)
 	AssertOk(t, err, "DSCProfilePrecommitHook did return error with valid parameters")
 
-	//Valid profile create/update Transparent/FlowAware
-	sampleProfile.Spec.Features = cluster.FeatureSet{
-		InterVMServices: false,
-		FlowAware:       true,
-		Firewall:        false,
-	}
+	sampleProfile.Spec.DeploymentTarget = cluster.DSCProfileSpec_HOST.String()
+	sampleProfile.Spec.FeatureSet = cluster.DSCProfileSpec_FLOWAWARE.String()
 
 	_, _, err = hooks.DSCProfilePreCommitHook(context.TODO(), kvs, txns, "sample", apiintf.CreateOper, false, sampleProfile)
 	AssertOk(t, err, "DSCProfilePrecommitHook did return error with valid parameters")
@@ -152,12 +123,8 @@ func TestDSCProfilePreCommitHooks(t *testing.T) {
 	_, _, err = hooks.DSCProfilePreCommitHook(context.TODO(), kvs, txns, "insertion_enforced", apiintf.UpdateOper, false, sampleProfile)
 	AssertOk(t, err, "DSCProfilePrecommitHook did return error with valid parameters")
 
-	//Valid profile create/update Transparent/Basenet
-	sampleProfile.Spec.Features = cluster.FeatureSet{
-		InterVMServices: false,
-		FlowAware:       false,
-		Firewall:        false,
-	}
+	sampleProfile.Spec.DeploymentTarget = cluster.DSCProfileSpec_HOST.String()
+	sampleProfile.Spec.FeatureSet = cluster.DSCProfileSpec_SMARTNIC.String()
 
 	_, _, err = hooks.DSCProfilePreCommitHook(context.TODO(), kvs, txns, "sample", apiintf.CreateOper, false, sampleProfile)
 	AssertOk(t, err, "DSCProfilePrecommitHook did return error with valid parameters")

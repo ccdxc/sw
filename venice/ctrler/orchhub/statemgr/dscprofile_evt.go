@@ -75,7 +75,7 @@ func (sm *Statemgr) OnDSCProfileCreate(dscProfile *ctkit.DSCProfile) error {
 }
 
 func (dps *DSCProfileState) isOrchestrationCompatible() bool {
-	return dps.DSCProfile.Spec.Features.InterVMServices
+	return dps.DSCProfile.Spec.DeploymentTarget == cluster.DSCProfileSpec_VIRTUALIZED.String() && dps.DSCProfile.Spec.FeatureSet == cluster.DSCProfileSpec_FLOWAWARE_FIREWALL.String()
 }
 
 // OnDSCProfileUpdate handles update event

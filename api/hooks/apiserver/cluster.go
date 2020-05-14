@@ -1145,9 +1145,8 @@ func (cl *clusterHooks) nodePreCommitHook(ctx context.Context, kvs kvstore.Inter
 	if strings.HasPrefix(verObj.Status.BuildVersion, "1.3") && rolloutMajorVersion == relAMajorVersion && rolloutMinorVersion > relAMinorVersion {
 		insertionFWProfile := &cluster.DSCProfile{}
 		insertionFWProfile.Defaults("all")
-		insertionFWProfile.Spec.Features.InterVMServices = true
-		insertionFWProfile.Spec.Features.FlowAware = true
-		insertionFWProfile.Spec.Features.Firewall = true
+		insertionFWProfile.Spec.DeploymentTarget = cluster.DSCProfileSpec_VIRTUALIZED.String()
+		insertionFWProfile.Spec.FeatureSet = cluster.DSCProfileSpec_FLOWAWARE_FIREWALL.String()
 		apiSrv := apisrvpkg.MustGetAPIServer()
 		insertionFWProfile.APIVersion = apiSrv.GetVersion()
 		insertionFWProfile.SelfLink = insertionFWProfile.MakeURI("configs", insertionFWProfile.APIVersion, string(apiclient.GroupCluster))

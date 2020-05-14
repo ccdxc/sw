@@ -21,8 +21,8 @@ func (cl *clusterHooks) DSCProfilePreCommitHook(ctx context.Context, kvs kvstore
 	}
 	err := checkValidProfile(updDSCProfile)
 	if err != nil {
-		cl.logger.Error(err)
-		return i, false, fmt.Errorf("Error DSCProfile: %v", err)
+		cl.logger.Errorf("Unsupported DSCProfile: DeploymentTarget:%s, FeatureSet:%s", updDSCProfile.Spec.DeploymentTarget, updDSCProfile.Spec.FeatureSet)
+		return i, false, fmt.Errorf("Unsupported DSCProfile: DeploymentTarget:%s, FeatureSet:%s", updDSCProfile.Spec.DeploymentTarget, updDSCProfile.Spec.FeatureSet)
 	}
 	if oper == apiintf.CreateOper {
 		return i, true, nil
@@ -57,18 +57,11 @@ func (cl *clusterHooks) DSCProfilePreCommitHook(ctx context.Context, kvs kvstore
 }
 
 func checkValidProfile(profile cluster.DSCProfile) error {
-	interVMServices := profile.Spec.Features.InterVMServices
-	flowAware := profile.Spec.Features.FlowAware
-	fireWall := profile.Spec.Features.Firewall
-	if interVMServices {
-		if flowAware != true || fireWall != true {
-			return fmt.Errorf("InterVMServices should be enabled along with flowaware and firewall features enabled")
-		}
-	} else {
-		if (fireWall == true) && (flowAware == false) {
-			return fmt.Errorf("Enable flowAware in order to enable fireWall feature")
-
+	if profile.Spec.DeploymentTarget == cluster.DSCProfileSpec_VIRTUALIZED.String() {
+		if profile.Spec.FeatureSet != cluster.DSCProfileSpec_FLOWAWARE_FIREWALL.String() {
+			return fmt.Errorf(" fwdMode:%s flowpolicy mode:%s is not supported", profile.Spec.DeploymentTarget, profile.Spec.FeatureSet)
 		}
 	}
 	return nil
+
 }

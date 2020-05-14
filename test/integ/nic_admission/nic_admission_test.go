@@ -1271,11 +1271,8 @@ func Setup(m *testing.M) {
 			Name: globals.DefaultDSCProfile,
 		},
 		Spec: pencluster.DSCProfileSpec{
-			Features: pencluster.FeatureSet{
-				InterVMServices: false,
-				FlowAware:       false,
-				Firewall:        false,
-			},
+			DeploymentTarget: "HOST",
+			FeatureSet:       "SMARTNIC",
 		},
 	}
 

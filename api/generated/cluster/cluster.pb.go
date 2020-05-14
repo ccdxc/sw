@@ -48,7 +48,6 @@
 		DSCProfile
 		DSCProfileSpec
 		DSCProfileStatus
-		FeatureSet
 		PropagationStatus
 		Feature
 		FeatureStatus

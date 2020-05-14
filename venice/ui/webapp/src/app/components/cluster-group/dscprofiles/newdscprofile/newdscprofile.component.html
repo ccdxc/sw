@@ -4,16 +4,12 @@
 
     <div fxFlex="auto" fxLayout="row" class="new-dsc-profile-content">
       <div fxFlex="nogrow" fxLayout="column">
-        <div fxLayout="column" fxLayoutAlign="start center" class="new-dsc-profile-form">
-          <ng-container *ngTemplateOutlet="metaName"></ng-container>
-          <div fxFlex="10px"></div>
-          <!-- <ng-container>
-          <ng-container *ngTemplateOutlet="feature_options"></ng-container>
-        </ng-container> -->
-          <ng-container>
-            <ng-container *ngTemplateOutlet="feature_set"></ng-container>
-          </ng-container>
-        </div>
+
+        <ng-container *ngTemplateOutlet="metaName"></ng-container>
+        <div fxFlex="10px"></div>
+        <ng-container>
+          <ng-container *ngTemplateOutlet="feature_set"></ng-container>
+        </ng-container>
       </div>
     </div>
   </div>
@@ -22,13 +18,13 @@
 <ng-template #metaName>
   <div fxFlex="nogrow" fxLayout="row" class="new-dsc-profile-row"
        [formGroup]="newObject.$formGroup">
-    <div formGroupName="meta" fxLayoutAlign="start center">
+    <div formGroupName="meta">
       <span [ngClass]="{
         'requiredField': isFieldEmpty(newObject.$formGroup.get(['meta', 'name']))
       }">
         <input fxFlex="342px" formControlName="name" class="new-dsc-profile-name" appErrorTooltip
                spellcheck="false"
-               type="text" pInputText appFloatLabel="Unique DSC Profile Name...">
+               type="text" pInputText appFloatLabel="Unique DSP Profile Name...">
       </span>
     </div>
   </div>
@@ -64,24 +60,39 @@
   </div>
 </ng-template>
 
-<ng-template #feature_options>
-  <app-fieldcontainer fieldTitle="Configure DSC Profile">
-    <div fxFlex="100" fxLayout="row" [formGroup]="newObject.$formGroup.get(['spec'])">
-      <span formGroupName="feature-set">
-        <div *ngFor="let k of getObjectKeys(newObject.spec['feature-set']) let i=index"
-             class="new-dsc-profile-feature-loop">
-          <ng-container>
-            <mat-slide-toggle [formControl]="newObject.$formGroup.get(['spec', 'feature-set', k])"
-                              fxFlex='30px'
-                              class="new-dsc-profile-feature--toggle">
-            </mat-slide-toggle>
-            <div class="new-dsc-profile-feature-label">{{k}} </div>
-          </ng-container>
+<!-- <ng-template #feature_options>
+  <fieldset [formGroup]="newObject.$formGroup">
+    <legend>
+      Configure DSC Mode
+    </legend>
+    <div fxFlex="100" fxLayout="row">
+      <div fxFlex="50" fxLayout="column" class="new-dsc-profile-row">
+        <div fxFlex="nogrow" class="fwdModeText">Forwarding Mode</div>
+        <div class="newdscprofile-plist-div">
+          <p-listbox #nodesListbox [options]="fwdModeOptions"
+                     *ngIf="fwdModeOptions && fwdModeOptions.length>0"
+                     [(ngModel)]="selectedFwdMode" checkbox="true" optionLabel="label"
+                     [listStyle]="{'height':'100px'}"
+                     (onChange)="setPolicyModeOptions($event)">
+          </p-listbox>
         </div>
-      </span>
+      </div>
+
+      <div fxFlex="50" fxLayout="column" class="new-dsc-profile-row"
+           *ngIf="policyModeOptions && policyModeOptions.length > 0">
+        <div fxFlex="nogrow" class="polModeText">Policy Mode</div>
+        <div class="newdscprofile-plist-div">
+          <p-listbox #nodesListbox [options]="policyModeOptions"
+                     *ngIf="policyModeOptions && policyModeOptions.length>0"
+                     [(ngModel)]="selectedPolicyMode" checkbox="true" optionLabel="label"
+                     [listStyle]="{'height':'100px'}">
+          </p-listbox>
+        </div>
+      </div>
+
     </div>
-  </app-fieldcontainer>
-</ng-template>
+  </fieldset>
+</ng-template> -->
 
 <ng-template #divider>
   <div fxFlex="20px" fxLayout="row">

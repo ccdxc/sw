@@ -482,11 +482,8 @@ func TestDistributedServiceCardCreateList(t *testing.T) {
 			Tenant:    "",
 		},
 		Spec: cluster.DSCProfileSpec{
-			Features: cluster.FeatureSet{
-				InterVMServices: true,
-				FlowAware:       true,
-				Firewall:        true,
-			},
+			DeploymentTarget: "VIRTUALIZED",
+			FeatureSet:       "FLOWAWARE_FIREWALL",
 		},
 	}
 
@@ -698,11 +695,8 @@ func TestUpdateDSCProfile(t *testing.T) {
 			Tenant:    "",
 		},
 		Spec: cluster.DSCProfileSpec{
-			Features: cluster.FeatureSet{
-				InterVMServices: true,
-				FlowAware:       true,
-				Firewall:        true,
-			},
+			DeploymentTarget: "VIRTUALIZED",
+			FeatureSet:       "FLOWAWARE_FIREWALL",
 		},
 	}
 
@@ -721,9 +715,8 @@ func TestUpdateDSCProfile(t *testing.T) {
 	err = createDistributedServiceCard(sm, "default", "prod-beef", "", nil)
 	Assert(t, (err == nil), "DistributedServiceCard could not be created")
 
-	dscProfile.Spec.Features.InterVMServices = true
-	dscProfile.Spec.Features.FlowAware = true
-	dscProfile.Spec.Features.Firewall = true
+	dscProfile.Spec.DeploymentTarget = cluster.DSCProfileSpec_HOST.String()
+	dscProfile.Spec.FeatureSet = cluster.DSCProfileSpec_SMARTNIC.String()
 	err = sm.ctrler.DSCProfile().Update(&dscProfile)
 	Assert(t, (err == nil), "Failed to update dscprofile")
 
@@ -747,11 +740,8 @@ func TestFindDSC(t *testing.T) {
 			Tenant:    "",
 		},
 		Spec: cluster.DSCProfileSpec{
-			Features: cluster.FeatureSet{
-				InterVMServices: true,
-				FlowAware:       true,
-				Firewall:        true,
-			},
+			DeploymentTarget: "VIRTUALIZED",
+			FeatureSet:       "FLOWAWARE_FIREWALL",
 		},
 	}
 
@@ -799,11 +789,8 @@ func TestWorkload(t *testing.T) {
 			Tenant:    "",
 		},
 		Spec: cluster.DSCProfileSpec{
-			Features: cluster.FeatureSet{
-				InterVMServices: true,
-				FlowAware:       true,
-				Firewall:        true,
-			},
+			DeploymentTarget: "VIRTUALIZED",
+			FeatureSet:       "FLOWAWARE_FIREWALL",
 		},
 	}
 

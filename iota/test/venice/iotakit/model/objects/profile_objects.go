@@ -26,11 +26,8 @@ func NewDscProfileInsertion(client objClient.ObjClient, name string) *DscProfile
 				Tenant:    "",
 			},
 			Spec: cluster.DSCProfileSpec{
-				Features: cluster.FeatureSet{
-					InterVMServices: true,
-					Firewall:        true,
-					FlowAware:       true,
-				},
+				DeploymentTarget: "VIRTUALIZED",
+				FeatureSet:       "FLOWAWARE_FIREWALL",
 			},
 		},
 	}
@@ -49,11 +46,8 @@ func NewDscProfileFlowAware(client objClient.ObjClient, name string) *DscProfile
 				Tenant:    "",
 			},
 			Spec: cluster.DSCProfileSpec{
-				Features: cluster.FeatureSet{
-					InterVMServices: false,
-					Firewall:        false,
-					FlowAware:       true,
-				},
+				DeploymentTarget: "HOST",
+				FeatureSet:       "FLOWAWARE",
 			},
 		},
 	}
@@ -72,11 +66,8 @@ func NewDscProfileEnforced(client objClient.ObjClient, name string) *DscProfile 
 				Tenant:    "",
 			},
 			Spec: cluster.DSCProfileSpec{
-				Features: cluster.FeatureSet{
-					InterVMServices: false,
-					Firewall:        true,
-					FlowAware:       true,
-				},
+				DeploymentTarget: "HOST",
+				FeatureSet:       "FLOWAWARE_FIREWALL",
 			},
 		},
 	}
@@ -95,11 +86,8 @@ func NewDscProfileBasenet(client objClient.ObjClient, name string) *DscProfile {
 				Tenant:    "",
 			},
 			Spec: cluster.DSCProfileSpec{
-				Features: cluster.FeatureSet{
-					InterVMServices: false,
-					Firewall:        false,
-					FlowAware:       false,
-				},
+				DeploymentTarget: "HOST",
+				FeatureSet:       "SMARTNIC",
 			},
 		},
 	}

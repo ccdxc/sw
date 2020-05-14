@@ -52,46 +52,37 @@ var typesMapDscprofile = map[string]*api.Struct{
 		},
 
 		CLITags: map[string]api.CLIInfo{
-			"Firewall":         api.CLIInfo{Path: "Spec.Features.Firewall", Skip: false, Insert: "", Help: ""},
-			"FlowAware":        api.CLIInfo{Path: "Spec.Features.FlowAware", Skip: false, Insert: "", Help: ""},
-			"InterVMServices":  api.CLIInfo{Path: "Spec.Features.InterVMServices", Skip: false, Insert: "", Help: ""},
-			"api-version":      api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
-			"generation-id":    api.CLIInfo{Path: "Status.PropagationStatus.GenerationID", Skip: false, Insert: "", Help: ""},
-			"kind":             api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
-			"labels":           api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
-			"min-version":      api.CLIInfo{Path: "Status.PropagationStatus.MinVersion", Skip: false, Insert: "", Help: ""},
-			"name":             api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
-			"namespace":        api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
-			"pending":          api.CLIInfo{Path: "Status.PropagationStatus.Pending", Skip: false, Insert: "", Help: ""},
-			"pending-dscs":     api.CLIInfo{Path: "Status.PropagationStatus.PendingNaples", Skip: false, Insert: "", Help: ""},
-			"resource-version": api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
-			"self-link":        api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
-			"status":           api.CLIInfo{Path: "Status.PropagationStatus.Status", Skip: false, Insert: "", Help: ""},
-			"tenant":           api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
-			"updated":          api.CLIInfo{Path: "Status.PropagationStatus.Updated", Skip: false, Insert: "", Help: ""},
-			"uuid":             api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
+			"api-version":       api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
+			"deployment-target": api.CLIInfo{Path: "Spec.DeploymentTarget", Skip: false, Insert: "", Help: ""},
+			"feature-set":       api.CLIInfo{Path: "Spec.FeatureSet", Skip: false, Insert: "", Help: ""},
+			"generation-id":     api.CLIInfo{Path: "Status.PropagationStatus.GenerationID", Skip: false, Insert: "", Help: ""},
+			"kind":              api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
+			"labels":            api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
+			"min-version":       api.CLIInfo{Path: "Status.PropagationStatus.MinVersion", Skip: false, Insert: "", Help: ""},
+			"name":              api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
+			"namespace":         api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
+			"pending":           api.CLIInfo{Path: "Status.PropagationStatus.Pending", Skip: false, Insert: "", Help: ""},
+			"pending-dscs":      api.CLIInfo{Path: "Status.PropagationStatus.PendingNaples", Skip: false, Insert: "", Help: ""},
+			"resource-version":  api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
+			"self-link":         api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
+			"status":            api.CLIInfo{Path: "Status.PropagationStatus.Status", Skip: false, Insert: "", Help: ""},
+			"tenant":            api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
+			"updated":           api.CLIInfo{Path: "Status.PropagationStatus.Updated", Skip: false, Insert: "", Help: ""},
+			"uuid":              api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
 		},
 	},
 	"cluster.DSCProfileSpec": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(DSCProfileSpec{}) },
 		Fields: map[string]api.Field{
-			"Features": api.Field{Name: "Features", CLITag: api.CLIInfo{ID: "feature-set", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "feature-set", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.FeatureSet"},
+			"DeploymentTarget": api.Field{Name: "DeploymentTarget", CLITag: api.CLIInfo{ID: "deployment-target", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "deployment-target", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"FeatureSet": api.Field{Name: "FeatureSet", CLITag: api.CLIInfo{ID: "feature-set", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "feature-set", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"cluster.DSCProfileStatus": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(DSCProfileStatus{}) },
 		Fields: map[string]api.Field{
 			"PropagationStatus": api.Field{Name: "PropagationStatus", CLITag: api.CLIInfo{ID: "propagation-status", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "propagation-status", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.PropagationStatus"},
-		},
-	},
-	"cluster.FeatureSet": &api.Struct{
-		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(FeatureSet{}) },
-		Fields: map[string]api.Field{
-			"InterVMServices": api.Field{Name: "InterVMServices", CLITag: api.CLIInfo{ID: "InterVMServices", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
-
-			"FlowAware": api.Field{Name: "FlowAware", CLITag: api.CLIInfo{ID: "FlowAware", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
-
-			"Firewall": api.Field{Name: "Firewall", CLITag: api.CLIInfo{ID: "Firewall", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
 		},
 	},
 	"cluster.PropagationStatus": &api.Struct{

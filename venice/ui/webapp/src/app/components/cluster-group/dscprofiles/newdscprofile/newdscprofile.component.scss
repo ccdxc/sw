@@ -14,6 +14,16 @@ $dary-grey: #a9a9a9;
   }
 }
 
+.new-dsc-profile-row-plist-B {
+  width: 100%;
+  justify-content: space-evenly;
+
+}
+
+.new-dsc-profile-container .new-dsc-profile-row-plist-B .ui-listbox {
+  width: 25em;
+}
+
 .new-dsc-profile-select-label {
   @include primary-font();
 }
@@ -31,12 +41,18 @@ $dary-grey: #a9a9a9;
   }
 }
 
-.new-dsc-profile-feature-label {
-  margin-left: 20px;
-}
+fieldset {
+  border: 1px solid $dary-grey;
+  padding: 5px;
+  margin-bottom: 10px;
 
-.new-dsc-profile-feature--toggle {
-  @include global-mat-toggle(rgb(209, 209, 208), rgb(103, 103, 99), rgb(211, 226, 246), rgb(101, 169, 227));
+  legend {
+    padding: 0 2px;
+    @include primary-font(15px);
+    color: #676763;
+    margin-bottom: 0px;
+    width: 127px;
+  }
 }
 
 .new-dsc-profile-feature-listbox {

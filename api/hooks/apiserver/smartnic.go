@@ -181,7 +181,9 @@ func (cl *clusterHooks) smartNICPreCommitHook(ctx context.Context, kvs kvstore.I
 			return i, false, fmt.Errorf("unable to find the new profile")
 		}
 		if oldprofname != "" && admitted { // validate update of profile only if the NIC is admitted and not decomissioned
-			errStr := fmt.Sprintf("Profile old :  %v  new: %v", oldProfile.Spec.Features, updProfile.Spec.Features)
+
+			errStr := fmt.Sprintf("Profile old :  %v %v  new: %v %v ", oldProfile.Spec.DeploymentTarget, oldProfile.Spec.FeatureSet, updProfile.Spec.DeploymentTarget, updProfile.Spec.FeatureSet)
+
 			cl.logger.Errorf(errStr)
 			err = verifyAllowedProfile(oldProfile, updProfile)
 			if err != nil {

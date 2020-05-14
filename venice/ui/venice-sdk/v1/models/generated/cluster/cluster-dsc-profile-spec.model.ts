@@ -7,10 +7,12 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
-import { ClusterFeatureSet, IClusterFeatureSet } from './cluster-feature-set.model';
+import { ClusterDSCProfileSpec_deployment_target,  ClusterDSCProfileSpec_deployment_target_uihint  } from './enums';
+import { ClusterDSCProfileSpec_feature_set,  ClusterDSCProfileSpec_feature_set_uihint  } from './enums';
 
 export interface IClusterDSCProfileSpec {
-    'feature-set'?: IClusterFeatureSet;
+    'deployment-target': ClusterDSCProfileSpec_deployment_target;
+    'feature-set': ClusterDSCProfileSpec_feature_set;
     '_ui'?: any;
 }
 
@@ -18,11 +20,20 @@ export interface IClusterDSCProfileSpec {
 export class ClusterDSCProfileSpec extends BaseModel implements IClusterDSCProfileSpec {
     /** Field for holding arbitrary ui state */
     '_ui': any = {};
-    'feature-set': ClusterFeatureSet = null;
+    'deployment-target': ClusterDSCProfileSpec_deployment_target = null;
+    'feature-set': ClusterDSCProfileSpec_feature_set = null;
     public static propInfo: { [prop in keyof IClusterDSCProfileSpec]: PropInfoItem } = {
+        'deployment-target': {
+            enum: ClusterDSCProfileSpec_deployment_target_uihint,
+            default: 'host',
+            required: true,
+            type: 'string'
+        },
         'feature-set': {
-            required: false,
-            type: 'object'
+            enum: ClusterDSCProfileSpec_feature_set_uihint,
+            default: 'smartnic',
+            required: true,
+            type: 'string'
         },
     }
 
@@ -48,7 +59,6 @@ export class ClusterDSCProfileSpec extends BaseModel implements IClusterDSCProfi
     */
     constructor(values?: any, setDefaults:boolean = true) {
         super();
-        this['feature-set'] = new ClusterFeatureSet();
         this._inputValue = values;
         this.setValues(values, setDefaults);
     }
@@ -61,10 +71,19 @@ export class ClusterDSCProfileSpec extends BaseModel implements IClusterDSCProfi
         if (values && values['_ui']) {
             this['_ui'] = values['_ui']
         }
-        if (values) {
-            this['feature-set'].setValues(values['feature-set'], fillDefaults);
+        if (values && values['deployment-target'] != null) {
+            this['deployment-target'] = values['deployment-target'];
+        } else if (fillDefaults && ClusterDSCProfileSpec.hasDefaultValue('deployment-target')) {
+            this['deployment-target'] = <ClusterDSCProfileSpec_deployment_target>  ClusterDSCProfileSpec.propInfo['deployment-target'].default;
         } else {
-            this['feature-set'].setValues(null, fillDefaults);
+            this['deployment-target'] = null
+        }
+        if (values && values['feature-set'] != null) {
+            this['feature-set'] = values['feature-set'];
+        } else if (fillDefaults && ClusterDSCProfileSpec.hasDefaultValue('feature-set')) {
+            this['feature-set'] = <ClusterDSCProfileSpec_feature_set>  ClusterDSCProfileSpec.propInfo['feature-set'].default;
+        } else {
+            this['feature-set'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -73,12 +92,8 @@ export class ClusterDSCProfileSpec extends BaseModel implements IClusterDSCProfi
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'feature-set': CustomFormGroup(this['feature-set'].$formGroup, ClusterDSCProfileSpec.propInfo['feature-set'].required),
-            });
-            // We force recalculation of controls under a form group
-            Object.keys((this._formGroup.get('feature-set') as FormGroup).controls).forEach(field => {
-                const control = this._formGroup.get('feature-set').get(field);
-                control.updateValueAndValidity();
+                'deployment-target': CustomFormControl(new FormControl(this['deployment-target'], [required, enumValidator(ClusterDSCProfileSpec_deployment_target), ]), ClusterDSCProfileSpec.propInfo['deployment-target']),
+                'feature-set': CustomFormControl(new FormControl(this['feature-set'], [required, enumValidator(ClusterDSCProfileSpec_feature_set), ]), ClusterDSCProfileSpec.propInfo['feature-set']),
             });
         }
         return this._formGroup;
@@ -90,7 +105,8 @@ export class ClusterDSCProfileSpec extends BaseModel implements IClusterDSCProfi
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this['feature-set'].setFormGroupValuesToBeModelValues();
+            this._formGroup.controls['deployment-target'].setValue(this['deployment-target']);
+            this._formGroup.controls['feature-set'].setValue(this['feature-set']);
         }
     }
 }

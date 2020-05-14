@@ -515,11 +515,8 @@ func (sm *SysModel) setupInsertionMode() error {
 			Tenant:    "",
 		},
 		Spec: cluster.DSCProfileSpec{
-			Features: cluster.FeatureSet{
-				InterVMServices: true,
-				Firewall:        true,
-				FlowAware:       true,
-			},
+			DeploymentTarget: "VIRTUALIZED",
+			FeatureSet:       "FLOWAWARE_FIREWALL",
 		},
 	}
 	cfgClient.CreateDscProfile(&dscProfile)

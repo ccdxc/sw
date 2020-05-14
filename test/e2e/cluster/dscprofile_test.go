@@ -46,11 +46,8 @@ func (dscTg *dscProfileTestGroup) testProfileCreateDelete() {
 			Name: "dscProfile1",
 		},
 		Spec: cluster.DSCProfileSpec{
-			Features: cluster.FeatureSet{
-				InterVMServices: false,
-				FlowAware:       false,
-				Firewall:        false,
-			},
+			DeploymentTarget: "HOST",
+			FeatureSet:       "SMARTNIC",
 		},
 	}
 
@@ -77,12 +74,8 @@ func (dscTg *dscProfileTestGroup) testDSCUpdateWithSameProfile() {
 			Name: "insertion.enforced",
 		},
 		Spec: cluster.DSCProfileSpec{
-
-			Features: cluster.FeatureSet{
-				InterVMServices: true,
-				FlowAware:       true,
-				Firewall:        true,
-			},
+			DeploymentTarget: "VIRTUALIZED",
+			FeatureSet:       "FLOWAWARE_FIREWALL",
 		},
 	}
 

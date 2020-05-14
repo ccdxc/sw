@@ -9,11 +9,14 @@ package cluster
 import (
 	"errors"
 	fmt "fmt"
+	"strings"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/ref"
+
+	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/globals"
@@ -24,6 +27,52 @@ import (
 var _ kvstore.Interface
 var _ log.Logger
 var _ listerwatcher.WatcherClient
+
+// DSCProfileSpec_Deployment_Target_normal is a map of normalized values for the enum
+var DSCProfileSpec_Deployment_Target_normal = map[string]string{
+	"host":        "host",
+	"virtualized": "virtualized",
+}
+
+var DSCProfileSpec_Deployment_Target_vname = map[int32]string{
+	0: "host",
+	1: "virtualized",
+}
+
+var DSCProfileSpec_Deployment_Target_vvalue = map[string]int32{
+	"host":        0,
+	"virtualized": 1,
+}
+
+func (x DSCProfileSpec_Deployment_Target) String() string {
+	return DSCProfileSpec_Deployment_Target_vname[int32(x)]
+}
+
+// DSCProfileSpec_Feature_Set_normal is a map of normalized values for the enum
+var DSCProfileSpec_Feature_Set_normal = map[string]string{
+	"flowaware":          "flowaware",
+	"flowaware_firewall": "flowaware_firewall",
+	"smartnic":           "smartnic",
+}
+
+var DSCProfileSpec_Feature_Set_vname = map[int32]string{
+	0: "smartnic",
+	1: "flowaware",
+	2: "flowaware_firewall",
+}
+
+var DSCProfileSpec_Feature_Set_vvalue = map[string]int32{
+	"smartnic":           0,
+	"flowaware":          1,
+	"flowaware_firewall": 2,
+}
+
+func (x DSCProfileSpec_Feature_Set) String() string {
+	return DSCProfileSpec_Feature_Set_vname[int32(x)]
+}
+
+var _ validators.DummyVar
+var validatorMapDscprofile = make(map[string]map[string][]func(string, interface{}) error)
 
 // MakeKey generates a KV store key for the object
 func (m *DSCProfile) MakeKey(prefix string) string {
@@ -59,6 +108,7 @@ func (m *DSCProfile) Defaults(ver string) bool {
 	if ret {
 		m.Tenant, m.Namespace = "", ""
 	}
+	ret = m.Spec.Defaults(ver) || ret
 	return ret
 }
 
@@ -80,7 +130,14 @@ func (m *DSCProfileSpec) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *DSCProfileSpec) Defaults(ver string) bool {
-	return false
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		m.DeploymentTarget = "host"
+		m.FeatureSet = "smartnic"
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -101,27 +158,6 @@ func (m *DSCProfileStatus) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *DSCProfileStatus) Defaults(ver string) bool {
-	return false
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *FeatureSet) Clone(into interface{}) (interface{}, error) {
-	var out *FeatureSet
-	var ok bool
-	if into == nil {
-		out = &FeatureSet{}
-	} else {
-		out, ok = into.(*FeatureSet)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *(ref.DeepCopy(m).(*FeatureSet))
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *FeatureSet) Defaults(ver string) bool {
 	return false
 }
 
@@ -172,12 +208,37 @@ func (m *DSCProfile) Validate(ver, path string, ignoreStatus bool, ignoreSpec bo
 			ret = append(ret, errs...)
 		}
 	}
+
+	if !ignoreSpec {
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Spec"
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Spec"
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
 	return ret
 }
 
 func (m *DSCProfile) Normalize() {
 
 	m.ObjectMeta.Normalize()
+
+	m.Spec.Normalize()
 
 }
 
@@ -187,10 +248,27 @@ func (m *DSCProfileSpec) References(tenant string, path string, resp map[string]
 
 func (m *DSCProfileSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+	if vs, ok := validatorMapDscprofile["DSCProfileSpec"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapDscprofile["DSCProfileSpec"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
 	return ret
 }
 
 func (m *DSCProfileSpec) Normalize() {
+
+	m.DeploymentTarget = DSCProfileSpec_Deployment_Target_normal[strings.ToLower(m.DeploymentTarget)]
+
+	m.FeatureSet = DSCProfileSpec_Feature_Set_normal[strings.ToLower(m.FeatureSet)]
 
 }
 
@@ -204,19 +282,6 @@ func (m *DSCProfileStatus) Validate(ver, path string, ignoreStatus bool, ignoreS
 }
 
 func (m *DSCProfileStatus) Normalize() {
-
-}
-
-func (m *FeatureSet) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
-
-}
-
-func (m *FeatureSet) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
-	var ret []error
-	return ret
-}
-
-func (m *FeatureSet) Normalize() {
 
 }
 
@@ -240,5 +305,34 @@ func init() {
 	scheme.AddKnownTypes(
 		&DSCProfile{},
 	)
+
+	validatorMapDscprofile = make(map[string]map[string][]func(string, interface{}) error)
+
+	validatorMapDscprofile["DSCProfileSpec"] = make(map[string][]func(string, interface{}) error)
+	validatorMapDscprofile["DSCProfileSpec"]["all"] = append(validatorMapDscprofile["DSCProfileSpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*DSCProfileSpec)
+
+		if _, ok := DSCProfileSpec_Deployment_Target_vvalue[m.DeploymentTarget]; !ok {
+			vals := []string{}
+			for k1, _ := range DSCProfileSpec_Deployment_Target_vvalue {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"DeploymentTarget", vals)
+		}
+		return nil
+	})
+
+	validatorMapDscprofile["DSCProfileSpec"]["all"] = append(validatorMapDscprofile["DSCProfileSpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*DSCProfileSpec)
+
+		if _, ok := DSCProfileSpec_Feature_Set_vvalue[m.FeatureSet]; !ok {
+			vals := []string{}
+			for k1, _ := range DSCProfileSpec_Feature_Set_vvalue {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"FeatureSet", vals)
+		}
+		return nil
+	})
 
 }

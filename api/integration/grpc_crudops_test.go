@@ -4579,14 +4579,11 @@ func TestRoutingConfigReferences(t *testing.T) {
 	// Create a DSC object
 	prof := &cluster.DSCProfile{
 		ObjectMeta: api.ObjectMeta{
-			Name: "transparent-basenet",
+			Name: cluster.DSCProfileSpec_SMARTNIC.String(),
 		},
 		Spec: cluster.DSCProfileSpec{
-			Features: cluster.FeatureSet{
-				InterVMServices: false,
-				Firewall:        false,
-				FlowAware:       false,
-			},
+			DeploymentTarget: cluster.DSCProfileSpec_HOST.String(),
+			FeatureSet:       cluster.DSCProfileSpec_SMARTNIC.String(),
 		},
 	}
 	_, err = apicl.ClusterV1().DSCProfile().Create(ctx, prof)
@@ -4599,7 +4596,7 @@ func TestRoutingConfigReferences(t *testing.T) {
 			ID:          "xxx",
 			MgmtMode:    cluster.DistributedServiceCardSpec_NETWORK.String(),
 			NetworkMode: cluster.DistributedServiceCardSpec_OOB.String(),
-			DSCProfile:  "transparent-basenet",
+			DSCProfile:  cluster.DSCProfileSpec_SMARTNIC.String(),
 		},
 		Status: cluster.DistributedServiceCardStatus{
 			AdmissionPhase: cluster.DistributedServiceCardStatus_ADMITTED.String(),

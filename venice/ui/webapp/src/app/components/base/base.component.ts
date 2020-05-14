@@ -205,8 +205,8 @@ export class BaseComponent implements OnInit {
     });
   }
 
-  getObjectKeys(obj, filterOut_ui: boolean = true): string[] {
-    return (obj) ? Object.keys(obj).filter( (item) =>  (filterOut_ui && item !== '_ui')) : [];
+  getObjectKeys(obj): string[] {
+    return (obj) ? Object.keys(obj) : [];
   }
 
   stringify(obj): string {

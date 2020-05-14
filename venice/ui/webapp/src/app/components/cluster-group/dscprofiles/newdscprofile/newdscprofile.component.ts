@@ -7,10 +7,11 @@ import { CreationForm } from '@app/components/shared/tableviewedit/tableviewedit
 import { ControllerService } from '@app/services/controller.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
-import { ClusterDSCProfile, ClusterDSCProfileSpec, IClusterDSCProfile, IClusterFeature } from '@sdk/v1/models/generated/cluster';
+import { ClusterDSCProfile, ClusterDSCProfileSpec, IClusterDSCProfile, ClusterDSCProfileSpec_deployment_target, ClusterDSCProfileSpec_feature_set } from '@sdk/v1/models/generated/cluster';
 import { SelectItem } from 'primeng/primeng';
 import { PropInfoItem } from '@sdk/v1/models/generated/basemodel/base-model';
 import { DSCProfileUtil, DSCProfileUIModel } from '../dscprofileUtil';
+
 
 
 @Component({
@@ -23,6 +24,8 @@ import { DSCProfileUtil, DSCProfileUIModel } from '../dscprofileUtil';
 export class NewdscprofileComponent extends CreationForm<IClusterDSCProfile, ClusterDSCProfile> implements OnInit, AfterViewInit, OnDestroy {
   @Input() existingObjects: ClusterDSCProfile[] = [];
 
+  selectedFwdMode: SelectItem;
+  selectedPolicyMode: SelectItem;
   validationErrorMessage: string;
 
   constructor(protected _controllerService: ControllerService,
@@ -32,20 +35,13 @@ export class NewdscprofileComponent extends CreationForm<IClusterDSCProfile, Clu
     super(_controllerService, uiconfigsService, ClusterDSCProfile);
   }
 
-  // TODO: add descriptions
-  depolymentTargetOptions: SelectItem[] = [
-    { label: 'Host', value: 'host'},
-    { label: 'Virtualized', value: 'virtualized'},
-  ];
+  depolymentTargetOptions: SelectItem[] = Utility.convertEnumToSelectItem(ClusterDSCProfileSpec_deployment_target);
 
-  hostFeatureSets: SelectItem[] = [
-    { label: 'SmartNIC', value: {InterVMServices: false,  FlowAware : false, Firewall: false, description: ''}},
-    { label: 'Flow Aware', value: {InterVMServices: false,  FlowAware : true, Firewall: false, description: ''}},
-  ];
+  featureSets: SelectItem[] = Utility.convertEnumToSelectItem(ClusterDSCProfileSpec_feature_set);
 
-  virtualizedFeatureSets: SelectItem[] = [
-    { label: 'Flow Aware with Firewall', value: {InterVMServices: true,  FlowAware : true, Firewall: true, description: ''}}
-  ];
+  hostFeatureSets: SelectItem[] = this.featureSets.slice(0, 2);
+
+  virtualizedFeatureSets: SelectItem[] = this.featureSets.slice(2);
 
   // NEW 5/8/2020
   selectedDeploymentTarget: SelectItem;
@@ -64,16 +60,11 @@ export class NewdscprofileComponent extends CreationForm<IClusterDSCProfile, Clu
   }
 
   postNgInit(): void {
-    if (!this.isInline) {
-      // default is with SmartNIC
-      const keys = this.getObjectKeys(this.newObject.spec['feature-set']);
-      keys.forEach(key => this.newObject.$formGroup.get(['spec', 'feature-set', key]).setValue(false) );
-    } else {
+    if (this.isInline) {
       const dscProfile: ClusterDSCProfile = this.newObject.getFormGroupValues();
-      const dscProfileUI = DSCProfileUtil.convertUIModel(dscProfile);
-      if (dscProfileUI.deploymentTarget === DSCProfileUtil.DTARGET_HOST) {
+      if (dscProfile.spec['deployment-target'] === DSCProfileUtil.DTARGET_HOST) {
         this.selectedDeploymentTarget = this.depolymentTargetOptions[0];
-        if (dscProfileUI.featureSet === DSCProfileUtil.FSET_SMARTNIC) {
+        if (dscProfile.spec['feature-set'] === DSCProfileUtil.FSET_SMARTNIC) {
           this.selectedFeatureSet = this.hostFeatureSets[0];
         } else {
           this.selectedFeatureSet = this.hostFeatureSets[1];
@@ -84,7 +75,6 @@ export class NewdscprofileComponent extends CreationForm<IClusterDSCProfile, Clu
       }
     }
   }
-
 
   setCustomValidation() {
     this.newObject.$formGroup.get(['meta', 'name']).setValidators([
@@ -143,12 +133,8 @@ export class NewdscprofileComponent extends CreationForm<IClusterDSCProfile, Clu
    */
   getObjectValues(): IClusterDSCProfile {
     const dscProfile: ClusterDSCProfile = this.newObject.getFormGroupValues();
-    if (this.selectedFeatureSet) {
-      const keys = this.getObjectKeys(dscProfile.spec['feature-set']) ;
-      keys.forEach(key => {
-        dscProfile.spec['feature-set'][key] = this.selectedFeatureSet.value[key];
-      });
-    }
+    dscProfile.spec['deployment-target'] = this.selectedDeploymentTarget.value;
+    dscProfile.spec['feature-set'] = this.selectedFeatureSet.value;
     return dscProfile;
   }
 
@@ -181,6 +167,7 @@ export class NewdscprofileComponent extends CreationForm<IClusterDSCProfile, Clu
       this.validationErrorMessage = 'Error: Please select a Feature Set';
       return false;
     }
+
     return true;
   }
 

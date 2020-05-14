@@ -241,11 +241,8 @@ func createTenant(t *testing.T, stateMgr *Statemgr, tenant string) error {
 			Tenant:    "",
 		},
 		Spec: cluster.DSCProfileSpec{
-			Features: cluster.FeatureSet{
-				InterVMServices: true,
-				Firewall:        true,
-				FlowAware:       true,
-			},
+			DeploymentTarget: "VIRTUALIZED",
+			FeatureSet:       "FLOWAWARE_FIREWALL",
 		},
 	}
 
@@ -2984,11 +2981,8 @@ func TestDSCProfileCreateUpdateDelete(t *testing.T) {
 			Name: "testDSCProfile",
 		},
 		Spec: cluster.DSCProfileSpec{
-			Features: cluster.FeatureSet{
-				InterVMServices: false,
-				Firewall:        false,
-				FlowAware:       false,
-			},
+			DeploymentTarget: "HOST",
+			FeatureSet:       "SMARTNIC",
 		},
 	}
 
@@ -3006,7 +3000,7 @@ func TestDSCProfileCreateUpdateDelete(t *testing.T) {
 	}, "Did not find DSCProfile", "1ms", "2s")
 
 	// change update
-	dscprof.Spec.Features.FlowAware = true
+	dscprof.Spec.FeatureSet = cluster.DSCProfileSpec_FLOWAWARE.String()
 	err = stateMgr.ctrler.DSCProfile().Update(&dscprof)
 	AssertOk(t, err, "Update the DSCProfile")
 
@@ -3014,7 +3008,7 @@ func TestDSCProfileCreateUpdateDelete(t *testing.T) {
 	AssertEventually(t, func() (bool, interface{}) {
 		obj, err := stateMgr.FindDSCProfile("", "testDSCProfile")
 		if err == nil {
-			if obj.DSCProfile.DSCProfile.Spec.Features.FlowAware == true {
+			if obj.DSCProfile.DSCProfile.Spec.FeatureSet == cluster.DSCProfileSpec_FLOWAWARE.String() {
 				return true, nil
 			}
 		}
@@ -3092,11 +3086,8 @@ func TestSmartNicCreateDelete(t *testing.T) {
 			Name: "testDSCProfile",
 		},
 		Spec: cluster.DSCProfileSpec{
-			Features: cluster.FeatureSet{
-				InterVMServices: false,
-				Firewall:        false,
-				FlowAware:       false,
-			},
+			DeploymentTarget: "HOST",
+			FeatureSet:       "SMARTNIC",
 		},
 	}
 

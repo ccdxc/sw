@@ -2279,28 +2279,16 @@
             "type": "string"
           },
           {
-            "name": "feature-set.InterVMServices",
-            "description": "ui-hint: InterVMServices.",
+            "name": "spec.deployment-target",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "string"
           },
           {
-            "name": "feature-set.FlowAware",
-            "description": "ui-hint: FlowAware.",
+            "name": "spec.feature-set",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
-          },
-          {
-            "name": "feature-set.Firewall",
-            "description": "ui-hint: Firewall.",
-            "in": "query",
-            "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "string"
           },
           {
             "name": "propagation-status.generation-id",
@@ -7295,9 +7283,36 @@
     },
     "clusterDSCProfileSpec": {
       "type": "object",
+      "required": [
+        "deployment-target",
+        "feature-set"
+      ],
       "properties": {
+        "deployment-target": {
+          "type": "string",
+          "enum": [
+            "host",
+            "virtualized"
+          ],
+          "default": "host",
+          "x-ui-hints": {
+            "host": "Host",
+            "virtualized": "Virtualized"
+          }
+        },
         "feature-set": {
-          "$ref": "#/definitions/clusterFeatureSet"
+          "type": "string",
+          "enum": [
+            "smartnic",
+            "flowaware",
+            "flowaware_firewall"
+          ],
+          "default": "smartnic",
+          "x-ui-hints": {
+            "flowaware": "FlowAware",
+            "flowaware_firewall": "FlowAware with Firewall",
+            "smartnic": "SmartNIC"
+          }
         }
       },
       "description": "ProfileSpec - Spec applicable to DSC."
@@ -7572,26 +7587,6 @@
         }
       },
       "description": "Feature represents each individual feature on the system."
-    },
-    "clusterFeatureSet": {
-      "type": "object",
-      "properties": {
-        "InterVMServices": {
-          "type": "boolean",
-          "format": "boolean",
-          "description": "ui-hint: InterVMServices."
-        },
-        "FlowAware": {
-          "type": "boolean",
-          "format": "boolean",
-          "description": "ui-hint: FlowAware."
-        },
-        "Firewall": {
-          "type": "boolean",
-          "format": "boolean",
-          "description": "ui-hint: Firewall."
-        }
-      }
     },
     "clusterFeatureStatus": {
       "type": "object",

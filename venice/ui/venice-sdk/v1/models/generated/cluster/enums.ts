@@ -44,6 +44,17 @@ export enum ClusterDSCCondition_status {
     'false' = "false",
 }
 
+export enum ClusterDSCProfileSpec_deployment_target {
+    'host' = "host",
+    'virtualized' = "virtualized",
+}
+
+export enum ClusterDSCProfileSpec_feature_set {
+    'smartnic' = "smartnic",
+    'flowaware' = "flowaware",
+    'flowaware_firewall' = "flowaware_firewall",
+}
+
 export enum ClusterDistributedServiceCardSpec_mgmt_mode {
     'host' = "host",
     'network' = "network",
@@ -143,6 +154,17 @@ export enum ClusterDSCCondition_status_uihint {
     'unknown' = "Unknown",
 }
 
+export enum ClusterDSCProfileSpec_deployment_target_uihint {
+    'host' = "Host",
+    'virtualized' = "Virtualized",
+}
+
+export enum ClusterDSCProfileSpec_feature_set_uihint {
+    'flowaware' = "FlowAware",
+    'flowaware_firewall' = "FlowAware with Firewall",
+    'smartnic' = "SmartNIC",
+}
+
 export enum ClusterDistributedServiceCardSpec_mgmt_mode_uihint {
     'host' = "Host",
     'network' = "Network",
@@ -227,6 +249,8 @@ export class AllEnums {
     ClusterClusterCondition_status = ClusterClusterCondition_status;
     ClusterDSCCondition_type = ClusterDSCCondition_type;
     ClusterDSCCondition_status = ClusterDSCCondition_status;
+    ClusterDSCProfileSpec_deployment_target = ClusterDSCProfileSpec_deployment_target;
+    ClusterDSCProfileSpec_feature_set = ClusterDSCProfileSpec_feature_set;
     ClusterDistributedServiceCardSpec_mgmt_mode = ClusterDistributedServiceCardSpec_mgmt_mode;
     ClusterDistributedServiceCardSpec_network_mode = ClusterDistributedServiceCardSpec_network_mode;
     ClusterDistributedServiceCardStatus_admission_phase = ClusterDistributedServiceCardStatus_admission_phase;
@@ -244,6 +268,8 @@ export class AllEnums {
     ClusterClusterCondition_status_uihint = ClusterClusterCondition_status_uihint;
     ClusterDSCCondition_type_uihint = ClusterDSCCondition_type_uihint;
     ClusterDSCCondition_status_uihint = ClusterDSCCondition_status_uihint;
+    ClusterDSCProfileSpec_deployment_target_uihint = ClusterDSCProfileSpec_deployment_target_uihint;
+    ClusterDSCProfileSpec_feature_set_uihint = ClusterDSCProfileSpec_feature_set_uihint;
     ClusterDistributedServiceCardSpec_mgmt_mode_uihint = ClusterDistributedServiceCardSpec_mgmt_mode_uihint;
     ClusterDistributedServiceCardSpec_network_mode_uihint = ClusterDistributedServiceCardSpec_network_mode_uihint;
     ClusterDistributedServiceCardStatus_admission_phase_uihint = ClusterDistributedServiceCardStatus_admission_phase_uihint;

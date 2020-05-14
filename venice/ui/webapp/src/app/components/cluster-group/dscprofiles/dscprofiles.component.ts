@@ -8,7 +8,7 @@ import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
-import { ClusterDSCProfile, IApiStatus, IClusterDSCProfile, ClusterDistributedServiceCard, ClusterDistributedServiceCardStatus_admission_phase } from '@sdk/v1/models/generated/cluster';
+import { ClusterDSCProfile, IApiStatus, IClusterDSCProfile, ClusterDistributedServiceCard } from '@sdk/v1/models/generated/cluster';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 import { Observable } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
@@ -85,9 +85,6 @@ export class DscprofilesComponent extends TablevieweditAbstract<IClusterDSCProfi
     { field: 'meta.name', header: 'Name', class: 'dscprofiles-column-dscprofile-name', sortable: true, width: 15 },
     { field: 'DSCs', header: 'DSCs', class: 'dscprofiles-column-dscs', sortable: false, width: 30 },
     { field: 'utilization', header: 'Utilization', class: 'dscprofiles-column-utilization', sortable: false, width: 10 },
-    // comment these two columns out for now 2020-05-01
-    // { field: 'spec.feature-set', header: 'Feature Set', class: 'dscprofiles-column-feature-set', sortable: true, width: 20 },
-    // { field: 'status.propagation-status.updated', header: 'Update DSC', class: 'dscprofiles-column-status-updated', sortable: true, width: 5 },
     { field: 'deploymentTarget', header: 'Deployment Target', class: 'dscprofiles-column-feature-set', sortable: true, width: 20 },
     { field: 'featureSet', header: 'Feature Set', class: 'dscprofiles-column-feature-set', sortable: true, width: 20 },
     { field: 'Propagation', header: 'Propagation Status', class: 'dscprofiles-column-propagation-status', sortable: true, width: 20 },
@@ -95,7 +92,6 @@ export class DscprofilesComponent extends TablevieweditAbstract<IClusterDSCProfi
     { field: 'meta.mod-time', header: 'Modification Time', class: 'dscprofiles-column-date', sortable: true, width: '180px' },
     { field: 'meta.creation-time', header: 'Creation Time', class: 'dscprofiles-column-date', sortable: true, width: '180px' },
   ];
-
 
   macToNameMap: { [key: string]: string } = {};
   viewPendingNaples: boolean;
@@ -164,9 +160,6 @@ export class DscprofilesComponent extends TablevieweditAbstract<IClusterDSCProfi
         }
         this.dataObjects  = response.data;
         this.handleDataReady(); // process DSCProfile. Note: At this this moment, this.selectedObj may not be available
-        if (this.selectedDSCProfile) {
-          this.selectedDSCProfile = null;  // clear out detail panel
-        }
       },
       this._controllerService.webSocketErrorHandler('Failed to get DSC Profile')
     );
@@ -198,7 +191,6 @@ export class DscprofilesComponent extends TablevieweditAbstract<IClusterDSCProfi
         this.processOneDSCProfile(dscProfile);
       }
       this.updateSelectedDSCProfile();
-      this.dataObjects = Utility.getLodash().cloneDeep(this.dataObjects);
     }
   }
 
@@ -209,7 +201,7 @@ export class DscprofilesComponent extends TablevieweditAbstract<IClusterDSCProfi
     const dscsnames = [];
     for (let j = 0; j < this.naplesList.length; j++) {
       const dsc: ClusterDistributedServiceCard = this.naplesList[j];
-      if (dscProfile.meta.name === dsc.spec.dscprofile && dsc.status['admission-phase'] === ClusterDistributedServiceCardStatus_admission_phase.admitted) {
+      if (dscProfile.meta.name === dsc.spec.dscprofile) {
         dscsnames.push(dsc);
       }
     }
@@ -237,13 +229,13 @@ export class DscprofilesComponent extends TablevieweditAbstract<IClusterDSCProfi
   }
 
   getDeploymentTarget(dscProfile: ClusterDSCProfile): string {
-    const dscProfileUI = DSCProfileUtil.convertUIModel(dscProfile);
-    return dscProfileUI.deploymentTarget;
+    // const dscProfileUI = DSCProfileUtil.convertUIModel(dscProfile);
+    return dscProfile.spec['deployment-target'];
   }
 
   getFeatureSet(dscProfile: ClusterDSCProfile): string {
-    const dscProfileUI = DSCProfileUtil.convertUIModel(dscProfile);
-    return dscProfileUI.featureSet;
+    // const dscProfileUI = DSCProfileUtil.convertUIModel(dscProfile);
+    return dscProfile.spec['feature-set'];
   }
 
   // TODO: Feature set data. Wait for backend
@@ -280,15 +272,10 @@ export class DscprofilesComponent extends TablevieweditAbstract<IClusterDSCProfi
   deleteRecord(object: ClusterDSCProfile): Observable<{ body: IClusterDSCProfile | IApiStatus | Error, statusCode: number; }> {
     return this.clusterService.DeleteDSCProfile(object.meta.name);
   }
-
   generateDeleteConfirmMsg(object: ClusterDSCProfile): string {
     return 'Are you sure you want to delete DSC Profile ' + object.meta.name;
   }
-
   generateDeleteSuccessMsg(object: ClusterDSCProfile): string {
-    if ( this.selectedDSCProfile  &&  this.selectedDSCProfile.meta.name === object.meta.name ) {
-      this.selectedDSCProfile = null;
-    }
     return 'Deleted DSC Profile ' + object.meta.name;
   }
 
@@ -355,20 +342,10 @@ export class DscprofilesComponent extends TablevieweditAbstract<IClusterDSCProfi
   }
 
   selectDSCProfile(event) {
-    const $ = Utility.getJQuery();
     if (this.selectedDSCProfile && event.rowData === this.selectedDSCProfile) {
       this.selectedDSCProfile = null;
-      if (event.event && event.event.currentTarget) {
-        $(event.event.currentTarget).removeClass('dscprofiles-selected-row ');
-        }
     } else {
       this.selectedDSCProfile = event.rowData;
-      if (event.event && event.event.currentTarget) {
-      if ($('.dscprofiles-selected-row')) {
-        $('.dscprofiles-selected-row').removeClass('dscprofiles-selected-row ');
-      }
-      $(event.event.currentTarget).addClass('dscprofiles-selected-row');
-      }
     }
   }
 

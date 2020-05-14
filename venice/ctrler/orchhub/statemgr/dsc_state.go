@@ -179,7 +179,11 @@ func (dscState *DistributedServiceCardState) isOrchestratorCompatible() bool {
 		return false
 	}
 
-	return dscProfileState.DSCProfile.Spec.Features.InterVMServices
+	if dscProfileState.DSCProfile.Spec.DeploymentTarget != cluster.DSCProfileSpec_VIRTUALIZED.String() || dscProfileState.DSCProfile.Spec.FeatureSet != cluster.DSCProfileSpec_FLOWAWARE_FIREWALL.String() {
+		return false
+	}
+
+	return true
 }
 
 // FindDSC Get DSC State by ID

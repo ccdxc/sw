@@ -80,9 +80,8 @@ var _ = BeforeSuite(func() {
 		insertionFWProfile := &cluster.DSCProfile{}
 		insertionFWProfile.Defaults("all")
 		insertionFWProfile.Name = insertionFWProfileName
-		insertionFWProfile.Spec.Features.InterVMServices = true
-		insertionFWProfile.Spec.Features.FlowAware = true
-		insertionFWProfile.Spec.Features.Firewall = true
+		insertionFWProfile.Spec.DeploymentTarget = cluster.DSCProfileSpec_VIRTUALIZED.String()
+		insertionFWProfile.Spec.FeatureSet = cluster.DSCProfileSpec_FLOWAWARE_FIREWALL.String()
 		Eventually(func() bool {
 			ctx, cancel := context.WithTimeout(ts.loggedInCtx, 10*time.Second)
 			_, err := ts.restSvc.ClusterV1().DSCProfile().Create(ctx, insertionFWProfile)

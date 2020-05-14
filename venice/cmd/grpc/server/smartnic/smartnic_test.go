@@ -1974,11 +1974,8 @@ func testSetup() {
 			Name: globals.DefaultDSCProfile,
 		},
 		Spec: cmd.DSCProfileSpec{
-			Features: cmd.FeatureSet{
-				InterVMServices: true,
-				Firewall:        true,
-				FlowAware:       true,
-			},
+			DeploymentTarget: "HOST",
+			FeatureSet:       "SMARTNIC",
 		},
 	}
 
