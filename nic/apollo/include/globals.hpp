@@ -13,9 +13,6 @@
 #define __INCLUDE_GLOBALS_HPP__
 
 #include "nic/sdk/include/sdk/globals.hpp"
-
-namespace {
-
 /// grpc port for pds agent
 #define PDS_GRPC_PORT_API                 11357
 /// grpc port for upgrade manager
@@ -61,7 +58,5 @@ typedef enum pds_ipc_event_id_s {
     PDS_IPC_EVENT_ID_VPP_MIN = PDS_IPC_EVENT_ID_HAL_MAX + 1,
     PDS_IPC_EVENT_ID_VPP_MAX = PDS_IPC_EVENT_ID_VPP_MIN + 3,
 } pds_ipc_event_id_t;
-
-}    // namespace
 
 #endif    // __INCLUDE_GLOBALS_HPP__

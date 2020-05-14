@@ -13,11 +13,20 @@
 #include "nic/apollo/core/msg.h"
 #include "nic/apollo/api/core/msg.h"
 
+#define foreach_config_data_element                 \
+        _(DEVICE, device)                           \
+        _(VPC, vpc)                                 \
+        _(VNIC, vnic)                               \
+        _(SUBNET, subnet)                           \
+        _(DHCP_POLICY, dhcp_policy)                 \
+        _(NAT_PORT_BLOCK, nat_port_block)           \
+        _(SECURITY_PROFILE, security_profile)       \
+
 // callback function prototype
 typedef sdk::sdk_ret_t (*pds_cfg_set_cb)(const pds_cfg_msg_t *msg);
 typedef sdk::sdk_ret_t (*pds_cfg_del_cb)(const pds_cfg_msg_t *msg);
 typedef sdk::sdk_ret_t (*pds_cfg_act_cb)(const pds_cfg_msg_t *msg);
-typedef sdk::sdk_ret_t (*pds_cfg_get_cb)(pds_cfg_msg_t *msg);
+typedef sdk::sdk_ret_t (*pds_cfg_get_cb)(void *info);
 typedef sdk::sdk_ret_t (*pds_cfg_dump_cb) ();
 typedef void (*pds_cfg_walk_cb)(pds_cfg_msg_t *msg, void *cb_msg);
 typedef void (*pds_cfg_notify_cb)(const pds_cfg_msg_t *msg, bool del);
@@ -59,14 +68,14 @@ typedef struct {
 // this is the authoritative copy, and plugins are notified (through
 // registered callbacks) when this config changes
 class vpp_config_data {
-    // containers are ordered map, instance to cfg msg
-    std::unordered_map<pds_obj_key_t, pds_device_cfg_msg_t, pds_obj_key_hash> device;
-    std::unordered_map<pds_obj_key_t, pds_vpc_cfg_msg_t, pds_obj_key_hash> vpc;
-    std::unordered_map<pds_obj_key_t, pds_vnic_cfg_msg_t, pds_obj_key_hash> vnic;
-    std::unordered_map<pds_obj_key_t, pds_subnet_cfg_msg_t, pds_obj_key_hash> subnet;
-    std::unordered_map<pds_obj_key_t, pds_dhcp_policy_cfg_msg_t, pds_obj_key_hash> dhcp_policy;
-    std::unordered_map<pds_obj_key_t, pds_nat_port_block_cfg_msg_t, pds_obj_key_hash> nat_port_block;
-    std::unordered_map<pds_obj_key_t, pds_security_profile_cfg_msg_t, pds_obj_key_hash> security_profile;
+    // containers are unordered map, instance to cfg msg
+#define _(o, d)     \
+    std::unordered_map<pds_obj_key_t, pds_##d##_cfg_msg_t, pds_obj_key_hash> d;
+
+    foreach_config_data_element
+
+#undef _
+
     static vpp_config_data singleton;
 
 public:
@@ -75,15 +84,17 @@ public:
 
     // constant operations
     int size(obj_id_t obj_id) const;
+    int objsize(obj_id_t obj_id) const;
     bool exists(pds_cfg_msg_t const& cfg_msg) const;
+    bool exists(obj_id_t obj_id, pds_obj_key_t const& key) const;
     bool get(pds_cfg_msg_t &value) const;
-    void walk(pds_cfg_msg_t &cfg_msg, pds_cfg_walk_cb cb, void *cb_msg) const;
+    bool get(pds_obj_key_t const& key, pds_cfg_get_rsp_t &reply) const;
+    void walk(obj_id_t obj_id, pds_cfg_walk_cb cb, void *cb_msg) const;
 
     // modifiers
     void set(pds_cfg_msg_t const& cfg_msg);
     void unset(obj_id_t obj_id, pds_cfg_msg_t const& cfg_msg);
 };
-
 
 // list of operations in a single msglist received from
 // HAL. each instance in the msglist has a batch_op_t entry in here, which is
@@ -125,8 +136,9 @@ public:
 public:
     sdk::sdk_ret_t create(const pds_msg_list_t *msglist);
     sdk::sdk_ret_t commit(void);
-    sdk::sdk_ret_t read(pds_cfg_msg_t &msg);
     sdk::sdk_ret_t dump(obj_id_t obj_id);
+    sdk::sdk_ret_t read(obj_id_t id, void *info);
+    sdk::sdk_ret_t read(pds_cfg_get_rsp_t &response);
     void clear(void);
 };
 

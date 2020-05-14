@@ -45,6 +45,6 @@ def ExecutePdsctlShowCommand(node, cmd, args=None, yaml=True, print_op=True):
 
 def GetObjects(node, objtype):
     # get object name
-    objName = objtype.name.lower()
+    objName = objtype.name.lower().replace("_", "-")
     return ExecutePdsctlShowCommand(node, objName)
 

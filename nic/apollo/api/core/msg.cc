@@ -51,18 +51,4 @@ pds_msg (pds_msg_list_t *msg_list, uint32_t idx)
     return &msg_list->msgs[idx];
 }
 
-/// \brief handle command msg reply from VPP
-void
-pds_cmd_response_handler_cb (sdk::ipc::ipc_msg_ptr msg, const void *ret)
-{
-    pds_cmd_reply_msg_t *response = (pds_cmd_reply_msg_t *)ret;
-
-    if (msg->length() != sizeof(pds_cmd_reply_msg_t)) {
-        response->status = sdk::SDK_RET_INVALID_ARG;
-        return;
-    }
-    memcpy(response, msg->data(), msg->length());
-}
-
-
 }    // namespace core

@@ -21,43 +21,26 @@ extern "C" {
 /// message types
 typedef enum pds_msg_type_s {
     PDS_MSG_TYPE_NONE = (SDK_IPC_MSG_ID_MAX + 1),
-    PDS_MSG_TYPE_CFG,                                   ///< config type message
-    PDS_MSG_TYPE_CMD,                                   ///< any CLI commands
-    PDS_MSG_TYPE_EVENT,                                 ///< event type message
+    PDS_MSG_TYPE_CFG_OBJ_SET,                     ///< config create/update msg
+    PDS_MSG_TYPE_CFG_OBJ_GET,                     ///< config read message
+    PDS_MSG_TYPE_CFG_OBJ_GET_ALL,                 ///< config read all message
+    PDS_MSG_TYPE_CMD,                             ///< miscellaneous cmd msgs
+    PDS_MSG_TYPE_EVENT,                           ///< event type message
 
     PDS_MSG_TYPE_MAX
 } pds_msg_type_t;
 
-/// unique message identifiers
-typedef enum pds_msg_id_s {
-    PDS_MSG_ID_NONE,
-    PDS_MSG_ID_MIN = PDS_MSG_ID_NONE,
-
-    /// config/policy message identifiers
-    PDS_CFG_MSG_ID_NONE,
-    /// any device/global configuration
-    PDS_CFG_MSG_ID_DEVICE,
-    /// vpc related configuration
-    PDS_CFG_MSG_ID_VPC,
-    /// vnic related configuration
-    PDS_CFG_MSG_ID_VNIC,
-    /// subnet related configuration
-    PDS_CFG_MSG_ID_SUBNET,
-    /// NAT port block configuration
-    PDS_CFG_MSG_ID_NAT_PORT_BLOCK,
-    /// DHCP (suppresion) policy configuration
-    PDS_CFG_MSG_ID_DHCP_POLICY,
-    /// security profile configuration
-    PDS_CFG_MSG_ID_SECURITY_PROFILE,
-
+/// unique cmd message identifiers
+typedef enum pds_cmd_msg_id_s {
     // TODO: should we punt event/alerts to shm directly
     PDS_CMD_MSG_ID_NONE,
+    PDS_CMD_MSG_ID_MIN = PDS_CMD_MSG_ID_NONE,
+    // clear flows matching key
     PDS_CMD_MSG_FLOW_CLEAR,
-    /// NAT port block configuration get
-    PDS_CMD_MSG_ID_NAT_PORT_BLOCK_GET,
+    /// get statistics of specified VNIC
     PDS_CMD_MSG_VNIC_STATS_GET,
     PDS_MSG_ID_MAX,
-} pds_msg_id_t;
+} pds_cmd_msg_id_t;
 
 #ifdef __cplusplus
 }

@@ -1079,11 +1079,9 @@ pds_svc_security_profile_get (const pds::SecurityProfileGetRequest *proto_req,
         return SDK_RET_INVALID_ARG;
     }
 
-    // Expected response is a singleton
+    // expected response is a singleton
     ret = pds_security_profile_read(pds_security_profile_api_info_to_proto,
                                     proto_rsp);
-
-    PDS_TRACE_ERR("SecurityProfileGET IPC not implemented on VPP side");
     proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     return ret;
 }

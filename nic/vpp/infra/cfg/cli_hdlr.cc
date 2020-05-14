@@ -226,14 +226,12 @@ dhcp_relay_cfg_entry_dump (pds_cfg_msg_t *msg, void *buf)
 int
 dhcp_cfg_db_dump_hdlr (void *buf, uint8_t proxy)
 {
-    pds_cfg_msg_t cfg_msg;
     vpp_config_data &config = vpp_config_data::get();;
 
-    cfg_msg.obj_id = OBJ_ID_DHCP_POLICY;
     if (proxy) {
-        config.walk(cfg_msg, &dhcp_proxy_cfg_entry_dump, buf);
+        config.walk(OBJ_ID_DHCP_POLICY, &dhcp_proxy_cfg_entry_dump, buf);
     } else {
-        config.walk(cfg_msg, &dhcp_relay_cfg_entry_dump, buf);
+        config.walk(OBJ_ID_DHCP_POLICY, &dhcp_relay_cfg_entry_dump, buf);
     }
     return 0;
 }
@@ -279,10 +277,8 @@ security_profile_cfg_entry_dump (pds_cfg_msg_t *msg, void *buf)
 int                                                            \
 obj##_cfg_db_dump_hdlr (void *buf)                             \
 {                                                              \
-    pds_cfg_msg_t cfg_msg;                                     \
     vpp_config_data &config = vpp_config_data::get();;         \
-    cfg_msg.obj_id = OBJ_ID_##OBJ;                             \
-    config.walk(cfg_msg, &obj##_cfg_entry_dump, (void *)buf);  \
+    config.walk(OBJ_ID_##OBJ, &obj##_cfg_entry_dump, (void *)buf);  \
                                                                \
     return 0;                                                  \
 }                                                              \

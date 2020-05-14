@@ -20,6 +20,8 @@
 #include "nic/apollo/api/vpc.hpp"
 #include "nic/apollo/api/subnet.hpp"
 #include "nic/apollo/api/vnic.hpp"
+#include "nic/apollo/api/utils.hpp"
+#include "nic/apollo/api/internal/ipc.hpp"
 #include "nic/apollo/api/impl/apulu/apulu_impl.hpp"
 #include "nic/apollo/api/impl/apulu/pds_impl_state.hpp"
 #include "nic/apollo/api/impl/apulu/route_impl.hpp"
@@ -1302,14 +1304,14 @@ vnic_impl::fill_status_(pds_vnic_status_t *status) {
 /// \brief retrieve vnic statistics summary from VPP
 sdk_ret_t
 vnic_impl::fill_vpp_stats_(pds_vnic_stats_t *stats) {
-    pds_msg_t request;
-    pds_cmd_reply_msg_t response;
+    pds_cmd_msg_t request;
+    pds_cmd_rsp_t response;
 
     // send a msg to VPP to retrieve VNIC stats
     request.id = PDS_CMD_MSG_VNIC_STATS_GET;
-    request.cmd_msg.vnic_stats_get.vnic_hw_id = hw_id_;
+    request.vnic_stats_get.vnic_hw_id = hw_id_;
     sdk::ipc::request(PDS_IPC_ID_VPP, PDS_MSG_TYPE_CMD, &request,
-                      sizeof(pds_msg_t), core::pds_cmd_response_handler_cb,
+                      sizeof(request), pds_cmd_response_handler_cb,
                       &response);
     if (response.status == sdk::SDK_RET_OK) {
         stats->active_sessions = response.vnic_stats.active_sessions;

@@ -187,7 +187,6 @@ vnic_entry::init_config(api_ctxt_t *api_ctxt) {
 
 sdk_ret_t
 vnic_entry::populate_msg(pds_msg_t *msg, api_obj_ctxt_t *obj_ctxt) {
-    msg->id = PDS_CFG_MSG_ID_VNIC;
     msg->cfg_msg.op = obj_ctxt->api_op;
     msg->cfg_msg.obj_id = OBJ_ID_VNIC;
     if (obj_ctxt->api_op == API_OP_DELETE) {

@@ -58,6 +58,11 @@ dhcp_state::find(pds_obj_key_t *key) const {
 }
 
 sdk_ret_t
+dhcp_state::walk(state_walk_cb_t walk_cb, void *ctxt) {
+    return dhcp_policy_ht_->walk(walk_cb, ctxt);
+}
+
+sdk_ret_t
 dhcp_state::slab_walk(state_walk_cb_t walk_cb, void *ctxt) {
     walk_cb(dhcp_policy_slab_, ctxt);
     return SDK_RET_OK;

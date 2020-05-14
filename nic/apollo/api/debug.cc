@@ -304,17 +304,16 @@ sdk_ret_t
 pds_flow_clear (pds_flow_key_t key)
 {
     sdk_ret_t ret;
-    pds_msg_t request;
+    pds_cmd_msg_t request;
 
     // send an IPC msg to VPP
     request.id = PDS_CMD_MSG_FLOW_CLEAR;
-    memset(&request.cmd_msg.flow_clear, 0, sizeof(pds_flow_clear_cmd_msg_t));
-    request.cmd_msg.flow_clear.key = key;
+    memset(&request.flow_clear, 0, sizeof(pds_flow_clear_cmd_msg_t));
+    request.flow_clear.key = key;
 
     // send a msg to VPP to clear flows
     sdk::ipc::request(PDS_IPC_ID_VPP, PDS_MSG_TYPE_CMD, &request,
-                      sizeof(pds_msg_t), flow_clear_resp_cb,
-                      &ret);
+                      sizeof(request), flow_clear_resp_cb, &ret);
 
     return ret;
 }

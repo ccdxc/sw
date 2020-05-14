@@ -54,6 +54,13 @@ public:
     /// \return     pointer to the DHCP policy entry found or NULL
     dhcp_policy *find(pds_obj_key_t *key) const;
 
+    /// \brief API to walk all the db elements
+    /// \param[in] walk_cb    callback to be invoked for every node
+    /// \param[in] ctxt       opaque context passed back to the callback
+    /// \return   SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t walk(state_walk_cb_t walk_cb, void *ctxt) override;
+
+    /// \brief API to walk all the slabs
     /// \brief API to walk all the slabs
     /// \param[in] walk_cb    callback to be invoked for every slab
     /// \param[in] ctxt       opaque context passed back to the callback

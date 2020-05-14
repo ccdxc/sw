@@ -123,7 +123,6 @@ device_entry::compute_update(api_obj_ctxt_t *obj_ctxt) {
 
 sdk_ret_t
 device_entry::populate_msg(pds_msg_t *msg, api_obj_ctxt_t *obj_ctxt) {
-    msg->id = PDS_CFG_MSG_ID_DEVICE;
     msg->cfg_msg.op = obj_ctxt->api_op;
     msg->cfg_msg.obj_id = OBJ_ID_DEVICE;
     if (obj_ctxt->api_op == API_OP_DELETE) {

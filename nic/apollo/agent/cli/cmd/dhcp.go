@@ -116,7 +116,7 @@ func dhcpRelayShowCmdHandler(cmd *cobra.Command, args []string) {
 	} else {
 		printDHCPRelayHeader()
 		for _, resp := range respMsg.Response {
-			printDHCPRelay(resp)
+			printDHCPRelay(resp);
 		}
 		printDHCPRelaySummary(len(respMsg.Response))
 	}
@@ -231,34 +231,32 @@ func printDHCPRelaySummary(count int) {
 }
 
 func printDHCPRelayHeader() {
-	hdrline := strings.Repeat("-", 125)
+	hdrline := strings.Repeat("-", 120)
 	fmt.Println(hdrline)
-	fmt.Printf("%-40s%-40s%-45s\n", "ID", "VPC ID", "Agent IP")
+	fmt.Printf("%-40s%-40s%-20s%-20s\n", "ID", "VPC ID", "Server IP", "Agent IP")
 	fmt.Println(hdrline)
 }
 
-func printDHCPRelay(dhcp *pds.DHCPPolicy) {
+func printDHCPRelay(dhcp *pds.DHCPPolicy) bool {
 
 	if dhcp == nil {
-		fmt.Printf("-\n")
-		return
+		return false
 	}
 
 	spec := dhcp.GetSpec()
 	if spec == nil {
-		fmt.Printf("-\n")
-		return
+		return false
 	}
 
-	outStr := fmt.Sprintf("%-40s", "ID", uuid.FromBytesOrNil(spec.GetId()).String())
-
-	switch spec.GetRelayOrProxy().(type) {
-	case *pds.DHCPPolicySpec_RelaySpec:
-		relaySpec := spec.GetRelaySpec()
-		outStr += fmt.Sprintf("%-40s", uuid.FromBytesOrNil(relaySpec.GetVPCId()).String())
-		outStr += fmt.Sprintf("%-45s", utils.IPAddrToStr(relaySpec.GetAgentIP()))
-	default:
-		return
+	relaySpec := spec.GetRelaySpec()
+	if (relaySpec == nil) {
+		return false
 	}
-	fmt.Println(outStr)
+
+	fmt.Printf("%-40s%-40s%-20s%-20s\n",
+		uuid.FromBytesOrNil(spec.GetId()).String(),
+		uuid.FromBytesOrNil(relaySpec.GetVPCId()).String(),
+		utils.IPAddrToStr(relaySpec.GetServerIP()),
+		utils.IPAddrToStr(relaySpec.GetAgentIP()))
+	return true
 }

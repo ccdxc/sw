@@ -20,15 +20,8 @@ static std::map<int, const void *> g_cb_ctx;
 // message rx counters for debugging
 static unsigned int g_type_count[PDS_MSG_TYPE_MAX] = {0};
 
-typedef struct cmd_cbs_s {
-    pds_cmd_cb cmd_hdl_cb;
-    pds_cmd_cb ctxt_init_cb;
-    pds_cmd_cb ctxt_destroy_cb;
-} cmd_cbs_t;
-
-// List of callbacks registered for processing VPP commands received from PDS
-// agent
-static std::map<int, cmd_cbs_t> g_cmd_cbs;
+// callbacks registered for processing VPP commands received from PDS agent
+static std::map<int, pds_cmd_cb_t> g_cmd_cbs;
 
 // called from VPP main poll loop, whenere data is available on the zmq
 // IPC file descriptor. Calls the SDK IPC library to read messages and
@@ -99,8 +92,7 @@ pds_ipc_invalid_type_cb (sdk::ipc::ipc_msg_ptr ipc_msg, const void *ctx) {
 
 // register callbacks from plugins for command messages
 int
-pds_ipc_register_cmd_callbacks (pds_msg_id_t msg_id, pds_cmd_cb cmd_hdl_cb,
-                                pds_cmd_cb ctxt_init_cb, pds_cmd_cb ctxt_destroy_cb)
+pds_ipc_register_cmd_callbacks (pds_cmd_msg_id_t msg_id, pds_cmd_cb_t cmd_hdl_cb)
 {
     if (cmd_hdl_cb == NULL) {
         ipc_log_error("Registration request for msg id %d has invalid function"
@@ -108,9 +100,7 @@ pds_ipc_register_cmd_callbacks (pds_msg_id_t msg_id, pds_cmd_cb cmd_hdl_cb,
         return -1;
     }
 
-    g_cmd_cbs[msg_id].cmd_hdl_cb = cmd_hdl_cb;
-    g_cmd_cbs[msg_id].ctxt_init_cb = ctxt_init_cb;
-    g_cmd_cbs[msg_id].ctxt_destroy_cb = ctxt_destroy_cb;
+    g_cmd_cbs[msg_id] = cmd_hdl_cb;
 
     return 0;
 }
@@ -129,7 +119,7 @@ pds_ipc_msglist_cb (sdk::ipc::ipc_msg_ptr ipc_msg, const void *ctx) {
 
     msglist = (pds_msg_list_t *)ipc_msg->data();
 
-    g_type_count[PDS_MSG_TYPE_CFG]++;
+    g_type_count[PDS_MSG_TYPE_CFG_OBJ_SET]++;
     ipc_log_notice("Received msglist with %u message(s) [epoch:%u]",
                    msglist->num_msgs, msglist->epoch);
 
@@ -159,59 +149,26 @@ error:
     sdk::ipc::respond(ipc_msg, (const void *)&ret, sizeof(sdk::sdk_ret_t));
 }
 
-// function for IPC respond
-static void
-cb_ipc_respond (sdk::ipc::ipc_msg_ptr ipc_msg, pds_msg_id_t id,
-                pds_cmd_ctxt_t *ctxt, sdk::sdk_ret_t ret) {
-    pds_cmd_reply_msg_t reply;
-    switch (id) {
-    case PDS_CMD_MSG_ID_NAT_PORT_BLOCK_GET:
-        {
-            auto resp = ctxt->nat_ctxt;
-            sdk::ipc::respond(ipc_msg, (const void *)resp,
-                              sizeof(uint16_t) + (resp->num_entries *
-                              sizeof(pds_nat_port_block_cfg_msg_t)));
-        }
-        break;
-    case PDS_CMD_MSG_VNIC_STATS_GET:
-        reply.status = (uint32_t )ret;
-        if (ret == sdk::SDK_RET_OK) {
-            // got active sessions, send back uint64
-            auto resp = ctxt->vnic_stats;
-            memcpy(&reply.vnic_stats, resp, sizeof(pds_vnic_stats_t));
-        } else {
-            // stats retrieve failed, send back error code
-            ipc_log_error("Command msg id:%u failed, ret:%d", id, ret);
-        }
-        sdk::ipc::respond(ipc_msg, (const void *)&reply,
-                          sizeof(pds_cmd_reply_msg_t));
-        break;
-    default:
-        sdk::ipc::respond(ipc_msg, (const void *)&ret,
-                          sizeof(sdk::sdk_ret_t));
-        break;
-    }
-}
-
 // handler for PDS IPC command call. command callbacks will have more than a
 // return code, so instead they return a pds_msg_t pointer
 static void
 pds_ipc_cmd_msg_cb (sdk::ipc::ipc_msg_ptr ipc_msg, const void *ctx) {
-    pds_msg_t *msg, response;
+    pds_cmd_msg_t *msg;
+    pds_cmd_rsp_t response;
     sdk::sdk_ret_t retcode = sdk::SDK_RET_OK;
     auto config_data = vpp_config_data::get();
     auto config_batch = vpp_config_batch::get();
-    std::map<int, cmd_cbs_t>::iterator cb_fun_it;
+    std::map<int, pds_cmd_cb_t>::iterator cb_fun_it;
 
     g_type_count[PDS_MSG_TYPE_CMD]++;
 
     // validate received message
-    if (ipc_msg->length() != sizeof(pds_msg_t)) {
+    if (ipc_msg->length() != sizeof(pds_cmd_msg_t)) {
         retcode = sdk::SDK_RET_INVALID_ARG;
         goto error;
     }
 
-    msg = (pds_msg_t *)ipc_msg->data();
+    msg = (pds_cmd_msg_t *)ipc_msg->data();
     if (msg->id >= PDS_MSG_ID_MAX) {
         retcode = sdk::SDK_RET_INVALID_ARG;
         goto error;
@@ -219,51 +176,159 @@ pds_ipc_cmd_msg_cb (sdk::ipc::ipc_msg_ptr ipc_msg, const void *ctx) {
 
     cb_fun_it = g_cmd_cbs.find(msg->id);
     if (cb_fun_it != g_cmd_cbs.end()) {
-        auto cb_funs = cb_fun_it->second;
-        pds_cmd_ctxt_t ctxt = { 0 };
-        // ctxt init
-        if (cb_funs.ctxt_init_cb) {
-            retcode = cb_funs.ctxt_init_cb(&msg->cmd_msg, &ctxt);
-            if (retcode != sdk::SDK_RET_OK) {
-                goto error;
-            }
-        }
-        // call back
-        if (cb_funs.cmd_hdl_cb) {
-            retcode = cb_funs.cmd_hdl_cb(&msg->cmd_msg, &ctxt);
-        }
-        // respond ipc
-        cb_ipc_respond(ipc_msg, msg->id, &ctxt, retcode);
-        // ctxt destroy
-        if (cb_funs.ctxt_destroy_cb) {
-            cb_funs.ctxt_destroy_cb(&msg->cmd_msg, &ctxt);
-        }
-        ipc_log_notice("Command msg id:%u processed", msg->id);
+        pds_cmd_cb_t cb_fun = cb_fun_it->second;
+        retcode = (*cb_fun)(msg, &response);
+
+        response.status = retcode;
+        sdk::ipc::respond(ipc_msg, (const void *)&response, sizeof(response));
+        ipc_log_notice("Execution success of command msg id:%u [count:%u]",
+                       msg->id, g_type_count[PDS_MSG_TYPE_CMD]);
         return;
+    } else {
+        retcode = sdk::SDK_RET_INVALID_ARG;
     }
-
-    // read in the spec from the cfg store
-    if (!config_data.exists(msg->cfg_msg)) {
-        retcode = sdk::SDK_RET_ENTRY_NOT_FOUND;
-        goto error;
-    }
-
-    memcpy(&response.cfg_msg, &msg->cfg_msg, sizeof(pds_cfg_msg_t));
-    config_data.get(response.cfg_msg);
-
-    // read in status/stats from node plugin
-    config_batch.read(response.cfg_msg);
-
-    ipc_log_notice("Execution success of command msg [count:%u]",
-                   g_type_count[PDS_MSG_TYPE_CMD]);
-    sdk::ipc::respond(ipc_msg, (const void *)&response, sizeof(pds_msg_t));
-    return;
 
 error:
     ipc_log_error("Execution fail of command msg [count:%u] ret:%u",
                   g_type_count[PDS_MSG_TYPE_CMD], retcode);
-    sdk::ipc::respond(ipc_msg, (const void *)&retcode, sizeof(sdk::sdk_ret_t));
+    response.status = (uint32_t )retcode;
+    sdk::ipc::respond(ipc_msg, (const void *)&response, sizeof(response));
 }
+
+// handler for PDS IPC config get call. cfg get callbacks will send a reply msg
+static void
+pds_ipc_cfg_get_cb (sdk::ipc::ipc_msg_ptr ipc_msg, const void *ctx)
+{
+    pds_cfg_get_req_t *req;
+    pds_cfg_get_rsp_t reply;
+    sdk::sdk_ret_t retcode = sdk::SDK_RET_OK;
+    auto config_data = vpp_config_data::get();
+    auto config_batch = vpp_config_batch::get();
+
+    g_type_count[PDS_MSG_TYPE_CFG_OBJ_GET]++;
+
+    // validate received message
+    if (ipc_msg->length() != sizeof(pds_cfg_get_req_t)) {
+        retcode = sdk::SDK_RET_INVALID_ARG;
+        goto error;
+    }
+
+    req = (pds_cfg_get_req_t *)ipc_msg->data();
+
+    // read in the spec from the cfg store
+    if (!config_data.exists(req->obj_id, req->key)) {
+        retcode = sdk::SDK_RET_ENTRY_NOT_FOUND;
+        goto error;
+    }
+
+    reply.obj_id = req->obj_id;
+    config_data.get(req->key, reply);
+
+    // read in status/stats from node plugin
+    config_batch.read(reply);
+
+    ipc_log_notice("Execution success of cfg get msg [count:%u]",
+                   g_type_count[PDS_MSG_TYPE_CFG_OBJ_GET]);
+    reply.status = (uint32_t )retcode;
+    sdk::ipc::respond(ipc_msg, (const void *)&reply, sizeof(reply));
+    return;
+
+error:
+    ipc_log_error("Execution fail of cfg get msg [count:%u] ret:%u",
+                  g_type_count[PDS_MSG_TYPE_CFG_OBJ_GET], retcode);
+    reply.status = (uint32_t )retcode;
+    sdk::ipc::respond(ipc_msg, (const void *)&reply, sizeof(reply));
+}
+
+static void
+pds_walk_cb (pds_cfg_msg_t *msg, void *cb_msg)
+{
+    pds_cfg_get_all_rsp_t *response = (pds_cfg_get_all_rsp_t *)cb_msg;
+    auto config_batch = vpp_config_batch::get();
+
+    switch(msg->obj_id) {
+#define _(obj, data)                                                   \
+    case OBJ_ID_##obj:                                                 \
+        memcpy(&response->data[response->count].spec, &msg->data.spec, \
+               sizeof(pds_##data##_spec_t));                           \
+        config_batch.read(msg->obj_id,                                 \
+                          (void *)&response->data[response->count]);   \
+        break;
+
+    _(DHCP_POLICY, dhcp_policy)
+    _(NAT_PORT_BLOCK, nat_port_block)
+    _(SECURITY_PROFILE, security_profile)
+
+#undef _
+    default:
+        // other objects currently unsupported
+        return;
+    }
+    response->count++;
+}
+
+// handler for PDS IPC config get call. cfg get callbacks will send a reply msg
+static void
+pds_ipc_cfg_getall_cb (sdk::ipc::ipc_msg_ptr ipc_msg, const void *ctx)
+{
+    pds_cfg_get_all_req_t *req;
+    pds_cfg_get_all_rsp_t *response = NULL;
+    sdk::sdk_ret_t retcode = sdk::SDK_RET_OK;
+    vpp_config_data &config_data = vpp_config_data::get();
+    int respsz = sizeof(pds_cfg_get_all_rsp_t);
+    int num_inst;
+
+    g_type_count[PDS_MSG_TYPE_CFG_OBJ_GET_ALL]++;
+
+    // validate received message
+    if (ipc_msg->length() != sizeof(pds_cfg_get_all_req_t)) {
+        retcode = sdk::SDK_RET_INVALID_ARG;
+        goto error;
+    }
+
+    req = (pds_cfg_get_all_req_t *)ipc_msg->data();
+    if (req->obj_id >= OBJ_ID_MAX) {
+        retcode = sdk::SDK_RET_INVALID_ARG;
+        goto error;
+    }
+
+    // read in the spec from the cfg store
+    num_inst = config_data.size(req->obj_id);
+    if (num_inst == 0) {
+        response = (pds_cfg_get_all_rsp_t *)calloc(1, respsz);
+        response->status = sdk::SDK_RET_OK;
+        response->count = 0;
+        sdk::ipc::respond(ipc_msg, (const void *)response, respsz);
+        free(response);
+        return;
+    }
+
+    respsz = sizeof(pds_cfg_get_all_rsp_t) +
+                    ((num_inst) * config_data.objsize(req->obj_id));
+    response = (pds_cfg_get_all_rsp_t *)calloc(1, respsz);
+
+    config_data.walk(req->obj_id, pds_walk_cb, (void *)response);
+    response->status = (uint32_t )sdk::SDK_RET_OK;
+
+    ipc_log_notice("Execution success of cfg getall msg [count:%u]",
+                   g_type_count[PDS_MSG_TYPE_CFG_OBJ_GET_ALL]);
+    sdk::ipc::respond(ipc_msg, (const void *)response, respsz);
+
+    free(response);
+    return;
+
+error:
+    ipc_log_error("Execution fail of cfg getall msg [count:%u] ret:%u",
+                  g_type_count[PDS_MSG_TYPE_CFG_OBJ_GET_ALL], retcode);
+    if (response == NULL) {
+        respsz = sizeof(pds_cfg_get_all_rsp_t);
+        response = (pds_cfg_get_all_rsp_t *)calloc(1, respsz);
+    }
+    response->status = (uint32_t )retcode;
+    sdk::ipc::respond(ipc_msg, (const void *)response, respsz);
+    free(response);
+}
+
 
 // VPP IPC initialization. Register VPP with IPC infra, and install callbacks
 // for handling base message types
@@ -286,7 +351,16 @@ pds_ipc_init (void)
                                   (const void *)PDS_MSG_TYPE_EVENT);
 
     // register handler for configuration batches
-    sdk::ipc::reg_request_handler(PDS_MSG_TYPE_CFG, pds_ipc_msglist_cb, NULL);
+    sdk::ipc::reg_request_handler(PDS_MSG_TYPE_CFG_OBJ_SET, pds_ipc_msglist_cb,
+                                  NULL);
+
+    // register handler for configuration read
+    sdk::ipc::reg_request_handler(PDS_MSG_TYPE_CFG_OBJ_GET, pds_ipc_cfg_get_cb,
+                                  NULL);
+
+    // register handler for configuration read all
+    sdk::ipc::reg_request_handler(PDS_MSG_TYPE_CFG_OBJ_GET_ALL,
+                                  pds_ipc_cfg_getall_cb, NULL);
 
     // register handler for command messages
     sdk::ipc::reg_request_handler(PDS_MSG_TYPE_CMD, pds_ipc_cmd_msg_cb, NULL);

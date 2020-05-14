@@ -19,6 +19,7 @@
 #include "nic/apollo/api/policy_state.hpp"
 #include "nic/apollo/api/utils.hpp"
 #include "nic/apollo/api/include/pds_policy.hpp"
+#include "nic/apollo/api/internal/ipc.hpp"
 
 static inline sdk_ret_t
 pds_policy_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
@@ -241,53 +242,47 @@ pds_security_profile_create (_In_ pds_security_profile_spec_t *spec,
     return pds_security_profile_api_handle(bctxt, API_OP_CREATE, NULL, spec);
 }
 
-typedef struct pds_security_profile_read_param_s {
-    pds_security_profile_read_cb_t cb;
-    pds_security_profile_info_t *info;
-    void *ctxt;
-} pds_security_profile_read_param_t;
-
-static inline void
-pds_security_profile_ipc_response_hdlr (sdk::ipc::ipc_msg_ptr msg,
-                                        const void *ctxt)
-{
-    #if 0
-    // Remove #if after vpp side is done.
-    pds_security_profile_read_param_t *param = (pds_security_profile_read_param_t *)ctxt;
-    pds_security_profile_spec_t *reply = (pds_security_profile_spec_t *)msg->data();
-
-    if (param->info && param->cb && param->ctxt) {
-        memcpy(&param->info->spec, msg->data(), sizeof(pds_security_profile_spec_t));
-        param->cb(param->info, param->ctxt);
-    }
-    #endif
-}
-
 sdk_ret_t
 pds_security_profile_read (_In_ pds_security_profile_read_cb_t cb,
                            _Out_ void *ctxt)
 {
-    #if 0
-    // Remove #if after VPP side is done.
-    pds_msg_t request;
-    pds_security_profile_info_t info = { 0 };
-    pds_security_profile_read_param_t param;
+    pds_cfg_get_all_rsp_t reply;
+    pds_cfg_get_all_rsp_t *payload;
+    size_t payloadsz;
+    sdk_ret_t ret;
 
-    param.cb = cb;
-    param.info = &info;
-    param.ctxt = ctxt;
-
-    request.id = PDS_CFG_MSG_ID_SECURITY_PROFILE;
-    request.cfg_msg.obj_id = OBJ_ID_SECURITY_PROFILE;
-
-    if (api::g_pds_state.vpp_ipc_mock() == false) {
-        sdk::ipc::request(PDS_IPC_ID_VPP, PDS_MSG_TYPE_CMD, &request,
-            sizeof(pds_msg_t), pds_security_profile_ipc_response_hdlr,
-            &param);
+    // first call to retrieve object count
+    ret = api::pds_ipc_cfg_get_all(PDS_IPC_ID_VPP, OBJ_ID_SECURITY_PROFILE,
+                                   &reply, sizeof(reply));
+    // abort on error
+    if (ret != SDK_RET_OK) {
+        return ret;
+    } else if (reply.status != (uint32_t )SDK_RET_OK) {
+        return (sdk_ret_t )reply.status;
     }
-    #endif
-    return SDK_RET_INVALID_OP;
+    if (reply.count == 0) {
+        // no configured instances, we're done
+        return SDK_RET_OK;
+    }
+    // allocate as much space as necessary
+    payloadsz = sizeof(pds_cfg_get_all_rsp_t) +
+        (reply.count * sizeof(pds_security_profile_info_t));
+    payload = (pds_cfg_get_all_rsp_t *)SDK_CALLOC(PDS_MEM_ALLOC_SECURITY_POLICY,
+                                                  payloadsz);
+    ret = api::pds_ipc_cfg_get_all(PDS_IPC_ID_VPP, OBJ_ID_SECURITY_PROFILE,
+                                   payload, payloadsz);
+    if (ret != SDK_RET_OK) {
+        SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, payload);
+        return ret;
+    }
+    for (uint32_t i = 0; i < payload->count; i++) {
+        (*cb)(&payload->security_profile[i], ctxt);
+    }
+    ret = (sdk_ret_t )payload->status;
+    SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, payload);
+    return ret;
 }
+
 sdk_ret_t
 pds_security_profile_update (_In_ pds_security_profile_spec_t *spec,
                              _In_ pds_batch_ctxt_t bctxt)

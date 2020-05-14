@@ -51,17 +51,13 @@ response_handler_cb(sdk::ipc::ipc_msg_ptr msg, const void *request_cookie) {
 ///        communication between test infra and VPP IPC infra
 TEST_F(ipc_base_test, ipc_base_ok_test) {
     if (!apulu()) return;
-    pds_msg_t *msg;
+    pds_msg_t msg;
     sdk::sdk_ret_t ret_val;
 
-    msg = new pds_msg_t;
-    msg->id = PDS_MSG_ID_NONE;
-
-    sdk::ipc::request(PDS_IPC_ID_VPP, PDS_MSG_TYPE_EVENT, msg,
+    sdk::ipc::request(PDS_IPC_ID_VPP, PDS_MSG_TYPE_EVENT, &msg,
                       sizeof(pds_msg_t), response_handler_cb,
                       (const void *)&ret_val);
     EXPECT_TRUE(ret_val == sdk::SDK_RET_OK);
-    delete msg;
 }
 
 /// \brief Dummy "INVALID" test. Send a message with "none" type. This returns a
@@ -69,17 +65,13 @@ TEST_F(ipc_base_test, ipc_base_ok_test) {
 ///        bi-directiopnal communication between test infra and VPP IPC infra
 TEST_F(ipc_base_test, ipc_base_invalid_test) {
     if (!apulu()) return;
-    pds_msg_t *msg;
+    pds_msg_t msg;
     sdk::sdk_ret_t ret_val;
 
-    msg = new pds_msg_t;
-    msg->id = PDS_MSG_ID_NONE;
-
-    sdk::ipc::request(PDS_IPC_ID_VPP, PDS_MSG_TYPE_NONE, msg,
+    sdk::ipc::request(PDS_IPC_ID_VPP, PDS_MSG_TYPE_NONE, &msg,
                       sizeof(pds_msg_t), response_handler_cb,
                       (const void *)&ret_val);
     EXPECT_TRUE(ret_val == sdk::SDK_RET_INVALID_OP);
-    delete msg;
 }
 
 #define TEST_BATCH_SIZE 10
@@ -97,9 +89,10 @@ TEST_F(ipc_base_test, ipc_base_batch_test) {
     msglist->num_msgs = TEST_BATCH_SIZE;
     for (int i = 0; i < msglist->num_msgs; i++) {
         pds_msg_t *msg = &msglist->msgs[i];
-        msg->id = PDS_MSG_ID_NONE;
+        msg->cfg_msg.op = API_OP_NONE;
+        msg->cfg_msg.obj_id = OBJ_ID_NONE;
     }
-    sdk::ipc::request(PDS_IPC_ID_VPP, PDS_MSG_TYPE_CFG, msglist,
+    sdk::ipc::request(PDS_IPC_ID_VPP, PDS_MSG_TYPE_CFG_OBJ_SET, msglist,
                       sz, response_handler_cb, (const void *)&ret_val);
     EXPECT_TRUE(ret_val == sdk::SDK_RET_OK);
     free(msglist);

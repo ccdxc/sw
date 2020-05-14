@@ -16,6 +16,7 @@
 #include "nic/apollo/framework/api_params.hpp"
 #include "nic/apollo/api/dhcp.hpp"
 #include "nic/apollo/api/pds_state.hpp"
+#include "nic/apollo/api/internal/ipc.hpp"
 
 namespace api {
 
@@ -181,7 +182,6 @@ dhcp_policy::init_config(api_ctxt_t *api_ctxt) {
 
 sdk_ret_t
 dhcp_policy::populate_msg(pds_msg_t *msg, api_obj_ctxt_t *obj_ctxt) {
-    msg->id = PDS_CFG_MSG_ID_DHCP_POLICY;
     msg->cfg_msg.op = obj_ctxt->api_op;
     msg->cfg_msg.obj_id = OBJ_ID_DHCP_POLICY;
     if (obj_ctxt->api_op == API_OP_DELETE) {
@@ -213,54 +213,35 @@ dhcp_policy::activate_config(pds_epoch_t epoch, api_op_t api_op,
     return SDK_RET_OK;
 }
 
-static inline void
-dhcp_policy_from_ipc_response(sdk::ipc::ipc_msg_ptr msg,
-                              const void *response) {
-    pds_dhcp_relay_spec_t *dhcp_relay_spec_ = (pds_dhcp_relay_spec_t *)response;
-
-    memcpy(dhcp_relay_spec_, msg->data(), sizeof(pds_dhcp_relay_spec_t));
-}
-
 void
 dhcp_policy::fill_spec_(pds_dhcp_policy_spec_t *spec) {
     pds_dhcp_proxy_spec_t *dhcp_proxy_spec;
-    #if 0
-    // Remove #if after VPP side is done.
-    pds_dhcp_relay_spec_t *dhcp_relay_spec;
-    pds_msg_t request;
-    #endif
 
     spec->key = key_;
     spec->type = type_;
 
-    if (spec->type == PDS_DHCP_POLICY_TYPE_PROXY) {
-        dhcp_proxy_spec = &spec->proxy_spec;
-        dhcp_proxy_spec->server_ip = server_ip_;
-        dhcp_proxy_spec->mtu = mtu_;
-        dhcp_proxy_spec->gateway_ip = gateway_ip_;
-        dhcp_proxy_spec->dns_server_ip = dns_server_ip_;
-        dhcp_proxy_spec->ntp_server_ip = ntp_server_ip_;
-        memcpy(dhcp_proxy_spec->domain_name, domain_name_, sizeof(domain_name_));
-        memcpy(dhcp_proxy_spec->boot_filename, boot_filename_, sizeof(boot_filename_));
-        dhcp_proxy_spec->lease_timeout = lease_timeout_;
-    } else if (spec->type == PDS_DHCP_POLICY_TYPE_RELAY) {
-        #if 0
-	// Remove #if after VPP side is done.
-        dhcp_relay_spec = &spec->relay_spec;
-        request.id = PDS_CFG_MSG_ID_DHCP_POLICY;
-        request.cmd_msg.dhcp_policy.key = key_;
-        if (api::g_pds_state.vpp_ipc_mock() == false) {
-            sdk::ipc::request(PDS_IPC_ID_VPP, PDS_MSG_TYPE_CMD, &request,
-                sizeof(pds_msg_t), dhcp_policy_from_ipc_response,
-                &dhcp_relay_spec);
-        }
-	#endif
+    if (spec->type != PDS_DHCP_POLICY_TYPE_PROXY) {
+        // rest of the spec is via IPC
+        return;
     }
+    dhcp_proxy_spec = &spec->proxy_spec;
+    dhcp_proxy_spec->server_ip = server_ip_;
+    dhcp_proxy_spec->mtu = mtu_;
+    dhcp_proxy_spec->gateway_ip = gateway_ip_;
+    dhcp_proxy_spec->dns_server_ip = dns_server_ip_;
+    dhcp_proxy_spec->ntp_server_ip = ntp_server_ip_;
+    memcpy(dhcp_proxy_spec->domain_name, domain_name_, sizeof(domain_name_));
+    memcpy(dhcp_proxy_spec->boot_filename, boot_filename_, sizeof(boot_filename_));
+    dhcp_proxy_spec->lease_timeout = lease_timeout_;
 }
 
 sdk_ret_t
 dhcp_policy::read(pds_dhcp_policy_info_t *info) {
     fill_spec_(&info->spec);
+    if (type_ == PDS_DHCP_POLICY_TYPE_RELAY) {
+        // for relay, get all info from VPP
+        return pds_ipc_cfg_get(PDS_IPC_ID_VPP, OBJ_ID_DHCP_POLICY, &key_, info);
+    }
     if (impl_) {
         return impl_->read_hw(this, (impl::obj_key_t *)(&info->spec.key),
                               (impl::obj_info_t *)info);

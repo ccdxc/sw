@@ -16,7 +16,8 @@
 #include "nic/apollo/framework/api_params.hpp"
 #include "nic/apollo/api/nat.hpp"
 #include "nic/apollo/api/pds_state.hpp"
-#include "nic/vpp/infra/ipc/pdsa_hdlr.hpp"
+#include "nic/apollo/api/internal/ipc.hpp"
+
 namespace api {
 
 // NAT port block API implementation
@@ -99,7 +100,6 @@ nat_port_block::init_config(api_ctxt_t *api_ctxt) {
 
 sdk_ret_t
 nat_port_block::populate_msg(pds_msg_t *msg, api_obj_ctxt_t *obj_ctxt) {
-    msg->id = PDS_CFG_MSG_ID_NAT_PORT_BLOCK;
     msg->cfg_msg.op = obj_ctxt->api_op;
     msg->cfg_msg.obj_id = OBJ_ID_NAT_PORT_BLOCK;
     if (obj_ctxt->api_op == API_OP_DELETE) {
@@ -122,76 +122,49 @@ typedef struct nat_port_block_read_params_s {
     void *ctxt;
 } nat_port_block_read_params_t;
 
-static void
-nat_port_block_from_ipc_response(sdk::ipc::ipc_msg_ptr msg,
-                                 const void *cookie) {
-    pds_nat_port_block_cmd_ctxt_t *reply = (pds_nat_port_block_cmd_ctxt_t *)msg->data();
-    nat_port_block_read_params_t *params = (nat_port_block_read_params_t *)cookie;
-    uint16_t num_pb = reply->num_entries;
-    pds_nat_port_block_cfg_msg_t *pb;
-
-    for (uint16_t i = 0; i < num_pb; i ++) {
-        pb = &reply->cfg[i];
-        if (params->read_all) {
-            pds_nat_port_block_info_t info;
-            info.spec = pb->spec;
-            info.status = pb->status;
-            info.stats = pb->stats;
-            if (params->cb) {
-                params->cb(&info, params->ctxt);
-            }
-        } else {
-            pds_nat_port_block_info_t *info =
-                (pds_nat_port_block_info_t *)params->ctxt;
-            info->spec = pb->spec;
-            info->status = pb->status;
-            info->stats = pb->stats;
-        }
-    }
-}
-
 sdk_ret_t
 nat_port_block::read(pds_nat_port_block_info_t *info) {
-    pds_msg_t request;
-    nat_port_block_read_params_t params;
-
-    params.cb = NULL;
-    params.ctxt = info;
-    params.read_all = false;
-
-    memset(&request, 0, sizeof(request));
-    request.id = PDS_CMD_MSG_ID_NAT_PORT_BLOCK_GET;
-    request.cmd_msg.nat_port_block.key = info->spec.key;
-
-    if (api::g_pds_state.vpp_ipc_mock() == false) {
-        sdk::ipc::request(PDS_IPC_ID_VPP, PDS_MSG_TYPE_CMD, &request,
-                          sizeof(pds_msg_t), nat_port_block_from_ipc_response, &params);
-        if (info->spec.nat_ip_range.ip_lo.v4_addr == 0) {
-            return SDK_RET_ENTRY_NOT_FOUND;
-        }
-    }
-
-    return SDK_RET_OK;
+    return pds_ipc_cfg_get(PDS_IPC_ID_VPP, OBJ_ID_NAT_PORT_BLOCK,
+                           &info->spec.key, info);
 }
 
 sdk_ret_t
 nat_port_block::read_all(nat_port_block_read_cb_t cb, void *ctxt) {
-    pds_msg_t request;
-    nat_port_block_read_params_t params;
+    pds_cfg_get_all_rsp_t reply;
+    pds_cfg_get_all_rsp_t *payload;
+    size_t payloadsz;
+    sdk_ret_t ret;
 
-    params.cb = cb;
-    params.ctxt = ctxt;
-    params.read_all = true;
-
-    memset(&request, 0, sizeof(request));
-    request.id = PDS_CMD_MSG_ID_NAT_PORT_BLOCK_GET;
-
-    if (api::g_pds_state.vpp_ipc_mock() == false) {
-        sdk::ipc::request(PDS_IPC_ID_VPP, PDS_MSG_TYPE_CMD, &request,
-                          sizeof(pds_msg_t), nat_port_block_from_ipc_response, &params);
+    // first call to retrieve object count
+    ret = api::pds_ipc_cfg_get_all(PDS_IPC_ID_VPP, OBJ_ID_NAT_PORT_BLOCK,
+                                   &reply, sizeof(reply));
+    // abort on error
+    if (ret != SDK_RET_OK) {
+        return ret;
+    } else if (reply.status != (uint32_t )SDK_RET_OK) {
+        return (sdk_ret_t )reply.status;
     }
-
-    return SDK_RET_OK;
+    if (reply.count == 0) {
+        // no configured instances, we're done
+        return SDK_RET_OK;
+    }
+    // allocate as much space as necessary
+    payloadsz = sizeof(pds_cfg_get_all_rsp_t) +
+        (reply.count * sizeof(pds_nat_port_block_info_t));
+    payload = (pds_cfg_get_all_rsp_t *)SDK_CALLOC(PDS_MEM_ALLOC_NAT_PORT_BLOCK,
+                                                  payloadsz);
+    ret = api::pds_ipc_cfg_get_all(PDS_IPC_ID_VPP, OBJ_ID_NAT_PORT_BLOCK,
+                                   payload, payloadsz);
+    if (ret != SDK_RET_OK) {
+        SDK_FREE(PDS_MEM_ALLOC_NAT_PORT_BLOCK, payload);
+        return ret;
+    }
+    for (uint32_t i = 0; i < payload->count; i++) {
+        (*cb)(&payload->nat_port_block[i], ctxt);
+    }
+    ret = (sdk_ret_t )payload->status;
+    SDK_FREE(PDS_MEM_ALLOC_NAT_PORT_BLOCK, payload);
+    return ret;
 }
 
 sdk_ret_t

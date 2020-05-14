@@ -20,7 +20,6 @@ class SecurityProfileObject(base.ConfigObjectBase):
         if hasattr(spec, 'origin'):
             self.SetOrigin(spec.origin)
         ############### PUBLIC ATTRIBUTES OF SECURITY PROFILE OBJECT ###############
-        self.SetSingleton(True)
         if (hasattr(spec, 'id')):
             self.SecurityProfileId = spec.id
         else:
@@ -121,37 +120,33 @@ class SecurityProfileObject(base.ConfigObjectBase):
     def ValidateYamlSpec(self, spec):
         if utils.GetYamlSpecAttr(spec) != self.GetKey():
             return False
-        if spec[ 'ConnTrackEn' ] != self.ConnTrackEn:
+        if spec[ 'conntracken' ] != self.ConnTrackEn:
             return False
-        if spec[ 'DefaultFWAction' ] != self.DefaultFWAction:
+        if spec[ 'defaultfwaction' ] != self.DefaultFWAction:
             return False
-        if spec[ 'TCPIdleTimeout' ] != self.TCPIdleTimeout:
+        if spec[ 'tcpidletimeout' ] != self.TCPIdleTimeout:
             return False
-        if spec[ 'UDPIdleTimeout' ] != self.UDPIdleTimeout:
+        if spec[ 'udpidletimeout' ] != self.UDPIdleTimeout:
             return False
-        if spec[ 'ICMPIdleTimeout' ] != self.ICMPIdleTimeout:
+        if spec[ 'icmpidletimeout' ] != self.ICMPIdleTimeout:
             return False
-        if spec[ 'OtherIdleTimeout' ] != self.OtherIdleTimeout:
+        if spec[ 'otheridletimeout' ] != self.OtherIdleTimeout:
             return False
-        if spec[ 'TCPCnxnSetupTimeout' ] != self.TCPCnxnSetupTimeout:
+        if spec[ 'tcpcnxnsetuptimeout' ] != self.TCPCnxnSetupTimeout:
             return False
-        if spec[ 'TCPHalfCloseTimeout' ] != self.TCPHalfCloseTimeout:
+        if spec[ 'tcphalfclosetimeout' ] != self.TCPHalfCloseTimeout:
             return False
-        if spec[ 'TCPCloseTimeout' ] != self.TCPCloseTimeout:
+        if spec[ 'tcpclosetimeout' ] != self.TCPCloseTimeout:
             return False
-        if spec[ 'TCPDropTimeout' ] != self.TCPDropTimeout:
+        if spec[ 'tcpdroptimeout' ] != self.TCPDropTimeout:
             return False
-        if spec[ 'UDPDropTimeout' ] != self.UDPDropTimeout:
+        if spec[ 'udpdroptimeout' ] != self.UDPDropTimeout:
             return False
-        if spec[ 'ICMPDropTimeout' ] != self.ICMPDropTimeout:
+        if spec[ 'icmpdroptimeout' ] != self.ICMPDropTimeout:
             return False
-        if spec[ 'OtherDropTimeout' ] != self.OtherDropTimeout:
+        if spec[ 'otherdroptimeout' ] != self.OtherDropTimeout:
             return False
         return True
-
-    def GetGrpcReadMessage(self):
-        grpcmsg = types_pb2.Empty()
-        return grpcmsg
 
     def UpdateDefaultFWAction(self, spec=None):
         if hasattr(spec, "DefaultFWAction"):
@@ -173,19 +168,11 @@ class SecurityProfileObjectClient(base.ConfigClientBase):
         super().__init__(api.ObjectTypes.SECURITY_PROFILE, Resmgr.MAX_SECURITY_PROFILE)
         return
 
-    def IsReadSupported(self):
-        # Enable once SecurityPolicySvcImpl::SecurityProfileGet is implemented
-        return False
-
     def GenerateObjects(self, node, topospec):
         if (hasattr(topospec, 'security_profile')):
             obj = SecurityProfileObject(node, topospec.security_profile)
-            self.Objs[node].update({0: obj})
+            self.Objs[node].update({obj.SecurityProfileId: obj})
             EzAccessStoreClient[node].SetSecurityProfile(obj)
         return
-
-    def GetGrpcReadAllMessage(self, node):
-        grpcmsg = types_pb2.Empty()
-        return grpcmsg
 
 client = SecurityProfileObjectClient()

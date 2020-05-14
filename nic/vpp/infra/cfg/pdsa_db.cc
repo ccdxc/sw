@@ -13,15 +13,6 @@ std::list<object_cbs_t> vpp_config_batch::object_cbs;
 std::list<object_notify_cbs_t> vpp_config_batch::object_notify_cbs;
 
 
-#define foreach_config_data_element                 \
-        _(DEVICE, device)                           \
-        _(VPC, vpc)                                 \
-        _(VNIC, vnic)                               \
-        _(SUBNET, subnet)                           \
-        _(DHCP_POLICY, dhcp_policy)                 \
-        _(NAT_PORT_BLOCK, nat_port_block)           \
-        _(SECURITY_PROFILE, security_profile)       \
-
 // vpp_config_data member functions
 
 // returns the currently configured number of instances of a specific obj id
@@ -29,6 +20,21 @@ int
 vpp_config_data::size (obj_id_t obj_id) const {
     switch(obj_id) {
 #define _(obj, data) case OBJ_ID_##obj:  return data.size();
+
+    foreach_config_data_element
+
+#undef _
+    default:
+        assert(false);
+    }
+    return 0;
+}
+
+// returns the size of the cfg_msg object for the specified obj id
+int
+vpp_config_data::objsize (obj_id_t obj_id) const {
+    switch(obj_id) {
+#define _(obj, data) case OBJ_ID_##obj:  return sizeof(pds_##data##_info_t);
 
     foreach_config_data_element
 
@@ -63,6 +69,29 @@ vpp_config_data::exists (pds_cfg_msg_t const& cfg_msg) const {
     return false;
 }
 
+// checks for existence of a key in the configuration. returns true if the key
+// exists
+bool
+vpp_config_data::exists (obj_id_t obj_id, pds_obj_key_t const& key) const
+{
+    switch(obj_id) {
+#define _(obj, data)                                        \
+    case OBJ_ID_##obj:                                      \
+        if (data.find(key) != data.end()) {    \
+            return true;                                    \
+        }                                                   \
+        break;
+        foreach_config_data_element
+#undef _
+
+    default:
+        // don't assert here, it could be a malformed IPC request
+        break;
+    }
+    return false;
+}
+
+
 // retrieves the configured spec associated with the specified key. returns
 // true if key found
 bool
@@ -96,19 +125,61 @@ vpp_config_data::get (pds_cfg_msg_t &cfg_msg) const {
     return true;
 }
 
+bool
+vpp_config_data::get (pds_obj_key_t const& key,
+                      pds_cfg_get_rsp_t &reply) const
+{
+    // initialize iterators to all obj types
+#define _(obj, data)                                \
+    auto data##_it = data.end();                    \
+    const pds_##data##_cfg_msg_t *data##_cfg_msg;
+
+    _(DHCP_POLICY, dhcp_policy)
+    _(NAT_PORT_BLOCK, nat_port_block)
+    _(SECURITY_PROFILE, security_profile)
+#undef _
+
+    switch(reply.obj_id) {
+#define _(obj, data)                                    \
+    case OBJ_ID_##obj:                                  \
+        data##_it = data.find(key);                     \
+        if (data##_it == data.end()) {                  \
+            return false;                               \
+        }                                               \
+        data##_cfg_msg = &data##_it->second;            \
+        memcpy(&reply.data.spec, &data##_cfg_msg->spec, \
+               sizeof(pds_##data##_spec_t));            \
+        break;
+
+    _(DHCP_POLICY, dhcp_policy)
+    _(NAT_PORT_BLOCK, nat_port_block)
+    _(SECURITY_PROFILE, security_profile)
+#undef _
+
+    default:
+        assert(false);
+        return false;
+    }
+
+    return true;
+}
+
 // walk on all config objects for the given config obj id. returns
 void
-vpp_config_data::walk (pds_cfg_msg_t &cfg_msg,
+vpp_config_data::walk (obj_id_t obj_id,
                        pds_cfg_walk_cb cb,
                        void *cb_msg) const {
+    pds_cfg_msg_t cfg_msg;
     // initialize iterators to all obj types
 #define _(obj, data)                                    \
     auto data##_it = data.begin();                      \
 
     foreach_config_data_element
 #undef _
+    cfg_msg.obj_id = obj_id;
+    cfg_msg.op = API_OP_NONE;
 
-    switch(cfg_msg.obj_id) {
+    switch(obj_id) {
 #define _(obj, data)                                    \
     case OBJ_ID_##obj:                                  \
         for (data##_it = data.begin();                  \
@@ -458,7 +529,7 @@ vpp_config_batch::create (const pds_msg_list_t *msglist) {
     for (rsv_count = 0; rsv_count < msglist->num_msgs; rsv_count++) {
         const pds_msg_t *msg = &msglist->msgs[rsv_count];
 
-        if (msg->id > PDS_MSG_ID_MAX) {
+        if (msg->cmd_msg.id > PDS_MSG_ID_MAX) {
             ret = sdk::SDK_RET_INVALID_ARG;
             break;
         }
@@ -592,19 +663,38 @@ vpp_config_batch::commit (void) {
 }
 
 sdk::sdk_ret_t
-vpp_config_batch::read (pds_cfg_msg_t &msg) {
+vpp_config_batch::read (obj_id_t id, void *info) {
     for (auto cit = object_cbs.begin(); cit != object_cbs.end(); cit++) {
-        if ((*cit).obj_id != msg.obj_id) {
+        if ((*cit).obj_id != id) {
             continue;
         }
 
         if ((*cit).get_cb) {
-            (*cit).get_cb(&msg);
+            (*cit).get_cb(info);
             return sdk::SDK_RET_OK;;
         }
     }
     // we don't really fail even if we can't find a CB
     return sdk::SDK_RET_OK;;
+}
+
+sdk::sdk_ret_t
+vpp_config_batch::read (pds_cfg_get_rsp_t &response)
+{
+    switch(response.obj_id) {
+#define _(obj, data)                                        \
+    case OBJ_ID_##obj:                                      \
+         return read(OBJ_ID_##obj, (void *)&response.data);
+
+    _(DHCP_POLICY, dhcp_policy)
+    _(NAT_PORT_BLOCK, nat_port_block)
+    _(SECURITY_PROFILE, security_profile)
+
+#undef _
+    default:
+        break;
+    }
+    return sdk::SDK_RET_OK;
 }
 
 sdk::sdk_ret_t

@@ -27,7 +27,7 @@ vpp_cfg_msg_cb (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
 static void
 vpp_init_func (void *ctxt)
 {
-    sdk::ipc::reg_request_handler(PDS_MSG_TYPE_CFG, vpp_cfg_msg_cb, NULL);
+    sdk::ipc::reg_request_handler(PDS_MSG_TYPE_CFG_OBJ_SET, vpp_cfg_msg_cb, NULL);
 }
 
 sdk_ret_t

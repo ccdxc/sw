@@ -58,7 +58,7 @@ clear_flow_entry (pds_flow_key_t *key)
 }
 
 static sdk::sdk_ret_t
-pdsa_flow_vnic_stats_get(const pds_cmd_msg_t *msg, pds_cmd_ctxt_t *ctxt) {
+pdsa_flow_vnic_stats_get(const pds_cmd_msg_t *msg, pds_cmd_rsp_t *response) {
     uint32_t active_sessions;
     bool ret;
 
@@ -67,27 +67,9 @@ pdsa_flow_vnic_stats_get(const pds_cmd_msg_t *msg, pds_cmd_ctxt_t *ctxt) {
     if (!ret) {
         return sdk::SDK_RET_ENTRY_NOT_FOUND;
     }
-    ctxt->vnic_stats->active_sessions = active_sessions;
+    response->vnic_stats.active_sessions = active_sessions;
     return sdk::SDK_RET_OK;
 }
-
-static sdk::sdk_ret_t
-pdsa_flow_vnic_stats_init(const pds_cmd_msg_t *msg, pds_cmd_ctxt_t *ctxt)
-{
-    ctxt->vnic_stats = (pds_vnic_stats_t *)calloc(1, sizeof(pds_vnic_stats_t));
-    if (ctxt->vnic_stats == NULL) {
-        return sdk::SDK_RET_OOM;
-    }
-    return sdk::SDK_RET_OK;
-}
-
-static sdk::sdk_ret_t
-pdsa_flow_vnic_stats_destroy(const pds_cmd_msg_t *msg, pds_cmd_ctxt_t *ctxt)
-{
-    free(ctxt->vnic_stats);
-    return sdk::SDK_RET_OK;
-}
-
 
 static sdk::sdk_ret_t
 pdsa_flow_cfg_set (const pds_cfg_msg_t *msg)
@@ -135,7 +117,7 @@ pdsa_flow_cfg_clear (const pds_cfg_msg_t *msg)
 }
 
 static sdk::sdk_ret_t
-pdsa_flow_clear_cmd(const pds_cmd_msg_t *msg, pds_cmd_ctxt_t *ctxt)
+pdsa_flow_clear_cmd(const pds_cmd_msg_t *msg, pds_cmd_rsp_t *response)
 {
     int ret;
     pds_flow_key_t key = msg->flow_clear.key;
@@ -168,7 +150,5 @@ pdsa_flow_hdlr_init (void)
     pds_ipc_register_cmd_callbacks(PDS_CMD_MSG_FLOW_CLEAR,
                                    pdsa_flow_clear_cmd);
     pds_ipc_register_cmd_callbacks(PDS_CMD_MSG_VNIC_STATS_GET,
-                                   pdsa_flow_vnic_stats_get,
-                                   pdsa_flow_vnic_stats_init,
-                                   pdsa_flow_vnic_stats_destroy);
+                                   pdsa_flow_vnic_stats_get);
 }
