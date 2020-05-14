@@ -469,6 +469,7 @@ export class WorkloadComponent extends DataComponent  implements OnInit {
   mapData() {
     this.buildObjectsMap();
     this.dataObjectsBackUp = Utility.getLodash().cloneDeepWith(this.dataObjects); // make a copy of server provided data
+    this.searchWorkloadCount = this.dataObjectsBackUp.length;
     this.uiModelLoading = this.tableLoading;
   }
 

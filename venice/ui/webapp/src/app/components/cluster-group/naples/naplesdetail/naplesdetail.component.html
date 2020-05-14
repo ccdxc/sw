@@ -1,16 +1,10 @@
 <app-pagebody [icon]="bodyicon" [header]="selectedObj?.spec.id" [transparent]="true">
   <div>
     <ng-container *ngTemplateOutlet="detailsTable"></ng-container>
-    <ng-container *ngTemplateOutlet="interface"></ng-container>
-    <ng-container *ngTemplateOutlet="interfaceTable"></ng-container>
-  </div>
-  <div class="naplesdetail-charts-card detail-card-wrapper">
-    <div class="detail-card">
-      <div class="detail-card-border"></div>
-      <app-naplesdetail-charts fxLayout="row" class="naplesdetail-charts-container"
-                               *ngIf="detailLoaded" [selectedId]="selectedId">
-      </app-naplesdetail-charts>
-      <div class="detail-card-border"></div>
+    <div fxLayout="row wrap">
+      <ng-container *ngTemplateOutlet="interface"></ng-container>
+      <ng-container *ngTemplateOutlet="interfaceTable"></ng-container>
+      <ng-container *ngTemplateOutlet="detailsCharts"></ng-container>
     </div>
   </div>
   <div class="naplesdetail-alertsevents-card detail-card-wrapper">
@@ -396,6 +390,18 @@
           </app-naplesdetail-iftable>
         </div>
       </div>
+      <div class="detail-card-border"></div>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #detailsCharts>
+  <div class="naplesdetail-charts-card detail-card-wrapper" fxFlex>
+    <div class="detail-card">
+      <div class="detail-card-border"></div>
+      <app-naplesdetail-charts fxLayout="row" class="naplesdetail-charts-container"
+                               *ngIf="detailLoaded" [selectedId]="selectedId">
+      </app-naplesdetail-charts>
       <div class="detail-card-border"></div>
     </div>
   </div>

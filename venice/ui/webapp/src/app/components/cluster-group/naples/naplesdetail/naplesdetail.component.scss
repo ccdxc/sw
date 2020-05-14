@@ -149,6 +149,9 @@
 
 .naplesdetail-interface-charts-container {
   margin: 10px;
+  max-width: 1250px;
+  min-width: 1151px;
+  width: 100%;
 
   .naplesdetail-interface-container,
   .naplesdetail-interface-table-container {
@@ -180,4 +183,8 @@
 .naplesdetail-alertsevents-card,
 .naplesdetail-charts-card {
   margin: 0 10px;
+}
+
+.naplesdetail-charts-card {
+  min-width: 500px;
 }
