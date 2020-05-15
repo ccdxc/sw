@@ -16,3 +16,15 @@ testcases:
         enable  : True
         args    :
             type         : remote_only
+
+    -   name    : lif_stats
+        testcase: testcases.drivers.ionic_config.lif_stats
+        enable  : True
+        args    :
+            type         : remote_only
+
+    -   name    : port_config
+        testcase: testcases.drivers.ionic_config.port_config
+        enable  : True
+        args    :
+            type         : remote_only
