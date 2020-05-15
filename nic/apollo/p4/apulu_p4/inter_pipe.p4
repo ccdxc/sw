@@ -138,6 +138,10 @@ action p4i_inter_pipe() {
         // return
     }
 
+    if (control_metadata.binding_check_enabled == FALSE) {
+        modify_field(p4i_i2e.binding_check_drop, FALSE);
+    }
+
     if (control_metadata.redirect_to_arm == TRUE) {
         ingress_to_rxdma();
     } else {

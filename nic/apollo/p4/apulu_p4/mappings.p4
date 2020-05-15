@@ -1,27 +1,27 @@
 /******************************************************************************/
 /* Local mapping                                                              */
 /******************************************************************************/
-@pragma capi appdatafields vnic_id xlate_id allow_tagged_pkts tag_idx binding_check_enabled binding_id1 binding_id2 ip_type
+@pragma capi appdatafields vnic_id xlate_id allow_tagged_pkts tag_idx binding_id1 binding_id2 ip_type
 @pragma capi hwfields_access_api
 action local_mapping_info(entry_valid, vnic_id,
                           hash1, hint1, hash2, hint2, hash3, hint3,
                           hash4, hint4, hash5, hint5, hash6, hint6,
                           hash7, hint7, hash8, hint8, more_hashes, more_hints,
                           xlate_id, allow_tagged_pkts, tag_idx,
-                          binding_check_enabled, binding_id1, binding_id2,
-                          ip_type) {
+                          binding_id1, binding_id2, ip_type) {
     if (entry_valid == TRUE) {
         // if hardware register indicates hit, take the results
         if (vnic_id != 0) {
             modify_field(vnic_metadata.vnic_id, vnic_id);
         }
         modify_field(p4i_i2e.xlate_id, xlate_id);
-        modify_field(control_metadata.binding_check_enabled,
-                     binding_check_enabled);
         modify_field(vnic_metadata.binding_id, binding_id1);
         modify_field(p4i_to_arm.local_mapping_ip_type, ip_type);
         modify_field(p4i_to_rxdma.local_tag_idx, tag_idx);
         modify_field(scratch_metadata.binding_id, binding_id2);
+        if (binding_id1 != 0) {
+            modify_field(control_metadata.binding_check_enabled, TRUE);
+        }
         modify_field(scratch_metadata.flag, allow_tagged_pkts);
         if ((control_metadata.rx_packet == FALSE) and
             (scratch_metadata.flag == FALSE) and
@@ -143,11 +143,11 @@ action binding_info(addr) {
     modify_field(scratch_metadata.ipv6_addr, addr);
     if (key_metadata.local_mapping_lkp_type == KEY_TYPE_IPV4) {
         if (ethernet_1.srcAddr != addr) {
-            ingress_drop(P4I_DROP_MAC_IP_BINDING_FAIL);
+            modify_field(p4i_i2e.binding_check_drop, TRUE);
         }
     } else {
         if ((ipv6_1.valid == TRUE) and (ipv6_1.srcAddr != addr)) {
-            ingress_drop(P4I_DROP_MAC_IP_BINDING_FAIL);
+            modify_field(p4i_i2e.binding_check_drop, TRUE);
         }
     }
 }
@@ -209,7 +209,7 @@ control local_mapping {
         apply(local_mapping_ohash);
     }
     if ((control_metadata.rx_packet == FALSE) and
-        (control_metadata.binding_check_enabled == TRUE)){
+        (control_metadata.binding_check_enabled == TRUE)) {
         apply(ip_mac_binding);
     }
 }

@@ -74,8 +74,8 @@ local_mapping_hit:
     phvwr       p.p4i_to_rxdma_local_tag_idx, d.local_mapping_info_d.tag_idx
     sne         c1, d.local_mapping_info_d.vnic_id, r0
     phvwr.c1    p.vnic_metadata_vnic_id, d.local_mapping_info_d.vnic_id
-    phvwr       p.control_metadata_binding_check_enabled, \
-                    d.local_mapping_info_d.binding_check_enabled
+    sne         c1, d.local_mapping_info_d.binding_id1, r0
+    phvwr.c1    p.control_metadata_binding_check_enabled, TRUE
     phvwr       p.vnic_metadata_binding_id, d.local_mapping_info_d.binding_id1
     seq         c1, k.control_metadata_rx_packet, FALSE
     seq.c1      c1, d.local_mapping_info_d.allow_tagged_pkts, FALSE

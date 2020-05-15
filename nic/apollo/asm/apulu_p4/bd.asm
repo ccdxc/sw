@@ -10,6 +10,9 @@ struct phv_     p;
 %%
 
 bd_info:
+    seq             c1, k.p4e_i2e_binding_check_drop, TRUE
+    phvwr.c1.e      p.capri_intrinsic_drop, 1
+    phvwr.c1.f      p.control_metadata_p4e_drop_reason[P4E_DROP_MAC_IP_BINDING_FAIL], 1
     seq             c1, k.vnic_metadata_egress_bd_id, r0
     nop.c1.e
     phvwr.!c1       p.rewrite_metadata_tunnel_tos, d.bd_info_d.tos

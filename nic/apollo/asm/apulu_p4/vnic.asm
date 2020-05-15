@@ -10,6 +10,8 @@ struct phv_     p;
 %%
 
 vnic_info:
+    phvwr           p.control_metadata_binding_check_enabled, \
+                        d.vnic_info_d.binding_check_enabled
     phvwr           p.p4i_to_arm_epoch, d.vnic_info_d.epoch
     seq             c1, k.control_metadata_flow_done, TRUE
     seq.c1          c1, k.control_metadata_flow_miss, FALSE

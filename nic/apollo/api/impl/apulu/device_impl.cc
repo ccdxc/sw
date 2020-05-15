@@ -263,9 +263,8 @@ device_impl::fill_ing_drop_stats_(pds_device_drop_stats_t *ing_drop_stats) {
     p4i_drop_stats_swkey_mask_t key_mask = { 0 };
     const char idrop[][PDS_MAX_DROP_NAME_LEN] = {
         "vni_invalid",
-        "nacl",
-        "mac_ip_binding_fail",
         "tagged_pkt_from_vnic",
+        "nacl",
     };
 
     SDK_ASSERT(sizeof(idrop)/sizeof(idrop[0]) == (P4I_DROP_REASON_MAX + 1));
@@ -302,6 +301,7 @@ device_impl::fill_egr_drop_stats_(pds_device_drop_stats_t *egr_drop_stats) {
         "tcp_rst_with_invalid_ack_num",
         "tcp_invalid_responder_first_pkt",
         "tcp_data_after_fin",
+        "mac_ip_binding_fail",
         "copp",
     };
 

@@ -25,7 +25,7 @@
 #define MAX_COUNT     5
 #define HASH_VALUE    0xDEADBEEF
 
-#define GET_AUTOMIC(v) (v.load(std::memory_order_relaxed))
+#define GET_ATOMIC(v) (v.load(std::memory_order_relaxed))
 
 using namespace std;
 
@@ -46,7 +46,7 @@ protected:
     atomic_uint num_reserve;
     atomic_uint num_release;
     atomic_uint num_get;
-    
+
     atomic_uint table_count;
     sdk_table_api_stats_t api_stats;
     sdk_table_stats_t table_stats;
@@ -59,7 +59,7 @@ protected:
         SDK_TRACE_INFO("============== SETUP : %s.%s ===============",
                           ::testing::UnitTest::GetInstance()->current_test_info()->test_case_name(),
                           ::testing::UnitTest::GetInstance()->current_test_info()->name());
-        
+
         ftl_mock_init();
 
         sdk_table_factory_params_t params = { 0 };
@@ -211,14 +211,14 @@ public:
     }
 
     void display_stats() {
-        SDK_TRACE_INFO("GTest Table Stats: Entries:%d", GET_AUTOMIC(table_count));
+        SDK_TRACE_INFO("GTest Table Stats: Entries:%d", GET_ATOMIC(table_count));
         //SDK_TRACE_INFO("HW Table Stats: Entries=%d", hw_count);
-        SDK_TRACE_INFO("SW Table Stats: Entries=%d Collisions:%d",
+        SDK_TRACE_INFO("SW Table Stats: Entries=%lu Collisions:%lu",
                        table_stats.entries, table_stats.collisions);
         SDK_TRACE_INFO("Test  API Stats: Insert=%d Update=%d Get=%d Remove:%d Reserve:%d Release:%d",
-                       GET_AUTOMIC(num_insert), GET_AUTOMIC(num_update), GET_AUTOMIC(num_get),
-                       GET_AUTOMIC(num_remove), GET_AUTOMIC(num_reserve), GET_AUTOMIC(num_release));
-        SDK_TRACE_INFO("Table API Stats: Insert=%d Update=%d Get=%d Remove:%d Reserve:%d Release:%d",
+                       GET_ATOMIC(num_insert), GET_ATOMIC(num_update), GET_ATOMIC(num_get),
+                       GET_ATOMIC(num_remove), GET_ATOMIC(num_reserve), GET_ATOMIC(num_release));
+        SDK_TRACE_INFO("Table API Stats: Insert=%lu Update=%lu Get=%lu Remove:%lu Reserve:%lu Release:%lu",
                        api_stats.insert, api_stats.update, api_stats.get,
                        api_stats.remove, api_stats.reserve, api_stats.release);
         return;

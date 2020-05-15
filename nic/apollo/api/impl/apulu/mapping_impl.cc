@@ -1354,8 +1354,6 @@ mapping_impl::fill_public_ip_mapping_key_data_(
     PDS_IMPL_FILL_LOCAL_IP_MAPPING_APPDATA(local_mapping_data,
         vnic_impl_obj->hw_id(), to_overlay_ip_nat_idx_,
         rxdma_local_mapping_tag_idx_,
-        (vnic->binding_checks_en() &&
-         (spec->public_ip.af == IP_AF_IPV4)) ? true : false,
         vnic_impl_obj->binding_hw_id(),
         PDS_IMPL_RSVD_IP_MAC_BINDING_HW_ID, vnic->tagged(),
         MAPPING_TYPE_PUBLIC);
@@ -1445,8 +1443,7 @@ mapping_impl::fill_local_overlay_ip_mapping_key_data_(
     PDS_IMPL_FILL_LOCAL_IP_MAPPING_APPDATA(local_mapping_data,
         vnic_impl_obj->hw_id(), to_public_ip_nat_idx_,
         rxdma_local_mapping_tag_idx_,
-        (vnic->binding_checks_en() && (spec->skey.ip_addr.af == IP_AF_IPV4)) ?
-             true : false, vnic_impl_obj->binding_hw_id(),
+        vnic_impl_obj->binding_hw_id(),
         PDS_IMPL_RSVD_IP_MAC_BINDING_HW_ID, vnic->tagged(),
         MAPPING_TYPE_OVERLAY);
     PDS_IMPL_FILL_TABLE_API_PARAMS(local_mapping_tbl_params,

@@ -202,7 +202,7 @@ table vni_otcam {
 /* VNIC info (Ingress)                                                        */
 /******************************************************************************/
 action vnic_info(epoch, meter_enabled, rx_mirror_session, tx_mirror_session,
-                 tx_policer_id) {
+                 tx_policer_id, binding_check_enabled) {
     modify_field(p4i_to_arm.epoch, epoch);
     if ((control_metadata.flow_done == TRUE) and
         (control_metadata.flow_miss == FALSE) and
@@ -211,6 +211,7 @@ action vnic_info(epoch, meter_enabled, rx_mirror_session, tx_mirror_session,
         modify_field(ingress_recirc.defunct_flow, TRUE);
         // return;
     }
+    modify_field(control_metadata.binding_check_enabled, binding_check_enabled);
     modify_field(p4i_i2e.meter_enabled, meter_enabled);
     if (control_metadata.rx_packet == TRUE) {
         modify_field(p4i_i2e.mirror_session, rx_mirror_session);
@@ -292,6 +293,10 @@ table vpc {
 /* BD info                                                                    */
 /******************************************************************************/
 action bd_info(vni, vrmac, tos) {
+    if (p4e_i2e.binding_check_drop == TRUE) {
+        egress_drop(P4E_DROP_MAC_IP_BINDING_FAIL);
+    }
+
     if (vnic_metadata.egress_bd_id == 0) {
         // return;
     }

@@ -642,7 +642,6 @@ local_mappings_init (void)
     memcpy(key.key_metadata_local_mapping_lkp_addr, &g_sip1, 4);
     local_info->entry_valid = 1;
     local_info->vnic_id = g_vnic_id1;
-    local_info->binding_check_enabled = 1;
     local_info->binding_id1 = g_binding_id1;
     local_info->allow_tagged_pkts = 1;
     entry_write(tbl_id, 0, &key, NULL, &data, true, LOCAL_MAPPING_TABLE_SIZE);
@@ -654,7 +653,6 @@ local_mappings_init (void)
     memcpy(key.key_metadata_local_mapping_lkp_addr, &g_sip11, 4);
     local_info->entry_valid = 1;
     local_info->vnic_id = g_vnic_id11;
-    local_info->binding_check_enabled = 1;
     local_info->binding_id1 = g_binding_id1;
     local_info->allow_tagged_pkts = 1;
     entry_write(tbl_id, 0, &key, NULL, &data, true, LOCAL_MAPPING_TABLE_SIZE);
@@ -666,7 +664,6 @@ local_mappings_init (void)
     memcpy(key.key_metadata_local_mapping_lkp_addr, &g_sip12, 4);
     local_info->entry_valid = 1;
     local_info->vnic_id = g_vnic_id12;
-    local_info->binding_check_enabled = 0;
     local_info->allow_tagged_pkts = 1;
     entry_write(tbl_id, 0, &key, NULL, &data, true, LOCAL_MAPPING_TABLE_SIZE);
 }
@@ -735,7 +732,6 @@ local_mappings_with_ohash_init (void)
     memcpy(key.key_metadata_local_mapping_lkp_addr, &g_sip7, 4);
     local_info->entry_valid = 1;
     local_info->vnic_id = g_vnic_id1;
-    local_info->binding_check_enabled = 1;
     local_info->binding_id1 = g_binding_id1;
     local_info->allow_tagged_pkts = 1;
     entry_write(P4TBL_ID_LOCAL_MAPPING_OHASH, hint, &key, NULL, &data, true,
@@ -1329,11 +1325,13 @@ vnic_init (void)
 
     memset(&data, 0, sizeof(data));
     vnic_info->epoch = EPOCH;
+    vnic_info->binding_check_enabled = 1;
     entry_write(tbl_id, g_vnic_id1, 0, 0, &data, false, 0);
 
     memset(&data, 0, sizeof(data));
     vnic_info->tx_mirror_session = (1 << g_mirror_id1) | (1 << g_mirror_id2);
     vnic_info->epoch = EPOCH;
+    vnic_info->binding_check_enabled = 1;
     entry_write(tbl_id, g_vnic_id11, 0, 0, &data, false, 0);
 
     memset(&data, 0, sizeof(data));

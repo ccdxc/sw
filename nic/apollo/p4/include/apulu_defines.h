@@ -28,12 +28,11 @@
 /*****************************************************************************/
 /* drop reasons - these are bit positions to be used in ASM                  */
 /*****************************************************************************/
-#define P4I_DROP_REASON_MIN             0
-#define P4I_DROP_VNI_INVALID            0
-#define P4I_DROP_NACL                   1
-#define P4I_DROP_MAC_IP_BINDING_FAIL    2
-#define P4I_DROP_TAGGED_PKT_FROM_VNIC   3
-#define P4I_DROP_REASON_MAX             3
+#define P4I_DROP_REASON_MIN                         0
+#define P4I_DROP_VNI_INVALID                        0
+#define P4I_DROP_TAGGED_PKT_FROM_VNIC               1
+#define P4I_DROP_NACL                               2
+#define P4I_DROP_REASON_MAX                         P4I_DROP_NACL
 
 #define P4E_DROP_REASON_MIN                         0
 #define P4E_DROP_SESSION_INVALID                    0
@@ -48,7 +47,8 @@
 #define P4E_DROP_TCP_RST_WITH_INVALID_ACK_NUM       9
 #define P4E_DROP_TCP_INVALID_RESPONDER_FIRST_PKT    10
 #define P4E_DROP_TCP_DATA_AFTER_FIN                 11
-#define P4E_DROP_COPP                               12
+#define P4E_DROP_MAC_IP_BINDING_FAIL                12
+#define P4E_DROP_COPP                               13
 #define P4E_DROP_REASON_MAX                         P4E_DROP_COPP
 
 /*****************************************************************************/
