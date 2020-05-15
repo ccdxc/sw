@@ -524,88 +524,88 @@ func updateVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc m
 }
 
 func deleteVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc msTypes.EvpnSvcClient, vrf netproto.Vrf) error {
-	curVrfB, err := infraAPI.Read(vrf.Kind, vrf.GetKey())
-	if err != nil {
-		return err
-	}
 	ctx := context.TODO()
-	curVrf := netproto.Vrf{}
-	curVrf.Unmarshal(curVrfB)
 	uid, err := uuid.FromString(vrf.UUID)
 	if err != nil {
 		log.Errorf("failed to parse UUID (%v)", err)
 		return err
 	}
 
-	if curVrf.Spec.RouteImportExport != nil {
-		rtReq := msTypes.EvpnIpVrfRtDeleteRequest{}
-		for _, rt := range vrf.Spec.RouteImportExport.ExportRTs {
-			// Create Metaswitch related objects
-			key := &msTypes.EvpnIpVrfRtKey{
-				VPCId: uid.Bytes(),
-				RT:    utils.RTToBytes(rt),
+	// Remove metaswitch related objects if tenant VPC
+	if vrf.Spec.VrfType == "CUSTOMER" {
+		if vrf.Spec.RouteImportExport != nil {
+			rtReq := msTypes.EvpnIpVrfRtDeleteRequest{}
+			for _, rt := range vrf.Spec.RouteImportExport.ExportRTs {
+				// Delete Metaswitch related objects
+				key := &msTypes.EvpnIpVrfRtKey{
+					VPCId: uid.Bytes(),
+					RT:    utils.RTToBytes(rt),
+				}
+				ert := msTypes.EvpnIpVrfRtKeyHandle{
+					IdOrKey: &msTypes.EvpnIpVrfRtKeyHandle_Key{key},
+				}
+				rtReq.Request = append(rtReq.Request, &ert)
 			}
-			ert := msTypes.EvpnIpVrfRtKeyHandle{
-				IdOrKey: &msTypes.EvpnIpVrfRtKeyHandle_Key{key},
+			for _, rt := range vrf.Spec.RouteImportExport.ImportRTs {
+				key := &msTypes.EvpnIpVrfRtKey{
+					VPCId: uid.Bytes(),
+					RT:    utils.RTToBytes(rt),
+				}
+				ert := msTypes.EvpnIpVrfRtKeyHandle{
+					IdOrKey: &msTypes.EvpnIpVrfRtKeyHandle_Key{key},
+				}
+				rtReq.Request = append(rtReq.Request, &ert)
 			}
-			rtReq.Request = append(rtReq.Request, &ert)
-		}
-		for _, rt := range vrf.Spec.RouteImportExport.ImportRTs {
-			key := &msTypes.EvpnIpVrfRtKey{
-				VPCId: uid.Bytes(),
-				RT:    utils.RTToBytes(rt),
+			eVrfRTResp, err := msc.EvpnIpVrfRtDelete(ctx, &rtReq)
+			if err != nil {
+				log.Infof("EVPN VRF RT Delete received resp (%v)[%+v]", err, eVrfRTResp)
+				return errors.Wrapf(types.ErrControlPlaneHanlding, "Vrf: %s Deleting  EVPN VRF RT| Err: %v", vrf.GetKey(), err)
 			}
-			ert := msTypes.EvpnIpVrfRtKeyHandle{
-				IdOrKey: &msTypes.EvpnIpVrfRtKeyHandle_Key{key},
+			if eVrfRTResp.ApiStatus != halapi.ApiStatus_API_STATUS_OK {
+				log.Infof("EVPN VRF RT Delete received resp (%v)[%v]", err, eVrfRTResp.ApiStatus)
+				return errors.Wrapf(types.ErrControlPlaneHanlding, "Vrf: %s Deleting EVPN VRF RT | Status: %v", vrf.GetKey(), eVrfRTResp.ApiStatus)
 			}
-			rtReq.Request = append(rtReq.Request, &ert)
+			log.Infof("VRF RT Delete: %s: got response [%v]", vrf.Name, eVrfRTResp.ApiStatus)
 		}
-		eVrfRTResp, err := msc.EvpnIpVrfRtDelete(ctx, &rtReq)
-		if err != nil {
-			log.Infof("EVPN VRF RT Delete received resp (%v)[%+v]", err, eVrfRTResp)
-			return errors.Wrapf(types.ErrControlPlaneHanlding, "Vrf: %s Deleting  EVPN VRF RT| Err: %v", vrf.GetKey(), err)
-		}
-		if eVrfRTResp.ApiStatus != halapi.ApiStatus_API_STATUS_OK {
-			log.Infof("EVPN VRF RT Delete received resp (%v)[%v]", err, eVrfRTResp.ApiStatus)
-			return errors.Wrapf(types.ErrControlPlaneHanlding, "Vrf: %s Deleting EVPN VRF RT | Status: %v", vrf.GetKey(), eVrfRTResp.ApiStatus)
-		}
-		log.Infof("VRF RT Delete: %s: got response [%v]", vrf.Name, eVrfRTResp.ApiStatus)
-	}
 
-	key := &msTypes.EvpnIpVrfKey{
-		VPCId: uid.Bytes(),
-	}
-	evrfReq := msTypes.EvpnIpVrfDeleteRequest{
-		Request: []*msTypes.EvpnIpVrfKeyHandle{
-			{
-				IdOrKey: &msTypes.EvpnIpVrfKeyHandle_Key{key},
+		key := &msTypes.EvpnIpVrfKey{
+			VPCId: uid.Bytes(),
+		}
+		evrfReq := msTypes.EvpnIpVrfDeleteRequest{
+			Request: []*msTypes.EvpnIpVrfKeyHandle{
+				{
+					IdOrKey: &msTypes.EvpnIpVrfKeyHandle_Key{key},
+				},
 			},
-		},
+		}
+
+		eVrfResp, err := msc.EvpnIpVrfDelete(ctx, &evrfReq)
+		if err != nil {
+			log.Infof("EVPN VRF Spec Delete received resp (%v)[%+v]", err, eVrfResp)
+			return errors.Wrapf(types.ErrControlPlaneHanlding, "Vrf: %s Deleting EVPN VRF | Err: %v", vrf.GetKey(), err)
+		}
+		if eVrfResp.ApiStatus != halapi.ApiStatus_API_STATUS_OK {
+			log.Infof("EVPN VRF Spec Delete received resp (%v)[%v]", err, eVrfResp.ApiStatus)
+			return errors.Wrapf(types.ErrControlPlaneHanlding, "Vrf: %s Deleting EVPN VRF | Status: %s", vrf.GetKey(), eVrfResp.ApiStatus)
+		}
+		log.Infof("VRF Delete: %s: got response [%v]", vrf.Name, eVrfResp.ApiStatus)
 	}
 
-	eVrfResp, err := msc.EvpnIpVrfDelete(ctx, &evrfReq)
-	if err != nil {
-		log.Infof("EVPN VRF Spec Delete received resp (%v)[%+v]", err, eVrfResp)
-		return errors.Wrapf(types.ErrControlPlaneHanlding, "Vrf: %s Deleting EVPN VRF | Err: %v", vrf.GetKey(), err)
-	}
-	if eVrfResp.ApiStatus != halapi.ApiStatus_API_STATUS_OK {
-		log.Infof("EVPN VRF Spec Delete received resp (%v)[%v]", err, eVrfResp.ApiStatus)
-		return errors.Wrapf(types.ErrControlPlaneHanlding, "Vrf: %s Deleting EVPN VRF | Status: %s", vrf.GetKey(), eVrfResp.ApiStatus)
-	}
-	log.Infof("VRF Delete: %s: got response [%v]", vrf.Name, eVrfResp.ApiStatus)
+	// Remove VPC if its an underlay VPC or VxLANVNI is non-zero
+	if vrf.Spec.VrfType == "INFRA" || vrf.Spec.VxLANVNI != 0 {
+		vpcDelReq := &halapi.VPCDeleteRequest{
+			Id: [][]byte{uid.Bytes()},
+		}
 
-	vpcDelReq := &halapi.VPCDeleteRequest{
-		Id: [][]byte{uid.Bytes()},
-	}
-
-	resp, err := client.VPCDelete(context.Background(), vpcDelReq)
-	if err != nil {
-		log.Errorf("Vrf: %s delete failed | Err: %v", vrf.GetKey(), err)
-		return errors.Wrapf(types.ErrDatapathHandling, "Vrf: %s delete failed | Err: %v", vrf.GetKey(), err)
-	}
-	if resp != nil {
-		if err := utils.HandleErr(types.Delete, resp.ApiStatus[0], err, fmt.Sprintf("VPC: %s", vrf.GetKey())); err != nil {
-			return err
+		resp, err := client.VPCDelete(context.Background(), vpcDelReq)
+		if err != nil {
+			log.Errorf("Vrf: %s delete failed | Err: %v", vrf.GetKey(), err)
+			return errors.Wrapf(types.ErrDatapathHandling, "Vrf: %s delete failed | Err: %v", vrf.GetKey(), err)
+		}
+		if resp != nil {
+			if err := utils.HandleErr(types.Delete, resp.ApiStatus[0], err, fmt.Sprintf("VPC: %s", vrf.GetKey())); err != nil {
+				return err
+			}
 		}
 	}
 
