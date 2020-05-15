@@ -28,7 +28,7 @@ std::string g_grpc_server_addr;
 #include "nic/hal/svc/interface_svc.hpp"
 #include "gen/hal/svc/endpoint_svc_gen.hpp"
 #include "gen/hal/svc/session_svc_gen.hpp"
-#include "gen/hal/svc/telemetry_svc_gen.hpp"
+#include "nic/hal/svc/telemetry_svc.hpp"
 #include "gen/hal/svc/internal_svc_gen.hpp"
 #include "gen/hal/svc/nwsec_svc_gen.hpp"
 #include "gen/hal/svc/qos_svc_gen.hpp"

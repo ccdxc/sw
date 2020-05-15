@@ -53,6 +53,9 @@ struct mirror_session_pd_s {
     uint64_t pad;
 } __PACK__;
 
+
+hal_ret_t pd_mirror_populate_data(mirror_session_t *session,
+                                  mirror_actiondata_t *action_data);
 }    // namespace pd
 }    // namespace hal
 

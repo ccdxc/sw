@@ -1896,7 +1896,7 @@ enic_if_update_check_for_change (InterfaceSpec& spec, if_t *hal_if,
 
         // Check for mirror sessions change
         mirror_session_id_t mirr_hw_id;
-        if (spec.txmirrorsessions_size() != 
+        if ((uint8_t)spec.txmirrorsessions_size() != 
             count_set_bits(hal_if->programmed_tx_session_id_bitmap)) {
             app_ctxt->tx_mirr_change = true;
         }
@@ -1924,7 +1924,7 @@ enic_if_update_check_for_change (InterfaceSpec& spec, if_t *hal_if,
                             app_ctxt->tx_mirr_bmap);
         }
         // RX Mirror
-        if (spec.rxmirrorsessions_size() != 
+        if ((uint8_t)spec.rxmirrorsessions_size() != 
             count_set_bits(hal_if->programmed_rx_session_id_bitmap)) {
             app_ctxt->rx_mirr_change = true;
         }

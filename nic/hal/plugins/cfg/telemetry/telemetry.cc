@@ -151,10 +151,79 @@ telemetry_flow_monitor_rule_get_id (int spec_id)
     return -1;
 }
 
+if_t *
+mirror_erspan_get_tunnel_if (mirror_session_t *session)
+{
+    if_t *tnnl_if = NULL;
+    ip_addr_t *dst_addr = &session->mirror_destination_u.
+        er_span_dest.ip_da;
+
+    tnnl_if = find_tnnlif_by_dst_ip(intf::IF_TUNNEL_ENCAP_TYPE_GRE,
+                                    dst_addr);
+
+    return tnnl_if;
+}
+
+ep_t *
+mirror_erspan_get_remote_ep (mirror_session_t *session)
+{
+    ep_t *ep = NULL;
+    ip_addr_t *dst_addr = &session->mirror_destination_u.
+        er_span_dest.ip_da;
+
+    switch (dst_addr->af) {
+    case IP_AF_IPV4:
+        ep = find_ep_by_v4_key(session->mirror_destination_u.er_span_dest.vrf_id, 
+                               dst_addr->addr.v4_addr);
+        break;
+    case IP_AF_IPV6:
+        ep = find_ep_by_v6_key(session->mirror_destination_u.er_span_dest.vrf_id, 
+                               dst_addr);
+        break;
+    default:
+        HAL_TRACE_ERR("Unknown IP type {}", dst_addr->af);
+    }
+
+    return ep;
+}
+
 hal_ret_t
 mirror_session_update (MirrorSessionSpec &spec, MirrorSessionResponse *rsp)
 {
-    return HAL_RET_OK;
+    hal_ret_t ret = HAL_RET_OK;
+    hal::pd::pd_mirror_session_cfg_update_args_t args;
+    pd::pd_func_args_t pd_func_args = {0};
+    mirror_session_t *session;
+    mirror_session_id_t sw_id;
+    auto ms_ht = g_hal_state->mirror_session_ht();
+
+    hal_api_trace(" API Begin: Mirror Session update");
+    proto_msg_dump(spec);
+
+    sw_id = spec.key_or_handle().mirrorsession_id();
+    session = (mirror_session_t*)ms_ht->lookup(&sw_id);
+    if (session == NULL) {
+        HAL_TRACE_ERR("Mirror session ID {} not found.", sw_id);
+        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
+        return HAL_RET_ENTRY_NOT_FOUND;
+    }
+
+    // Update PI mirror session
+    ret = populate_mirror_session_from_spec(session, spec);
+
+    // PD call to update mirror session
+    args.session = session;
+    pd_func_args.pd_mirror_session_cfg_update = &args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_MIRROR_SESSION_CFG_UPDATE, 
+                          &pd_func_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PD API failed {}", ret);
+        rsp->set_api_status(hal_prepare_rsp(ret));
+        return ret;
+    }
+
+    rsp->set_api_status(hal_prepare_rsp(ret));
+    return ret;
 }
 
 hal_ret_t
@@ -182,8 +251,6 @@ mirror_session_update_pd (mirror_session_t *session,
 
 #if 0
 hal_ret_t
-mirror_session_update_ifs (mirror_session_t *session,
-                           bool dst_if_change, if_t *dest_if,
                            bool tunnel_if_change, if_t *tunnel_if)
 {
     hal_ret_t                       ret = HAL_RET_OK;
@@ -291,8 +358,8 @@ end:
 #endif
 }
 
-static if_t *
-telemetry_mirror_pick_dest_if ()
+if_t *
+telemetry_mirror_pick_dest_if (void)
 {
     if_t *dst_if = NULL;
 
@@ -329,6 +396,37 @@ telemetry_mirror_pick_dest_if ()
 
     return dest_if;
 #endif
+}
+
+hal_ret_t
+populate_mirror_session_from_spec (mirror_session_t *session, 
+                                   MirrorSessionSpec &spec)
+{
+    hal_ret_t ret = HAL_RET_OK;
+
+    session->sw_id = spec.key_or_handle().mirrorsession_id();
+    session->truncate_len = spec.snaplen();
+
+    if (spec.destination_case() == MirrorSessionSpec::kErspanSpec) {
+        auto erspan = spec.erspan_spec();
+        session->type = hal::MIRROR_DEST_ERSPAN;
+        session->mirror_destination_u.er_span_dest.vrf_id =
+            spec.vrf_key_handle().vrf_id();
+        ip_addr_t *src_addr = &session->mirror_destination_u.
+            er_span_dest.ip_sa;
+        ip_addr_t *dst_addr = &session->mirror_destination_u.
+            er_span_dest.ip_da;
+        session->mirror_destination_u.er_span_dest.ip_type = dst_addr->af;
+        ip_addr_spec_to_ip_addr(src_addr, erspan.src_ip());
+        ip_addr_spec_to_ip_addr(dst_addr, erspan.dest_ip());
+        auto erspan_type = erspan.type();
+        SDK_ASSERT(erspan_type == ERSPAN_TYPE_II || erspan_type == ERSPAN_TYPE_III);
+        session->mirror_destination_u.er_span_dest.type = erspan_type;
+        session->mirror_destination_u.er_span_dest.vlan_strip_en = erspan.vlan_strip_en();
+        session->mirror_destination_u.er_span_dest.span_id = erspan.span_id();
+    }
+
+    return ret;
 }
 
 hal_ret_t
@@ -398,6 +496,10 @@ mirror_session_create (MirrorSessionSpec &spec, MirrorSessionResponse *rsp)
         break;
     }
     case MirrorSessionSpec::kErspanSpec: {
+        ret = populate_mirror_session_from_spec(session,
+                                                spec);
+        break;
+#if 0
         auto erspan = spec.erspan_spec();
         session->mirror_destination_u.er_span_dest.vrf_id =
             spec.vrf_key_handle().vrf_id();
@@ -451,6 +553,7 @@ mirror_session_create (MirrorSessionSpec &spec, MirrorSessionResponse *rsp)
         args.dst_if = dest_if;
         args.rtep_ep = ep;
         break;
+#endif
     }
     default: {
         TELEMETRY_FREE_RSP_RET_TRACE(mirror_session_free, session,
@@ -785,9 +888,10 @@ collector_create (CollectorSpec &spec, CollectorResponse *rsp)
     uint64_t mgmt_mac = 0;
     uint32_t id;
     encap_t  encap;
-    // if_t     *dest_if = NULL, *ndest_if = NULL;
 
-    collector_spec_dump(spec);
+    hal_api_trace(" API Begin: Collector create ");
+    proto_msg_dump(spec);
+
     // Get free collector id
     sdk_ret_t sret = g_hal_state->telemetry_collectors_bmp()->first_free(&id);
     if (sret != SDK_RET_OK) {
@@ -800,7 +904,7 @@ collector_create (CollectorSpec &spec, CollectorResponse *rsp)
         rsp->set_api_status(types::API_STATUS_INVALID_ARG);
         return HAL_RET_INVALID_ARG;
     }
-    HAL_TRACE_DEBUG("ExportID {} allocated id {}",
+    HAL_TRACE_DEBUG("ExportID {} allocated bmp id {}",
                         spec.key_or_handle().collector_id(), id);
     // Stash the collector id
     telemetry_collector_id_db[id] = spec.key_or_handle().collector_id();
@@ -917,9 +1021,107 @@ cleanup:
 }
 
 hal_ret_t
+populate_collector_from_spec (collector_config_t &cfg,
+                              CollectorSpec &spec)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    mac_addr_t *mac = NULL;
+    mac_addr_t smac;
+    uint64_t mgmt_mac = 0;
+    encap_t  encap;
+
+    ip_addr_spec_to_ip_addr(&cfg.src_ip, spec.src_ip());
+    ip_addr_spec_to_ip_addr(&cfg.dst_ip, spec.dest_ip());
+    auto ep = find_ep_by_v4_key(spec.vrf_key_handle().vrf_id(), cfg.dst_ip.addr.v4_addr);
+    if (!ep) {
+        HAL_TRACE_DEBUG("Unable to find ep for ip: {}",
+                        ipaddr2str(&cfg.dst_ip));
+    }
+
+    cfg.ep = ep;
+    cfg.template_id = spec.template_id();
+    cfg.export_intvl = spec.export_interval();
+    switch (spec.format()) {
+        case telemetry::ExportFormat::IPFIX:
+            cfg.format = EXPORT_FORMAT_IPFIX;
+            break;
+        case telemetry::ExportFormat::NETFLOWV9:
+            HAL_TRACE_ERR("PI-Collector: Netflow-v9 format type is not supported {}",
+                           spec.format());
+            ret = HAL_RET_INVALID_ARG;
+            goto end;
+        default:
+            HAL_TRACE_ERR("PI-Collector: Unknown format type {}", spec.format());
+            ret = HAL_RET_INVALID_ARG;
+            goto end;
+    }
+    cfg.protocol = spec.protocol();
+    cfg.dport = spec.dest_port();
+    cfg.l2seg = l2seg_lookup_key_or_handle(spec.l2seg_key_handle());
+    if (cfg.l2seg == NULL) {
+        HAL_TRACE_ERR("PI-Collector: Could not retrieve L2 segment");
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+    /* MAC SA. Use mac from device.conf only if it is set. Else derive the smac via ep l2seg */
+    mgmt_mac = g_hal_state->mgmt_if_mac();
+    if (mgmt_mac == 0) {
+        mac = ep_get_rmac(ep, cfg.l2seg);
+        memcpy(cfg.src_mac, mac, sizeof(mac_addr_t));
+    } else {
+        MAC_UINT64_TO_ADDR(smac, mgmt_mac);
+        memcpy(cfg.src_mac, smac, sizeof(mac_addr_t));
+    }
+
+    /* Encap comes from the l2seg */
+    encap = l2seg_get_wire_encap(cfg.l2seg);
+    if (encap.type == types::ENCAP_TYPE_DOT1Q) {
+        cfg.vlan = encap.val;
+        HAL_TRACE_DEBUG("PI-Collector: Encap vlan {}", cfg.vlan);
+    } else {
+        HAL_TRACE_ERR("PI-Collector: Unsupport Encap {}", encap.type);
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+end:
+    return ret;
+}
+
+hal_ret_t
 collector_update (CollectorSpec &spec, CollectorResponse *rsp)
 {
-    return HAL_RET_OK;
+    hal_ret_t                       ret;
+    collector_config_t              cfg;
+    pd::pd_func_args_t              pd_func_args = {0};
+    pd::pd_collector_update_args_t  args;
+
+    hal_api_trace(" API Begin: Collector update ");
+    proto_msg_dump(spec);
+
+    int id = telemetry_collector_get_id(spec.key_or_handle().collector_id());
+    if (id < 0) {
+        HAL_TRACE_ERR("Collector not found for id {}", 
+                      spec.key_or_handle().collector_id());
+        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
+        return HAL_RET_INVALID_ARG;
+    }
+    cfg.collector_id = id;
+
+    ret = populate_collector_from_spec(cfg, spec); 
+
+    args.cfg = &cfg;
+    args.ep = cfg.ep;
+    pd_func_args.pd_collector_update = &args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_COLLECTOR_UPDATE, &pd_func_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PI-Collector: PD API failed {}", ret);
+        goto end;
+    }
+    
+end:
+    rsp->set_api_status(hal_prepare_rsp(ret));
+    return ret;
 }
 
 hal_ret_t
@@ -930,8 +1132,8 @@ collector_delete (CollectorDeleteRequest &req, CollectorDeleteResponse *rsp)
     pd::pd_func_args_t              pd_func_args = {0};
     pd::pd_collector_delete_args_t  args;
 
-    HAL_TRACE_DEBUG("Collector ID {}",
-            req.key_or_handle().collector_id());
+    hal_api_trace(" API Begin: Collector delete ");
+    proto_msg_dump(req);
     int id = telemetry_collector_get_id(req.key_or_handle().collector_id());
     if (id < 0) {
         HAL_TRACE_ERR("Collector not found for id {}", req.key_or_handle().collector_id());
@@ -1064,16 +1266,20 @@ hal_ret_t get_flowmon_action (FlowMonitorRuleSpec &spec,
 
 static hal_ret_t
 populate_flow_monitor_rule (FlowMonitorRuleSpec &spec,
-                            flow_monitor_rule_t *rule)
+                            flow_monitor_rule_t *rule,
+                            bool skip_match_extraction)
 {
     hal_ret_t   ret = HAL_RET_OK;
+    uint32_t    mirr_hw_id_bmp = 0;
 
-    // Populate the rule_match structure
-    ret = rule_match_spec_extract(spec.match(), &rule->rule_match);
-    if (ret != HAL_RET_OK) {
-        rule_match_cleanup(&rule->rule_match);
-        HAL_TRACE_ERR("Failed to retrieve rule_match");
-        return ret;
+    if (!skip_match_extraction) {
+        // Populate the rule_match structure
+        ret = rule_match_spec_extract(spec.match(), &rule->rule_match);
+        if (ret != HAL_RET_OK) {
+            rule_match_cleanup(&rule->rule_match);
+            HAL_TRACE_ERR("Failed to retrieve rule_match");
+            return ret;
+        }
     }
     rule->action.num_mirror_dest = rule->action.num_collector = 0;
     if (spec.has_action()) {
@@ -1099,10 +1305,13 @@ populate_flow_monitor_rule (FlowMonitorRuleSpec &spec,
                 }
                 rule->action.mirror_destinations_sw_id[i] = sw_id;
                 rule->action.mirror_destinations[i] = hw_id;
+                mirr_hw_id_bmp |= (1 << hw_id);
                 HAL_TRACE_DEBUG("Mirror Destinations[{}] hw: {} sw: {}", i,
                                 rule->action.mirror_destinations[i],
                                 rule->action.mirror_destinations_sw_id[i]);
             }
+            SDK_ATOMIC_STORE_UINT32(&(rule->action.mirr_hw_id_bmp), &mirr_hw_id_bmp);
+            HAL_TRACE_DEBUG("Mirror Desg hwid bitmap: {}", rule->action.mirr_hw_id_bmp);
             rule->action.num_mirror_dest = n;
             n = spec.action().action_size();
             if (n != 0) {
@@ -1165,6 +1374,9 @@ flow_monitor_rule_create (FlowMonitorRuleSpec &spec, FlowMonitorRuleResponse *rs
     bool                new_ctx = false;
     const acl_ctx_t    *flowmon_acl_ctx_p = NULL;
 
+    hal_api_trace(" API Begin: Flowmonitor rule create ");
+    proto_msg_dump(spec);
+
     vrf_id = spec.vrf_key_handle().vrf_id();
     if (vrf_id == HAL_VRF_ID_INVALID) {
         rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
@@ -1217,7 +1429,7 @@ flow_monitor_rule_create (FlowMonitorRuleSpec &spec, FlowMonitorRuleResponse *rs
                          rule->vrf_id, (uint64_t) flowmon_acl_ctx);
         new_ctx = true;
     }
-    ret = populate_flow_monitor_rule(spec, rule);
+    ret = populate_flow_monitor_rule(spec, rule, false);
     if (ret != HAL_RET_OK) {
         rsp->set_api_status(types::API_STATUS_ERR);
         goto end;
@@ -1264,9 +1476,62 @@ end:
 }
 
 hal_ret_t
-flow_monitor_rule_update (FlowMonitorRuleSpec &spec, FlowMonitorRuleResponse *rsp)
+flow_monitor_rule_update (FlowMonitorRuleSpec &spec, FlowMonitorRuleResponse *rsp,
+                          bool batch_end)
 {
-    hal_ret_t ret = HAL_RET_OK;
+    hal_ret_t           ret = HAL_RET_OK;
+    uint64_t            vrf_id;
+    int                 id;
+    rule_key_t          rule_id = (~0);
+    flow_monitor_rule_t *rule = NULL;
+
+    hal_api_trace(" API Begin: Flowmonitor rule update ");
+    proto_msg_dump(spec);
+
+    vrf_id = spec.vrf_key_handle().vrf_id();
+    if (vrf_id == HAL_VRF_ID_INVALID) {
+        rsp->set_api_status(types::API_STATUS_VRF_ID_INVALID);
+        HAL_TRACE_ERR("vrf {}", spec.vrf_key_handle().vrf_id());
+        ret = HAL_RET_INVALID_ARG;
+        goto end;
+    }
+
+    id = telemetry_flow_monitor_rule_get_id(
+                        spec.key_or_handle().flowmonitorrule_id());
+    rule_id = id;
+    if (rule_id < 0) {
+        HAL_TRACE_ERR("Rule not found for id {}",
+                        spec.key_or_handle().flowmonitorrule_id());
+        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
+        return HAL_RET_INVALID_ARG;
+    }
+    rule = (flow_monitor_rule_t *)g_hal_state->flowmon_rules_ht()->lookup((void *)&rule_id);
+    if (!rule) {
+        HAL_TRACE_DEBUG("Ruleid {} does not exist", rule_id);
+        ret = HAL_RET_OK;
+        goto end;
+    }
+    HAL_TRACE_DEBUG("Ruleid {}", rule_id);
+
+    if (rule->action.num_mirror_dest == 0) {
+        HAL_TRACE_ERR("Update supported only for mirror.");
+        goto end;
+    }
+
+    ret = populate_flow_monitor_rule(spec, rule, true);
+    if (ret != HAL_RET_OK) {
+        rsp->set_api_status(types::API_STATUS_ERR);
+        goto end;
+    }
+
+    if (batch_end) {
+        ret = telemetry_eval_sessions();
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("telemetry_eval_sessions failed {}", ret);
+        }
+    }
+
+end:
     return ret;
 }
 

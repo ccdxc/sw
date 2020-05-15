@@ -300,6 +300,7 @@ hal_pd_load_symbols (void)
 
     // mirror session
     PD_FUNC_LOAD(PD_FUNC_ID_MIRROR_SESSION_CREATE, pd_mirror_session_create);
+    PD_FUNC_LOAD(PD_FUNC_ID_MIRROR_SESSION_CFG_UPDATE, pd_mirror_session_cfg_update);
     PD_FUNC_LOAD(PD_FUNC_ID_MIRROR_SESSION_UPDATE, pd_mirror_session_update);
     PD_FUNC_LOAD(PD_FUNC_ID_MIRROR_SESSION_DELETE, pd_mirror_session_delete);
     PD_FUNC_LOAD(PD_FUNC_ID_MIRROR_SESSION_GET_HW_ID, pd_mirror_session_get_hw_id);
@@ -315,6 +316,7 @@ hal_pd_load_symbols (void)
 
     // collector
     PD_FUNC_LOAD(PD_FUNC_ID_COLLECTOR_CREATE, pd_collector_create);
+    PD_FUNC_LOAD(PD_FUNC_ID_COLLECTOR_UPDATE, pd_collector_update);
     PD_FUNC_LOAD(PD_FUNC_ID_COLLECTOR_DELETE, pd_collector_delete);
     PD_FUNC_LOAD(PD_FUNC_ID_COLLECTOR_GET, pd_collector_get);
     PD_FUNC_LOAD(PD_FUNC_ID_COLL_EP_UPDATE, pd_collector_ep_update);

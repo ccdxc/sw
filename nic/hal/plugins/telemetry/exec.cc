@@ -25,6 +25,7 @@ update_flow_from_telemetry_rules (fte::ctx_t& ctx, bool mirror_action)
     fte::flow_update_t                  export_flowupd;
     hal::ipv4_tuple                     acl_key;
     hal_ret_t                           ret = HAL_RET_OK;
+    uint32_t                            mirr_hw_id_bmp = 0;
     const hal::flow_monitor_rule_t      *frule = NULL;
     const hal::ipv4_rule_t              *rule = NULL;
     const acl::acl_ctx_t                *acl_ctx = NULL;
@@ -96,22 +97,16 @@ update_flow_from_telemetry_rules (fte::ctx_t& ctx, bool mirror_action)
         if (mirror_action) {
             if (frule->action.num_mirror_dest > 0) {
                 mirror_flowupd.mirror_info.mirror_en = true;
-                mirror_flowupd.mirror_info.ing_mirror_session = 0;
-                mirror_flowupd.mirror_info.egr_mirror_session = 0;
-                for (int i = 0; i < frule->action.num_mirror_dest; i++) {
-                    //
-                    // We always want to send user-vlan while mirroring. so pick
-                    // the mirroring as ingress or egress depending on the
-                    // flow direction. There is a bit of a cost to do the recirc
-                    // for egress in P4. TBD: Move to user configurable option
-                    //
-                    if (ctx.get_flow_direction() == hal::FLOW_DIR_FROM_DMA) { 
-                        mirror_flowupd.mirror_info.egr_mirror_session |= 
-                        (1 << frule->action.mirror_destinations[i]);
-                    } else {
-                        mirror_flowupd.mirror_info.ing_mirror_session |= 
-                        (1 << frule->action.mirror_destinations[i]);
-                    }
+                //
+                // We always want to send user-vlan while mirroring. so pick
+                // the mirroring as ingress or egress depending on the
+                // flow direction. TBD: Move to user configurable option
+                //
+                SDK_ATOMIC_LOAD_UINT32(&mirr_hw_id_bmp, &(frule->action.mirr_hw_id_bmp));
+                if (ctx.get_flow_direction() == hal::FLOW_DIR_FROM_DMA) { 
+                    mirror_flowupd.mirror_info.egr_mirror_session = mirr_hw_id_bmp;
+                } else {
+                    mirror_flowupd.mirror_info.ing_mirror_session = mirr_hw_id_bmp;
                 }
             }
         }

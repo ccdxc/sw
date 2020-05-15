@@ -12,6 +12,7 @@ typedef enum gtest_oper_e {
 
 #define GTEST_EP_NUM_IPS 10
 #define GTEST_EP_MIRR_SESSIONS 8
+#define GTEST_FLOW_MON_MIRR_SESSIONS 8
 
 typedef struct gtest_ep_s {
     uint32_t vrf_id;
@@ -34,6 +35,33 @@ typedef struct gtest_enic_s {
     uint32_t rx_mirr[GTEST_EP_MIRR_SESSIONS];
     uint32_t rx_mirr_count;
 } __PACK__ gtest_enic_t;
+
+typedef struct gtest_mirror_s {
+    uint32_t session_id;
+    uint32_t span_id;
+    uint32_t vrf_id;
+    uint32_t sip;
+    uint32_t dip;
+    bool vlan_strip_en;
+    uint8_t erspan_type;
+} __PACK__ gtest_mirror_t;
+
+typedef struct gtest_flow_mon_s {
+    uint32_t vrf_id;
+    uint32_t rule_id;
+    uint32_t sess_id[GTEST_FLOW_MON_MIRR_SESSIONS];
+    uint32_t sess_count;
+} __PACK__ gtest_flow_mon_t;
+
+typedef struct gtest_collector_s {
+    uint32_t cid;
+    uint32_t vrf; 
+    uint32_t l2seg;
+    uint32_t src_ip; 
+    uint32_t dst_ip;
+    uint32_t dest_port;
+    uint32_t export_invl;
+} __PACK__ gtest_collector_t;
 
 hal_ret_t create_uplink(uint32_t if_id, uint32_t port, 
                         uint32_t native_l2seg = 0, bool is_oob = false);
@@ -68,5 +96,8 @@ hal_ret_t delete_ep(uint32_t vrf_id, uint32_t l2seg_id, uint64_t mac);
 hal_ret_t create_mcast(uint32_t l2seg_id, uint64_t mac, uint32_t ifid[], uint32_t ifid_count);
 hal_ret_t delete_mcast(uint32_t l2seg_id, uint64_t mac);
 hal_ret_t create_mirror(uint32_t session_id, uint32_t vrf_id, uint32_t sip, uint32_t dip, bool vlan_strip_en = false, uint8_t erspan_type=3);
+hal_ret_t update_mirror(gtest_mirror_t *mirror, bool create);
 hal_ret_t create_collector(uint32_t cid, uint32_t vrf, uint32_t l2seg, 
                            uint32_t src_ip, uint32_t dst_ip);
+hal_ret_t update_collector(gtest_collector_t *coll, bool create);
+hal_ret_t update_flow_monitor(gtest_flow_mon_t *fmon, bool create);

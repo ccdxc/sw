@@ -204,6 +204,7 @@ typedef struct flow_monitor_rule_action_s {
     uint8_t     collectors[MAX_COLLECTORS_PER_FLOW]; // Collector ids
     uint8_t     mirror_destinations[MAX_MIRROR_SESSION_DEST];   // Mirror session hw ids
     mirror_session_id_t mirror_destinations_sw_id[MAX_MIRROR_SESSION_DEST];   // Mirror session sw ids
+    uint32_t    mirr_hw_id_bmp;
     bool        mirror_to_cpu;       // Mirror to cpu - additional mirror dest
 } __PACK__ flow_monitor_rule_action_t;
 
@@ -256,6 +257,7 @@ typedef struct collector_config_s {
     uint32_t            template_id;
     uint32_t            export_intvl;
     export_formats_en   format;
+    ep_t                *ep;
 } collector_config_t;
 
 typedef struct collector_stats_s {
@@ -346,32 +348,6 @@ flowmon_acl_ctx_name (vrf_id_t vrf_id, bool mirror_action)
         std::snprintf(name, sizeof(name), "flowmon-rules-collect:%lu", vrf_id);
     }
     return name;
-}
-
-static inline void
-collector_spec_dump (CollectorSpec& spec)
-{
-    std::string    cfg;
-
-    if (hal::utils::hal_trace_level() < ::utils::trace_debug) {
-        return;
-    }
-    google::protobuf::util::MessageToJsonString(spec, &cfg);
-    HAL_TRACE_DEBUG("CollectorSpec configuration:");
-    HAL_TRACE_DEBUG("{}", cfg.c_str());
-}
-
-static inline void
-flowmonrule_spec_dump (FlowMonitorRuleSpec& spec)
-{
-    std::string    cfg;
-
-    if (hal::utils::hal_trace_level() < ::utils::trace_debug) {
-        return;
-    }
-    google::protobuf::util::MessageToJsonString(spec, &cfg);
-    HAL_TRACE_DEBUG("FlowMonitorRuleSpec configuration:");
-    HAL_TRACE_DEBUG("{}", cfg.c_str());
 }
 
 static inline void
@@ -499,7 +475,8 @@ hal_ret_t collector_get(CollectorGetRequest &req, CollectorGetResponseMsg *rsp);
 hal_ret_t collector_ep_update(ip_addr_t *ip, ep_t *ep);
 
 hal_ret_t flow_monitor_rule_create(FlowMonitorRuleSpec &spec, FlowMonitorRuleResponse *rsp);
-hal_ret_t flow_monitor_rule_update(FlowMonitorRuleSpec &spec, FlowMonitorRuleResponse *rsp);
+hal_ret_t flow_monitor_rule_update(FlowMonitorRuleSpec &spec, FlowMonitorRuleResponse *rsp,
+                                   bool batch_end);
 hal_ret_t flow_monitor_rule_delete(FlowMonitorRuleDeleteRequest &req, FlowMonitorRuleDeleteResponse *rsp);
 hal_ret_t flow_monitor_rule_get(FlowMonitorRuleGetRequest &req, FlowMonitorRuleGetResponseMsg *rsp);
 
@@ -514,6 +491,13 @@ uint32_t flowmon_rules_key_size(void);
 
 void *mirror_session_get_key_func(void *entry);
 uint32_t mirror_session_key_size(void);
+if_t * mirror_erspan_get_tunnel_if(mirror_session_t *session);
+ep_t *mirror_erspan_get_remote_ep(mirror_session_t *session);
+if_t *telemetry_mirror_pick_dest_if(void);
+hal_ret_t populate_mirror_session_from_spec(mirror_session_t *session, 
+                                            MirrorSessionSpec &spec);
+hal_ret_t populate_collector_from_spec(collector_config_t &cfg,
+                                       CollectorSpec &spec);
 
 }    // namespace
 

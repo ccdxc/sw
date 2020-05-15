@@ -13,6 +13,7 @@ MODULE_SRCS     = ${MODULE_SRC_DIR}/event_svc.cc \
 				  ${MODULE_SRC_DIR}/proxy_svc.cc \
 				  ${MODULE_SRC_DIR}/system_svc.cc \
 				  ${MODULE_SRC_DIR}/nic_svc.cc \
+				  ${MODULE_SRC_DIR}/telemetry_svc.cc \
 				  ${MODULE_SRC_DIR}/interface_svc.cc
 endif
 include ${MKDEFS}/post.mk

@@ -2042,6 +2042,16 @@ pd_mirror_session_update_args_init (pd_mirror_session_update_args_t *args)
     args->session = NULL;
 }
 
+typedef struct pd_mirror_session_cfg_update_args_s {
+    mirror_session_t *session;
+} __PACK__ pd_mirror_session_cfg_update_args_t;
+
+static inline void
+pd_mirror_session_cfg_update_args_init (pd_mirror_session_cfg_update_args_t *args)
+{
+    args->session = NULL;
+}
+
 typedef struct pd_mirror_session_delete_args_s {
     mirror_session_t *session;
 } __PACK__ pd_mirror_session_delete_args_t;
@@ -2159,6 +2169,18 @@ pd_collector_create_args_init (pd_collector_create_args_t *args)
     args->cfg = NULL;
 }
 
+typedef struct pd_collector_update_args_s {
+    collector_config_t *cfg;
+    ep_t *ep;
+} __PACK__ pd_collector_update_args_t;
+
+static inline void
+pd_collector_update_args_init (pd_collector_update_args_t *args)
+{
+    args->cfg = NULL;
+    args->ep = NULL;
+}
+
 typedef struct pd_collector_ep_update_args_s {
     ip_addr_t *ip;
     ep_t *ep;
@@ -2185,6 +2207,7 @@ static inline void
 pd_collector_get_args_init (pd_collector_get_args_t *args)
 {
     args->cfg = NULL;
+    args->stats = NULL;
 }
 
 // mc entry
@@ -3399,7 +3422,9 @@ pd_nvme_cq_create_args_init (pd_nvme_cq_create_args_t *args)
     ENTRY(PD_FUNC_ID_IF_COMPUTE_BW,              353, "PD_FUNC_ID_IF_COMPUTE_BW") \
     ENTRY(PD_FUNC_ID_QOS_CLASS_RESET_STATS,      354, "PD_FUNC_ID_QOS_CLASS_RESET_STATS")        \
     ENTRY(PD_FUNC_ID_QOS_CLEAR_STATS,            355, "PD_FUNC_ID_QOS_CLEAR_STATS")        \
-    ENTRY(PD_FUNC_ID_MAX,                        356, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_MIRROR_SESSION_CFG_UPDATE,  356, "PD_FUNC_ID_MIRROR_SESSION_CFG_UPDATE")\
+    ENTRY(PD_FUNC_ID_COLLECTOR_UPDATE,           357, "PD_FUNC_ID_COLLECTOR_UPDATE")\
+    ENTRY(PD_FUNC_ID_MAX,                        358, "pd_func_id_max")
 
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
@@ -3628,6 +3653,7 @@ typedef struct pd_func_args_s {
 
         // mirror session
         PD_UNION_ARGS_FIELD(pd_mirror_session_create);
+        PD_UNION_ARGS_FIELD(pd_mirror_session_cfg_update);
         PD_UNION_ARGS_FIELD(pd_mirror_session_update);
         PD_UNION_ARGS_FIELD(pd_mirror_session_delete);
         PD_UNION_ARGS_FIELD(pd_mirror_session_get_hw_id);
@@ -3643,6 +3669,7 @@ typedef struct pd_func_args_s {
 
         // collector
         PD_UNION_ARGS_FIELD(pd_collector_create);
+        PD_UNION_ARGS_FIELD(pd_collector_update);
         PD_UNION_ARGS_FIELD(pd_collector_delete);
         PD_UNION_ARGS_FIELD(pd_collector_get);
         PD_UNION_ARGS_FIELD(pd_collector_ep_update);
@@ -4090,6 +4117,7 @@ PD_FUNCP_TYPEDEF(pd_wring_get_base_addr);
 // mirror session
 PD_FUNCP_TYPEDEF(pd_mirror_session_create);
 PD_FUNCP_TYPEDEF(pd_mirror_session_update);
+PD_FUNCP_TYPEDEF(pd_mirror_session_cfg_update);
 PD_FUNCP_TYPEDEF(pd_mirror_session_delete);
 PD_FUNCP_TYPEDEF(pd_mirror_session_get_hw_id);
 
@@ -4109,6 +4137,7 @@ PD_FUNCP_TYPEDEF(pd_drop_monitor_rule_get);
 
 // collector
 PD_FUNCP_TYPEDEF(pd_collector_create);
+PD_FUNCP_TYPEDEF(pd_collector_update);
 PD_FUNCP_TYPEDEF(pd_collector_delete);
 PD_FUNCP_TYPEDEF(pd_collector_get);
 PD_FUNCP_TYPEDEF(pd_collector_ep_update);

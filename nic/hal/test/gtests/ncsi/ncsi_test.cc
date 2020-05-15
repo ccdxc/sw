@@ -30,7 +30,7 @@
 #include "nic/hal/svc/interface_svc.hpp"
 #include "nic/hal/svc/proxy_svc.hpp"
 
-#include "gen/hal/svc/telemetry_svc_gen.hpp"
+#include "nic/hal/svc/telemetry_svc.hpp"
 #include "gen/hal/svc/nw_svc_gen.hpp"
 #include "gen/hal/svc/rdma_svc_gen.hpp"
 #include "gen/hal/svc/vrf_svc_gen.hpp"

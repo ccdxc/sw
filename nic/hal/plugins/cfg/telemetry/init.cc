@@ -1,6 +1,6 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#include "gen/hal/svc/telemetry_svc_gen.hpp"
+#include "nic/hal/svc/telemetry_svc.hpp"
 
 using grpc::Server;
 using grpc::ServerBuilder;

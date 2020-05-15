@@ -29,7 +29,7 @@ telemetry_export_dest_t export_destinations[TELEMETRY_NUM_EXPORT_DEST];
 char _deb_buf[TELEMETRY_EXPORT_BUFF_SIZE + 1];
 
 hal_ret_t
-pd_mirror_update_hw(uint32_t id, mirror_actiondata_t *action_data)
+pd_mirror_update_hw (uint32_t id, mirror_actiondata_t *action_data)
 {
     hal_ret_t           ret = HAL_RET_OK;
     sdk_ret_t           sdk_ret;
@@ -42,29 +42,40 @@ pd_mirror_update_hw(uint32_t id, mirror_actiondata_t *action_data)
     sdk_ret = session->update(id, action_data);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("{}: programming sesion {} failed ({})",
-                __FUNCTION__, id, ret);
+        HAL_TRACE_ERR("Programming sesion {} failed ({})",
+                      id, ret);
         if (sdk_ret == SDK_RET_ENTRY_NOT_FOUND) {
             sdk_ret = session->insert_withid(action_data, id);
             ret = hal_sdk_ret_to_hal_ret(sdk_ret);
             if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("{}: programming sesion {} failed ({})",
-                              __FUNCTION__, id, ret);
+                HAL_TRACE_ERR("Programming sesion {} failed ({})",
+                              id, ret);
             } else {
-                HAL_TRACE_DEBUG("{}: programmed session {}: {}",
-                                __FUNCTION__, id, buff);
+                HAL_TRACE_DEBUG("Programmed session {}: {}",
+                                id, buff);
             }
         }
     } else {
-#if 0
-        p4pd_error_t        p4_err;
-        p4_err =  p4pd_table_ds_decoded_string_get(P4TBL_ID_MIRROR, 0, NULL, NULL,
-                action_data, buff, sizeof(buff));
-        SDK_ASSERT(p4_err == P4PD_SUCCESS);
-#endif
-        HAL_TRACE_DEBUG("{}: programmed session {}: {}",
-                __FUNCTION__, id, buff);
+        HAL_TRACE_DEBUG("Programmed session {}: {}",
+                        id, buff);
     }
+    return ret;
+}
+
+hal_ret_t
+pd_mirror_session_cfg_update (pd_func_args_t *pd_func_args)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    pd_mirror_session_cfg_update_args_t *args = 
+        pd_func_args->pd_mirror_session_cfg_update;
+    mirror_session_pd_t *session_pd = (mirror_session_pd_t *)args->session->pd;
+    mirror_actiondata_t action_data;
+    auto hw_id = session_pd->hw_id;
+
+    ret = pd_mirror_populate_data(args->session, &action_data); 
+
+    ret = pd_mirror_update_hw(hw_id, &action_data);
+
     return ret;
 }
 
@@ -216,13 +227,65 @@ pd_mirror_session_update (pd_func_args_t *pd_func_args)
 #endif
 
 hal_ret_t
+pd_mirror_populate_data (mirror_session_t *session,
+                         mirror_actiondata_t *action_data)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    if_t      *dest_if = NULL, *tnnl_if = NULL;
+    ep_t      *rtep_ep = NULL;
+    uint32_t  dst_lport;
+    hal::pd::pd_tunnelif_get_rw_idx_args_t tif_args = { 0 };
+    pd_func_args_t pd_func_args1 = {0};
+
+    memset(action_data, 0, sizeof(mirror_actiondata_t));
+    
+    if (session->type == MIRROR_DEST_ERSPAN) {
+        action_data->action_id = MIRROR_ERSPAN_MIRROR_ID;
+        auto erspan_type = session->mirror_destination_u.er_span_dest.type;
+        auto vlan_strip_en = session->mirror_destination_u.er_span_dest.vlan_strip_en;
+        auto span_id = session->mirror_destination_u.er_span_dest.span_id;
+        action_data->action_u.mirror_erspan_mirror.truncate_len = session->truncate_len;
+        action_data->action_u.mirror_erspan_mirror.erspan_type = erspan_type;
+        action_data->action_u.mirror_erspan_mirror.vlan_strip_en = vlan_strip_en;
+        action_data->action_u.mirror_erspan_mirror.span_id = span_id ? span_id : 1;
+        action_data->action_u.mirror_erspan_mirror.span_tm_oq = qos_get_span_tm_oq();
+        if (likely(is_platform_type_hw()) &&
+            likely(erspan_type == ERSPAN_TYPE_II || erspan_type == ERSPAN_TYPE_III)) {
+            action_data->action_u.mirror_erspan_mirror.gre_seq_en = 1;
+        }
+        dest_if = telemetry_mirror_pick_dest_if();
+        dst_lport = dest_if ? if_get_lport_id(dest_if) : 0;
+
+        tnnl_if = mirror_erspan_get_tunnel_if(session);
+        if (tnnl_if) {
+            tif_args.hal_if = tnnl_if;
+            pd_func_args1.pd_tunnelif_get_rw_idx = &tif_args;
+            hal::pd::pd_tunnelif_get_rw_idx(&pd_func_args1);
+            action_data->action_u.mirror_erspan_mirror.tunnel_rewrite_index =
+                tif_args.tnnl_rw_idx;
+        } else {
+            dst_lport = 0;
+        }
+
+        rtep_ep = mirror_erspan_get_remote_ep(session);
+        if (!rtep_ep) {
+            dst_lport = 0;
+        }
+        action_data->action_u.mirror_erspan_mirror.dst_lport = dst_lport;
+    }
+
+    return ret;
+}
+
+hal_ret_t
 pd_mirror_session_create (pd_func_args_t *pd_func_args)
 {
+    hal_ret_t ret = HAL_RET_OK;
     uint32_t dst_lport;
     pd_mirror_session_create_args_t *args = pd_func_args->pd_mirror_session_create;
     mirror_actiondata_t action_data;
-    hal::pd::pd_tunnelif_get_rw_idx_args_t    tif_args = { 0 };
-    pd_func_args_t pd_func_args1 = {0};
+    // hal::pd::pd_tunnelif_get_rw_idx_args_t    tif_args = { 0 };
+    // pd_func_args_t pd_func_args1 = {0};
     mirror_session_pd_t *session_pd;
     uint32_t hw_id;
 
@@ -269,6 +332,8 @@ pd_mirror_session_create (pd_func_args_t *pd_func_args)
         break;
     }
     case MIRROR_DEST_ERSPAN: {
+        ret = pd_mirror_populate_data(args->session, &action_data);
+#if 0
         action_data.action_id = MIRROR_ERSPAN_MIRROR_ID;
         auto erspan_type = args->session->mirror_destination_u.er_span_dest.type;
         auto vlan_strip_en = args->session->mirror_destination_u.er_span_dest.vlan_strip_en;
@@ -302,6 +367,7 @@ pd_mirror_session_create (pd_func_args_t *pd_func_args)
             dst_lport = 0;
         }
         action_data.action_u.mirror_erspan_mirror.dst_lport = dst_lport;
+#endif
         break;
     }
     default:
@@ -337,7 +403,7 @@ pd_mirror_session_create (pd_func_args_t *pd_func_args)
     session_pd = (mirror_session_pd_t*)g_hal_state_pd->mirror_session_pd_slab()->alloc();
     SDK_ASSERT(session_pd != NULL);
     // program the hw
-    auto ret = pd_mirror_update_hw(hw_id, &action_data);
+    ret = pd_mirror_update_hw(hw_id, &action_data);
     if (ret != HAL_RET_OK) {
         g_hal_state_pd->mirror_session_idxr()->free(hw_id);
         g_hal_state_pd->mirror_session_pd_slab()->free(session_pd);
@@ -492,18 +558,22 @@ hal_ret_t
 telemetry_export_dest_commit(telemetry_export_dest_t *d)
 {
     HAL_TRACE_DEBUG("{}: Export Destination commit {}-> {}", __FUNCTION__, d->id, d->base_addr);
+
     p4plus_hbm_write(d->base_addr, (uint8_t*)&d->buf_hdr, sizeof(d->buf_hdr),
-            P4PLUS_CACHE_ACTION_NONE);
+                     P4PLUS_CACHE_ACTION_NONE);
     print_buffer(_deb_buf, TELEMETRY_EXPORT_BUFF_SIZE, (uint8_t*)&d->buf_hdr,
                  sizeof(d->buf_hdr));
+
     HAL_TRACE_DEBUG("{} : Buffer Header: Wrote: {}", __FUNCTION__, _deb_buf);
+
     // memcpy(d->base_addr, &d->buf_hdr, sizeof(d->buf_hdr));
     uint64_t hdr = d->base_addr + sizeof(d->buf_hdr);
     p4plus_hbm_write(hdr, (uint8_t*)&d->ipfix_hdr, sizeof(d->ipfix_hdr),
-            P4PLUS_CACHE_ACTION_NONE);
+                     P4PLUS_CACHE_INVALIDATE_TXDMA);
     print_buffer(_deb_buf, TELEMETRY_EXPORT_BUFF_SIZE, (uint8_t*)&d->ipfix_hdr,
                  sizeof(d->ipfix_hdr));
     HAL_TRACE_DEBUG("{} : IPFIX-Header: Wrote: {}", __FUNCTION__, _deb_buf);
+
     return HAL_RET_OK;
 }
 
@@ -579,6 +649,40 @@ pd_collector_populate_export_info (collector_config_t *cfg,
     telemetry_export_dest_commit(dst);
 
     return ret;
+}
+
+hal_ret_t
+pd_collector_update(pd_func_args_t *pd_func_args)
+{
+    pd_collector_update_args_t          *c_args;
+    collector_config_t                  *cfg;
+    telemetry_export_dest_t             *d;
+    pd_l2seg_get_fromcpu_vlanid_args_t  args;
+    pd_func_args_t                      pd_func_args1 = {0};
+
+    c_args = pd_func_args->pd_collector_update;
+    cfg = c_args->cfg;
+
+    HAL_TRACE_DEBUG("CollectorID bmp: {}", cfg->collector_id);
+    d = &export_destinations[cfg->collector_id];
+    if (!d->valid) {
+        HAL_TRACE_ERR("Collector does not exist, id {}", cfg->collector_id);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    args.l2seg = cfg->l2seg;
+    args.vid = &cfg->vlan;
+    pd_func_args1.pd_l2seg_get_fromcpu_vlanid = &args;
+
+    if (pd_l2seg_get_fromcpu_vlanid(&pd_func_args1) != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("{}: Could not retrieve CPU VLAN", __FUNCTION__);
+        return HAL_RET_INVALID_ARG;
+    }
+    HAL_TRACE_DEBUG("{}: CPU VLAN {}", __FUNCTION__, cfg->vlan);
+
+    pd_collector_populate_export_info(cfg, c_args->ep, d);
+
+    return HAL_RET_OK;
 }
 
 hal_ret_t

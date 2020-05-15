@@ -141,6 +141,35 @@ create_collector (uint32_t cid, uint32_t vrf, uint32_t l2seg,
 }
 
 hal_ret_t
+update_collector (gtest_collector_t *coll, bool create)
+{
+    hal_ret_t            ret;
+    CollectorSpec        spec;
+    CollectorResponse    rsp;
+
+    spec.mutable_key_or_handle()->set_collector_id(coll->cid);
+    spec.mutable_vrf_key_handle()->set_vrf_id(coll->vrf);
+    spec.mutable_l2seg_key_handle()->set_segment_id(coll->l2seg);
+    spec.mutable_src_ip()->set_ip_af(types::IP_AF_INET);
+    spec.mutable_src_ip()->set_v4_addr(coll->src_ip);
+    spec.mutable_dest_ip()->set_ip_af(types::IP_AF_INET);
+    spec.mutable_dest_ip()->set_v4_addr(coll->dst_ip);
+    spec.set_protocol(types::IPPROTO_UDP);
+    spec.set_dest_port(coll->dest_port);
+    spec.set_export_interval(coll->export_invl);
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    if (create) {
+        ret = hal::collector_create(spec, &rsp);
+    } else {
+        ret = hal::collector_update(spec, &rsp);
+    }
+    hal::hal_cfg_db_close();
+    return ret;
+
+}
+
+hal_ret_t
 delete_interface (uint32_t if_id)
 {
     hal_ret_t               ret;
@@ -480,6 +509,58 @@ create_mirror (uint32_t session_id, uint32_t vrf_id, uint32_t sip, uint32_t dip,
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::mirror_session_create(spec, &rsp);
+    hal::hal_cfg_db_close();
+    return ret;
+}
+
+hal_ret_t
+update_mirror (gtest_mirror_t *mirror, bool create)
+{
+    hal_ret_t ret;
+    MirrorSessionSpec spec;
+    MirrorSessionResponse rsp;
+
+    spec.mutable_vrf_key_handle()->set_vrf_id(mirror->vrf_id);
+    spec.mutable_key_or_handle()->set_mirrorsession_id(mirror->session_id);
+    spec.mutable_erspan_spec()->mutable_src_ip()->set_ip_af(::types::IP_AF_INET);
+    spec.mutable_erspan_spec()->mutable_src_ip()->set_v4_addr(mirror->sip);
+    spec.mutable_erspan_spec()->mutable_dest_ip()->set_ip_af(::types::IP_AF_INET);
+    spec.mutable_erspan_spec()->mutable_dest_ip()->set_v4_addr(mirror->dip);
+    spec.mutable_erspan_spec()->set_vlan_strip_en(mirror->vlan_strip_en);
+    spec.mutable_erspan_spec()->set_span_id(mirror->span_id);
+    spec.mutable_erspan_spec()->set_type((ERSpanType)mirror->erspan_type);
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    if (create) {
+        ret = hal::mirror_session_create(spec, &rsp);
+    } else {
+        ret = hal::mirror_session_update(spec, &rsp);
+    }
+    hal::hal_cfg_db_close();
+    return ret;
+}
+
+hal_ret_t 
+update_flow_monitor (gtest_flow_mon_t *fmon, bool create)
+{
+    hal_ret_t ret;
+    FlowMonitorRuleSpec spec;
+    FlowMonitorRuleResponse rsp;
+
+    spec.mutable_key_or_handle()->set_flowmonitorrule_id(fmon->rule_id);
+    spec.mutable_vrf_key_handle()->set_vrf_id(fmon->vrf_id);
+    auto action = spec.mutable_action();
+    action->add_action(telemetry::RuleAction::MIRROR);
+    for (int i = 0; i < fmon->sess_count; i++) {
+        action->add_ms_key_handle()->set_mirrorsession_id(fmon->sess_id[i]);
+    }
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    if (create) {
+        ret = hal::flow_monitor_rule_create(spec, &rsp);
+    } else {
+        ret = hal::flow_monitor_rule_update(spec, &rsp, true);
+    }
     hal::hal_cfg_db_close();
     return ret;
 }

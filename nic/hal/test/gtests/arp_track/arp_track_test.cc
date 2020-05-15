@@ -68,6 +68,7 @@ TEST_F (arp_track_test, mirror_order1) {
     if_t           *up_if = NULL;
     uint32_t       host_lifid1 = 68;
     uint32_t       wl_encap1 = 100;
+    gtest_mirror_t g_mirror;
 
     // Create uplinks
     ASSERT_EQ(create_uplink(uplinkif_id1, up_port1), HAL_RET_OK);
@@ -107,12 +108,44 @@ TEST_F (arp_track_test, mirror_order1) {
     ASSERT_EQ(create_mirror(sid1, vrf_id_hp1, src_ip, ips[0], true), HAL_RET_OK);
     ASSERT_EQ(create_mirror(sid2, vrf_id_hp1, src_ip, ips[1]), HAL_RET_OK);
 
+    g_mirror.session_id = sid2;
+    g_mirror.span_id = 1000;
+    g_mirror.vrf_id = vrf_id_hp1;
+    g_mirror.sip = src_ip;
+    g_mirror.dip = ips[1];
+    g_mirror.vlan_strip_en = true;
+    g_mirror.erspan_type = 2;
+    ASSERT_EQ(update_mirror(&g_mirror, false), HAL_RET_OK);
+
+    // Create flow monitor
+    gtest_flow_mon_t fmon;
+    fmon.vrf_id = vrf_id_hp1;
+    fmon.rule_id = 1;
+    fmon.sess_count = 1;
+    fmon.sess_id[0] = sid1;
+    ASSERT_EQ(update_flow_monitor(&fmon, true), HAL_RET_OK);
+
+    fmon.sess_count = 2;
+    fmon.sess_id[0] = sid1;
+    fmon.sess_id[1] = sid2;
+    ASSERT_EQ(update_flow_monitor(&fmon, false), HAL_RET_OK);
+
     g_hal_state->set_inb_bond_active_uplink(up_if->hal_handle); 
     hal::hal_if_inb_bond_active_changed(false);
 
     // Create collector
     ASSERT_EQ(create_collector(cid1, vrf_id_hp1, l2seg_id_hp1, src_ip, ips[0]), HAL_RET_OK);
     ASSERT_EQ(create_collector(cid2, vrf_id_hp1, l2seg_id_hp1, src_ip, ips[1]), HAL_RET_OK);
+
+    gtest_collector_t coll;
+    coll.cid = cid2;
+    coll.vrf = vrf_id_hp1;
+    coll.l2seg = l2seg_id_hp1;
+    coll.src_ip = src_ip;
+    coll.dst_ip = ips[1];
+    coll.dest_port = 200;
+    coll.export_invl = 20;
+    ASSERT_EQ(update_collector(&coll, false), HAL_RET_OK);
      
     // Remove IP from EP
     ASSERT_EQ(update_ep(vrf_id_hp1, l2seg_id_hp1, uplinkif_id1, 0x000010002001, ips, 1), HAL_RET_OK);
