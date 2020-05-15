@@ -14,6 +14,7 @@ control vnic(inout cap_phv_intr_global_h capri_intrinsic,
 	metadata.cntrl.skip_l2_flow_lkp = TRUE;
 	hdr.ingress_recirc_header.dnat_done = TRUE;
 	hdr.ingress_recirc_header.flow_done = TRUE;
+	hdr.ingress_recirc_header.l2_flow_done = TRUE;
         /* Treat it as a flow miss for now */
 	metadata.cntrl.flow_miss = TRUE;
 	
@@ -21,6 +22,7 @@ control vnic(inout cap_phv_intr_global_h capri_intrinsic,
 	metadata.cntrl.vnic_type = vnic_type;
 	hdr.p4i_to_p4e_header.l2_vnic = vnic_type;
 	metadata.cntrl.skip_l2_flow_lkp = ~vnic_type;
+	hdr.ingress_recirc_header.l2_flow_done = ~vnic_type;
 	metadata.key.vnic_id = vnic_id;
 	//	metadata.l2_key.vnic_id16 = (bit<16>)vnic_id;
       }
@@ -65,6 +67,7 @@ control vnic(inout cap_phv_intr_global_h capri_intrinsic,
 		
 	metadata.cntrl.vnic_type = vnic_type;
 	metadata.cntrl.skip_l2_flow_lkp = ~vnic_type;
+	hdr.ingress_recirc_header.l2_flow_done = ~vnic_type;
 	hdr.p4i_to_p4e_header.l2_vnic = vnic_type;
 	metadata.key.vnic_id = vnic_id;
 	//	metadata.l2_key.vnic_id16 = (bit<16>)vnic_id;

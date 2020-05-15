@@ -34,14 +34,14 @@ control flow_lookup(inout cap_phv_intr_global_h intr_global,
 
         if (entry_valid == FALSE) {
 	    hdr.ingress_recirc_header.flow_done = TRUE;
-	    hdr.p4i_to_p4e_header.index = 0;
-	    hdr.p4i_to_p4e_header.index_type = 0;
+
+	    // hdr.p4i_to_p4e_header.index = 0;
+	    // hdr.p4i_to_p4e_header.index_type = 0;
 	    hdr.p4i_to_p4e_header.flow_miss = TRUE;
             metadata.cntrl.flow_miss = TRUE;
- 	    metadata.cntrl.index = 0;
+ 	    // metadata.cntrl.index = 0;
           return;
         }
-
         if (__table_hit()) {
 	    hdr.ingress_recirc_header.flow_done = TRUE;
 	    hdr.p4i_to_p4e_header.index = (bit<24>)idx;
@@ -53,50 +53,45 @@ control flow_lookup(inout cap_phv_intr_global_h intr_global,
 	      hdr.p4i_to_p4e_header.session_info_en = TRUE;
 	    }
 	    hdr.p4i_to_p4e_header.direction = metadata.cntrl.direction;
+	    hdr.ingress_recirc_header.flow_ohash_lkp = metadata.cntrl.flow_ohash_lkp;
+
 	    //    metadata.cntrl.index = idx;
-            metadata.scratch.hint_valid = TRUE;
+	    //metadata.scratch.hint_valid = TRUE;
 
 	} else {
-	  metadata.scratch.hint_valid = FALSE;
-            if ((hint1 != 0 ) && (metadata.scratch.hint_valid == FALSE) && (hash1 == hardware_hash[31:21])) {
-	      metadata.scratch.hint_valid = TRUE;
-	      metadata.scratch.flow_hint = hint1;
-	    }
-            if ((hint2 != 0 ) && (metadata.scratch.hint_valid == FALSE) && (hash2 == hardware_hash[31:21])) {
-	      metadata.scratch.hint_valid = TRUE;
-	      metadata.scratch.flow_hint = hint2;
-	    }
-            if ((hint3 != 0 ) && (metadata.scratch.hint_valid == FALSE) && (hash3 == hardware_hash[31:21])) {
-	      metadata.scratch.hint_valid = TRUE;
-	      metadata.scratch.flow_hint = hint3;
-	    }
-            if ((hint4 != 0 ) && (metadata.scratch.hint_valid == FALSE) && (hash4 == hardware_hash[31:21])) {
-	      metadata.scratch.hint_valid = TRUE;
-	      metadata.scratch.flow_hint = hint4;
-	    }
-            if ((hint5 != 0 ) && (metadata.scratch.hint_valid == FALSE) && (hash5 == hardware_hash[31:21])) {
-	      metadata.scratch.hint_valid = TRUE;
-	      metadata.scratch.flow_hint = hint5;
-	    }
-	    metadata.scratch.flag = more_hashes;
-            if ((more_hashes == 1) && (metadata.scratch.hint_valid == FALSE)) {
-	      metadata.scratch.hint_valid = TRUE;
-	      metadata.scratch.flow_hint = more_hints;
-	    }
-	    
-	    if( metadata.scratch.hint_valid == TRUE) {
-	      metadata.cntrl.flow_ohash_lkp = TRUE;
-	      hdr.ingress_recirc_header.flow_ohash = 
-		POS_OVERFLOW_HASH_BIT | (bit<32>)metadata.scratch.flow_hint;
-	    } else {
-	      hdr.ingress_recirc_header.flow_done = TRUE;
-	      hdr.p4i_to_p4e_header.index = 0;
-	      hdr.p4i_to_p4e_header.index_type = 0;
-	      hdr.p4i_to_p4e_header.flow_miss = TRUE;
-              metadata.cntrl.flow_miss = TRUE;
- 	      metadata.cntrl.index = 0;
-	    }
-
+	  bit<1> hint_valid = FALSE; 
+	  if ((hint1 != 0 ) && (hash1 == hardware_hash[31:21])) {
+	  hint_valid = TRUE;
+	  metadata.scratch.flow_hint = hint1;
+	  } else if ((hint2 != 0 ) && (hash2 == hardware_hash[31:21])) {
+	    hint_valid = TRUE;
+	    metadata.scratch.flow_hint = hint2;
+	  } else if ((hint3 != 0 ) && (hash3 == hardware_hash[31:21])) {
+	    hint_valid = TRUE;
+	    metadata.scratch.flow_hint = hint3;
+	  } else if ((hint4 != 0 ) &&  (hash4 == hardware_hash[31:21])) {
+	    hint_valid = TRUE;
+	    metadata.scratch.flow_hint = hint4;
+	  } else if ((hint5 != 0 ) && (hash5 == hardware_hash[31:21])) {
+	    hint_valid = TRUE;
+	    metadata.scratch.flow_hint = hint5;
+	  } else if ((more_hashes == 1)) {
+	    hint_valid = TRUE;
+	    metadata.scratch.flow_hint = more_hints;
+	  }
+	  
+	  if( hint_valid == TRUE ) {
+	    metadata.cntrl.flow_ohash_lkp = TRUE;
+	    hdr.ingress_recirc_header.flow_ohash_lkp = TRUE;
+	    hdr.ingress_recirc_header.flow_ohash = 
+	      POS_OVERFLOW_HASH_BIT | (bit<32>)metadata.scratch.flow_hint;
+	  } else {
+	    hdr.ingress_recirc_header.flow_done = TRUE;
+	    // hdr.p4i_to_p4e_header.index = 0;
+	    // hdr.p4i_to_p4e_header.index_type = 0;
+	    hdr.p4i_to_p4e_header.flow_miss = TRUE;
+	    metadata.cntrl.flow_miss = TRUE;
+	  }
 	}
         
     }
@@ -142,11 +137,11 @@ control flow_lookup(inout cap_phv_intr_global_h intr_global,
 
 
     apply {
-      if (!hdr.ingress_recirc_header.isValid()) {
-	if(metadata.cntrl.skip_flow_lkp == FALSE) {
-	  flow.apply();	  
-	}
+      //    if (!hdr.ingress_recirc_header.isValid()) {
+      if(metadata.cntrl.skip_flow_lkp == FALSE) {
+	flow.apply();	  
       }
+	// }
       
       if (metadata.cntrl.flow_ohash_lkp == TRUE) {
 	 flow_ohash.apply();

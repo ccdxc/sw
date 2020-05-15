@@ -12,7 +12,12 @@
 #define VNIC_ID_L2_SLOW_PATH   0x0008
 #define VNIC_ID_L2_ICMP        0x0009
 #define VNIC_ID_L2_NAT         0x000a
+#define VNIC_ID_VLAN0         0x000b
+#define VNIC_ID_UDPSPORT    0x000c
+#define VNIC_ID_L2_UDPSPORT    0x000d
+#define VNIC_ID_RECIRC    0x000e
 
+#define VLAN_ID_VLAN0         0x0
 #define VLAN_ID_UDP         0x0001
 #define VLAN_ID_TCP         0x0002
 #define VLAN_ID_SLOW_PATH   0x0003
@@ -25,9 +30,9 @@
 #define VLAN_ID_L2_ICMP        0x0009
 #define VLAN_ID_L2_NAT         0x000a
 
-#define VLAN_ID_VLAN0         0x0
-#define VNIC_ID_VLAN0         0x000b
-#define MPLS_LABEL_VLAN0      0x6789f
+#define VLAN_ID_UDPSPORT    0x000c
+#define VLAN_ID_L2_UDPSPORT    0x000d
+#define VLAN_ID_RECIRC    0x000e
 
 
 //#define MPLS_LABEL_UDP      0x49440
@@ -36,12 +41,16 @@
 #define MPLS_LABEL_SLOW_PATH    0x6789c
 #define MPLS_LABEL_ICMP     0x6789d
 #define MPLS_LABEL_NAT      0x6789e
+#define MPLS_LABEL_VLAN0      0x6789f
+#define MPLS_LABEL_UDPSPORT    0x678a0
 
 #define GENEVE_DST_SLOT_ID_UDP      0x1234a
 #define GENEVE_DST_SLOT_ID_TCP      0x1234b
 #define GENEVE_DST_SLOT_ID_SLOW_PATH    0x1234c
 #define GENEVE_DST_SLOT_ID_ICMP     0x1234d
 #define GENEVE_DST_SLOT_ID_NAT      0x1234e
+#define GENEVE_DST_SLOT_ID_UDPSPORT      0x1234f
+#define GENEVE_DST_SLOT_ID_RECIRC      0x12350
 
 
 extern uint8_t     g_h_port;
@@ -95,7 +104,7 @@ create_h2s_session_rewrite_mplsoudp(uint32_t session_rewrite_id,
         mac_addr_t *substrate_dmac, mac_addr_t *substrate_smac,
         uint16_t substrate_vlan,
         uint32_t substrate_sip, uint32_t substrate_dip,
-        uint32_t mpls1_label, uint32_t mpls2_label);
+        uint32_t mpls1_label, uint32_t mpls2_label, uint16_t substrate_udp_sport = 0);
 
 sdk_ret_t
 create_h2s_session_rewrite_mplsoudp_nat_ipv4(uint32_t session_rewrite_id,
@@ -104,7 +113,7 @@ create_h2s_session_rewrite_mplsoudp_nat_ipv4(uint32_t session_rewrite_id,
         uint32_t substrate_sip, uint32_t substrate_dip,
         uint32_t mpls1_label, uint32_t mpls2_label,
         pds_flow_session_rewrite_nat_type_t nat_type,
-        ipv4_addr_t ipv4_addr);
+	ipv4_addr_t ipv4_addr, uint16_t substrate_udp_sport = 0);
 
 sdk_ret_t
 create_h2s_session_rewrite_mplsoudp_nat_ipv6(uint32_t session_rewrite_id,
@@ -113,7 +122,7 @@ create_h2s_session_rewrite_mplsoudp_nat_ipv6(uint32_t session_rewrite_id,
         uint32_t substrate_sip, uint32_t substrate_dip,
         uint32_t mpls1_label, uint32_t mpls2_label,
         pds_flow_session_rewrite_nat_type_t nat_type,
-        ipv6_addr_t *ipv6_addr);
+	ipv6_addr_t *ipv6_addr, uint16_t substrate_udp_sport = 0);
 
 sdk_ret_t
 vlan_to_vnic_map(uint16_t vlan_id, uint16_t vnic_id, pds_vnic_type_t vnic_type = VNIC_TYPE_L3 );
@@ -134,7 +143,7 @@ create_h2s_session_rewrite_geneve(uint32_t session_rewrite_id,
 	uint32_t destination_slot_id, uint16_t sg_id1,
 	uint16_t sg_id2, uint16_t sg_id3,
         uint16_t sg_id4, uint16_t sg_id5,
-        uint16_t sg_id6, uint32_t originator_physical_ip);
+	uint16_t sg_id6, uint32_t originator_physical_ip, uint16_t substrate_udp_sport = 0);
 
 sdk_ret_t
 create_h2s_session_rewrite_geneve_nat_ipv4(uint32_t session_rewrite_id,
@@ -147,7 +156,7 @@ create_h2s_session_rewrite_geneve_nat_ipv4(uint32_t session_rewrite_id,
         uint16_t sg_id4, uint16_t sg_id5,
 	uint16_t sg_id6, uint32_t originator_physical_ip,        
         pds_flow_session_rewrite_nat_type_t nat_type,
-        ipv4_addr_t ipv4_addr);
+	ipv4_addr_t ipv4_addr, uint16_t substrate_udp_sport = 0);
 
 sdk_ret_t
 create_h2s_session_rewrite_geneve_nat_ipv6(uint32_t session_rewrite_id,
@@ -160,7 +169,7 @@ create_h2s_session_rewrite_geneve_nat_ipv6(uint32_t session_rewrite_id,
         uint16_t sg_id4, uint16_t sg_id5,
 	uint16_t sg_id6, uint32_t originator_physical_ip, 
         pds_flow_session_rewrite_nat_type_t nat_type,
-        ipv6_addr_t *ipv6_addr);
+	ipv6_addr_t *ipv6_addr, uint16_t substrate_udp_sport = 0);
 
 sdk_ret_t
 create_s2h_session_rewrite_insert_ctag(uint32_t session_rewrite_id,
@@ -254,12 +263,26 @@ sdk_ret_t
 athena_gtest_test_flows_nat(void);
 
 #ifndef P4_14
+/* UDP Flows with UDP SRC PORT*/
+sdk_ret_t
+athena_gtest_setup_flows_udp_udpsrcport(void);
+
+sdk_ret_t
+athena_gtest_test_flows_udp_udpsrcport(void);
+
 /* L2 UDP Flows */
 sdk_ret_t
 athena_gtest_setup_l2_flows_udp(void);
 
 sdk_ret_t
 athena_gtest_test_l2_flows_udp(void);
+
+/* L2 UDP Flows with UDP SRC PORT*/
+sdk_ret_t
+athena_gtest_setup_l2_flows_udp_udpsrcport(void);
+
+sdk_ret_t
+athena_gtest_test_l2_flows_udp_udpsrcport(void);
 
 /* L2 TCP Flows */
 sdk_ret_t

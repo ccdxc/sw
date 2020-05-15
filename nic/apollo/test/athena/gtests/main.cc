@@ -35,10 +35,13 @@
 #include "nic/apollo/api/include/athena/pds_init.h"
 #include "nic/apollo/api/include/athena/pds_vnic.h"
 #include "nic/apollo/api/include/athena/pds_flow_cache.h"
+#include "nic/apollo/api/include/athena/pds_l2_flow_cache.h"
 #include "nic/apollo/api/include/athena/pds_flow_session_info.h"
 #include "nic/apollo/api/include/athena/pds_flow_session_rewrite.h"
 #include "nic/apollo/api/include/athena/pds_dnat.h"
 #include "athena_gtest.hpp"
+#include <boost/crc.hpp>
+
 
 #ifndef P4_14
 #include "nic/apollo/api/include/athena/pds_l2_flow_cache.h"
@@ -303,6 +306,56 @@ sdk_ret_t send_packet_wmask(const char *out_pkt_descr, uint8_t *out_pkt, uint16_
     return SDK_RET_OK;
 }
 
+static uint32_t
+generate_hash_ (void *key, uint32_t key_len, uint32_t crc_init_val)
+{
+    boost::crc_basic<32> *crc_hash;
+    uint32_t hash_val = 0x0;
+
+    crc_hash = new boost::crc_basic<32>(0x04C11DB7, crc_init_val, 0x00000000,
+                                        false, false);
+    crc_hash->process_bytes(key, key_len);
+    hash_val = crc_hash->checksum();
+    delete crc_hash;
+    return hash_val;
+}
+
+static uint32_t
+entry_write (uint32_t tbl_id, uint32_t index, void *key, void *mask, void *data,
+             bool hash_table, uint32_t table_size)
+{
+    uint32_t hash = 0;
+    if (key || mask) {
+        // prepare entry and write hardware
+        uint32_t hwkey_len = 0;
+        uint32_t hwmask_len = 0;
+        uint32_t hwdata_len = 0;
+        uint8_t *hwkey = NULL;
+        uint8_t *hwmask = NULL;
+        p4pd_hwentry_query(tbl_id, &hwkey_len, &hwmask_len, &hwdata_len);
+        hwkey_len = (hwkey_len >> 3) + ((hwkey_len & 0x7) ? 1 : 0);
+        hwmask_len = (hwmask_len >> 3) + ((hwmask_len & 0x7) ? 1 : 0);
+        hwdata_len = (hwdata_len >> 3) + ((hwdata_len & 0x7) ? 1 : 0);
+        hwkey = new uint8_t[hwkey_len];
+        hwmask = new uint8_t[hwmask_len];
+        memset(hwkey, 0, hwkey_len);
+        memset(hwmask, 0, hwmask_len);
+        p4pd_hwkey_hwmask_build(tbl_id, key, mask, hwkey, hwmask);
+        if (hash_table) {
+            if (index == 0) {
+                hash = index = generate_hash_(hwkey, hwkey_len, 0);
+            }
+            index &= table_size - 1;
+        }
+        p4pd_entry_write(tbl_id, index, hwkey, hwmask, data);
+        delete[] hwkey;
+        delete[] hwmask;
+    } else {
+        p4pd_entry_write(tbl_id, index, NULL, NULL, data);
+    }
+    return hash;
+}
+
 
 uint8_t     g_h_port = UPLINK_HOST;
 uint8_t     g_s_port = UPLINK_SWITCH;
@@ -438,7 +491,7 @@ create_h2s_session_rewrite_mplsoudp(uint32_t session_rewrite_id,
         mac_addr_t *substrate_dmac, mac_addr_t *substrate_smac,
         uint16_t substrate_vlan,
         uint32_t substrate_sip, uint32_t substrate_dip,
-        uint32_t mpls1_label, uint32_t mpls2_label)
+	uint32_t mpls1_label, uint32_t mpls2_label, uint16_t substrate_udp_sport)
 { 
     pds_ret_t                                   ret = PDS_RET_OK;
     pds_flow_session_rewrite_spec_t             spec;
@@ -460,6 +513,8 @@ create_h2s_session_rewrite_mplsoudp(uint32_t session_rewrite_id,
     spec.data.u.mplsoudp_encap.ip_encap.ip_saddr = substrate_sip;
     spec.data.u.mplsoudp_encap.ip_encap.ip_daddr = substrate_dip;
 
+    spec.data.u.mplsoudp_encap.udp_encap.udp_sport = substrate_udp_sport;
+
     spec.data.u.mplsoudp_encap.mpls1_label = mpls1_label;
     spec.data.u.mplsoudp_encap.mpls2_label = mpls2_label;
 
@@ -478,7 +533,7 @@ create_h2s_session_rewrite_mplsoudp_nat_ipv4(uint32_t session_rewrite_id,
         uint32_t substrate_sip, uint32_t substrate_dip,
         uint32_t mpls1_label, uint32_t mpls2_label,
         pds_flow_session_rewrite_nat_type_t nat_type,
-        ipv4_addr_t ipv4_addr)
+	ipv4_addr_t ipv4_addr, uint16_t substrate_udp_sport)
 { 
     pds_ret_t                                   ret = PDS_RET_OK;
     pds_flow_session_rewrite_spec_t             spec;
@@ -501,6 +556,8 @@ create_h2s_session_rewrite_mplsoudp_nat_ipv4(uint32_t session_rewrite_id,
     spec.data.u.mplsoudp_encap.ip_encap.ip_saddr = substrate_sip;
     spec.data.u.mplsoudp_encap.ip_encap.ip_daddr = substrate_dip;
 
+    spec.data.u.mplsoudp_encap.udp_encap.udp_sport = substrate_udp_sport;
+
     spec.data.u.mplsoudp_encap.mpls1_label = mpls1_label;
     spec.data.u.mplsoudp_encap.mpls2_label = mpls2_label;
 
@@ -519,7 +576,7 @@ create_h2s_session_rewrite_mplsoudp_nat_ipv6(uint32_t session_rewrite_id,
         uint32_t substrate_sip, uint32_t substrate_dip,
         uint32_t mpls1_label, uint32_t mpls2_label,
         pds_flow_session_rewrite_nat_type_t nat_type,
-        ipv6_addr_t *ipv6_addr)
+	ipv6_addr_t *ipv6_addr, uint16_t substrate_udp_sport)
 { 
     pds_ret_t                                   ret = PDS_RET_OK;
     pds_flow_session_rewrite_spec_t             spec;
@@ -543,8 +600,11 @@ create_h2s_session_rewrite_mplsoudp_nat_ipv6(uint32_t session_rewrite_id,
     spec.data.u.mplsoudp_encap.ip_encap.ip_saddr = substrate_sip;
     spec.data.u.mplsoudp_encap.ip_encap.ip_daddr = substrate_dip;
 
+    spec.data.u.mplsoudp_encap.udp_encap.udp_sport = substrate_udp_sport;
+
     spec.data.u.mplsoudp_encap.mpls1_label = mpls1_label;
     spec.data.u.mplsoudp_encap.mpls2_label = mpls2_label;
+
 
     ret = pds_flow_session_rewrite_create(&spec);
     if (ret != PDS_RET_OK) {
@@ -565,7 +625,7 @@ create_h2s_session_rewrite_geneve(uint32_t session_rewrite_id,
 	uint32_t destination_slot_id, uint16_t sg_id1,
 	uint16_t sg_id2, uint16_t sg_id3,
         uint16_t sg_id4, uint16_t sg_id5,
-        uint16_t sg_id6, uint32_t originator_physical_ip)
+	uint16_t sg_id6, uint32_t originator_physical_ip, uint16_t substrate_udp_sport)
 { 
     pds_ret_t                                   ret = PDS_RET_OK;
     pds_flow_session_rewrite_spec_t             spec;
@@ -586,6 +646,8 @@ create_h2s_session_rewrite_geneve(uint32_t session_rewrite_id,
 
     spec.data.u.geneve_encap.ip_encap.ip_saddr = substrate_sip;
     spec.data.u.geneve_encap.ip_encap.ip_daddr = substrate_dip;
+
+    spec.data.u.geneve_encap.udp_encap.udp_sport = substrate_udp_sport;
 
     spec.data.u.geneve_encap.vni = vni;
     spec.data.u.geneve_encap.source_slot_id = source_slot_id;
@@ -617,7 +679,7 @@ create_h2s_session_rewrite_geneve_nat_ipv4(uint32_t session_rewrite_id,
         uint16_t sg_id4, uint16_t sg_id5,
 	uint16_t sg_id6, uint32_t originator_physical_ip,      
         pds_flow_session_rewrite_nat_type_t nat_type,
-        ipv4_addr_t ipv4_addr)
+        ipv4_addr_t ipv4_addr, uint16_t substrate_udp_sport)
 { 
     pds_ret_t                                   ret = PDS_RET_OK;
     pds_flow_session_rewrite_spec_t             spec;
@@ -639,6 +701,8 @@ create_h2s_session_rewrite_geneve_nat_ipv4(uint32_t session_rewrite_id,
 
     spec.data.u.geneve_encap.ip_encap.ip_saddr = substrate_sip;
     spec.data.u.geneve_encap.ip_encap.ip_daddr = substrate_dip;
+
+    spec.data.u.geneve_encap.udp_encap.udp_sport = substrate_udp_sport;
 
     spec.data.u.geneve_encap.vni = vni;
     spec.data.u.geneve_encap.source_slot_id = source_slot_id;
@@ -670,7 +734,7 @@ create_h2s_session_rewrite_geneve_nat_ipv6(uint32_t session_rewrite_id,
         uint16_t sg_id4, uint16_t sg_id5,
 	uint16_t sg_id6, uint32_t originator_physical_ip,      
         pds_flow_session_rewrite_nat_type_t nat_type,
-        ipv6_addr_t *ipv6_addr)
+        ipv6_addr_t *ipv6_addr, uint16_t substrate_udp_sport)
 { 
     pds_ret_t                                   ret = PDS_RET_OK;
     pds_flow_session_rewrite_spec_t             spec;
@@ -693,6 +757,8 @@ create_h2s_session_rewrite_geneve_nat_ipv6(uint32_t session_rewrite_id,
 
     spec.data.u.geneve_encap.ip_encap.ip_saddr = substrate_sip;
     spec.data.u.geneve_encap.ip_encap.ip_daddr = substrate_dip;
+
+    spec.data.u.geneve_encap.udp_encap.udp_sport = substrate_udp_sport;
 
     spec.data.u.geneve_encap.vni = vni;
     spec.data.u.geneve_encap.source_slot_id = source_slot_id;
@@ -915,7 +981,7 @@ setup_flows(void)
     if (ret != SDK_RET_OK) {
         return ret;
     }
-
+    
     ret = athena_gtest_setup_flows_tcp();
     if (ret != SDK_RET_OK) {
         return ret;
@@ -938,6 +1004,12 @@ setup_flows(void)
     }
 #endif
 #ifndef P4_14
+   
+    ret = athena_gtest_setup_flows_udp_udpsrcport();
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+    
     ret = athena_gtest_setup_l2_flows_udp();
     if (ret != SDK_RET_OK) {
         return ret;
@@ -959,6 +1031,13 @@ setup_flows(void)
         return ret;
     }
 #endif
+    
+   ret = athena_gtest_setup_l2_flows_udp_udpsrcport();
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+
+    
 #endif
     return ret;
 }
@@ -1004,10 +1083,11 @@ dump_single_l2_flow(pds_l2_flow_iter_cb_arg_t *iter_cb_arg)
     pds_l2_flow_key_t *key = &iter_cb_arg->l2_flow_key;
     pds_l2_flow_data_t *data = &iter_cb_arg->l2_flow_appdata;
 
-    printf(" VNICID:%u "
-	   " DMAC:%06x "
+   printf(" VNICID:%u DMAC:%02x:%02x:%02x:%02x:%02x:%02x "
            "index:%u \n\n",
-	   key->vnic_id,key->dmac,
+	   key->vnic_id,key->dmac[5], key->dmac[4],
+	  key->dmac[3], key->dmac[2], key->dmac[1],
+	  key->dmac[0],
            data->index);
     return;
 }
@@ -1098,6 +1178,9 @@ TEST(athena_gtest, sim)
 #endif
 
 #ifndef P4_14
+    /* UDP Flow with UDP SRCPORT tests */
+    ASSERT_TRUE(athena_gtest_test_flows_udp_udpsrcport() == SDK_RET_OK);
+   
     /* L2 UDP Flow tests */
     ASSERT_TRUE(athena_gtest_test_l2_flows_udp() == SDK_RET_OK);
 
@@ -1111,10 +1194,17 @@ TEST(athena_gtest, sim)
     /* L2 NAT Flow tests */
     ASSERT_TRUE(athena_gtest_test_l2_flows_nat() == SDK_RET_OK);
 #endif
+    /* L2 UDP Flow with UDP SRCPORT tests */
+    ASSERT_TRUE(athena_gtest_test_l2_flows_udp_udpsrcport() == SDK_RET_OK);
+    
+
 #endif
 
     iterate_dump_flows();
 
+#ifndef P4_14
+    iterate_dump_l2_flows();
+#endif
     print_stats();
 
     pds_global_teardown();

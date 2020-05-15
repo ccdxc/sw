@@ -415,12 +415,12 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
        if (strip_l2_header_flag == TRUE) {
 	 hdr.ethernet_1.setInvalid();
 	 //	 hdr.p4i_to_p4e_header.packet_len = hdr.p4i_to_p4e_header.packet_len - 14;
-       }
-       if (strip_vlan_tag_flag == TRUE) {
-         if(hdr.ctag_1.isValid()) {
+       } 
+       if ((strip_vlan_tag_flag == TRUE) && (hdr.ctag_1.isValid())) {
+	   //        if(hdr.ctag_1.isValid()) {
 	   hdr.ctag_1.setInvalid();
 	   hdr.ethernet_1.etherType = hdr.ctag_1.etherType;
-	 }
+	   //}
 	   // hdr.p4i_to_p4e_header.packet_len = hdr.p4i_to_p4e_header.packet_len - 4;
        }
        
@@ -428,16 +428,18 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
 	 if (strip_outer_encap_flag == TRUE) {
 	   hdr.ip_1.ipv4.setInvalid();
 	   hdr.udp.setInvalid();
-	   hdr.mpls_src.setInvalid();
-	   hdr.mpls_dst.setInvalid();
-	   hdr.mpls_label3_1.setInvalid();
-	   hdr.geneve_1.setInvalid();
-	   hdr.geneve_options_blob.setInvalid();
-	      
+	   if(hdr.geneve_1.isValid()) {
+	     hdr.geneve_1.setInvalid();
+	     hdr.geneve_options_blob.setInvalid();
+	   } else {
+	     hdr.mpls_src.setInvalid();
+	     hdr.mpls_dst.setInvalid();
+	     hdr.mpls_label3_1.setInvalid();
+	   }
 	 }
        }
        
-       metadata.scratch.packet_len = hdr.p4i_to_p4e_header.packet_len;
+       //     metadata.scratch.packet_len = hdr.p4i_to_p4e_header.packet_len;
 #if 0
        hdr.ip_2.ipv4.srcAddr = metadata.scratch.addr;
        hdr.ip_2.ipv4.dstAddr = metadata.scratch.addr;
@@ -463,9 +465,7 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
 
      if(metadata.cntrl.direction == TX_FROM_HOST) {
        hdr.ip_1.ipv4.srcAddr = ipv4_addr_snat;
-     } 
-
-     if(metadata.cntrl.direction == RX_FROM_SWITCH) {
+     } else {
        hdr.ip_2.ipv4.srcAddr = ipv4_addr_snat;
      } 
      metadata.cntrl.update_checksum = TRUE;
@@ -479,9 +479,7 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
 
      if(metadata.cntrl.direction == TX_FROM_HOST) {
        hdr.ip_1.ipv4.dstAddr = ipv4_addr_dnat;
-     } 
-
-     if(metadata.cntrl.direction == RX_FROM_SWITCH) {
+     } else {
        hdr.ip_2.ipv4.dstAddr = ipv4_addr_dnat;
      } 
      metadata.cntrl.update_checksum = TRUE;
@@ -506,8 +504,7 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
 	 hdr.ip_1.ipv4.dstAddr = ipv4_addr_dpat;
        }
 
-     } 
-     if(metadata.cntrl.direction == RX_FROM_SWITCH) {
+     } else {
        if(ipv4_addr_spat != 0) {
 	 hdr.ip_2.ipv4.srcAddr = ipv4_addr_spat;
        }
@@ -534,9 +531,7 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
 
      if(metadata.cntrl.direction == TX_FROM_HOST) {
        hdr.ip_1.ipv6.srcAddr = ipv6_addr_snat;
-     } 
-
-     if(metadata.cntrl.direction == RX_FROM_SWITCH) {
+     } else {
        hdr.ip_2.ipv6.srcAddr = ipv6_addr_snat;
      } 
      metadata.cntrl.update_checksum = TRUE;
@@ -550,9 +545,7 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
 
      if(metadata.cntrl.direction == TX_FROM_HOST) {
        hdr.ip_1.ipv6.dstAddr = ipv6_addr_dnat;
-     } 
-
-     if(metadata.cntrl.direction == RX_FROM_SWITCH) {
+     } else {
        hdr.ip_2.ipv6.dstAddr = ipv6_addr_dnat;
      } 
      metadata.cntrl.update_checksum = TRUE;
@@ -754,7 +747,11 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
 	 
 	 //Setup UDP
 	 hdr.l4_0.udp.setValid();
-	 hdr.l4_0.udp.srcPort = hdr.p4i_to_p4e_header.flow_hash[15:0];
+	 if(udp_sport == 0) {
+	   hdr.l4_0.udp.srcPort = hdr.p4i_to_p4e_header.flow_hash[15:0];
+	 } else {
+	   hdr.l4_0.udp.srcPort = udp_sport;
+	 }
 	 hdr.l4_0.udp.dstPort = 0x19EB;
 	 session_rewrite_encap_ip(ipv4_sa, ipv4_da,IP_PROTO_UDP, hdr.ip_0.ipv4.totalLen);
    }
@@ -862,7 +859,11 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
       hdr.ip_0.ipv4.totalLen = hdr.l4_0.udp.len + 20;
       //Setup UDP
       hdr.l4_0.udp.setValid();
-      hdr.l4_0.udp.srcPort = hdr.p4i_to_p4e_header.flow_hash[15:0];
+      if(udp_sport == 0) {
+	hdr.l4_0.udp.srcPort = hdr.p4i_to_p4e_header.flow_hash[15:0];
+      } else {
+	hdr.l4_0.udp.srcPort = udp_sport;
+      }   
       hdr.l4_0.udp.dstPort = 0x17C1;
       session_rewrite_encap_ip(ipv4_sa, ipv4_da,IP_PROTO_UDP, hdr.ip_0.ipv4.totalLen);
    }

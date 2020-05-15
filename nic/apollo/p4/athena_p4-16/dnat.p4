@@ -34,7 +34,21 @@ control dnat_lookup(inout cap_phv_intr_global_h capri_intrinsic,
       bit<32>  hardware_hash = __hash_value();
 
        if (entry_valid == FALSE) {
-	    hdr.ingress_recirc_header.dnat_done = TRUE;
+	 hdr.ingress_recirc_header.dnat_done = TRUE;
+	 
+	 //JUST TO TEST
+	 /*
+	 if(hdr.ingress_recirc_header.isValid()) {
+	   hdr.ingress_recirc_header.dnat_done = TRUE;
+	 } else {
+	    hdr.ingress_recirc_header.dnat_done = FALSE;
+	    hdr.ingress_recirc_header.dnat_ohash_lkp = TRUE;
+	    hdr.ingress_recirc_header.dnat_ohash = 
+	     POS_OVERFLOW_HASH_BIT | 0x3456;
+
+	 }
+	 */
+
           return;
         }
 
@@ -43,48 +57,43 @@ control dnat_lookup(inout cap_phv_intr_global_h capri_intrinsic,
 	    metadata.key.src= addr;
 	    metadata.key.ktype= addr_type;
 	    hdr.p4i_to_p4e_header.dnat_epoch = epoch;
-	    
-            metadata.scratch.flow_hash = hardware_hash[31:14];
-            metadata.scratch.hint_valid = TRUE;
+	    hdr.ingress_recirc_header.dnat_ohash_lkp = metadata.cntrl.dnat_ohash_lkp;
+	    //          metadata.scratch.flow_hash = hardware_hash[31:14];
+            // metadata.scratch.hint_valid = TRUE;
 	    
        } else {
-	 //    metadata.cntrl.dnat_ohash_lkp = TRUE;
-            if ((hint1 != 0 ) && (metadata.scratch.hint_valid == FALSE) && (hash1 == hardware_hash[31:14])) {
-	      metadata.scratch.hint_valid = TRUE;
-	      metadata.scratch.flow_hint = (bit<20>)hint1;
-	    }
-            if ((hint2 != 0 ) && (metadata.scratch.hint_valid == FALSE) && (hash2 == hardware_hash[31:14])) {
-	      metadata.scratch.hint_valid = TRUE;
-	      metadata.scratch.flow_hint = (bit<20>)hint2;
-	    }
-            if ((hint3 != 0 ) && (metadata.scratch.hint_valid == FALSE) && (hash3 == hardware_hash[31:14])) {
-	      metadata.scratch.hint_valid = TRUE;
-	      metadata.scratch.flow_hint = (bit<20>)hint3;
-	    }
-            if ((hint4 != 0 ) && (metadata.scratch.hint_valid == FALSE) && (hash4 == hardware_hash[31:14])) {
-	      metadata.scratch.hint_valid = TRUE;
-	      metadata.scratch.flow_hint = (bit<20>)hint4;
-	    }
-            if ((hint5 != 0 ) && (metadata.scratch.hint_valid == FALSE) && (hash5 == hardware_hash[31:14])) {
-	      metadata.scratch.hint_valid = TRUE;
-	      metadata.scratch.flow_hint = (bit<20>)hint5;
-	    }
-	    metadata.scratch.flag = more_hashes;
-            if ((more_hashes == 1) && (metadata.scratch.hint_valid == FALSE)) {
-	      metadata.scratch.hint_valid = TRUE;
-	      metadata.scratch.flow_hint = (bit<20>)more_hints;
-	    }
-	    
-	    if( metadata.scratch.hint_valid == TRUE) {
-	      metadata.cntrl.dnat_ohash_lkp = TRUE;
-	      hdr.ingress_recirc_header.dnat_ohash = 
-		POS_OVERFLOW_HASH_BIT | (bit<32>)metadata.scratch.flow_hint;
-	    } else {
-	      hdr.ingress_recirc_header.dnat_done = TRUE;
-	    }
+	 bit<1> hint_valid = FALSE;
+	 if ((hint1 != 0 )  && (hash1 == hardware_hash[31:14])) {
+	   hint_valid = TRUE;
+	   metadata.scratch.flow_hint = (bit<20>)hint1;
+	 } else if ((hint2 != 0 )  && (hash2 == hardware_hash[31:14])) {
+	   hint_valid = TRUE;
+	   metadata.scratch.flow_hint = (bit<20>)hint2;
+	 } else if ((hint3 != 0 ) &&  (hash3 == hardware_hash[31:14])) {
+	   hint_valid = TRUE;
+	   metadata.scratch.flow_hint = (bit<20>)hint3;
+	 } else if ((hint4 != 0 ) && (hash4 == hardware_hash[31:14])) {
+	   hint_valid = TRUE;
+	   metadata.scratch.flow_hint = (bit<20>)hint4;
+	 } else if ((hint5 != 0 )  && (hash5 == hardware_hash[31:14])) {
+	   hint_valid = TRUE;
+	   metadata.scratch.flow_hint = (bit<20>)hint5;
+	 } else if ((more_hashes == 1) ) {
+	   hint_valid = TRUE;
+	   metadata.scratch.flow_hint = (bit<20>)more_hints;
+	 }
+	 
+	 if( hint_valid == TRUE) {
+	   metadata.cntrl.dnat_ohash_lkp = TRUE;
+	   hdr.ingress_recirc_header.dnat_ohash_lkp = TRUE;
+	   hdr.ingress_recirc_header.dnat_ohash = 
+	     POS_OVERFLOW_HASH_BIT | (bit<32>)metadata.scratch.flow_hint;
+	 } else {
+	   hdr.ingress_recirc_header.dnat_done = TRUE;
+	 }
+	 
        }
     }
- 
 
     @hbm_table
     @name(".dnat_ohash")
@@ -145,11 +154,11 @@ control dnat_lookup(inout cap_phv_intr_global_h capri_intrinsic,
     */
 
     apply {
-      if(!hdr.ingress_recirc_header.isValid()) {
+      //    if(!hdr.ingress_recirc_header.isValid()) {
 	if(metadata.cntrl.skip_dnat_lkp == FALSE) {
 	  dnat.apply();
 	}
-      }
+	//      }
 
       if(metadata.cntrl.dnat_ohash_lkp == TRUE) {
 	dnat_ohash.apply();

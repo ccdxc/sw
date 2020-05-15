@@ -40,6 +40,7 @@ parser AthenaIngressParser(packet_in packet,
 
   state parse_txdma_to_ingress {
     metadata.cntrl.from_arm = TRUE;
+    metadata.cntrl.skip_dnat_lkp = TRUE;
     transition parse_txdma_to_ingress_split;
   }
   
@@ -72,10 +73,15 @@ state parse_txdma_gso {
   state parse_ingress_recirc_header {
     packet.extract(intr_p4);
     packet.extract(hdr.ingress_recirc_header);
+    metadata.cntrl.direction = hdr.ingress_recirc_header.direction;
+    transition parse_packet;
+    /*
     transition select(hdr.ingress_recirc_header.direction) {
        RX_FROM_SWITCH : parse_packet_from_switch;
        TX_FROM_HOST : parse_packet_from_host;
-    }  
+    } 
+    */
+ 
   }
 
   /* 
@@ -547,6 +553,7 @@ state parse_txdma_gso {
     bit<8> opt_type = packet.lookahead<bit<24>>()[7:0];
     //    bit<8> opt_len = (bit<8>)packet.lookahead<bit<32>>()[4:0];
     transition select(geneve_options_len, opt_type) {
+      (0x80 &&& 0x80, 0x00 &&& 0x00)              : parse_geneve_option_error;
       (0x00 &&& 0xFF, 0x00 &&& 0x00)              : parse_geneve_ulp;
       (0x00 &&& 0x00, GENEVE_OPTION_SRC_SLOT_ID ) : parse_geneve_option_src_slot_id; 
       (0x00 &&& 0x00, GENEVE_OPTION_DST_SLOT_ID ) : parse_geneve_option_dst_slot_id; 
@@ -558,12 +565,18 @@ state parse_txdma_gso {
 
     }   
   }
-  
+
+  state parse_geneve_option_error {
+    metadata.prs.geneve_option_len_error = 1;
+    transition accept;
+  }  
+
   state parse_geneve_option_src_slot_id {
     packet.extract(hdr.geneve_option_srcSlotId);
     geneve_options_len = geneve_options_len - 8;
     transition select(geneve_options_len) {
-    0x00 : parse_geneve_ulp;
+       0x80 : parse_geneve_option_error;
+       0x00 : parse_geneve_ulp;
        default : parse_geneve_options;
     }
   }
@@ -577,6 +590,7 @@ state parse_txdma_gso {
     metadata.cntrl.mpls_label_b3_b0 = hdr.geneve_option_dstSlotIdSplit.dstSlotId_b3_b0;
     geneve_options_len = geneve_options_len - 8;
     transition select(geneve_options_len) {
+        0x80 : parse_geneve_option_error;
         0x00 :  parse_geneve_ulp;
        default : parse_geneve_options;
     }
@@ -587,7 +601,8 @@ state parse_txdma_gso {
     packet.extract(hdr.geneve_option_origPhysicalIp);
     geneve_options_len = geneve_options_len - 8;
     transition select(geneve_options_len) {
-    0x00 : parse_geneve_ulp;
+       0x80 : parse_geneve_option_error;
+       0x00 : parse_geneve_ulp;
        default : parse_geneve_options;
     }
   }
@@ -597,6 +612,7 @@ state parse_txdma_gso {
     packet.extract_bytes(hdr.geneve_option_srcSecGrpList, (bit<16>)src_sec_grp_list_opt_len);
     geneve_options_len = geneve_options_len - (bit<16>)src_sec_grp_list_opt_len;
     transition select(geneve_options_len) {
+       0x80 : parse_geneve_option_error;
        0x00 : parse_geneve_ulp;
        default : parse_geneve_options;
     }
@@ -607,6 +623,7 @@ state parse_txdma_gso {
     packet.extract_bytes(hdr.geneve_option_unknown, (bit<16>)unk_opt_len);
     geneve_options_len = geneve_options_len - (bit<16>)unk_opt_len;
     transition select(geneve_options_len) {
+       0x80 : parse_geneve_option_error;
        0x00 : parse_geneve_ulp;
        default : parse_geneve_options;
     }

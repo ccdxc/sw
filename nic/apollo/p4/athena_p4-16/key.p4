@@ -73,10 +73,16 @@ control key_init(inout cap_phv_intr_global_h intr_global,
     }
 
    @name(".native_nonip_packet") action native_nonip_packet() {
-	metadata.l2_key.ktype = P4_KEY_TYPE_MAC;
-	//	metadata.l2_key.dst = (bit<128>)hdr.ethernet_1.dstAddr;
-	metadata.l2_key.dmac = hdr.ethernet_1.dstAddr;
         metadata.cntrl.skip_flow_lkp = TRUE;
+        metadata.cntrl.skip_l2_flow_lkp = TRUE;
+        metadata.cntrl.skip_dnat_lkp = TRUE;
+	hdr.ingress_recirc_header.flow_done = TRUE;
+	hdr.ingress_recirc_header.dnat_done = TRUE; 
+	hdr.ingress_recirc_header.l2_flow_done = TRUE; 
+
+        /* Treat it as a flow miss for now */
+	metadata.cntrl.flow_miss = TRUE;
+
     }
 
     @name(".tunneled_ipv4_packet") action tunneled_ipv4_packet() {
@@ -143,9 +149,15 @@ control key_init(inout cap_phv_intr_global_h intr_global,
     }
 
    @name(".tunneled_nonip_packet") action tunneled_nonip_packet() {
-	metadata.l2_key.ktype = P4_KEY_TYPE_MAC;
         metadata.cntrl.skip_flow_lkp = TRUE;
-	metadata.l2_key.src = (bit<128>)hdr.ethernet_1.dstAddr;
+        metadata.cntrl.skip_l2_flow_lkp = TRUE;
+        metadata.cntrl.skip_dnat_lkp = TRUE;
+	hdr.ingress_recirc_header.flow_done = TRUE;
+	hdr.ingress_recirc_header.dnat_done = TRUE; 
+	hdr.ingress_recirc_header.l2_flow_done = TRUE; 
+
+        /* Treat it as a flow miss for now */
+	metadata.cntrl.flow_miss = TRUE;
     }
 
     
@@ -191,12 +203,22 @@ control key_init(inout cap_phv_intr_global_h intr_global,
   action ingress_recirc_header_info() {
     if (hdr.ingress_recirc_header.isValid()) {
 
-      metadata.cntrl.flow_ohash_lkp = TRUE;
-      metadata.cntrl.dnat_ohash_lkp = TRUE;
-    } else {
-      if(metadata.cntrl.skip_flow_lkp == TRUE) {
-          metadata.cntrl.flow_miss = TRUE;
+      metadata.cntrl.flow_ohash_lkp =  hdr.ingress_recirc_header.flow_ohash_lkp;
+      metadata.cntrl.dnat_ohash_lkp = hdr.ingress_recirc_header.dnat_ohash_lkp;
+      metadata.cntrl.l2_flow_ohash_lkp = hdr.ingress_recirc_header.l2_flow_ohash_lkp;
+
+      if( hdr.ingress_recirc_header.flow_ohash_lkp == TRUE) {
+	metadata.cntrl.skip_flow_lkp =  TRUE;
       }
+      if( hdr.ingress_recirc_header.dnat_ohash_lkp == TRUE) {
+	metadata.cntrl.skip_dnat_lkp = TRUE;
+      }
+      if( hdr.ingress_recirc_header.l2_flow_ohash_lkp == TRUE) {
+	metadata.cntrl.skip_l2_flow_lkp = TRUE;
+      }
+    } else if(metadata.cntrl.skip_flow_lkp == 1) {
+      metadata.cntrl.flow_miss = TRUE;
+      
     }
   }
 

@@ -49,8 +49,8 @@ struct l2_key_metadata_t {
 struct control_metadata_t {
         bit<16> geneve_prototype;
         bit<1> conn_track_tcp;
-        bit<8> conn_track_prev_state;
-        bit<8> conn_track_curr_state;
+        bit<4> conn_track_prev_state;
+        bit<4> conn_track_curr_state;
         bit<16> drop_reason;
 	bit<1> parser_encap_error;
 	bit<1> forward_to_uplink;
@@ -294,6 +294,7 @@ struct csum_metadata_t {
 
 struct parser_metadata_t {
      bit<16> geneve_prototype;
+     bit<1> geneve_option_len_error;
 }
 
 struct metadata_t {

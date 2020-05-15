@@ -29,11 +29,15 @@ header ingress_recirc_header_h {
     bit<32> l2_flow_ohash;
     bit<32> flow_ohash;
     bit<32> dnat_ohash;
-    bit<4>  pad1;
+//    bit<4>  pad1;
+    bit<1>  pad1;
     bit<1>  direction;
     bit<1>  l2_flow_done;
     bit<1>  flow_done;
     bit<1>  dnat_done;
+    bit<1>  l2_flow_ohash_lkp;
+    bit<1>  flow_ohash_lkp;
+    bit<1>  dnat_ohash_lkp;
 }
 
 header predicate_header_h {
