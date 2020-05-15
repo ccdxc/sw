@@ -18,12 +18,14 @@ always_inline void
 arp_proxy_trace_fill (arp_proxy_trace_t *trace, ethernet_arp_header_t *arp,
                       mac_addr_t mac, u32 id)
 {
-    clib_memcpy(&trace->src, &arp->ip4_over_ethernet[0].ip4,
+    if (arp) {
+        clib_memcpy(&trace->src, &arp->ip4_over_ethernet[0].ip4,
                 sizeof(ip4_address_t));
-    clib_memcpy(&trace->dst, &arp->ip4_over_ethernet[1].ip4,
+        clib_memcpy(&trace->dst, &arp->ip4_over_ethernet[1].ip4,
                 sizeof(ip4_address_t));
-    clib_memcpy(trace->smac, &arp->ip4_over_ethernet[1].mac,
+        clib_memcpy(trace->smac, &arp->ip4_over_ethernet[1].mac,
                 ETH_ADDR_LEN);
+    }
     clib_memcpy(trace->vr_mac, mac, ETH_ADDR_LEN);
     trace->bd = id;
 }

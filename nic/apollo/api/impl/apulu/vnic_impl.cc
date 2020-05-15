@@ -89,7 +89,6 @@ vnic_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
                              api_obj_ctxt_t *obj_ctxt) {
     uint32_t idx;
     sdk_ret_t ret;
-    lif_impl *lif;
     subnet_entry *subnet;
     sdk_table_api_params_t tparams;
     mapping_swkey_t mapping_key = { 0 };
@@ -117,41 +116,14 @@ vnic_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
                           spec->subnet.str(), spec->key.str());
             return sdk::SDK_RET_INVALID_ARG;
         }
-        if ((spec->vnic_encap.type == PDS_ENCAP_TYPE_DOT1Q) ||
-            (spec->host_if == k_pds_obj_key_invalid)) {
-            // allocate hw id for this vnic
-            if ((ret = vnic_impl_db()->vnic_idxr()->alloc(&idx)) !=
-                    SDK_RET_OK) {
-                PDS_TRACE_ERR("Failed to allocate hw id for vnic %s, err %u",
-                              spec->key.str(), ret);
-                return ret;
-            }
-            hw_id_ = idx;
-        } else {
-            lif = lif_impl_db()->find(&spec->host_if);
-            // inherit vnic hw id of the corresponding lif
-            if (unlikely(lif == NULL)) {
-                PDS_TRACE_ERR("Failed to reserve resources for vnic %s, host "
-                              "lif %s not found", spec->key.str(),
-                              spec->host_if.str());
-                return SDK_RET_INVALID_ARG;
-            }
-            if (unlikely(lif->type() != sdk::platform::LIF_TYPE_HOST &&
-                         lif->type() != sdk::platform::LIF_TYPE_CONTROL)) {
-                PDS_TRACE_ERR("Incorrect type %u lif %s in vnic %s spec",
-                              lif->type(), spec->host_if.str(),
-                              spec->key.str());
-                return SDK_RET_INVALID_ARG;
-            }
-            if (lif->state() != sdk::types::LIF_STATE_UP) {
-                PDS_TRACE_ERR("Failed to reserve resources for vnic %s, host "
-                              "lif %s is not up, current state %u",
-                              spec->key.str(), spec->host_if.str(),
-                              lif->state());
-                return SDK_RET_RETRY;
-            }
-            hw_id_ = lif->vnic_hw_id();
+        // allocate hw id for this vnic
+        if ((ret = vnic_impl_db()->vnic_idxr()->alloc(&idx)) !=
+                SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to allocate hw id for vnic %s, err %u",
+                          spec->key.str(), ret);
+            return ret;
         }
+        hw_id_ = idx;
 
         // reserve an entry in LOCAL_MAPPING table for MAC entry
         local_mapping_key.key_metadata_local_mapping_lkp_type = KEY_TYPE_MAC;
@@ -256,11 +228,8 @@ vnic_impl::release_resources(api_base *api_obj) {
         nexthop_impl_db()->nh_idxr()->free(nh_idx_);
     }
 
-    // if the vnic_hw_id_ is not inherited from the lif, release it
-    if (((vnic->vnic_encap().type == PDS_ENCAP_TYPE_DOT1Q) ||
-         (vnic->host_if() == k_pds_obj_key_invalid) ||
-         (g_pds_state.platform_type() == platform_type_t::PLATFORM_TYPE_SIM)) &&
-        (hw_id_ != 0xFFFF)) {
+    // release the vnic h/w id
+    if (hw_id_ != 0xFFFF) {
         vnic_impl_db()->vnic_idxr()->free(hw_id_);
     }
 
@@ -324,11 +293,8 @@ vnic_impl::nuke_resources(api_base *api_obj) {
         nexthop_impl_db()->nh_idxr()->free(nh_idx_);
     }
 
-    // free the vnic hw id, if its not inherited from lif
-    if (((vnic->vnic_encap().type == PDS_ENCAP_TYPE_DOT1Q) ||
-         (vnic->host_if() == k_pds_obj_key_invalid) ||
-         (g_pds_state.platform_type() == platform_type_t::PLATFORM_TYPE_SIM))
-        && (hw_id_ != 0xFFFF)) {
+    // free the vnic hw id
+    if (hw_id_ != 0xFFFF) {
         vnic_impl_db()->vnic_idxr()->free(hw_id_);
     }
 
@@ -342,16 +308,15 @@ vnic_impl::nuke_resources(api_base *api_obj) {
 sdk_ret_t
 vnic_impl::populate_msg(pds_msg_t *msg, api_base *api_obj,
                         api_obj_ctxt_t *obj_ctxt) {
+    lif_impl *lif;
+
     msg->cfg_msg.vnic.status.hw_id = hw_id_;
     msg->cfg_msg.vnic.status.nh_hw_id = nh_idx_;
-
-    // also read host LIF id from lif DB and populate in vnic status
-    pds_lif_info_t info = { 0 };
-    sdk_ret_t ret = pds_lif_read(&msg->cfg_msg.vnic.spec.host_if, &info);
-    if (ret == SDK_RET_OK) {
-        msg->cfg_msg.vnic.status.host_if_hw_id = info.spec.id;
+    // populate lif id, if vnic has host intf association
+    lif = lif_impl_db()->find(&msg->cfg_msg.vnic.spec.host_if);
+    if (lif) {
+        msg->cfg_msg.vnic.status.host_if_hw_id = lif->id();
     }
-
     return SDK_RET_OK;
 }
 

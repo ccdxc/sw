@@ -74,14 +74,16 @@ action vlan_info(vnic_id, bd_id, vpc_id, rmac) {
             modify_field(key_metadata.local_mapping_lkp_id,
                          vnic_metadata.vpc_id);
         } else {
-            modify_field(key_metadata.local_mapping_lkp_id,
-                         vnic_metadata.bd_id);
             if (arp.valid == TRUE) {
+                modify_field(key_metadata.local_mapping_lkp_id,
+                             vnic_metadata.vpc_id);
                 modify_field(key_metadata.local_mapping_lkp_type,
                              KEY_TYPE_IPV4);
                 modify_field(key_metadata.local_mapping_lkp_addr,
                              arp.senderIpAddr);
             } else {
+                modify_field(key_metadata.local_mapping_lkp_id,
+                             vnic_metadata.bd_id);
                 modify_field(key_metadata.local_mapping_lkp_type,
                              KEY_TYPE_MAC);
                 modify_field(key_metadata.local_mapping_lkp_addr,
