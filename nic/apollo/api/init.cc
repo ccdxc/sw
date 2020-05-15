@@ -174,18 +174,23 @@ system_mac_init (void)
 {
     std::string       mac_str;
     mac_addr_t        mac_addr;
-
-    if (api::g_pds_state.platform_type() == platform_type_t::PLATFORM_TYPE_HW) {
-        sdk::platform::readfrukey(BOARD_MACADDRESS_KEY, mac_str);
-        mac_str_to_addr((char *)mac_str.c_str(), mac_addr);
-        api::g_pds_state.set_system_mac(mac_addr);
-    } else {
-        // for non h/w platforms, set system MAC to default
+    
+    int ret = sdk::platform::readfrukey(BOARD_MACADDRESS_KEY, mac_str);
+    if (ret < 0) {
+        // invalid fru. set system MAC to default
         MAC_UINT64_TO_ADDR(mac_addr, PENSANDO_NIC_MAC);
-        api::g_pds_state.set_system_mac(mac_addr);
-        PDS_TRACE_INFO("system mac 0x%06lx",
-                       MAC_TO_UINT64(api::g_pds_state.system_mac()));
+    } else {
+        // valid fru
+        mac_str_to_addr((char *)mac_str.c_str(), mac_addr);
     }
+    if (api::g_pds_state.platform_type() == platform_type_t::PLATFORM_TYPE_HW) {
+        if (ret < 0) {
+            SDK_ASSERT(0);
+        }
+    }
+    api::g_pds_state.set_system_mac(mac_addr);
+    PDS_TRACE_INFO("system mac 0x%06lx",
+                           MAC_TO_UINT64(api::g_pds_state.system_mac()));
 }
 
 static std::string
