@@ -31,6 +31,140 @@ ExceptionFilter(IN ULONG Code, IN PEXCEPTION_POINTERS ExceptPtrs)
     return EXCEPTION_EXECUTE_HANDLER;
 }
 
+ULONG ionic_wcstoul(IN PWCHAR StrNum, IN BOOLEAN bTrimStartSpaces, IN BOOLEAN bStopAtFirstNonNumeric) {
+    ULONG Num = 0;
+
+    if (StrNum) {
+        int i = -1;
+        while (0 != StrNum[++i]) {
+            if ((bTrimStartSpaces) && ((L' ' == StrNum[i]) || (L'\t' == StrNum[i]))) {
+                continue;
+            }
+            if ((L'0' <= StrNum[i]) && (StrNum[i] <= L'9')) {
+                Num = (Num * 10) + (StrNum[i] - L'0');
+                bTrimStartSpaces = FALSE;
+            }
+            else {
+                if (bStopAtFirstNonNumeric) {
+                    break;
+                }
+            }
+        }
+    }
+
+    return Num;
+}
+
+wchar_t* ionic_wcstok(wchar_t* Str, const wchar_t* Delim, wchar_t** Context) {
+    wchar_t* p;
+
+    if (Str == NULL) {
+        Str = *Context;
+    }
+
+    while (*Str && wcschr(Delim, *Str)) {
+        Str++;
+    }
+    if (!*Str) {
+        *Context = Str;
+        return NULL;
+    }
+    for (p = Str; *Str && !wcschr(Delim, *Str); Str++) {
+        continue;
+    }
+    if (*Str) {
+        *Str++ = L'\0';
+    }
+
+    *Context = Str;
+    return p;
+}
+
+void DestroyVLANRanges(IN struct ionic* adapter) {
+    PLIST_ENTRY pEntry;
+    PVLAN_RANGE pVlanRange;
+
+    while (!IsListEmpty(&adapter->vlanRangesList)) {
+
+        pEntry = RemoveHeadList(&adapter->vlanRangesList);
+            
+        pVlanRange = CONTAINING_RECORD(pEntry, VLAN_RANGE, list_entry);
+
+        NdisFreeMemoryWithTagPriority_internal(adapter->adapterhandle, pVlanRange, IONIC_GENERIC_TAG);
+    }
+}
+
+NDIS_STATUS FillVlanRangesFromString(IN PNDIS_STRING pnsVLANRanges, IN struct ionic* adapter) {
+    PCWCHAR     SepComma = L",";
+    PCWCHAR     SepDash = L"-";
+    PWCHAR      CtxComma = NULL;
+    PWCHAR      CtxDash = NULL;
+    PWCHAR      tok_dash;
+    PWCHAR      tok_comma;
+    NDIS_STATUS Status = NDIS_STATUS_SUCCESS;
+    USHORT      VlanLower, VlanUpper;
+    
+    if (NULL == pnsVLANRanges) {
+        return NDIS_STATUS_INVALID_PARAMETER;
+    }
+    // check string and NULL terminate in case it was not
+    if ((pnsVLANRanges->Buffer) &&
+        (0 != pnsVLANRanges->Length) &&
+        (pnsVLANRanges->Length + sizeof(WCHAR) <= pnsVLANRanges->MaximumLength))
+    {
+        pnsVLANRanges->Buffer[(pnsVLANRanges->Length / sizeof(WCHAR))] = 0;
+    }
+
+    DestroyVLANRanges(adapter);
+
+    DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE, "********* VlanRanges: %S", pnsVLANRanges->Buffer));
+
+
+    tok_comma = ionic_wcstok(pnsVLANRanges->Buffer, SepComma, &CtxComma);
+
+    // look for all tokens separated by comma
+    while (tok_comma != NULL)
+    {
+        VlanLower = VlanUpper = 0;
+
+        tok_dash = ionic_wcstok(tok_comma, SepDash, &CtxDash);
+        if (NULL != tok_dash) {
+            VlanLower = (USHORT)ionic_wcstoul(tok_dash, TRUE, TRUE);
+            tok_dash = ionic_wcstok(NULL, SepDash, &CtxDash);
+            if (NULL != tok_dash) {
+                VlanUpper = (USHORT)ionic_wcstoul(tok_dash, TRUE, TRUE);
+            }
+        }
+        if ((0 != VlanLower) && (VlanUpper <= ETH_VLAN_ID_MAX) && (VlanLower <= ETH_VLAN_ID_MAX)) {
+            PVLAN_RANGE pVlanRange = (PVLAN_RANGE)NdisAllocateMemoryWithTagPriority_internal(adapter->adapterhandle, sizeof(VLAN_RANGE), IONIC_GENERIC_TAG, NormalPoolPriority);
+            if (NULL == pVlanRange) {
+                Status = NDIS_STATUS_RESOURCES;
+                goto exit;
+            }
+            pVlanRange->LowerVLANId = VlanLower;
+            if (VlanUpper > VlanLower) {
+                pVlanRange->UpperVLANId = VlanUpper;
+            }
+            else {
+                pVlanRange->UpperVLANId = VlanLower;
+            }
+            
+            DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
+                "%s New VLANRange added to list - %u - %u \n", __FUNCTION__, pVlanRange->LowerVLANId, pVlanRange->UpperVLANId));
+
+            InsertTailList(&adapter->vlanRangesList, &pVlanRange->list_entry);
+            
+        }
+        // Get next token:
+        tok_comma = ionic_wcstok(NULL, SepComma, &CtxComma);
+    }
+exit:    
+    if (NDIS_STATUS_SUCCESS != Status) {
+        DestroyVLANRanges(adapter);
+    }
+    return Status;
+}
+
 NDIS_STATUS
 ReadRegParameters(struct ionic *Adapter)
 {
@@ -137,6 +271,27 @@ ReadRegParameters(struct ionic *Adapter)
 
 			Adapter->registry_config[ IONIC_REG_VLANID].current_value = pParameters->ParameterData.IntegerData;
         }
+
+		NdisInitUnicodeString( &uniKeyWord,
+							   ionic_registry[IONIC_REG_VLANFILTERS].name);
+        NdisReadConfiguration(&ntStatus, &pParameters, hConfig, &uniKeyWord,
+                              NdisParameterString);
+
+        if (ntStatus == NDIS_STATUS_SUCCESS) {
+            ntStatus = FillVlanRangesFromString(&pParameters->ParameterData.StringData, Adapter);
+        }
+    }
+
+    NdisInitUnicodeString(&uniKeyWord,
+        ionic_registry[IONIC_REG_PROMISCMODE].name);
+    NdisReadConfiguration(&ntStatus, &pParameters, hConfig, &uniKeyWord,  NdisParameterInteger);
+    /* By default it is disabled */
+    ClearFlag(Adapter->ConfigStatus, IONIC_PROMISCMODE_ENABLED);
+    if (ntStatus == NDIS_STATUS_SUCCESS) {
+        if (pParameters->ParameterData.IntegerData == 1) {
+            SetFlag(Adapter->ConfigStatus, IONIC_PROMISCMODE_ENABLED);
+        }
+        Adapter->registry_config[IONIC_REG_PROMISCMODE].current_value = pParameters->ParameterData.IntegerData;
     }
 
     Adapter->tx_frag_pool_count = IONIC_TX_FRAG_DEFAULT;

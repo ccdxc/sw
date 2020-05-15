@@ -1450,3 +1450,6 @@ ionic_perfmon_cb(void *SystemContext,
                   void *Context2);
 
 };
+
+void DestroyVLANRanges(IN struct ionic* adapter);
+

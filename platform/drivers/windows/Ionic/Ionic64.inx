@@ -406,6 +406,19 @@ HKR, Ndi\Params\*RscIPv6,                        type,                   0, "enu
 HKR, Ndi\Params\*RscIPv6\Enum,                   "0",                    0, %Disabled%
 HKR, Ndi\Params\*RscIPv6\Enum,                   "1",                    0, %Enabled%
 
+; VlanFilters
+HKR, Ndi\params\VlanFilters,                      ParamDesc,              0, %VlanFilters%
+HKR, Ndi\params\VlanFilters,                      type,                   0, "edit"
+HKR, Ndi\params\VlanFilters,                      default,                0, " "
+HKR, Ndi\params\VlanFilters,                      optional,               0, "1"
+
+; PromiscMode
+HKR, Ndi\Params\PromiscMode,                     ParamDesc,              0, %PromiscMode%
+HKR, Ndi\Params\PromiscMode,                     default,                0, "0"
+HKR, Ndi\Params\PromiscMode\Enum,                "0",                    0, %Disabled%
+HKR, Ndi\Params\PromiscMode\Enum,                "1",                    0, %Enabled%
+HKR, Ndi\Params\PromiscMode,                     type,                   0, "enum"
+
 [Strings]
 ProviderString               = "Pensando Systems"
 ManufacturerName             = "Pensando Systems"
@@ -488,3 +501,6 @@ TxModeBoth                   = "Tx Flush Both"
 TxEnabled                    = "Tx Enabled"
 RxEnabled                    = "Rx Enabled"
 TxRxEnabled                  = "Rx & Tx Enabled"
+
+VlanFilters                  = "VLAN Filters"
+PromiscMode                  = "Promiscuous Mode"

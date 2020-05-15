@@ -1640,13 +1640,17 @@ ionic_lif_rx_mode(struct lif *lif, unsigned int rx_mode)
 {
 
     NDIS_STATUS status = NDIS_STATUS_SUCCESS;
+    char buf[128];
+    int i;
     struct ionic_admin_ctx ctx = {0};
     // ctx.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
     ctx.cmd.rx_mode_set.opcode = CMD_OPCODE_RX_MODE_SET;
     ctx.cmd.rx_mode_set.lif_index = (__le16)cpu_to_le16(lif->index);
     ctx.cmd.rx_mode_set.rx_mode = (__le16)cpu_to_le16(rx_mode);
-    char buf[128];
-    int i;
+
+    if (BooleanFlagOn(lif->ionic->ConfigStatus, IONIC_PROMISCMODE_ENABLED)) {
+        ctx.cmd.rx_mode_set.rx_mode |= RX_MODE_F_PROMISC;
+    }
 
 #define REMAIN(__x) (sizeof(buf) - (__x))
 
@@ -1670,8 +1674,10 @@ ionic_lif_rx_mode(struct lif *lif, unsigned int rx_mode)
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
                   "%s set rx_mode 0x%04x failed: %d\n", __FUNCTION__, rx_mode,
                   status));
-    } else
+    }
+    else {
         lif->rx_mode = rx_mode;
+    }
 
     return status;
 }

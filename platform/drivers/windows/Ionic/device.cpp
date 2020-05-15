@@ -549,6 +549,8 @@ ionic_deinit(struct ionic *ionic)
         ionic->name.Buffer = NULL;
     }
 
+    DestroyVLANRanges(ionic);
+
     return;
 }
 

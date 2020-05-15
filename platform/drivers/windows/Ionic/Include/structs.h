@@ -635,6 +635,14 @@ struct filter_info
 	ULONG			q_index;
 };
 
+
+typedef struct _VLAN_RANGE {
+	LIST_ENTRY	list_entry;
+	USHORT		LowerVLANId;
+	USHORT		UpperVLANId;
+} VLAN_RANGE, * PVLAN_RANGE;
+
+
 struct ionic {
 
 	LIST_ENTRY		list_entry;
@@ -678,6 +686,8 @@ struct ionic {
 	NDIS_HANDLE		timer_obj;
 
 	u16				vlan_id;
+
+	LIST_ENTRY		vlanRangesList;
 
 	u32				speed_duplex;
 

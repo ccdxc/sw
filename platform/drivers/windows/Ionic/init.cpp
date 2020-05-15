@@ -559,6 +559,34 @@ InitializeEx(NDIS_HANDLE AdapterHandle,
         goto err_out_free_lifs;
     }
 
+    // main vlan_id was added, now add VLAN filters
+    if (!IsListEmpty(&adapter->vlanRangesList)) {
+        PLIST_ENTRY pListHead = &adapter->vlanRangesList;
+        PLIST_ENTRY pEntry = NULL;
+        PVLAN_RANGE pVlanRange;
+        USHORT      VlanIdx;
+
+        if (!IsListEmpty(pListHead)) {
+            pEntry = pListHead->Flink;
+            do {
+                pVlanRange = CONTAINING_RECORD(pEntry, VLAN_RANGE, list_entry);
+                for (VlanIdx = pVlanRange->LowerVLANId; VlanIdx <= pVlanRange->UpperVLANId; VlanIdx++) {
+                    if (VlanIdx != adapter->master_lif->vlan_id) {
+                        status = ionic_lif_vlan(adapter->master_lif, VlanIdx, true);
+                        if (status != NDIS_STATUS_SUCCESS) {
+                            DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR, "%s ionic_lif_vlan(%u) returned: %08lX\n", __FUNCTION__, VlanIdx, status));
+                        }
+                        else {
+                            DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE, "%s ionic_lif_vlan(%u) successfully added vlan filter.\n", __FUNCTION__, VlanIdx));
+                        }
+                                  
+                    }
+                }
+                pEntry = pEntry->Flink;
+            } while (pEntry != pListHead);
+        }
+    }
+
     status = ionic_open(adapter);
     if (status != NDIS_STATUS_SUCCESS) {
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,

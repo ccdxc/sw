@@ -56,6 +56,8 @@ ionic_add_device(NDIS_HANDLE miniport_adapter_handle,
 
     InitializeListHead(&adapter->lifs);
 
+    InitializeListHead(&adapter->vlanRangesList);
+
     KeInitializeEvent(&adapter->outstanding_complete_event, NotificationEvent, TRUE);
 
     RtlInitializeBitMap(&adapter->intrs, (PULONG)adapter->intrs_buffer,
