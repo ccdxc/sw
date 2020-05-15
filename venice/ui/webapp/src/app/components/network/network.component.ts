@@ -10,7 +10,7 @@ import { OrchestrationService } from '@app/services/generated/orchestration.serv
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { ControllerService } from '@app/services/controller.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
-import { Utility } from '@app/common/Utility';
+import { Utility, WorkloadNameInterface } from '@app/common/Utility';
 import { OrchestrationOrchestrator } from '@sdk/v1/models/generated/orchestration';
 import { SelectItem } from 'primeng/api';
 import { WorkloadWorkload } from '@sdk/v1/models/generated/workload';
@@ -79,10 +79,10 @@ export class NetworkComponent extends DataComponent implements OnInit {
 
   cols: TableCol[] = [
     { field: 'meta.name', header: 'Name', class: 'network-column-name', sortable: true, width: 20 },
-    { field: 'meta.creation-time', header: 'Creation Time', class: 'vcenter-integration-column-date', sortable: true, width: '180px' },
     { field: 'spec.vlan-id', header: 'VLAN', class: 'network-column-vlan', sortable: true, width: '80px'},
     { field: 'spec.orchestrators', header: 'Orchestrators', class: 'network-column-orchestrators', sortable: false, width: 35 },
     { field: 'associatedWorkloads', header: 'Workloads', class: '', sortable: false, width: 35 },
+    { field: 'meta.creation-time', header: 'Creation Time', class: 'vcenter-integration-column-date', sortable: true, width: '180px' }
   ];
 
   constructor(private networkService: NetworkService,
@@ -100,7 +100,7 @@ export class NetworkComponent extends DataComponent implements OnInit {
         if (response.connIsErrorState) {
           return;
         }
-        this.dataObjects = this.buildVCenterWorkloadsMap(response.data);
+        this.dataObjects = this.buildNetworkWorkloadsMap(response.data);
         this.tableLoading = false;
       },
       (error) => {
@@ -141,7 +141,7 @@ export class NetworkComponent extends DataComponent implements OnInit {
           return;
         }
         this.workloadList = response.data as WorkloadWorkload[];
-        this.buildVCenterWorkloadsMap();
+        this.dataObjects = this.buildNetworkWorkloadsMap(this.dataObjects);
       }
     );
     this.subscriptions.push(workloadSubscription);
@@ -168,8 +168,6 @@ export class NetworkComponent extends DataComponent implements OnInit {
     const value = Utility.getObjectValueByPropertyPath(rowData, fields);
     const column = col.field;
     switch (column) {
-      case 'status.workloads':
-        return this.displayColumn_workloads(value);
       case 'spec.orchestrators':
         return this.displayColumn_orchestrators(value);
       case 'spec.vlan-id':
@@ -179,12 +177,15 @@ export class NetworkComponent extends DataComponent implements OnInit {
     }
   }
 
-  displayColumn_workloads(rowData: NetworkNetwork): any {
-    const associatedWorkloads: WorkloadWorkload[] = rowData._ui.associatedWorkloads;
-    // network may have lots of workloads, only display 8 workloads but
-    // provide a link that can allow user to go to workload page to filer
-    // right workloads related to the selected vcenter.
-    return Utility.getMaxiumNumberWorkloadNames(associatedWorkloads);
+  getNetworkWorkloads(rowData: NetworkNetwork): any {
+    return Utility.getWorkloadNames(rowData._ui.associatedWorkloads);
+  }
+
+  getNetworkWorkloadFullnames(workloads: WorkloadNameInterface[]): string[] {
+    if (!workloads) {
+      return null;
+    }
+    return workloads.map((workload: WorkloadNameInterface) => workload.fullname);
   }
 
   displayColumn_orchestrators(values: NetworkOrchestratorInfo[]): any {
@@ -245,16 +246,16 @@ export class NetworkComponent extends DataComponent implements OnInit {
     );
   }
 
-  buildVCenterWorkloadsMap(responseData: any = []) {
-      const networkWorkloadsTuple: NetworkWorkloadsTuple =
-        ObjectsRelationsUtility.buildNetworkWorkloadsMap(this.workloadList || [], responseData);
-      return responseData.map(network => {
-        const associatedWorkloads: WorkloadWorkload[] =
-          networkWorkloadsTuple[network.meta.name] || [];
-        const uiModel: NetworkUIModel = { associatedWorkloads };
-        network._ui = uiModel;
-        return network;
-      });
+  buildNetworkWorkloadsMap(responseData: any = []) {
+    const networkWorkloadsTuple: NetworkWorkloadsTuple =
+      ObjectsRelationsUtility.buildNetworkWorkloadsMap(this.workloadList || [], responseData);
+    return responseData.map(network => {
+      const associatedWorkloads: WorkloadWorkload[] =
+        networkWorkloadsTuple[network.meta.name] || [];
+      const uiModel: NetworkUIModel = { associatedWorkloads };
+      network._ui = uiModel;
+      return network;
+    });
   }
 
   deleteRecord(object: NetworkNetwork): Observable<{ body: INetworkNetwork | IApiStatus | Error; statusCode: number }> {

@@ -5,7 +5,7 @@ import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { OrchestrationService } from '@app/services/generated/orchestration.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
-import { Utility } from '@common/Utility';
+import { Utility, WorkloadNameInterface } from '@common/Utility';
 import { TablevieweditAbstract } from '@components/shared/tableviewedit/tableviewedit.component';
 import { IApiStatus, OrchestrationOrchestrator, IOrchestrationOrchestrator } from '@sdk/v1/models/generated/orchestration';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
@@ -20,6 +20,7 @@ interface VcenterUIModel {
   associatedWorkloads: WorkloadWorkload[];
   associatedDatacenters: string[];
 }
+
 /**
  * vCenter page.
  * UI fetches all vcenter objects.
@@ -133,12 +134,15 @@ export class VcenterIntegrationsComponent extends TablevieweditAbstract<IOrchest
     }
   }
 
-  displayColumn_workloads(rowData: OrchestrationOrchestrator): any {
-    const associatedWorkloads: WorkloadWorkload[] = rowData._ui.associatedWorkloads;
-    // vcenter may have lots of workloads, only display 8 workloads but
-    // provide a link that can allow user to go to workload page to filer
-    // right workloads related to the selected vcenter.
-    return Utility.getMaxiumNumberWorkloadNames(associatedWorkloads);
+  getVcenterWorkloads(rowData: OrchestrationOrchestrator): WorkloadNameInterface[] {
+    return Utility.getWorkloadNames(rowData._ui.associatedWorkloads);
+  }
+
+  getVcenterWorkloadFullnames(workloads: WorkloadNameInterface[]): string[] {
+    if (!workloads) {
+      return null;
+    }
+    return workloads.map((workload: WorkloadNameInterface) => workload.fullname);
   }
 
   postNgInit() {

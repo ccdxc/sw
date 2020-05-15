@@ -50,6 +50,11 @@ export interface VeniceObjectCache {
   data?: any[];
 }
 
+export interface WorkloadNameInterface {
+  fullname: string;
+  name: string;
+}
+
 
 export class Utility {
 
@@ -2196,31 +2201,29 @@ export class Utility {
   }
 
   /**
-   * This API takes a ist of workload objects and print at maxium 8
-   * workloads name with display name if it has one
+   * This API takes a list of workloads and print workloads
+   * with both workload name and display name if it has one
    */
-  public static getMaxiumNumberWorkloadNames(workloads: WorkloadWorkload[], maxCount: number = 8) {
+  public static getWorkloadNames(workloads: WorkloadWorkload[], displayNameFirst = true): WorkloadNameInterface[] {
     if (!workloads || workloads.length === 0) {
       return null;
     }
-    const names: string[] = [];
-    for (let i = 0; i < Math.min(maxCount, workloads.length); i++) {
+    const names = [];
+    for (let i = 0; i < workloads.length; i++) {
       let fullname = workloads[i].meta.name;
+      let name = fullname;
       if (workloads[i].meta.labels &&
             workloads[i].meta.labels['io.pensando.vcenter.display-name']) {
-        fullname += '(' + workloads[i].meta.labels['io.pensando.vcenter.display-name'] + ')';
+        name = workloads[i].meta.labels['io.pensando.vcenter.display-name'];
+        if (displayNameFirst) {
+          fullname = workloads[i].meta.labels['io.pensando.vcenter.display-name'] + '(' + fullname + ')';
+        } else {
+          fullname += '(' + workloads[i].meta.labels['io.pensando.vcenter.display-name'] + ')';
+        }
       }
-      names.push(fullname);
+      names.push({ name, fullname });
     }
-    const isOverMax: boolean = workloads && workloads.length > maxCount;
-    let list: string = names.join(', ');
-    let title: string = names.join('\n');
-    if (isOverMax) {
-      const hiddenNumber: number = workloads.length - maxCount;
-      list += ' ' + hiddenNumber + ' more ...';
-      title += '\n' + hiddenNumber + ' more ...';
-    }
-    return { list, title };
+    return names;
   }
 
   // this function is used to determin whether an interface should be filtered

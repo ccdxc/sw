@@ -410,3 +410,13 @@ $backgroundGradient: linear-gradient(to left, rgba(255, 255, 255, 0), rgba(255, 
 .detail-card-header-actions {
   justify-content: flex-end;
 }
+
+.more-link-div {
+  width: 150px;
+  height: 25px;
+  background: url("/assets/images/icons/ico-morelnk-grey.svg") left center no-repeat;
+  background-size: contain;
+  line-height: 25px;
+  padding-left: 30px;
+  color: #767676;
+}

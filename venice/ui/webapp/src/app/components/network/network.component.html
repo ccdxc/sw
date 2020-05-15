@@ -40,15 +40,31 @@
 </ng-template>
 
 <!-- TABLE BODY -->
-<ng-template #bodyTemplate let-rowData let-col="col">
+<ng-template #bodyTemplate let-rowData let-col="col" let-hovered="hovered">
   <ng-container [ngSwitch]="col.field">
     <ng-container *ngSwitchCase="'meta.creation-time'">
       {{rowData.meta['creation-time'] | PrettyDate }}
     </ng-container>
     <ng-container *ngSwitchCase="'associatedWorkloads'">
-      <ng-container *ngIf="displayColumn_workloads(rowData) as workloads">
-        <div class="ellipsisText" title="{{workloads.title}}">
-          {{ workloads.list }}
+      <ng-container *ngIf="getNetworkWorkloads(rowData) as workloads">
+        <div *ngIf="!hovered" class="ellipsisText">
+          {{ getNetworkWorkloadFullnames(workloads).join(', ') }}
+        </div>
+        <div *ngIf="hovered && workloads.length < 5">
+          <div *ngFor="let workload of workloads; index as index;">
+            <div [title]="workload.fullname" class="ellipsisText">{{ workload.fullname }}</div>
+          </div>
+        </div>
+        <div *ngIf="hovered && workloads.length > 4">
+          <div *ngFor="let workload of workloads; index as index;">
+            <div *ngIf="index < 3" [title]="workload.fullname" class="ellipsisText">
+              {{ workload.fullname }}</div>
+          </div>
+          <a [matTooltip]="'Show all workloads on this network in the Workload page'"
+             [queryParams]="{ filter: rowData.meta.name }"
+             routerLink="/workload">
+            <div class="more-link-div"> {{ workloads.length - 3 }} More</div>
+          </a>
         </div>
       </ng-container>
     </ng-container>
