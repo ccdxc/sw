@@ -5,7 +5,15 @@ MODULE_TARGET   = sysmond.bin
 MODULE_PIPELINE = iris
 MODULE_SRCS     = $(wildcard ${MODULE_SRC_DIR}/*.cc ${MODULE_SRC_DIR}/event_recorder/*.cc) \
                   ${MODULE_SRC_DIR}/delphi/sysmond_delphi.cc ${MODULE_SRC_DIR}/delphi/sysmond_delphi_cb.cc \
-                  ${MODULE_SRC_DIR}/delphi/asicerrord_delphi.cc ${MODULE_SRC_DIR}/cpld/*.cc)
+                  ${MODULE_SRC_DIR}/cpld/*.cc)
+ifeq ($(ASIC),elba)
+MODULE_SRCS     += $(wildcard ${MODULE_SRC_DIR}/delphi/elba/*.cc) 
+MODULE_FLAGS    = -DELBA_SW ${NIC_CSR_FLAGS} -O2 
+else
+MODULE_SRCS     += $(wildcard ${MODULE_SRC_DIR}/delphi/capri/*.cc) 
+MODULE_FLAGS    = -DCAPRI_SW ${NIC_CSR_FLAGS} -O2
+endif
+
 MODULE_SOLIBS   = delphisdk trace halproto utils sdkasicpd \
                   sdk_asicrw_if sensor pal catalog logger \
                   pdcommon p4pd_${PIPELINE} sdkp4 \
@@ -18,5 +26,4 @@ MODULE_LDLIBS   = :libprotobuf.so.14 grpc++ \
                   ${SDK_THIRDPARTY_CAPRI_LDLIBS} \
                   ${NIC_THIRDPARTY_GOOGLE_LDLIBS} \
                   ${NIC_CAPSIM_LDLIBS}
-MODULE_FLAGS    = -DCAPRI_SW ${NIC_CSR_FLAGS} -O2
 include ${MKDEFS}/post.mk

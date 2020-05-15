@@ -1,0 +1,733 @@
+Group,Count,Owner,Parent.int_groups,Register,Field,Path,Name,Type,Allow during port up,FLags,Severity,,info (I) action (default is none),I->E count thresh,,error (E) action (default is count),Error->Fatal count threshold,Description (or Action in case of Fatal),,fatal (F) action (default is reset)
+p4,2,Alessandro,dpp.dpp[#],int_credit,err_framer_hdrsize_zero_ovfl,dpp.dpp[#].int_credit,int_credit.err_framer_hdrsize_zero_ovfl,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpp.dpp[#],int_credit,framer_credit_ovflow,dpp.dpp[#].int_credit,int_credit.framer_credit_ovflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpp.dpp[#],int_credit,framer_credit_undflow,dpp.dpp[#].int_credit,int_credit.framer_credit_undflow,,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpp.dpp[#],int_credit,framer_hdrfld_offset_ovfl,dpp.dpp[#].int_credit,int_credit.framer_hdrfld_offset_ovfl,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpp.dpp[#],int_credit,framer_hdrfld_vld_ovfl,dpp.dpp[#].int_credit,int_credit.framer_hdrfld_vld_ovfl,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpp.dpp[#],int_credit,pkt_credit_ovflow,dpp.dpp[#].int_credit,int_credit.pkt_credit_ovflow,pkt,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpp.dpp[#],int_credit,pkt_credit_undflow,dpp.dpp[#].int_credit,int_credit.pkt_credit_undflow,pkt,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpp.dpp[#],int_credit,ptr_credit_ovflow,dpp.dpp[#].int_credit,int_credit.ptr_credit_ovflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpp.dpp[#],int_credit,ptr_credit_undflow,dpp.dpp[#].int_credit,int_credit.ptr_credit_undflow,,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpp.dpp[#],int_fifo,csum_phv_ff_ovflow,dpp.dpp[#].int_fifo,int_fifo.csum_phv_ff_ovflow,phv,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpp.dpp[#],int_fifo,csum_phv_ff_undflow,dpp.dpp[#].int_fifo,int_fifo.csum_phv_ff_undflow,phv,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpp.dpp[#],int_fifo,ohi_ff_overflow,dpp.dpp[#].int_fifo,int_fifo.ohi_ff_overflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpp.dpp[#],int_fifo,phv_ff_overflow,dpp.dpp[#].int_fifo,int_fifo.phv_ff_overflow,phv,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpp.dpp[#],int_fifo,pkt_size_ff_ovflow,dpp.dpp[#].int_fifo,int_fifo.pkt_size_ff_ovflow,pkt,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpp.dpp[#],int_fifo,pkt_size_ff_undflow,dpp.dpp[#].int_fifo,int_fifo.pkt_size_ff_undflow,pkt,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpp.dpp[#],int_reg#,err_clip_max_pkt_size,dpp.dpp[#].int_reg#,int_reg#.err_clip_max_pkt_size,pkt,,None,error (E),,n/a,n/a,,Fix P4 program,never,P4 program/compiler error. Packet constructed goes beyond programmed or hardwires  max byte threshold (whichever is less),,
+p4,2,Alessandro,dpp.dpp[#],int_reg#,err_crc_multiple_hdr,dpp.dpp[#].int_reg#,int_reg#.err_crc_multiple_hdr,,,None,error (E),,n/a,n/a,,Fix P4 program,never,P4 program/compiler error. more than one header requesting crc computation,,
+p4,2,Alessandro,dpp.dpp[#],int_reg#,err_csum_multiple_hdr,dpp.dpp[#].int_reg#,int_reg#.err_csum_multiple_hdr,,,None,error (E),,n/a,n/a,,Fix P4 program,never,P4 program/compiler error. more than one header requesting same csum engine computation,,
+p4,2,Alessandro,dpp.dpp[#],int_reg#,err_csum_multiple_hdr_copy,dpp.dpp[#].int_reg#,int_reg#.err_csum_multiple_hdr_copy,,,None,error (E),,n/a,n/a,,Fix P4 program,never,P4 program/compiler error. more than one header requesting csum copy,,
+p4,2,Alessandro,dpp.dpp[#],int_reg#,err_framer_credit_overrun,dpp.dpp[#].int_reg#,int_reg#.err_framer_credit_overrun,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpp.dpp[#],int_reg#,err_max_active_hdrs,dpp.dpp[#].int_reg#,int_reg#.err_max_active_hdrs,,,None,error (E),,n/a,n/a,,Fix P4 program,never,P4 program/compiler error. exceeding max number of available headers per 64 byte line,,
+p4,2,Alessandro,dpp.dpp[#],int_reg#,err_max_pkt_size,dpp.dpp[#].int_reg#,int_reg#.err_max_pkt_size,pkt,,None,error (E),,n/a,n/a,,Fix P4 program,n/a,P4 program/compiler error. packet built size exceeding programmed threshold  ,,
+p4,2,Alessandro,dpp.dpp[#],int_reg#,err_min_pkt_size,dpp.dpp[#].int_reg#,int_reg#.err_min_pkt_size,pkt,,None,error (E),,n/a,n/a,,Fix P4 program,n/a,P4 program/compiler error. packet built size too small to carry vital intrinsic information,,
+p4,2,Alessandro,dpp.dpp[#],int_reg#,err_null_hdr_vld,dpp.dpp[#].int_reg#,int_reg#.err_null_hdr_vld,,,None,error (E),,n/a,n/a,,Fix P4 program,n/a,P4 program/compiler error. packet has no headers (0 size),,
+p4,2,Alessandro,dpp.dpp[#],int_reg#,err_null_hdrfld_vld,dpp.dpp[#].int_reg#,int_reg#.err_null_hdrfld_vld,,,None,error (E),,n/a,n/a,,Fix P4 program,n/a,P4 program/compiler error. packet has no headers (0 size),,
+p4,2,Alessandro,dpp.dpp[#],int_reg#,err_ohi_eop_no_sop,dpp.dpp[#].int_reg#,int_reg#.err_ohi_eop_no_sop,,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpp.dpp[#],int_reg#,err_ohi_sop_no_eop,dpp.dpp[#].int_reg#,int_reg#.err_ohi_sop_no_eop,,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpp.dpp[#],int_reg#,err_packets_in_flight_credit_overrun,dpp.dpp[#].int_reg#,int_reg#.err_packets_in_flight_credit_overrun,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpp.dpp[#],int_reg#,err_phv_eop_no_sop,dpp.dpp[#].int_reg#,int_reg#.err_phv_eop_no_sop,phv,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpp.dpp[#],int_reg#,err_phv_no_data_reference_ohi,dpp.dpp[#].int_reg#,int_reg#.err_phv_no_data_reference_ohi,phv,,None,fatal (F),,n/a,n/a,,n/a,n/a,P4 program/compiler error. reference to a byte in the incoming packet on a software PHV originated frame with no associated packet,,
+p4,2,Alessandro,dpp.dpp[#],int_reg#,err_phv_sop_no_eop,dpp.dpp[#].int_reg#,int_reg#.err_phv_sop_no_eop,phv,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpp.dpp[#],int_reg#,err_ptr_fifo_credit_overrun,dpp.dpp[#].int_reg#,int_reg#.err_ptr_fifo_credit_overrun,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpp.dpp[#],int_reg#,fieldC,dpp.dpp[#].int_reg#,int_reg#.fieldC,,,None,info (I),,n/a,n/a,,n/a,n/a,spare,,
+p4,2,Alessandro,dpp.dpp[#],int_reg#,fieldD,dpp.dpp[#].int_reg#,int_reg#.fieldD,,,None,info (I),,n/a,n/a,,n/a,n/a,spare,,
+p4,64,Alessandro,dpp.dpp[#],int_spare,spare_#,dpp.dpp[#].int_spare,int_spare.spare_#,,,None,error (E),,n/a,n/a,,"Fix P4 program, except spare_2: capture engaged used for debug; is INFO",never,spare_0: err_headerfld_size. P4 program/compiler error. header size is grater than > 16Kbytes; spare_1: err_adder_overflow P4 program/compiler error acccumulated header size is grater than > 16Kbytes; spare_2: capture engaged used for debug;,,
+p4,2,Alessandro,dpp.dpp[#],int_srams_ecc,dpp_ohi_fifo_correctable,dpp.dpp[#].int_srams_ecc,int_srams_ecc.dpp_ohi_fifo_correctable,ecc_hw,,None,error (E),,n/a,n/a,,count,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+p4,2,Alessandro,dpp.dpp[#],int_srams_ecc,dpp_ohi_fifo_uncorrectable,dpp.dpp[#].int_srams_ecc,int_srams_ecc.dpp_ohi_fifo_uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,"ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip",,send chip to Avago
+p4,2,Alessandro,dpp.dpp[#],int_srams_ecc,dpp_phv_fifo_correctable,dpp.dpp[#].int_srams_ecc,int_srams_ecc.dpp_phv_fifo_correctable,ecc_hw,,None,error (E),,n/a,n/a,,count,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+p4,2,Alessandro,dpp.dpp[#],int_srams_ecc,dpp_phv_fifo_uncorrectable,dpp.dpp[#].int_srams_ecc,int_srams_ecc.dpp_phv_fifo_uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,"ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip",,send chip to Avago
+p4,2,Alessandro,dpr.dpr[#],int_credit,egress_credit_ovflow,dpr.dpr[#].int_credit,int_credit.egress_credit_ovflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_credit,egress_credit_undflow,dpr.dpr[#].int_credit,int_credit.egress_credit_undflow,,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_credit,pktout_credit_ovflow,dpr.dpr[#].int_credit,int_credit.pktout_credit_ovflow,pkt,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_credit,pktout_credit_undflow,dpr.dpr[#].int_credit,int_credit.pktout_credit_undflow,pkt,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_fifo,csum_ff_ovflow,dpr.dpr[#].int_fifo,int_fifo.csum_ff_ovflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_fifo,ohi_ff_ovflow,dpr.dpr[#].int_fifo,int_fifo.ohi_ff_ovflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_fifo,phv_ff_ovflow,dpr.dpr[#].int_fifo,int_fifo.phv_ff_ovflow,phv,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_fifo,pktin_ff_ovflow,dpr.dpr[#].int_fifo,int_fifo.pktin_ff_ovflow,pkt,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_fifo,pktout_ff_undflow,dpr.dpr[#].int_fifo,int_fifo.pktout_ff_undflow,pkt,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_fifo,ptr_ff_ovflow,dpr.dpr[#].int_fifo,int_fifo.ptr_ff_ovflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_flop_fifo_#,crc_err_flop_ff_ovflow,dpr.dpr[#].int_flop_fifo_#,int_flop_fifo_#.crc_err_flop_ff_ovflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_flop_fifo_#,crc_err_flop_ff_undflow,dpr.dpr[#].int_flop_fifo_#,int_flop_fifo_#.crc_err_flop_ff_undflow,,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_flop_fifo_#,csum_cal_vld_flop_ff_ovflow,dpr.dpr[#].int_flop_fifo_#,int_flop_fifo_#.csum_cal_vld_flop_ff_ovflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_flop_fifo_#,csum_cal_vld_flop_ff_undflow,dpr.dpr[#].int_flop_fifo_#,int_flop_fifo_#.csum_cal_vld_flop_ff_undflow,,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_flop_fifo_#,csum_err_flop_ff_ovflow,dpr.dpr[#].int_flop_fifo_#,int_flop_fifo_#.csum_err_flop_ff_ovflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_flop_fifo_#,csum_err_flop_ff_undflow,dpr.dpr[#].int_flop_fifo_#,int_flop_fifo_#.csum_err_flop_ff_undflow,,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_flop_fifo_#,data_mux_drop_flop_ff_ovflow,dpr.dpr[#].int_flop_fifo_#,int_flop_fifo_#.data_mux_drop_flop_ff_ovflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_flop_fifo_#,data_mux_drop_flop_ff_undflow,dpr.dpr[#].int_flop_fifo_#,int_flop_fifo_#.data_mux_drop_flop_ff_undflow,,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_flop_fifo_#,data_mux_eop_err_flop_ff_ovflow,dpr.dpr[#].int_flop_fifo_#,int_flop_fifo_#.data_mux_eop_err_flop_ff_ovflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_flop_fifo_#,data_mux_eop_err_flop_ff_undflow,dpr.dpr[#].int_flop_fifo_#,int_flop_fifo_#.data_mux_eop_err_flop_ff_undflow,,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_flop_fifo_#,data_mux_force_bypass_crc_flop_ff_ovflow,dpr.dpr[#].int_flop_fifo_#,int_flop_fifo_#.data_mux_force_bypass_crc_flop_ff_ovflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_flop_fifo_#,data_mux_force_bypass_crc_flop_ff_undflow,dpr.dpr[#].int_flop_fifo_#,int_flop_fifo_#.data_mux_force_bypass_crc_flop_ff_undflow,,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_flop_fifo_#,data_mux_force_bypass_csum_flop_ff_ovflow,dpr.dpr[#].int_flop_fifo_#,int_flop_fifo_#.data_mux_force_bypass_csum_flop_ff_ovflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_flop_fifo_#,data_mux_force_bypass_csum_flop_ff_undflow,dpr.dpr[#].int_flop_fifo_#,int_flop_fifo_#.data_mux_force_bypass_csum_flop_ff_undflow,,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_flop_fifo_#,dpr_crc_info_flop_ff_ovflow,dpr.dpr[#].int_flop_fifo_#,int_flop_fifo_#.dpr_crc_info_flop_ff_ovflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_flop_fifo_#,dpr_crc_info_flop_ff_undflow,dpr.dpr[#].int_flop_fifo_#,int_flop_fifo_#.dpr_crc_info_flop_ff_undflow,,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_flop_fifo_#,dpr_crc_update_info_flop_ff_ovflow,dpr.dpr[#].int_flop_fifo_#,int_flop_fifo_#.dpr_crc_update_info_flop_ff_ovflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_flop_fifo_#,dpr_crc_update_info_flop_ff_undflow,dpr.dpr[#].int_flop_fifo_#,int_flop_fifo_#.dpr_crc_update_info_flop_ff_undflow,,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_flop_fifo_#,dpr_csum_info_flop_ff_ovflow,dpr.dpr[#].int_flop_fifo_#,int_flop_fifo_#.dpr_csum_info_flop_ff_ovflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_flop_fifo_#,dpr_csum_info_flop_ff_undflow,dpr.dpr[#].int_flop_fifo_#,int_flop_fifo_#.dpr_csum_info_flop_ff_undflow,,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_flop_fifo_#,dpr_csum_update_info_flop_ff_ovflow,dpr.dpr[#].int_flop_fifo_#,int_flop_fifo_#.dpr_csum_update_info_flop_ff_ovflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_flop_fifo_#,dpr_csum_update_info_flop_ff_undflow,dpr.dpr[#].int_flop_fifo_#,int_flop_fifo_#.dpr_csum_update_info_flop_ff_undflow,,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_flop_fifo_#,eop_vld_flop_ff_ovflow,dpr.dpr[#].int_flop_fifo_#,int_flop_fifo_#.eop_vld_flop_ff_ovflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_flop_fifo_#,eop_vld_flop_ff_undflow,dpr.dpr[#].int_flop_fifo_#,int_flop_fifo_#.eop_vld_flop_ff_undflow,,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_flop_fifo_#,padding_size_flop_ff_ovflow,dpr.dpr[#].int_flop_fifo_#,int_flop_fifo_#.padding_size_flop_ff_ovflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_flop_fifo_#,padding_size_flop_ff_undflow,dpr.dpr[#].int_flop_fifo_#,int_flop_fifo_#.padding_size_flop_ff_undflow,,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_flop_fifo_#,phv_no_data_flop_ff_ovflow,dpr.dpr[#].int_flop_fifo_#,int_flop_fifo_#.phv_no_data_flop_ff_ovflow,phv,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_flop_fifo_#,phv_no_data_flop_ff_undflow,dpr.dpr[#].int_flop_fifo_#,int_flop_fifo_#.phv_no_data_flop_ff_undflow,phv,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_flop_fifo_#,phv_pkt_data_flop_ff_ovflow,dpr.dpr[#].int_flop_fifo_#,int_flop_fifo_#.phv_pkt_data_flop_ff_ovflow,phv,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_flop_fifo_#,phv_pkt_data_flop_ff_undflow,dpr.dpr[#].int_flop_fifo_#,int_flop_fifo_#.phv_pkt_data_flop_ff_undflow,phv,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_flop_fifo_#,pktin_eop_err_flop_ff_ovflow,dpr.dpr[#].int_flop_fifo_#,int_flop_fifo_#.pktin_eop_err_flop_ff_ovflow,pkt,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_flop_fifo_#,pktin_eop_err_flop_ff_undflow,dpr.dpr[#].int_flop_fifo_#,int_flop_fifo_#.pktin_eop_err_flop_ff_undflow,pkt,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_flop_fifo_#,pktin_err_flop_ff_ovflow,dpr.dpr[#].int_flop_fifo_#,int_flop_fifo_#.pktin_err_flop_ff_ovflow,pkt,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_flop_fifo_#,pktin_err_flop_ff_undflow,dpr.dpr[#].int_flop_fifo_#,int_flop_fifo_#.pktin_err_flop_ff_undflow,pkt,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_flop_fifo_#,pktout_len_cell_flop_ff_ovflow,dpr.dpr[#].int_flop_fifo_#,int_flop_fifo_#.pktout_len_cell_flop_ff_ovflow,pkt,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_flop_fifo_#,pktout_len_cell_flop_ff_undflow,dpr.dpr[#].int_flop_fifo_#,int_flop_fifo_#.pktout_len_cell_flop_ff_undflow,pkt,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_flop_fifo_#,ptr_early_pkt_eop_info_flop_ff_ovflow,dpr.dpr[#].int_flop_fifo_#,int_flop_fifo_#.ptr_early_pkt_eop_info_flop_ff_ovflow,pkt,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_flop_fifo_#,ptr_early_pkt_eop_info_flop_ff_undflow,dpr.dpr[#].int_flop_fifo_#,int_flop_fifo_#.ptr_early_pkt_eop_info_flop_ff_undflow,pkt,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_flop_fifo_#,ptr_lookahaed_flop_ff_ovflow,dpr.dpr[#].int_flop_fifo_#,int_flop_fifo_#.ptr_lookahaed_flop_ff_ovflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_flop_fifo_#,ptr_lookahaed_flop_ff_undflow,dpr.dpr[#].int_flop_fifo_#,int_flop_fifo_#.ptr_lookahaed_flop_ff_undflow,,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_reg#,err_crc_loc_gt_pkt_size,dpr.dpr[#].int_reg#,int_reg#.err_crc_loc_gt_pkt_size,pkt,,None,error (E),,n/a,n/a,,Fix P4 program,never,P4 program/compiler error. ICRC location greater then packet size,,
+p4,2,Alessandro,dpr.dpr[#],int_reg#,err_crc_mask_offset_gt_pkt_size,dpr.dpr[#].int_reg#,int_reg#.err_crc_mask_offset_gt_pkt_size,pkt,,None,SW-MASK-IGNORE,,n/a,n/a,,"Does not work, SW should mask/ignore",n/a,Invalid need to be masked,,
+p4,2,Alessandro,dpr.dpr[#],int_reg#,err_crc_offset_gt_pkt_size,dpr.dpr[#].int_reg#,int_reg#.err_crc_offset_gt_pkt_size,pkt,,None,error (E),,n/a,n/a,,Fix P4 program,never,P4 program/compiler error. ICRC covers more than packet size,,
+p4,2,Alessandro,dpr.dpr[#],int_reg#,err_crc_start_gt_end,dpr.dpr[#].int_reg#,int_reg#.err_crc_start_gt_end,,,None,error (E),,n/a,n/a,,Fix P4 program,never,P4 program/compiler error. ICRC start is greater then end,,
+p4,2,Alessandro,dpr.dpr[#],int_reg#,err_csum_ff_overflow,dpr.dpr[#].int_reg#,int_reg#.err_csum_ff_overflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,10,Alessandro,dpr.dpr[#],int_reg#,err_csum_loc_gt_pkt_size_#,dpr.dpr[#].int_reg#,int_reg#.err_csum_loc_gt_pkt_size_#,pkt,,None,error (E),,n/a,n/a,,Fix P4 program,never,P4 program/compiler error. Checksum location greater then packet size,,
+p4,10,Alessandro,dpr.dpr[#],int_reg#,err_csum_offset_gt_pkt_size_#,dpr.dpr[#].int_reg#,int_reg#.err_csum_offset_gt_pkt_size_#,pkt,,None,error (E),,n/a,n/a,,Fix P4 program,never,P4 program/compiler error. Checksum covers more than packet size,,
+p4,10,Alessandro,dpr.dpr[#],int_reg#,err_csum_phdr_offset_gt_pkt_size_#,dpr.dpr[#].int_reg#,int_reg#.err_csum_phdr_offset_gt_pkt_size_#,pkt,,None,error (E),,n/a,n/a,,Fix P4 program,n/a,P4 program/compiler error. Checksum pseudoheaders covers more than packet size,,
+p4,10,Alessandro,dpr.dpr[#],int_reg#,err_csum_start_gt_end_#,dpr.dpr[#].int_reg#,int_reg#.err_csum_start_gt_end_#,,,None,error (E),,n/a,n/a,,Fix P4 program,never,P4 program/compiler error. Checksum start is greater then end,,
+p4,2,Alessandro,dpr.dpr[#],int_reg#,err_ohi_eop_no_sop,dpr.dpr[#].int_reg#,int_reg#.err_ohi_eop_no_sop,,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_reg#,err_ohi_sop_no_eop,dpr.dpr[#].int_reg#,int_reg#.err_ohi_sop_no_eop,,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_reg#,err_phv_eop_no_sop,dpr.dpr[#].int_reg#,int_reg#.err_phv_eop_no_sop,phv,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_reg#,err_phv_sop_no_eop,dpr.dpr[#].int_reg#,int_reg#.err_phv_sop_no_eop,phv,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_reg#,err_pkt_eop_early,dpr.dpr[#].int_reg#,int_reg#.err_pkt_eop_early,pkt,,None,info (I),,n/a,n/a,,n/a,n/a,spare,,
+p4,2,Alessandro,dpr.dpr[#],int_reg#,err_pktin_eop_no_sop,dpr.dpr[#].int_reg#,int_reg#.err_pktin_eop_no_sop,pkt,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_reg#,err_pktin_sop_no_eop,dpr.dpr[#].int_reg#,int_reg#.err_pktin_sop_no_eop,pkt,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_reg#,err_pktout_ff_overflow,dpr.dpr[#].int_reg#,int_reg#.err_pktout_ff_overflow,pkt,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_reg#,err_ptr_ff_overflow,dpr.dpr[#].int_reg#,int_reg#.err_ptr_ff_overflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_reg#,err_ptr_from_cfg_overflow,dpr.dpr[#].int_reg#,int_reg#.err_ptr_from_cfg_overflow,overflow,,None,info (I),,n/a,n/a,,n/a,n/a,Hardware Error,,
+p4,2,Alessandro,dpr.dpr[#],int_reg#,fieldC,dpr.dpr[#].int_reg#,int_reg#.fieldC,,,None,info (I),,n/a,n/a,,n/a,n/a,spare,,
+p4,2,Alessandro,dpr.dpr[#],int_reg#,fieldD,dpr.dpr[#].int_reg#,int_reg#.fieldD,,,None,info (I),,n/a,n/a,,n/a,n/a,spare,,
+p4,64,Alessandro,dpr.dpr[#],int_spare,spare_#,dpr.dpr[#].int_spare,int_spare.spare_#,,,None,fatal (F),,n/a,n/a,,n/a,n/a,spare_0 .. spare_7: Hardware Error; spare_8: err_phv_above_max: P4 program/compiler error. Packet need to get information form a PHV that is beyond the maximum supported; spare_9: capture engaged used for debug;,,"Only bit 0 to 7 are fatal, bit 8 should be masked and bit 9 is info"
+p4,2,Alessandro,dpr.dpr[#],int_srams_ecc,dpr_csum_fifo_correctable,dpr.dpr[#].int_srams_ecc,int_srams_ecc.dpr_csum_fifo_correctable,ecc_hw,,None,error (E),,n/a,n/a,,count,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+p4,2,Alessandro,dpr.dpr[#],int_srams_ecc,dpr_csum_fifo_uncorrectable,dpr.dpr[#].int_srams_ecc,int_srams_ecc.dpr_csum_fifo_uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,"ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip",,send chip to Avago
+p4,2,Alessandro,dpr.dpr[#],int_srams_ecc,dpr_ohi_fifo_correctable,dpr.dpr[#].int_srams_ecc,int_srams_ecc.dpr_ohi_fifo_correctable,ecc_hw,,None,error (E),,n/a,n/a,,count,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+p4,2,Alessandro,dpr.dpr[#],int_srams_ecc,dpr_ohi_fifo_uncorrectable,dpr.dpr[#].int_srams_ecc,int_srams_ecc.dpr_ohi_fifo_uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,"ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip",,send chip to Avago
+p4,2,Alessandro,dpr.dpr[#],int_srams_ecc,dpr_phv_fifo_correctable,dpr.dpr[#].int_srams_ecc,int_srams_ecc.dpr_phv_fifo_correctable,ecc_hw,,None,error (E),,n/a,n/a,,count,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+p4,2,Alessandro,dpr.dpr[#],int_srams_ecc,dpr_phv_fifo_uncorrectable,dpr.dpr[#].int_srams_ecc,int_srams_ecc.dpr_phv_fifo_uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,"ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip",,send chip to Avago
+p4,2,Alessandro,dpr.dpr[#],int_srams_ecc,dpr_pktin_fifo_correctable,dpr.dpr[#].int_srams_ecc,int_srams_ecc.dpr_pktin_fifo_correctable,ecc_hw,,None,error (E),,n/a,n/a,,count,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+p4,2,Alessandro,dpr.dpr[#],int_srams_ecc,dpr_pktin_fifo_uncorrectable,dpr.dpr[#].int_srams_ecc,int_srams_ecc.dpr_pktin_fifo_uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,"ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip",,send chip to Avago
+p4,2,Alessandro,dpr.dpr[#],int_srams_ecc,dpr_pktout_fifo_correctable,dpr.dpr[#].int_srams_ecc,int_srams_ecc.dpr_pktout_fifo_correctable,ecc_hw,,None,error (E),,n/a,n/a,,count,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+p4,2,Alessandro,dpr.dpr[#],int_srams_ecc,dpr_pktout_fifo_uncorrectable,dpr.dpr[#].int_srams_ecc,int_srams_ecc.dpr_pktout_fifo_uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,"ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip",,send chip to Avago
+p4,2,Alessandro,dpr.dpr[#],int_srams_ecc,dpr_ptr_fifo_correctable,dpr.dpr[#].int_srams_ecc,int_srams_ecc.dpr_ptr_fifo_correctable,ecc_hw,,None,error (E),,n/a,n/a,,count,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+p4,2,Alessandro,dpr.dpr[#],int_srams_ecc,dpr_ptr_fifo_uncorrectable,dpr.dpr[#].int_srams_ecc,int_srams_ecc.dpr_ptr_fifo_uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,"ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip",,send chip to Avago
+mac,1,Daniel,bx.bx,int_mac,bxpb_pbus_drdy,bx.bx.int_mac,int_mac.bxpb_pbus_drdy,pbus,,None,fatal (F),,n/a,n/a,,n/a,n/a,"Debug PB config. Never happen; otherwise, it's hardware bug",,
+mac,1,Daniel,bx.bx,int_mac,lane_dbe,bx.bx.int_mac,int_mac.lane_dbe,ecc,YES,None,HW-RMA (F) after init,,n/a,,,n/a,,Double bit error in SerDes. Lane may go down,,
+mac,1,Daniel,bx.bx,int_mac,lane_sbe,bx.bx.int_mac,int_mac.lane_sbe,ecc,YES,None,error (E),,n/a,n/a,,count,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,
+mac,1,Daniel,bx.bx,int_mac,rx_min_size_err,bx.bx.int_mac,int_mac.rx_min_size_err,,,None,info (I),,n/a,n/a,,n/a,n/a,HW self recover,,
+mac,1,Daniel,bx.bx,int_mac,rx_missing_eof,bx.bx.int_mac,int_mac.rx_missing_eof,,,None,info (I),,n/a,n/a,,n/a,n/a,HW self recover,,
+mac,1,Daniel,bx.bx,int_mac,rx_missing_sof,bx.bx.int_mac,int_mac.rx_missing_sof,,,None,info (I),,n/a,n/a,,n/a,n/a,HW self recover,,
+mac,1,Daniel,bx.bx,int_mac,rx_timeout_err,bx.bx.int_mac,int_mac.rx_timeout_err,,,None,info (I),,n/a,n/a,,n/a,n/a,HW self recover,,
+mac,1,Daniel,bx.bx,int_mac,xdmac#_intr,bx.bx.int_mac,int_mac.xdmac#_intr,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+mac,1,Daniel,bx.bx,int_mac,xdmac#_pslverr,bx.bx.int_mac,int_mac.xdmac#_pslverr,,,None,SW-MASK-IGNORE,,n/a,n/a,,"Does not work, SW should mask/ignore",n/a,Invalid need to be masked,,
+mac,2,Daniel,mx.mx[#],int_ecc,correctable,mx.mx[#].int_ecc,int_ecc.correctable,ecc_hw,,None,error (E),,n/a,n/a,,count,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+mac,2,Daniel,mx.mx[#],int_ecc,uncorrectable,mx.mx[#].int_ecc,int_ecc.uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,"ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip",,send chip to Avago
+mac,8,Daniel,mx.mx[#],int_mac,lane#_dbe,mx.mx[#].int_mac,int_mac.lane#_dbe,ecc,YES,None,HW-RMA (F) after init,,n/a,n/a,,n/a,n/a,Double bit error in SerDes. Lane may go down,,
+mac,8,Daniel,mx.mx[#],int_mac,lane#_sbe,mx.mx[#].int_mac,int_mac.lane#_sbe,ecc,YES,None,error (E),,n/a,n/a,,count,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,
+mac,8,Daniel,mx.mx[#],int_mac,m#pb_pbus_drdy,mx.mx[#].int_mac,int_mac.m#pb_pbus_drdy,pbus,,None,fatal (F),,n/a,n/a,,n/a,n/a,"Debug PB config. Never happen; otherwise, it's hardware bug",,
+mac,8,Daniel,mx.mx[#],int_mac,rx#_min_size_err,mx.mx[#].int_mac,int_mac.rx#_min_size_err,,,None,info (I),,n/a,n/a,,n/a,n/a,HW self recover,,
+mac,8,Daniel,mx.mx[#],int_mac,rx#_missing_eof,mx.mx[#].int_mac,int_mac.rx#_missing_eof,,,None,info (I),,n/a,n/a,,n/a,n/a,HW self recover,,
+mac,8,Daniel,mx.mx[#],int_mac,rx#_missing_sof,mx.mx[#].int_mac,int_mac.rx#_missing_sof,,,None,info (I),,n/a,n/a,,n/a,n/a,HW self recover,,
+mac,8,Daniel,mx.mx[#],int_mac,rx#_timeout_err,mx.mx[#].int_mac,int_mac.rx#_timeout_err,,,None,info (I),,n/a,n/a,,n/a,n/a,HW self recover,,
+mac,2,Daniel,mx.mx[#],int_mac,umac_CFG#_intr,mx.mx[#].int_mac,int_mac.umac_CFG#_intr,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+mac,2,Daniel,mx.mx[#],int_mac,umac_CFG#_pslverr,mx.mx[#].int_mac,int_mac.umac_CFG#_pslverr,,,None,SW-MASK-IGNORE,,n/a,n/a,,"Does not work, SW should mask/ignore",n/a,Invalid need to be masked,,
+p4,1,Daniel,sse.pics / ssi.pics / rpc.pics / tpc.pics,int_badaddr,bg_bad_addr,sse.pics.int_badaddr,int_badaddr.bg_bad_addr,address,,None,error (E),,n/a,n/a,,Fix P4 pic config ,n/a,SW programming error,,
+p4,1,Daniel,sse.pics / ssi.pics / rpc.pics / tpc.pics,int_badaddr,cpu_bad_addr,sse.pics.int_badaddr,int_badaddr.cpu_bad_addr,address,,None,error (E),,n/a,n/a,,Fix P4 pic config ,n/a,SW programming error,,
+p4,8,Daniel,sse.pics / ssi.pics / rpc.pics / tpc.pics,int_badaddr,rdreq#_bad_addr,sse.pics.int_badaddr,int_badaddr.rdreq#_bad_addr,address,,None,error (E),,n/a,n/a,,Fix P4 pic config ,n/a,SW programming error,,
+p4,8,Daniel,sse.pics / ssi.pics / rpc.pics / tpc.pics,int_badaddr,wrreq#_bad_addr,sse.pics.int_badaddr,int_badaddr.wrreq#_bad_addr,address,,None,error (E),,n/a,n/a,,Fix P4 pic config ,n/a,SW programming error,,
+p4,16,Daniel,sse.pics / ssi.pics / rpc.pics / tpc.pics,int_bg,unfinished_bg#,sse.pics.int_bg,int_bg.unfinished_bg#,,,None,error (E),,n/a,n/a,,Fix P4 pic config ,n/a,SW programming error,,
+p4,1,Daniel,sse.pics / ssi.pics / rpc.pics / tpc.pics,int_pics,correctable_ecc,sse.pics.int_pics,int_pics.correctable_ecc,ecc_sw,,None,error (E),,n/a,n/a,,SW must write again to correct,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+p4,1,Daniel,sse.pics / ssi.pics / rpc.pics / tpc.pics,int_pics,picc,sse.pics.int_pics,int_pics.picc,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+p4,1,Daniel,sse.pics / ssi.pics / rpc.pics / tpc.pics,int_pics,too_many_rl_sch_error,sse.pics.int_pics,int_pics.too_many_rl_sch_error,,,None,error (E),,n/a,n/a,,Fix P4 pic config ,n/a,SW programming error,,
+p4,1,Daniel,sse.pics / ssi.pics / rpc.pics / tpc.pics,int_pics,uncorrectable_ecc,sse.pics.int_pics,int_pics.uncorrectable_ecc,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,"ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip",,send chip to Avago
+p4,1,Daniel,sse.pics.picc / ssi.pics.picc / rpc.pics.picc / tpc.pics.picc,int_picc,cache_hbm_bresp_decerr,sse.pics.picc.int_picc,int_picc.cache_hbm_bresp_decerr,,,None,fatal (F),,n/a,n/a,,n/a,n/a,HBM access fatal error,,
+p4,1,Daniel,sse.pics.picc / ssi.pics.picc / rpc.pics.picc / tpc.pics.picc,int_picc,cache_hbm_bresp_slverr,sse.pics.picc.int_picc,int_picc.cache_hbm_bresp_slverr,,,None,fatal (F),,n/a,n/a,,n/a,n/a,HBM access fatal error,,
+p4,1,Daniel,sse.pics.picc / ssi.pics.picc / rpc.pics.picc / tpc.pics.picc,int_picc,cache_hbm_rresp_decerr,sse.pics.picc.int_picc,int_picc.cache_hbm_rresp_decerr,,,None,fatal (F),,n/a,n/a,,n/a,n/a,HBM access fatal error,,
+p4,1,Daniel,sse.pics.picc / ssi.pics.picc / rpc.pics.picc / tpc.pics.picc,int_picc,cache_hbm_rresp_slverr,sse.pics.picc.int_picc,int_picc.cache_hbm_rresp_slverr,,,None,fatal (F),,n/a,n/a,,n/a,n/a,HBM access fatal error,,
+p4,1,Daniel,sse.pics.picc / ssi.pics.picc / rpc.pics.picc / tpc.pics.picc,int_picc,cache_stg_awlen_err,sse.pics.picc.int_picc,int_picc.cache_stg_awlen_err,,,None,fatal (F),,n/a,n/a,,n/a,n/a,HBM access fatal error,,
+p4,1,Daniel,sse.pics.picc / ssi.pics.picc / rpc.pics.picc / tpc.pics.picc,int_picc,correctable_ecc,sse.pics.picc.int_picc,int_picc.correctable_ecc,ecc_sw,,None,error (E),,n/a,n/a,,SW must write again to correct,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+p4,1,Daniel,sse.pics.picc / ssi.pics.picc / rpc.pics.picc / tpc.pics.picc,int_picc,uncorrectable_ecc,sse.pics.picc.int_picc,int_picc.uncorrectable_ecc,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,"ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip",,send chip to Avago
+p4+rxdma,1,Georges,pr.pr.psp / pt.pt.psp,int_err,lb_phv_almost_full_timeout_err,pr.pr.psp.int_err,int_err.lb_phv_almost_full_timeout_err,phv,,None,error (E),,n/a,n/a,,send to asic team for debug,1,the PHV state machine waited for longer than cfg_profile_almost_full_timer_max,,may need to reset the dma or chip
+p4+rxdma,1,Georges,pr.pr.psp / pt.pt.psp,int_err,lb_pkt_almost_full_timeout_err,pr.pr.psp.int_err,int_err.lb_pkt_almost_full_timeout_err,pbus,,None,error (E),,n/a,n/a,,send to asic team for debug,1,the PKT state machine waited for longer than cfg_profile_almost_full_timer_max,,may need to reset the dma or chip
+p4+rxdma,1,Georges,pr.pr.psp / pt.pt.psp,int_err,max_recir_count_err,pr.pr.psp.int_err,int_err.max_recir_count_err,phv,,None,error (E),,n/a,n/a,,fix program,never,a packet was recirculated through P4+ more than the cfg_profile_recirc_max,,n/a
+p4+rxdma,1,Georges,pr.pr.psp / pt.pt.psp,int_err,pb_pbus_dummy_err,pr.pr.psp.int_err,int_err.pb_pbus_dummy_err,pbus,,None,error (E),,n/a,n/a,,fix program,never,"there was a missing PKT after the PHV, so the HW generated a dummy PKT",,n/a
+p4+rxdma,1,Georges,pr.pr.psp / pt.pt.psp,int_err,pb_pbus_err,pr.pr.psp.int_err,int_err.pb_pbus_err,pbus,,None,error (E),,n/a,n/a,,expected on errors,never,error bit received ont the input PKT bus,,n/a
+p4+rxdma,1,Georges,pr.pr.psp / pt.pt.psp,int_err,pb_pbus_min_err,pr.pr.psp.int_err,int_err.pb_pbus_min_err,pbus,,None,error (E),,n/a,n/a,,fix program,never,PKT smaller than cfg_profile_phv_min received from the input PKT bus,,n/a
+p4+rxdma,1,Georges,pr.pr.psp / pt.pt.psp,int_err,pb_pbus_nopkt_err,pr.pr.psp.int_err,int_err.pb_pbus_nopkt_err,pbus,,None,error (E),,n/a,n/a,,fix program,never,"PKT smaller than 12 flits received from the input PKT bus, PKT data was dropped",,n/a
+p4+rxdma,1,Georges,pr.pr.psp / pt.pt.psp,int_err,pr_pbus_err,pr.pr.psp.int_err,int_err.pr_pbus_err,pbus,,None,error (E),,n/a,n/a,,expected on errors,never,error bit sent on the output PKT bus,,n/a
+p4+rxdma,1,Georges,pr.pr.psp / pt.pt.psp,int_err,pr_resub_pbus_err,pr.pr.psp.int_err,int_err.pr_resub_pbus_err,pbus,,None,error (E),,n/a,n/a,,expected on errors,never,error bit received ont the input PKT bus,,n/a
+p4+rxdma,1,Georges,pr.pr.psp / pt.pt.psp,int_err,psp_csr_read_access_err,pr.pr.psp.int_err,int_err.psp_csr_read_access_err,csr,,None,error (E),,n/a,n/a,,fix register access address,never,psp_csr_read_access && psp_csr_ready && psp_csr_error,,n/a
+p4+rxdma,1,Georges,pr.pr.psp / pt.pt.psp,int_err,psp_csr_write_access_err,pr.pr.psp.int_err,int_err.psp_csr_write_access_err,csr,,None,error (E),,n/a,n/a,,fix register access address,never,psp_csr_write_access && psp_csr_ready && psp_csr_error,,n/a
+p4+rxdma,1,Georges,pr.pr.psp / pt.pt.psp,int_err,psp_phv_eop_offset_err,pr.pr.psp.int_err,int_err.psp_phv_eop_offset_err,phv,,None,error (E),,n/a,n/a,,fix program,never,EOP seen before reaching PHV offset,,n/a
+p4+rxdma,1,Georges,pr.pr.psp / pt.pt.psp,int_err,psp_phv_larger_than_twelve_flits_err,pr.pr.psp.int_err,int_err.psp_phv_larger_than_twelve_flits_err,phv,,None,error (E),,n/a,n/a,,fix program,never,PHV over the max 12 flits received and truncated,,n/a
+p4+rxdma,1,Georges,pr.pr.psp / pt.pt.psp,int_err,psp_phv_sop_offset_err,pr.pr.psp.int_err,int_err.psp_phv_sop_offset_err,phv,,None,error (E),,n/a,n/a,,fix program,never,EOP seen before reaching PHV offset in SOP flit,,n/a
+p4+rxdma,1,Georges,pr.pr.psp / pt.pt.psp,int_fatal,dc_phv_sop_err,pr.pr.psp.int_fatal,int_fatal.dc_phv_sop_err,phv,,None,fatal (F),,n/a,n/a,,n/a,n/a,"fatal HW fsm error, no HW handling",,may need to reset the dma or chip
+p4+rxdma,1,Georges,pr.pr.psp / pt.pt.psp,int_fatal,dc_pkt_sop_err,pr.pr.psp.int_fatal,int_fatal.dc_pkt_sop_err,pkt,,None,fatal (F),,n/a,n/a,,n/a,n/a,"fatal HW fsm error, no HW handling",,may need to reset the dma or chip
+p4+rxdma,1,Georges,pr.pr.psp / pt.pt.psp,int_fatal,flit_cnt_oflow_err,pr.pr.psp.int_fatal,int_fatal.flit_cnt_oflow_err,phv,,None,fatal (F),,n/a,n/a,,n/a,n/a,"fatal HW fsm error, no HW handling",,may need to reset the dma or chip
+p4+rxdma,1,Georges,pr.pr.psp / pt.pt.psp,int_fatal,lb_phv_sop_err,pr.pr.psp.int_fatal,int_fatal.lb_phv_sop_err,phv,,None,fatal (F),,n/a,n/a,,n/a,n/a,"fatal HW fsm error, no HW handling",,may need to reset the dma or chip
+p4+rxdma,1,Georges,pr.pr.psp / pt.pt.psp,int_fatal,lb_pkt_sop_err,pr.pr.psp.int_fatal,int_fatal.lb_pkt_sop_err,pkt,,None,fatal (F),,n/a,n/a,,n/a,n/a,"fatal HW fsm error, no HW handling",,may need to reset the dma or chip
+p4+rxdma,1,Georges,pr.pr.psp / pt.pt.psp,int_fatal,lif_ind_table_rsp_err,pr.pr.psp.int_fatal,int_fatal.lif_ind_table_rsp_err,table,,None,fatal (F),,n/a,n/a,,n/a,n/a,"fatal HW fsm error, no HW handling",,may need to reset the dma or chip
+p4+rxdma,1,Georges,pr.pr.psp / pt.pt.psp,int_fatal,ma_eop_err,pr.pr.psp.int_fatal,int_fatal.ma_eop_err,phv,,None,fatal (F),,n/a,n/a,,n/a,n/a,"fatal HW fsm error, no HW handling",,may need to reset the dma or chip
+p4+rxdma,1,Georges,pr.pr.psp / pt.pt.psp,int_fatal,ma_sop_err,pr.pr.psp.int_fatal,int_fatal.ma_sop_err,phv,,None,fatal (F),,n/a,n/a,,n/a,n/a,"fatal HW fsm error, no HW handling",,may need to reset the dma or chip
+p4+rxdma,1,Georges,pr.pr.psp / pt.pt.psp,int_fatal,pb_pbus_eop_err,pr.pr.psp.int_fatal,int_fatal.pb_pbus_eop_err,pbus,,None,fatal (F),,n/a,n/a,,n/a,n/a,"fatal HW fsm error, no HW handling",,may need to reset the dma or chip
+p4+rxdma,5,Georges,pr.pr.psp / pt.pt.psp,int_fatal,pb_pbus_fsm#_no_data_err,pr.pr.psp.int_fatal,int_fatal.pb_pbus_fsm#_no_data_err,pbus,,None,fatal (F),,n/a,n/a,,n/a,n/a,"fatal HW fsm error, no HW handling",,may need to reset the dma or chip
+p4+rxdma,1,Georges,pr.pr.psp / pt.pt.psp,int_fatal,pb_pbus_fsm#_pkt_too_small_err,pr.pr.psp.int_fatal,int_fatal.pb_pbus_fsm#_pkt_too_small_err,pbus,,None,fatal (F),,n/a,n/a,,n/a,n/a,"fatal HW fsm error, no HW handling",,may need to reset the dma or chip
+p4+rxdma,1,Georges,pr.pr.psp / pt.pt.psp,int_fatal,pb_pbus_sop_err,pr.pr.psp.int_fatal,int_fatal.pb_pbus_sop_err,pbus,,None,fatal (F),,n/a,n/a,,n/a,n/a,"fatal HW fsm error, no HW handling",,may need to reset the dma or chip
+p4+rxdma,1,Georges,pr.pr.psp / pt.pt.psp,int_fatal,pr_pbus_eop_err,pr.pr.psp.int_fatal,int_fatal.pr_pbus_eop_err,pbus,,None,fatal (F),,n/a,n/a,,n/a,n/a,"fatal HW fsm error, no HW handling",,may need to reset the dma or chip
+p4+rxdma,1,Georges,pr.pr.psp / pt.pt.psp,int_fatal,pr_pbus_sop_err,pr.pr.psp.int_fatal,int_fatal.pr_pbus_sop_err,pbus,,None,fatal (F),,n/a,n/a,,n/a,n/a,"fatal HW fsm error, no HW handling",,may need to reset the dma or chip
+p4+rxdma,1,Georges,pr.pr.psp / pt.pt.psp,int_fatal,pr_resub_eop_err,pr.pr.psp.int_fatal,int_fatal.pr_resub_eop_err,phv,,None,fatal (F),,n/a,n/a,,n/a,n/a,"fatal HW fsm error, no HW handling",,may need to reset the dma or chip
+p4+rxdma,1,Georges,pr.pr.psp / pt.pt.psp,int_fatal,pr_resub_pbus_eop_err,pr.pr.psp.int_fatal,int_fatal.pr_resub_pbus_eop_err,pbus,,None,fatal (F),,n/a,n/a,,n/a,n/a,"fatal HW fsm error, no HW handling",,may need to reset the dma or chip
+p4+rxdma,1,Georges,pr.pr.psp / pt.pt.psp,int_fatal,pr_resub_pbus_sop_err,pr.pr.psp.int_fatal,int_fatal.pr_resub_pbus_sop_err,pbus,,None,fatal (F),,n/a,n/a,,n/a,n/a,"fatal HW fsm error, no HW handling",,may need to reset the dma or chip
+p4+rxdma,1,Georges,pr.pr.psp / pt.pt.psp,int_fatal,pr_resub_sop_err,pr.pr.psp.int_fatal,int_fatal.pr_resub_sop_err,phv,,None,fatal (F),,n/a,n/a,,n/a,n/a,"fatal HW fsm error, no HW handling",,may need to reset the dma or chip
+p4+rxdma,1,Georges,pr.pr.psp / pt.pt.psp,int_fatal,sw_phv_jabber_err,pr.pr.psp.int_fatal,int_fatal.sw_phv_jabber_err,phv,,None,fatal (F),,n/a,n/a,,n/a,n/a,"fatal HW fsm error, no HW handling",,may need to reset the dma or chip
+p4+rxdma,5,Georges,pr.pr.psp / pt.pt.psp,int_info,pb_pbus_fsm#_no_data,pr.pr.psp.int_info,int_info.pb_pbus_fsm#_no_data,pbus,,None,info (I),,count,n/a,,n/a,n/a,received PHV with no data,,n/a
+p4+rxdma,1,Georges,pr.pr.psp / pt.pt.psp,int_info,phv_srdy_collapsed,pr.pr.psp.int_info,int_info.phv_srdy_collapsed,phv,,None,info (I),,count,n/a,,n/a,n/a,collapsed multiple idential PHVs,,n/a
+p4+rxdma,1,Georges,pr.pr.psp / pt.pt.psp,int_info,pr_pkt_ff_almost_full,pr.pr.psp.int_info,int_info.pr_pkt_ff_almost_full,pkt,,None,info (I),,count,n/a,,n/a,n/a,almost full flow control was asserted,,n/a
+p4+rxdma,1,Georges,pr.pr.psp / pt.pt.psp,int_info,pr_resub_pkt_before_phv,pr.pr.psp.int_info,int_info.pr_resub_pkt_before_phv,phv,,None,info (I),,"none, info only",n/a,,n/a,n/a,received the PKT before the PHV on the resub busses,,n/a
+p4+rxdma,1,Georges,pr.pr.psp / pt.pt.psp,int_info,ptd_npv_phv_full,pr.pr.psp.int_info,int_info.ptd_npv_phv_full,phv,,None,info (I),,count,n/a,,n/a,n/a,almost full flow control was asserted,,n/a
+p4+rxdma,1,Georges,pr.pr.psp / pt.pt.psp,int_lif_qstate_map,ecc_correctable,pr.pr.psp.int_lif_qstate_map,int_lif_qstate_map.ecc_correctable,ecc_sw,,None,error (E),,n/a,n/a,,SW must write again to correct,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+p4+rxdma,1,Georges,pr.pr.psp / pt.pt.psp,int_lif_qstate_map,ecc_uncorrectable,pr.pr.psp.int_lif_qstate_map,int_lif_qstate_map.ecc_uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,"ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip",,send chip to Avago
+p4+rxdma,1,Georges,pr.pr.psp / pt.pt.psp,int_lif_qstate_map,qid_invalid,pr.pr.psp.int_lif_qstate_map,int_lif_qstate_map.qid_invalid,table,,None,info (I),,fix lif table content,never,,n/a,n/a,lookup in lif table missed,,n/a
+p4+rxdma,1,Georges,pr.pr.psp / pt.pt.psp,int_sw_phv_mem,ecc_correctable,pr.pr.psp.int_sw_phv_mem,int_sw_phv_mem.ecc_correctable,ecc_sw,,None,error (E),,n/a,n/a,,SW must write again to correct,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+p4+rxdma,1,Georges,pr.pr.psp / pt.pt.psp,int_sw_phv_mem,ecc_uncorrectable,pr.pr.psp.int_sw_phv_mem,int_sw_phv_mem.ecc_uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,"ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip",,send chip to Avago
+p4+rxdma,8,Georges,pr.pr.psp / pt.pt.psp,int_sw_phv_mem,phv_done#,pr.pr.psp.int_sw_phv_mem,int_sw_phv_mem.phv_done#,phv,,None,info (I),,for SW use,never,,n/a,n/a,SW PHV done info,,n/a
+p4+rxdma,1,Georges,pr.pr.psp / pt.pt.psp,int_sw_phv_mem,phv_invalid_data,pr.pr.psp.int_sw_phv_mem,int_sw_phv_mem.phv_invalid_data,phv,,None,info (I),,fix SW PHV sram content,never,,n/a,n/a,bad SW PHV sram programming,,n/a
+p4+rxdma,1,Georges,pr.pr.psp / pt.pt.psp,int_sw_phv_mem,phv_invalid_sram,pr.pr.psp.int_sw_phv_mem,int_sw_phv_mem.phv_invalid_sram,phv,,None,info (I),,fix SW PHV sram content,never,,n/a,n/a,bad SW PHV sram programming,,n/a
+ms,1,Hemant,db.wa,int_db,bresp_err,db.wa.int_db,int_db.bresp_err,,,None,error (E),,n/a,n/a,,"investigate why queue state access got error, doorbell will be dropped",,,,
+ms,1,Hemant,db.wa,int_db,db_cam_conflict,db.wa.int_db,int_db.db_cam_conflict,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+ms,1,Hemant,db.wa,int_db,db_pid_chk_fail,db.wa.int_db,int_db.db_pid_chk_fail,,,None,error (E),,n/a,n/a,,"investigate PID check configuration, doorbell will be dropped",,,,
+ms,1,Hemant,db.wa,int_db,db_qid_overflow,db.wa.int_db,int_db.db_qid_overflow,overflow,,None,error (E),,n/a,n/a,,"Investigate LIF table mapping, Queue number is beyond configured, doorbell will be dropped",,,,
+ms,1,Hemant,db.wa,int_db,host_ring_access_err,db.wa.int_db,int_db.host_ring_access_err,,,None,error (E),,n/a,n/a,,"investigate ring# config in queue state table for host doorbells, doorbell will be dropped",,,,
+ms,1,Hemant,db.wa,int_db,rresp_err,db.wa.int_db,int_db.rresp_err,,,None,error (E),,n/a,n/a,,"investigate why queue state access got error, doorbell will be dropped",,,,
+ms,1,Hemant,db.wa,int_db,total_ring_access_err,db.wa.int_db,int_db.total_ring_access_err,,,None,error (E),,n/a,n/a,,"investigate total ring# config in queue state table for  doorbells, doorbell will be dropped",,,,
+ms,1,Hemant,db.wa,int_lif_qstate_map,ecc_correctable,db.wa.int_lif_qstate_map,int_lif_qstate_map.ecc_correctable,ecc_sw,,None,error (E),,n/a,n/a,,SW must write again to correct,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+ms,1,Hemant,db.wa,int_lif_qstate_map,ecc_uncorrectable,db.wa.int_lif_qstate_map,int_lif_qstate_map.ecc_uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,"ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip",,send chip to Avago
+ms,1,Hemant,db.wa,int_lif_qstate_map,qid_invalid,db.wa.int_lif_qstate_map,int_lif_qstate_map.qid_invalid,,,None,error (E),,n/a,n/a,,"Queue number not configured in LIF qstate map table, doorbell will be dropped ",,,,
+ms,1,Hemant,intr.intr,int_intr_ecc,int_credit_positive_after_return,intr.intr.int_intr_ecc,int_intr_ecc.int_credit_positive_after_return,,,ignore_once,info (I),,,,,"Driver should process all CQs, if less int_credits are returned that number of CQs posted before the interrupt. ",,,,
+ms,1,Hemant,intr.intr,int_intr_ecc,int_credits_max_debug_threshold,intr.intr.int_intr_ecc,int_intr_ecc.int_credits_max_debug_threshold,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+ms,1,Hemant,intr.intr,int_intr_ecc,intr_bresp_err,intr.intr.int_intr_ecc,int_intr_ecc.intr_bresp_err,,,None,error (E),,n/a,n/a,,"Check interrupt address configuration, it got address error, interrupt will not be delivered",,,,
+ms,1,Hemant,intr.intr,int_intr_ecc,intr_legacy_fifo_overrun,intr.intr.int_intr_ecc,int_intr_ecc.intr_legacy_fifo_overrun,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,"Fatal error, try to reproduce in lab and debug the configuration settings using PCIE Analyzer",,
+pcie,8,Hemant,pp.pp,int_pp,perst#n_dn#up,pp.pp.int_pp,int_pp.perst#n_dn#up,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+pcie,8,Hemant,pp.pp,int_pp,port#_c_int,pp.pp.int_pp,int_pp.port#_c_int,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+pcie,8,Hemant,pp.pp,int_pp,port#_p_int,pp.pp.int_pp,int_pp.port#_p_int,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+pcie,1,Hemant,pp.pp,int_pp,ppsd_dbe,pp.pp.int_pp,int_pp.ppsd_dbe,ecc,YES,None,HW-RMA (F) after init,,n/a,n/a,,n/a,n/a,"ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip",,
+pcie,1,Hemant,pp.pp,int_pp,ppsd_sbe,pp.pp.int_pp,int_pp.ppsd_sbe,ecc,YES,None,error (E),,n/a,n/a,,n/a,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,
+pcie,1,Hemant,pp.pp,int_pp,sbus_err,pp.pp.int_pp,int_pp.sbus_err,,,ignore_all,info (I),,,,,,,,,
+pcie,32,Hemant,pp.pp.port_c[#],int_c_ecc,rxbuf_#_correctable,pp.pp.port_c[#].int_c_ecc,int_c_ecc.rxbuf_#_correctable,ecc_hw,,None,error (E),,n/a,n/a,,count,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+pcie,32,Hemant,pp.pp.port_c[#],int_c_ecc,rxbuf_#_uncorrectable,pp.pp.port_c[#].int_c_ecc,int_c_ecc.rxbuf_#_uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,"ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip",,send chip to Avago
+pcie,8,Hemant,pp.pp.port_c[#],int_c_mac,link_dn#up,pp.pp.port_c[#].int_c_mac,int_c_mac.link_dn#up,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+pcie,8,Hemant,pp.pp.port_c[#],int_c_mac,link_up#dn,pp.pp.port_c[#].int_c_mac,int_c_mac.link_up#dn,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+pcie,8,Hemant,pp.pp.port_c[#],int_c_mac,ltssm_st_changed,pp.pp.port_c[#].int_c_mac,int_c_mac.ltssm_st_changed,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+pcie,8,Hemant,pp.pp.port_c[#],int_c_mac,pm_turnoff,pp.pp.port_c[#].int_c_mac,int_c_mac.pm_turnoff,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+pcie,8,Hemant,pp.pp.port_c[#],int_c_mac,portgate_open#close,pp.pp.port_c[#].int_c_mac,int_c_mac.portgate_open#close,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+pcie,8,Hemant,pp.pp.port_c[#],int_c_mac,rc_aerr,pp.pp.port_c[#].int_c_mac,int_c_mac.rc_aerr,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+pcie,8,Hemant,pp.pp.port_c[#],int_c_mac,rc_dpc,pp.pp.port_c[#].int_c_mac,int_c_mac.rc_dpc,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+pcie,8,Hemant,pp.pp.port_c[#],int_c_mac,rc_eq_req,pp.pp.port_c[#].int_c_mac,int_c_mac.rc_eq_req,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+pcie,8,Hemant,pp.pp.port_c[#],int_c_mac,rc_hpe,pp.pp.port_c[#].int_c_mac,int_c_mac.rc_hpe,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+pcie,8,Hemant,pp.pp.port_c[#],int_c_mac,rc_legacy_intpin_changed,pp.pp.port_c[#].int_c_mac,int_c_mac.rc_legacy_intpin_changed,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+pcie,8,Hemant,pp.pp.port_c[#],int_c_mac,rc_pme,pp.pp.port_c[#].int_c_mac,int_c_mac.rc_pme,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+pcie,8,Hemant,pp.pp.port_c[#],int_c_mac,rc_serr,pp.pp.port_c[#].int_c_mac,int_c_mac.rc_serr,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+pcie,8,Hemant,pp.pp.port_c[#],int_c_mac,rst_dn#up,pp.pp.port_c[#].int_c_mac,int_c_mac.rst_dn#up,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+pcie,8,Hemant,pp.pp.port_c[#],int_c_mac,rst_up#dn,pp.pp.port_c[#].int_c_mac,int_c_mac.rst_up#dn,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+pcie,8,Hemant,pp.pp.port_c[#],int_c_mac,rxtlp_err,pp.pp.port_c[#].int_c_mac,int_c_mac.rxtlp_err,,,None,error (E),,n/a,n/a,,"count, bad tlps received from host",,,,
+pcie,8,Hemant,pp.pp.port_c[#],int_c_mac,sec_bus_rst,pp.pp.port_c[#].int_c_mac,int_c_mac.sec_bus_rst,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+pcie,8,Hemant,pp.pp.port_c[#],int_c_mac,sec_busnum_changed,pp.pp.port_c[#].int_c_mac,int_c_mac.sec_busnum_changed,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+pcie,8,Hemant,pp.pp.port_c[#],int_c_mac,tl_flr_req,pp.pp.port_c[#].int_c_mac,int_c_mac.tl_flr_req,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+pcie,8,Hemant,pp.pp.port_c[#],int_c_mac,txbfr_overflow,pp.pp.port_c[#].int_c_mac,int_c_mac.txbfr_overflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,"Fatal error, try to reproduce in lab and debug the configuration settings using PCIE Analyzer",,
+pcie,8,Hemant,pp.pp.port_p[#],int_p_ecc,replay_bfr_overflow,pp.pp.port_p[#].int_p_ecc,int_p_ecc.replay_bfr_overflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,"Fatal error, try to reproduce in lab and debug the configuration settings using PCIE Analyzer",,
+pcie,8,Hemant,pp.pp.port_p[#],int_p_ecc,rxbfr_overflow,pp.pp.port_p[#].int_p_ecc,int_p_ecc.rxbfr_overflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,"Fatal error, try to reproduce in lab and debug the configuration settings using PCIE Analyzer",,
+pcie,8,Hemant,pp.pp.port_p[#],int_p_ecc,rxtlp_err,pp.pp.port_p[#].int_p_ecc,int_p_ecc.rxtlp_err,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+pcie,32,Hemant,pp.pp.port_p[#],int_p_ecc,txbuf_#_correctable,pp.pp.port_p[#].int_p_ecc,int_p_ecc.txbuf_#_correctable,ecc_hw,,None,error (E),,n/a,n/a,,count,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+pcie,32,Hemant,pp.pp.port_p[#],int_p_ecc,txbuf_#_uncorrectable,pp.pp.port_p[#].int_p_ecc,int_p_ecc.txbuf_#_uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,"ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip",,send chip to Avago
+pcie,1,Hemant,pxb.pxb,int_err,cpl_ecrc,pxb.pxb.int_err,int_err.cpl_ecrc,,,None,error (E),,n/a,n/a,,"ECRC error, if enabled by host, internal RD from Capri will produce AXI resp errr",,,,
+pcie,1,Hemant,pxb.pxb,int_err,cpl_len,pxb.pxb.int_err,int_err.cpl_len,,,None,error (E),,n/a,n/a,,"Completion length did not match request, internal RD from Capri will produce AXI resp errr",,,,
+pcie,1,Hemant,pxb.pxb,int_err,cpl_lowaddr,pxb.pxb.int_err,int_err.cpl_lowaddr,,,None,error (E),,n/a,n/a,,"Completion low address did not match request, internal RD from Capri will produce AXI resp errr",,,,
+pcie,1,Hemant,pxb.pxb,int_err,cpl_poison,pxb.pxb.int_err,int_err.cpl_poison,,,None,error (E),,n/a,n/a,,"Completion had response data poisoned, internal RD from Capri will produce AXI resp errr",,,,
+pcie,1,Hemant,pxb.pxb,int_err,cpl_rxbuf_err,pxb.pxb.int_err,int_err.cpl_rxbuf_err,,,None,fatal (F),,n/a,n/a,,n/a,n/a,"Fatal error, try to reproduce in lab and debug the configuration settings using PCIE Analyzer",,
+pcie,1,Hemant,pxb.pxb,int_err,cpl_stat,pxb.pxb.int_err,int_err.cpl_stat,,,None,error (E),,n/a,n/a,,"Completion from host with non-success status, maybe IOMMU or other permission issue with initiator request, AXI resp err will be generated",,,,
+pcie,1,Hemant,pxb.pxb,int_err,cpl_timeout,pxb.pxb.int_err,int_err.cpl_timeout,,,None,fatal (F),,n/a,n/a,,,n/a,"Completion timeout for initiator requests, maybe link issue or host is hung or something fatal across pcie link",,
+pcie,1,Hemant,pxb.pxb,int_err,cpl_unexp,pxb.pxb.int_err,int_err.cpl_unexp,,,None,info (I),,,,,"informative, received unexpected completion",,,,
+pcie,1,Hemant,pxb.pxb,int_err,itr_atomic_resource_err,pxb.pxb.int_err,int_err.itr_atomic_resource_err,,,None,error (E),,n/a,n/a,,"PCIe atomic transaction handshake violation, a RD/WR transaction was issued on same atomic resource while previous atomic response is pending for same resource",,,,
+pcie,1,Hemant,pxb.pxb,int_err,itr_atomic_seq_err,pxb.pxb.int_err,int_err.itr_atomic_seq_err,,,None,error (E),,n/a,n/a,,"PCIe atomic transaction handshake violation, for the same atomic resource,  back2back WR or back2back RD were received instead of a RD/WR pair at a time",,,,
+pcie,1,Hemant,pxb.pxb,int_err,itr_bus_master_dis,pxb.pxb.int_err,int_err.itr_bus_master_dis,,,None,error (E),,n/a,n/a,,"PCIE control register had bus master disabled, so ininitator DMA request will be returned as AXI err",,,,
+pcie,1,Hemant,pxb.pxb,int_err,itr_req_axi_unsupp,pxb.pxb.int_err,int_err.itr_req_axi_unsupp,axi,,None,error (E),,n/a,n/a,,"fix the address range or program, check slave interrupts",never,"Access to invalid address, missing address range in the NOC, or slave sent back an error",,
+pcie,1,Hemant,pxb.pxb,int_err,itr_req_bdfmiss,pxb.pxb.int_err,int_err.itr_req_bdfmiss,,,None,error (E),,n/a,n/a,,initiator requests sent to wrong LIF#. investigate and fix LIF configuration,,Request was sent towards PCIE host with LIF number that is not configured,,
+pcie,1,Hemant,pxb.pxb,int_err,itr_req_msg_align_err,pxb.pxb.int_err,int_err.itr_req_msg_align_err,,,None,error (E),,n/a,n/a,,"PCIE message request from initiator had alignment violation, addr must be 64B aligned, data must be DW aligned and less than 128B",,,,
+pcie,1,Hemant,pxb.pxb,int_err,tgt_axi_rsp_err,pxb.pxb.int_err,int_err.tgt_axi_rsp_err,axi,,None,error (E),,n/a,n/a,,"fix the address range or program, check slave interrupts",never,"Access to invalid address, missing address range in the NOC, or slave sent back an error",,
+pcie,1,Hemant,pxb.pxb,int_err,tgt_axi_rsp_unexp,pxb.pxb.int_err,int_err.tgt_axi_rsp_unexp,axi,,None,error (E),,n/a,n/a,,"fix the address range or program, check slave interrupts",never,"Access to invalid address, missing address range in the NOC, or slave sent back an error",,
+pcie,1,Hemant,pxb.pxb,int_err,tgt_ind_notify_axi_resperr,pxb.pxb.int_err,int_err.tgt_ind_notify_axi_resperr,axi,,None,error (E),,n/a,n/a,,"fix the address range or program, check slave interrupts",never,"Access to invalid address, missing address range in the NOC, or slave sent back an error",,
+pcie,1,Hemant,pxb.pxb,int_err,tgt_ind_rsp_unexp,pxb.pxb.int_err,int_err.tgt_ind_rsp_unexp,,,None,error (E),,n/a,n/a,,"host's target transaction is mapped to an internal address which is generating AXI resp errors, check the address mapping, host will get an unsupported completion response",,,,
+pcie,1,Hemant,pxb.pxb,int_err,tgt_req_#k_err,pxb.pxb.int_err,int_err.tgt_req_#k_err,,,None,error (E),,n/a,n/a,,Host's target transaction to Capri generates a 4K crossing transaction err on AXI side. check address mapping ,,,,
+pcie,1,Hemant,pxb.pxb,int_err,tgt_rmw_axi_resperr,pxb.pxb.int_err,int_err.tgt_rmw_axi_resperr,axi,,None,error (E),,n/a,n/a,,"fix the address range or program, check slave interrupts",never,"Access to invalid address, missing address range in the NOC, or slave sent back an error",,
+pcie,1,Hemant,pxb.pxb,int_itr_ecc,cplbfr_correctable,pxb.pxb.int_itr_ecc,int_itr_ecc.cplbfr_correctable,ecc_hw,,None,error (E),,n/a,n/a,,count,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+pcie,1,Hemant,pxb.pxb,int_itr_ecc,cplbfr_uncorrectable,pxb.pxb.int_itr_ecc,int_itr_ecc.cplbfr_uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,"ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip",,send chip to Avago
+pcie,1,Hemant,pxb.pxb,int_itr_ecc,pcihdrt_correctable,pxb.pxb.int_itr_ecc,int_itr_ecc.pcihdrt_correctable,ecc_sw,,None,error (E),,n/a,n/a,,SW must write again to correct,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+pcie,1,Hemant,pxb.pxb,int_itr_ecc,pcihdrt_uncorrectable,pxb.pxb.int_itr_ecc,int_itr_ecc.pcihdrt_uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,"ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip",,send chip to Avago
+pcie,1,Hemant,pxb.pxb,int_itr_ecc,portmap_correctable,pxb.pxb.int_itr_ecc,int_itr_ecc.portmap_correctable,ecc_sw,,None,error (E),,n/a,n/a,,SW must write again to correct,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+pcie,1,Hemant,pxb.pxb,int_itr_ecc,portmap_uncorrectable,pxb.pxb.int_itr_ecc,int_itr_ecc.portmap_uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,"ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip",,send chip to Avago
+pcie,1,Hemant,pxb.pxb,int_itr_ecc,rdhdr_correctable,pxb.pxb.int_itr_ecc,int_itr_ecc.rdhdr_correctable,ecc_hw,,None,error (E),,n/a,n/a,,count,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+pcie,1,Hemant,pxb.pxb,int_itr_ecc,rdhdr_uncorrectable,pxb.pxb.int_itr_ecc,int_itr_ecc.rdhdr_uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,"ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip",,send chip to Avago
+pcie,4,Hemant,pxb.pxb,int_itr_ecc,wrbfr_#_correctable,pxb.pxb.int_itr_ecc,int_itr_ecc.wrbfr_#_correctable,ecc_hw,,None,error (E),,n/a,n/a,,count,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+pcie,4,Hemant,pxb.pxb,int_itr_ecc,wrbfr_#_uncorrectable,pxb.pxb.int_itr_ecc,int_itr_ecc.wrbfr_#_uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,"ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip",,send chip to Avago
+pcie,1,Hemant,pxb.pxb,int_itr_ecc,wrhdr_correctable,pxb.pxb.int_itr_ecc,int_itr_ecc.wrhdr_correctable,ecc_hw,,None,error (E),,n/a,n/a,,count,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+pcie,1,Hemant,pxb.pxb,int_itr_ecc,wrhdr_uncorrectable,pxb.pxb.int_itr_ecc,int_itr_ecc.wrhdr_uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,"ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip",,send chip to Avago
+pcie,5,Hemant,pxb.pxb,int_tgt_ecc,aximst_#_correctable,pxb.pxb.int_tgt_ecc,int_tgt_ecc.aximst_#_correctable,ecc_sw,,None,error (E),,n/a,n/a,,SW must write again to correct,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+pcie,5,Hemant,pxb.pxb,int_tgt_ecc,aximst_#_uncorrectable,pxb.pxb.int_tgt_ecc,int_tgt_ecc.aximst_#_uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,"ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip",,send chip to Avago
+pcie,1,Hemant,pxb.pxb,int_tgt_ecc,cplst_correctable,pxb.pxb.int_tgt_ecc,int_tgt_ecc.cplst_correctable,ecc_sw,,None,error (E),,n/a,n/a,,SW must write again to correct,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+pcie,1,Hemant,pxb.pxb,int_tgt_ecc,cplst_uncorrectable,pxb.pxb.int_tgt_ecc,int_tgt_ecc.cplst_uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,"ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip",,send chip to Avago
+pcie,1,Hemant,pxb.pxb,int_tgt_ecc,pmr_correctable,pxb.pxb.int_tgt_ecc,int_tgt_ecc.pmr_correctable,ecc_sw,,None,error (E),,n/a,n/a,,SW must write again to correct,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+pcie,1,Hemant,pxb.pxb,int_tgt_ecc,pmr_uncorrectable,pxb.pxb.int_tgt_ecc,int_tgt_ecc.pmr_uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,"ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip",,send chip to Avago
+pcie,1,Hemant,pxb.pxb,int_tgt_ecc,prt_correctable,pxb.pxb.int_tgt_ecc,int_tgt_ecc.prt_correctable,ecc_sw,,None,error (E),,n/a,n/a,,SW must write again to correct,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+pcie,1,Hemant,pxb.pxb,int_tgt_ecc,prt_uncorrectable,pxb.pxb.int_tgt_ecc,int_tgt_ecc.prt_uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,"ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip",,send chip to Avago
+pcie,1,Hemant,pxb.pxb,int_tgt_ecc,romask_correctable,pxb.pxb.int_tgt_ecc,int_tgt_ecc.romask_correctable,ecc_sw,,None,error (E),,n/a,n/a,,SW must write again to correct,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+pcie,1,Hemant,pxb.pxb,int_tgt_ecc,romask_uncorrectable,pxb.pxb.int_tgt_ecc,int_tgt_ecc.romask_uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,"ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip",,send chip to Avago
+pcie,4,Hemant,pxb.pxb,int_tgt_ecc,rxcrbfr_#_correctable,pxb.pxb.int_tgt_ecc,int_tgt_ecc.rxcrbfr_#_correctable,ecc_hw,,None,error (E),,n/a,n/a,,count,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+pcie,4,Hemant,pxb.pxb,int_tgt_ecc,rxcrbfr_#_uncorrectable,pxb.pxb.int_tgt_ecc,int_tgt_ecc.rxcrbfr_#_uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,"ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip",,send chip to Avago
+pcie,1,Hemant,pxb.pxb,int_tgt_ecc,rxinfo_correctable,pxb.pxb.int_tgt_ecc,int_tgt_ecc.rxinfo_correctable,ecc_hw,,None,error (E),,n/a,n/a,,count,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+pcie,1,Hemant,pxb.pxb,int_tgt_ecc,rxinfo_uncorrectable,pxb.pxb.int_tgt_ecc,int_tgt_ecc.rxinfo_uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,"ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip",,send chip to Avago
+p4,4,Justina,ppa.ppa[#],int_bndl#,state_lkp_srch_hit_addr_range_err,ppa.ppa[#].int_bndl#,int_bndl#.state_lkp_srch_hit_addr_range_err,address,,None,error (E),,n/a,n/a,,fix the parser tcam entry programming,,software error. Parser TCAM entry programmed out of valid range.,,
+p4,4,Justina,ppa.ppa[#],int_bndl#,state_lkp_srch_miss,ppa.ppa[#].int_bndl#,int_bndl#.state_lkp_srch_miss,,,None,error (E),,n/a,n/a,,program a catch-all entry in TCAM,,software error. Parser TCAM search miss,,
+p4,4,Justina,ppa.ppa[#],int_bndl#,state_lkp_srch_req_not_rdy,ppa.ppa[#].int_bndl#,int_bndl#.state_lkp_srch_req_not_rdy,,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4,4,Justina,ppa.ppa[#],int_ecc,bndl#_state_lkp_sram_correctable,ppa.ppa[#].int_ecc,int_ecc.bndl#_state_lkp_sram_correctable,ecc_sw,,None,error (E),,n/a,n/a,,SW must write again to correct,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+p4,4,Justina,ppa.ppa[#],int_ecc,bndl#_state_lkp_sram_uncorrectable,ppa.ppa[#].int_ecc,int_ecc.bndl#_state_lkp_sram_uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,"ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip",,send chip to Avago
+p4,2,Justina,ppa.ppa[#],int_ecc,pkt_mem_correctable,ppa.ppa[#].int_ecc,int_ecc.pkt_mem_correctable,ecc_hw,,None,error (E),,n/a,n/a,,count,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+p4,2,Justina,ppa.ppa[#],int_ecc,pkt_mem_uncorrectable,ppa.ppa[#].int_ecc,int_ecc.pkt_mem_uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,"ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip",,send chip to Avago
+p4,2,Justina,ppa.ppa[#],int_fifo#,chk_ff_ovflow,ppa.ppa[#].int_fifo#,int_fifo#.chk_ff_ovflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4,2,Justina,ppa.ppa[#],int_fifo#,dp_if_ff_ovflow,ppa.ppa[#].int_fifo#,int_fifo#.dp_if_ff_ovflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4,2,Justina,ppa.ppa[#],int_fifo#,ma_if_ff_ovflow,ppa.ppa[#].int_fifo#,int_fifo#.ma_if_ff_ovflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4,2,Justina,ppa.ppa[#],int_fifo#,ohi_if_ff_ovflow,ppa.ppa[#].int_fifo#,int_fifo#.ohi_if_ff_ovflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4,2,Justina,ppa.ppa[#],int_fifo#,outohi_ff_ovflow,ppa.ppa[#].int_fifo#,int_fifo#.outohi_ff_ovflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4,2,Justina,ppa.ppa[#],int_fifo#,outphv_ff_ovflow,ppa.ppa[#].int_fifo#,int_fifo#.outphv_ff_ovflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4,2,Justina,ppa.ppa[#],int_fifo#,pb_if_ff_ovflow,ppa.ppa[#].int_fifo#,int_fifo#.pb_if_ff_ovflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4,20,Justina,ppa.ppa[#],int_fifo#,pe#_ohi_ff_ovflow,ppa.ppa[#].int_fifo#,int_fifo#.pe#_ohi_ff_ovflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4,20,Justina,ppa.ppa[#],int_fifo#,pe#_phv_ff_ovflow,ppa.ppa[#].int_fifo#,int_fifo#.pe#_phv_ff_ovflow,phv,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4,20,Justina,ppa.ppa[#],int_fifo#,pe#_qctl_ff_ovflow,ppa.ppa[#].int_fifo#,int_fifo#.pe#_qctl_ff_ovflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4,2,Justina,ppa.ppa[#],int_fifo#,pkt_mtu_ff_ovflow,ppa.ppa[#].int_fifo#,int_fifo#.pkt_mtu_ff_ovflow,pkt,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4,2,Justina,ppa.ppa[#],int_intf,dp_eop_err,ppa.ppa[#].int_intf,int_intf.dp_eop_err,,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4,2,Justina,ppa.ppa[#],int_intf,dp_err,ppa.ppa[#].int_intf,int_intf.dp_err,,,None,error (E),,n/a,n/a,,,,Packet err bit set along with EOP in packet bus from Parser to Deparser. Error bit probably is from buffer or from memory ecc error. Check other interrupts.,,
+p4,2,Justina,ppa.ppa[#],int_intf,dp_sop_err,ppa.ppa[#].int_intf,int_intf.dp_sop_err,,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4,2,Justina,ppa.ppa[#],int_intf,ma_eop_err,ppa.ppa[#].int_intf,int_intf.ma_eop_err,,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4,2,Justina,ppa.ppa[#],int_intf,ma_err,ppa.ppa[#].int_intf,int_intf.ma_err,,,None,error (E),,n/a,n/a,,,,Packet err bit set along with EOP in PHV bus from Parser to STG. Error bit probably is from memory ecc error. Check other interrupts.,,
+p4,2,Justina,ppa.ppa[#],int_intf,ma_sop_err,ppa.ppa[#].int_intf,int_intf.ma_sop_err,,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4,2,Justina,ppa.ppa[#],int_intf,ohi_eop_err,ppa.ppa[#].int_intf,int_intf.ohi_eop_err,,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4,2,Justina,ppa.ppa[#],int_intf,ohi_err,ppa.ppa[#].int_intf,int_intf.ohi_err,,,None,error (E),,n/a,n/a,,,,Packet err bit set along with EOP in OHI bus from Parser to Deparser. Error bit probably is from buffer or from memory ecc error. Check other interrupts.,,
+p4,2,Justina,ppa.ppa[#],int_intf,ohi_sop_err,ppa.ppa[#].int_intf,int_intf.ohi_sop_err,,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4,2,Justina,ppa.ppa[#],int_intf,pb_eop_err,ppa.ppa[#].int_intf,int_intf.pb_eop_err,,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4,2,Justina,ppa.ppa[#],int_intf,pb_err,ppa.ppa[#].int_intf,int_intf.pb_err,,,None,error (E),,n/a,n/a,,,,Packet err bit set along with EOP in packet bus from buffer to Parser. Error bit probably is from memory ecc error. Check other interrupts in PB.,,
+p4,2,Justina,ppa.ppa[#],int_intf,pb_sop_err,ppa.ppa[#].int_intf,int_intf.pb_sop_err,,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4,2,Justina,ppa.ppa[#],int_intf,sw_phv_eop_err,ppa.ppa[#].int_intf,int_intf.sw_phv_eop_err,phv,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4,2,Justina,ppa.ppa[#],int_intf,sw_phv_err,ppa.ppa[#].int_intf,int_intf.sw_phv_err,phv,,None,error (E),,n/a,n/a,,,,SW phv gen logic set error along with PHV. Error bit probably is from memory ecc error. Check other interrupts.,,
+p4,2,Justina,ppa.ppa[#],int_intf,sw_phv_sop_err,ppa.ppa[#].int_intf,int_intf.sw_phv_sop_err,phv,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4,2,Justina,ppa.ppa[#],int_pa,chkr_phv_not_sop,ppa.ppa[#].int_pa,int_pa.chkr_phv_not_sop,phv,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4,2,Justina,ppa.ppa[#],int_pa,chkr_phv_single_flit,ppa.ppa[#].int_pa,int_pa.chkr_phv_single_flit,phv,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4,2,Justina,ppa.ppa[#],int_pa,chkr_pkt_not_sop,ppa.ppa[#].int_pa,int_pa.chkr_pkt_not_sop,pkt,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4,2,Justina,ppa.ppa[#],int_pa,chkr_seq_id,ppa.ppa[#].int_pa,int_pa.chkr_seq_id,,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4,2,Justina,ppa.ppa[#],int_pa,crc_not_enuf_bytes,ppa.ppa[#].int_pa,int_pa.crc_not_enuf_bytes,,,ignore_all,error (E),,n/a,n/a,,Fix CRC checking profile config,,software error. CRC checking logic has programmable start and end offset. The packet ended before end offset. It's possible the packet is malformed as well. Check for other interrupts in PB.,,
+p4,2,Justina,ppa.ppa[#],int_pa,crc_start_more_than_end_offset,ppa.ppa[#].int_pa,int_pa.crc_start_more_than_end_offset,,,ignore_all,error (E),,n/a,n/a,,Fix CRC checking profile config,,Software error. CRC checking logic programmable start offset is more than end offset,,
+p4,10,Justina,ppa.ppa[#],int_pa,csum#_not_enuf_bytes,ppa.ppa[#].int_pa,int_pa.csum#_not_enuf_bytes,,,ignore_all,error (E),,n/a,n/a,,Fix CSM checking profile config,,software error. CSUM checking logic has programmable start and end offset. The packet ended before end offset. It's possible the packet is malformed as well. Check for other interrupts in PB.,,
+p4,10,Justina,ppa.ppa[#],int_pa,csum#_start_more_than_end_offset,ppa.ppa[#].int_pa,int_pa.csum#_start_more_than_end_offset,,,ignore_all,error (E),,n/a,n/a,,Fix CSUM checking profile config,,Software error. CSUM checking logic programmable start offset is more than end offset,,
+p4,2,Justina,ppa.ppa[#],int_pa,preparse_dff_not_sop,ppa.ppa[#].int_pa,int_pa.preparse_dff_not_sop,,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4,2,Justina,ppa.ppa[#],int_pa,preparse_dff_ovflow,ppa.ppa[#].int_pa,int_pa.preparse_dff_ovflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4,2,Justina,ppa.ppa[#],int_pa,preparse_eff_ovflow,ppa.ppa[#].int_pa,int_pa.preparse_eff_ovflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4,2,Justina,ppa.ppa[#],int_pa,preparse_line#_not_sop,ppa.ppa[#].int_pa,int_pa.preparse_line#_not_sop,,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4,2,Justina,ppa.ppa[#],int_pa,reorder_phv_not_sop,ppa.ppa[#].int_pa,int_pa.reorder_phv_not_sop,phv,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4,20,Justina,ppa.ppa[#],int_pe#,d#_not_valid,ppa.ppa[#].int_pe#,int_pe#.d#_not_valid,,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4,20,Justina,ppa.ppa[#],int_pe#,exceed_parse_loop_cnt,ppa.ppa[#].int_pe#,int_pe#.exceed_parse_loop_cnt,,,None,error (E),,n/a,n/a,,Fix parser state programming,,software error: Number of parse states jump for a packet exceeded the limit. ,,
+p4,20,Justina,ppa.ppa[#],int_pe#,exceed_phv_flit_cnt,ppa.ppa[#].int_pe#,int_pe#.exceed_phv_flit_cnt,phv,,None,error (E),,n/a,n/a,,Fix phv flit programming in state table,,software error: Number of phv flits generated exceeded the limit.,,
+p4,20,Justina,ppa.ppa[#],int_pe#,offset_jump_chk,ppa.ppa[#].int_pe#,int_pe#.offset_jump_chk,,,None,info (I),,,,,,,software error. Parser state programming error.,,
+p4,20,Justina,ppa.ppa[#],int_pe#,offset_out_of_range,ppa.ppa[#].int_pe#,int_pe#.offset_out_of_range,,,None,error (E),,n/a,n/a,,,,software error. Parser state programming error.,,
+p4,20,Justina,ppa.ppa[#],int_pe#,phv_upr_idx_less,ppa.ppa[#].int_pe#,int_pe#.phv_upr_idx_less,phv,,None,error (E),,n/a,n/a,,,,software error. Parser state programming error.,,
+p4,20,Justina,ppa.ppa[#],int_pe#,pkt_size_chk,ppa.ppa[#].int_pe#,int_pe#.pkt_size_chk,pkt,,None,error (E),,n/a,n/a,,,,software error. Not enough bytes in packet. Parser state programming error.,,
+p4,20,Justina,ppa.ppa[#],int_pe#,qctl_not_sop_after_pkt_release,ppa.ppa[#].int_pe#,int_pe#.qctl_not_sop_after_pkt_release,pkt,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4,20,Justina,ppa.ppa[#],int_pe#,qctl_skid_depth_not_zero,ppa.ppa[#].int_pe#,int_pe#.qctl_skid_depth_not_zero,,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4,20,Justina,ppa.ppa[#],int_pe#,unexpected_non_sop,ppa.ppa[#].int_pe#,int_pe#.unexpected_non_sop,,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4,2,Justina,ppa.ppa[#],int_sw_phv_mem,ecc_correctable,ppa.ppa[#].int_sw_phv_mem,int_sw_phv_mem.ecc_correctable,ecc_hw,,None,error (E),,n/a,n/a,,count,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+p4,2,Justina,ppa.ppa[#],int_sw_phv_mem,ecc_uncorrectable,ppa.ppa[#].int_sw_phv_mem,int_sw_phv_mem.ecc_uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,"ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip",,send chip to Avago
+p4,16,Justina,ppa.ppa[#],int_sw_phv_mem,phv_done#,ppa.ppa[#].int_sw_phv_mem,int_sw_phv_mem.phv_done#,phv,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+p4,2,Justina,ppa.ppa[#],int_sw_phv_mem,phv_invalid_data,ppa.ppa[#].int_sw_phv_mem,int_sw_phv_mem.phv_invalid_data,phv,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+p4,2,Justina,ppa.ppa[#],int_sw_phv_mem,phv_invalid_sram,ppa.ppa[#].int_sw_phv_mem,int_sw_phv_mem.phv_invalid_sram,phv,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+p4+rxdma,1,Justina,pr.pr.prd,int_ecc,pkt_mem_correctable,pr.pr.prd.int_ecc,int_ecc.pkt_mem_correctable,ecc_hw,,None,error (E),,n/a,n/a,,count,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+p4+rxdma,1,Justina,pr.pr.prd,int_ecc,pkt_mem_uncorrectable,pr.pr.prd.int_ecc,int_ecc.pkt_mem_uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,"ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip",,send chip to Avago
+p4+rxdma,1,Justina,pr.pr.prd,int_ecc,rdata_mem_correctable,pr.pr.prd.int_ecc,int_ecc.rdata_mem_correctable,ecc_hw,,None,error (E),,n/a,n/a,,count,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+p4+rxdma,1,Justina,pr.pr.prd,int_ecc,rdata_mem_uncorrectable,pr.pr.prd.int_ecc,int_ecc.rdata_mem_uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,"ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip",,send chip to Avago
+p4+rxdma,1,Justina,pr.pr.prd,int_fifo,cmd_ff_ovflow,pr.pr.prd.int_fifo,int_fifo.cmd_ff_ovflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4+rxdma,1,Justina,pr.pr.prd,int_fifo,cmdflit_ff_ovflow,pr.pr.prd.int_fifo,int_fifo.cmdflit_ff_ovflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4+rxdma,1,Justina,pr.pr.prd,int_fifo,dfence_ff_ovflow,pr.pr.prd.int_fifo,int_fifo.dfence_ff_ovflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4+rxdma,1,Justina,pr.pr.prd,int_fifo,ffence_ff_ovflow,pr.pr.prd.int_fifo,int_fifo.ffence_ff_ovflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4+rxdma,1,Justina,pr.pr.prd,int_fifo,pkt_ff_ovflow,pr.pr.prd.int_fifo,int_fifo.pkt_ff_ovflow,pkt,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4+rxdma,1,Justina,pr.pr.prd,int_fifo,pkt_order_ff_ovflow,pr.pr.prd.int_fifo,int_fifo.pkt_order_ff_ovflow,pkt,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4+rxdma,1,Justina,pr.pr.prd,int_fifo,pkt_stg_ff_ovflow,pr.pr.prd.int_fifo,int_fifo.pkt_stg_ff_ovflow,pkt,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4+rxdma,1,Justina,pr.pr.prd,int_fifo,rcv_stg_ff_ovflow,pr.pr.prd.int_fifo,int_fifo.rcv_stg_ff_ovflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4+rxdma,1,Justina,pr.pr.prd,int_fifo,rd_lat_ff_ovflow,pr.pr.prd.int_fifo,int_fifo.rd_lat_ff_ovflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4+rxdma,1,Justina,pr.pr.prd,int_fifo,wdata_ff_ovflow,pr.pr.prd.int_fifo,int_fifo.wdata_ff_ovflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4+rxdma,1,Justina,pr.pr.prd,int_fifo,wr_lat_ff_ovflow,pr.pr.prd.int_fifo,int_fifo.wr_lat_ff_ovflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4+rxdma,1,Justina,pr.pr.prd,int_fifo,wr_mem_ff_ovflow,pr.pr.prd.int_fifo,int_fifo.wr_mem_ff_ovflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4+rxdma,1,Justina,pr.pr.prd,int_grp#,pkt_len_calc_len_mismatch,pr.pr.prd.int_grp#,int_grp#.pkt_len_calc_len_mismatch,pkt,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+p4+rxdma,1,Justina,pr.pr.prd,int_grp#,pkt_not_sop,pr.pr.prd.int_grp#,int_grp#.pkt_not_sop,pkt,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4+rxdma,1,Justina,pr.pr.prd,int_grp#,rcv_cmd_nop_eop,pr.pr.prd.int_grp#,int_grp#.rcv_cmd_nop_eop,,,None,error (E),,n/a,n/a,,,,software error,,
+p4+rxdma,1,Justina,pr.pr.prd,int_grp#,rcv_cmd_out_not_sop,pr.pr.prd.int_grp#,int_grp#.rcv_cmd_out_not_sop,,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4+rxdma,1,Justina,pr.pr.prd,int_grp#,rcv_exceed_#byte,pr.pr.prd.int_grp#,int_grp#.rcv_exceed_#byte,,,None,error (E),,n/a,n/a,,,,software error. mem2mem_phv2mem or phv2mem with fence exceeded 16 bytes,,
+p4+rxdma,1,Justina,pr.pr.prd,int_grp#,rcv_m#m_dst_not_seen,pr.pr.prd.int_grp#,int_grp#.rcv_m#m_dst_not_seen,,,None,error (E),,n/a,n/a,,,,software error. mem2mem_dst command is expected right after mem2mem_src.,,
+p4+rxdma,1,Justina,pr.pr.prd,int_grp#,rcv_m#m_src_not_seen,pr.pr.prd.int_grp#,int_grp#.rcv_m#m_src_not_seen,,,None,error (E),,n/a,n/a,,,,software error. mem2mem_dst command is seen without mem2mem_src before it.,,
+p4+rxdma,1,Justina,pr.pr.prd,int_grp#,rcv_mem#pkt_seen,pr.pr.prd.int_grp#,int_grp#.rcv_mem#pkt_seen,,,None,error (E),,n/a,n/a,,,,software error. mem2pkt command not expected in PRD,,
+p4+rxdma,1,Justina,pr.pr.prd,int_grp#,rcv_no_data_but_pkt#mem_cmd,pr.pr.prd.int_grp#,int_grp#.rcv_no_data_but_pkt#mem_cmd,pkt,,None,error (E),,n/a,n/a,,,,"software error. no_data bit is set in PHV, but it has pkt2mem command. ",,
+p4+rxdma,1,Justina,pr.pr.prd,int_grp#,rcv_no_data_but_skip_cmd,pr.pr.prd.int_grp#,int_grp#.rcv_no_data_but_skip_cmd,,,None,error (E),,n/a,n/a,,,,"software error. no_data bit is set in PHV, but it has skip command. ",,
+p4+rxdma,1,Justina,pr.pr.prd,int_grp#,rcv_pend_phv_less,pr.pr.prd.int_grp#,int_grp#.rcv_pend_phv_less,phv,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4+rxdma,1,Justina,pr.pr.prd,int_grp#,rcv_pend_phv_more_than_#,pr.pr.prd.int_grp#,int_grp#.rcv_pend_phv_more_than_#,phv,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4+rxdma,1,Justina,pr.pr.prd,int_grp#,rcv_phv_addr,pr.pr.prd.int_grp#,int_grp#.rcv_phv_addr,phv,,None,error (E),,n/a,n/a,,,,software error. phv2mem or phv2pkt start/end address is not programmed correctly.,,
+p4+rxdma,1,Justina,pr.pr.prd,int_grp#,rcv_phv_dma_ptr,pr.pr.prd.int_grp#,int_grp#.rcv_phv_dma_ptr,phv,,None,error (E),,n/a,n/a,,,,software error. dma pointer points to a non-existing flit in PHV,,
+p4+rxdma,1,Justina,pr.pr.prd,int_grp#,rcv_phv_eop_no_cmd_eop,pr.pr.prd.int_grp#,int_grp#.rcv_phv_eop_no_cmd_eop,phv,,None,error (E),,n/a,n/a,,,,"software error. End of PHV reached, but cmdeop is not seen in any command",,
+p4+rxdma,1,Justina,pr.pr.prd,int_grp#,rcv_phv_not_sop,pr.pr.prd.int_grp#,int_grp#.rcv_phv_not_sop,phv,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4+rxdma,1,Justina,pr.pr.prd,int_grp#,rcv_phv#pkt_seen,pr.pr.prd.int_grp#,int_grp#.rcv_phv#pkt_seen,phv,,None,error (E),,n/a,n/a,,,,software error. phv2pkt command not expected in PRD,,
+p4+rxdma,1,Justina,pr.pr.prd,int_grp#,rcv_pkt_order_ff_full,pr.pr.prd.int_grp#,int_grp#.rcv_pkt_order_ff_full,pkt,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4+rxdma,1,Justina,pr.pr.prd,int_grp#,rdreq_invalid_cmd_seen,pr.pr.prd.int_grp#,int_grp#.rdreq_invalid_cmd_seen,,,None,error (E),,n/a,n/a,,,,software error. invalid cmdtype seen in dma command,,
+p4+rxdma,1,Justina,pr.pr.prd,int_grp#,rdreq_m#m_phv#mem_exceed_#byte,pr.pr.prd.int_grp#,int_grp#.rdreq_m#m_phv#mem_exceed_#byte,phv,,None,error (E),,n/a,n/a,,,,software error. mem2mem_phv2mem exceeds 16 bytes,,
+p4+rxdma,1,Justina,pr.pr.prd,int_grp#,rdreq_mem#mem_psize_zero,pr.pr.prd.int_grp#,int_grp#.rdreq_mem#mem_psize_zero,,,None,error (E),,n/a,n/a,,,,software error. mem2mem psize field is zero,,
+p4+rxdma,1,Justina,pr.pr.prd,int_grp#,rdreq_phv#mem_fence_exceed_#byte,pr.pr.prd.int_grp#,int_grp#.rdreq_phv#mem_fence_exceed_#byte,phv,,None,error (E),,n/a,n/a,,,,software error. phv2mem fence exceeds 16 bytes,,
+p4+rxdma,1,Justina,pr.pr.prd,int_grp#,rdreq_pkt#mem_psize_zero,pr.pr.prd.int_grp#,int_grp#.rdreq_pkt#mem_psize_zero,pkt,,None,error (E),,n/a,n/a,,,,software error. pkt2mem psize is zero,,
+p4+rxdma,1,Justina,pr.pr.prd,int_grp#,rdreq_skip_psize_zero,pr.pr.prd.int_grp#,int_grp#.rdreq_skip_psize_zero,,,None,error (E),,n/a,n/a,,,,software error. skip command psize field iz zero,,
+p4+rxdma,1,Justina,pr.pr.prd,int_grp#,rdrsp_axi,pr.pr.prd.int_grp#,int_grp#.rdrsp_axi,axi,,None,error (E),,n/a,n/a,,"fix the address range or program, check slave interrupts",never,"Access to invalid address, missing address range in the NOC, or slave sent back an error",,
+p4+rxdma,1,Justina,pr.pr.prd,int_grp#,rdrsp_axi_id_out_of_range,pr.pr.prd.int_grp#,int_grp#.rdrsp_axi_id_out_of_range,axi,,None,error (E),,n/a,n/a,,"fix the address range or program, check slave interrupts",never,"Access to invalid address, missing address range in the NOC, or slave sent back an error",,
+p4+rxdma,1,Justina,pr.pr.prd,int_grp#,spurious_rd_resp,pr.pr.prd.int_grp#,int_grp#.spurious_rd_resp,,,None,error (E),,n/a,n/a,,,,unexpected read response received. Check interrupts in other blocks.,,
+p4+rxdma,1,Justina,pr.pr.prd,int_grp#,spurious_wr_resp,pr.pr.prd.int_grp#,int_grp#.spurious_wr_resp,,,None,error (E),,n/a,n/a,,,,unexpected read response received. Check interrupts in other blocks.,,
+p4+rxdma,1,Justina,pr.pr.prd,int_grp#,wr_axi_rd_err_recovery,pr.pr.prd.int_grp#,int_grp#.wr_axi_rd_err_recovery,axi,,None,error (E),,n/a,n/a,,"fix the address range or program, check slave interrupts",never,"Access to invalid address, missing address range in the NOC, or slave sent back an error",,
+p4+rxdma,1,Justina,pr.pr.prd,int_grp#,wr_axi_rd_resp,pr.pr.prd.int_grp#,int_grp#.wr_axi_rd_resp,axi,,None,error (E),,n/a,n/a,,"fix the address range or program, check slave interrupts",never,"Access to invalid address, missing address range in the NOC, or slave sent back an error",,
+p4+rxdma,1,Justina,pr.pr.prd,int_grp#,wr_invalid_cmd,pr.pr.prd.int_grp#,int_grp#.wr_invalid_cmd,,,None,error (E),,n/a,n/a,,,,software error. Unexpected dma commands seen,,
+p4+rxdma,1,Justina,pr.pr.prd,int_grp#,wr_no_data_pkt_cmd,pr.pr.prd.int_grp#,int_grp#.wr_no_data_pkt_cmd,pkt,,None,error (E),,n/a,n/a,,,,"software error. no_data set in phv, but pkt command seen",,
+p4+rxdma,1,Justina,pr.pr.prd,int_grp#,wr_not_enuf_pkt_bytes,pr.pr.prd.int_grp#,int_grp#.wr_not_enuf_pkt_bytes,pkt,,None,error (E),,n/a,n/a,,,,software error. dma command trying to access more packet bytes than what's available in packet,,
+p4+rxdma,1,Justina,pr.pr.prd,int_grp#,wr_seq_id,pr.pr.prd.int_grp#,int_grp#.wr_seq_id,,,None,info (I),,,,,,,software error. dma command and packet size out of sync causing seq_id error,,
+p4+rxdma,1,Justina,pr.pr.prd,int_grp#,wrreq_info_first_missing,pr.pr.prd.int_grp#,int_grp#.wrreq_info_first_missing,,,None,error (E),,n/a,n/a,,,,"software error can trigger this interrupt. Can happen with other interrupts. If no other interrupt, then this may be a hw error.",,
+p4+rxdma,1,Justina,pr.pr.prd,int_grp#,wrreq_num_bytes_more_than_#,pr.pr.prd.int_grp#,int_grp#.wrreq_num_bytes_more_than_#,,,None,error (E),,n/a,n/a,,,,"software error can trigger this interrupt. Can happen with other interrupts. If no other interrupt, then this may be a hw error.",,
+p4+rxdma,1,Justina,pr.pr.prd,int_grp#,wrreq_num_bytes_zero,pr.pr.prd.int_grp#,int_grp#.wrreq_num_bytes_zero,,,None,error (E),,n/a,n/a,,,,"software error can trigger this interrupt. Can happen with other interrupts. If no other interrupt, then this may be a hw error.",,
+p4+rxdma,1,Justina,pr.pr.prd,int_grp#,wrrsp_axi,pr.pr.prd.int_grp#,int_grp#.wrrsp_axi,axi,,None,error (E),,n/a,n/a,,"fix the address range or program, check slave interrupts",never,"Access to invalid address, missing address range in the NOC, or slave sent back an error",,
+p4+rxdma,1,Justina,pr.pr.prd,int_intf,ma_eop_err,pr.pr.prd.int_intf,int_intf.ma_eop_err,,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4+rxdma,1,Justina,pr.pr.prd,int_intf,ma_err,pr.pr.prd.int_intf,int_intf.ma_err,,,None,error (E),,n/a,n/a,,,,PHV from STG received with error bit. Possible ecc error. Check interrupts in other blocks.,,
+p4+rxdma,1,Justina,pr.pr.prd,int_intf,ma_sop_err,pr.pr.prd.int_intf,int_intf.ma_sop_err,,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4+rxdma,1,Justina,pr.pr.prd,int_intf,ps_pkt_eop_err,pr.pr.prd.int_intf,int_intf.ps_pkt_eop_err,pkt,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4+rxdma,1,Justina,pr.pr.prd,int_intf,ps_pkt_err,pr.pr.prd.int_intf,int_intf.ps_pkt_err,pkt,,None,error (E),,n/a,n/a,,,,Packet from PSP received with error bit. The error bit may be from buffer (PB). check interrupts in other blocks.,,
+p4+rxdma,1,Justina,pr.pr.prd,int_intf,ps_pkt_sop_err,pr.pr.prd.int_intf,int_intf.ps_pkt_sop_err,pkt,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4+rxdma,1,Justina,pr.pr.prd,int_intf,ps_resub_phv_eop_err,pr.pr.prd.int_intf,int_intf.ps_resub_phv_eop_err,phv,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4+rxdma,1,Justina,pr.pr.prd,int_intf,ps_resub_phv_err,pr.pr.prd.int_intf,int_intf.ps_resub_phv_err,phv,,None,error (E),,n/a,n/a,,,,PHV from PRD to PSP sent with error bit. The error might be from STG originally. Possible ecc error. Check interrupts in other blocks.,,
+p4+rxdma,1,Justina,pr.pr.prd,int_intf,ps_resub_phv_sop_err,pr.pr.prd.int_intf,int_intf.ps_resub_phv_sop_err,phv,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4+rxdma,1,Justina,pr.pr.prd,int_intf,ps_resub_pkt_eop_err,pr.pr.prd.int_intf,int_intf.ps_resub_pkt_eop_err,pkt,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4+rxdma,1,Justina,pr.pr.prd,int_intf,ps_resub_pkt_err,pr.pr.prd.int_intf,int_intf.ps_resub_pkt_err,pkt,,None,error (E),,n/a,n/a,,,,Packet from PRD to PSP sent with error bit. The error might be from PSP originally or from buffer. Possible ecc error. Check interrupts in other blocks.,,
+p4+rxdma,1,Justina,pr.pr.prd,int_intf,ps_resub_pkt_sop_err,pr.pr.prd.int_intf,int_intf.ps_resub_pkt_sop_err,pkt,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4+txdma,1,Justina,pt.pt.ptd,int_ecc,lat_mem_correctable,pt.pt.ptd.int_ecc,int_ecc.lat_mem_correctable,ecc_hw,,None,error (E),,n/a,n/a,,count,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+p4+txdma,1,Justina,pt.pt.ptd,int_ecc,lat_mem_uncorrectable,pt.pt.ptd.int_ecc,int_ecc.lat_mem_uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,"ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip",,send chip to Avago
+p4+txdma,1,Justina,pt.pt.ptd,int_ecc,rdata_mem_correctable,pt.pt.ptd.int_ecc,int_ecc.rdata_mem_correctable,ecc_hw,,None,error (E),,n/a,n/a,,count,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+p4+txdma,1,Justina,pt.pt.ptd,int_ecc,rdata_mem_uncorrectable,pt.pt.ptd.int_ecc,int_ecc.rdata_mem_uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,"ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip",,send chip to Avago
+p4+txdma,1,Justina,pt.pt.ptd,int_ecc,wdata_mem_correctable,pt.pt.ptd.int_ecc,int_ecc.wdata_mem_correctable,ecc_hw,,None,error (E),,n/a,n/a,,count,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+p4+txdma,1,Justina,pt.pt.ptd,int_ecc,wdata_mem_uncorrectable,pt.pt.ptd.int_ecc,int_ecc.wdata_mem_uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,"ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip",,send chip to Avago
+p4+txdma,1,Justina,pt.pt.ptd,int_fifo,cmd_ff_ovflow,pt.pt.ptd.int_fifo,int_fifo.cmd_ff_ovflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4+txdma,1,Justina,pt.pt.ptd,int_fifo,cmdflit_ff_ovflow,pt.pt.ptd.int_fifo,int_fifo.cmdflit_ff_ovflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4+txdma,1,Justina,pt.pt.ptd,int_fifo,dfence_ff_ovflow,pt.pt.ptd.int_fifo,int_fifo.dfence_ff_ovflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4+txdma,1,Justina,pt.pt.ptd,int_fifo,ffence_ff_ovflow,pt.pt.ptd.int_fifo,int_fifo.ffence_ff_ovflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4+txdma,1,Justina,pt.pt.ptd,int_fifo,lat_ff_ovflow,pt.pt.ptd.int_fifo,int_fifo.lat_ff_ovflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4+txdma,1,Justina,pt.pt.ptd,int_fifo,pkt_ff_ovflow,pt.pt.ptd.int_fifo,int_fifo.pkt_ff_ovflow,pkt,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4+txdma,1,Justina,pt.pt.ptd,int_fifo,rcv_stg_ff_ovflow,pt.pt.ptd.int_fifo,int_fifo.rcv_stg_ff_ovflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4+txdma,1,Justina,pt.pt.ptd,int_fifo,wdata_ff_ovflow,pt.pt.ptd.int_fifo,int_fifo.wdata_ff_ovflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4+txdma,1,Justina,pt.pt.ptd,int_fifo,wr_mem_ff_ovflow,pt.pt.ptd.int_fifo,int_fifo.wr_mem_ff_ovflow,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4+txdma,1,Justina,pt.pt.ptd,int_grp#,pkt_cmd_eop_no_data,pt.pt.ptd.int_grp#,int_grp#.pkt_cmd_eop_no_data,pkt,,None,error (E),,n/a,n/a,,,,software error. Packet creation control signal error. This can happen with either axi read resp error or malformed dma commands. Check other interrupts in ptd_wr block.,,
+p4+txdma,1,Justina,pt.pt.ptd,int_grp#,pkt_err_eop_forced,pt.pt.ptd.int_grp#,int_grp#.pkt_err_eop_forced,pkt,,None,error (E),,n/a,n/a,,,,Eop is forced while creating a packet. Check for interrupts in ptd_wr. Possible software error or axi read resp error.,,
+p4+txdma,1,Justina,pt.pt.ptd,int_grp#,pkt_no_eop_err_seen,pt.pt.ptd.int_grp#,int_grp#.pkt_no_eop_err_seen,pkt,,None,error (E),,n/a,n/a,,,,Eop is forced while creating a packet. Check for interrupts in ptd_wr. Possible software error or axi read resp error.,,
+p4+txdma,1,Justina,pt.pt.ptd,int_grp#,rcv_cmd_nop_eop,pt.pt.ptd.int_grp#,int_grp#.rcv_cmd_nop_eop,,,None,error (E),,n/a,n/a,,,,"software error. NOP is seen at the end, but no cmd_eop",,
+p4+txdma,1,Justina,pt.pt.ptd,int_grp#,rcv_cmd_out_not_sop,pt.pt.ptd.int_grp#,int_grp#.rcv_cmd_out_not_sop,,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4+txdma,1,Justina,pt.pt.ptd,int_grp#,rcv_exceed_#byte,pt.pt.ptd.int_grp#,int_grp#.rcv_exceed_#byte,,,None,error (E),,n/a,n/a,,,,software error. mem2mem_phv2mem or phv2mem with fence exceeded 16 bytes,,
+p4+txdma,1,Justina,pt.pt.ptd,int_grp#,rcv_m#m_dst_not_seen,pt.pt.ptd.int_grp#,int_grp#.rcv_m#m_dst_not_seen,,,None,error (E),,n/a,n/a,,,,software error. mem2mem_dst command is expected right after mem2mem_src.,,
+p4+txdma,1,Justina,pt.pt.ptd,int_grp#,rcv_m#m_src_not_seen,pt.pt.ptd.int_grp#,int_grp#.rcv_m#m_src_not_seen,,,None,error (E),,n/a,n/a,,,,software error. mem2mem_dst command is seen without mem2mem_src before it.,,
+p4+txdma,1,Justina,pt.pt.ptd,int_grp#,rcv_pend_phv_less,pt.pt.ptd.int_grp#,int_grp#.rcv_pend_phv_less,phv,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4+txdma,1,Justina,pt.pt.ptd,int_grp#,rcv_pend_phv_more_than_#,pt.pt.ptd.int_grp#,int_grp#.rcv_pend_phv_more_than_#,phv,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4+txdma,1,Justina,pt.pt.ptd,int_grp#,rcv_phv_addr,pt.pt.ptd.int_grp#,int_grp#.rcv_phv_addr,phv,,None,error (E),,n/a,n/a,,,,software error. phv2mem or phv2pkt start/end address is not programmed correctly.,,
+p4+txdma,1,Justina,pt.pt.ptd,int_grp#,rcv_phv_dma_ptr,pt.pt.ptd.int_grp#,int_grp#.rcv_phv_dma_ptr,phv,,None,error (E),,n/a,n/a,,,,software error. dma pointer points to a non-existing flit in PHV,,
+p4+txdma,1,Justina,pt.pt.ptd,int_grp#,rcv_phv_eop_no_cmd_eop,pt.pt.ptd.int_grp#,int_grp#.rcv_phv_eop_no_cmd_eop,phv,,None,error (E),,n/a,n/a,,,,"software error. End of PHV reached, but cmdeop is not seen in any command",,
+p4+txdma,1,Justina,pt.pt.ptd,int_grp#,rcv_phv_not_sop,pt.pt.ptd.int_grp#,int_grp#.rcv_phv_not_sop,phv,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4+txdma,1,Justina,pt.pt.ptd,int_grp#,rcv_pkt_order_ff_full,pt.pt.ptd.int_grp#,int_grp#.rcv_pkt_order_ff_full,pkt,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4+txdma,1,Justina,pt.pt.ptd,int_grp#,rcv_pkt#mem_seen,pt.pt.ptd.int_grp#,int_grp#.rcv_pkt#mem_seen,pkt,,None,error (E),,n/a,n/a,,,,software error. pkt2mem command not expected in PTD,,
+p4+txdma,1,Justina,pt.pt.ptd,int_grp#,rcv_skip_seen,pt.pt.ptd.int_grp#,int_grp#.rcv_skip_seen,,,None,error (E),,n/a,n/a,,,,software error. skip command not expected in PTD,,
+p4+txdma,1,Justina,pt.pt.ptd,int_grp#,rdreq_invalid_cmd_seen,pt.pt.ptd.int_grp#,int_grp#.rdreq_invalid_cmd_seen,,,None,error (E),,n/a,n/a,,,,software error. invalid cmdtype seen in dma command,,
+p4+txdma,1,Justina,pt.pt.ptd,int_grp#,rdreq_m#m_phv#mem_exceed_#byte,pt.pt.ptd.int_grp#,int_grp#.rdreq_m#m_phv#mem_exceed_#byte,phv,,None,error (E),,n/a,n/a,,,,software error. mem2mem_phv2mem exceeds 16 bytes,,
+p4+txdma,1,Justina,pt.pt.ptd,int_grp#,rdreq_mem#mem_psize_zero,pt.pt.ptd.int_grp#,int_grp#.rdreq_mem#mem_psize_zero,,,None,error (E),,n/a,n/a,,,,software error. mem2mem psize field is zero,,
+p4+txdma,1,Justina,pt.pt.ptd,int_grp#,rdreq_mem#pkt_psize_zero,pt.pt.ptd.int_grp#,int_grp#.rdreq_mem#pkt_psize_zero,,,None,error (E),,n/a,n/a,,,,software error. mem2pkt psize field is zero,,
+p4+txdma,1,Justina,pt.pt.ptd,int_grp#,rdreq_phv#mem_fence_exceed_#byte,pt.pt.ptd.int_grp#,int_grp#.rdreq_phv#mem_fence_exceed_#byte,phv,,None,error (E),,n/a,n/a,,,,software error. phv2mem fence exceeds 16 bytes,,
+p4+txdma,1,Justina,pt.pt.ptd,int_grp#,rdrsp_axi,pt.pt.ptd.int_grp#,int_grp#.rdrsp_axi,axi,,None,error (E),,n/a,n/a,,"fix the address range or program, check slave interrupts",never,"Access to invalid address, missing address range in the NOC, or slave sent back an error",,
+p4+txdma,1,Justina,pt.pt.ptd,int_grp#,spurious_rd_resp,pt.pt.ptd.int_grp#,int_grp#.spurious_rd_resp,,,None,error (E),,n/a,n/a,,,,unexpected read response received. Check interrupts in other blocks.,,
+p4+txdma,1,Justina,pt.pt.ptd,int_grp#,spurious_wr_resp,pt.pt.ptd.int_grp#,int_grp#.spurious_wr_resp,,,None,error (E),,n/a,n/a,,,,unexpected write response received. check interrupts in other blocks,,
+p4+txdma,1,Justina,pt.pt.ptd,int_grp#,wr_axi_rd_resp,pt.pt.ptd.int_grp#,int_grp#.wr_axi_rd_resp,axi,,None,error (E),,n/a,n/a,,"fix the address range or program, check slave interrupts",never,"Access to invalid address, missing address range in the NOC, or slave sent back an error",,
+p4+txdma,1,Justina,pt.pt.ptd,int_grp#,wr_invalid_cmd,pt.pt.ptd.int_grp#,int_grp#.wr_invalid_cmd,,,None,error (E),,n/a,n/a,,,,software error. invalid cmdtype seen in dma command,,
+p4+txdma,1,Justina,pt.pt.ptd,int_grp#,wr_pend_sz,pt.pt.ptd.int_grp#,int_grp#.wr_pend_sz,,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4+txdma,1,Justina,pt.pt.ptd,int_grp#,wrreq_info_first_missing,pt.pt.ptd.int_grp#,int_grp#.wrreq_info_first_missing,,,None,error (E),,n/a,n/a,,,,"software error can trigger this interrupt. Can happen with other interrupts. If no other interrupt, then this may be a hw error.",,
+p4+txdma,1,Justina,pt.pt.ptd,int_grp#,wrreq_num_bytes_more_than_#,pt.pt.ptd.int_grp#,int_grp#.wrreq_num_bytes_more_than_#,,,None,error (E),,n/a,n/a,,,,"software error can trigger this interrupt. Can happen with other interrupts. If no other interrupt, then this may be a hw error.",,
+p4+txdma,1,Justina,pt.pt.ptd,int_grp#,wrreq_num_bytes_zero,pt.pt.ptd.int_grp#,int_grp#.wrreq_num_bytes_zero,,,None,error (E),,n/a,n/a,,,,"software error can trigger this interrupt. Can happen with other interrupts. If no other interrupt, then this may be a hw error.",,
+p4+txdma,1,Justina,pt.pt.ptd,int_grp#,wrrsp_axi,pt.pt.ptd.int_grp#,int_grp#.wrrsp_axi,axi,,None,error (E),,n/a,n/a,,"fix the address range or program, check slave interrupts",never,"Access to invalid address, missing address range in the NOC, or slave sent back an error",,
+p4+txdma,1,Justina,pt.pt.ptd,int_intf,ma_eop_err,pt.pt.ptd.int_intf,int_intf.ma_eop_err,,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4+txdma,1,Justina,pt.pt.ptd,int_intf,ma_err,pt.pt.ptd.int_intf,int_intf.ma_err,,,None,error (E),,n/a,n/a,,,,PHV from STG received with error bit. Possible ecc error. Check interrupts in other blocks.,,
+p4+txdma,1,Justina,pt.pt.ptd,int_intf,ma_sop_err,pt.pt.ptd.int_intf,int_intf.ma_sop_err,,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4+txdma,1,Justina,pt.pt.ptd,int_intf,npv_resub_eop_err,pt.pt.ptd.int_intf,int_intf.npv_resub_eop_err,,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4+txdma,1,Justina,pt.pt.ptd,int_intf,npv_resub_err,pt.pt.ptd.int_intf,int_intf.npv_resub_err,,,None,error (E),,n/a,n/a,,,,PHV sent to NPV with error bit. Possible error bit set in PHV from STG or ecc error. check interrupts in other blocks.,,
+p4+txdma,1,Justina,pt.pt.ptd,int_intf,npv_resub_sop_err,pt.pt.ptd.int_intf,int_intf.npv_resub_sop_err,,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4+txdma,1,Justina,pt.pt.ptd,int_intf,pb_eop_err,pt.pt.ptd.int_intf,int_intf.pb_eop_err,,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+p4+txdma,1,Justina,pt.pt.ptd,int_intf,pb_err,pt.pt.ptd.int_intf,int_intf.pb_err,,,None,error (E),,n/a,n/a,,,,Packet to PB sent with error. Possible axi read response error or malformed dma commands. Check other interrupts in ptd_wr block,,
+p4+txdma,1,Justina,pt.pt.ptd,int_intf,pb_sop_err,pt.pt.ptd.int_intf,int_intf.pb_sop_err,,,None,fatal (F),,n/a,n/a,,n/a,n/a,hardware error,,
+memory,8,Kalyan,mc.mc[#],int_mc,mch_int,mc.mc[#].int_mc,int_mc.mch_int,,,None,error (E),,n/a,n/a,,Needs unravel code,,,,
+memory,16,Kalyan,mc.mc[#].mch,int_mc,ecc_#bit_thresh_ps#,mc.mc[#].mch.int_mc,int_mc.ecc_#bit_thresh_ps#,,,None,error (E),,n/a,n/a,,Needs unravel code,,,,
+ms,1,Kalyan,ms.ms,int_esecure,mb_rxint,ms.ms.int_esecure,int_esecure.mb_rxint,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+ms,1,Kalyan,ms.ms,int_esecure,mb_txint,ms.ms.int_esecure,int_esecure.mb_txint,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+ms,10,Kalyan,ms.ms,int_gic#,msar_int_lvl,ms.ms.int_gic#,int_gic#.msar_int_lvl,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+ms,14,Kalyan,ms.ms,int_gic#,msar_int_lvl,ms.ms.int_gic#,int_gic#.msar_int_lvl,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+ms,1,Kalyan,ms.ms,int_misc,ahb_esec_data_ram_ecc_correctable,ms.ms.int_misc,int_misc.ahb_esec_data_ram_ecc_correctable,ecc_hw,,ignore_all,error (E),,n/a,n/a,,Need Threshold,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+ms,1,Kalyan,ms.ms,int_misc,ahb_esec_data_ram_ecc_uncorrectable,ms.ms.int_misc,int_misc.ahb_esec_data_ram_ecc_uncorrectable,ecc,,ignore_all,HW-RMA (F),,n/a,n/a,,n/a,n/a,Hardware Error,,send chip to Avago
+ms,1,Kalyan,ms.ms,int_misc,ahb_esec_esystem_ram_ecc_correctable,ms.ms.int_misc,int_misc.ahb_esec_esystem_ram_ecc_correctable,ecc_hw,,ignore_all,error (E),,n/a,n/a,,Need Threshold,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+ms,1,Kalyan,ms.ms,int_misc,ahb_esec_esystem_ram_ecc_uncorrectable,ms.ms.int_misc,int_misc.ahb_esec_esystem_ram_ecc_uncorrectable,ecc,,ignore_all,HW-RMA (F),,n/a,n/a,,n/a,n/a,Hardware Error,,send chip to Avago
+ms,1,Kalyan,ms.ms,int_misc,bl#_ram_ecc_correctable,ms.ms.int_misc,int_misc.bl#_ram_ecc_correctable,ecc_hw,,None,error (E),,n/a,n/a,,Need Threshold,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+ms,1,Kalyan,ms.ms,int_misc,bl#_ram_ecc_uncorrectable,ms.ms.int_misc,int_misc.bl#_ram_ecc_uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,Hardware Error,,send chip to Avago
+ms,1,Kalyan,ms.ms,int_misc,elam_cap_ecc_correctable,ms.ms.int_misc,int_misc.elam_cap_ecc_correctable,ecc_hw,,None,error (E),,n/a,n/a,,Need Threshold,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+ms,1,Kalyan,ms.ms,int_misc,elam_cap_ecc_uncorrectable,ms.ms.int_misc,int_misc.elam_cap_ecc_uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,Hardware Error,,send chip to Avago
+ms,3,Kalyan,ms.ms,int_misc,int_rd_full#,ms.ms.int_misc,int_misc.int_rd_full#,,,None,info (I),,,,,n/a,,"Info only, no action",,
+ms,3,Kalyan,ms.ms,int_misc,int_rd_stall_hit#,ms.ms.int_misc,int_misc.int_rd_stall_hit#,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+ms,3,Kalyan,ms.ms,int_misc,int_wr_full#,ms.ms.int_misc,int_misc.int_wr_full#,,,None,info (I),,,,,,,"Info only, no action",,
+ms,3,Kalyan,ms.ms,int_misc,int_wr_stall_hit#,ms.ms.int_misc,int_misc.int_wr_stall_hit#,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+ms,1,Kalyan,ms.ms,int_misc,qspi_ram_ecc_correctable,ms.ms.int_misc,int_misc.qspi_ram_ecc_correctable,ecc_hw,,ignore_all,error (E),,n/a,n/a,,Need Threshold,>10 per 1 day,Hardware Error,,send chip to Avago
+ms,1,Kalyan,ms.ms,int_misc,qspi_ram_ecc_uncorrectable,ms.ms.int_misc,int_misc.qspi_ram_ecc_uncorrectable,ecc,,ignore_all,HW-RMA (F),,n/a,n/a,,n/a,n/a,Hardware Error,,send chip to Avago
+ms,1,Kalyan,ms.ms,int_ms,addr_filter_read,ms.ms.int_ms,int_ms.addr_filter_read,address,,None,error (E),,n/a,n/a,,"fix the address range or program, check slave interrupts",never,Software Error,,
+ms,1,Kalyan,ms.ms,int_ms,addr_filter_write,ms.ms.int_ms,int_ms.addr_filter_write,address,,None,error (E),,n/a,n/a,,"fix the address range or program, check slave interrupts",never,Software Error,,
+ms,1,Kalyan,ms.ms,int_ms,ahb_axi_err,ms.ms.int_ms,int_ms.ahb_axi_err,axi,,None,error (E),,n/a,n/a,,"fix the address range or program, check slave interrupts",never,Software Error,,
+ms,1,Kalyan,ms.ms,int_ms,ahb_axi_werr,ms.ms.int_ms,int_ms.ahb_axi_werr,axi,,None,error (E),,n/a,n/a,,"fix the address range or program, check slave interrupts",never,Software Error,,
+ms,1,Kalyan,ms.ms,int_ms,ds#_efuse_cpu_read_timeout,ms.ms.int_ms,int_ms.ds#_efuse_cpu_read_timeout,,,None,HW-RMA (F),,,,,n/a,,Hardware Error,,
+ms,1,Kalyan,ms.ms,int_ms,ds#_efuse_init_read_timeout,ms.ms.int_ms,int_ms.ds#_efuse_init_read_timeout,,,None,HW-RMA (F),,,,,n/a,,Hardware Error,,
+ms,1,Kalyan,ms.ms,int_ms,emmc_pre_axi_err,ms.ms.int_ms,int_ms.emmc_pre_axi_err,axi,,None,error (E),,n/a,n/a,,"fix the address range or program, check slave interrupts",never,Software Error,,
+ms,1,Kalyan,ms.ms,int_ms,emmc_pre_axi_werr,ms.ms.int_ms,int_ms.emmc_pre_axi_werr,axi,,None,error (E),,n/a,n/a,,"fix the address range or program, check slave interrupts",never,Software Error,,
+ms,1,Kalyan,ms.ms,int_ms,fl_axi_err,ms.ms.int_ms,int_ms.fl_axi_err,axi,,None,error (E),,n/a,n/a,,"fix the address range or program, check slave interrupts",never,Software Error,,
+ms,1,Kalyan,ms.ms,int_ms,fl_axi_werr,ms.ms.int_ms,int_ms.fl_axi_werr,axi,,None,error (E),,n/a,n/a,,"fix the address range or program, check slave interrupts",never,Software Error,,
+ms,1,Kalyan,ms.ms,int_ms,ms_esec_mb_pre_axi_err,ms.ms.int_ms,int_ms.ms_esec_mb_pre_axi_err,axi,,None,error (E),,n/a,n/a,,"fix the address range or program, check slave interrupts",never,Software Error,,
+ms,1,Kalyan,ms.ms,int_ms,ms_esec_mb_pre_axi_werr,ms.ms.int_ms,int_ms.ms_esec_mb_pre_axi_werr,axi,,None,error (E),,n/a,n/a,,"fix the address range or program, check slave interrupts",never,Software Error,,
+ms,1,Kalyan,ms.ms,int_ms,msap_pre_axi_err,ms.ms.int_ms,int_ms.msap_pre_axi_err,axi,,None,error (E),,n/a,n/a,,"fix the address range or program, check slave interrupts",never,Software Error,,
+ms,1,Kalyan,ms.ms,int_ms,msap_pre_axi_werr,ms.ms.int_ms,int_ms.msap_pre_axi_werr,axi,,None,error (E),,n/a,n/a,,"fix the address range or program, check slave interrupts",never,Software Error,,
+ms,1,Kalyan,ms.ms,int_ms,nxms_a#_axi_err,ms.ms.int_ms,int_ms.nxms_a#_axi_err,axi,,None,error (E),,n/a,n/a,,"fix the address range or program, check slave interrupts",never,Software Error,,
+ms,1,Kalyan,ms.ms,int_ms,nxms_a#_axi_werr,ms.ms.int_ms,int_ms.nxms_a#_axi_werr,axi,,None,error (E),,n/a,n/a,,"fix the address range or program, check slave interrupts",never,Software Error,,
+ms,1,Kalyan,ms.ms,int_ms,pk_efuse_burn_imm_timeout,ms.ms.int_ms,int_ms.pk_efuse_burn_imm_timeout,,,None,HW-RMA (F),,,,,n/a,,Hardware Error,,
+ms,1,Kalyan,ms.ms,int_ms,pk_efuse_cpu_burn_timeout,ms.ms.int_ms,int_ms.pk_efuse_cpu_burn_timeout,,,None,HW-RMA (F),,,,,n/a,,Hardware Error,,
+ms,1,Kalyan,ms.ms,int_ms,pk_efuse_cpu_read_timeout,ms.ms.int_ms,int_ms.pk_efuse_cpu_read_timeout,,,None,HW-RMA (F),,,,,n/a,,Hardware Error,,
+ms,1,Kalyan,ms.ms,int_ms,pk_efuse_init_read_timeout,ms.ms.int_ms,int_ms.pk_efuse_init_read_timeout,,,None,HW-RMA (F),,,,,n/a,,Hardware Error,,
+ms,1,Kalyan,ms.ms,int_ms,rbm_axi_err,ms.ms.int_ms,int_ms.rbm_axi_err,axi,,None,error (E),,n/a,n/a,,"fix the address range or program, check slave interrupts",never,Software Error,,
+ms,1,Kalyan,ms.ms,int_ms,rbm_axi_werr,ms.ms.int_ms,int_ms.rbm_axi_werr,axi,,None,error (E),,n/a,n/a,,"fix the address range or program, check slave interrupts",never,Software Error,,
+ms,1,Kalyan,ms.ms,int_ms,rei_err,ms.ms.int_ms,int_ms.rei_err,,,None,HW-RMA (F),,,,,n/a,,Hardware Error,,
+ms,1,Kalyan,ms.ms,int_ms,rei_pll_err,ms.ms.int_ms,int_ms.rei_pll_err,,,None,HW-RMA (F),,,,,n/a,,Hardware Error,,
+ms,1,Kalyan,ms.ms,int_ms,sbus_err,ms.ms.int_ms,int_ms.sbus_err,,,ignore_all,error (E),,n/a,n/a,,Fix SW,never,Software Error,,
+ms,1,Kalyan,ms.ms,int_ms,ssram_axi_err,ms.ms.int_ms,int_ms.ssram_axi_err,axi,,None,error (E),,n/a,n/a,,"fix the address range or program, check slave interrupts",never,Software Error,,
+ms,1,Kalyan,ms.ms,int_ms,ssram_axi_werr,ms.ms.int_ms,int_ms.ssram_axi_werr,axi,,None,error (E),,n/a,n/a,,"fix the address range or program, check slave interrupts",never,Software Error,,
+ms,5,Kalyan,ms.ms,int_prp#,ack_timeout,ms.ms.int_prp#,int_prp#.ack_timeout,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+ms,5,Kalyan,ms.ms,int_prp#,byte_read,ms.ms.int_prp#,int_prp#.byte_read,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+ms,5,Kalyan,ms.ms,int_prp#,byte_write,ms.ms.int_prp#,int_prp#.byte_write,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+ms,5,Kalyan,ms.ms,int_prp#,decode,ms.ms.int_prp#,int_prp#.decode,,,None,error (E),,n/a,n/a,,"fix the address range or program, check slave interrupts",never,Software Error,,
+ms,5,Kalyan,ms.ms,int_prp#,read,ms.ms.int_prp#,int_prp#.read,,,None,error (E),,n/a,n/a,,"fix the address range or program, check slave interrupts",never,Software Error,,
+ms,5,Kalyan,ms.ms,int_prp#,security,ms.ms.int_prp#,int_prp#.security,,,None,error (E),,n/a,n/a,,"fix the address range or program, check slave interrupts",never,Software Error,,
+ms,5,Kalyan,ms.ms,int_prp#,stall_timeout,ms.ms.int_prp#,int_prp#.stall_timeout,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+p4,6,Louis,sge.te[#] / sgi.te[#] / pcr.te[#] / pct.te[#],int_err,axi_bad_read,sge.te[#].int_err,int_err.axi_bad_read,axi,,None,error (E),,n/a,n/a,,"fix the address range or program, check slave interrupts",never,"Access to invalid address, missing address range in the NOC, or slave sent back an error",,
+p4,6,Louis,sge.te[#] / sgi.te[#] / pcr.te[#] / pct.te[#],int_err,axi_rdrsp_err,sge.te[#].int_err,int_err.axi_rdrsp_err,axi,,None,error (E),,n/a,n/a,,"fix the address range or program, check slave interrupts",never,"Access to invalid address, missing address range in the NOC, or slave sent back an error",,
+p4,6,Louis,sge.te[#] / sgi.te[#] / pcr.te[#] / pct.te[#],int_err,axi_req_idx_fifo,sge.te[#].int_err,int_err.axi_req_idx_fifo,axi,,None,error (E),,n/a,n/a,,"fix the address range or program, check slave interrupts",never,"Access to invalid address, missing address range in the NOC, or slave sent back an error",,
+p4,6,Louis,sge.te[#] / sgi.te[#] / pcr.te[#] / pct.te[#],int_err,both_pend_down,sge.te[#].int_err,int_err.both_pend_down,,,None,error (E),,n/a,n/a,,,never,mpu error,,
+p4,6,Louis,sge.te[#] / sgi.te[#] / pcr.te[#] / pct.te[#],int_err,both_pend_went_up,sge.te[#].int_err,int_err.both_pend_went_up,,,None,error (E),,n/a,n/a,,,never,mpu error,,
+p4,6,Louis,sge.te[#] / sgi.te[#] / pcr.te[#] / pct.te[#],int_err,loaded_but_no_proc,sge.te[#].int_err,int_err.loaded_but_no_proc,,,None,error (E),,n/a,n/a,,,never,mpu error,,
+p4,6,Louis,sge.te[#] / sgi.te[#] / pcr.te[#] / pct.te[#],int_err,loaded_but_no_proc_tbl_vld,sge.te[#].int_err,int_err.loaded_but_no_proc_tbl_vld,,,None,error (E),,n/a,n/a,,,never,mpu error,,
+p4,6,Louis,sge.te[#] / sgi.te[#] / pcr.te[#] / pct.te[#],int_err,miss_eop,sge.te[#].int_err,int_err.miss_eop,,,None,fatal (F),,n/a,n/a,,n/a,n/a,previous stage error,,stg packet sequence error
+p4,6,Louis,sge.te[#] / sgi.te[#] / pcr.te[#] / pct.te[#],int_err,miss_sop,sge.te[#].int_err,int_err.miss_sop,,,None,fatal (F),,n/a,n/a,,n/a,n/a,previous stage error,,stg packet sequence error
+p4,6,Louis,sge.te[#] / sgi.te[#] / pcr.te[#] / pct.te[#],int_err,mpu_req_idx_fifo,sge.te[#].int_err,int_err.mpu_req_idx_fifo,,,None,fatal (F),,n/a,n/a,,n/a,n/a,pop empty fifo,,
+p4,6,Louis,sge.te[#] / sgi.te[#] / pcr.te[#] / pct.te[#],int_err,pend_wo_proc_down,sge.te[#].int_err,int_err.pend_wo_proc_down,,,None,error (E),,n/a,n/a,,,never,mpu error,,
+p4,6,Louis,sge.te[#] / sgi.te[#] / pcr.te[#] / pct.te[#],int_err,pend_wo_wb,sge.te[#].int_err,int_err.pend_wo_wb,,,None,error (E),,n/a,n/a,,,never,mpu error,,
+p4,6,Louis,sge.te[#] / sgi.te[#] / pcr.te[#] / pct.te[#],int_err,pend#_wo_pend#,sge.te[#].int_err,int_err.pend#_wo_pend#,,,None,error (E),,n/a,n/a,,,never,mpu error,,
+p4,6,Louis,sge.te[#] / sgi.te[#] / pcr.te[#] / pct.te[#],int_err,phv_max_size,sge.te[#].int_err,int_err.phv_max_size,phv,,None,error (E),,n/a,n/a,,,never,invalid,,
+p4,6,Louis,sge.te[#] / sgi.te[#] / pcr.te[#] / pct.te[#],int_err,proc_tbl_vld_wo_proc,sge.te[#].int_err,int_err.proc_tbl_vld_wo_proc,,,None,error (E),,n/a,n/a,,,never,mpu error,,
+p4,6,Louis,sge.te[#] / sgi.te[#] / pcr.te[#] / pct.te[#],int_err,spurious_axi_rsp,sge.te[#].int_err,int_err.spurious_axi_rsp,axi,,None,error (E),,n/a,n/a,,"fix the address range or program, check slave interrupts",never,"Access to invalid address, missing address range in the NOC, or slave sent back an error",,
+p4,6,Louis,sge.te[#] / sgi.te[#] / pcr.te[#] / pct.te[#],int_err,spurious_tcam_rsp,sge.te[#].int_err,int_err.spurious_tcam_rsp,,,None,fatal (F),,n/a,n/a,,n/a,n/a,bad tcam response,,
+p4,6,Louis,sge.te[#] / sgi.te[#] / pcr.te[#] / pct.te[#],int_err,tcam_req_idx_fifo,sge.te[#].int_err,int_err.tcam_req_idx_fifo,,,None,fatal (F),,n/a,n/a,,n/a,n/a,pop empty fifo,,
+p4,6,Louis,sge.te[#] / sgi.te[#] / pcr.te[#] / pct.te[#],int_err,tcam_rsp_idx_fifo,sge.te[#].int_err,int_err.tcam_rsp_idx_fifo,,,None,fatal (F),,n/a,n/a,,n/a,n/a,pop empty fifo,,
+p4,6,Louis,sge.te[#] / sgi.te[#] / pcr.te[#] / pct.te[#],int_err,te#mpu_timeout,sge.te[#].int_err,int_err.te#mpu_timeout,,,None,SW-MASK-IGNORE,,n/a,n/a,,n/a,n/a,"impossible, should be disabled",,
+p4,96,Louis,sge.te[#] / sgi.te[#] / pcr.te[#] / pct.te[#],int_info,profile_cam_hit#,sge.te[#].int_info,int_info.profile_cam_hit#,,,None,info (I),,info,,,n/a,n/a,"Info only, no action",,
+p4,6,Louis,sge.te[#] / sgi.te[#] / pcr.te[#] / pct.te[#],int_info,profile_cam_miss,sge.te[#].int_info,int_info.profile_cam_miss,,,None,info (I),,info,,,n/a,n/a,"Info only, no action",,
+txs,1,Louis,txs.txs,int_sch,sch_aclr_hbm_ln_rollovr,txs.txs.int_sch,int_sch.sch_aclr_hbm_ln_rollovr,,,None,fatal (F),,n/a,n/a,,n/a,n/a,,,
+txs,1,Louis,txs.txs,int_sch,sch_bid_err,txs.txs.int_sch,int_sch.sch_bid_err,,,None,error (E),,n/a,n/a,,,never,axi error,,
+txs,1,Louis,txs.txs,int_sch,sch_bresp_err,txs.txs.int_sch,int_sch.sch_bresp_err,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+txs,1,Louis,txs.txs,int_sch,sch_drb_cnt_ovfl,txs.txs.int_sch,int_sch.sch_drb_cnt_ovfl,overflow,,None,error (E),,n/a,n/a,,,,need to read clear drb counter in memory to avoid ovfl,,
+txs,1,Louis,txs.txs,int_sch,sch_drb_cnt_qid_fifo,txs.txs.int_sch,int_sch.sch_drb_cnt_qid_fifo,,,None,SW-MASK-IGNORE,,n/a,n/a,,"Does not work, SW should mask/ignore",n/a,"Not applicable, it was left there in the reg defintion but is not used internally",,
+txs,1,Louis,txs.txs,int_sch,sch_drb_cnt_unfl,txs.txs.int_sch,int_sch.sch_drb_cnt_unfl,,,None,fatal (F),,n/a,n/a,,n/a,n/a,,,
+txs,1,Louis,txs.txs,int_sch,sch_hbm_byp_ovf,txs.txs.int_sch,int_sch.sch_hbm_byp_ovf,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,,,
+txs,1,Louis,txs.txs,int_sch,sch_hbm_byp_pending_efull,txs.txs.int_sch,int_sch.sch_hbm_byp_pending_efull,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+txs,1,Louis,txs.txs,int_sch,sch_hbm_byp_wtag_wrap,txs.txs.int_sch,int_sch.sch_hbm_byp_wtag_wrap,,,None,fatal (F),,n/a,n/a,,n/a,n/a,,,
+txs,1,Louis,txs.txs,int_sch,sch_hbm_rd_pending_efull,txs.txs.int_sch,int_sch.sch_hbm_rd_pending_efull,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+txs,1,Louis,txs.txs,int_sch,sch_hbm_re_efull,txs.txs.int_sch,int_sch.sch_hbm_re_efull,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+txs,1,Louis,txs.txs,int_sch,sch_hbm_we_efull,txs.txs.int_sch,int_sch.sch_hbm_we_efull,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+txs,1,Louis,txs.txs,int_sch,sch_hbm_wr_pending_efull,txs.txs.int_sch,int_sch.sch_hbm_wr_pending_efull,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+txs,1,Louis,txs.txs,int_sch,sch_lif_sg_mismatch,txs.txs.int_sch,int_sch.sch_lif_sg_mismatch,,,None,error (E),,n/a,n/a,,,,"shouldn't happen, need debugging if happens",,
+txs,1,Louis,txs.txs,int_sch,sch_null_lif,txs.txs.int_sch,int_sch.sch_null_lif,,,None,error (E),,n/a,n/a,,,,lif map programming error,,
+txs,1,Louis,txs.txs,int_sch,sch_rd_txfifo_ovf,txs.txs.int_sch,int_sch.sch_rd_txfifo_ovf,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,,,
+txs,1,Louis,txs.txs,int_sch,sch_rid_empty,txs.txs.int_sch,int_sch.sch_rid_empty,,,None,fatal (F),,n/a,n/a,,n/a,n/a,,,
+txs,1,Louis,txs.txs,int_sch,sch_rid_err,txs.txs.int_sch,int_sch.sch_rid_err,,,None,error (E),,n/a,n/a,,,,axi error,,
+txs,1,Louis,txs.txs,int_sch,sch_rlid_ovfl,txs.txs.int_sch,int_sch.sch_rlid_ovfl,overflow,,None,error (E),,n/a,n/a,,,,rlid programming error,,
+txs,1,Louis,txs.txs,int_sch,sch_rlid_unfl,txs.txs.int_sch,int_sch.sch_rlid_unfl,,,None,error (E),,n/a,n/a,,,,rlid programming error,,
+txs,1,Louis,txs.txs,int_sch,sch_rresp_err,txs.txs.int_sch,int_sch.sch_rresp_err,,,None,error (E),,n/a,n/a,,,,,,
+txs,1,Louis,txs.txs,int_sch,sch_state_fifo_ovf,txs.txs.int_sch,int_sch.sch_state_fifo_ovf,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,,,
+txs,1,Louis,txs.txs,int_sch,sch_txdma_msg_efull,txs.txs.int_sch,int_sch.sch_txdma_msg_efull,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+txs,1,Louis,txs.txs,int_sch,sch_txdma_msg_ovfl,txs.txs.int_sch,int_sch.sch_txdma_msg_ovfl,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,,,
+txs,1,Louis,txs.txs,int_sch,sch_wid_empty,txs.txs.int_sch,int_sch.sch_wid_empty,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+txs,1,Louis,txs.txs,int_sch,sch_wr_txfifo_ovf,txs.txs.int_sch,int_sch.sch_wr_txfifo_ovf,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,,,
+txs,1,Louis,txs.txs,int_srams_ecc,sch_grp_correctable,txs.txs.int_srams_ecc,int_srams_ecc.sch_grp_correctable,ecc_hw,,None,error (E),,n/a,n/a,,count,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+txs,1,Louis,txs.txs,int_srams_ecc,sch_grp_uncorrectable,txs.txs.int_srams_ecc,int_srams_ecc.sch_grp_uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,"ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip",,send chip to Avago
+txs,1,Louis,txs.txs,int_srams_ecc,sch_lif_map_correctable,txs.txs.int_srams_ecc,int_srams_ecc.sch_lif_map_correctable,ecc_sw,,None,error (E),,n/a,n/a,,SW must write again to correct,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+txs,1,Louis,txs.txs,int_srams_ecc,sch_lif_map_uncorrectable,txs.txs.int_srams_ecc,int_srams_ecc.sch_lif_map_uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,"ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip",,send chip to Avago
+txs,1,Louis,txs.txs,int_srams_ecc,sch_rlid_map_correctable,txs.txs.int_srams_ecc,int_srams_ecc.sch_rlid_map_correctable,ecc_sw,,None,error (E),,n/a,n/a,,SW must write again to correct,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+txs,1,Louis,txs.txs,int_srams_ecc,sch_rlid_map_uncorrectable,txs.txs.int_srams_ecc,int_srams_ecc.sch_rlid_map_uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,"ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip",,send chip to Avago
+txs,1,Louis,txs.txs,int_srams_ecc,tmr_cnt_correctable,txs.txs.int_srams_ecc,int_srams_ecc.tmr_cnt_correctable,ecc_hw,,None,error (E),,n/a,n/a,,count,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+txs,1,Louis,txs.txs,int_srams_ecc,tmr_cnt_uncorrectable,txs.txs.int_srams_ecc,int_srams_ecc.tmr_cnt_uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,"ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip",,send chip to Avago
+txs,1,Louis,txs.txs,int_tmr,ftmr_ctime_wrap,txs.txs.int_tmr,int_tmr.ftmr_ctime_wrap,,,None,error (E),,n/a,n/a,,,,,,
+txs,1,Louis,txs.txs,int_tmr,ftmr_fifo_efull,txs.txs.int_tmr,int_tmr.ftmr_fifo_efull,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+txs,1,Louis,txs.txs,int_tmr,ftmr_fifo_ovf,txs.txs.int_tmr,int_tmr.ftmr_fifo_ovf,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,,,
+txs,1,Louis,txs.txs,int_tmr,ftmr_key_not_found,txs.txs.int_tmr,int_tmr.ftmr_key_not_found,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+txs,1,Louis,txs.txs,int_tmr,ftmr_key_not_push,txs.txs.int_tmr,int_tmr.ftmr_key_not_push,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+txs,1,Louis,txs.txs,int_tmr,ftmr_push_out_of_wheel,txs.txs.int_tmr,int_tmr.ftmr_push_out_of_wheel,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+txs,1,Louis,txs.txs,int_tmr,ftmr_stall,txs.txs.int_tmr,int_tmr.ftmr_stall,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+txs,1,Louis,txs.txs,int_tmr,stmr_ctime_wrap,txs.txs.int_tmr,int_tmr.stmr_ctime_wrap,,,None,error (E),,n/a,n/a,,,,,,
+txs,1,Louis,txs.txs,int_tmr,stmr_fifo_efull,txs.txs.int_tmr,int_tmr.stmr_fifo_efull,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+txs,1,Louis,txs.txs,int_tmr,stmr_fifo_ovf,txs.txs.int_tmr,int_tmr.stmr_fifo_ovf,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,,,
+txs,1,Louis,txs.txs,int_tmr,stmr_key_not_found,txs.txs.int_tmr,int_tmr.stmr_key_not_found,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+txs,1,Louis,txs.txs,int_tmr,stmr_key_not_push,txs.txs.int_tmr,int_tmr.stmr_key_not_push,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+txs,1,Louis,txs.txs,int_tmr,stmr_push_out_of_wheel,txs.txs.int_tmr,int_tmr.stmr_push_out_of_wheel,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+txs,1,Louis,txs.txs,int_tmr,stmr_stall,txs.txs.int_tmr,int_tmr.stmr_stall,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+txs,1,Louis,txs.txs,int_tmr,tmr_bid_err,txs.txs.int_tmr,int_tmr.tmr_bid_err,,,None,error (E),,n/a,n/a,,,,,,
+txs,1,Louis,txs.txs,int_tmr,tmr_bresp_err,txs.txs.int_tmr,int_tmr.tmr_bresp_err,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+txs,1,Louis,txs.txs,int_tmr,tmr_hbm_byp_ovf,txs.txs.int_tmr,int_tmr.tmr_hbm_byp_ovf,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,,,
+txs,1,Louis,txs.txs,int_tmr,tmr_hbm_byp_pending_efull,txs.txs.int_tmr,int_tmr.tmr_hbm_byp_pending_efull,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+txs,1,Louis,txs.txs,int_tmr,tmr_hbm_byp_wtag_wrap,txs.txs.int_tmr,int_tmr.tmr_hbm_byp_wtag_wrap,,,None,fatal (F),,n/a,n/a,,n/a,n/a,,,
+txs,1,Louis,txs.txs,int_tmr,tmr_hbm_rd_pending_efull,txs.txs.int_tmr,int_tmr.tmr_hbm_rd_pending_efull,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+txs,1,Louis,txs.txs,int_tmr,tmr_hbm_re_efull,txs.txs.int_tmr,int_tmr.tmr_hbm_re_efull,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+txs,1,Louis,txs.txs,int_tmr,tmr_hbm_we_efull,txs.txs.int_tmr,int_tmr.tmr_hbm_we_efull,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+txs,1,Louis,txs.txs,int_tmr,tmr_hbm_wr_pending_efull,txs.txs.int_tmr,int_tmr.tmr_hbm_wr_pending_efull,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+txs,1,Louis,txs.txs,int_tmr,tmr_rd_txfifo_ovf,txs.txs.int_tmr,int_tmr.tmr_rd_txfifo_ovf,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,,,
+txs,1,Louis,txs.txs,int_tmr,tmr_rejct_drb_efull,txs.txs.int_tmr,int_tmr.tmr_rejct_drb_efull,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+txs,1,Louis,txs.txs,int_tmr,tmr_rejct_drb_ovf,txs.txs.int_tmr,int_tmr.tmr_rejct_drb_ovf,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,,,
+txs,1,Louis,txs.txs,int_tmr,tmr_rid_empty,txs.txs.int_tmr,int_tmr.tmr_rid_empty,,,None,fatal (F),,n/a,n/a,,n/a,n/a,,,
+txs,1,Louis,txs.txs,int_tmr,tmr_rid_err,txs.txs.int_tmr,int_tmr.tmr_rid_err,,,None,error (E),,n/a,n/a,,,,,,
+txs,1,Louis,txs.txs,int_tmr,tmr_rresp_err,txs.txs.int_tmr,int_tmr.tmr_rresp_err,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+txs,1,Louis,txs.txs,int_tmr,tmr_state_fifo_ovf,txs.txs.int_tmr,int_tmr.tmr_state_fifo_ovf,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,,,
+txs,1,Louis,txs.txs,int_tmr,tmr_wid_empty,txs.txs.int_tmr,int_tmr.tmr_wid_empty,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+txs,1,Louis,txs.txs,int_tmr,tmr_wr_txfifo_ovf,txs.txs.int_tmr,int_tmr.tmr_wr_txfifo_ovf,overflow,,None,fatal (F),,n/a,n/a,,n/a,n/a,,,
+ms,1,Hemant,intr.intr,int_intr_ecc,intr_coalesce_correctable,intr.intr.int_intr_ecc,int_intr_ecc.intr_coalesce_correctable,ecc_sw,,None,error (E),,n/a,n/a,,SW must write again to correct,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+ms,1,Hemant,intr.intr,int_intr_ecc,intr_coalesce_uncorrectable,intr.intr.int_intr_ecc,int_intr_ecc.intr_coalesce_uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,"ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip",,send chip to Avago
+ms,1,Hemant,intr.intr,int_intr_ecc,intr_pba_cfg_correctable,intr.intr.int_intr_ecc,int_intr_ecc.intr_pba_cfg_correctable,ecc_sw,,None,error (E),,n/a,n/a,,SW must write again to correct,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+ms,1,Hemant,intr.intr,int_intr_ecc,intr_pba_cfg_uncorrectable,intr.intr.int_intr_ecc,int_intr_ecc.intr_pba_cfg_uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,"ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip",,send chip to Avago
+ms,1,Hemant,intr.intr,int_intr_ecc,intr_state_correctable,intr.intr.int_intr_ecc,int_intr_ecc.intr_state_correctable,ecc_sw,,None,error (E),,n/a,n/a,,SW must write again to correct,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+ms,1,Hemant,intr.intr,int_intr_ecc,intr_state_uncorrectable,intr.intr.int_intr_ecc,int_intr_ecc.intr_state_uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,"ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip",,send chip to Avago
+p4,24,Mike,sge.mpu[#] / sgi.mpu[#] / pcr.mpu[#] / pct.mpu[#],int_err,cache_axi_#,sge.mpu[#].int_err,int_err.cache_axi_#,,,None,error (E),,n/a,n/a,,Fix MPU program,never,"instruction cache fill returned response error, likely memory address error",,
+p4,24,Mike,sge.mpu[#] / sgi.mpu[#] / pcr.mpu[#] / pct.mpu[#],int_err,cache_parity_#,sge.mpu[#].int_err,int_err.cache_parity_#,,,None,fatal (F),,n/a,n/a,,n/a,n/a,instruction cache parity error,,send chip to Avago
+p4,24,Mike,sge.mpu[#] / sgi.mpu[#] / pcr.mpu[#] / pct.mpu[#],int_err,illegal_op_#,sge.mpu[#].int_err,int_err.illegal_op_#,,,None,error (E),,n/a,n/a,,Fix MPU program,never,MPU executed illegal opcode (likely a jump to bad address or code space written over by DMA),,
+p4,24,Mike,sge.mpu[#] / sgi.mpu[#] / pcr.mpu[#] / pct.mpu[#],int_err,max_inst_#,sge.mpu[#].int_err,int_err.max_inst_#,,,None,error (E),,n/a,n/a,,Fix MPU program,never,MPU exceeded max instruction count for one program,,
+p4,24,Mike,sge.mpu[#] / sgi.mpu[#] / pcr.mpu[#] / pct.mpu[#],int_err,phvwr_#,sge.mpu[#].int_err,int_err.phvwr_#,phv,,None,error (E),,n/a,n/a,,Fix MPU program,never,Illegal phvwr command or offset,,
+p4,6,Mike,sge.mpu[#] / sgi.mpu[#] / pcr.mpu[#] / pct.mpu[#],int_err,results_mismatch,sge.mpu[#].int_err,int_err.results_mismatch,,,None,SW-MASK-IGNORE,,n/a,n/a,,"Does not work, SW should mask/ignore",n/a,"mask this interrupt, not fully implemented",,
+p4,6,Mike,sge.mpu[#] / sgi.mpu[#] / pcr.mpu[#] / pct.mpu[#],int_err,sdp_mem_correctable,sge.mpu[#].int_err,int_err.sdp_mem_correctable,ecc_hw,,None,error (E),,n/a,n/a,,count,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+p4,6,Mike,sge.mpu[#] / sgi.mpu[#] / pcr.mpu[#] / pct.mpu[#],int_err,sdp_mem_uncorrectable,sge.mpu[#].int_err,int_err.sdp_mem_uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,"ecc uncorrectable DOUBLE bit SOFT error, expect once per 250 years per chip",,send chip to Avago
+p4,24,Mike,sge.mpu[#] / sgi.mpu[#] / pcr.mpu[#] / pct.mpu[#],int_err,write_err_#,sge.mpu[#].int_err,int_err.write_err_#,,,None,error (E),,n/a,n/a,,Fix MPU program,never,"MPU write returned error on acknowledge, likely an address error",,
+p4,24,Mike,sge.mpu[#] / sgi.mpu[#] / pcr.mpu[#] / pct.mpu[#],int_info,mpu_stop_#,sge.mpu[#].int_info,int_info.mpu_stop_#,,,None,error (E),,n/a,n/a,,Fix MPU program,never,"MPU stopped, in debug mode, pipeline frozen until start",,
+p4,24,Mike,sge.mpu[#] / sgi.mpu[#] / pcr.mpu[#] / pct.mpu[#],int_info,trace_full_#,sge.mpu[#].int_info,int_info.trace_full_#,,,None,info (I),,,,,n/a,n/a,MPU debug trace buffer has filled,,
+offloads,1,Ganlin/Nital,md.hens,int_axi_err,rrsp_err,md.hens.int_axi_err,int_axi_err.rrsp_err,axi,,None,error (E),,n/a,n/a,,"fix the address range or program, check slave interrupts",never,Software Error,,
+offloads,1,Ganlin/Nital,md.hens,int_axi_err,wrsp_err,md.hens.int_axi_err,int_axi_err.wrsp_err,axi,,None,error (E),,n/a,n/a,,"fix the address range or program, check slave interrupts",never,Software Error,,
+offloads,1,Ganlin/Nital,md.hens,int_drbg_cryptoram_ecc,correctable_err,md.hens.int_drbg_cryptoram_ecc,int_drbg_cryptoram_ecc.correctable_err,ecc,,None,error (E),,n/a,n/a,,count,>10 per 1 day,Hardware Error,,send chip to Avago
+offloads,1,Ganlin/Nital,md.hens,int_drbg_cryptoram_ecc,uncorrectable_err,md.hens.int_drbg_cryptoram_ecc,int_drbg_cryptoram_ecc.uncorrectable_err,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,Hardware Error,,send chip to Avago
+offloads,1,Ganlin/Nital,md.hens,int_drbg_intram_ecc,correctable_err,md.hens.int_drbg_intram_ecc,int_drbg_intram_ecc.correctable_err,ecc,,None,error (E),,n/a,n/a,,count,>10 per 1 day,Hardware Error,,send chip to Avago
+offloads,1,Ganlin/Nital,md.hens,int_drbg_intram_ecc,uncorrectable_err,md.hens.int_drbg_intram_ecc,int_drbg_intram_ecc.uncorrectable_err,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,Hardware Error,,send chip to Avago
+offloads,1,Ganlin/Nital,md.hens,int_ipcore,cp,md.hens.int_ipcore,int_ipcore.cp,,,None,*parent-bit*,,n/a,n/a,,See details under link,n/a,,,
+offloads,1,Ganlin/Nital,md.hens,int_ipcore,dc,md.hens.int_ipcore,int_ipcore.dc,,,None,*parent-bit*,,n/a,n/a,,See details under link,n/a,,,
+offloads,1,Ganlin/Nital,md.hens,int_ipcore,drbg,md.hens.int_ipcore,int_ipcore.drbg,,,None,*parent-bit*,,n/a,n/a,,See details under link,n/a,,,
+offloads,2,Ganlin/Nital,md.hens,int_ipcore,gcm#,md.hens.int_ipcore,int_ipcore.gcm#,,,None,*parent-bit*,,n/a,n/a,,See details under link,n/a,,,
+offloads,1,Ganlin/Nital,md.hens,int_ipcore,pk,md.hens.int_ipcore,int_ipcore.pk,,,None,*parent-bit*,,n/a,n/a,,See details under link,n/a,,,
+offloads,1,Ganlin/Nital,md.hens,int_ipcore,xts,md.hens.int_ipcore,int_ipcore.xts,,,None,*parent-bit*,,n/a,n/a,,See details under link,n/a,,,
+offloads,1,Ganlin/Nital,md.hens,int_ipcore,xts_enc,md.hens.int_ipcore,int_ipcore.xts_enc,,,None,*parent-bit*,,n/a,n/a,,See details under link,n/a,,,
+offloads,1,Ganlin/Nital,md.hens,int_pk_ecc,correctable_err,md.hens.int_pk_ecc,int_pk_ecc.correctable_err,ecc,,None,error (E),,n/a,n/a,,count,>10 per 1 day,Hardware Error,,send chip to Avago
+offloads,1,Ganlin/Nital,md.hens,int_pk_ecc,uncorrectable_err,md.hens.int_pk_ecc,int_pk_ecc.uncorrectable_err,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,Hardware Error,,send chip to Avago
+offloads,8,Ganlin/Nital,mp.mpns,int_crypto,mpp#,mp.mpns.int_crypto,int_crypto.mpp#,,,None,*parent-bit*,,n/a,n/a,,See details under link,n/a,,,
+memory,2,Patricio,pb.pbc,int_credit_underflow,port_#,pb.pbc.int_credit_underflow,int_credit_underflow.port_#,,,None,fatal (F),,n/a,n/a,,n/a,n/a,Software Error,,
+memory,2,Patricio,pb.pbc,int_ecc_desc_#,correctable,pb.pbc.int_ecc_desc_#,int_ecc_desc_#.correctable,ecc_hw,,None,error (E),,n/a,n/a,,count,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+memory,2,Patricio,pb.pbc,int_ecc_desc_#,uncorrectable,pb.pbc.int_ecc_desc_#,int_ecc_desc_#.uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,Hardware Error,,send chip to Avago
+memory,2,Patricio,pb.pbc,int_ecc_fc_#,correctable,pb.pbc.int_ecc_fc_#,int_ecc_fc_#.correctable,ecc_hw,,None,error (E),,n/a,n/a,,count,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+memory,2,Patricio,pb.pbc,int_ecc_fc_#,uncorrectable,pb.pbc.int_ecc_fc_#,int_ecc_fc_#.uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,Hardware Error,,send chip to Avago
+memory,2,Patricio,pb.pbc,int_ecc_ll_#,correctable,pb.pbc.int_ecc_ll_#,int_ecc_ll_#.correctable,ecc_hw,,None,error (E),,n/a,n/a,,count,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+memory,2,Patricio,pb.pbc,int_ecc_ll_#,uncorrectable,pb.pbc.int_ecc_ll_#,int_ecc_ll_#.uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,Hardware Error,,send chip to Avago
+memory,1,Patricio,pb.pbc,int_ecc_nc,correctable,pb.pbc.int_ecc_nc,int_ecc_nc.correctable,ecc_hw,,None,error (E),,n/a,n/a,,count,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+memory,1,Patricio,pb.pbc,int_ecc_nc,uncorrectable,pb.pbc.int_ecc_nc,int_ecc_nc.uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,Hardware Error,,send chip to Avago
+memory,1,Patricio,pb.pbc,int_ecc_pack,correctable,pb.pbc.int_ecc_pack,int_ecc_pack.correctable,ecc_hw,,None,error (E),,n/a,n/a,,count,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+memory,1,Patricio,pb.pbc,int_ecc_pack,uncorrectable,pb.pbc.int_ecc_pack,int_ecc_pack.uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,Hardware Error,,send chip to Avago
+memory,1,Patricio,pb.pbc,int_ecc_port_mon_in,correctable,pb.pbc.int_ecc_port_mon_in,int_ecc_port_mon_in.correctable,ecc_hw,,None,error (E),,n/a,n/a,,count,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+memory,1,Patricio,pb.pbc,int_ecc_port_mon_in,uncorrectable,pb.pbc.int_ecc_port_mon_in,int_ecc_port_mon_in.uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a, Hardware Error,,send chip to Avago
+memory,1,Patricio,pb.pbc,int_ecc_port_mon_out,correctable,pb.pbc.int_ecc_port_mon_out,int_ecc_port_mon_out.correctable,ecc_hw,,None,error (E),,n/a,n/a,,count,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+memory,1,Patricio,pb.pbc,int_ecc_port_mon_out,uncorrectable,pb.pbc.int_ecc_port_mon_out,int_ecc_port_mon_out.uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,Hardware Error,,send chip to Avago
+memory,1,Patricio,pb.pbc,int_ecc_rc,correctable,pb.pbc.int_ecc_rc,int_ecc_rc.correctable,ecc_hw,,None,error (E),,n/a,n/a,,count,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+memory,1,Patricio,pb.pbc,int_ecc_rc,uncorrectable,pb.pbc.int_ecc_rc,int_ecc_rc.uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,Hardware Error,,send chip to Avago
+memory,1,Patricio,pb.pbc,int_ecc_rwr,correctable,pb.pbc.int_ecc_rwr,int_ecc_rwr.correctable,ecc_hw,,None,error (E),,n/a,n/a,,count,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+memory,1,Patricio,pb.pbc,int_ecc_rwr,uncorrectable,pb.pbc.int_ecc_rwr,int_ecc_rwr.uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,Hardware Error,,send chip to Avago
+memory,1,Patricio,pb.pbc,int_ecc_sched,correctable,pb.pbc.int_ecc_sched,int_ecc_sched.correctable,ecc_hw,,None,error (E),,n/a,n/a,,count,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+memory,1,Patricio,pb.pbc,int_ecc_sched,uncorrectable,pb.pbc.int_ecc_sched,int_ecc_sched.uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,Hardware Error,,send chip to Avago
+memory,1,Patricio,pb.pbc,int_ecc_sideband,pck_correctable,pb.pbc.int_ecc_sideband,int_ecc_sideband.pck_correctable,ecc_hw,,None,error (E),,n/a,n/a,,count,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+memory,1,Patricio,pb.pbc,int_ecc_sideband,pck_uncorrectable,pb.pbc.int_ecc_sideband,int_ecc_sideband.pck_uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,Hardware Error,,send chip to Avago
+memory,1,Patricio,pb.pbc,int_ecc_sideband,rwr_correctable,pb.pbc.int_ecc_sideband,int_ecc_sideband.rwr_correctable,ecc_hw,,None,error (E),,n/a,n/a,,count,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+memory,1,Patricio,pb.pbc,int_ecc_sideband,rwr_uncorrectable,pb.pbc.int_ecc_sideband,int_ecc_sideband.rwr_uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,Hardware Error,,send chip to Avago
+memory,1,Patricio,pb.pbc,int_ecc_sideband,rxd_correctable,pb.pbc.int_ecc_sideband,int_ecc_sideband.rxd_correctable,ecc_hw,,None,error (E),,n/a,n/a,,count,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+memory,1,Patricio,pb.pbc,int_ecc_sideband,rxd_uncorrectable,pb.pbc.int_ecc_sideband,int_ecc_sideband.rxd_uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,Hardware Error,,send chip to Avago
+memory,1,Patricio,pb.pbc,int_ecc_uc,correctable,pb.pbc.int_ecc_uc,int_ecc_uc.correctable,ecc_hw,,None,error (E),,n/a,n/a,,count,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+memory,1,Patricio,pb.pbc,int_ecc_uc,uncorrectable,pb.pbc.int_ecc_uc,int_ecc_uc.uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,Hardware Error,,send chip to Avago
+memory,12,Patricio,pb.pbc,int_pbus_violation_in,eop_eop_in_#,pb.pbc.int_pbus_violation_in,int_pbus_violation_in.eop_eop_in_#,pbus,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,fatal
+memory,12,Patricio,pb.pbc,int_pbus_violation_in,sop_sop_in_#,pb.pbc.int_pbus_violation_in,int_pbus_violation_in.sop_sop_in_#,pbus,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,fatal
+memory,12,Patricio,pb.pbc,int_pbus_violation_out,eop_eop_out_#,pb.pbc.int_pbus_violation_out,int_pbus_violation_out.eop_eop_out_#,pbus,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,fatal
+memory,12,Patricio,pb.pbc,int_pbus_violation_out,sop_sop_out_#,pb.pbc.int_pbus_violation_out,int_pbus_violation_out.sop_sop_out_#,pbus,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,fatal
+memory,1,Patricio,pb.pbc,int_rpl,memory_error,pb.pbc.int_rpl,int_rpl.memory_error,,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,fatal
+memory,1,Patricio,pb.pbc,int_rpl,zero_last_error,pb.pbc.int_rpl,int_rpl.zero_last_error,,,None,info (I),,,,,n/a,n/a,last node of a linked list has 0 valid entries. Not Fatal.,,
+memory,12,Patricio,pb.pbc,int_write_#,credit_growth_error,pb.pbc.int_write_#,int_write_#.credit_growth_error,,,None,fatal (F),,n/a,n/a,,n/a,n/a,Software Error,,
+memory,12,Patricio,pb.pbc,int_write_#,enq_err,pb.pbc.int_write_#,int_write_#.enq_err,,,None,info (I),,,,,n/a,n/a,enqueue error,,
+memory,12,Patricio,pb.pbc,int_write_#,intrinsic_drop,pb.pbc.int_write_#,int_write_#.intrinsic_drop,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+memory,12,Patricio,pb.pbc,int_write_#,min_size_viol,pb.pbc.int_write_#,int_write_#.min_size_viol,,,None,info (I),,,,,n/a,n/a,packet smaller than minimum allowed,,
+memory,12,Patricio,pb.pbc,int_write_#,oq_range,pb.pbc.int_write_#,int_write_#.oq_range,,,None,info (I),,,,,n/a,n/a,tm_oq out of range,,
+memory,12,Patricio,pb.pbc,int_write_#,out_of_cells,pb.pbc.int_write_#,int_write_#.out_of_cells,,,None,info (I),,,,,n/a,n/a,port run out of cells while receiving a packet,,
+memory,12,Patricio,pb.pbc,int_write_#,out_of_cells#,pb.pbc.int_write_#,int_write_#.out_of_cells#,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+memory,12,Patricio,pb.pbc,int_write_#,out_of_credit,pb.pbc.int_write_#,int_write_#.out_of_credit,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+memory,12,Patricio,pb.pbc,int_write_#,port_disabled,pb.pbc.int_write_#,int_write_#.port_disabled,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+memory,12,Patricio,pb.pbc,int_write_#,port_range,pb.pbc.int_write_#,int_write_#.port_range,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+memory,12,Patricio,pb.pbc,int_write_#,tail_drop_cpu,pb.pbc.int_write_#,int_write_#.tail_drop_cpu,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+memory,12,Patricio,pb.pbc,int_write_#,tail_drop_span,pb.pbc.int_write_#,int_write_#.tail_drop_span,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+memory,12,Patricio,pb.pbc,int_write_#,truncation,pb.pbc.int_write_#,int_write_#.truncation,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+memory,12,Patricio,pb.pbc,int_write_#,xoff_timeout,pb.pbc.int_write_#,int_write_#.xoff_timeout,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+memory,1,Patricio,pb.pbc.hbm,int_ecc_hbm_ht,correctable,pb.pbc.hbm.int_ecc_hbm_ht,int_ecc_hbm_ht.correctable,ecc_hw,,None,error (E),,n/a,n/a,,count,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+memory,1,Patricio,pb.pbc.hbm,int_ecc_hbm_ht,uncorrectable,pb.pbc.hbm.int_ecc_hbm_ht,int_ecc_hbm_ht.uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,Hardware Error,,send chip to Avago
+memory,1,Patricio,pb.pbc.hbm,int_ecc_hbm_mtu,correctable,pb.pbc.hbm.int_ecc_hbm_mtu,int_ecc_hbm_mtu.correctable,ecc_hw,,None,error (E),,n/a,n/a,,count,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+memory,1,Patricio,pb.pbc.hbm,int_ecc_hbm_mtu,uncorrectable,pb.pbc.hbm.int_ecc_hbm_mtu,int_ecc_hbm_mtu.uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,Hardware Error,,send chip to Avago
+memory,1,Patricio,pb.pbc.hbm,int_ecc_hbm_rb,cdt_correctable,pb.pbc.hbm.int_ecc_hbm_rb,int_ecc_hbm_rb.cdt_correctable,ecc_hw,,None,error (E),,n/a,n/a,,count,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+memory,1,Patricio,pb.pbc.hbm,int_ecc_hbm_rb,cdt_uncorrectable,pb.pbc.hbm.int_ecc_hbm_rb,int_ecc_hbm_rb.cdt_uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,Hardware Error,,send chip to Avago
+memory,1,Patricio,pb.pbc.hbm,int_ecc_hbm_rb,rb_correctable,pb.pbc.hbm.int_ecc_hbm_rb,int_ecc_hbm_rb.rb_correctable,ecc_hw,,None,error (E),,n/a,n/a,,count,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+memory,1,Patricio,pb.pbc.hbm,int_ecc_hbm_rb,rb_uncorrectable,pb.pbc.hbm.int_ecc_hbm_rb,int_ecc_hbm_rb.rb_uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,Hardware Error,,send chip to Avago
+memory,1,Patricio,pb.pbc.hbm,int_ecc_hbm_wb,correctable,pb.pbc.hbm.int_ecc_hbm_wb,int_ecc_hbm_wb.correctable,ecc_hw,,None,error (E),,n/a,n/a,,count,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+memory,1,Patricio,pb.pbc.hbm,int_ecc_hbm_wb,uncorrectable,pb.pbc.hbm.int_ecc_hbm_wb,int_ecc_hbm_wb.uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,Hardware Error,,send chip to Avago
+memory,1,Patricio,pb.pbc.hbm,int_hbm_axi_err_rsp,ctrl,pb.pbc.hbm.int_hbm_axi_err_rsp,int_hbm_axi_err_rsp.ctrl,axi,,None,error (E),,n/a,n/a,,"fix the address range or program, check slave interrupts",never,"Access to invalid address, missing address range in the NOC, or slave sent back an error",,
+memory,1,Patricio,pb.pbc.hbm,int_hbm_axi_err_rsp,pyld,pb.pbc.hbm.int_hbm_axi_err_rsp,int_hbm_axi_err_rsp.pyld,axi,,None,error (E),,n/a,n/a,,"fix the address range or program, check slave interrupts",never,"Access to invalid address, missing address range in the NOC, or slave sent back an error",,
+memory,1,Patricio,pb.pbc.hbm,int_hbm_axi_err_rsp,r#a,pb.pbc.hbm.int_hbm_axi_err_rsp,int_hbm_axi_err_rsp.r#a,axi,,None,error (E),,n/a,n/a,,"fix the address range or program, check slave interrupts",never,"Access to invalid address, missing address range in the NOC, or slave sent back an error",,
+memory,9,Patricio,pb.pbc.hbm,int_hbm_drop_ctrl,full_#,pb.pbc.hbm.int_hbm_drop_ctrl,int_hbm_drop_ctrl.full_#,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+memory,9,Patricio,pb.pbc.hbm,int_hbm_drop_emergency,stop_#,pb.pbc.hbm.int_hbm_drop_emergency,int_hbm_drop_emergency.stop_#,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+memory,9,Patricio,pb.pbc.hbm,int_hbm_drop_threshold,crossed_#,pb.pbc.hbm.int_hbm_drop_threshold,int_hbm_drop_threshold.crossed_#,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+memory,9,Patricio,pb.pbc.hbm,int_hbm_drop_write_ack,filling_up_#,pb.pbc.hbm.int_hbm_drop_write_ack,int_hbm_drop_write_ack.filling_up_#,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+memory,9,Patricio,pb.pbc.hbm,int_hbm_drop_write_ack,full_#,pb.pbc.hbm.int_hbm_drop_write_ack,int_hbm_drop_write_ack.full_#,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+memory,9,Patricio,pb.pbc.hbm,int_hbm_drop,occupancy_#,pb.pbc.hbm.int_hbm_drop,int_hbm_drop.occupancy_#,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+memory,10,Patricio,pb.pbc.hbm,int_hbm_pbus_violation_in,eop_eop_in_#,pb.pbc.hbm.int_hbm_pbus_violation_in,int_hbm_pbus_violation_in.eop_eop_in_#,pbus,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+memory,10,Patricio,pb.pbc.hbm,int_hbm_pbus_violation_in,sop_sop_in_#,pb.pbc.hbm.int_hbm_pbus_violation_in,int_hbm_pbus_violation_in.sop_sop_in_#,pbus,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+memory,10,Patricio,pb.pbc.hbm,int_hbm_pbus_violation_out,eop_eop_out_#,pb.pbc.hbm.int_hbm_pbus_violation_out,int_hbm_pbus_violation_out.eop_eop_out_#,pbus,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+memory,10,Patricio,pb.pbc.hbm,int_hbm_pbus_violation_out,sop_sop_out_#,pb.pbc.hbm.int_hbm_pbus_violation_out,int_hbm_pbus_violation_out.sop_sop_out_#,pbus,,None,fatal (F),,n/a,n/a,,n/a,n/a,Hardware Error,,
+memory,1,Patricio,pb.pbc.hbm,int_hbm_stop,occupancy_#,pb.pbc.hbm.int_hbm_stop,int_hbm_stop.occupancy_#,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+memory,9,Patricio,pb.pbc.hbm,int_hbm_truncate_no,drop_#,pb.pbc.hbm.int_hbm_truncate_no,int_hbm_truncate_no.drop_#,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+memory,32,Patricio,pb.pbc.hbm,int_hbm_xoff,timeout_#,pb.pbc.hbm.int_hbm_xoff,int_hbm_xoff.timeout_#,,,None,info (I),,n/a,n/a,,n/a,n/a,"Info only, no action",,
+memory,5,Patricio,pm.pbm,int_ecc_col#,correctable,pm.pbm.int_ecc_col#,int_ecc_col#.correctable,ecc_hw,,None,error (E),,n/a,n/a,,count,>10 per 1 day,"ecc correctable single bit SOFT error, expect once per 25 years per chip",,send chip to Avago
+memory,5,Patricio,pm.pbm,int_ecc_col#,uncorrectable,pm.pbm.int_ecc_col#,int_ecc_col#.uncorrectable,ecc,,None,HW-RMA (F),,n/a,n/a,,n/a,n/a,Hardware Error,,send chip to Avago

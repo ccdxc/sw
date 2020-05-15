@@ -57,7 +57,11 @@ typedef struct intr_cfg_s {
     intr_event_cb_t intr_event_cb;
 } intr_cfg_t;
 
+#ifdef ELBA
+extern intr_reg_t elb0;
+#else
 extern intr_reg_t cap0;
+#endif
 extern intr_reg_t all_csrs;
 
 static inline std::string
