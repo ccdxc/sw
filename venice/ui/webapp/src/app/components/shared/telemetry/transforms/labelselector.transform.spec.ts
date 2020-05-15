@@ -2,6 +2,8 @@ import { LabelSelectorTransform } from './labelselector.transform';
 import * as _ from 'lodash';
 import { fakeAsync, tick } from '@angular/core/testing';
 import { FormControl } from '@angular/forms';
+import { setMetricsMetadata } from '@sdk/metrics/generated/metadata';
+import { MetricsMetadataIris } from '@sdk/metrics/generated/iris_metadata';
 
 describe('Label Selector transform', () => {
   let transform: LabelSelectorTransform;
@@ -28,6 +30,10 @@ describe('Label Selector transform', () => {
       }
     }
   };
+
+  beforeEach(() => {
+    setMetricsMetadata(MetricsMetadataIris);
+  });
 
   /**
    * 1. Switching measurements should update the repeater options

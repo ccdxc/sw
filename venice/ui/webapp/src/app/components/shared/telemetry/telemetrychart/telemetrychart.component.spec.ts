@@ -23,6 +23,8 @@ import { AuthService } from '@app/services/auth.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
 import { NetworkService } from '@app/services/generated/network.service';
 import { AuthService as AuthServiceGen } from '@app/services/generated/auth.service';
+import { MetricsMetadataIris } from '@sdk/metrics/generated/iris_metadata';
+import { setMetricsMetadata } from '@sdk/metrics/generated/metadata';
 
 
 @Component({
@@ -70,6 +72,7 @@ describe('TelemetrychartComponent', () => {
   });
 
   beforeEach(() => {
+    setMetricsMetadata(MetricsMetadataIris);
     fixture = TestBed.createComponent(TelemetrychartComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();

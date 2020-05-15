@@ -2,11 +2,16 @@ import { FieldSelectorTransform } from './fieldselector.transform';
 import * as _ from 'lodash';
 import { fakeAsync, tick } from '@angular/core/testing';
 import { FormControl } from '@angular/forms';
-import { MetricsMetadata } from '@sdk/metrics/generated/metadata';
+import { MetricsMetadata, setMetricsMetadata } from '@sdk/metrics/generated/metadata';
+import { MetricsMetadataIris } from '@sdk/metrics/generated/iris_metadata';
 
 describe('Field Selector transform', () => {
   let transform: FieldSelectorTransform;
   let reqMetricsSpy: jasmine.Spy;
+
+  beforeEach(() => {
+    setMetricsMetadata(MetricsMetadataIris);
+  });
 
   /**
    * 1. Switching measurements should update the repeater options

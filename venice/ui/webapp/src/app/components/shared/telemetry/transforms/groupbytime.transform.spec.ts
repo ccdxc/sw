@@ -2,6 +2,8 @@ import { GroupByTimeTransform } from './groupbytime.transform';
 import * as moment from 'moment';
 import { TransformQuery } from './types';
 import { Telemetry_queryMetricsQuerySpec } from '@sdk/v1/models/generated/telemetry_query';
+import { setMetricsMetadata } from '@sdk/metrics/generated/metadata';
+import { MetricsMetadataIris } from '@sdk/metrics/generated/iris_metadata';
 
 interface TestCase {
   maxPoints?: number;
@@ -12,6 +14,9 @@ interface TestCase {
 
 describe('Group by time transform', () => {
   let transform: GroupByTimeTransform;
+  beforeEach(() => {
+    setMetricsMetadata(MetricsMetadataIris);
+  });
 
   it('should transform query', () => {
 
