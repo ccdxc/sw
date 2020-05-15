@@ -29,6 +29,11 @@ def Setup(tc):
     assert(len(naples_nodes) >= 1)
     new_node     = naples_nodes[0]
     tc.new_node  = new_node
+    move_info    = vm_utils.MoveInfo()
+    move_info.new_node = new_node
+    move_info.wl       = w1
+    move_info.old_node = w1.node_name
+    tc.move_info.append(move_info)
     return api.types.status.SUCCESS
 
 def Trigger(tc):
@@ -63,7 +68,8 @@ def Trigger(tc):
     tc.cmd_cookies1.append(cmd_cookie)         
     tc.resp1 = api.Trigger(req)
  
-    vm_utils.do_vmotion(tc, tc.wl, tc.new_node)
+    # vm_utils.do_vmotion(tc, tc.wl, tc.new_node)
+    vm_utils.do_vmotion(tc, True)
 
     #import pdb; pdb.set_trace()
 

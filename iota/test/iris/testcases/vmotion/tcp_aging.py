@@ -45,6 +45,18 @@ def chooseNaples(tc, pair):
     tc.client, tc.server, tc.naples = client, server, naples
     tc.wl       = client 
     tc.old_node = naples
+    # remove the node being used to pick wl for traffic
+    # pick the next node in the naples nodes
+    naples_nodes = tc.Nodes[:]
+    naples_nodes.remove(client.node_name)
+    assert(len(naples_nodes) >= 1)
+    new_node     = naples_nodes[0]
+    move_info    = vm_utils.MoveInfo()
+    move_info.wl       = client 
+    move_info.old_node = client.node_name
+    move_info.new_node = new_node
+    tc.move_info.append(move_info)
+
     return api.types.status.SUCCESS
 
 def Setup(tc):
@@ -148,7 +160,8 @@ def Trigger(tc):
     api.Trigger_AddNaplesCommand(req2, naples.node_name, "/nic/bin/halctl show session --dstport {} --dstip {} | grep ESTABLISHED".format(server_port, server.ip_address))
     tc.cmd_cookies.append(cmd_cookie)
 
-    vm_utils.do_vmotion(tc, tc.wl, tc.new_node)
+     # vm_utils.do_vmotion(tc, tc.wl, tc.new_node)
+     vm_utils.do_vmotion(tc, True)
 
     cmd_cookie = "After moving show session"
     api.Trigger_AddNaplesCommand(req2, naples.node_name, "/nic/bin/halctl show session --dstport {} --dstip {} | grep ESTABLISHED".format(server_port, server.ip_address))

@@ -40,6 +40,12 @@ def Trigger(tc):
     assert(len(naples_nodes) >= 1)
     new_node     = naples_nodes[0]
     tc.new_node  = new_node
+    move_info    = vm_utils.MoveInfo()
+    move_info.new_node = new_node
+    move_info.wl       = wl1
+    move_info.old_node = wl1.node_name
+    tc.move_info.append(move_info)
+
 
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     cmd_cookie = "%s(%s) --> %s(%s)" %\
@@ -89,7 +95,8 @@ def Trigger(tc):
 
     trig_resp = api.Trigger(req)
 
-    vm_utils.do_vmotion(tc, server, new_node)
+     # vm_utils.do_vmotion(tc, server, new_node)
+     vm_utils.do_vmotion(tc, True)
 
     req_after = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 

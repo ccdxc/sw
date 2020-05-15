@@ -50,7 +50,7 @@ testbundles:
         - vmotion/triggers.testbundle
         #- vmotion/clean.testbundle
         #- vmotion/aging.testbundle
-        
+        - vmotion/alg.testbundle
 
 teardown:
     #- step      : verif.utils.collect_logs_and_cores

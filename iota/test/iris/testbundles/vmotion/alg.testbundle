@@ -1,0 +1,31 @@
+meta:
+    name    : vmotion_alg
+    os      : [ esx ]
+    nics    : [ pensando ]
+    #targetcount : 35
+
+testcases:
+   -   name    : TFTP_VM_1
+       testcase: testcases.vmotion.tftp_basic
+       args    :
+            move      : client
+            type      : local
+            #timeout  : 60
+
+   -   name     : FTP_VM_1
+       testcase : testcases.vmotion.ftp_basic
+       iterators:
+            type      : nested
+            mode      : [ active, passive ]
+       args     :
+            move      : client
+            type      : local
+            #timeout   : 60
+
+   -   name    : SUNRPC_VM_1
+       testcase: testcases.vmotion.sunrpc_basic
+       args    :
+            move      : client
+            type      : local
+            #timeout  : 60
+

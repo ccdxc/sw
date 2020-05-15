@@ -1070,7 +1070,8 @@ size_t parse_msrpc_dg_control_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
  */
 hal_ret_t alg_msrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
                          l4_alg_status_t *l4_sess) {
-    uint32_t              payload_offset = ctx.cpu_rxhdr()->payload_offset;
+    uint32_t              payload_offset = ((!ctx.sync_session_request()) ?
+                                             ctx.cpu_rxhdr()->payload_offset : 0);
     hal_ret_t             ret = HAL_RET_OK;
     fte::flow_update_t    flowupd;
     rpc_info_t           *rpc_info = NULL;
