@@ -253,6 +253,8 @@ NBB_VOID evpn_evi_set_fill_func (EvpnEviSpec&    req,
                                  NBB_LONG        row_status);
 NBB_VOID  evpn_ip_vrf_get_fill_func (EvpnIpVrfSpec&   req,
                                      NBB_ULONG*       oid);
+NBB_VOID  evpn_ip_vrf_status_get_fill_func (EvpnIpVrfSpec&   req,
+                                            NBB_ULONG*       oid);
 NBB_VOID  evpn_ip_vrf_set_fill_func (EvpnIpVrfSpec&   req,
                                      AMB_GEN_IPS      *mib_msg,
                                      AMB_EVPN_IP_VRF  *data,

@@ -148,9 +148,9 @@ func evpnVrfStatusShowCmdHandler(cmd *cobra.Command, args []string) error {
 		} else {
 			vpcIDStr := uuid.FromBytesOrNil(ipVrf.Spec.GetVPCId()).String()
 			if doDetail {
-				fmt.Printf(evpnIPVrfDetStr, vpcIDStr, ipVrf.Spec.VNI, ipVrf.Spec.RD)
+				fmt.Printf(evpnIPVrfDetStr, vpcIDStr, ipVrf.Spec.VNI, ipVrf.Status.RD)
 			} else {
-				fmt.Printf(evpnIPVrfFmt, vpcIDStr, ipVrf.Spec.VNI, ipVrf.Spec.RD)
+				fmt.Printf(evpnIPVrfFmt, vpcIDStr, ipVrf.Spec.VNI, ipVrf.Status.RD)
 				fmt.Printf("\n")
 			}
 		}

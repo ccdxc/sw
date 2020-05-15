@@ -24,6 +24,12 @@ def process_response(req_msg, resp_msg):
             print ("-----------------------");
             print ("Spec: VNI :%d"%spec.VNI)
             print ("Spec: RD: %s"%spec.RD)
+            status = resp.Status
+            print ("Oper RD: "),
+            for i in status.RD:
+                mm=int(i.encode('hex'),16)
+                print(hex(mm) ),
+            print
     else:
         print ("Op Success")
     return

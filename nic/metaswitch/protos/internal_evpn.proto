@@ -221,6 +221,20 @@ message EvpnIpVrfSpec {
 
 // operational status of EVPN IP VRF, if any
 message EvpnIpVrfStatus {
+  option (venice.pdsaGetGlobOpts) = {
+    OidLen:  "AMB_EVPN_IP_VRF_OID_LEN",
+    Mib:     "evpnIpVrfTable",
+    FillFn:  "evpn_ip_vrf_status_get_fill_func"
+    SpecMsg: "EvpnIpVrfSpec"
+  };
+
+  // in use route-distinguisher of the IP VRF
+  bytes          RD     = 1 [(venice.pdsaFields) = {Field:"rd_in_use"}];
+  // operational status of the IP VRF
+  EvpnOperStatus Status = 2 [(venice.pdsaFields) = {Field:"oper_status"}];
+
+  // Internal only
+  string VRFName = 1000 [(venice.pdsaFields) = {Field:"vrf_name", SetKeyOidIndex: "AMB_EVPN_IP_VRF_NAME_INDEX", SetKeyOidLenIndex: "AMB_EVPN_IP_VRF_NAME_LEN_INDEX", GetKeyOidIndex: "AMB_EVPN_IP_VRF_NAME_INDEX", GetKeyOidLenIndex: "AMB_EVPN_IP_VRF_NAME_LEN_INDEX", IsInternalField: true}];
 }
 
 // EVPN IP VRF object

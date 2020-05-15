@@ -716,6 +716,13 @@ evpn_ip_vrf_get_fill_func (EvpnIpVrfSpec&   req,
 }
 
 NBB_VOID
+evpn_ip_vrf_status_get_fill_func (EvpnIpVrfSpec&   req,
+                                  NBB_ULONG*       oid)
+{
+    oid[AMB_EVPN_IP_VRF_ENT_INDEX]  = PDS_MS_EVPN_ENT_INDEX;
+}
+
+NBB_VOID
 evpn_ip_vrf_set_fill_func (EvpnIpVrfSpec&   req,
                        AMB_GEN_IPS      *mib_msg,
                        AMB_EVPN_IP_VRF  *data,

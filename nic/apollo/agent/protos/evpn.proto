@@ -163,6 +163,10 @@ message EvpnIpVrfSpec {
 
 // operational status of EVPN IP VRF, if any
 message EvpnIpVrfStatus {
+  // in use route-distinguisher of the IP VRF
+  bytes          RD     = 1;
+  // operational status of the IP VRF
+  EvpnOperStatus Status = 2;
 }
 
 // EVPN IP VRF object

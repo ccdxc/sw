@@ -907,11 +907,15 @@ func NewEvpnIpVrfSpec(in *pds.EvpnIpVrfSpec) ShadowEvpnIpVrfSpec {
 
 // ShadowEvpnIpVrfStatus shadows the EvpnIpVrfStatus for CLI purposes
 type ShadowEvpnIpVrfStatus struct {
+	RD     string
+	Status string
 	*pds.EvpnIpVrfStatus
 }
 
 func NewEvpnIpVrfStatus(in *pds.EvpnIpVrfStatus) ShadowEvpnIpVrfStatus {
 	return ShadowEvpnIpVrfStatus{
+		RD:              printRD(in.RD),
+		Status:          strings.TrimPrefix(in.Status.String(), "EVPN_OPER_STATUS_"),
 		EvpnIpVrfStatus: in,
 	}
 }
