@@ -44,7 +44,6 @@ var _ = Describe("TechSupport", func() {
 
 	Context("Naples TechSupport cases", func() {
 		It("Request Techsupport for 1DSC", func() {
-			//Skip("Disabling test for sanity")
 			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling on naples sim until FRU mac is used for Nodes")
 			}
@@ -68,7 +67,7 @@ var _ = Describe("TechSupport", func() {
 			// verify if techsupport request got completed successfully
 			Eventually(func() error {
 				return ts.model.VerifyTechsupport(techsupportName)
-			}, 2*time.Minute, 30*time.Second).Should(Succeed())
+			}, 5*time.Minute, 30*time.Second).Should(Succeed())
 
 			// TODO: Add File validations
 
@@ -84,7 +83,6 @@ var _ = Describe("TechSupport", func() {
 		})
 
 		It("Request Techsupport for All nodes", func() {
-			//Skip("Disabling test for sanity")
 			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling on naples sim until FRU mac is used for Nodes")
 			}
@@ -134,8 +132,6 @@ var _ = Describe("TechSupport", func() {
 
 	Context("Negative TechSupport cases", func() {
 		It("Request Techsupport for 0 Nodes", func() {
-			//Skip("Disabling test for sanity")
-
 			var nodeNames []string
 
 			techsupportName := "techsupport-neg-1"
@@ -161,7 +157,6 @@ var _ = Describe("TechSupport", func() {
 		})
 
 		It("Delete non-requested Techsupport", func() {
-			//Skip("Disabling test for sanity")
 			techsupportName := "techsupport-neg-3"
 
 			// verify if delete techsupport request fails
@@ -173,7 +168,6 @@ var _ = Describe("TechSupport", func() {
 		})
 
 		It("Request Techsupport for invalid node", func() {
-			//Skip("Disabling test for sanity")
 			var nodeNames []string
 
 			techsupportName := "techsupport-neg-4"
