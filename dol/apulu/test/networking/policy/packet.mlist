@@ -1,0 +1,66 @@
+# Feature networking Modules List for Local to Local scenario
+feature:
+    id          : policy
+    sub         : packet
+    package     : test.networking
+    module      : policy
+    runorder    : 500
+    enable      : True
+    ignore      : True
+
+modules:
+
+    - module:
+        name    : L2L_SUBNET_IPV4_TCP_QTAG  #same subnet
+        spec    : local2local.testspec
+        enable  : False      # remove this once multiple vnics per subnet supported
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2L,L2LType=SAME_SUBNET,Label=NETWORKING
+              vnic : filter://Dot1Qenabled=False
+
+    - module:
+        name    : L2L_VNIC_IPV4_TCP
+        spec    : local2local.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2L,L2LType=SAME_VNIC,Label=NETWORKING
+              vnic : filter://Dot1Qenabled=False
+
+    - module:
+        name    : L2R_L2_IPV4_TCP   # same subnet
+        spec    : local2remote.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+              vnic : filter://Dot1Qenabled=False
+
+    - module:
+        name    : L2R_L3_IPV4_TCP   # inter subnet
+        spec    : local2remote.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
+              vnic : filter://Dot1Qenabled=False
+
+    - module:
+        name    : R2L_L2_IPV4_TCP_ENCAP    # same subnet
+        spec    : remote2local.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+              vnic : filter://Dot1Qenabled=False
+
+    - module:
+        name    : R2L_L3_IPV4_TCP_ENCAP    # inter subnet
+        spec    : remote2local.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
+              vnic : filter://Dot1Qenabled=False
+
+    - module:
+        name    : N2L_IPV4_UDP_ENCAP
+        spec    : igw2local.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW,Label=NETWORKING
+
+    - module:
+        name    : L2N_IPV4_UDP_QTAG
+        spec    : local2igw.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW,Label=NETWORKING
