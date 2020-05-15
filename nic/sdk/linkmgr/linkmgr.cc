@@ -1513,12 +1513,13 @@ port_shutdown (void *pd_p)
 {
     port *port_p = (port *)pd_p;
 
-    return port_p->port_disable();
+    return port::port_disable(port_p);
 }
 
 sdk_ret_t
 port_pb_shutdown (void *pd_p)
 {
+    // it is ok to call this in the caller context as it is an asic call
     port *port_p = (port *)pd_p;
 
     return port_p->port_pb_enable(false);

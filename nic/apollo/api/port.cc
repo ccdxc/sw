@@ -175,7 +175,7 @@ port_shutdown_walk_cb (void *entry, void *ctxt)
     if (ctx->port_shutdown) {
         ret = sdk::linkmgr::port_shutdown(intf->port_info());
     } else if (ctx->port_pb_shutdown) {
-        ret = sdk::linkmgr::port_shutdown(intf->port_info());
+        ret = sdk::linkmgr::port_pb_shutdown(intf->port_info());
     } else {
         ret = SDK_RET_ERR;
     }

@@ -28,7 +28,7 @@
             "//": "stops external communication channels and",
             "//": "prepare for B bringup",
             "svc": {
-                "rsp_timeout": "300000"
+                "rsp_timeout": "600000"
             },
             "events": [
                 { "name": "svc_rsp_ok",   "next_stage": "backup" },

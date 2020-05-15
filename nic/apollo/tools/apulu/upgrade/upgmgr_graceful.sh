@@ -34,6 +34,10 @@ elif [[ $STAGE_NAME == "UPG_STAGE_PREP_SWITCHOVER" && $STAGE_TYPE == "POST" ]]; 
     upgmgr_backup
     [[ $? -ne 0 ]] && echo "Files backup failed!" && exit 1
 
+elif [[ $STAGE_NAME == "UPG_STAGE_RESPAWN" && $STAGE_TYPE == "PRE" ]]; then
+    reload_drivers
+    upgmgr_set_init_mode "graceful"
+
 elif [[ $STAGE_NAME == "UPG_STAGE_SWITCHOVER" && $STAGE_TYPE == "PRE" ]]; then
     upgmgr_set_init_mode "graceful"
 

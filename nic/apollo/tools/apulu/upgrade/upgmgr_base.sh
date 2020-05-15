@@ -87,3 +87,18 @@ function upgmgr_restore() {
     # TODO : check graceful upgrade and validate the file existance
     mv /update/pds_api_upgdata /dev/shm/pds_api_upgrade
 }
+
+function reload_drivers() {
+    echo "Reloading mnic drivers"
+    rmmod mnet mnet_uio_pdrv_genirq ionic_mnic
+
+    # load kernel modules for mnics
+    insmod $PDSPKG_TOPDIR/bin/ionic_mnic.ko &> $NON_PERSISTENT_LOGDIR/ionic_mnic_load.log
+    [[ $? -ne 0 ]] && echo "Aborting reload, failed to load mnic driver!" && exit 1
+
+    insmod $PDSPKG_TOPDIR/bin/mnet_uio_pdrv_genirq.ko &> $NON_PERSISTENT_LOGDIR/mnet_uio_pdrv_genirq_load.log
+    [[ $? -ne 0 ]] && echo "Aborting reload, failed to load mnet_uio_pdrv_genirq driver!" && exit 1
+
+    insmod $PDSPKG_TOPDIR/bin/mnet.ko &> $NON_PERSISTENT_LOGDIR/mnet_load.log
+    [[ $? -ne 0 ]] && echo "Aborting reload, failed to load mnet driver!" && exit 1
+}

@@ -15,6 +15,7 @@ public:
     virtual void ProcessDied(std::string name, pid_t pid,
                              std::string reason) override;
     void SwitchRoot(void);
+    void RespawnProcesses(void);
 private:
     bus_api_t *api_;
 
@@ -25,6 +26,15 @@ SysmgrBusPtr
 init_bus (bus_api_t *api)
 {
     return std::make_shared<PenIPCBus>(api);
+}
+
+static sdk_ret_t
+upg_respawn_cb (sdk::upg::upg_ev_params_t *params)
+{
+    PenIPCBus *bus = (PenIPCBus *)params->svc_ctx;
+    bus->RespawnProcesses();
+
+    return SDK_RET_OK;
 }
 
 static sdk_ret_t
@@ -46,6 +56,7 @@ PenIPCBus::PenIPCBus(bus_api_t *api) {
     snprintf(upg_ev.svc_name, SDK_MAX_NAME_LEN, "sysmgr");
     upg_ev.svc_ipc_id = PDS_IPC_ID_SYSMGR;
     upg_ev.switchover_hdlr = upg_switchover_cb;
+    upg_ev.respawn_hdlr = upg_respawn_cb;
     upg_ev.svc_ctx = this;
     sdk::upg::upg_ev_hdlr_register(upg_ev);
 }
@@ -53,6 +64,11 @@ PenIPCBus::PenIPCBus(bus_api_t *api) {
 void
 PenIPCBus::SwitchRoot(void) {
     this->api_->switchroot();
+}
+
+void
+PenIPCBus::RespawnProcesses(void) {
+    this->api_->respawn_processes();
 }
 
 void
