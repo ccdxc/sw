@@ -346,6 +346,8 @@ message LifStatus {
   IfStatus AdminState = 3;
   // operational status of this lif
   IfStatus Status     = 4;
+  // nexthop hw idx of this lif, if any
+  uint32   NhIndex    = 5;
 }
 
 message LifStats {

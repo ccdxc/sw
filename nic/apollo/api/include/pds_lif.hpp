@@ -38,6 +38,8 @@ typedef struct pds_lif_spec_s {
 typedef struct pds_lif_status_s {
     ///< encoded interface index of this lif
     if_index_t     ifindex;
+    ///< nexthop hw index of this lif, if any
+    uint32_t       nh_idx;
     ///< name of the lif (as seen on host)
     char           name[SDK_MAX_NAME_LEN];
     ///< admin state of the lif
