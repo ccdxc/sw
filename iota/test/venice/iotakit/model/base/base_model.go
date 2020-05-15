@@ -11,11 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fatih/color"
-	"github.com/olekukonko/tablewriter"
-	"github.com/onsi/ginkgo"
-	"github.com/onsi/ginkgo/config"
-	"github.com/onsi/ginkgo/types"
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/monitoring"
@@ -29,43 +24,19 @@ import (
 	"github.com/pensando/sw/iota/test/venice/iotakit/cfg/objClient"
 	"github.com/pensando/sw/iota/test/venice/iotakit/model/common"
 	"github.com/pensando/sw/iota/test/venice/iotakit/model/objects"
+	reporter "github.com/pensando/sw/iota/test/venice/iotakit/model/reporter"
 	modelUtils "github.com/pensando/sw/iota/test/venice/iotakit/model/utils"
 	"github.com/pensando/sw/iota/test/venice/iotakit/testbed"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/willf/bitset"
 )
 
-// TestCaseResult stores test case results
-type TestCaseResult struct {
-	failCount int
-	passCount int
-	skipCount int
-	duration  time.Duration
-}
-
-// TestGroupResult stores test case results
-type TestGroupResult struct {
-	duration  time.Duration
-	failCount int
-	passCount int
-	skipCount int
-	results   map[string]*TestCaseResult
-}
-
-// TestBundleResult stores test case results
-type TestBundleResult struct {
-	duration  time.Duration
-	failCount int
-	passCount int
-	skipCount int
-	results   map[string]*TestGroupResult
-}
-
 //RunVerifySystemHealth run system health verification
 type RunVerifySystemHealth func(collectLogOnErr bool) error
 
 // SysModel represents a objects.of the system under test
 type SysModel struct {
+	reporter.Reporter
 	Type                  common.ModelType
 	RandomTrigger         common.RunRandomTrigger
 	RunVerifySystemHealth RunVerifySystemHealth
@@ -88,15 +59,11 @@ type SysModel struct {
 	NoSetupDataPathAfterSwitch bool     // temp flag to set up datapath post naples
 	AutoDiscovery              bool     //whether discovery of venice from naples is auto
 
-	SkipSetup    bool             //to do skip setup or not
-	SkipConfig   bool             //to do skip reboot or not
-	Tb           *testbed.TestBed // testbed
-	Scale        bool
-	ScaleData    bool
-	testResult   map[string]bool            // test result
-	taskResult   map[string]error           // sub task result
-	caseResult   map[string]*TestCaseResult // test case result counts
-	bundleResult map[string]*TestBundleResult
+	SkipSetup  bool             //to do skip setup or not
+	SkipConfig bool             //to do skip reboot or not
+	Tb         *testbed.TestBed // testbed
+	Scale      bool
+	ScaleData  bool
 }
 
 // Init init sys model
@@ -112,19 +79,43 @@ func (sm *SysModel) Init(tb *testbed.TestBed, cfgType enterprise.CfgType, reinit
 	sm.FakeNaples = make(map[string]*objects.Naples)
 	sm.FakeHosts = make(map[string]*objects.Host)
 	sm.WorkloadsObjs = make(map[string]*objects.Workload)
-
-	if !reinit {
-		sm.testResult = make(map[string]bool)
-		sm.taskResult = make(map[string]error)
-		sm.caseResult = make(map[string]*TestCaseResult)
-		sm.bundleResult = make(map[string]*TestBundleResult)
-	}
+	sm.Reporter = reporter.NewReporter(sm)
 
 	sm.SkipSetup = os.Getenv("SKIP_SETUP") != "" || reinit
 	sm.RandomTrigger = sm.RunRandomTrigger
 	sm.RunVerifySystemHealth = sm.VerifySystemHealth
 
 	return nil
+}
+
+const defaultStyle = "\x1b[0m"
+const boldStyle = "\x1b[1m"
+const redColor = "\x1b[91m"
+const greenColor = "\x1b[32m"
+const yellowColor = "\x1b[33m"
+const cyanColor = "\x1b[36m"
+const grayColor = "\x1b[90m"
+const lightGrayColor = "\x1b[37m"
+
+func (sm *SysModel) BeforeTestCallback() {
+
+	if os.Getenv("RANDOM_TRIGGER") != "" {
+		err := sm.RandomTrigger(100)
+		if err != nil {
+			log.Errorf("")
+			fmt.Printf("%s%sRunning Random trigger failed %s\n", redColor, boldStyle, defaultStyle)
+			sm.ModelExit()
+		}
+	}
+}
+
+func (sm *SysModel) AfterTestCallback() {
+	sm.AfterTestCommon()
+}
+
+func (sm *SysModel) FailTest(bundleName, groupName, tcName string) {
+	tcDir := modelLogsDir + "/" + "'" + bundleName + "'" + "/" + "'" + groupName + "'" + "/" + "'" + tcName + "'"
+	sm.DownloadTechsupport(tcDir)
 }
 
 // Testbed get testbed obj
@@ -135,6 +126,16 @@ func (sm *SysModel) Testbed() *testbed.TestBed {
 // ConfigClient get objclient
 func (sm *SysModel) ConfigClient() objClient.ObjClient {
 	return sm.CfgModel.ObjClient()
+}
+
+//SetReporter set reporter instance
+func (sm *SysModel) SetReporter(rep reporter.Reporter) {
+	sm.Reporter = rep
+}
+
+//GetReporter gets reporter instance
+func (sm *SysModel) GetReporter() reporter.Reporter {
+	return sm.Reporter
 }
 
 func (sm *SysModel) enableSSHDOnNaples(nodes []*testbed.TestNode) error {
@@ -788,25 +789,6 @@ func (sm *SysModel) modifyConfig() error {
 	log.Infof("Modifying config as per model spec")
 	cfgObjects := sm.GetCfgObjects()
 
-	if os.Getenv("DYNAMIC_IP") != "" {
-		// Workloads to get IP dynamically. reset static IP
-		for _, workload := range cfgObjects.Workloads {
-			workload.Spec.Interfaces[0].IpAddresses[0] = ""
-		}
-	}
-
-	// Workloads DHCP server for all testbeds is configured with 20.20.<testbed-id>.1
-	server := "20.20.0.1"
-	id, iderr := strconv.ParseInt(sm.Tb.ID(), 10, 64)
-	if iderr == nil {
-		server = fmt.Sprintf("20.20.%v.1", id)
-	}
-
-	for _, ipam := range cfgObjects.Ipams {
-		ipam.Spec.DHCPRelay.Servers[0].IPAddress = server
-		log.Infof("IPAM %v's DHCPServer: %v\n", ipam.Name, ipam.Spec.DHCPRelay.Servers[0].IPAddress)
-	}
-
 	//For base model, network not set
 	for i := range cfgObjects.Workloads {
 		for j := range cfgObjects.Workloads[i].Spec.Interfaces {
@@ -833,10 +815,6 @@ func (sm *SysModel) InitConfig(scale, scaleData bool) error {
 			dscs = append(dscs, inst.Dsc)
 		}
 		cfgParams.Dscs = append(cfgParams.Dscs, dscs)
-		for index, ncfg := range naples.GetTestNode().NaplesConfigs.Configs {
-			naples.Instances[index].LoopbackIP = sm.Tb.GetLoopBackIP(naples.GetIotaNode().Name, index+1)
-			cfgParams.NaplesLoopBackIPs[convertToVeniceFormatMac(ncfg.NodeUuid)] = naples.Instances[index].LoopbackIP
-		}
 	}
 
 	index := 0
@@ -851,9 +829,6 @@ func (sm *SysModel) InitConfig(scale, scaleData bool) error {
 	for _, naples := range sm.FakeNaples {
 		//cfgParams.Dscs = append(cfgParams.Dscs, naples.SmartNic)
 		cfgParams.FakeDscs = append(cfgParams.FakeDscs, naples.Instances[0].Dsc)
-		//node uuid already in format
-		cfgParams.NaplesLoopBackIPs[naples.Instances[0].Dsc.Status.PrimaryMAC] = naples.IP()
-		naples.Instances[0].LoopbackIP = naples.IP()
 	}
 
 	for _, node := range sm.VeniceNodeMap {
@@ -1042,58 +1017,10 @@ func (sm *SysModel) AfterTestCommon() error {
 	return nil
 }
 
-// AddTaskResult adds a sub task result to summary
-func (sm *SysModel) AddTaskResult(taskName string, err error) {
-	testInfo := ginkgo.CurrentGinkgoTestDescription()
-	/*if err != nil && os.Getenv("STOP_ON_ERROR") != "" {
-		fmt.Printf("\n ------ %v |%v ------\n", strings.Join(testInfo.ComponentTexts, "|"), taskName)
-		fmt.Printf("\n------------------ Test Failed exiting--------------------\n")
-		os.Exit(1)
-	} */
-
-	bundleName := testInfo.ComponentTexts[0]
-	groupName := testInfo.ComponentTexts[1]
-	testcaseDescr := testInfo.ComponentTexts[2]
-
-	bundleResult, ok := sm.bundleResult[bundleName]
-	if !ok {
-		sm.bundleResult[bundleName] = &TestBundleResult{}
-		bundleResult = sm.bundleResult[bundleName]
-		bundleResult.results = make(map[string]*TestGroupResult)
-	}
-
-	groupResult, ok := bundleResult.results[groupName]
-	if !ok {
-		bundleResult.results[groupName] = &TestGroupResult{}
-		groupResult = bundleResult.results[groupName]
-		groupResult.results = make(map[string]*TestCaseResult)
-	}
-
-	testcaseResult, ok := groupResult.results[testcaseDescr]
-	if !ok {
-		groupResult.results[testcaseDescr] = &TestCaseResult{}
-		testcaseResult = groupResult.results[testcaseDescr]
-	}
-
-	if err == nil {
-		testcaseResult.passCount++
-		groupResult.passCount++
-		bundleResult.passCount++
-	} else {
-		testcaseResult.failCount++
-		groupResult.failCount++
-		bundleResult.failCount++
-	}
-	testcaseResult.duration = testInfo.Duration
-	groupResult.duration += testInfo.Duration
-	bundleResult.duration += testInfo.Duration
-
-}
-
 func (sm *SysModel) combineLogs() {
 
 	// create a tar.gz from all log files
-	cmdStr := fmt.Sprintf("pushd %s/src/github.com/pensando/sw/iota && tar cvzf venice-iota.tgz *.log logs  && popd", os.Getenv("GOPATH"))
+	cmdStr := fmt.Sprintf("pushd %s/src/github.com/pensando/sw/iota && tar cvzf venice-iota.tgz *.log logs && mv venice-iota.tgz logs/  && popd", os.Getenv("GOPATH"))
 	cmd := exec.Command("bash", "-c", cmdStr)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -1112,180 +1039,7 @@ func (sm *SysModel) combineLogs() {
 // PrintResult prints test result summary
 func (sm *SysModel) PrintResult() {
 	sm.combineLogs()
-	fmt.Printf("==========================================================================================================================================\n")
-	fmt.Printf("                Test Results \n")
-	fmt.Printf("==========================================================================================================================================\n")
-
-	totalCases := 0
-	totalPass := 0
-	totalFail := 0
-	totalSkipped := 0
-	var totalDuration time.Duration
-
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"TestCase", "Bundle", "Group", "Result", "Time"})
-	//	table.SetAutoMergeCells(true)
-	table.SetBorder(false) // Set Border to false
-	table.SetRowLine(true) // Enable row line
-	// Change table lines
-	table.SetCenterSeparator("*")
-	table.SetColumnSeparator("╪")
-	table.SetRowSeparator("-")
-
-	data := [][]string{}
-	for bundleName, bundle := range sm.bundleResult {
-
-		for groupName, group := range bundle.results {
-
-			for tcName, tcData := range group.results {
-				if tcData.skipCount != 0 {
-					continue
-				}
-				result := fmt.Sprintf("%sPASS%s", greenColor, defaultStyle)
-				if tcData.failCount != 0 {
-					result = fmt.Sprintf("%sFAIL%s", redColor, defaultStyle)
-				}
-				data = append(data, []string{tcName, bundleName, groupName, result, tcData.duration.String()})
-			}
-		}
-
-		//	fmt.Printf("              Bundle Summary Total Cases : %v %s Pass  : %v  %s Fail : %v %s Skipped : %v %s Duration %v \n", bundle.passCount+bundle.failCount,
-		//greenColor, bundle.passCount, redColor, bundle.failCount, yellowColor, bundle.skipCount, defaultStyle, bundle.duration.String())
-		totalCases += bundle.passCount + bundle.failCount + bundle.skipCount
-		totalPass += bundle.passCount
-		totalFail += bundle.failCount
-		totalSkipped += bundle.skipCount
-		totalDuration += bundle.duration
-
-	}
-	table.AppendBulk(data) // Add Bulk Data
-	table.Render()
-	fmt.Printf("==========================================================================================================================================\n")
-	fmt.Printf("              Overall Run Summary Total Cases : %v %s Pass  : %v  %s Fail : %v %s Skipped : %v %s Duration %v \n", totalCases,
-		greenColor, totalPass, redColor, totalFail, yellowColor, totalSkipped, defaultStyle, totalDuration.String())
-	fmt.Printf("==========================================================================================================================================\n")
-
-}
-
-const defaultStyle = "\x1b[0m"
-const boldStyle = "\x1b[1m"
-const redColor = "\x1b[91m"
-const greenColor = "\x1b[32m"
-const yellowColor = "\x1b[33m"
-const cyanColor = "\x1b[36m"
-const grayColor = "\x1b[90m"
-const lightGrayColor = "\x1b[37m"
-
-func (sm *SysModel) SpecSuiteWillBegin(config config.GinkgoConfigType, summary *types.SuiteSummary) {
-
-}
-func (sm *SysModel) BeforeSuiteDidRun(setupSummary *types.SetupSummary) {
-
-}
-
-func (sm *SysModel) SpecWillRun(specSummary *types.SpecSummary) {
-	var testcaseDescr string
-	bundleName := specSummary.ComponentTexts[1]
-	groupName := specSummary.ComponentTexts[2]
-	if len(specSummary.ComponentTexts) > 3 {
-		testcaseDescr = specSummary.ComponentTexts[3]
-	}
-	if !specSummary.Skipped() {
-		fmt.Printf("%sRunning Test :%v:%v:%v%s\n", boldStyle, color.GreenString(bundleName), groupName, testcaseDescr, defaultStyle)
-	}
-
-	if os.Getenv("RANDOM_TRIGGER") != "" {
-		err := sm.RandomTrigger(100)
-		if err != nil {
-			log.Errorf("")
-			fmt.Printf("%s%sRunning Random trigger failed %s\n", redColor, boldStyle, defaultStyle)
-			sm.ModelExit()
-		}
-	}
-}
-
-func (sm *SysModel) SpecDidComplete(specSummary *types.SpecSummary) {
-	var testcaseDescr string
-	bundleName := specSummary.ComponentTexts[1]
-	groupName := specSummary.ComponentTexts[2]
-
-	if len(specSummary.ComponentTexts) > 3 {
-		testcaseDescr = specSummary.ComponentTexts[3]
-	}
-
-	tcDir := modelLogsDir + "/" + "'" + bundleName + "'" + "/" + "'" + groupName + "'" + "/" + "'" + testcaseDescr + "'"
-	if !specSummary.Skipped() {
-		resultColor := greenColor
-		resultString := "PASS"
-		if specSummary.Failed() {
-			resultColor = redColor
-			resultString = "FAIL"
-			fmt.Printf("%s%s%s\n", redColor, "Failure", defaultStyle)
-			fmt.Printf("\t%v\n", specSummary.Failure.ComponentCodeLocation.String())
-			fmt.Printf("%s%s%s\n", redColor, specSummary.Failure.Message, defaultStyle)
-			fmt.Printf("\t%v\n", specSummary.Failure.Location.String())
-			sm.DownloadTechsupport(tcDir)
-		} else if specSummary.Panicked() {
-			resultString = "FAIL"
-			fmt.Printf("%s%s%s\n", redColor, "Panicked", defaultStyle)
-			fmt.Printf("%s%s%s\n", redColor, specSummary.Failure.ForwardedPanic, defaultStyle)
-			fmt.Printf("\t%v\n", specSummary.Failure.Location.String())
-			fmt.Printf("%s%s%s\n", redColor, "Full Stack Trace", defaultStyle)
-			fmt.Printf("\t%v\n", specSummary.Failure.Location.FullStackTrace)
-		}
-		fmt.Printf("%sCompleted Test :%v:%v:%v:Result:%s%v%s\n", boldStyle, color.GreenString(bundleName),
-			groupName, testcaseDescr, resultColor, resultString, defaultStyle)
-	} else {
-		fmt.Printf("%sSkipped Test :%v:%v:%v %s\n", boldStyle, color.GreenString(bundleName), groupName, testcaseDescr, defaultStyle)
-	}
-
-	bundleResult, ok := sm.bundleResult[bundleName]
-	if !ok {
-		sm.bundleResult[bundleName] = &TestBundleResult{}
-		bundleResult = sm.bundleResult[bundleName]
-		bundleResult.results = make(map[string]*TestGroupResult)
-	}
-
-	groupResult, ok := bundleResult.results[groupName]
-	if !ok {
-		bundleResult.results[groupName] = &TestGroupResult{}
-		groupResult = bundleResult.results[groupName]
-		groupResult.results = make(map[string]*TestCaseResult)
-	}
-
-	testcaseResult, ok := groupResult.results[testcaseDescr]
-	if !ok {
-		groupResult.results[testcaseDescr] = &TestCaseResult{}
-		testcaseResult = groupResult.results[testcaseDescr]
-	}
-
-	testcaseResult.duration = specSummary.RunTime
-	groupResult.duration += specSummary.RunTime
-	bundleResult.duration += specSummary.RunTime
-	if !specSummary.Skipped() {
-		if specSummary.Failed() {
-			testcaseResult.failCount++
-			groupResult.failCount++
-			bundleResult.failCount++
-		} else {
-			testcaseResult.passCount++
-			groupResult.passCount++
-			bundleResult.passCount++
-		}
-		//Make sure system in good state
-		sm.AfterTestCommon()
-	} else {
-		testcaseResult.skipCount++
-		groupResult.skipCount++
-		bundleResult.skipCount++
-	}
-
-}
-
-func (sm *SysModel) AfterSuiteDidRun(setupSummary *types.SetupSummary) {
-}
-func (sm *SysModel) SpecSuiteDidEnd(summary *types.SuiteSummary) {
-
+	sm.Reporter.PrintReport()
 }
 
 func (sm *SysModel) ModelExit() {

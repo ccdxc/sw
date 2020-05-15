@@ -27,6 +27,13 @@ func TestCfgenPolicyGen(t *testing.T) {
 	cfg.NumOfIPAMPsPerTenant = 1
 	cfg.WorkloadParams.InterfacesPerWorkload = 2
 
+	cfg.NumOfTenants = 50
+	cfg.NumOfVRFsPerTenant = 1
+	cfg.NumOfSubnetsPerVpc = 6
+	cfg.NumOfIPAMPsPerTenant = 1
+	cfg.NumUnderlayRoutingConfigs = 1 // Same as other AS number
+	cfg.NumUnderlayNeighbors = 1      //TOR AS nubr
+
 	// create smartnic macs from a template
 	smartnics := []*cluster.DistributedServiceCard{}
 	snicsFile := os.Getenv("SNICS_FILE")

@@ -4,7 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/onsi/ginkgo"
+	"github.com/pensando/sw/iota/test/venice/iotakit/model/reporter"
+
 	"github.com/onsi/gomega"
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/api/generated/rollout"
@@ -41,7 +42,7 @@ type SysModelInterface interface {
 	ConfigIntf
 	ObjectIntf
 	common.TriggerIntf
-	ginkgo.Reporter
+	reporter.Reporter
 
 	ForEachHost(fn objects.HostIteratorFn) error
 	ForEachNaples(fn objects.NaplesIteratorFn) error
@@ -50,6 +51,8 @@ type SysModelInterface interface {
 
 	PrintResult()
 	Testbed() *testbed.TestBed
+	SetReporter(reporter.Reporter)
+	GetReporter() reporter.Reporter
 	//deleteWorkload(wr *objects.Workload) error
 	//findWorkload(name string) *objects.Workload
 }
@@ -239,15 +242,21 @@ func NewSysModel(tb *testbed.TestBed) (SysModelInterface, error) {
 }
 
 func ReinitSysModel(model SysModelInterface, modelType common.ModelType) (SysModelInterface, error) {
+	var nm SysModelInterface
+	var err error
 	switch modelType {
 	case VcenterModel:
-		return factory.NewVcenterSysModel(model.Testbed(), cfgModel.VcenterCfgType, true)
+		nm, err = factory.NewVcenterSysModel(model.Testbed(), cfgModel.VcenterCfgType, true)
 	case CloudModel:
-		return factory.NewCloudSysModel(model.Testbed(), cfgModel.CloudCfgType, true)
+		nm, err = factory.NewCloudSysModel(model.Testbed(), cfgModel.CloudCfgType, true)
 	case BaseNetModel:
-		return factory.NewBasenetSysModel(model.Testbed(), cfgModel.BasenetCfgType, true)
+		nm, err = factory.NewBasenetSysModel(model.Testbed(), cfgModel.BasenetCfgType, true)
+	default:
+		nm, err = factory.NewDefaultSysModel(model.Testbed(), cfgModel.GsCfgType, true)
 	}
-	return factory.NewDefaultSysModel(model.Testbed(), cfgModel.GsCfgType, true)
+
+	nm.SetReporter(model.GetReporter())
+	return nm, err
 }
 
 func getModelTypeFromTopo(mtype testbed.ModelType) common.ModelType {

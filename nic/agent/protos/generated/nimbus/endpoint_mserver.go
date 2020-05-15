@@ -288,7 +288,7 @@ func (eh *EndpointTopic) GetAckedEventStatus(nodeID string, event api.EventType)
 // CreateEndpoint creates Endpoint
 func (eh *EndpointTopic) CreateEndpoint(ctx context.Context, objinfo *netproto.Endpoint) (*netproto.Endpoint, error) {
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
-	log.Infof("Received CreateEndpoint from node %v: {%+v}", nodeID, objinfo)
+	// log.Infof("Received CreateEndpoint from node %v: {%+v}", nodeID, objinfo)
 
 	// trigger callbacks. we allow creates to happen before it exists in memdb
 	if eh.statusReactor != nil {

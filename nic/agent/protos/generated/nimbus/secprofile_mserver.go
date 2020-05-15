@@ -288,7 +288,7 @@ func (eh *SecurityProfileTopic) GetAckedEventStatus(nodeID string, event api.Eve
 // CreateSecurityProfile creates SecurityProfile
 func (eh *SecurityProfileTopic) CreateSecurityProfile(ctx context.Context, objinfo *netproto.SecurityProfile) (*netproto.SecurityProfile, error) {
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
-	log.Infof("Received CreateSecurityProfile from node %v: {%+v}", nodeID, objinfo)
+	// log.Infof("Received CreateSecurityProfile from node %v: {%+v}", nodeID, objinfo)
 
 	// trigger callbacks. we allow creates to happen before it exists in memdb
 	if eh.statusReactor != nil {

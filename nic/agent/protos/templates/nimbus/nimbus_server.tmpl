@@ -296,7 +296,7 @@ func (eh *{{$crudObject}}Topic) GetAckedEventStatus(nodeID string, event api.Eve
 // Create{{$crudObject}} creates {{$crudObject}}
 func (eh *{{$crudObject}}Topic) Create{{$crudObject}}(ctx context.Context, objinfo *netproto.{{$crudObject}}) (*netproto.{{$crudObject}}, error) {
     nodeID := netutils.GetNodeUUIDFromCtx(ctx)
-    log.Infof("Received Create{{$crudObject}} from node %v: {%+v}", nodeID, objinfo)
+ // log.Infof("Received Create{{$crudObject}} from node %v: {%+v}", nodeID, objinfo)
 
     // trigger callbacks. we allow creates to happen before it exists in memdb
     if eh.statusReactor != nil {

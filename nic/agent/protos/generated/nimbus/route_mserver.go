@@ -288,7 +288,7 @@ func (eh *RouteTableTopic) GetAckedEventStatus(nodeID string, event api.EventTyp
 // CreateRouteTable creates RouteTable
 func (eh *RouteTableTopic) CreateRouteTable(ctx context.Context, objinfo *netproto.RouteTable) (*netproto.RouteTable, error) {
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
-	log.Infof("Received CreateRouteTable from node %v: {%+v}", nodeID, objinfo)
+	// log.Infof("Received CreateRouteTable from node %v: {%+v}", nodeID, objinfo)
 
 	// trigger callbacks. we allow creates to happen before it exists in memdb
 	if eh.statusReactor != nil {
@@ -842,7 +842,7 @@ func (eh *RoutingConfigTopic) GetAckedEventStatus(nodeID string, event api.Event
 // CreateRoutingConfig creates RoutingConfig
 func (eh *RoutingConfigTopic) CreateRoutingConfig(ctx context.Context, objinfo *netproto.RoutingConfig) (*netproto.RoutingConfig, error) {
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
-	log.Infof("Received CreateRoutingConfig from node %v: {%+v}", nodeID, objinfo)
+	// log.Infof("Received CreateRoutingConfig from node %v: {%+v}", nodeID, objinfo)
 
 	// trigger callbacks. we allow creates to happen before it exists in memdb
 	if eh.statusReactor != nil {

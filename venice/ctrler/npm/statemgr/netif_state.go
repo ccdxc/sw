@@ -121,7 +121,7 @@ func (sm *Statemgr) OnInterfaceCreateReq(nodeID string, agentNetif *netproto.Int
 		return nil
 	}
 
-	_, err := sm.FindObject("NetworkInterface", agentNetif.ObjectMeta.Tenant, agentNetif.ObjectMeta.Namespace, agentNetif.ObjectMeta.Name)
+	_, err := smgrNetworkInterface.FindNetworkInterface(agentNetif.Name)
 	if err == nil {
 		return sm.OnInterfaceUpdateReq(nodeID, agentNetif)
 	}

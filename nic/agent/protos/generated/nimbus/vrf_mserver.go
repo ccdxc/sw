@@ -288,7 +288,7 @@ func (eh *VrfTopic) GetAckedEventStatus(nodeID string, event api.EventType) *Eve
 // CreateVrf creates Vrf
 func (eh *VrfTopic) CreateVrf(ctx context.Context, objinfo *netproto.Vrf) (*netproto.Vrf, error) {
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
-	log.Infof("Received CreateVrf from node %v: {%+v}", nodeID, objinfo)
+	// log.Infof("Received CreateVrf from node %v: {%+v}", nodeID, objinfo)
 
 	// trigger callbacks. we allow creates to happen before it exists in memdb
 	if eh.statusReactor != nil {

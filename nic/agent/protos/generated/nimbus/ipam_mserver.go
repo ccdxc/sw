@@ -288,7 +288,7 @@ func (eh *IPAMPolicyTopic) GetAckedEventStatus(nodeID string, event api.EventTyp
 // CreateIPAMPolicy creates IPAMPolicy
 func (eh *IPAMPolicyTopic) CreateIPAMPolicy(ctx context.Context, objinfo *netproto.IPAMPolicy) (*netproto.IPAMPolicy, error) {
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
-	log.Infof("Received CreateIPAMPolicy from node %v: {%+v}", nodeID, objinfo)
+	// log.Infof("Received CreateIPAMPolicy from node %v: {%+v}", nodeID, objinfo)
 
 	// trigger callbacks. we allow creates to happen before it exists in memdb
 	if eh.statusReactor != nil {

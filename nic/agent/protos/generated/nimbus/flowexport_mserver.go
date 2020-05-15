@@ -288,7 +288,7 @@ func (eh *FlowExportPolicyTopic) GetAckedEventStatus(nodeID string, event api.Ev
 // CreateFlowExportPolicy creates FlowExportPolicy
 func (eh *FlowExportPolicyTopic) CreateFlowExportPolicy(ctx context.Context, objinfo *netproto.FlowExportPolicy) (*netproto.FlowExportPolicy, error) {
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
-	log.Infof("Received CreateFlowExportPolicy from node %v: {%+v}", nodeID, objinfo)
+	// log.Infof("Received CreateFlowExportPolicy from node %v: {%+v}", nodeID, objinfo)
 
 	// trigger callbacks. we allow creates to happen before it exists in memdb
 	if eh.statusReactor != nil {

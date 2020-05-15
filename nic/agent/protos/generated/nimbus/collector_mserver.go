@@ -288,7 +288,7 @@ func (eh *CollectorTopic) GetAckedEventStatus(nodeID string, event api.EventType
 // CreateCollector creates Collector
 func (eh *CollectorTopic) CreateCollector(ctx context.Context, objinfo *netproto.Collector) (*netproto.Collector, error) {
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
-	log.Infof("Received CreateCollector from node %v: {%+v}", nodeID, objinfo)
+	// log.Infof("Received CreateCollector from node %v: {%+v}", nodeID, objinfo)
 
 	// trigger callbacks. we allow creates to happen before it exists in memdb
 	if eh.statusReactor != nil {

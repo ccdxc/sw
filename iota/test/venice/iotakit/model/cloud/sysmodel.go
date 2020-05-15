@@ -1,18 +1,23 @@
 package cloud
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
 	"os"
 	"sort"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/security"
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	"github.com/pensando/sw/iota/test/venice/iotakit/cfg/enterprise"
+	"github.com/pensando/sw/iota/test/venice/iotakit/cfg/enterprise/base"
 	baseModel "github.com/pensando/sw/iota/test/venice/iotakit/model/base"
 	"github.com/pensando/sw/iota/test/venice/iotakit/model/objects"
 	"github.com/pensando/sw/iota/test/venice/iotakit/testbed"
@@ -388,6 +393,115 @@ func (sm *SysModel) SetupWorkloads(scale bool) error {
 	}
 
 	return sm.BringupWorkloads()
+}
+
+func (sm *SysModel) modifyConfig() error {
+
+	log.Infof("Modifying config as per model spec")
+	cfgObjects := sm.GetCfgObjects()
+
+	if os.Getenv("DYNAMIC_IP") != "" {
+		// Workloads to get IP dynamically. reset static IP
+		for _, workload := range cfgObjects.Workloads {
+			workload.Spec.Interfaces[0].IpAddresses[0] = ""
+		}
+	}
+
+	// Workloads DHCP server for all testbeds is configured with 20.20.<testbed-id>.1
+	server := "20.20.0.1"
+	id, iderr := strconv.ParseInt(sm.Tb.ID(), 10, 64)
+	if iderr == nil {
+		server = fmt.Sprintf("20.20.%v.1", id)
+	}
+
+	for _, ipam := range cfgObjects.Ipams {
+		ipam.Spec.DHCPRelay.Servers[0].IPAddress = server
+		log.Infof("IPAM %v's DHCPServer: %v\n", ipam.Name, ipam.Spec.DHCPRelay.Servers[0].IPAddress)
+	}
+
+	return nil
+}
+
+func convertToVeniceFormatMac(s string) string {
+	mac := strings.Replace(s, ":", "", -1)
+	var buffer bytes.Buffer
+	i := 1
+	for _, rune := range mac {
+		buffer.WriteRune(rune)
+		if i != 0 && i%4 == 0 && i != len(mac) {
+			buffer.WriteRune('.')
+		}
+		i++
+	}
+	return buffer.String()
+}
+
+// InitConfig sets up a default config for the system
+func (sm *SysModel) InitConfig(scale, scaleData bool) error {
+	skipSetup := os.Getenv("SKIP_SETUP")
+	skipConfig := os.Getenv("SKIP_CONFIG")
+	cfgParams := &base.ConfigParams{
+		Scale:                         scale,
+		Regenerate:                    skipSetup == "",
+		Vlans:                         sm.Tb.AllocatedVlans(),
+		NumberOfInterfacesPerWorkload: 1,
+	}
+	cfgParams.NaplesLoopBackIPs = make(map[string]string)
+	for _, naples := range sm.NaplesNodes {
+		dscs := []*cluster.DistributedServiceCard{}
+		for _, inst := range naples.Instances {
+			dscs = append(dscs, inst.Dsc)
+		}
+		cfgParams.Dscs = append(cfgParams.Dscs, dscs)
+		for index, ncfg := range naples.GetTestNode().NaplesConfigs.Configs {
+			naples.Instances[index].LoopbackIP = sm.Tb.GetLoopBackIP(naples.GetIotaNode().Name, index+1)
+			cfgParams.NaplesLoopBackIPs[convertToVeniceFormatMac(ncfg.NodeUuid)] = naples.Instances[index].LoopbackIP
+		}
+	}
+
+	for _, naples := range sm.FakeNaples {
+		//cfgParams.Dscs = append(cfgParams.Dscs, naples.SmartNic)
+		cfgParams.FakeDscs = append(cfgParams.FakeDscs, naples.Instances[0].Dsc)
+		//node uuid already in format
+		cfgParams.NaplesLoopBackIPs[naples.Instances[0].Dsc.Status.PrimaryMAC] = naples.IP()
+		naples.Instances[0].LoopbackIP = naples.IP()
+	}
+
+	for _, node := range sm.VeniceNodeMap {
+		cfgParams.VeniceNodes = append(cfgParams.VeniceNodes, node.ClusterNode)
+	}
+
+	err := sm.PopulateConfig(cfgParams)
+	if err != nil {
+		return err
+	}
+
+	if skipConfig == "" {
+		err = sm.CleanupAllConfig()
+		if err != nil {
+			return err
+		}
+
+		err = sm.modifyConfig()
+		if err != nil {
+			return err
+		}
+
+		err = sm.PushConfig()
+		if err != nil {
+			return err
+		}
+
+		ok, err := sm.IsConfigPushComplete()
+		if !ok || err != nil {
+			return err
+		}
+
+	} else {
+		log.Info("Skipping config")
+	}
+
+	return nil
 }
 
 // SetupDefaultConfig sets up a default config for the system
