@@ -498,8 +498,6 @@ func LearnValidationTypeToStr(valType pds.LearnValidationType) string {
 	var valStr string
 
 	switch valType {
-	case pds.LearnValidationType_LEARN_CHECK_UNTAGGED_MAC_LIMIT:
-		valStr = "Exceeded untagged MAC per host interface limit"
 	case pds.LearnValidationType_LEARN_CHECK_MAC_LIMIT:
 		valStr = "Exceeded MAC limit"
 	case pds.LearnValidationType_LEARN_CHECK_IP_LIMIT:

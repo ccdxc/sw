@@ -109,10 +109,9 @@ message LearnEvents {
 
 enum LearnValidationType {
   LEARN_CHECK_NONE               = 0;
-  LEARN_CHECK_UNTAGGED_MAC_LIMIT = 1;
-  LEARN_CHECK_MAC_LIMIT          = 2;
-  LEARN_CHECK_IP_LIMIT           = 3;
-  LEARN_CHECK_IP_IN_SUBNET       = 4;
+  LEARN_CHECK_MAC_LIMIT          = 1;
+  LEARN_CHECK_IP_LIMIT           = 2;
+  LEARN_CHECK_IP_IN_SUBNET       = 3;
 }
 
 message LearnValidations {

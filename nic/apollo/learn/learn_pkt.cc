@@ -293,18 +293,6 @@ validate_learn (learn_ctxt_t *ctxt)
             LEARN_COUNTER_INCR(validation_err[MAC_LIMIT]);
             return SDK_RET_ERR;
         }
-        // only one untagged vnic per subnet is allowed, since untagged vnics
-        //  use hostif's vnic_hw_id.
-        if (ctxt->pkt_ctxt.impl_info.encap.type == PDS_ENCAP_TYPE_NONE) {
-            if (impl::untagged_vnic_exists_on_lif(
-                                           ctxt->pkt_ctxt.impl_info.lif)) {
-                PDS_TRACE_ERR("Only one untagged VNIC supported per LIF, "
-                              "dropping EP %s", ctxt->str());
-                LEARN_COUNTER_INCR(validation_err[UNTAGGED_MAC_LIMIT]);
-                return SDK_RET_ERR;
-            }
-        }
-
     }
 
     // validate only if it is a new learn or R2L move.

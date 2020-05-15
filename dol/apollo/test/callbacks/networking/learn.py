@@ -9,15 +9,6 @@ def GetLearnDelay(testcase, args):
     else:
         return 30
 
-def GetMACAddrForValidation(testcase, args):
-    mac_addr = testcase.config.localmapping.VNIC.MACAddr
-    if testcase.module.name != "LEARN_NEG_MULT_UNTAG_VNIC_SAME_SUBNET":
-        return mac_addr
-    # spoof second untagged MAC
-    spoof_mac_addr = MacAddressBase(string = str(mac_addr))
-    spoof_mac_addr.update(1024)
-    return spoof_mac_addr
-
 def GetIPAddrForValidation(testcase, args):
     if testcase.module.name != "LEARN_NEG_IP_NOT_IN_SUBNET":
         return str(testcase.config.localmapping.IPAddr)

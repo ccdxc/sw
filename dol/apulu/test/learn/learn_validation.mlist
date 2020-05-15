@@ -17,12 +17,6 @@ modules:
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
 
     - module:
-        name    : LEARN_NEG_MULT_UNTAG_VNIC_SAME_SUBNET
-        spec    : garp.testspec
-        iterate :
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
-
-    - module:
         name    : LEARN_NEG_IP_NOT_IN_SUBNET
         spec    : garp.testspec
         iterate :

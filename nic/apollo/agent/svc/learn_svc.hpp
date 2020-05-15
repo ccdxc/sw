@@ -126,8 +126,6 @@ static inline pds::LearnValidationType
 pds_learn_validation_type_to_proto (uint8_t validation_type)
 {
     switch (validation_type) {
-    case learn::UNTAGGED_MAC_LIMIT:
-        return pds::LEARN_CHECK_UNTAGGED_MAC_LIMIT;
     case MAC_LIMIT:
         return pds::LEARN_CHECK_MAC_LIMIT;
     case IP_LIMIT:

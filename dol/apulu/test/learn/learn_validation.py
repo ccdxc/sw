@@ -54,18 +54,12 @@ def TestCaseStepVerify(tc, step):
         ep_mac = learn.EpMac(tc.config.localmapping)
         ep_ip = learn.EpIp(tc.config.localmapping)
         return learn.ExistsOnDevice(ep_mac) and learn.ExistsOnDevice(ep_ip)
-    elif tc.module.name == "LEARN_NEG_MULT_UNTAG_VNIC_SAME_SUBNET":
-        ep_mac = learn.EpMac(tc.config.localmapping)
-        val_type = learn_pb2.LEARN_CHECK_UNTAGGED_MAC_LIMIT
-        drop_reason = learn_pb2.LEARN_PKTDROP_REASON_LEARNING_FAIL
-        return VerifyCounter("validationerrors", val_type, 1) and \
-               VerifyCounter("dropstats", drop_reason, 1)
     elif tc.module.name == "LEARN_NEG_IP_NOT_IN_SUBNET":
         ep_ip = learn.EpIp(tc.config.localmapping)
         val_type = learn_pb2.LEARN_CHECK_IP_IN_SUBNET
         drop_reason = learn.learn_pb2.LEARN_PKTDROP_REASON_LEARNING_FAIL
         return VerifyCounter("validationerrors", val_type, 1) and \
-               VerifyCounter("dropstats", drop_reason, 2)
+               VerifyCounter("dropstats", drop_reason, 1)
     return True
 
 def TestCaseStepTeardown(tc, step):

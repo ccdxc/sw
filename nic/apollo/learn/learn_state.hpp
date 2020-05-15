@@ -66,7 +66,6 @@ enum {
 
 // local learn validation errors
 enum {
-    UNTAGGED_MAC_LIMIT,
     MAC_LIMIT,
     IP_LIMIT,
     IP_ADDR_SUBNET_MISMATCH,

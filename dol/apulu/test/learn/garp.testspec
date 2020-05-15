@@ -12,13 +12,13 @@ packets:
         template    : ref://factory/packets/id=ETH_ARP
         headers     :
             eth:
-                src   : callback://networking/learn/GetMACAddrForValidation
+                src   : ref://testcase/config/localmapping/VNIC/MACAddr
                 dst   : ref://testcase/config/localmapping/VNIC/SUBNET/VirtualRouterMACAddr
             qtag:
                 vlan  : ref://testcase/config/localmapping/VNIC/VlanId
             arp:
                 op    : 2 # ARP_REPLY
-                hwsrc : callback://networking/learn/GetMACAddrForValidation
+                hwsrc : ref://testcase/config/localmapping/VNIC/MACAddr
                 hwdst : ref://testcase/config/localmapping/VNIC/SUBNET/VirtualRouterMACAddr
                 psrc  : callback://networking/learn/GetIPAddrForValidation
                 pdst  : 0.0.0.0
