@@ -2042,6 +2042,7 @@ EthLif::SetFeatures(void *req, void *req_data, void *resp, void *resp_data)
         (cmd->features & IONIC_ETH_HW_TX_CSUM) ? 1 : 0,
         (cmd->features & IONIC_ETH_HW_RX_HASH) ? 1 : 0,
         (cmd->features & IONIC_ETH_HW_TX_SG) ? 1 : 0,
+        (cmd->features & IONIC_ETH_HW_RX_SG) ? 1 : 0,
         (cmd->features & IONIC_ETH_HW_RX_CSUM_GENEVE) ? 1 : 0,
         (cmd->features & IONIC_ETH_HW_TX_CSUM_GENEVE) ? 1 : 0,
         (cmd->features & IONIC_ETH_HW_TSO_GENEVE) ? 1 : 0);
