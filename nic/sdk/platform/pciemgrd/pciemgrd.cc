@@ -49,6 +49,42 @@ pcie_hostdn(void)
 }
 
 /*
+ * When Naples25 SWM ALOM card is not present hostdn handling is
+ * the same as Naples25.  This function is used to negate the
+ * catalog long_lived setting based on CPLD control register
+ * alom_present bit.  OCP card also is long_lived but its CPLD
+ * does not have that bit setting as it does not need an ALOM.
+ */
+static int swm_alom_present(void)
+{
+    int id;
+    int cntl;
+
+    id = cpld_reg_rd(CPLD_REGISTER_ID);
+    if (id == -1) {
+        pciesys_logerror("error reading cpld id\n");
+        return 0;
+    }
+
+    /* OCP card type has long_lived set in the catalog */
+    if (id != CPLD_ID_NAPLES25_SWM)
+        return 1;
+
+    cntl = cpld_reg_rd(CPLD_REGISTER_CTRL);
+    if (cntl == -1) {
+        pciesys_logerror("error reading cpld ctrl reg\n");
+        return 0;
+    }
+
+    if ((id == CPLD_ID_NAPLES25_SWM) && (cntl & CPLD_ALOM_PRESENT_BIT)) {
+        return 1;
+    } else {
+        pciesys_loginfo("naples25 swm alom missing, reset for hostdn\n");
+        return 0;
+    }
+}
+
+/*
  * With long-lived SWM cards, a hostdn is a sign the host is going away.
  * This might be an opportunity for us to reset if there is a
  * pending config change.  The pcie_hostdn_swm.sh script will check
@@ -751,7 +787,7 @@ portmap_init_from_catalog(pciemgrenv_t *pme)
     pme->params.vendorid = catalog->pcie_vendorid();
     pme->params.subvendorid = catalog->pcie_subvendorid();
     pme->params.subdeviceid = catalog->pcie_subdeviceid();
-    pme->params.long_lived = catalog->pcie_long_lived();
+    pme->params.long_lived = catalog->pcie_long_lived() && swm_alom_present();
     pme->params.clock_freq = catalog->pcie_clock_freq();
 
     int nportspecs = catalog->pcie_nportspecs();
