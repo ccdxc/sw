@@ -6,6 +6,7 @@ package cmd
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -55,7 +56,7 @@ func logsShowCmdHandler(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	cmd.Println(string(resp))
+	fmt.Println(string(resp))
 	return nil
 }
 
