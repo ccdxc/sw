@@ -3,7 +3,12 @@
     <div class="alertlist-main-menu">
       <div class="alertlist-main-menu-number-front-group-div">
         <span class="alertlist-main-menu-label">Open Alerts</span>
+        <span class="alertlist-foote-expand" (click)="onExpandAlertsClick($event)"
+              title="Go to alerts table">
+          <i class="fa fa-external-link alertlist-foote-expand-top-icon"></i>
+        </span>
         <span class="alertlist-main-menu-number alertlist-main-menu-number-total"
+              [matTooltip]="'Displaying maximum ' + maxNumber + ' alerts. Go to alerts page to see more.'"
               (click)="onAlertNumberClick($event, 'total')">{{alertnumber.total | number}}</span>
       </div>
       <div class="alertlist-main-menu-number-back-group-div">
@@ -22,10 +27,10 @@
     </div>
   </div>
   <div class="alertlist-items-div">
-    <ng-container *ngFor="let alert of alerts ">
+    <ng-container *ngFor="let alert of alerts ; let i=index">
       <app-alertlistitem [data]="alert" (alertClick)="onAlertClick(alert)"
                          (alertSourceNameClick)="onAlertSourceNameClick()"
-                         *ngIf="isToShowThisAlert(alert)"></app-alertlistitem>
+                         *ngIf="isToShowThisAlert(alert) && i < maxNumber "></app-alertlistitem>
     </ng-container>
   </div>
   <div class="alertlist-footer-div">

@@ -35,6 +35,9 @@ export class AlertlistComponent implements OnInit, OnDestroy, OnChanges {
   alerts = [];
   currentAlertFilterType = 'total';
 
+  // This variable limit how many alert-items listed in Venice-UI alert panel
+  maxNumber: number = 20;
+
   constructor() { }
 
   /**

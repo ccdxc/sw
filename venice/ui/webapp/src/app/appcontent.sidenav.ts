@@ -368,7 +368,6 @@ export const sideNavMenu: SideNavItem[] = [
           matIconName: 'library_books'
         },
         roleGuard: UIRolePermissions.adminrole,
-        featureGuard: Features.apiCapture,
         link: ['/admin', 'api']
       }
     ]

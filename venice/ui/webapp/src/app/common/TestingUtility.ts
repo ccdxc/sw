@@ -15,17 +15,27 @@ export class TestingUtility {
   fixture: ComponentFixture<any>;
 
   public static createDataCacheSubject(objList: any[], eventList: any[] = [], iconnIsErrorState: boolean = false) {
-    const events = TestingUtility.createWatchEvents(eventList);
+    /* const events = TestingUtility.createWatchEvents(eventList);
     const obj = {
       'data':  objList,
       'events': events.events,
       'connIsErrorState': iconnIsErrorState
-    };
+    }; */
+    const obj = this.createDataCacheObject(objList, eventList, iconnIsErrorState);
     return new BehaviorSubject(obj);
   }
 
   public static createWatchEventsSubject(obj: any[]) {
     return new BehaviorSubject(TestingUtility.createWatchEvents(obj));
+  }
+
+  public static createDataCacheObject(objList: any[], eventList: any[] = [], iconnIsErrorState: boolean = false): any {
+   const events = TestingUtility.createWatchEvents(eventList);
+   return  {
+      'data':  objList,
+      'events': events.events,
+      'connIsErrorState': iconnIsErrorState
+    };
   }
 
 

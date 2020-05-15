@@ -21,7 +21,6 @@ export enum UIFeatures {
   troubleshooting = 'troubleshooting',
   securitygroup = 'securitygroup',
   dataCache = 'dataCache',
-  apiCapture = 'apiCapture',
 
   // derived features
   cloud = 'cloud',
@@ -183,9 +182,6 @@ export class UIConfigsService implements OnDestroy {
     'admin/api': {
       requiredPerm: [
         UIRolePermissions.adminrole,
-      ],
-      requiredFeatures: [
-        Features.apiCapture,
       ]
     },
   };

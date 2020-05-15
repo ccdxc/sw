@@ -76,9 +76,9 @@ export class AlertlistitemComponent implements OnInit, OnDestroy, OnChanges {
 
   ngOnChanges() {
     if (this.data) {
-    // add a UI_FIELD_PROPERTY to avoid constant function running in html template.
-    this.alert = this.data;
-    this.alert[AlertlistitemComponent.ALERT_SOURCE_NAME_LINK] = this.getAlertItemSourceNameLink();
+      // add a UI_FIELD_PROPERTY to avoid constant function running in html template.
+      this.alert = this.data;
+      this.alert[AlertlistitemComponent.ALERT_SOURCE_NAME_LINK] = this.getAlertItemSourceNameLink();
     }
   }
 

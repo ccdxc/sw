@@ -83,7 +83,7 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
   idleDialogRef: any;
 
   // alerts related variables
-  alertsEventUtility: HttpEventUtility<MonitoringAlert>;
+
   alertGetSubscription: Subscription;
   alertWatchSubscription: Subscription;
   alerts: ReadonlyArray<MonitoringAlert> = [];
@@ -493,7 +493,8 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
     if (this._boolInitApp === true) {
       return;
     } else {
-      this.getAlerts();
+      // As we use listAlertCache() to fetch alerts.  this.getAlerts() is not needed.
+      this.getAlertsWatch();
     }
     this._boolInitApp = true;
     this._setupIdle();
@@ -721,10 +722,10 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
     }
   }
   /**
-   * Call server to fetch all alerts to populate RHS alert-list
+   * Call server to fetch all alerts using search API to populate RHS alert-list
+   *
    */
   getAlerts() {
-    this.alertsEventUtility = new HttpEventUtility<MonitoringAlert>(MonitoringAlert);
     if (this.alertGetSubscription) {
       this.alertGetSubscription.unsubscribe();
     }
@@ -756,18 +757,20 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
     this.subscriptions.push(this.alertGetSubscription);
   }
 
+  /**
+   * We use ListAlertCache to fetch alerts
+   */
   getAlertsWatch() {
-    this.alertsEventUtility = new HttpEventUtility<MonitoringAlert>(MonitoringAlert);
     if (this.alertWatchSubscription) {
       this.alertWatchSubscription.unsubscribe();
     }
-    this.alertWatchSubscription = this.monitoringService.WatchAlert(this.alertQuery).subscribe(
+    this.alertWatchSubscription = this.monitoringService.ListAlertCache().subscribe(
       response => {
-        // NOTE: there is a max of 100 events that will come in a single chunk
-        // The second chunk is NOT guaranteed to be
-        this.alertsEventUtility.processEvents(response);
-        // this.alertQuery is empty. So we will get all alerts. We only need the alerts that are in open state. Alert table can update alerts. This will reflect the changes of alerts.
-        this.alerts = this.alertsEventUtility.array.filter((alert: MonitoringAlert) => {
+        if (response.connIsErrorState) {
+          return;
+        }
+        const myAlerts = response.data as MonitoringAlert[];
+        this.alerts = myAlerts.filter((alert: MonitoringAlert) => {
           return (this.isAlertInOpenState(alert));
         });
 
@@ -775,11 +778,6 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
         this.alerts = Utility.sortDate(this.alerts, ['meta', 'creation-time'], -1);
         this.updateHighestSeverity();
 
-        if (Array.isArray(this.alertsEventUtility.array) && this.alertsEventUtility.array.length > 0 && this.alerts.length === 0) {
-          // UI helps VS-952.
-          // It is possible that user resolves all alerts in backend. It make this.startingAlertCount number outdated.
-          this.alertNumbers = 0;
-        }
 
         // We are watching alerts. So when there are new alerts coming in, we display a toaster.
         if (this.alertNumbers > 0 && this.alertNumbers < this.alerts.length) {
@@ -808,6 +806,7 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
     );
     this.subscriptions.push(this.alertWatchSubscription);
   }
+
 
   isAlertInOpenState(alert: MonitoringAlert): boolean {
     return (alert.spec.state === 'open');
