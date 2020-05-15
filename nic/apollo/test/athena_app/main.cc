@@ -88,7 +88,10 @@ logger_init (void)
     else
         logfile = log_file(std::getenv("LOG_DIR"), "/pds-athena-agent.log");
 
-    err_logfile = log_file(std::getenv("PERSISTENT_LOG_DIR"), "/obfl.log");
+    if (fte_ath::g_athena_app_mode == ATHENA_APP_MODE_SOFT_INIT)
+        err_logfile = log_file(std::getenv("PERSISTENT_LOG_DIR"), "/obfl_sec.log");
+    else
+        err_logfile = log_file(std::getenv("PERSISTENT_LOG_DIR"), "/obfl.log");
 
     if (logfile.empty() || err_logfile.empty()) {
         return SDK_RET_ERR;

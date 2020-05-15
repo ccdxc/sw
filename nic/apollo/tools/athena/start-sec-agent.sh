@@ -9,7 +9,7 @@ rm -f $NON_PERSISTENT_LOGDIR/pds-athena-sec-agent.log*
 
 ulimit -c unlimited
 
-export PERSISTENT_LOG_DIR=/obfl_sec/
+export PERSISTENT_LOG_DIR=/obfl/
 
 #Huge-pages for DPDK
 if  ! mount | grep hugetlbfs ; then

@@ -384,6 +384,7 @@ dependencies:
     - reference: iota/test/standalone/precheckin/linux
   nic/apollo:
     - reference: iota/test/standalone/precheckin/apulu-sdn-pds
+      exclude_dirs: ["p4/athena_p4-16", "test/athena_app", "test/athena", "api/impl/athena", "api/include/athena"]
     - reference: nic/apollo/tools/apulu/sanity/base
     - reference: nic/apollo/tools/athena/sanity/base
     - reference: test/ci_targets/cloud-e2e
@@ -393,6 +394,10 @@ dependencies:
   nic/apollo/p4/athena_p4-16:
     - reference: iota/test/standalone/precheckin/athena
   nic/apollo/test/athena_app:
+    - reference: iota/test/standalone/precheckin/athena
+  nic/apollo/test/athena:
+    - reference: iota/test/standalone/precheckin/athena
+  nic/apollo/api/include/athena:
     - reference: iota/test/standalone/precheckin/athena
   nic/agent:
     - reference: iota/test/venice
