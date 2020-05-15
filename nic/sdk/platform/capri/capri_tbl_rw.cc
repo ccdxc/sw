@@ -745,23 +745,34 @@ capri_tcam_memory_init (asic_cfg_t *capri_cfg)
         return;
     }
 
-    // Get actual width in bytes (multiple of 4)
-    uint32_t width = (((CAP_PICT_CSR_DHS_TCAM_XY_WIDTH - 1) >> 5) + 1) << 2;
+    // Get actual width in 32-bit words
+    int32_t  width = (CAP_PICT_CSR_DHS_TCAM_XY_WIDTH + 31) >> 5;
+    uint64_t pa = 0;
+    void    *va = 0;
+
+    uint32_t data0[width] = {0};
+    uint32_t data1[width] = {0};
+    data1[width-1] = 0xFFFFFFFF;
 
     // Ingress
-    uint64_t pa = CAP_ADDR_BASE_TSI_PICT_OFFSET + offsetof(Cap_pict_csr,
-                                                           dhs_tcam_xy);
+    pa = CAP_ADDR_BASE_TSI_PICT_OFFSET + offsetof(Cap_pict_csr, dhs_tcam_xy);
+    va = sdk::lib::pal_mem_map(pa, CAPRI_TCAM_ROWS * 8);
     for (int i = 0; i < CAPRI_TCAM_ROWS * 8; i++) {
-        pal_memset(pa, 0, width, 0);
+        sdk::lib::pal_reg_write(pa, data1, width);
+        sdk::lib::pal_reg_write(pa, data0, width);
         pa += sizeof(Cap_pict_csr_dhs_tcam_xy_entry);
     }
+    sdk::lib::pal_mem_unmap(va);
 
     // Egress
     pa = CAP_ADDR_BASE_TSE_PICT_OFFSET + offsetof(Cap_pict_csr, dhs_tcam_xy);
+    va = sdk::lib::pal_mem_map(pa, CAPRI_TCAM_ROWS * 4);
     for (int i = 0; i < CAPRI_TCAM_ROWS * 4; i++) {
-        pal_memset(pa, 0, width, 0);
+        sdk::lib::pal_reg_write(pa, data1, width);
+        sdk::lib::pal_reg_write(pa, data0, width);
         pa += sizeof(Cap_pict_csr_dhs_tcam_xy_entry);
     }
+    sdk::lib::pal_mem_unmap(va);
 
 #if 0
     cap_pict_zero_init_tcam(0, 0, 8);
@@ -815,37 +826,47 @@ capri_sram_memory_init (asic_cfg_t *capri_cfg)
         return;
     }
 
-    // Get actual width in bytes (multiple of 4)
-    uint32_t width = (((CAP_PICS_CSR_DHS_SRAM_WIDTH - 1) >> 5) + 1) << 2;
+    // Get actual width in 32-bit words
+    int32_t  width = (CAP_PICS_CSR_DHS_SRAM_WIDTH + 31) >> 5;
+    uint32_t data[width] = {0};
+    uint64_t pa = 0;
+    void    *va = 0;
 
     // Ingress
-    uint64_t pa = CAP_ADDR_BASE_SSI_PICS_OFFSET + offsetof(Cap_pics_csr,
-                                                           dhs_sram);
+    pa = CAP_ADDR_BASE_SSI_PICS_OFFSET + offsetof(Cap_pics_csr, dhs_sram);
+    va = sdk::lib::pal_mem_map(pa, CAPRI_SRAM_ROWS * 8);
     for (int i = 0; i < CAPRI_SRAM_ROWS * 8; i++) {
-        pal_memset(pa, 0, width, 0);
+        sdk::lib::pal_reg_write(pa, data, width);
         pa += sizeof(Cap_pics_csr_dhs_sram_entry);
     }
+    sdk::lib::pal_mem_unmap(va);
 
     // Egress
     pa = CAP_ADDR_BASE_SSE_PICS_OFFSET + offsetof(Cap_pics_csr, dhs_sram);
+    va = sdk::lib::pal_mem_map(pa, CAPRI_SRAM_ROWS * 8);
     for (int i = 0; i < CAPRI_SRAM_ROWS * 8; i++) {
-        pal_memset(pa, 0, width, 0);
+        sdk::lib::pal_reg_write(pa, data, width);
         pa += sizeof(Cap_pics_csr_dhs_sram_entry);
     }
+    sdk::lib::pal_mem_unmap(va);
 
     // RXDMA
     pa = CAP_ADDR_BASE_RPC_PICS_OFFSET + offsetof(Cap_pics_csr, dhs_sram);
+    va = sdk::lib::pal_mem_map(pa, CAPRI_SRAM_ROWS * 3);
     for (int i = 0; i < CAPRI_SRAM_ROWS * 3; i++) {
-        pal_memset(pa, 0, width, 0);
+        sdk::lib::pal_reg_write(pa, data, width);
         pa += sizeof(Cap_pics_csr_dhs_sram_entry);
     }
+    sdk::lib::pal_mem_unmap(va);
 
     // TXDMA
     pa = CAP_ADDR_BASE_TPC_PICS_OFFSET + offsetof(Cap_pics_csr, dhs_sram);
+    va = sdk::lib::pal_mem_map(pa, CAPRI_SRAM_ROWS * 3);
     for (int i = 0; i < CAPRI_SRAM_ROWS * 3; i++) {
-        pal_memset(pa, 0, width, 0);
+        sdk::lib::pal_reg_write(pa, data, width);
         pa += sizeof(Cap_pics_csr_dhs_sram_entry);
     }
+    sdk::lib::pal_mem_unmap(va);
 
 #if 0
     cap_pics_zero_init_sram(0, 0, 3);
