@@ -1125,7 +1125,7 @@ nat_flow_is_dst_valid(u32 vpc_id, ip4_address_t dip, u16 dport,
     pool_foreach (pb, nat_pb,
     ({
         if (pb->addr.as_u32 == dip.as_u32 &&
-            pb->start_port >=  dport &&
+            dport >= pb->start_port &&
             dport <= pb->end_port) {
             clib_spinlock_unlock(&vpc->lock);
             return true;

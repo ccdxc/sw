@@ -839,7 +839,8 @@ pds_flow_classify_no_vnic (vlib_buffer_t *p,
                            u16 *next,
                            u32 *counter)
 {
-    if (hdr->rx_packet && (hdr->flags & VPP_CPU_FLAGS_IPV4_2_VALID)) {
+    if (hdr->rx_packet && (hdr->flags & VPP_CPU_FLAGS_IPV4_2_VALID) &&
+        !hdr->flow_hit) {
         /*
          * When vnic lookup fails in P4, P4/P4+ cannot do a route lookup on
          * the source ip to determine route hit with NAT rule enabled. We
@@ -919,16 +920,14 @@ pds_flow_classify_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
     flag_orig = hdr->flags;
     u8 flags = BIT_ISSET(flag_orig, VPP_CPU_FLAGS_IP_VALID);
     vnic = pds_impl_db_vnic_get(hdr->vnic_id);
-    if (PREDICT_FALSE(!vnic)) {
-        pds_flow_classify_no_vnic(p, hdr, next, counter);
-        return;
-    }
     vnet_buffer(p)->pds_flow_data.ses_id = hdr->session_id;
     vnet_buffer(p)->pds_flow_data.flow_hash = hdr->flow_hash;
     BIT_SET(vnet_buffer(p)->pds_flow_data.flags,
             pds_get_cpu_flags_from_hdr(hdr));
-    BIT_SET(vnet_buffer(p)->pds_flow_data.flags,
-            pds_get_cpu_flags_from_vnic(vnic));
+    if (vnic) {
+        BIT_SET(vnet_buffer(p)->pds_flow_data.flags,
+                pds_get_cpu_flags_from_vnic(vnic));
+    }
     vnet_buffer(p)->pds_flow_data.tcp_flags = hdr->tcp_flags;
     vnet_buffer(p)->pds_flow_data.epoch = hdr->epoch;
     nexthop = hdr->nexthop_id;
@@ -995,6 +994,10 @@ pds_flow_classify_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
         *next = FLOW_CLASSIFY_NEXT_AGE_FLOW;
         counter[FLOW_CLASSIFY_COUNTER_TCP_PKT] += 1;
         goto end;
+    }
+    if (PREDICT_FALSE(!vnic)) {
+        pds_flow_classify_no_vnic(p, hdr, next, counter);
+        return;
     }
 
     vlib_buffer_advance(p, pds_flow_classify_get_advance_offset(p, flag_orig));
