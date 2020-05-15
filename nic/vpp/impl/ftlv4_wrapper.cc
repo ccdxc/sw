@@ -12,7 +12,6 @@
 #include <nic/sdk/platform/capri/capri_tbl_rw.hpp>
 #include <nic/sdk/lib/p4/p4_utils.hpp>
 #include "gen/p4gen/p4/include/ftl_table.hpp"
-#include <nic/apollo/p4/include/defines.h>
 #include "nic/vpp/infra/operd/flow_export.h"
 #include <pd_utils.h>
 #include <ftl_wrapper.h>
@@ -90,7 +89,7 @@ done:
 }
 
 static void
-ftlv4_move_cb (base_table_entry_t *entry, handle_t old_handle, 
+ftlv4_move_cb (base_table_entry_t *entry, handle_t old_handle,
                handle_t new_handle, bool move_complete)
 {
     ipv4_flow_hash_entry_t *v4entry = (ipv4_flow_hash_entry_t *)entry;
@@ -105,7 +104,7 @@ ftlv4_move_cb (base_table_entry_t *entry, handle_t old_handle,
     }
 
     if (v4entry->get_flow_role() == TCP_FLOW_INITIATOR) {
-        g_ses_cb (ses_id, new_pindex, new_sindex, true, 
+        g_ses_cb (ses_id, new_pindex, new_sindex, true,
                   move_complete);
     } else {
         g_ses_cb (ses_id, new_pindex, new_sindex, false,
@@ -410,7 +409,7 @@ ftlv4_delete (ftlv4 *obj)
     ftlv4::destroy(obj);
 }
 
-void 
+void
 ftlv4_set_key (ipv4_flow_hash_entry_t *entry,
                uint32_t sip,
                uint32_t dip,
@@ -753,7 +752,7 @@ ftlv4_cache_advance_count (int val)
 }
 
 int
-ftlv4_cache_program_index (ftlv4 *obj, uint16_t id, uint32_t *pindex, 
+ftlv4_cache_program_index (ftlv4 *obj, uint16_t id, uint32_t *pindex,
                            uint32_t *sindex)
 {
     return ftlv4_insert(obj, g_ip4_flow_cache.ip4_flow + id,

@@ -23,7 +23,7 @@ handle_pds_cmd (cmd_ctxt_t *ctxt, int fd)
     case CMD_MSG_FLOW_DUMP:
         flow_cb = vpp_uds_callbacks[VPP_UDS_FLOW_DUMP];
         if (flow_cb) {
-            flow_cb(fd);
+            flow_cb(fd, ctxt->args.flow_dump.summary);
         }
         break;
     default:

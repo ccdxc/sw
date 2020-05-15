@@ -11,8 +11,6 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/gogo/protobuf/types"
-
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/pensando/sw/nic/apollo/agent/cli/utils"
@@ -321,12 +319,19 @@ func flowShowCmdHandler(cmd *cobra.Command, args []string) {
 		}
 		flowPrintSummary(count)
 	} else {
-		flow := myFlowMsg{}
-		msg := pds.FlowMsg{}
-		flow.msg = &msg
-		err := HandleUdsShowObject(pds.Command_CMD_FLOW_DUMP, flow)
+		if !summaryOutput {
+			flowPrintHeader()
+		}
+		req := &pds.FlowGetRequest{
+			Summary: summaryOutput,
+			Filter:  nil,
+		}
+		cmdResp, err := HandleSvcReqCommandMsg(pds.Command_CMD_FLOW_DUMP, req)
 		if err != nil {
-			fmt.Printf("Error %v\n", err)
+			fmt.Printf("Command failed with %v error\n", err)
+		}
+		if cmdResp.ApiStatus != pds.ApiStatus_API_STATUS_OK {
+			fmt.Printf("Command failed with %v error\n", cmdResp.ApiStatus)
 		}
 	}
 }
@@ -378,11 +383,18 @@ func flowPrintSummary(count int) {
 }
 
 func flowPrintHeader() {
-	hdrLine := strings.Repeat("-", 131)
+	fmt.Printf("Legend:\n")
+	fmt.Printf("Handle: Session Handle\n")
+	fmt.Printf("Role: I (Initiator), R (Responder)\n")
+	fmt.Printf("Direction: U (Uplink), H (Host)\n")
+	fmt.Printf("Sport|SeqNo: Sequence num for ICMP, source port for other protocols\n")
+	fmt.Printf("DPort|Type/Code: ICMP type and code, destination port for other protocols\n")
+	fmt.Printf("FlowAction: A (Allowed flow), D (drop flow)\n")
+	hdrLine := strings.Repeat("-", 120)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-6s%-40s%-40s%-8s%-8s%-8s%-5s%-11s%-5s\n",
-		"VPCId", "SrcAddr", "DstAddr", "SrcPort",
-		"DstPort", "IPProto", "Role", "SessionIdx", "Epoch")
+	fmt.Printf("%-8s%-10s%-6s%-20s%-20s%-20s%-20s%-8s%-8s\n",
+		"Handle", "Role/Dir", "BdId", "SIP", "Sport|SeqNo", "DIP",
+		"DPort|Type/Code", "Proto", "FlowAction")
 	fmt.Println(hdrLine)
 }
 
@@ -627,33 +639,4 @@ func flowStatsPrint(resp *pds.FlowStatsSummaryResponse) {
 	fmt.Printf("%-30s: %d\n", "Other IPv6 Sessions", resp.GetNumOtherIPv6Sessions())
 	fmt.Printf("%-30s: %d\n", "L2 Sessions", resp.GetNumL2Sessions())
 	fmt.Printf("%-30s: %d\n", "Session Errors", resp.GetNumSessionErrors())
-}
-
-// PrintObject interface
-func (flowMsg myFlowMsg) PrintHeader() {
-	flowPrintHeader()
-}
-
-// PrintObject interface
-func (flowMsg myFlowMsg) PrintSummary(count int) {
-	flowPrintSummary(count)
-}
-
-// PrintObject interface
-func (flowMsg myFlowMsg) HandleObject(data *types.Any) (done bool) {
-	err := types.UnmarshalAny(data, flowMsg.msg)
-	if err != nil {
-		fmt.Printf("Command failed with %v error\n", err)
-		done = true
-		return
-	}
-	if flowMsg.msg.FlowEntryCount == 0 {
-		// Last message
-		done = true
-		return
-	}
-	flowPrintEntry(flowMsg.msg.FlowEntry)
-
-	done = false
-	return
 }

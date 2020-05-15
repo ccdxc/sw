@@ -10,6 +10,7 @@
 #include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/agent/svc/svc_cfg_msg.hpp"
 #include "gen/proto/types.pb.h"
+#include "gen/proto/session.pb.h"
 #include "gen/proto/debug.grpc.pb.h"
 
 //----------------------------------------------------------------------------
@@ -570,6 +571,7 @@ pds_cmd_proto_to_cmd_ctxt (cmd_ctxt_t *cmd_ctxt,
     google::protobuf::Any *any_msg;
     pds::MappingDumpFilter filter;
     pds::CommandUUID uuid;
+    pds::FlowGetRequest flow_req;
     std::string cmd_msg;
     std::size_t delim_pos;
 
@@ -612,6 +614,10 @@ pds_cmd_proto_to_cmd_ctxt (cmd_ctxt_t *cmd_ctxt,
                 any_msg->UnpackTo(&uuid);
                 cmd_ctxt->args.valid = true;
                 pds_obj_key_proto_to_api_spec(&cmd_ctxt->args.port_id, uuid.id());
+            } else if (!cmd_msg.compare("pds.FlowGetRequest")) {
+                any_msg->UnpackTo(&flow_req);
+                cmd_ctxt->args.valid = true;
+                cmd_ctxt->args.flow_dump.summary = flow_req.summary();
             }
         }
     }

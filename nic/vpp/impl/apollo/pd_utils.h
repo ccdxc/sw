@@ -9,6 +9,7 @@
 
 #include <nic/sdk/include/sdk/platform.hpp>
 #include <gen/p4gen/apollo/include/p4pd.h>
+#include <nic/apollo/p4/include/defines.h>
 #define PDS_PIPELINE "apollo"
 
 #endif    // __VPP_IMPL_APOLLO_PD_UTILS_H__

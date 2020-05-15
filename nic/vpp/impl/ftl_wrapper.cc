@@ -12,7 +12,6 @@
 #include <nic/sdk/platform/capri/capri_tbl_rw.hpp>
 #include <nic/sdk/lib/p4/p4_utils.hpp>
 #include "gen/p4gen/p4/include/ftl_table.hpp"
-#include <nic/apollo/p4/include/defines.h>
 #include "nic/vpp/infra/operd/flow_export.h"
 #include <pd_utils.h>
 #include <ftl_wrapper.h>
@@ -394,7 +393,7 @@ ftl_dump_hw_entry_iter_cb (sdk_table_api_params_t *params)
     FILE *fp = (FILE *)params->cbdata;
     char buf[FTL_ENTRY_STR_MAX];
 
-    if (hwentry->entry_valid && 
+    if (hwentry->entry_valid &&
         (params->key_type == hwentry->key_metadata_ktype)) {
         if (hwentry->key_metadata_ktype == KEY_TYPE_IPV6) {
             ftlv6_entry_count++;
@@ -416,7 +415,7 @@ ftl_dump_hw_entry_detail_iter_cb (sdk_table_api_params_t *params)
     uint32_t size;
     char buf[FTL_ENTRY_STR_MAX];
 
-    if (hwentry->entry_valid && 
+    if (hwentry->entry_valid &&
         (params->key_type == hwentry->key_metadata_ktype)) {
         if (hwentry->key_metadata_ktype == KEY_TYPE_IPV6) {
             ftlv6_entry_count++;
@@ -599,7 +598,7 @@ ftl_set_entry_nexthop (flow_hash_entry_t *entry, uint32_t nhid, uint32_t nhtype,
 }
 
 void
-ftlv4_set_entry_nexthop (ipv4_flow_hash_entry_t *entry, uint32_t nhid, 
+ftlv4_set_entry_nexthop (ipv4_flow_hash_entry_t *entry, uint32_t nhid,
                          uint32_t nhtype, uint8_t nhvalid, uint8_t priority)
 {
     ftlv4_set_nexthop(entry, nhid, nhtype, nhvalid, priority);

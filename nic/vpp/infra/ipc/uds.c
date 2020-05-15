@@ -10,6 +10,7 @@
 #include <vppinfra/socket.h>
 #include <vppinfra/file.h>
 #include <vlib/unix/unix.h>
+#include "nic/sdk/include/sdk/uds.hpp"
 
 #define SOCKET_FILE "/run/vpp/pds.sock"
 #define BUF_SIZE 4096
@@ -20,20 +21,17 @@ vpp_uds_read_ready (clib_file_t * uf)
 {
     u8 *input_buf = 0;
     int n;
-    vlib_main_t *vm = vlib_get_main();
+    int cmd_fd;
 
     vec_resize(input_buf, BUF_SIZE);
-    n = read (uf->file_descriptor, input_buf, vec_len(input_buf));
-    if (n < 0 && errno != EAGAIN) {
+    if ((n = uds_recv(uf->file_descriptor, &cmd_fd, input_buf, BUF_SIZE)) < 0) {
         return clib_error_return_unix(0, "read");
-    } else if (n == 0 && errno != EAGAIN) {
+    } else if (n == 0) {
         clib_file_del(&file_main, uf);
         return clib_error_return_unix(0, "read-close");
     }
 
-    vlib_worker_thread_barrier_sync(vm);
-    udswrap_process_input(uf->file_descriptor, (char *)input_buf, n);
-    vlib_worker_thread_barrier_release(vm);
+    udswrap_process_input(cmd_fd, (char *)input_buf, n);
     clib_file_del(&file_main, uf);
     vec_free(input_buf);
     return 0;
@@ -86,8 +84,7 @@ vpp_uds_init()
 
     s->config = SOCKET_FILE;
     s->flags = CLIB_SOCKET_F_IS_SERVER |
-        CLIB_SOCKET_F_SEQPACKET |
-        CLIB_SOCKET_F_ALLOW_GROUP_WRITE;    /* PF_LOCAL socket only */
+               CLIB_SOCKET_F_ALLOW_GROUP_WRITE;    /* PF_LOCAL socket only */
 
     // makedir of file socket
     u8 *tmp = format(0, "%s", "/run/vpp");
@@ -99,7 +96,7 @@ vpp_uds_init()
         clib_error_report(error);
         return 1;
     }
-        
+
     clib_file_t clib_file = { 0 };
     clib_file.read_function = vpp_uds_listen_read_ready;
     clib_file.file_descriptor = s->fd;

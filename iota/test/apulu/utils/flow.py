@@ -57,14 +57,15 @@ def parseFlowEntries(entries, w1, w2):
     iflow_found = False
     rflow_found = False
     api.Logger.info("parseFlowEntries: entries %s" %(entries))
-    for entry in entries.splitlines():
+    # Skip the first 10 lines as they are part of legend and header
+    for entry in entries.splitlines()[10:-1]:
         api.Logger.info("parseFlowEntries: entry %s" %(entry))
         column = entry.split()
-        if len(column) < 2:
+        if len(column) < 9:
             continue
-        if iflow_found == False and w1.ip_address == column[1] and w2.ip_address == column[2]:
+        if iflow_found == False and w1.ip_address == column[3] and w2.ip_address == column[5]:
             iflow_found = True
-        elif rflow_found == False and w1.ip_address == column[2] and w2.ip_address == column[1]:
+        elif rflow_found == False and w1.ip_address == column[5] and w2.ip_address == column[3]:
             rflow_found = True
         if iflow_found and rflow_found:
             break

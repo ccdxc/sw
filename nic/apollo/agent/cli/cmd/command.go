@@ -3,8 +3,6 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"net"
-	"syscall"
 
 	"github.com/gogo/protobuf/types"
 	"github.com/golang/protobuf/proto"
@@ -30,17 +28,12 @@ const (
 
 var AgentTransport Transport
 
-type PrintObject interface {
-	PrintHeader()
-	HandleObject(*types.Any) bool
-	PrintSummary(int)
-}
-
 // function to handle commands over unix domain sockets
 // param[in] cmdReq  Service request message to be sent
 // return    cmdResp Service response message
 //           err     Error
-func HandleCommand(cmdReq *pds.ServiceRequestMessage) (*pds.ServiceResponseMessage, error) {
+func HandleCommand(cmdReq *pds.ServiceRequestMessage,
+	socket string) (*pds.ServiceResponseMessage, error) {
 	// marshall cmdCtxt
 	iovec, err := proto.Marshal(cmdReq)
 	if err != nil {
@@ -49,7 +42,7 @@ func HandleCommand(cmdReq *pds.ServiceRequestMessage) (*pds.ServiceResponseMessa
 	}
 
 	// send over UDS
-	resp, err := utils.CmdSend(CmdSocket, iovec, int(os.Stdout.Fd()))
+	resp, err := utils.CmdSend(socket, iovec, int(os.Stdout.Fd()))
 	if err != nil {
 		fmt.Printf("Command send operation failed with error %v\n", err)
 		return nil, err
@@ -132,8 +125,13 @@ func HandleSvcReqCommandMsg(cmd pds.Command,
 		ConfigMsg: cmdReqMsg,
 	}
 
+	socket := CmdSocket
+	if cmd == pds.Command_CMD_FLOW_DUMP {
+		socket = vppUdsPath
+	}
+
 	// handle command
-	return HandleCommand(cmdReq)
+	return HandleCommand(cmdReq, socket)
 }
 
 // function to handle config service request message
@@ -176,92 +174,6 @@ func HandleSvcReqConfigMsg(op pds.ServiceRequestOp,
 	}
 
 	return err
-}
-
-// function to handle show object command over unix domain sockets
-// param[in] cmd     Command to be sent
-// return    err     Error
-func HandleUdsShowObject(cmd pds.Command, i PrintObject) error {
-	command := &pds.CommandMessage{
-		Command:    cmd,
-		CommandMsg: nil,
-	}
-
-	cmdReqMsg, err := types.MarshalAny(command)
-	if err != nil {
-		fmt.Printf("Command failed with %v error\n", err)
-		return err
-	}
-
-	cmdReq := &pds.ServiceRequestMessage{
-		ConfigOp:  pds.ServiceRequestOp_SERVICE_OP_NONE,
-		ConfigMsg: cmdReqMsg,
-	}
-
-	// marshall cmdCtxt
-	iovec, err := proto.Marshal(cmdReq)
-	if err != nil {
-		fmt.Printf("Marshall command failed with error %v\n", err)
-		return err
-	}
-
-	c, err := net.Dial("unixpacket", vppUdsPath)
-	if err != nil {
-		fmt.Printf("Could not connect to unix domain socket\n")
-		return err
-	}
-	defer c.Close()
-
-	udsConn := c.(*net.UnixConn)
-	udsFile, err := udsConn.File()
-	if err != nil {
-		return err
-	}
-
-	socket := int(udsFile.Fd())
-	defer udsFile.Close()
-
-	err = syscall.Sendmsg(socket, iovec, nil, nil, 0)
-	if err != nil {
-		fmt.Printf("Sendmsg failed with error %v\n", err)
-		return err
-	}
-
-	count := 0
-	i.PrintHeader()
-	// read from the socket until the no more entries are received
-	resp := make([]byte, 256)
-	for {
-		n, _, _, _, err := syscall.Recvmsg(socket, resp, nil, syscall.MSG_WAITALL)
-		if err != nil {
-			fmt.Printf("Recvmsg failed with error %v\n", err)
-			return err
-		}
-
-		// unmarshal response
-		recvResp := resp[:n]
-		cmdResp := &pds.ServiceResponseMessage{}
-		err = proto.Unmarshal(recvResp, cmdResp)
-		if err != nil {
-			fmt.Printf("Command failed with %v error\n", err)
-			return err
-		}
-
-		if cmdResp.ApiStatus != pds.ApiStatus_API_STATUS_OK {
-			fmt.Printf("Command failed with %v error\n", cmdResp.ApiStatus)
-			return err
-		}
-
-		done := i.HandleObject(cmdResp.GetResponse())
-		if done {
-			// Last message
-			break
-		}
-
-		count += 1
-	}
-	i.PrintSummary(count)
-	return nil
 }
 
 func GetAgentTransport(cmd *cobra.Command) (Transport, error) {

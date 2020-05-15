@@ -9,6 +9,7 @@
 
 #include <nic/sdk/include/sdk/platform.hpp>
 #include <gen/p4gen/artemis/include/p4pd.h>
+#include <nic/apollo/p4/include/artemis_defines.h>
 #define PDS_PIPELINE "artemis"
 
 #endif    // __VPP_IMPL_ARTEMIS_PD_UTILS_H__

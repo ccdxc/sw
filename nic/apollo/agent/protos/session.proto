@@ -30,6 +30,11 @@ message FlowMsg {
   Flow FlowEntry        = 2;
 }
 
+message FlowGetRequest {
+  bool       Summary = 1;
+  FlowFilter Filter  = 2;
+}
+
 message Session {
   Flow InitiatorFlow = 1;
   Flow ResponderFlow = 2;

@@ -99,11 +99,16 @@ typedef struct mapping_dump_args_s {
     mapping_dump_type_t type;
 } mapping_dump_args_t;
 
+typedef struct flow_dump_args_s {
+    bool summary;
+} flow_dump_args_t;
+
 typedef struct cmd_args_s {
     bool valid;
     union {
         mapping_dump_args_t mapping_dump;
         pds_obj_key_t port_id;
+        flow_dump_args_t flow_dump;
     };
 } cmd_args_t;
 

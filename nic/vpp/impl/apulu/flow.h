@@ -155,12 +155,12 @@ pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
     actiondata.drop = ctx->drop;
     if (ses_track_en && !pds_is_flow_session_present(b)) {
         track_actiondata.action_u.session_track_session_track_info.iflow_tcp_state = FLOW_STATE_INIT;
-        track_actiondata.action_u.session_track_session_track_info.iflow_tcp_seq_num = 
+        track_actiondata.action_u.session_track_session_track_info.iflow_tcp_seq_num =
             vnet_buffer(b)->pds_flow_data.flow_hash + 1;
-        track_actiondata.action_u.session_track_session_track_info.iflow_tcp_win_size = 
+        track_actiondata.action_u.session_track_session_track_info.iflow_tcp_win_size =
             vnet_buffer(b)->pds_flow_data.tcp_win_sz;
         track_actiondata.action_u.session_track_session_track_info.rflow_tcp_state = FLOW_STATE_INIT;
-        track_actiondata.action_u.session_track_session_track_info.rflow_tcp_ack_num = 
+        track_actiondata.action_u.session_track_session_track_info.rflow_tcp_ack_num =
             vnet_buffer(b)->pds_flow_data.flow_hash + 1;
         track_actiondata.action_u.session_track_session_track_info.rflow_tcp_win_size =
             vnet_buffer(b)->pds_flow_data.tcp_win_sz;
@@ -778,7 +778,7 @@ pds_flow_packet_type_derive (vlib_buffer_t *p, p4_rx_cpu_hdr_t *hdr,
         }
     }
 
-    // if existing session then retain packet type last known 
+    // if existing session then retain packet type last known
     if (PREDICT_FALSE(NULL != ctx)) {
         pkt_type = ctx->packet_type;
     }
@@ -988,7 +988,7 @@ pds_flow_classify_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
             counter[FLOW_CLASSIFY_COUNTER_TCP_PKT_NO_SES] += 1;
             goto end;
         }
-        // If ageing is supported, all TCP packets except SYN should go to AGE_FLOW 
+        // If ageing is supported, all TCP packets except SYN should go to AGE_FLOW
         // node
         vlib_buffer_advance(p, (APULU_P4_TO_ARM_HDR_SZ -
                                 APULU_ARM_TO_P4_HDR_SZ));

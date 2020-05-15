@@ -9,6 +9,7 @@
 
 #include <nic/sdk/include/sdk/platform.hpp>
 #include <gen/p4gen/apulu/include/p4pd.h>
+#include <nic/apollo/p4/include/apulu_defines.h>
 #define PDS_PIPELINE "apulu"
 
 #endif    // __VPP_INFRA_LOOKUP_APULU_PD_UTILS_H__

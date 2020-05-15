@@ -17,7 +17,8 @@ void pds_flow_dump_init(void);
 // pdsa_vpp_uds_hdlr.c
 void * pds_flow_get_table4(void);
 void * pds_flow_get_table6_or_l2(void);
-
+bool pds_flow_get_session_drop(int ses_id);
+bool pds_flow_get_flow_from_host(int ses_id, bool flow_role);
 #ifdef __cplusplus
 }
 #endif

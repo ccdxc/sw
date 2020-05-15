@@ -5,6 +5,8 @@
 #ifndef __UDS_INTERNAL_H__
 #define __UDS_INTERNAL_H__
 
+#include <stdbool.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -21,7 +23,7 @@ typedef enum vpp_uds_op_s {
 } vpp_uds_op_t;
 
 // callback function prototype
-typedef void (*vpp_uds_cb)(int fd);
+typedef void (*vpp_uds_cb)(int fd, bool summary);
 
 void vpp_uds_register_cb(vpp_uds_op_t op, vpp_uds_cb cb);
 

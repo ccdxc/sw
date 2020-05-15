@@ -1770,23 +1770,23 @@ pds_flow_init (vlib_main_t * vm)
 
     pds_flow_pipeline_init(vm);
     fm->flow_metrics_hdl = pdsa_flow_stats_init();
-    
+
     /* Create the TCP keep alive packet template */
     {
         ip4_and_tcp_header_t h;
 
         clib_memset (&h, 0, sizeof (h));
 
-        /* 
-         * Fill in the constant fields. Data should be empty and rest will 
-         * be filled when sending the packet 
+        /*
+         * Fill in the constant fields. Data should be empty and rest will
+         * be filled when sending the packet
          * */
         h.ip4_hdr.ip_version_and_header_length = 0x45;
         // Length = length of IP heaer + length of TCP header because TCP
         // keepalive doesn't carry any data
         h.ip4_hdr.length = clib_host_to_net_u16(0x28);
         h.ip4_hdr.protocol = IP_PROTOCOL_TCP;
-        h.ip4_hdr.ttl = 255;        
+        h.ip4_hdr.ttl = 255;
         h.tcp_hdr.flags = 1 << TCP_FLAG_BIT_ACK;
         // TCP header is 5 32-bit words as there are no options
         h.tcp_hdr.data_offset_and_reserved = 0x5 << 4;
