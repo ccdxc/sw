@@ -543,12 +543,13 @@ sdk_ret_t
 lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     sdk_ret_t ret;
     nacl_swkey_t key;
+    ipv4_addr_t v4_addr;
     p4pd_error_t p4pd_ret;
     uint32_t idx, nacl_idx;
-    sdk::qos::policer_t policer;
     nacl_swkey_mask_t mask;
     nacl_actiondata_t data;
     static uint32_t dplif = 0;
+    sdk::qos::policer_t policer;
     nexthop_info_entry_t nexthop_info_entry;
 
     strncpy(name_, spec->name, sizeof(name_));
@@ -571,6 +572,31 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
                       "at idx %u", id_, nh_idx_);
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
+    }
+
+    // drop tenant IP multicast traffic from PFs and uplink
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+    key.key_metadata_ktype = KEY_TYPE_IPV4;
+    key.key_metadata_entry_valid = 1;
+    v4_addr = 0xE0000000;
+    memcpy(key.key_metadata_dst, &v4_addr, sizeof(v4_addr));
+    mask.key_metadata_ktype_mask = ~0;
+    mask.key_metadata_entry_valid_mask = ~0;
+    v4_addr = 0xF0000000;
+    memcpy(mask.key_metadata_dst_mask, &v4_addr, sizeof(v4_addr));
+    data.action_id = NACL_NACL_DROP_ID;
+    SDK_ASSERT(apulu_impl_db()->nacl_idxr()->alloc(&nacl_idx) == SDK_RET_OK);
+    p4pd_ret = p4pd_entry_install(P4TBL_ID_NACL, nacl_idx, &key, &mask, &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to program IPv4 multicast drop NACL at idx %u",
+                      nacl_idx);
+        ret = sdk::SDK_RET_HW_PROGRAM_ERR;
+        goto error;
+    } else {
+        PDS_TRACE_DEBUG("Programmed IPv4 multicast drop NACL entry idx %u",
+                        nacl_idx);
     }
 
     // drop traffic from host PF/VFs when no subnet is associated with it
