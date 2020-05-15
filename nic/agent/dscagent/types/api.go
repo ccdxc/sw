@@ -137,6 +137,6 @@ type PipelineAPI interface {
 	// HandleTechSupport captures tech support from DSC and uploads it to Venice
 	HandleTechSupport(obj tsproto.TechSupportRequest) (techSupportArtifact string, err error)
 
-	// HandleAlerts relays alerts from HAL to various exporters
-	HandleAlerts(evtsDispatcher events.Dispatcher)
+	// HandleAlerts relays alerts from pen-oper to various exporters
+	HandleAlerts(ctx context.Context, evtsDispatcher events.Dispatcher)
 }

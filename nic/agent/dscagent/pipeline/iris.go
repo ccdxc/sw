@@ -2147,7 +2147,7 @@ func (i *IrisAPI) HandleTechSupport(obj tsproto.TechSupportRequest) (string, err
 }
 
 // HandleAlerts unimplemented
-func (i *IrisAPI) HandleAlerts(evtsDispatcher events.Dispatcher) {
+func (i *IrisAPI) HandleAlerts(ctx context.Context, evtsDispatcher events.Dispatcher) {
 	return
 }
 

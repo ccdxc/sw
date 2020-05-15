@@ -250,9 +250,6 @@ func (a *ApuluAPI) HandleVeniceCoordinates(dsc types.DistributedServiceCardStatu
 		log.Error(errors.Wrapf(types.ErrBoltDBStoreCreate, "Uplink: %s | Uplink: %v", lb.GetKey(), err))
 		return
 	}
-
-	// start event/alert policies watcher
-	a.StartAlertPoliciesWatch()
 }
 
 // RegisterControllerAPI ensures the handles for controller API is appropriately set up
@@ -1399,9 +1396,9 @@ func (a *ApuluAPI) HandleTechSupport(obj tsproto.TechSupportRequest) (string, er
 }
 
 // HandleAlerts start consuming alerts from operd plugin & export
-func (a *ApuluAPI) HandleAlerts(evtsDispatcher events.Dispatcher) {
+func (a *ApuluAPI) HandleAlerts(ctx context.Context, evtsDispatcher events.Dispatcher) {
 	// handle all the alerts
-	apulu.HandleAlerts(evtsDispatcher, a.AlertsSvcClient)
+	apulu.HandleAlerts(ctx, evtsDispatcher, a.AlertsSvcClient)
 }
 
 // ReplayConfigs replays last known configs from boltDB
@@ -2022,6 +2019,8 @@ func (a *ApuluAPI) startDynamicWatch(kinds []string) {
 				} else {
 					log.Infof("AggWatchers Start for kinds %s", types.InsertionKinds)
 					a.ControllerAPI.Start(kinds)
+					// start event/alert policies watcher
+					a.StartAlertPoliciesWatch()
 					return
 				}
 			}

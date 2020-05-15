@@ -350,8 +350,32 @@ func (c *API) startPolicyWatcher() {
 	}()
 }
 
+func (c *API) stopAlertPoliciesWatch() {
+	log.Info("Stopping alert policy watchers")
+	if c.policyWatcher != nil {
+		c.policyWatcher.Stop()
+		c.policyWatcher = nil
+	}
+
+	if c.policyMgr != nil {
+		c.policyMgr.Stop()
+		c.policyMgr = nil
+	}
+
+	if c.evtsDispatcher != nil {
+		c.evtsDispatcher.DeleteExporter(exporters.Venice.String())
+		c.evtsDispatcher.Shutdown()
+		c.evtsDispatcher = nil
+	}
+}
+
 // WatchAlertPolicies watches for alert/event policies & handles alerts. Cloud Pipeline only
 func (c *API) WatchAlertPolicies() error {
+
+	if c.WatchCtx == nil {
+		log.Info("Controller API: WatchCtx is not set")
+		return fmt.Errorf("Controller API: WatchCtx is not set")
+	}
 
 	if c.ResolverClient == nil {
 		log.Info("Controller API: Resolver client is not set yet")
@@ -383,7 +407,7 @@ func (c *API) WatchAlertPolicies() error {
 
 	// start venice exporter
 	exporterChLen := 1000
-	veniceExporter, err := exporters.NewVeniceExporter("venice", exporterChLen, "", c.ResolverClient, defLogger)
+	veniceExporter, err := exporters.NewVeniceExporter(exporters.Venice.String(), exporterChLen, "", c.ResolverClient, defLogger)
 	if err != nil {
 		log.Errorf("Controller API: venice exporter create failed, err %v", err)
 		return err
@@ -397,14 +421,14 @@ func (c *API) WatchAlertPolicies() error {
 
 	c.policyMgr, err = policy.NewManager(nodeName, c.evtsDispatcher, defLogger)
 	if err != nil {
-		log.Errorf("Controller API: venice exporter create policy manager failed, err %v", err)
+		log.Errorf("Controller API: policy manager creation failed, err %v", err)
 		return err
 	}
 	c.startPolicyWatcher()
 
 	c.evtsDispatcher.Start()
 	log.Info("Controller API: Started Events Dispatcher")
-	c.PipelineAPI.HandleAlerts(c.evtsDispatcher)
+	c.PipelineAPI.HandleAlerts(c.WatchCtx, c.evtsDispatcher)
 	return nil
 }
 
@@ -565,6 +589,7 @@ func (c *API) Stop() error {
 	c.cancelWatcher()
 
 	c.closeConnections()
+	c.stopAlertPoliciesWatch()
 	// Wait for nimbus client to drain all active watchers
 	c.Wait()
 

@@ -65,11 +65,17 @@ func convertToVeniceAlert(nEvt *operdapi.Alert) *evtsapi.Event {
 	return vAlert
 }
 
-func queryAlerts(evtsDispatcher events.Dispatcher, stream operdapi.AlertsSvc_AlertsGetClient) {
+func queryAlerts(ctx context.Context, evtsDispatcher events.Dispatcher, stream operdapi.AlertsSvc_AlertsGetClient) {
 	for {
 		resp, err := stream.Recv()
 		if err == io.EOF {
 			break
+		}
+		select {
+		case <-ctx.Done():
+			log.Info("Closing alerts query with pen-oper")
+			return
+		default:
 		}
 		if err != nil {
 			log.Error(errors.Wrapf(types.ErrAlertsRecv,
@@ -90,6 +96,7 @@ func queryAlerts(evtsDispatcher events.Dispatcher, stream operdapi.AlertsSvc_Ale
 		if err := evtsDispatcher.Action(*vAlert); err != nil {
 			log.Error(errors.Wrapf(types.ErrAlertsFwd,
 				"Error forwarding alert {%+v} to venice, err: %v", alert, err))
+			return
 		} else {
 			log.Infof("Forwarded alert %+v to venice", alert)
 		}
@@ -98,7 +105,7 @@ func queryAlerts(evtsDispatcher events.Dispatcher, stream operdapi.AlertsSvc_Ale
 }
 
 // HandleAlerts handles collecting and reporting of alerts
-func HandleAlerts(evtsDispatcher events.Dispatcher, client operdapi.AlertsSvcClient) {
+func HandleAlerts(ctx context.Context, evtsDispatcher events.Dispatcher, client operdapi.AlertsSvcClient) {
 	emptyStruct := &halapi.Empty{}
 	// create a stream for alerts
 	alertsStream, err := client.AlertsGet(context.Background(), emptyStruct)
@@ -114,13 +121,17 @@ func HandleAlerts(evtsDispatcher events.Dispatcher, client operdapi.AlertsSvcCli
 
 		for {
 			select {
+			case <-ctx.Done():
+				log.Info("Closing periodic alerts query with pen-oper")
+				return
 			case <-ticker.C:
+				log.Info("Querying alerts")
 				penOperURL := fmt.Sprintf("127.0.0.1:%s", types.PenOperGRPCDefaultPort)
 				if utils.IsServerUp(penOperURL) == false {
 					// pen_oper is not up yet, skip querying
 					continue
 				}
-				queryAlerts(evtsDispatcher, stream)
+				queryAlerts(ctx, evtsDispatcher, stream)
 			}
 		}
 	}(alertsStream)

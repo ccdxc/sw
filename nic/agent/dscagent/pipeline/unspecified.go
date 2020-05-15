@@ -1769,7 +1769,7 @@ func (i *FakeAgentAPI) HandleTechSupport(obj tsproto.TechSupportRequest) (string
 }
 
 // HandleAlerts unimplemented
-func (i *FakeAgentAPI) HandleAlerts(evtsDispatcher events.Dispatcher) {
+func (i *FakeAgentAPI) HandleAlerts(ctx context.Context, evtsDispatcher events.Dispatcher) {
 	return
 }
 
