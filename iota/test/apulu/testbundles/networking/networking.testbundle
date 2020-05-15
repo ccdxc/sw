@@ -13,7 +13,7 @@ testcases:
         iterators :
             type    : nested
             ipaf    : [ ipv4 ]
-            pktsize : [ 64, 1024 ]
+            pktsize : [ 128, 1024 ]
 
     -   name    : Ping_Remote_Workloads
         testcase: testcases.networking.ping
@@ -24,8 +24,7 @@ testcases:
             type    : nested
             #ipaf    : [ ipv4, ipv6 ]
             ipaf    : [ ipv4 ]
-            #pktsize : [ 64, 128, 256, 512, 1024, 2048, 4096, 8192 ]
-            pktsize : [ 64, 128, 256, 512, 1024 ]
+            pktsize : [ 64, 8192 ]
 
     -   name    : Ping_IGW_NAPT_Workloads
         testcase: testcases.networking.ping
@@ -36,7 +35,7 @@ testcases:
         iterators :
             type    : nested
             ipaf    : [ ipv4 ]
-            pktsize : [ 64 ]
+            pktsize : [ 2048 ]
 
     -   name    : Ping_IGW_NAPT_SERVICE_Workloads
         testcase: testcases.networking.ping
@@ -47,7 +46,7 @@ testcases:
         iterators :
             type    : nested
             ipaf    : [ ipv4 ]
-            pktsize : [ 64 ]
+            pktsize : [ 128 ]
 
     -   name    : Ping_IGW_PUBLIC_NAPT_SERVICE_Workloads
         testcase: testcases.networking.ping
@@ -70,7 +69,7 @@ testcases:
         iterators :
             type      : nested
             ipaf      : [ ipv4 ]
-            pktsize   : [ 1024 ]
+            pktsize   : [ 4096 ]
             protocol  : [ tcp ]
 
     -   name    : Iperf_IGW_NAPT_UDP
@@ -82,7 +81,7 @@ testcases:
         iterators :
             type      : nested
             ipaf      : [ ipv4 ]
-            pktsize   : [ 1024 ]
+            pktsize   : [ 8192 ]
             protocol  : [ udp ]
 
     -   name    : Iperf_IGW_NAPT_SERVICE_TCP
@@ -94,7 +93,7 @@ testcases:
         iterators :
             type      : nested
             ipaf      : [ ipv4 ]
-            pktsize   : [ 512 ]
+            pktsize   : [ 6000 ]
             protocol  : [ tcp ]
 
     -   name    : Iperf_IGW_NAPT_SERVICE_UDP
@@ -156,7 +155,7 @@ testcases:
         iterators :
             type      : nested
             ipaf      : [ ipv4 ]
-            pktsize   : [ 512 ]
+            pktsize   : [ 5000 ]
             protocol  : [ udp ]
 
     -   name    : Iperf_IGW_NAT_TCP
@@ -181,5 +180,5 @@ testcases:
         iterators :
             type    : nested
             ipaf    : [ ipv4 ]
-            pktsize : [ 64 ]
+            pktsize : [ 256 ]
 
