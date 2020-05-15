@@ -63,7 +63,7 @@ func (t *BgpAsn) UnmarshalJSON(b []byte) error {
 				return errors.New("ASN should either be specified as a integer or in dotted notation as a string")
 			}
 
-			ret = uint32(higherBytesAsInt)*65535 + uint32(lowerBytesAsInt)
+			ret = uint32(higherBytesAsInt)*(uint32(math.MaxUint16)+1) + uint32(lowerBytesAsInt)
 		}
 	}
 
@@ -77,8 +77,8 @@ func (t *BgpAsn) MarshalJSON() ([]byte, error) {
 		return json.Marshal(t.ASNumber)
 	}
 
-	higherBytes := t.ASNumber / 65535
-	lowerBytes := t.ASNumber % 65535
+	higherBytes := t.ASNumber / (uint32(math.MaxUint16) + 1)
+	lowerBytes := t.ASNumber % (uint32(math.MaxUint16) + 1)
 	dottedASN := strconv.Itoa(int(higherBytes)) + "." + strconv.Itoa(int(lowerBytes))
 
 	return json.Marshal(dottedASN)
