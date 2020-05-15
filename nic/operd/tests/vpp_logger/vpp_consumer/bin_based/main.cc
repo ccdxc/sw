@@ -3,7 +3,7 @@
 #include <inttypes.h>
 #include <sys/stat.h>
 
-#include "gen/proto/oper.pb.h"
+#include "gen/proto/flow.pb.h"
 #include "gen/proto/types.pb.h"
 #include "lib/operd/operd.hpp"
 
@@ -13,19 +13,19 @@
 static void
 print_flow (int fd, char *data, uint64_t data_length)
 {
-    pds::FlowLog flow;
+    operd::FlowLog flow;
     
     bool result = flow.ParseFromArray(data, data_length);
     assert(result == true);
     
     switch (flow.logtype()) {
-    case pds::FLOW_LOG_TYPE_OPEN:
+    case operd::FLOW_LOG_TYPE_OPEN:
         dprintf(fd, "Add, ");
         break;
-    case pds::FLOW_LOG_TYPE_CLOSE:
+    case operd::FLOW_LOG_TYPE_CLOSE:
         dprintf(fd, "Delete, ");
         break;
-    case pds::FLOW_LOG_TYPE_ACTIVE:
+    case operd::FLOW_LOG_TYPE_ACTIVE:
         dprintf(fd, "Active, ");
         break;
     default:

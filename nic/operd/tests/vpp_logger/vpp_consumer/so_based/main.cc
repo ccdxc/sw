@@ -1,7 +1,7 @@
 #include <arpa/inet.h>
 #include <inttypes.h>
 
-#include "gen/proto/oper.pb.h"
+#include "gen/proto/flow.pb.h"
 #include "gen/proto/types.pb.h"
 #include "lib/operd/operd.hpp"
 
@@ -10,16 +10,16 @@ extern "C" {
 void
 handler(sdk::operd::log_ptr entry)
 {
-    pds::FlowLog flow;
+    operd::FlowLog flow;
 
     bool result = flow.ParseFromArray(entry->data(), entry->data_length());
     assert(result == true);
 
     switch (flow.logtype()) {
-    case pds::FLOW_LOG_TYPE_OPEN:
+    case operd::FLOW_LOG_TYPE_OPEN:
         printf("Add, ");
         break;
-    case pds::FLOW_LOG_TYPE_CLOSE:
+    case operd::FLOW_LOG_TYPE_CLOSE:
         printf("Delete, ");
         break;
     default:

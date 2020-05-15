@@ -5,7 +5,7 @@
 #include <string.h>
 
 #include "flow_decoder.h"
-#include "gen/proto/oper.pb.h"
+#include "gen/proto/flow.pb.h"
 #include "gen/proto/types.pb.h"
 #include "lib/operd/decoder.h"
 
@@ -26,7 +26,7 @@ vpp_decoder (uint8_t encoder, const char *data, size_t data_length,
              char *output, size_t output_size)
 {
     const operd_flow_t *flow = (operd_flow_t *)data;
-    pds::FlowLog flowLog;
+    operd::FlowLog flowLog;
     size_t len;
 
     assert(sizeof(*flow) == data_length);
@@ -44,13 +44,13 @@ vpp_decoder (uint8_t encoder, const char *data, size_t data_length,
 
     switch (flow->logtype) {
     case OPERD_FLOW_LOGTYPE_ADD:
-        flowLog.set_logtype(::pds::FLOW_LOG_TYPE_OPEN);
+        flowLog.set_logtype(::operd::FLOW_LOG_TYPE_OPEN);
         break;
     case OPERD_FLOW_LOGTYPE_DEL:
-        flowLog.set_logtype(::pds::FLOW_LOG_TYPE_CLOSE);
+        flowLog.set_logtype(::operd::FLOW_LOG_TYPE_CLOSE);
         break;
     case OPERD_FLOW_LOGTYPE_ACTIVE:
-        flowLog.set_logtype(::pds::FLOW_LOG_TYPE_ACTIVE);
+        flowLog.set_logtype(::operd::FLOW_LOG_TYPE_ACTIVE);
         break;
     default:
         assert(0);

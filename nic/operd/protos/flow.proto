@@ -1,0 +1,74 @@
+//
+// {C} Copyright 2020 Pensando Systems Inc. All rights reserved
+//
+//------------------------------------------------------------------------------
+///
+/// \file
+/// protobuf specification for flows
+///
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+package operd;
+
+import "types.proto";
+
+// flow log type indicates whether log is generated when flow is
+// created or closed
+enum FlowLogType {
+  FLOW_LOG_TYPE_NONE   = 0;
+  // flow log raised at the time of flow/session creation
+  FLOW_LOG_TYPE_OPEN   = 1;
+  // flow log raised at the time of flow/session deletion
+  FLOW_LOG_TYPE_CLOSE  = 2;
+  // flow log raised for long lived flows while flow is active
+  FLOW_LOG_TYPE_ACTIVE = 3;
+}
+
+// security policy type due to which the flow action was chosen
+enum SecurityPolicyType {
+  SECURITY_POLICY_TYPE_NONE = 0;
+  // flow action is the result of a security group rule
+  SECURITY_POLICY_TYPE_SG   = 1;
+  // flow action is the result of a stateless NACL rule (subnet/vpc level)
+  SECURITY_POLICY_TYPE_NACL = 2;
+}
+
+// protobuf format for flow logs (this is the format consumers will see flow
+// logs in). The producer (e.g., VPP) will do just a binary dump to shared
+// memory and a decoder (invoked by operd) will transform the contents into
+// this format
+message FlowLog {
+  // timestamp indicating when the flow is created/closed
+  uint64                   Timestamp    = 1;
+  // flow open log or flow close log
+  FlowLogType              LogType      = 2;
+  // source interface of first packet (uplink of VF/PF id)
+  uint32                   SrcInterface = 3;
+  // flow key
+  types.FlowKey            Key          = 4;
+  // flow action taken
+  types.SecurityRuleAction FlowAction   = 5;
+  // NAT-ed source IP after the rewrite, if any
+  types.IPAddress          SrcNATIP     = 6;
+  // source NAT port, if any
+  uint32                   SrcNATPort   = 7;
+  // NAT-ed destination IP after the rewrite, if any
+  types.IPAddress          DstNATIP     = 8;
+  // destination NAT port, if any
+  uint32                   DstNATPort   = 9;
+  // type of the security policy rule that matched the packet
+  SecurityPolicyType       PolicyType   = 10;
+  // SessionId identifies unique id assigned for the the flow pair
+  // for the lifetime of the session
+  uint64                   SessionId    = 11;
+  // initiator flow octet count
+  uint64                   IflowBytes   = 12;
+  // initator flow packet count
+  uint64                   IflowPackets = 13;
+  // responder flow octet count
+  uint64                   RflowBytes   = 14;
+  // responder flow packet count
+  uint64                   RflowPackets = 15;
+}
+
