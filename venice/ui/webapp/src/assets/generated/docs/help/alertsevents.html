@@ -1,204 +1,120 @@
 <h1 id="alertsandevents">Alerts and Events</h1>
-<p>The alert and event logs discovers events of interest, that provide general information or information that are triggered by some critical event.  PSM allows the creation of customized alert and event policies to facilitate these specific events in the environment, that can be sent to an external syslog server.</p>
+<p>The alert and event logs discovers events of interest, that provide general information or information that are triggered by some critical event.  Venice allows the creation of customized alert and event policies to facilitate these specific events in the environment, that can be sent to an external syslog server.</p>
 <h2 id="alertpolicies">Alert Policies</h2>
 <p>Within the alert section, a customizable alert policy can be created to meet one or more specific criteria.   This will allow monitoring of your environment within this view.  To build this alert policy, you will need to provide the following from the "Add Alert Policy".  It is required to have at least one destination for the "Alert Policy".  </p>
 <h3 id="adddestination">Add Destination</h3>
 <p>The "Add Destination" is referring to the external syslog server that the alerts will be sent to.  One destination is required before any alert policy can be created.  The destination needs the following information:</p>
-<table>
-<thead>
-<tr>
-<th>Option</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>name</td>
-<td>Name of the object, unique within a Namespace for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.</td>
-</tr>
-</tbody>
-</table>
-<h6 id="syslogexportconfiguration">Syslog Export Configuration</h6>
-<table>
-<thead>
-<tr>
-<th>Option</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>format</td>
-<td>Event export format, SYSLOG_BSD default. <br> Valid options include:<br> - BSD <br> - RFC5424</td>
-</tr>
-<tr>
-<td>facility-override</td>
-<td>Override default facility with this in exported logs. <br> Valid options include:<br> - Auth <br> - Private Auth <br> - CRON <br> - Daemon <br> - FTP <br> - Kernel <br> - local 0 <br> - local 1 <br> - local 2 <br> - local 3 <br> - local 4 <br> - local 5 <br> - local 6 <br> - local 7 <br> - LPR <br> - Mail <br> - News <br> - Syslog <br> - User <br> - UUCP</td>
-</tr>
-<tr>
-<td>prefix</td>
-<td>Add prefix in exported logs.</td>
-</tr>
-</tbody>
-</table>
-<h6 id="target">Target</h6>
-<p>Servers to send the data to. Additional Targets are allowed by clicking on "+Add". </p>
-<table>
-<thead>
-<tr>
-<th>Option</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>destination</td>
-<td>IP address or URL of the collector/entity to which the data is to be exported. Length of string should be between 1 and 2048.</td>
-</tr>
-<tr>
-<td>gateway</td>
-<td>Gateway of the dest IP address or URL of the collector/entity to which the data is to be exported. Length of string should be between 0 and 2048.</td>
-</tr>
-<tr>
-<td>transport</td>
-<td>Protocol and Port number where an external collector is gathering the data example "UDP/2055". Should be a valid layer 3 or layer 4 protocol and port/type.</td>
-</tr>
-</tbody>
-</table>
+<ul>
+<li>Unique Destination Name: Provide a unique destination name</li>
+<li>Syslog Export Configuration:<ul>
+<li>Facility Override: A drop-down box that provides the list of overrides</li>
+<li>Prefix: <?></li>
+<li>Format: Two supported format (BSD or RFC5424)</li></ul></li>
+<li>Target:<ul>
+<li>Destination: IP Address and path (URL) of the syslog server</li>
+<li>Transport: TCP or UDP and port number</li></ul></li>
+</ul>
 <h3 id="alertpolicy">Alert Policy</h3>
 <p>The alert policy allows for specific customized alerts to be sent to the syslog server.  </p>
 <h4 id="addalertpolicy">Add Alert Policy</h4>
 <p>To build this alert policy, the following information is needed:</p>
-<table>
-<thead>
-<tr>
-<th>Option</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>name</td>
-<td>Name of the object, unique within a Namespace for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.</td>
-</tr>
-</tbody>
-</table>
-<h6 id="criteriaselector">Criteria selector</h6>
-<p>If the event matches the given criteria, then an alert will be generated. 
-All requirements are ANDed together.</p>
-<table>
-<thead>
-<tr>
-<th>Option</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>key</td>
-<td>The event field that the condition applies to.</td>
-</tr>
-<tr>
-<td>operator</td>
-<td>Condition checked for the key.</td>
-</tr>
-<tr>
-<td>values</td>
-<td>Values contains one or more comma separated values corresponding to the key.</td>
-</tr>
-</tbody>
-</table>
-<h6 id="alertlevel">Alert level</h6>
-<p>Then Alert defines the severity of the generated alert</p>
-<table>
-<thead>
-<tr>
-<th>Option</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>severity</td>
-<td>Severity to be set for an alert that gets triggered from this rule. <br> Valid options include:<br> - info <br> - warn <br> - critical</td>
-</tr>
-</tbody>
-</table>
-<h6 id="destination">Destination</h6>
-<table>
-<thead>
-<tr>
-<th>Option</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>destinations</td>
-<td>Name of the alert destinations to be used to send out notification when an alert gets generated.</td>
-</tr>
-</tbody>
-</table>
+<ul>
+<li>Policy Name: Provide an alert policy name</li>
+<li>If Event: A drop down list of possible event criteria is provided. </li>
+<li>Operand: Equals or Not Equals</li>
+<li>Value: Enter in the value for the criteria</li>
+<li>Add:  Additional criteria can be added (optional)</li>
+<li>Then Alert:  This will define what type of alert it is categorized as (info, warn, critical)</li>
+<li>Destination: This will be the external syslog server that this alert will be sent to.  A drop down list provided the configured external syslog server(s).</li>
+</ul>
+<h4 id="adddestination-1">Add Destination</h4>
+<p>A definition for the syslog destination can be configured in this section.  Here are the following attributes.</p>
+<ul>
+<li>Name:  Unique name for syslog destination</li>
+<li>Syslog Export Configuration:<ul>
+<li>Facility Override: Options are<ul>
+<li>Auth</li>
+<li>Private Auth</li>
+<li>CRON</li>
+<li>Daemon</li>
+<li>FTP</li>
+<li>Kernel</li>
+<li>local 0 - 7</li>
+<li>LPR</li>
+<li>Mail</li>
+<li>News</li>
+<li>Syslog</li>
+<li>User</li>
+<li>UUCP</li></ul></li>
+<li>Prefix: gathers the specific prefix </li>
+<li>Format: Options are BSD or RFC5424</li></ul></li>
+<li>Target:  This is the information for the syslog server<ul>
+<li>Destination: IP Address of the server</li>
+<li>Transport:  Protocol/Port </li></ul></li>
+</ul>
 <h2 id="eventspolicy">Events Policy</h2>
-<p>Within the events section, an event policy can be created to send events to an external syslog server. To build this event policy, you will need to provide the following from the "Add Event Policy". </p>
-<table>
-<thead>
-<tr>
-<th>Option</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>name</td>
-<td>Name of the object, unique within a Namespace for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.</td>
-</tr>
-</tbody>
-</table>
-<h6 id="syslogexportconfiguration-1">Syslog Export Configuration</h6>
-<table>
-<thead>
-<tr>
-<th>Option</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>format</td>
-<td>Event export format, SYSLOG_BSD default. <br> Valid options include:<br> - BSD <br> - RFC5424</td>
-</tr>
-<tr>
-<td>facility-override</td>
-<td>Override default facility with this in exported logs. <br> Valid options include:<br> - Auth <br> - Private Auth <br> - CRON <br> - Daemon <br> - FTP <br> - Kernel <br> - local 0 <br> - local 1 <br> - local 2 <br> - local 3 <br> - local 4 <br> - local 5 <br> - local 6 <br> - local 7 <br> - LPR <br> - Mail <br> - News <br> - Syslog <br> - User <br> - UUCP</td>
-</tr>
-<tr>
-<td>prefix</td>
-<td>Add prefix in exported logs.</td>
-</tr>
-</tbody>
-</table>
-<h6 id="target-1">Target</h6>
-<p>Servers to send the data to. Additional Targets are allowed by clicking on "+Add". </p>
-<table>
-<thead>
-<tr>
-<th>Option</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>destination</td>
-<td>IP address or URL of the collector/entity to which the data is to be exported. Length of string should be between 1 and 2048.</td>
-</tr>
-<tr>
-<td>gateway</td>
-<td>Gateway of the dest IP address or URL of the collector/entity to which the data is to be exported. Length of string should be between 0 and 2048.</td>
-</tr>
-<tr>
-<td>transport</td>
-<td>Protocol and Port number where an external collector is gathering the data example "UDP/2055". Should be a valid layer 3 or layer 4 protocol and port/type.</td>
-</tr>
-</tbody>
-</table>
+<p>Within the events section, an event policy can be created to send specific categorized events to an external syslog server. To build this event policy, you will need to provide the following from the "Add Event Policy".  It is required to have at least one destination for the "Alert Policy", please create the "Destination" prior to creating the Event Policy. </p>
+<ul>
+<li>Unique Policy Name: Provide a unique event policy name<ul>
+<li>If Event:  The events are based upon the following options<ul>
+<li>name</li>
+<li>tenant</li>
+<li>namespace</li>
+<li>generation-id</li>
+<li>resource-version</li>
+<li>uuid</li>
+<li>creation-time</li>
+<li>mod-time</li></ul></li>
+<li>Operand:  Options are equals or not equals </li>
+<li>Value: Enter in the value for the event filter</li>
+<li>Then Alert:  Once the event occurs, provide the following information to the syslog server<ul>
+<li>info</li>
+<li>warn</li>
+<li>critical</li></ul></li>
+<li>Destinations:  Choose from the drop-down box the list of destinations that has been configured </li></ul></li>
+</ul>
+<h3 id="exportevents">Export Events</h3>
+<p>Events section allow users to export Events log to a named file for archival. This file is downloadable from the Events section itself after "Create archive" is successful. The archived Events log file is also available for download in the "Monitoring" section under "Archive log".</p>
+<p>Steps for creating a archive request -</p>
+<ol>
+<li><p>Click on "Export Events" found next to "Event Policies"</p></li>
+<li><p>Specify a Archive request name - Unique name </p></li>
+<li><p>Specify timerange - "Start time" and "End time" or select one of the avaiable time range from the following options:<br />
+Past hour/ Past day/ Previous day/ Past 6 hours/ Past week/ Previous week/ Past 12 hours/ Past month/ Previous month.<br />
+The range is automatically set if one of the preset range is choosen.</p></li>
+<li><p>Select "Create Archive" to complete the archive request.<br />
+If the input file name already exist, an error message - "Create failed" / Already exist in Cache is displayed in a pop up.</p>
+<p>If successful, a "Create Successful - Created archive "<em>request archive-request-file</em>" pop up is displayed along with - Archive Request "<em>archive-request-file</em>" is completed. Click [<em>Download</em>]() to download the file!</p>
+<p>The [Download]() link can be used to download the archive log. The archive log file is gzip'ed for saving space. </p></li>
+</ol>
+<p>The Event logs archive file is available for download in the "Monitoring" section under "Archive log".</p>
+<p>Note: Advanced search query in the Events records (the "V" arrow next to the search icon) can be used to select only those records that meets your criteria to be archived. The "View Search Query" button will show the Archive Query during the "Create Archive" operation.</p>
+<p>For ex. 
+Using Advanced search, filter the Events records based on "Action" column with "Severity" Equal to "critical", now click "Export Events" and follow the steps for creating an archive request.
+"View Search Query" will display the "Archive Query"-</p>
+<pre><code>{
+ "fields": {
+  "_ui": {},
+  "requirements": [
+   {
+    "_ui": {},
+    "key": "severity",
+    "operator": "in",
+    "values": [
+     "critical"
+    ]
+   }
+  ]
+ },
+ "labels": {
+  "_ui": {},
+  "requirements": []
+ },
+ "texts": [
+  {
+   "_ui": {},
+   "text": []
+  }
+ ]
+}
+</code></pre>

@@ -14,6 +14,7 @@ export const UrlMap: { [url: string]: string } = {
   '/monitoring/alertsevents/alertdestinations': 'alertsevents',
   '/monitoring/alertsevents/eventpolicy': 'alertsevents',
   '/monitoring/auditevents' : 'auditevents',
+  '/monitoring/archive': 'archivelogs',
   '/monitoring/fwlogs': 'fwlogs',
   '/monitoring/fwlogpolicies': 'firewalllogpolicy',
   '/monitoring/metrics': 'metrics',  

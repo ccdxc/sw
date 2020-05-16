@@ -1,5 +1,5 @@
 <h2 id="auditevents">Audit Events</h2>
-<p>The Audit Events section tracks all events for the PSM cluster that provides the number of events seen.  It provides a selectable list to be shown of the following information about the events, which are:</p>
+<p>The Audit Events section tracks all events for the Venice cluster that provides the number of events seen.  It provides a selectable list to be shown of the following information about the events, which are:</p>
 <pre><code>- Who:  Which user did the action
 - Time:  Timestamp of the event
 - Action: What type of action was executed.  Examples are read, login, create, etc.
@@ -8,6 +8,51 @@
 - Outcome: Result of the event
 - Client: Source IP where the action was executed from
 - Service Node: Which cluster node the event processed
-- Service Name: Which PSM service was used 
+- Service Name: Which Venice service was used 
 </code></pre>
 <p>The audited events can be searched by any of the criteria above to narrow the list of events.  The columns shown can be selectable to show all 9 columns or a sub section of them.  The events can be exported into a CSV or JSON format by clicking on the gear icon.</p>
+<h3 id="exportauditevents">Export Audit Events</h3>
+<p>Audit Events section allow users to export Audit Events log to a named file for archival. This file is downloadable from the Audit Events section itself after "Create archive" is successful. The archived Audit Event log file is also available for download in the "Monitoring" section under "Archive log".</p>
+<p>Steps for creating a archive request -</p>
+<ol>
+<li>Click on "Export Audit Events" on the right hand top corner of the Audit Events panel</li>
+<li>Specify a Archive request name - Unique name </li>
+<li>Specify timerange - "Start time" and "End time" or select one of the avaiable time range from the following options:
+Past hour/ Past day/ Previous day/ Past 6 hours/ Past week/ Previous week/ Past 12 hours/ Past month/ Previous month.<br />
+The range is automatically set if one of the preset range is choosen.</li>
+<li>Select "Create Archive" to complete the archive request.</li>
+</ol>
+<p>If the input file name already exist, an error message - "Create failed" / "Already exist in Cache" is displayed in a pop up.</p>
+<p>If successful,  "Create Successful - Created archive "<em>request archive-request-file</em>" pop up is displayed along with - Archive Request "<em>archive-request-file</em>" is completed. Click [<em>Download</em>]() to download the file! </p>
+<p>The [Download]() link can be used to download the archive log. The archive log is gzip'ed for saving space.</p>
+<p>The archive request file is available for download in the "Monitoring" section under "Archive log".
+Note: Advanced search query in the Audit Event records (the "V" arrow next to the search icon) can be used to select only those records that meets your criteria to be archived. The "View Search Query" button will show the Archive Query during the "Create Archive" operation.</p>
+<p>For ex. 
+Using the advanced search, filter the Audit records based on "Action" column with "Action" Equal to "Delete", now click "Export Audit Events" and follow the steps for creating an archive request.
+"View Search Query" will display the "Archive Query" -</p>
+<pre><code>{
+ "fields": {
+  "_ui": {},
+  "requirements": [
+   {
+    "_ui": {},
+    "key": "action",
+    "operator": "in",
+    "values": [
+     "Delete"
+    ]
+   }
+  ]
+ },
+ "labels": {
+  "_ui": {},
+  "requirements": []
+ },
+ "texts": [
+  {
+   "_ui": {},
+   "text": []
+  }
+ ]
+}
+</code></pre>
