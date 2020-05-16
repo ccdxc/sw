@@ -13,6 +13,10 @@ import apollo.config.topo as topo
 from apollo.config.agent.api import ObjectTypes as ObjectTypes
 import types_pb2 as types_pb2
 
+from infra.common.objects import IpAddress
+from infra.common.objects import Ipv6Address
+from infra.common.objects import MacAddressBase
+
 IPV4_HOST = ipaddress.IPv4Address(0xbadee1ba)
 IPV6_HOST = ipaddress.IPv6Address('e1ba:aced:a11:face:b00c:bade:da75:900d')
 
@@ -1026,3 +1030,52 @@ def GetVNId(testcase, args=None):
         return testcase.config.localmapping.VNIC.SUBNET.Vnid
     else:
         return testcase.config.localmapping.VNIC.SUBNET.VPC.Vnid
+
+def GetMulticastIP(testcase, packet, args=None):
+    iterelem = testcase.module.iterator.Get()
+    lobj = testcase.config.localmapping
+    robj = testcase.config.remotemapping
+    if args and args.direction == "TX":
+        isV4Stack = True if lobj.AddrFamily == "IPV4" else False
+    else:
+        isV4Stack = True if robj.AddrFamily == "IPV4" else False
+
+    if isV4Stack:
+        if iterelem.id == 'IGMP-TO-CPU':
+            return IpAddress(string='224.0.0.1')
+        elif iterelem.id == 'IGMP':
+            return IpAddress(string='224.0.0.22')
+        else:
+            return IpAddress(string='239.1.1.1')
+    else:
+        if iterelem.id == 'MLD_QUERY':
+            return Ipv6Address(string='FF02::1')
+        elif iterelem.id == 'MLD_RESPONSE':
+            return Ipv6Address(string='FF02::16')
+        elif iterelem.id == 'MLD_DONE':
+            return Ipv6Address(string='FF02::2')
+        elif iterelem.id == 'ROUTER_SOLICITATION':
+            return Ipv6Address(string='FF02::2')
+        elif iterelem.id == 'ROUTER_ADVERTISEMENT':
+            return Ipv6Address(string='FF02::1')
+        elif iterelem.id == 'NEIGHBOR_SOLICITATION':
+            return Ipv6Address(string='ff08::1')
+        elif iterelem.id == 'NEIGHBOR_ADVERTISEMENT':
+            return Ipv6Address(string='FF02::1')
+        else:
+            return Ipv6Address(string='ff08::1')
+
+def GetMulticastMacFromIPv4(ip):
+    return MacAddressBase(integer=(0x01005E000000 | (ip.getnum() & 0x007FFFFF)))
+
+def GetMulticastMacFromIPv6(ip):
+    return MacAddressBase(integer=(0x333300000000 | (ip.getnum() & 0xFFFFFFFF)))
+
+def GetMulticastMacFromIP(testcase, packet):
+    ip = GetMulticastIP(testcase, packet)
+    if ip.value.version == 4:
+        return GetMulticastMacFromIPv4(ip)
+    elif ip.value.version == 6:
+        return GetMulticastMacFromIPv6(ip)
+    else:
+        assert(0)
