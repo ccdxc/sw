@@ -107,12 +107,30 @@ local_mac_ip_del_ (ms_bd_id_t bd_id, mac_addr_t mac, const ip_addr_t& ip)
     ATG_MAI_MAC_IP_ID mac_ip_id = {0};
     mac_ip_id.bd_id.bd_type = ATG_L2_BRIDGE_DOMAIN_EVPN;
     mac_ip_id.bd_id.bd_id = bd_id;
-    memcpy(mac_ip_id.mac_address, mac, ETH_ADDR_LEN);
     if (!ip_addr_is_zero(&ip)) {
+        // Delete local MAC only entry
         pds_ms::pds_to_ms_ipaddr(ip, &mac_ip_id.ip_address);
+    }
+
+    if (is_mac_set(mac)) {
+        // Delete local IP,MAC entry
+        memcpy(mac_ip_id.mac_address, mac, ETH_ADDR_LEN);
+    } else {
+        // Delete local IP entry for any MAC - fetch the MAC for this IP first
+         auto ret_mac_ip_id =
+             l2f::Fte::get().get_me_store().me_ip_find_first_mac_key(mac_ip_id);
+         if (ret_mac_ip_id == nullptr) {
+             PDS_TRACE_DEBUG("Could not find local BD %d IP %s in internal store",
+                             bd_id, ipaddr2str(&ip));
+             goto end;
+         }
+         mac_ip_id = *ret_mac_ip_id;
+         PDS_TRACE_DEBUG("Deleting local BD %d IP %s MAC %s",
+                       bd_id, ipaddr2str(&ip), macaddr2str(mac_ip_id.mac_address));
     }
     l2f::l2f_cc_is_mac_delete(mac_ip_id);
 
+end:
     NBS_RELEASE_SHARED_DATA();
     NBS_EXIT_SHARED_CONTEXT();
     NBB_DESTROY_THREAD_CONTEXT
@@ -495,10 +513,10 @@ void l2f_mai_t::handle_add_upd_ip(ATG_MAI_UPDATE_MAC_IP* mac_ip_id) {
                    ips_info_.bd_id, ipaddr2str(&ips_info_.ip_address),
                    macaddr2str(ips_info_.mac_address));
 
-    // Clean up local MAC,IP from MS store so that any subsequent
+    // Clean up local IP from MS store so that any subsequent
     // move is not ignored
-    local_mac_ip_del_(ips_info_.bd_id, ips_info_.mac_address,
-                      ips_info_.ip_address);
+    mac_addr_t zero_mac = {0};
+    local_mac_ip_del_(ips_info_.bd_id, zero_mac, ips_info_.ip_address);
 
     // Cannot detect Update of existing Remote Mapping IP entry
     // Learn accepts Create for existing Remote Mapping entries
