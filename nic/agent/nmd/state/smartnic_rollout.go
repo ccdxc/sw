@@ -20,6 +20,7 @@ import (
 const (
 	//value taken from nic/sim/naples/start-naples.sh
 	simSerialNumber = "SIM18440000"
+	retryCount      = 30
 )
 
 // CreateUpdateDSCRollout as requested by Rollout Controller
@@ -168,20 +169,8 @@ func (n *NMD) issueNextPendingOp() {
 
 	if len(n.ro.PendingOps) == 0 {
 		log.Info("No pending ops. Sending updates to Venice.")
-		st := protos.DSCRolloutStatusUpdate{
-			ObjectMeta: n.ro.ObjectMeta,
-			Status: protos.DSCRolloutStatus{
-				OpStatus: n.ro.OpStatus,
-			},
-		}
-		if n.rollout == nil {
-			log.Errorf("RolloutIf empty while updating status")
-			return
-		}
-
-		err := n.rollout.UpdateDSCRolloutStatus(&st)
-		if err != nil {
-			log.Errorf("Failed to update Rollout err: %v", err)
+		if err := n.sendUpdateToPSM(); err != nil {
+			log.Errorf("Failed to update Rollout. Err : %v", err)
 		}
 		return
 	}
@@ -448,19 +437,36 @@ func (n *NMD) updateOpStatus(op protos.DSCOp, version string, status string, mes
 	n.ro.OpStatus = OpStatus
 	log.Infof("Updated NMD internal op status: %v", n.ro.OpStatus)
 
+	if err := n.sendUpdateToPSM(); err != nil {
+		log.Errorf("PSM update failed. Err : %v", err)
+	}
+}
+
+// sendUpdateToPSM tries to send update to PSM with retries
+func (n *NMD) sendUpdateToPSM() error {
+	retries := 0
 	st := protos.DSCRolloutStatusUpdate{
 		ObjectMeta: n.ro.ObjectMeta,
 		Status: protos.DSCRolloutStatus{
-			OpStatus: OpStatus,
+			OpStatus: n.ro.OpStatus,
 		},
 	}
-	if n.rollout == nil {
-		log.Errorf("RolloutIf empty while updating status")
-		return
+
+	// Try to send update to PSM for 30 seconds
+	for retries < retryCount {
+		if n.rollout != nil {
+			err := n.rollout.UpdateDSCRolloutStatus(&st)
+			if err == nil {
+				log.Infof("Successfully updated status to PSM.")
+				return nil
+			}
+			log.Errorf("Failed to send update to PSM. Err : %v. Retrying...", err)
+		}
+
+		retries++
+		time.Sleep(time.Second)
 	}
 
-	err := n.rollout.UpdateDSCRolloutStatus(&st)
-	if err != nil {
-		log.Errorf("Failed to update Rollout err: %v", err)
-	}
+	return fmt.Errorf("failed to send update to PSM after retries")
+
 }
