@@ -12,9 +12,11 @@ import (
 	"github.com/vmware/govmomi/vim25/types"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/vcprobe/session"
 	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 )
 
 const (
@@ -199,9 +201,17 @@ func (t *tagsProbe) SetupBaseTags() bool {
 			t.Log.Infof("Pensando managed tag created")
 			return true
 		}
-		t.Log.Errorf("Failed to create VCTagManaged for category: %s", err)
+
+		evtMsg := fmt.Sprintf("%v : Failed to write tag Pensando managed: %s", t.State.OrchConfig.Name, err)
+		t.Log.Errorf(evtMsg)
+
+		if t.IsREST403(err) {
+			recorder.Event(eventtypes.ORCH_CONFIG_PUSH_FAILURE, evtMsg, t.State.OrchConfig)
+		}
+
 		if t.IsREST401(err) {
 			t.CheckTagSession = true
+			recorder.Event(eventtypes.ORCH_CONFIG_PUSH_FAILURE, evtMsg, t.State.OrchConfig)
 		}
 		return false
 	})

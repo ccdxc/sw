@@ -184,6 +184,19 @@ func (d *PenDC) AddPG(pgName string, networkMeta api.ObjectMeta, dvsName string)
 	d.Lock()
 	defer d.Unlock()
 	var errs []error
+
+	if len(d.DvsMap) == 0 {
+		// If the number of element in DvsMap equals to 0, then something bad happens.
+		// Could be the given account doesn't have write permission to vCenter.
+		// In this case, DVS was not able to be created previously.
+		evtMsg := fmt.Sprintf("%v : Failed to add network %s in Datacenter %s due to missing DVS. Please check vCenter account permissions.", d.State.OrchConfig.Name, networkMeta.Name, d.Name)
+		err := fmt.Errorf(evtMsg)
+		errs = append(errs, err)
+		recorder.Event(eventtypes.ORCH_CONFIG_PUSH_FAILURE, evtMsg, d.State.OrchConfig)
+
+		return errs
+	}
+
 	for _, penDVS := range d.DvsMap {
 		if dvsName == "" || dvsName == penDVS.DvsName {
 			err := penDVS.AddPenPG(pgName, networkMeta)
@@ -193,6 +206,7 @@ func (d *PenDC) AddPG(pgName string, networkMeta api.ObjectMeta, dvsName string)
 			}
 		}
 	}
+
 	return errs
 }
 

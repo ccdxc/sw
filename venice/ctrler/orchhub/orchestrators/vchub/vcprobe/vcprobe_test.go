@@ -172,6 +172,8 @@ func TestListAndWatch(t *testing.T) {
 	// Testing list
 	s.AddDC("DC2")
 
+	dcMap := vcp.GetDCMap()
+	AssertEquals(t, 2, len(dcMap), "Get DC Map response length did not match exp")
 	dcs := vcp.ListDC()
 	AssertEquals(t, 2, len(dcs), "List DC response length did not match exp")
 	vms := vcp.ListVM(nil)

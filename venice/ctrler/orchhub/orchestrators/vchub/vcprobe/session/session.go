@@ -200,6 +200,14 @@ func (s *Session) IsREST401(err error) bool {
 	return strings.Contains(err.Error(), "401 Unauthorized")
 }
 
+// IsREST403 returns whether the given error is a 403 forbidden error
+func (s *Session) IsREST403(err error) bool {
+	if err == nil {
+		return false
+	}
+	return strings.Contains(err.Error(), "403 Forbidden")
+}
+
 // PeriodicSessionCheck starts a goroutine that re-establishes the session
 // if it goes down at any point
 func (s *Session) PeriodicSessionCheck(wg *sync.WaitGroup) {
