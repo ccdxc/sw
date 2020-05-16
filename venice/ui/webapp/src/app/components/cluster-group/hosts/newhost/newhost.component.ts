@@ -75,6 +75,7 @@ export class NewhostComponent extends CreationForm<IClusterHost, ClusterHost> im
   @Input() objectData: IClusterHost;
   @Input() naplesWithoutHosts: ClusterDistributedServiceCard[] = [];
   @Input() notAdmittedCount: number = 0;
+  @Input() allDSCs: ClusterDistributedServiceCard[] = [];
   @Output() formClose: EventEmitter<any> = new EventEmitter();
 
   createButtonTooltip: string = '';
@@ -245,8 +246,29 @@ export class NewhostComponent extends CreationForm<IClusterHost, ClusterHost> im
     return (matchedDSCs > -1);
   }
 
+  /**
+   * A DSC has id="dsc1" and mac-address  = 'aaaa.bbbb.cccc".
+   * If User assign  DSC using mac-address 'aaaa.bbbb.cccc".  In table row, DSC-column will show "dsc1"
+   * If user first assigns a DSC to using "id dsc1". This manually input "dsc1" will collid with real DSC (dsc1)
+   * @param inputvalue
+   * @param dscs
+   */
+  isInputDSCidCollidInNaplesList(inputvalue: string, dscs: ClusterDistributedServiceCard[]): boolean {
+    if (!dscs) {
+      return false;
+    }
+    const matchedIndex = dscs.findIndex(dsc => dsc.spec.id === inputvalue);
+    return (matchedIndex > -1);
+  }
+
+  /**
+   * Say user inputs dscId (using id radio button)
+   * This dscId can not be equal to  any  host.spec.dscs[i].id and dsc.spec.id
+   * @param dscId
+   * @param hosts
+   */
   isDSCIdOccupied(dscId: string, hosts: IClusterHost[]): boolean {
-    return this.isDSCIdOrMacOccupied(dscId, hosts, 'id');
+    return this.isDSCIdOrMacOccupied(dscId, hosts, 'id') || this.isInputDSCidCollidInNaplesList(dscId, this.allDSCs);
   }
 
   isDSCMacOccupied(mac: string, hosts: IClusterHost[]): boolean {

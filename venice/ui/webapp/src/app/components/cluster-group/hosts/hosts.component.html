@@ -58,6 +58,7 @@
 <ng-template #createTemplate>
   <app-newhost (formClose)="creationFormClose()"
                fxFlex="grow" [existingObjects]='dataObjects' [notAdmittedCount]="notAdmittedCount"
+               [allDSCs]="naplesList"
                [naplesWithoutHosts]="naplesWithoutHosts">
   </app-newhost>
 </ng-template>
@@ -143,6 +144,6 @@
 
 <ng-template #expandTemplate let-rowData let-columns="columns">
   <app-newhost [style.width]="'100%'" [objectData]="rowData" [isInline]="true"
-               [existingObjects]='dataObjects'
+               [existingObjects]='dataObjects' [allDSCs]="naplesList"
                (formClose)="closeRowExpand()" fxFlex="none"></app-newhost>
 </ng-template>

@@ -466,16 +466,17 @@ export class TableUtility {
    * @param delimiter : string. default is "."
    */
   public static searchTableOneField(requirement: FieldsRequirement, data: any[] | ReadonlyArray<any>, delimiter: string = '.'): any[] {
-    const outputs: any[] = [];
+    let outputs: any[] = [];
     const isSearchingLabels = (requirement.key === 'meta.labels');
     const fields: Array<string> = requirement.key.split(delimiter);
     const searchValues = requirement.values;
     let operator = String(requirement.operator);
-    operator = TableUtility.convertOperator(operator);
+    operator =  TableUtility.convertOperator(operator);
     for (let i = 0; data && i < data.length; i++) {
       const recordValue = _.get(data[i], fields);
       for (let j = 0; searchValues && j < searchValues.length; j++) {
-        const activateFunc = TableUtility.filterConstraints[operator];
+        const activateFunc = (isSearchingLabels) ? TableUtility.filterConstraints['contains'] :  TableUtility.filterConstraints[operator];
+        // When search label using "no equals" operator, we use "contains" function.  We then flip the result
         if (!isSearchingLabels) {
           if (Array.isArray(recordValue)) {
             for (let k = 0; k < recordValue.length; k++) {
@@ -501,13 +502,21 @@ export class TableUtility {
               }
             } else {
               const searchVal = searchInputs[0];
-              if (activateFunc && activateFunc(recordValue[labelKeys[l]], searchVal)) {
+              // searchInputs can be "tag" or "1"
+              if (activateFunc && (activateFunc(labelKeys[l], searchVal) || activateFunc(recordValue[labelKeys[l]], searchVal))) {
                 outputs.push(data[i]);
               }
             }
           }
         }
       }
+    }
+    outputs = _.uniqWith(outputs, _.isEqual); // remove dupliate items. For example, DSC-1 can have labels {tag:1 , env:21}. If search [Label equals 1 ], DSC-1 will match twice in "outputs"
+    if (isSearchingLabels &&  operator === 'notcontains') {
+      // When search label using "no equals" operator, we use "contains" function above. Now we have to flip the result
+      // we want to find data[i] not outputs-list
+      const list  = _.differenceWith(data, outputs, _.isEqual);
+      return list;
     }
     return outputs;
 

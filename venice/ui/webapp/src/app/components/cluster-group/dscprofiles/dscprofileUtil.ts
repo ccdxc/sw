@@ -1,4 +1,3 @@
-import { ClusterDSCProfile, ClusterDSCProfileSpec, IClusterDSCProfile, IClusterFeature } from '@sdk/v1/models/generated/cluster';
 
 
 export interface DSCProfileUIModel {
