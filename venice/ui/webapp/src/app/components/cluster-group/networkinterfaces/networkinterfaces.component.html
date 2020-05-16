@@ -1,39 +1,40 @@
 <app-pagebody class="networkinterfaces" header="Network Interfaces" [icon]="bodyicon">
-  <app-tableviewedit fxLayout="column" class="networkinterfaces-widget" style="height: 100%;"
-                     [creatingMode]="creatingMode" [showRowExpand]="showRowExpand"
-                     [data]="dataObjects" [cols]="cols"
-                     [expandedRowData]="expandedRowData" [captionTemplate]="captionTemplate"
-                     [bodyTemplate]="bodyTemplate"
-                     [actionTemplate]="actionTemplate" [enableCheckbox]="true"
-                     [tableLoading]="tableLoading"
-                     (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)"
-                     (rowClick)="selectNetworkInterface($event)">
-  </app-tableviewedit>
-
+  <app-pentable #networkInterfaceTable
+                [actionTemplate]="actionTemplate"
+                [bodyTemplate]="bodyTemplate"
+                [captionTemplate]="captionTemplate"
+                [columns]="cols"
+                [data]="dataObjects"
+                [enableCheckbox]="true"
+                [exportFilename]="exportFilename"
+                [exportMap]="exportMap"
+                [loading]="tableLoading">
+  </app-pentable>
 </app-pagebody>
 
 
 
 <ng-template #captionTemplate let-count="count">
-  <div fxFlex="auto" fxLayout="column">
-    <div *ngIf="selectedNetworkInterface" fxFlex="auto" fxLayout="row"
+  <div class="networknetworkinterface-table-caption">
+    <div *ngIf="selectedNetworkInterface" fxFlex="auto"
          class="networknetworkinterface-detail-container">
       <ng-container *ngTemplateOutlet="selectedNetworkInterfaceDetail;"></ng-container>
     </div>
-    <div fxLayout="row" style="border-bottom: 1px solid #d9d9d9;">
+    <div style="border-bottom: 1px solid #d9d9d9;">
       <app-tableheader title="Network Interfaces" [total]="count" fxFlex="auto" fxLayout="row"
-                       [tableMenuItems]="tableMenuItems" [enableColumnSelect]="true" [cols]="cols"
+                       [tableMenuItems]="networkInterfaceTable.tableMenuItems"
+                       [enableColumnSelect]="true" [cols]="cols"
                        (columnSelectChange)="onColumnSelectChange($event)" [icon]="headerIcon">
 
         <ng-container *ngTemplateOutlet="actionButtonsTemplate"></ng-container>
       </app-tableheader>
     </div>
 
-    <div fxLayout="row">
+    <div>
       <app-advanced-search #advancedSearchComponent [formArray]="fieldFormArray"
                            [cols]="advSearchCols"
                            (cancelEmitter)="onCancelSearch($event)"
-                           (searchEmitter)="onSearchWorkloads()" kind="NetworkInterface"
+                           (searchEmitter)="onSearchNetworkInterfaces()" kind="NetworkInterface"
                            fxFlex="grow">
       </app-advanced-search>
     </div>
@@ -51,7 +52,8 @@
     <app-labeleditor [metadata]="labelEditorMetaData" [inLabelEditMode]="inLabelEditMode"
                      (saveEmitter)="handleEditSave($event)"
                      (cancelEmitter)="handleEditCancel($event)"
-                     [objects]="this.tableContainer.selectedDataObjects" [nameKey]="'spec.id'">
+                     [objects]="getSelectedDataObjects()"
+                     [nameKey]="'meta.name'">
     </app-labeleditor>
   </div>
 

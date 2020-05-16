@@ -21,3 +21,8 @@
 .networknetworkinterface-detail-header {
   @include primary-font(18px, #676763, bold);
 }
+
+.networknetworkinterface-table-caption .tableheader-title {
+  min-width: 150px;
+  text-align: left;
+}

@@ -22,6 +22,11 @@ import { IApiStatus, INetworkNetworkInterface, NetworkNetworkInterface } from '@
 import { FieldsRequirement } from '@sdk/v1/models/generated/search';
 import { IStagingBulkEditAction } from '@sdk/v1/models/generated/staging';
 import { forkJoin, Observable } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
+import * as _ from 'lodash';
+import { PentableComponent } from '@app/components/shared/pentable/pentable.component';
+import { Eventtypes } from '@app/enum/eventtypes.enum';
+import { DataComponent } from '@app/components/shared/datacomponent/datacomponent.component';
 
 /**
  * NetworkinterfacesComponent is linked to DSC object.
@@ -51,9 +56,10 @@ interface NetworkInterfaceUiModel {
   animations: [Animations],
   encapsulation: ViewEncapsulation.None
 })
-export class NetworkinterfacesComponent extends TablevieweditAbstract<INetworkNetworkInterface, NetworkNetworkInterface> implements OnInit, OnDestroy {
+export class NetworkinterfacesComponent extends DataComponent implements OnInit {
 
   @ViewChild('advancedSearchComponent') advancedSearchComponent: AdvancedSearchComponent;
+  @ViewChild('networkInterfaceTable') networkInterfaceTable: PentableComponent;
 
   maxSearchRecords: number = 8000;
 
@@ -121,9 +127,16 @@ export class NetworkinterfacesComponent extends TablevieweditAbstract<INetworkNe
     protected browserService: BrowserService,
     private _route: ActivatedRoute
   ) {
-    super(controllerService, cdr, uiConfigsService);
+    super(controllerService, uiConfigsService);
   }
 
+  clearSelectedDataObjects() {
+    this.networkInterfaceTable.selectedDataObjects = [];
+  }
+
+  getSelectedDataObjects() {
+    return this.networkInterfaceTable.selectedDataObjects;
+  }
   /**
   * Overide super's API
   * It will return this Component name
@@ -132,14 +145,18 @@ export class NetworkinterfacesComponent extends TablevieweditAbstract<INetworkNe
     return this.constructor.name;
   }
 
-  postNgInit() {
-    this.tableLoading = false;
+  ngOnInit() {
+    this._controllerService.publish(Eventtypes.COMPONENT_INIT, {
+      'component': this.getClassName(), 'state': Eventtypes.COMPONENT_INIT
+    });
     this._route.queryParams.subscribe(params => {
       if (params.hasOwnProperty('interface')) {
         // alerttab selected
         this.getSearchedNetworkInterface(params['interface']);
       }
     });
+    this.tableLoading = true;
+    this.setDefaultToolbar();
     this.watchNetworkInterfaces();
     this.watchNaples();
     this.buildAdvSearchCols();
@@ -188,7 +205,6 @@ export class NetworkinterfacesComponent extends TablevieweditAbstract<INetworkNe
         }
         this.dataObjects = response.data;
         this.handleDataReady();
-        this.dataObjectsBackUp = Utility.getLodash().cloneDeepWith(this.dataObjects); // make a copy of server provided data
       },
       (error) => {
         this.tableLoading = false;
@@ -264,7 +280,7 @@ export class NetworkinterfacesComponent extends TablevieweditAbstract<INetworkNe
 
   editLabels() {
     this.labelEditorMetaData = {
-      title: 'Editing network interface objects',
+      title: 'Edit network interface labels',
       keysEditable: true,
       valuesEditable: true,
       propsDeletable: true,
@@ -330,7 +346,6 @@ export class NetworkinterfacesComponent extends TablevieweditAbstract<INetworkNe
 
   onForkJoinSuccess() {
     this.inLabelEditMode = false;
-    this.tableContainer.selectedDataObjects = [];
   }
 
   onBulkEditSuccess(veniceObjects: any[], stagingBulkEditAction: IStagingBulkEditAction, successMsg: string, failureMsg: string) {
@@ -403,7 +418,7 @@ export class NetworkinterfacesComponent extends TablevieweditAbstract<INetworkNe
   * @param field
   * @param order
   */
-  onSearchWorkloads(field = this.tableContainer.sortField, order = this.tableContainer.sortOrder) {
+  onSearchNetworkInterfaces(field = this.networkInterfaceTable.sortField, order = this.networkInterfaceTable.sortOrder) {
     const searchResults = this.onSearchDataObjects(field, order, 'NetworkInterface', this.maxSearchRecords, this.advSearchCols, this.dataObjectsBackUp, this.advancedSearchComponent);
     if (searchResults && searchResults.length > 0) {
       this.dataObjects = [];
@@ -426,6 +441,16 @@ export class NetworkinterfacesComponent extends TablevieweditAbstract<INetworkNe
       }
     }
     return outputs;
+  }
+
+  expandRowRequest(event, rowData) {
+    if (!this.networkInterfaceTable.showRowExpand) {
+      this.networkInterfaceTable.toggleRow(rowData, event);
+    }
+  }
+
+  onColumnSelectChange(event) {
+    this.networkInterfaceTable.onColumnSelectChange(event);
   }
 
 }
