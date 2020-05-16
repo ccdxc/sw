@@ -416,7 +416,8 @@ func (n *NMD) UpgNotPossible(errStrList *[]string) {
 	} else {
 		log.Infof("UpgNotPossible got called when there is no pending Op")
 	}
-
+	//Empty the pendingOps since precheck failed
+	n.ro.PendingOps = []protos.DSCOpSpec{}
 	n.issueNextPendingOp() // issue next request, if any
 }
 
