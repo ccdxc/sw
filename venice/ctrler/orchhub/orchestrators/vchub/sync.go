@@ -210,7 +210,8 @@ func (v *VCHub) syncNetwork(networks []*ctkit.Network, dc mo.Datacenter, dvsObjs
 				continue
 			}
 			for _, orch := range nw.Network.Spec.Orchestrators {
-				if orch.Name == v.VcID && orch.Namespace == dcName {
+				if orch.Name == v.VcID &&
+					(orch.Namespace == dcName || orch.Namespace == utils.ManageAllDcs) {
 					pgName := CreatePGName(nw.Network.Name)
 					pgNameMap[pgName] = nw.Network.ObjectMeta
 				}
@@ -268,7 +269,8 @@ func (v *VCHub) syncNetwork(networks []*ctkit.Network, dc mo.Datacenter, dvsObjs
 		for _, nw := range networks {
 			v.Log.Debugf("Checking nw %s", nw.Network.Name)
 			for _, orch := range nw.Network.Spec.Orchestrators {
-				if orch.Name == v.VcID && orch.Namespace == dcName {
+				if orch.Name == v.VcID &&
+					(orch.Namespace == dcName || orch.Namespace == utils.ManageAllDcs) {
 					pgName := CreatePGName(nw.Network.Name)
 
 					err := penDVS.AddPenPG(pgName, nw.Network.ObjectMeta)

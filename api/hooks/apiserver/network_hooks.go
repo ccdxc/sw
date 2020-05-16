@@ -343,30 +343,26 @@ func (h *networkHooks) networkOrchConfigPrecommit(ctx context.Context, kv kvstor
 		entry[config.Namespace] = true
 	}
 
-	// determine which orch infos are being deleted
-	delMap := map[string](map[string]bool){}
+	// check if any orch or namespace got removed
+	orchRemoved := false
 	for _, config := range existingObj.Spec.Orchestrators {
 		entry, ok := orchMap[config.Name]
-		deleted := false
 		if !ok {
-			deleted = true
-		}
-		if _, ok := entry[config.Namespace]; !ok {
-			deleted = true
-		}
-		if deleted {
-			if _, ok := delMap[config.Name]; !ok {
-				delMap[config.Name] = map[string]bool{}
+			// orchestrator is removed
+			orchRemoved = true
+			break
+		} else if _, ok := entry[config.Namespace]; !ok {
+			if _, ok := entry[utils.ManageAllDcs]; !ok {
+				// namespace is removed and new object does not use all_namespaces
+				orchRemoved = true
+				break
 			}
-			delMap[config.Name][config.Namespace] = true
 		}
 	}
-
-	if len(delMap) == 0 {
-		// no deletions to orchestrator info
+	// avoid checking workloads if no orch config changed
+	if !orchRemoved {
 		return i, true, nil
 	}
-
 	// Fetch workloads
 	var workloads workload.WorkloadList
 	wl := workload.Workload{
@@ -382,11 +378,8 @@ func (h *networkHooks) networkOrchConfigPrecommit(ctx context.Context, kv kvstor
 
 	// check workloads
 	for _, wl := range workloads.Items {
+		// check if workload was created by orchestrator
 		orch, ok := utils.GetOrchNameFromObj(wl.Labels)
-		if !ok {
-			continue
-		}
-		delNs, ok := delMap[orch]
 		if !ok {
 			continue
 		}
@@ -394,18 +387,33 @@ func (h *networkHooks) networkOrchConfigPrecommit(ctx context.Context, kv kvstor
 		if !ok {
 			continue
 		}
-		if _, ok := delNs[namespace]; !ok {
-			continue
-		}
-		// Check the workloads interfaces to see if it's using this network
+		// check if the workload has any interface on this network
+		networkUsed := false
 		for _, inf := range wl.Spec.Interfaces {
 			if inf.Network == in.Name {
-				// workload relies on this orch config
-				return i, true, fmt.Errorf("Cannot remove orchestrator info %s, namespace %s, as workloads from this orchestrator are using this network", orch, namespace)
+				networkUsed = true
+				break
 			}
 		}
+		if !networkUsed {
+			continue
+		}
+		// check if this workload belongs to an orch or DC that is not configured anymore (removed)
+		if entry, ok := orchMap[orch]; ok {
+			// check if namespace is stil configured
+			if _, ok := entry[namespace]; ok {
+				continue
+			} else if _, ok := entry[utils.ManageAllDcs]; ok {
+				continue
+			} else {
+				// Cannot remove DC from the the networr
+				return i, true, fmt.Errorf("Cannot remove orchestrator %s namespace %s, as workloads from this orchestrator namespace are using this network", orch, namespace)
+			}
+		} else {
+			// Cannot remove the orchestrator from the network
+			return i, true, fmt.Errorf("Cannot remove orchestrator info %s, as workloads from this orchestrator are using this network", orch)
+		}
 	}
-
 	return i, true, nil
 }
 

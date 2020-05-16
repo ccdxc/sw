@@ -735,6 +735,87 @@ func TestNetworkOrchestratorRemoval(t *testing.T) {
 		// Should have succeeded
 		AssertOk(t, err, "orch info removal should have succeeded")
 	}
+	{
+		// validate update orch config o1, namespace1 -> o1, all_namespaces succeeds
+		nw = &network.Network{
+			ObjectMeta: api.ObjectMeta{
+				Name:   "nw",
+				Tenant: globals.DefaultTenant,
+			},
+			Spec: network.NetworkSpec{
+				Type: network.NetworkType_Bridged.String(),
+				Orchestrators: []*network.OrchestratorInfo{
+					&network.OrchestratorInfo{
+						Name:      "o1",
+						Namespace: utils.ManageAllDcs,
+					},
+					&network.OrchestratorInfo{
+						Name:      "o2",
+						Namespace: "namesapce1",
+					},
+				},
+			},
+		}
+		key := nw.MakeKey(string(apiclient.GroupNetwork))
+		_, _, err := hooks.networkOrchConfigPrecommit(ctx, kv, kv.NewTxn(), key, apiintf.UpdateOper, false, *nw)
+
+		// Should have succeeded
+		AssertOk(t, err, "orch info removal should have succeeded")
+	}
+	{
+		// validate update orch config  all_namespaces -> o1, namesapce2 fails
+		nw = &network.Network{
+			ObjectMeta: api.ObjectMeta{
+				Name:   "nw",
+				Tenant: globals.DefaultTenant,
+			},
+			Spec: network.NetworkSpec{
+				Type: network.NetworkType_Bridged.String(),
+				Orchestrators: []*network.OrchestratorInfo{
+					&network.OrchestratorInfo{
+						Name:      "o1",
+						Namespace: "namespace2",
+					},
+					&network.OrchestratorInfo{
+						Name:      "o2",
+						Namespace: "namesapce1",
+					},
+				},
+			},
+		}
+		key := nw.MakeKey(string(apiclient.GroupNetwork))
+		_, _, err := hooks.networkOrchConfigPrecommit(ctx, kv, kv.NewTxn(), key, apiintf.UpdateOper, false, *nw)
+
+		// Should have succeeded
+		Assert(t, err != nil, "orch info removal should have failed")
+	}
+	{
+		// validate update orch config  all_namespaces -> o1, namesapce1 succeeds
+		nw = &network.Network{
+			ObjectMeta: api.ObjectMeta{
+				Name:   "nw",
+				Tenant: globals.DefaultTenant,
+			},
+			Spec: network.NetworkSpec{
+				Type: network.NetworkType_Bridged.String(),
+				Orchestrators: []*network.OrchestratorInfo{
+					&network.OrchestratorInfo{
+						Name:      "o1",
+						Namespace: "namespace1",
+					},
+					&network.OrchestratorInfo{
+						Name:      "o2",
+						Namespace: "namesapce1",
+					},
+				},
+			},
+		}
+		key := nw.MakeKey(string(apiclient.GroupNetwork))
+		_, _, err := hooks.networkOrchConfigPrecommit(ctx, kv, kv.NewTxn(), key, apiintf.UpdateOper, false, *nw)
+
+		// Should have succeeded
+		AssertOk(t, err, "orch info removal should have succeeded")
+	}
 
 	{
 		// validate remove orch config o2 - namespace1 should succeed

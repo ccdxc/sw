@@ -4,6 +4,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/useg"
+	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
 	"github.com/pensando/sw/venice/utils/kvstore"
 )
 
@@ -24,7 +25,14 @@ func (v *VCHub) handleNetworkEvent(evtType kvstore.WatchEventType, nw *network.N
 	dcs := map[string]bool{}
 	for _, orch := range nw.Spec.Orchestrators {
 		if orch.Name == v.OrchConfig.GetName() {
-			dcs[orch.Namespace] = true
+			if orch.Namespace == utils.ManageAllDcs {
+				// Add all known DCs to the map
+				for _, dc := range v.DcMap {
+					dcs[dc.Name] = true
+				}
+			} else {
+				dcs[orch.Namespace] = true
+			}
 		}
 	}
 	v.Log.Infof("evt %s network %s event for dcs %v", evtType, nw.Name, dcs)
@@ -78,13 +86,14 @@ func (v *VCHub) checkNetworks(dcName string) {
 	for _, nw := range networks {
 		v.Log.Debugf("Checking nw %s", nw.Network.Name)
 		for _, orch := range nw.Network.Spec.Orchestrators {
-			if orch.Name == v.VcID && orch.Namespace == dcName {
+			if orch.Name == v.VcID &&
+				(orch.Namespace == dcName || orch.Namespace == utils.ManageAllDcs) {
 				penDC := v.GetDC(dcName)
 				pgName := CreatePGName(nw.Network.Name)
 				err := penDC.AddPG(pgName, nw.Network.ObjectMeta, "")
 				v.Log.Infof("Create Pen PG %s returned %s", pgName, err)
 			} else {
-				v.Log.Debugf("vcID %s  dcName %s does not match orch-spec %s - %s",
+				v.Log.Debugf("vcID %s dcName %s does not match orch-spec %s - %s",
 					v.VcID, dcName, orch.Name, orch.Namespace)
 			}
 		}
