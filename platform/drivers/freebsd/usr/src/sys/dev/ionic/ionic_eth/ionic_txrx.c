@@ -2610,7 +2610,7 @@ ionic_setup_qos_stats(struct ionic_lif *lif, struct sysctl_ctx_list *ctx,
 				&pb_stats->input_queue_buffer_occupancy[i], "");
 			SYSCTL_ADD_ULONG(ctx, queue_list1, OID_AUTO, "input_queue_port_monitor", CTLFLAG_RD,
 				&pb_stats->input_queue_port_monitor[i], "");
-			SYSCTL_ADD_ULONG(ctx, queue_list1, OID_AUTO, "queue_drops", CTLFLAG_RD,
+			SYSCTL_ADD_ULONG(ctx, queue_list1, OID_AUTO, "queue_drop", CTLFLAG_RD,
 				&pb_stats->input_queue_err_pkts_in[i], "");
 			SYSCTL_ADD_ULONG(ctx, queue_list1, OID_AUTO, "output_queue_port_monitor", CTLFLAG_RD,
 				&pb_stats->output_queue_port_monitor[i], "");

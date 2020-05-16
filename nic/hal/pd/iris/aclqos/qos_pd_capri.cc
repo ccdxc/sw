@@ -507,6 +507,12 @@ qos_pd_clear_stats(uint32_t tm_port, uint8_t qos_group_bitmap)
         capri_tm_debug_stats_get(tm_port, NULL, true);
     }
 
+    // Update the context stats shadow copy so that
+    // the tm_ctx()->prev_val will be set to the new h/w counter value.
+    // Without this, the next read will result in a higher context stat
+    // than the port stat since the port stat is read from h/w.
+    pd_qos_class_periodic_stats_update(NULL);
+                
     /* Clear iq and oq stats */
     for (unsigned iq = 0; iq < HAL_MAX_UPLINK_IQS; iq++) {
         iq_tc = g_qos_iq_to_tc[iq];
