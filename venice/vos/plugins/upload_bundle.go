@@ -11,8 +11,11 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"time"
 
-	minio "github.com/minio/minio-go/v6"
+	"github.com/pensando/sw/venice/utils/ratelimit"
+
+	"github.com/minio/minio-go/v6"
 
 	"github.com/pensando/sw/venice/globals"
 
@@ -31,6 +34,7 @@ const (
 	veniceImageName   = "venice.tgz"
 	naplesImageName   = "naples_fw.tar"
 	veniceOSImageName = "venice_appl_os.tgz"
+	sleepSize         = 10 * 1024 * 1024
 )
 
 //getSHA256Sum computes checksum for image
@@ -144,6 +148,7 @@ func getUploadBundleCbFunc(bucket string, stage vos.OperStage) vos.CallBackFunc 
 		defer of.Close()
 		buf := make([]byte, 1024)
 		totsize := 0
+		uploadedSize := sleepSize
 		for {
 			n, err := fr.Read(buf)
 			if err != nil && err != io.EOF {
@@ -157,6 +162,10 @@ func getUploadBundleCbFunc(bucket string, stage vos.OperStage) vos.CallBackFunc 
 			if _, err = of.Write(buf[:n]); err != nil {
 				log.Errorf("Error writing to output file (%s)", err)
 				return fmt.Errorf("Error writing to output file (%s)", err)
+			}
+			if totsize > uploadedSize {
+				time.Sleep(100 * time.Millisecond)
+				uploadedSize += sleepSize //Adds 10MB
 			}
 		}
 		log.Infof("Got image [%s] of size [%d]", in.Name, totsize)
@@ -182,7 +191,6 @@ func getUploadBundleCbFunc(bucket string, stage vos.OperStage) vos.CallBackFunc 
 		if err != nil {
 			log.Errorf("removal of %s/%s  returned %v", tarfileDir, in.Name, err)
 		}
-
 		versionMap, err := ValidateImageBundle()
 		if versionMap == nil {
 			if rerr := client.RemoveObject("default."+bucket, in.Name); rerr != nil {
@@ -240,7 +248,9 @@ func uploadFileToObjStore(client vos.BackendClient, bucket string, root string, 
 	meta[metaReleaseDate] = metaMap[imageType][metaReleaseDate]
 	meta[metaVersion] = metaMap[imageType][metaVersion]
 
-	_, err = client.PutObject("default."+bucket, imageType+"/"+metaMap[imageType][metaVersion]+"_img/"+metaMap[imageType][metaName], bytes.NewBuffer(fileBuf), -1, minio.PutObjectOptions{UserMetadata: meta})
+	lreader := ratelimit.NewReader(bytes.NewBuffer(fileBuf), 20*1024*1024, 100*time.Millisecond)
+
+	_, err = client.PutObject("default."+bucket, imageType+"/"+metaMap[imageType][metaVersion]+"_img/"+metaMap[imageType][metaName], lreader, -1, minio.PutObjectOptions{UserMetadata: meta, NumThreads: 1})
 	if err != nil {
 		log.Errorf("UploadImage: Could not put object [%s] to datastore (%s)", metaMap[imageType][metaName], err)
 		return err

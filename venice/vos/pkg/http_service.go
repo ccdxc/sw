@@ -11,8 +11,10 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/pensando/sw/venice/utils/ratelimit"
+
 	"github.com/go-martini/martini"
-	minio "github.com/minio/minio-go/v6"
+	"github.com/minio/minio-go/v6"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/objstore"
@@ -137,7 +139,9 @@ func (h *httpHandler) uploadHandler(w http.ResponseWriter, req *http.Request, ns
 			h.writeError(w, http.StatusPreconditionFailed, errs)
 			return
 		}
-		sz, err := h.client.PutObject(bucket, header.Filename, file, -1, minio.PutObjectOptions{UserMetadata: meta, ContentType: contentType})
+		lreader := ratelimit.NewReader(file, 20*1024*1024, 100*time.Millisecond)
+
+		sz, err := h.client.PutObject(bucket, header.Filename, lreader, -1, minio.PutObjectOptions{UserMetadata: meta, ContentType: contentType, NumThreads: 1})
 		if err != nil {
 			log.Errorf("failed to write object (%s)", err)
 			h.writeError(w, http.StatusInternalServerError, fmt.Sprintf("error writing object (%s)", err))
