@@ -543,6 +543,7 @@ sdk_ret_t
 lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     sdk_ret_t ret;
     nacl_swkey_t key;
+    mac_addr_t mac_addr;
     ipv4_addr_t v4_addr;
     p4pd_error_t p4pd_ret;
     uint32_t idx, nacl_idx;
@@ -572,6 +573,31 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
                       "at idx %u", id_, nh_idx_);
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
+    }
+
+    // drop tenant L2 multicast traffic
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+    key.key_metadata_ktype = KEY_TYPE_MAC;
+    key.key_metadata_entry_valid = 1;
+    mac_str_to_addr((char *)"01:00:5E:00:00:00", mac_addr);
+    sdk::lib::memrev(key.ethernet_1_dstAddr, mac_addr, ETH_ADDR_LEN);
+    mask.key_metadata_ktype_mask = ~0;
+    mask.key_metadata_entry_valid_mask = ~0;
+    mac_str_to_addr((char *)"FF:FF:FF:00:00:00", mac_addr);
+    sdk::lib::memrev(mask.ethernet_1_dstAddr_mask, mac_addr, ETH_ADDR_LEN);
+    data.action_id = NACL_NACL_DROP_ID;
+    SDK_ASSERT(apulu_impl_db()->nacl_idxr()->alloc(&nacl_idx) == SDK_RET_OK);
+    p4pd_ret = p4pd_entry_install(P4TBL_ID_NACL, nacl_idx, &key, &mask, &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to program L2 multicast drop NACL at idx %u",
+                      nacl_idx);
+        ret = sdk::SDK_RET_HW_PROGRAM_ERR;
+        goto error;
+    } else {
+        PDS_TRACE_DEBUG("Programmed L2 multicast drop NACL entry idx %u",
+                        nacl_idx);
     }
 
     // drop tenant IP multicast traffic from PFs and uplink
