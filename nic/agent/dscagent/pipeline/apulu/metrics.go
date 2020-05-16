@@ -262,7 +262,7 @@ func HandleMetrics(infraAPI types.InfraAPI, client operdapi.MetricsSvcClient) er
 					continue
 				}
 				queryInterfaceMetrics(infraAPI, stream)
-				//queryFlowStatsSummaryMetrics(infraAPI, stream)
+				queryFlowStatsSummaryMetrics(infraAPI, stream)
 				querySysmonMetrics(infraAPI, stream)
 			}
 		}

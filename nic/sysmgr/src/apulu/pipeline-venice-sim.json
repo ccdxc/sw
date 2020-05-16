@@ -10,6 +10,14 @@
         "cpu-affinity": "0x3"
     },
     {
+        "name": "vpp",
+        "command": "/naples/nic/tools/start-vpp-naples-sim.sh",
+        "dependencies": [],
+        "flags": ["save_stdout_on_crash"],
+        "timeout": 0.0,
+        "cpu-affinity": "0x3"
+    },
+    {
         "name": "operd",
         "command": "/naples/nic/bin/operd /naples/nic/conf/operd-sim.json /naples/nic/conf/operd-decoders-sim.json",
         "dependencies": [],

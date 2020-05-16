@@ -36,3 +36,6 @@ nic/build/$ARCH/$PIPELINE/lib/libdpdksim.so                       /nic/lib/
 nic/apollo/tools/$PIPELINE/start-nmd-sim.sh                       /nic/tools/
 nic/build/x86_64/$PIPELINE/penctl                                 /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/alerts_gen                          /nic/bin/
+#vpp mock mode
+nic/vpp/tools/start-vpp-naples-sim.sh                             /nic/tools/
+nic/vpp/conf/vpp_1_worker_naples_sim.conf                         /nic/conf/vpp/
