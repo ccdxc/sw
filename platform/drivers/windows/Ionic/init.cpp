@@ -460,26 +460,28 @@ InitializeEx(NDIS_HANDLE AdapterHandle,
     }
 
     IoPrint("%s ASIC %s rev 0x%X serial num %s fw version %s N_LIF %d "
-            "N_DBPGS_LIF %d Rx Budget %d RxPool Factor %d NUMA %d Coal %s %d\n",
+            "N_DBPGS_LIF %d Rx Budget %d RxPool Factor %d NUMA %d Coal %s Rx %d Tx %d\n",
             __FUNCTION__, ionic_dev_asic_name(adapter->idev.dev_info.asic_type),
             adapter->idev.dev_info.asic_rev, adapter->idev.dev_info.serial_num,
             adapter->idev.dev_info.fw_version, adapter->ident.dev.nlifs,
             adapter->ident.dev.ndbpgs_per_lif, RxBudget,
             adapter->rx_pool_factor, adapter->numa_node,
 			BooleanFlagOn(adapter->ConfigStatus, IONIC_INTERRUPT_MOD_ENABLED)?"Enabled":"Disabled",
-			adapter->registry_config[ IONIC_REG_RX_INT_MOD_TO].current_value);
+			adapter->registry_config[ IONIC_REG_RX_INT_MOD_TO].current_value,
+			adapter->registry_config[ IONIC_REG_TX_INT_MOD_TO].current_value);
 
     DbgTrace(
         (TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
          "%s ASIC %s rev 0x%X serial num %s fw version %s N_LIF %d "
-            "N_DBPGS_LIF %d Rx Budget %d RxPool Factor %d NUMA %d Coal %s %d\n",
+            "N_DBPGS_LIF %d Rx Budget %d RxPool Factor %d NUMA %d Coal %s Rx %d Tx %d\n",
             __FUNCTION__, ionic_dev_asic_name(adapter->idev.dev_info.asic_type),
             adapter->idev.dev_info.asic_rev, adapter->idev.dev_info.serial_num,
             adapter->idev.dev_info.fw_version, adapter->ident.dev.nlifs,
             adapter->ident.dev.ndbpgs_per_lif, RxBudget,
             adapter->rx_pool_factor, adapter->numa_node,
 			BooleanFlagOn(adapter->ConfigStatus, IONIC_INTERRUPT_MOD_ENABLED)?"Enabled":"Disabled",
-			adapter->registry_config[ IONIC_REG_RX_INT_MOD_TO].current_value));
+			adapter->registry_config[ IONIC_REG_RX_INT_MOD_TO].current_value,
+			adapter->registry_config[ IONIC_REG_TX_INT_MOD_TO].current_value));
 
 	status = ionic_register_interrupts(adapter, InitParameters);
 	if (status != NDIS_STATUS_SUCCESS) {

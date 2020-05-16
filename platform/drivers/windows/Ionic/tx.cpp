@@ -1546,9 +1546,14 @@ ionic_send_packets(NDIS_HANDLE adapter_context,
             next_nbl = NET_BUFFER_LIST_NEXT_NBL(nbl);
             NET_BUFFER_LIST_NEXT_NBL(nbl) = NULL;
 
-            status = (ionic->hardware_status == NdisHardwareStatusClosing)
-                         ? NDIS_STATUS_SEND_ABORTED
-                         : NDIS_STATUS_ADAPTER_NOT_READY;
+			if (BooleanFlagOn(ionic->Flags, IONIC_FLAG_PAUSED)) {
+				status = NDIS_STATUS_PAUSED;
+			}
+			else {
+				status = (ionic->hardware_status == NdisHardwareStatusClosing)
+							 ? NDIS_STATUS_SEND_ABORTED
+							 : NDIS_STATUS_ADAPTER_NOT_READY;
+			}
 
             NET_BUFFER_LIST_STATUS(nbl) = status;
 
@@ -1672,6 +1677,10 @@ ionic_tx_flush(struct qcq *qcq, unsigned int budget, bool cleanup, bool credits)
         qcq->tx_stats->descriptor_max = queue_len;
     }
 #endif
+
+	if (credits) {
+		flags = IONIC_INTR_CRED_UNMASK | IONIC_INTR_CRED_RESET_COALESCE;
+	}
 
     comp = (struct txq_comp *)cq->tail->cq_desc;
 
@@ -2178,6 +2187,7 @@ tx_packet_dpc_callback( _KDPC *Dpc,
 	LARGE_INTEGER start_time;
 #endif
 
+	UNREFERENCED_PARAMETER( Dpc);
 	UNREFERENCED_PARAMETER(SystemArgument1);
 	UNREFERENCED_PARAMETER(SystemArgument2);
 
@@ -2199,10 +2209,10 @@ tx_packet_dpc_callback( _KDPC *Dpc,
 		ionic_service_nb_requests(qcq, false);
 
 		if(ionic_tx_flush(qcq, IONIC_TX_BUDGET_DEFAULT,
-				false, false) &&
-		   RtlCheckBit(&qcq->q.lif->state, LIF_UP)) {
-
-			KeInsertQueueDpc(Dpc,
+				false, BooleanFlagOn( StateFlags, IONIC_STATE_TX_INTERRUPT)) &&
+		   RtlCheckBit(&qcq->q.lif->state, LIF_UP) &&
+		   !BooleanFlagOn( StateFlags, IONIC_STATE_TX_INTERRUPT)) {
+			KeInsertQueueDpc(&qcq->tx_packet_dpc,
 					NULL,
 					NULL);
 		}

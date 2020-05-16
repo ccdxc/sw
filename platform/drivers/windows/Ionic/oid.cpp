@@ -2279,7 +2279,7 @@ oid_query_information(struct ionic *ionic,
         NdisZeroMemory(&var.rsc, sizeof(var.rsc));
         var.rsc.Header.Type = NDIS_OBJECT_TYPE_DEFAULT;
         var.rsc.Header.Revision = NDIS_RSC_STATISTICS_REVISION_1;
-        var.rsc.Header.Size = sizeof(var.rsc);
+        var.rsc.Header.Size = NDIS_SIZEOF_RSC_STATISTICS_REVISION_1;
 
         for (unsigned int i = 0; i < lif->nrxqs; ++i) {
             struct qcq *qcq = lif->rxqcqs[i].qcq;
@@ -2304,7 +2304,7 @@ oid_query_information(struct ionic *ionic,
         var.im.Header.Type = NDIS_OBJECT_TYPE_DEFAULT;
         var.im.Header.Revision =
             NDIS_INTERRUPT_MODERATION_PARAMETERS_REVISION_1;
-        var.im.Header.Size = sizeof(NDIS_INTERRUPT_MODERATION_PARAMETERS);
+        var.im.Header.Size = NDIS_SIZEOF_INTERRUPT_MODERATION_PARAMETERS_REVISION_1;
         var.im.Flags = NDIS_INTERRUPT_MODERATION_CHANGE_NEEDS_REINITIALIZE;
 
         if (BooleanFlagOn(ionic->ConfigStatus, IONIC_INTERRUPT_MOD_ENABLED)) {
@@ -2461,7 +2461,8 @@ OidRequest(NDIS_HANDLE MiniportAdapterContext, PNDIS_OID_REQUEST OidRequest)
     switch (OidRequest->RequestType) {
     case NdisRequestMethod: {
 
-        if (ionic->hardware_status != NdisHardwareStatusReady) {
+        if (ionic->hardware_status != NdisHardwareStatusReady &&
+			!BooleanFlagOn(ionic->Flags, IONIC_FLAG_PAUSED)) {
 
             DbgTrace((TRACE_COMPONENT_OID, TRACE_LEVEL_ERROR,
                       "%s Oid %08lX not accepted due to device not ready\n",
@@ -2494,7 +2495,8 @@ OidRequest(NDIS_HANDLE MiniportAdapterContext, PNDIS_OID_REQUEST OidRequest)
 
     case NdisRequestSetInformation: {
 
-        if (ionic->hardware_status != NdisHardwareStatusReady) {
+        if (ionic->hardware_status != NdisHardwareStatusReady &&
+			!BooleanFlagOn(ionic->Flags, IONIC_FLAG_PAUSED)) {
 
             DbgTrace((TRACE_COMPONENT_OID, TRACE_LEVEL_ERROR,
                       "%s Oid %08lX not accepted due to device not ready\n",

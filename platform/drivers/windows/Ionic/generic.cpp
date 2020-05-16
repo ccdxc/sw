@@ -420,6 +420,20 @@ ReadRegParameters(struct ionic *Adapter)
                           NdisParameterInteger);
     if (ntStatus == NDIS_STATUS_SUCCESS) {
 		Adapter->registry_config[ IONIC_REG_RX_INT_MOD_TO].current_value = pParameters->ParameterData.IntegerData;
+		if( Adapter->registry_config[ IONIC_REG_RX_INT_MOD_TO].current_value > IONIC_ITR_COAL_USEC_MAX) {
+			Adapter->registry_config[ IONIC_REG_RX_INT_MOD_TO].current_value = IONIC_ITR_COAL_USEC_DEFAULT;
+		}
+    }
+
+	NdisInitUnicodeString( &uniKeyWord,
+						   ionic_registry[ IONIC_REG_TX_INT_MOD_TO].name);
+    NdisReadConfiguration(&ntStatus, &pParameters, hConfig, &uniKeyWord,
+                          NdisParameterInteger);
+    if (ntStatus == NDIS_STATUS_SUCCESS) {
+		Adapter->registry_config[ IONIC_REG_TX_INT_MOD_TO].current_value = pParameters->ParameterData.IntegerData;
+		if( Adapter->registry_config[ IONIC_REG_TX_INT_MOD_TO].current_value > IONIC_ITR_COAL_USEC_MAX) {
+			Adapter->registry_config[ IONIC_REG_TX_INT_MOD_TO].current_value = IONIC_ITR_COAL_USEC_DEFAULT;
+		}
     }
 
     // xsum and LSO offload
@@ -2680,7 +2694,40 @@ ConfigureRxBudget(IN ULONG Budget)
                                            sizeof(ULONG));
 
         if (!NT_SUCCESS(ntStatus)) {
-            IoPrint("%s Failed to set RxBudget in registry Status %08lX\n",
+             DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
+					"%s Failed to set RxBudget in registry Status %08lX\n",
+                    ntStatus));
+        }
+    }
+
+    return ntStatus;
+}
+
+NTSTATUS
+ConfigureTxMode(IN ULONG TxMode)
+{
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    UNICODE_STRING uniString;
+	ULONG current_mode = 0;
+
+	current_mode = (StateFlags & IONIC_STATE_VALID_TX_MODE_FLAGS);
+
+    //
+    // Go update the registry with the new entries
+    //
+
+    if ((TxMode & IONIC_STATE_VALID_TX_MODE_FLAGS) != current_mode) {
+		StateFlags &= ~IONIC_STATE_VALID_TX_MODE_FLAGS;
+        StateFlags |= (TxMode & IONIC_STATE_VALID_TX_MODE_FLAGS);
+
+        RtlInitUnicodeString(&uniString, REG_STATE_FLAGS);
+
+        ntStatus = UpdateRegistryParameter(&uniString, REG_DWORD, &StateFlags,
+                                           sizeof(ULONG));
+
+        if (!NT_SUCCESS(ntStatus)) {
+            IoPrint("%s Failed to set StateFlags in registry Status %08lX\n",
                     ntStatus);
         }
     }
@@ -3697,8 +3744,6 @@ get_nearby_core_count(struct ionic *ionic)
 			ionic->nearby_core_count++;
 		}
     }
-
-	IoPrint("%s Have %d nearby cores\n", __FUNCTION__, ionic->nearby_core_count);
 
 	return;
 }

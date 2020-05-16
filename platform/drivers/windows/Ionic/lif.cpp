@@ -24,7 +24,7 @@ static void ionic_link_qcq_interrupts(struct qcq *src_qcq, struct qcq *n_qcq);
 static void ionic_qcq_free(struct lif *lif, struct qcq *qcq);
 
 static inline u32
-ionic_coal_usec_to_hw(struct ionic *ionic, u32 usecs)
+ionic_coal_usec_to_hw(struct ionic *ionic, u32 usecs, u32 *current_value)
 {
 
 	u32 hw_val = 0;
@@ -46,7 +46,7 @@ ionic_coal_usec_to_hw(struct ionic *ionic, u32 usecs)
 		usecs = (INTR_CTRL_COAL_MAX * div)/mult;
 
 		/* Update the registry setting */
-		ionic->registry_config[ IONIC_REG_RX_INT_MOD_TO].current_value = usecs;
+		*current_value = usecs;
 		hw_val = INTR_CTRL_COAL_MAX;
 	}
 	else if(hw_val == 0) {
@@ -1861,6 +1861,8 @@ ionic_txrx_alloc(struct lif *lif,
     BOOLEAN default_port = FALSE;
 	struct intr_msg *intr_rx_msg = NULL;
 	struct intr_msg *intr_tx_msg = NULL;
+	PPROCESSOR_NUMBER new_proc_num = NULL;
+	ULONG proc_idx = 0;
 
 	if (queue_id == (ULONG)-1 && vport_id == (ULONG)-1) {
         q_index = 0;
@@ -1876,6 +1878,9 @@ ionic_txrx_alloc(struct lif *lif,
               lif->ionic, lif, lif->ntxqs, lif->nrxqs, q_index));
 
     flags = QCQ_F_TX_STATS | QCQ_F_SG;
+	if( BooleanFlagOn( StateFlags, IONIC_STATE_TX_INTERRUPT)) {
+		flags |= QCQ_F_INTR;
+	}
     for (i = 0; i < lif->ntxqs; i++) {
         status =
             ionic_qcq_alloc(lif, IONIC_QTYPE_TXQ, i, "tx", flags,
@@ -1918,6 +1923,58 @@ ionic_txrx_alloc(struct lif *lif,
             if (status != NDIS_STATUS_SUCCESS)
                 goto err_out_free_txqcqs;
         }
+
+		if( BooleanFlagOn( StateFlags, IONIC_STATE_TX_INTERRUPT)) {
+
+			/* Affinitize the int */
+			intr_tx_msg = find_intr_msg(lif->ionic, ANY_PROCESSOR_CLOSE_INDEX);
+			if (intr_tx_msg == NULL) {
+				intr_tx_msg = find_intr_msg(lif->ionic, ANY_PROCESSOR_INDEX);
+				if( intr_tx_msg == NULL) {
+					status = NDIS_STATUS_FAILURE;
+					goto err_out_free_txqcqs;
+				}
+			}
+
+			intr_tx_msg->inuse = true;
+			intr_tx_msg->tx_entry = true;
+			
+			ionic_intr_affinitize(lif->ionic, lif->txqcqs[i].qcq->cq.bound_intr->index, intr_tx_msg->id);
+
+			lif->txqcqs[i].qcq->intr_msg_id = intr_tx_msg->id;
+
+			set_processor_number( lif->ionic, intr_tx_msg->proc_idx, true);
+
+			/* Need to be sure the DPC we allocated has the same affinity as the ISR*/
+			status = KeSetTargetProcessorDpcEx( &lif->txqcqs[i].qcq->tx_packet_dpc,
+												&intr_tx_msg->proc);
+			if (status != STATUS_SUCCESS) {
+				IoPrint("%s KeSetTargetProcessorDpcEx() for Tx ISR failed status %08lX\n",
+									__FUNCTION__,
+									status);
+				status = NDIS_STATUS_FAILURE;
+				goto err_out_free_rxqcqs;
+			}
+
+			/* If enabled, set the coalescing timer */	
+			if( BooleanFlagOn(ionic->ConfigStatus, IONIC_INTERRUPT_MOD_ENABLED)) {
+				ionic_intr_coal_init(lif->ionic->idev.intr_ctrl,
+								 lif->txqcqs[i].qcq->cq.bound_intr->index,
+								 ionic->tx_coalesce_hw);
+			}
+			else {
+				ionic_intr_coal_init(lif->ionic->idev.intr_ctrl,
+								 lif->txqcqs[i].qcq->cq.bound_intr->index,
+								 0);
+			}
+
+			DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
+									"%s Setting tx queue %d ISR Id %d to core %d\n",
+									__FUNCTION__,
+									i,
+									intr_tx_msg->id,
+									intr_tx_msg->proc_idx));
+		}
     }
 
     flags = QCQ_F_RX_STATS | QCQ_F_INTR | QCQ_F_SG;
@@ -1963,7 +2020,9 @@ ionic_txrx_alloc(struct lif *lif,
 							 0);
 		}
 
-        ionic_link_qcq_interrupts(lif->rxqcqs[i].qcq, lif->txqcqs[i].qcq);
+		if( !BooleanFlagOn( StateFlags, IONIC_STATE_TX_INTERRUPT)) {
+			ionic_link_qcq_interrupts(lif->rxqcqs[i].qcq, lif->txqcqs[i].qcq);
+		}
 
         if (!is_master_lif(lif) &&
             (i == 0)) { // For now we will only store the 0 queue
@@ -1974,54 +2033,102 @@ ionic_txrx_alloc(struct lif *lif,
                 goto err_out_free_rxqcqs;
 		}
 
-		/* Affinitize the int */
-		intr_rx_msg = find_intr_msg(lif->ionic, ANY_PROCESSOR_INDEX);
-		if (intr_rx_msg == NULL) {
-			 status = NDIS_STATUS_FAILURE;
-			goto err_out_free_rxqcqs;
-		}
+		if( BooleanFlagOn( StateFlags, IONIC_STATE_TX_INTERRUPT)) {
 
-		intr_rx_msg->inuse = true;
-		ionic_intr_affinitize(lif->ionic, lif->rxqcqs[i].qcq->cq.bound_intr->index, intr_rx_msg->id);
+			// Are the rx and tx on the same or different cores
+			if (BooleanFlagOn(StateFlags, IONIC_STATE_FLAG_TXRX_DIFF_CORE)) {
+				intr_rx_msg = find_intr_msg(lif->ionic, ANY_PROCESSOR_CLOSE_INDEX);
+				if (intr_rx_msg == NULL) {
+					intr_rx_msg = find_intr_msg(lif->ionic, ANY_PROCESSOR_INDEX);
+					if( intr_rx_msg == NULL) {
+						status = NDIS_STATUS_FAILURE;
+						goto err_out_free_rxqcqs;
+					}
+				}
 
-		IoPrint("%s Setting rx queue %d to core %d\n",
+				DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
+								"%s Affinitize rx queue %d msi %d to different core %d\n",
 								__FUNCTION__,
 								i,
-								intr_rx_msg->proc_idx);
-	
-		if( BooleanFlagOn( StateFlags, IONIC_STATE_FLAG_TXRX_DIFF_CORE)) {
-			/* Set the processor affniity for the tx packet dpc */
-			intr_tx_msg = find_intr_msg(lif->ionic, ANY_NON_RSS_PROCESSOR_CLOSE_INDEX);
-			if (intr_tx_msg == NULL) {
-				intr_tx_msg = find_intr_msg(lif->ionic, ANY_PROCESSOR_INDEX);
-				if (intr_tx_msg == NULL) {
-					intr_tx_msg = intr_rx_msg;
+								intr_rx_msg->id,
+								intr_rx_msg->proc_idx));
+			}
+			else {
+				intr_tx_msg = get_intr_msg( ionic, lif->txqcqs[i].qcq->intr_msg_id);
+				intr_rx_msg = find_intr_msg(lif->ionic, intr_tx_msg->proc_idx);
+				if (intr_rx_msg == NULL) {
+					intr_rx_msg = find_intr_msg(lif->ionic, ANY_PROCESSOR_INDEX); // Do we want to get ANY core or fail?
+					if( intr_rx_msg == NULL) {
+						status = NDIS_STATUS_FAILURE;
+						goto err_out_free_rxqcqs;
+					}
+				}
+
+				DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
+								"%s Affinitize rx queue %d msi %d to same core %d\n",
+								__FUNCTION__,
+								i,
+								intr_rx_msg->id,
+								intr_rx_msg->proc_idx));
+			}
+
+			intr_rx_msg->inuse = true;
+			ionic_intr_affinitize(lif->ionic, lif->rxqcqs[i].qcq->cq.bound_intr->index, intr_rx_msg->id);
+			set_processor_number( lif->ionic, intr_rx_msg->proc_idx, true);
+		}
+		else {
+
+			/* Affinitize the int */
+			intr_rx_msg = find_intr_msg(lif->ionic, ANY_PROCESSOR_CLOSE_INDEX);
+			if (intr_rx_msg == NULL) {
+				intr_rx_msg = find_intr_msg(lif->ionic, ANY_PROCESSOR_INDEX);
+				if( intr_rx_msg == NULL) {
+					status = NDIS_STATUS_FAILURE;
+					goto err_out_free_rxqcqs;
 				}
 			}
 
-			if( intr_tx_msg != intr_rx_msg) {
-				intr_tx_msg->inuse = true;
-				intr_tx_msg->tx_entry = true;
-				intr_tx_msg->qcq = lif->txqcqs[i].qcq;
+			intr_rx_msg->inuse = true;
+			ionic_intr_affinitize(lif->ionic, lif->rxqcqs[i].qcq->cq.bound_intr->index, intr_rx_msg->id);
+			set_processor_number( lif->ionic, intr_rx_msg->proc_idx, true);
+
+			DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
+									"%s Setting rx queue %d msi %d to core %d\n",
+									__FUNCTION__,
+									i,
+									intr_rx_msg->id,
+									intr_rx_msg->proc_idx));
+	
+			if( BooleanFlagOn( StateFlags, IONIC_STATE_FLAG_TXRX_DIFF_CORE)) {
+				/* Set the processor affniity for the tx packet dpc */
+				new_proc_num = get_processor_number( lif->ionic, lif->ionic->numa_node, intr_rx_msg->proc_idx);
+				if (new_proc_num == NULL) {
+					new_proc_num = &intr_rx_msg->proc;
+				}
 			}
-		}
-		else {
-			intr_tx_msg = intr_rx_msg;
-		}
+			else {
+				new_proc_num = &intr_rx_msg->proc;
+			}
 
-		IoPrint("%s Setting tx queue %d to core %d\n",
-								__FUNCTION__,
-								i,
-								intr_tx_msg->proc_idx);
+			proc_idx = KeGetProcessorIndexFromNumber(new_proc_num);
 
-		status = KeSetTargetProcessorDpcEx( &lif->txqcqs[i].qcq->tx_packet_dpc,
-											&intr_tx_msg->proc);
-		if (status != STATUS_SUCCESS) {
-			IoPrint("%s KeSetTargetProcessorDpcEx() failed status %08lX\n",
-								__FUNCTION__,
-								status);
-			status = NDIS_STATUS_FAILURE;
-			goto err_out_free_rxqcqs;
+			DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
+									"%s Setting tx queue %d to core %d\n",
+									__FUNCTION__,
+									i,
+									proc_idx));
+
+			status = KeSetTargetProcessorDpcEx( &lif->txqcqs[i].qcq->tx_packet_dpc,
+												new_proc_num);
+			if (status != STATUS_SUCCESS) {
+				IoPrint("%s KeSetTargetProcessorDpcEx() failed status %08lX\n",
+									__FUNCTION__,
+									status);
+				status = NDIS_STATUS_FAILURE;
+				goto err_out_free_rxqcqs;
+			}
+			lif->txqcqs[i].qcq->proc_idx = proc_idx;
+			set_processor_number( lif->ionic, proc_idx, true);
 		}
     }
 
@@ -2300,9 +2407,19 @@ ionic_open(struct ionic *ionic)
     }
 
 	/* Convert the default coalesce value to actual hw resolution */
-	ionic->rx_coalesce_usecs = ionic->registry_config[ IONIC_REG_RX_INT_MOD_TO].current_value;
-	ionic->rx_coalesce_hw = ionic_coal_usec_to_hw(ionic,
-												ionic->rx_coalesce_usecs);
+	if( ionic->registry_config[ IONIC_REG_RX_INT_MOD_TO].current_value != 0) {
+		ionic->rx_coalesce_usecs = ionic->registry_config[ IONIC_REG_RX_INT_MOD_TO].current_value;
+		ionic->rx_coalesce_hw = ionic_coal_usec_to_hw(ionic,
+													ionic->rx_coalesce_usecs,
+													(u32 *)&ionic->registry_config[ IONIC_REG_RX_INT_MOD_TO].current_value);
+	}
+
+	if( ionic->registry_config[ IONIC_REG_TX_INT_MOD_TO].current_value != 0) {
+		ionic->tx_coalesce_usecs = ionic->registry_config[ IONIC_REG_TX_INT_MOD_TO].current_value;
+		ionic->tx_coalesce_hw = ionic_coal_usec_to_hw(ionic,
+													ionic->tx_coalesce_usecs,
+													(u32 *)&ionic->registry_config[ IONIC_REG_TX_INT_MOD_TO].current_value);
+	}
 
     return NDIS_STATUS_SUCCESS;
 }
@@ -2588,7 +2705,8 @@ ionic_set_coalesce(struct ionic *ionic, BOOLEAN Enable)
 {
     struct identity *ident;
     unsigned int i;
-    u32 coal = 0;
+    u32 rx_coal = 0;
+	u32 tx_coal = 0;
 
     ident = &ionic->ident;
     if (ident->dev.intr_coal_div == 0) {
@@ -2603,21 +2721,39 @@ ionic_set_coalesce(struct ionic *ionic, BOOLEAN Enable)
      * for non-zero and it resolved to zero, bump it up
      */
     if (Enable) {
-        coal = ionic->rx_coalesce_hw;
+        rx_coal = ionic->rx_coalesce_hw; // Do we want to override the 0 value?
+		if (rx_coal == 0) {
+			rx_coal = 1;
+		}
+		if( BooleanFlagOn( StateFlags, IONIC_STATE_TX_INTERRUPT)) {
+			tx_coal = ionic->tx_coalesce_hw;
+			if (tx_coal == 0) {
+				tx_coal = 1;
+			}
+		}
     }
 
-    if (!coal && Enable)
-        coal = 1;
-    if (coal > INTR_CTRL_COAL_MAX)
+    if (rx_coal > INTR_CTRL_COAL_MAX || tx_coal > INTR_CTRL_COAL_MAX)
         return NDIS_STATUS_INVALID_PARAMETER;
 
     if (RtlCheckBit(&ionic->master_lif->state, LIF_UP)) {
         for (i = 0; i < ionic->master_lif->nrxqs; i++) {
             ionic_intr_coal_init(ionic->master_lif->ionic->idev.intr_ctrl,
                                  ionic->master_lif->rxqcqs[i].qcq->cq.bound_intr->index,
-                                 coal);
+                                 rx_coal);
         }
     }
+
+	if (BooleanFlagOn(StateFlags, IONIC_STATE_TX_INTERRUPT)) {
+		if (RtlCheckBit(&ionic->master_lif->state, LIF_UP)) {
+			for (i = 0; i < ionic->master_lif->ntxqs; i++) {
+				ionic_intr_coal_init(ionic->master_lif->ionic->idev.intr_ctrl,
+									 ionic->master_lif->txqcqs[i].qcq->cq.bound_intr->index,
+									 tx_coal);
+			}
+		}
+	}
+
 	/* Update the state in the registry */
 	if (Enable) {
 		if (ionic->registry_config[IONIC_REG_INTERRUPT_MOD].current_value == 0) {

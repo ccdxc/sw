@@ -292,6 +292,9 @@ struct qcq {
 	NDIS_HANDLE tx_pkts_pool;
     struct txq_pkt *txq_base;
 
+	ULONG intr_msg_id;
+	ULONG proc_idx;
+
 #ifdef DBG
     LONG tx_pkts_free_count;
 #endif
@@ -627,6 +630,17 @@ struct vf_info
 	struct ionic_dev_bar BAR[2];
 };
 
+struct proc_info
+{
+
+	bool	inuse;
+
+	ULONG	numa_id;
+
+	PROCESSOR_NUMBER proc;
+
+};
+
 struct filter_info
 {
 	
@@ -703,6 +717,7 @@ struct ionic {
 	u32				nearby_core_count;
 
 	u32				tx_coalesce_usecs;
+	u32				tx_coalesce_hw;
 	u32				rx_coalesce_usecs;
 	u32				rx_coalesce_hw;
 
@@ -804,6 +819,8 @@ struct ionic {
 
 	/* Registry parameters specific to this interface */
 	struct registry_entry *registry_config;
+
+	struct proc_info *proc_tbl;
 
 	// Cache aligned elements
 	CACHE_ALIGN NDIS_SPIN_LOCK	dev_cmd_lock;

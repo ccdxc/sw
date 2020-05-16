@@ -650,10 +650,13 @@ _ionic_do_rsc(struct qcq *qcq,
         "%s rsc yes we will rsc\n", __FUNCTION__));
 
     if (NET_BUFFER_LIST_COALESCED_SEG_COUNT(last_nbl) == 0) {
+        rx_stats->rsc_bytes += NET_BUFFER_DATA_LENGTH(last_nb) - off;
         ++rx_stats->rsc_events;
         ++rx_stats->rsc_packets;
         ++NET_BUFFER_LIST_COALESCED_SEG_COUNT(last_nbl);
     }
+
+    rx_stats->rsc_bytes += NET_BUFFER_DATA_LENGTH(nb) - off;
     ++rx_stats->rsc_packets;
     ++NET_BUFFER_LIST_COALESCED_SEG_COUNT(last_nbl);
 
@@ -865,6 +868,8 @@ ionic_rx_clean(struct queue *q,
                   __FUNCTION__, ionic, q->index, comp_status));
         NET_BUFFER_DATA_LENGTH(packet) = 0;
         NdisAdjustMdlLength(mdl, 0);
+
+        ++rx_stats->completion_errors;
 
         goto cleanup;
     }
@@ -1383,11 +1388,12 @@ ionic_rx_napi(struct intr_msg *int_info,
 	LARGE_INTEGER start_time;
 	LARGE_INTEGER end_time;
 #endif
-	//for( int indx = 0;indx < (int)lif->ntxqs; indx++) {
+
+	if( !BooleanFlagOn( StateFlags, IONIC_STATE_TX_INTERRUPT)) {
 		KeInsertQueueDpc(&lif->txqcqs[qi].qcq->tx_packet_dpc,
 			NULL,
 			NULL);
-	//}
+	}
 
     NdisDprAcquireSpinLock(&qcq->rx_ring_lock);
 
@@ -1492,7 +1498,7 @@ ionic_rq_indicate_bufs(struct lif *lif,
     flags |= (NDIS_RECEIVE_FLAGS_SINGLE_QUEUE |
               NDIS_RECEIVE_FLAGS_SHARED_MEMORY_INFO_VALID);
 
-    if (count != 0) {
+    if (packets_to_indicate != NULL) {
 
         DbgTrace((TRACE_COMPONENT_IO, TRACE_LEVEL_VERBOSE,
                   "%s Indicating %d packets nbl %p\n", __FUNCTION__, count,

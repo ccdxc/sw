@@ -16,6 +16,7 @@ wmain(int argc, wchar_t* argv[])
     info.cmds.push_back(CmdSetTrace());
     info.cmds.push_back(CmdGetTrace());
     info.cmds.push_back(CmdPort());
+    info.cmds.push_back(CmdTxMode());
     info.cmds.push_back(CmdRxBudget());
     info.cmds.push_back(CmdDevStats());
     info.cmds.push_back(CmdLifStats());
@@ -272,6 +273,7 @@ DumpRxRingStats(const char *id, struct dev_rx_ring_stats *rx_stats)
     printf("\t\t\trx%s_poll:\t%I64u\n", id, rx_stats->poll);
     printf("\t\t\trx%s_arm:\t%I64u\n", id, rx_stats->arm);
     printf("\t\t\trx%s_comp:\t%I64u\n", id, rx_stats->completion_count);
+    printf("\t\t\trx%s_comp_errors:\t%I64u\n", id, rx_stats->completion_errors);
     printf("\t\t\trx%s_buffers_posted:\t%I64u\n", id, rx_stats->buffers_posted);
     printf("\t\t\trx%s_ucast_bytes:\t%I64u\n", id, rx_stats->directed_bytes);
     printf("\t\t\trx%s_ucast_packets:\t%I64u\n", id, rx_stats->directed_packets);
@@ -349,6 +351,7 @@ DumpDevStats(void *Stats)
                 rx_total.poll += dev_stats->lif_stats[ulLifCount].rx_ring[ulRxCnt].poll;
                 rx_total.arm += dev_stats->lif_stats[ulLifCount].rx_ring[ulRxCnt].arm;
                 rx_total.completion_count += dev_stats->lif_stats[ulLifCount].rx_ring[ulRxCnt].completion_count;
+                rx_total.completion_errors += dev_stats->lif_stats[ulLifCount].rx_ring[ulRxCnt].completion_errors;
                 rx_total.buffers_posted += dev_stats->lif_stats[ulLifCount].rx_ring[ulRxCnt].buffers_posted;
                 rx_total.directed_bytes += dev_stats->lif_stats[ulLifCount].rx_ring[ulRxCnt].directed_bytes;
                 rx_total.directed_packets += dev_stats->lif_stats[ulLifCount].rx_ring[ulRxCnt].directed_packets;
@@ -1613,6 +1616,62 @@ CmdRxBudget()
     cmd.opts = CmdRxBudgetOpts;
     cmd.pos = CmdRxBudgetPos;
     cmd.run = CmdRxBudgetRun;
+
+    return cmd;
+}
+
+//
+// -TxMode
+//
+
+static
+po::options_description
+CmdTxModeOpts(bool hidden)
+{
+    po::options_description opts("IonicConfig.exe [-h] TxMode [-x] <tx mode>");
+
+    opts.add_options()
+        ("TxMode,x", optype_long()->required(), "Tx Processing Mode");
+
+    return opts;
+}
+
+static
+po::positional_options_description
+CmdTxModePos()
+{
+    po::positional_options_description pos;
+
+    pos.add("TxMode", 1);
+
+    return pos;
+}
+
+static
+int
+CmdTxModeRun(command_info& info)
+{
+    if (info.usage) {
+        std::cout << info.cmd.opts(info.hidden) << info.cmd.desc << std::endl;
+        return info.status;
+    }
+
+    DWORD dwTxMode = opval_long(info.vm, "TxMode");
+
+    return DoIoctl(IOCTL_IONIC_SET_TX_MODE, &dwTxMode, sizeof(dwTxMode), NULL, 0, NULL, info.dryrun) != ERROR_SUCCESS;
+}
+
+command
+CmdTxMode()
+{
+    command cmd;
+
+    cmd.name = "TxMode";
+    cmd.desc = "Set Tx Processing Mode";
+
+    cmd.opts = CmdTxModeOpts;
+    cmd.pos = CmdTxModePos;
+    cmd.run = CmdTxModeRun;
 
     return cmd;
 }

@@ -322,11 +322,20 @@ HKR, NDI\Params\*InterruptModeration\enum,		"1",					0, "%Enabled%"
 ; Rx Interrupt Moderation value
 HKR, Ndi\params\RxIntModTimeout,                ParamDesc,              0, %RxIntModTimeout%
 HKR, Ndi\params\RxIntModTimeout,                default,                0, "64"
-HKR, Ndi\params\RxIntModTimeout,                min,                    0, "1"
+HKR, Ndi\params\RxIntModTimeout,                min,                    0, "0"
 HKR, Ndi\params\RxIntModTimeout,                max,                    0, "84"
 HKR, Ndi\params\RxIntModTimeout,                step,                   0, "1"
 HKR, Ndi\params\RxIntModTimeout,                Base,                   0, "10"
 HKR, Ndi\params\RxIntModTimeout,                type,                   0, "DWORD"
+
+; Rx Interrupt Moderation value
+HKR, Ndi\params\TxIntModTimeout,                ParamDesc,              0, %TxIntModTimeout%
+HKR, Ndi\params\TxIntModTimeout,                default,                0, "64"
+HKR, Ndi\params\TxIntModTimeout,                min,                    0, "0"
+HKR, Ndi\params\TxIntModTimeout,                max,                    0, "84"
+HKR, Ndi\params\TxIntModTimeout,                step,                   0, "1"
+HKR, Ndi\params\TxIntModTimeout,                Base,                   0, "10"
+HKR, Ndi\params\TxIntModTimeout,                type,                   0, "DWORD"
 
 [IonicMini.Powermgmt.Common.reg]
 ; EnablePME
@@ -488,6 +497,7 @@ Bytes9000                    = "9000 Bytes"
 
 InterruptModeration			 = "Interrupt Moderation"
 RxIntModTimeout				 = "Rx Interrupt Moderation Timeout"
+TxIntModTimeout				 = "Tx Interrupt Moderation Timeout"
 
 RxPoolSize                   = "Rx Pool Size"
 

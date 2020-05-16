@@ -28,13 +28,14 @@
 #define IONIC_REG_PAUSETYPE		25
 #define IONIC_REG_INTERRUPT_MOD	26
 #define IONIC_REG_RX_INT_MOD_TO	27
-#define IONIC_REG_TXFRAG	28
-#define IONIC_REG_RSCV4	        29
-#define IONIC_REG_RSCV6	        30
-#define IONIC_REG_VLANFILTERS   31
-#define IONIC_REG_PROMISCMODE   32
+#define IONIC_REG_TX_INT_MOD_TO	28
+#define IONIC_REG_TXFRAG	29
+#define IONIC_REG_RSCV4	        30
+#define IONIC_REG_RSCV6	        31
+#define IONIC_REG_VLANFILTERS   32
+#define IONIC_REG_PROMISCMODE   33
 
-#define IONIC_REG_ENTRY_COUNT	33 // Include the 0th entry
+#define IONIC_REG_ENTRY_COUNT	34 // Include the 0th entry
 
 #ifndef DEFINITIONS_ONLY
 struct registry_entry ionic_registry[] = {
@@ -66,6 +67,7 @@ struct registry_entry ionic_registry[] = {
 		{L"PauseType",					0,		2,		0,		IONIC_REG_UNDEFINED, NdisParameterInteger},
 		{L"*InterruptModeration",		0,		1,		1,		1, NdisParameterString},
 		{L"RxIntModTimeout",			IONIC_ITR_COAL_USEC_MIN,	IONIC_ITR_COAL_USEC_MAX,	IONIC_ITR_COAL_USEC_DEFAULT,	IONIC_ITR_COAL_USEC_DEFAULT, NdisParameterInteger},
+		{L"TxIntModTimeout",			IONIC_ITR_COAL_USEC_MIN,	IONIC_ITR_COAL_USEC_MAX,	IONIC_ITR_COAL_USEC_DEFAULT,	IONIC_ITR_COAL_USEC_DEFAULT, NdisParameterInteger},
 		{L"TxDefragPoolSize",           IONIC_TX_FRAG_MIN, IONIC_TX_FRAG_MAX, IONIC_TX_FRAG_DEFAULT, IONIC_TX_FRAG_DEFAULT, NdisParameterInteger},
 		{L"*RscIPv4",                   0,              1,              1,              1, NdisParameterString},
 		{L"*RscIPv6",                   0,              1,              1,              1, NdisParameterString},

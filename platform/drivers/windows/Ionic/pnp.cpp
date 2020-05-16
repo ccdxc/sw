@@ -167,6 +167,10 @@ ionic_remove_device(NDIS_HANDLE miniport_add_device_context)
         NdisFreeMemoryWithTagPriority_internal(ionic->adapterhandle, ionic->sys_proc_info, IONIC_ADAPTER_TAG);
     }
 
+    if (ionic->proc_tbl != NULL) {
+        NdisFreeMemoryWithTagPriority_internal(ionic->adapterhandle, ionic->proc_tbl, IONIC_ADAPTER_TAG);
+    }
+
     NdisFreeMemoryWithTagPriority_internal(ionic->adapterhandle, ionic, IONIC_ADAPTER_TAG);
 
     DbgTrace((TRACE_COMPONENT_PNP, TRACE_LEVEL_VERBOSE,
@@ -189,7 +193,6 @@ print_io_resource_requirements_list(PIO_RESOURCE_REQUIREMENTS_LIST prrl)
 
         DbgTrace((TRACE_COMPONENT_PNP, TRACE_LEVEL_VERBOSE, "%s resource list %lu count %lu\n",
             __FUNCTION__, prl_idx, prl->Count));
-        IoPrint("%s resource list %lu count %lu\n", __FUNCTION__, prl_idx, prl->Count);
 
         for (ULONG prd_idx = 0; prd_idx < prl->Count; ++prd_idx) {
             prd = &prl->Descriptors[prd_idx];
@@ -202,10 +205,6 @@ print_io_resource_requirements_list(PIO_RESOURCE_REQUIREMENTS_LIST prrl)
                     __FUNCTION__,
                     prd->u.Port.Alignment, prd->u.Port.Length,
                     prd->u.Port.MinimumAddress.QuadPart, prd->u.Port.MaximumAddress.QuadPart));
-                IoPrint("%s port align 0x%lx length %lu min 0x%llx max 0x%llx\n",
-                    __FUNCTION__,
-                    prd->u.Port.Alignment, prd->u.Port.Length,
-                    prd->u.Port.MinimumAddress.QuadPart, prd->u.Port.MaximumAddress.QuadPart);
                 break;
             case CmResourceTypeInterrupt:
                 DbgTrace((TRACE_COMPONENT_PNP, TRACE_LEVEL_VERBOSE,
@@ -213,10 +212,6 @@ print_io_resource_requirements_list(PIO_RESOURCE_REQUIREMENTS_LIST prrl)
                     __FUNCTION__,
                     prd->u.Interrupt.MinimumVector, prd->u.Interrupt.MaximumVector,
                     prd->u.Interrupt.Group, prd->u.Interrupt.TargetedProcessors));
-                IoPrint("%s interrupt min 0x%lx max 0x%lx group %d affinity 0x%llx\n",
-                    __FUNCTION__,
-                    prd->u.Interrupt.MinimumVector, prd->u.Interrupt.MaximumVector,
-                    prd->u.Interrupt.Group, prd->u.Interrupt.TargetedProcessors);
                 break;
             case CmResourceTypeMemory:
                 DbgTrace((TRACE_COMPONENT_PNP, TRACE_LEVEL_VERBOSE,
@@ -224,17 +219,11 @@ print_io_resource_requirements_list(PIO_RESOURCE_REQUIREMENTS_LIST prrl)
                     __FUNCTION__,
                     prd->u.Memory.Alignment, prd->u.Memory.Length,
                     prd->u.Memory.MinimumAddress.QuadPart, prd->u.Memory.MaximumAddress.QuadPart));
-                IoPrint("%s memory align 0x%lx length %lu min 0x%llx max 0x%llx\n",
-                    __FUNCTION__,
-                    prd->u.Memory.Alignment, prd->u.Memory.Length,
-                    prd->u.Memory.MinimumAddress.QuadPart, prd->u.Memory.MaximumAddress.QuadPart);
                 break;
             default:
                 DbgTrace((TRACE_COMPONENT_PNP, TRACE_LEVEL_VERBOSE,
                     "%s descriptor %lu type %u\n",
                     __FUNCTION__, prd_idx, prd->Type));
-                IoPrint("%s descriptor %lu type %u\n",
-                    __FUNCTION__, prd_idx, prd->Type);
                 break;
             }
 
@@ -265,11 +254,16 @@ ionic_set_proc_info(NDIS_HANDLE miniport_add_device_context)
 
     DbgTrace((TRACE_COMPONENT_PNP, TRACE_LEVEL_VERBOSE,
         "%s sys_proc_info_sz %d\n", __FUNCTION__, sys_proc_info_sz));
-    IoPrint("%s sys_proc_info_sz %d\n", __FUNCTION__, sys_proc_info_sz);
 
 	if (ionic->sys_proc_info != NULL) {
 		NdisFreeMemoryWithTagPriority_internal(ionic->adapterhandle, ionic->sys_proc_info, IONIC_ADAPTER_TAG);
+		ionic->sys_proc_info = NULL;
 	}
+
+    if (ionic->proc_tbl != NULL) {
+        NdisFreeMemoryWithTagPriority_internal(ionic->adapterhandle, ionic->proc_tbl, IONIC_ADAPTER_TAG);
+		ionic->proc_tbl = NULL;
+    }
 
     ionic->sys_proc_info = (PNDIS_SYSTEM_PROCESSOR_INFO_EX)NdisAllocateMemoryWithTagPriority_internal(
         miniport_add_device_context, (UINT)sys_proc_info_sz, IONIC_ADAPTER_TAG, NormalPoolPriority);
@@ -279,6 +273,7 @@ ionic_set_proc_info(NDIS_HANDLE miniport_add_device_context)
             __FUNCTION__));
         IoPrint("%s failed to allocate memory for processor information\n",
             __FUNCTION__);
+		status = NDIS_STATUS_RESOURCES;
         return status;
     }
 
@@ -293,6 +288,19 @@ ionic_set_proc_info(NDIS_HANDLE miniport_add_device_context)
         return status;
 
     }
+
+    ionic->proc_tbl = (struct proc_info *)NdisAllocateMemoryWithTagPriority_internal(
+        miniport_add_device_context, (UINT)(ionic->sys_proc_info->NumberOfProcessors * sizeof(struct proc_info)), IONIC_ADAPTER_TAG, NormalPoolPriority);
+    if (ionic->proc_tbl == NULL) {
+        DbgTrace((TRACE_COMPONENT_PNP, TRACE_LEVEL_ERROR,
+            "%s failed to allocate memory for processor table\n",
+            __FUNCTION__));
+		status = NDIS_STATUS_RESOURCES;
+        return status;
+    }
+
+	NdisZeroMemory( ionic->proc_tbl,
+					(ionic->sys_proc_info->NumberOfProcessors * sizeof(struct proc_info)));
 
     DbgTrace((TRACE_COMPONENT_PNP, TRACE_LEVEL_VERBOSE,
         "%s sockets %d cores %d cores/socket %d num_procs %d\n",
@@ -319,11 +327,8 @@ ionic_set_proc_info(NDIS_HANDLE miniport_add_device_context)
             proc->ProcNum.Group, proc->ProcNum.Number,
             proc->SocketId, proc->CoreId,
             proc->NodeId, proc->NodeDistance));
-        IoPrint("%s group %d proc %d sock %d core %d node %u node_dist %u\n",
-            __FUNCTION__,
-            proc->ProcNum.Group, proc->ProcNum.Number,
-            proc->SocketId, proc->CoreId,
-            proc->NodeId, proc->NodeDistance);
+		ionic->proc_tbl[i].numa_id = proc->NodeId;
+		ionic->proc_tbl[i].proc = proc->ProcNum;
     }
 
     return NDIS_STATUS_SUCCESS;
@@ -369,8 +374,6 @@ ionic_set_intr_requirements(NDIS_HANDLE miniport_add_device_context,
                     DbgTrace((TRACE_COMPONENT_PNP, TRACE_LEVEL_VERBOSE,
                         "%s msg_id %d affinity IrqPolicyAllCloseProcessors\n",
                         __FUNCTION__, msg_id));
-                    IoPrint("%s msg_id %d affinity IrqPolicyAllCloseProcessors\n",
-                        __FUNCTION__, msg_id);
                 } else {
                     /* affinitize datapath MSI-x messages to processors in round-robin order */
                     proc = &ionic->sys_proc[proc_idx];
@@ -380,15 +383,11 @@ ionic_set_intr_requirements(NDIS_HANDLE miniport_add_device_context,
                     prd->u.Interrupt.Group = proc->ProcNum.Group;
                     prd->u.Interrupt.TargetedProcessors = 1i64 << proc->ProcNum.Number;
 
-    DbgTrace((TRACE_COMPONENT_PNP, TRACE_LEVEL_VERBOSE,
+					DbgTrace((TRACE_COMPONENT_PNP, TRACE_LEVEL_VERBOSE,
                         "%s msg_id %d group %u proc %d affinity 0x%llx\n",
                         __FUNCTION__,
                         msg_id, prd->u.Interrupt.Group, proc->ProcNum.Number,
                         prd->u.Interrupt.TargetedProcessors));
-                    IoPrint("%s msg_id %d group %u proc %d affinity 0x%llx\n",
-                        __FUNCTION__,
-                        msg_id, prd->u.Interrupt.Group, proc->ProcNum.Number,
-                        prd->u.Interrupt.TargetedProcessors);
 
                     ++proc_idx %= ionic->sys_proc_info->NumberOfProcessors;
                 }
@@ -542,7 +541,8 @@ ionic_filter_resource_requirements(NDIS_HANDLE miniport_add_device_context,
         prrl = new_prrl;
         print_io_resource_requirements_list(new_prrl);
     } else {
-        IoPrint("%s resource requirement list unchanged\n", __FUNCTION__);
+        DbgTrace((TRACE_COMPONENT_PNP, TRACE_LEVEL_VERBOSE,
+					"%s resource requirement list unchanged\n", __FUNCTION__));
     }
 
     status = ionic_set_intr_requirements(miniport_add_device_context, prrl);

@@ -106,8 +106,9 @@ Pause(NDIS_HANDLE MiniportAdapterContext,
     DbgTrace((TRACE_COMPONENT_HANDLERS_ENT_EX, TRACE_LEVEL_VERBOSE,
               "%s Enter adapter %p\n", __FUNCTION__, ionic));
 
-    ionic->hardware_status = NdisHardwareStatusReset;
+    //ionic->hardware_status = NdisHardwareStatusReset;
     SetFlag(ionic->Flags, IONIC_FLAG_PAUSED);
+	ionic_stop(ionic);
 
     return ntStatus;
 }

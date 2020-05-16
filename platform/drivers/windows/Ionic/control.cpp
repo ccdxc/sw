@@ -196,6 +196,20 @@ DeviceIoControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
         break;
     }
 
+	case IOCTL_IONIC_SET_TX_MODE: {
+
+        if (Irp->AssociatedIrp.SystemBuffer == NULL ||
+            pIrpSp->Parameters.DeviceIoControl.InputBufferLength <
+                sizeof(ULONG)) {
+            ntStatus = STATUS_BUFFER_TOO_SMALL;
+            break;
+        }
+
+        ntStatus =
+            ConfigureTxMode(*((ULONG *)Irp->AssociatedIrp.SystemBuffer));
+		break;
+	}
+
     case IOCTL_IONIC_GET_REG_KEY_INFO: {
         ntStatus = IoctlRegKeyInfo(Irp->AssociatedIrp.SystemBuffer,
                                    pIrpSp->Parameters.DeviceIoControl.InputBufferLength,

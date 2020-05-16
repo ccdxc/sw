@@ -159,6 +159,7 @@ command CmdVersion();
 command CmdSetTrace();
 command CmdGetTrace();
 command CmdPort();
+command CmdTxMode();
 command CmdRxBudget();
 command CmdDevStats();
 command CmdLifStats();

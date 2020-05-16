@@ -414,6 +414,9 @@ oid_set_vlan(struct ionic *ionic,
 NTSTATUS
 ConfigureRxBudget( IN ULONG Budget);
 
+NTSTATUS
+ConfigureTxMode( IN ULONG TxMode);
+
 NDIS_STATUS
 queue_workitem(struct ionic *ionic,
     ULONG WorkItem,
@@ -568,6 +571,13 @@ NDIS_STATUS
 ionic_register_interrupts(struct ionic *ionic,
     PNDIS_MINIPORT_INIT_PARAMETERS init_params);
 
+
+PPROCESSOR_NUMBER
+get_processor_number(struct ionic *ionic, ULONG node_id, ULONG proc_idx);
+
+void
+set_processor_number(struct ionic *ionic, ULONG proc_num, bool inuse);
+
 BOOLEAN 
 ionic_msi_handler(PVOID miniport_interrupt_context,
   ULONG message_id, PBOOLEAN queue_default_interrupt_dpc,
@@ -630,6 +640,9 @@ is_tx_entry(struct ionic *ionic, ULONG proc_idx);
 
 struct intr_msg*
 find_intr_msg(struct ionic *ionic, ULONG proc_idx);
+
+struct intr_msg*
+find_intr_msg_not_idx(struct ionic *ionic, ULONG proc_idx);
 
 BOOLEAN
 sync_intr_msg(NDIS_HANDLE SynchronizeContext);

@@ -390,14 +390,15 @@ ionic_register_interrupts(struct ionic *ionic,
 		ionic->intr_msg_tbl[i].numa_node = get_numa_node( ionic,
 														  &ionic->intr_msg_tbl[i].proc);
 
-        IoPrint("%s msg %lu vec 0x%lx addr 0x%lx data 0x%lx affinity %lx rss %s NUMA %d\n",
+        DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
+			"%s msg %lu vec 0x%lx addr 0x%lx data 0x%lx affinity %lx rss %s NUMA %d\n",
             __FUNCTION__, i,
             ionic->intr_msginfo_tbl->MessageInfo[i].Vector,
             ionic->intr_msginfo_tbl->MessageInfo[i].MessageAddress,
             ionic->intr_msginfo_tbl->MessageInfo[i].MessageData,
             ionic->intr_msginfo_tbl->MessageInfo[i].TargetProcessorSet,
 			ionic->intr_msg_tbl[i].rss_entry?"Yes":"No",
-			ionic->intr_msg_tbl[i].numa_node);
+			ionic->intr_msg_tbl[i].numa_node));
     }
 
 	NdisFreeMemoryWithTagPriority_internal( ionic->adapterhandle,
@@ -459,6 +460,44 @@ exit:
     }
 
     return status;
+}
+
+PPROCESSOR_NUMBER
+get_processor_number(struct ionic *ionic, ULONG node_id, ULONG proc_num)
+{
+	PPROCESSOR_NUMBER ret_proc = NULL;
+
+    for (ULONG i = 0; i < ionic->sys_proc_info->NumberOfProcessors; ++i) {
+        struct proc_info *proc = &ionic->proc_tbl[i];
+		ULONG proc_idx = KeGetProcessorIndexFromNumber(&proc->proc);
+
+		if (!proc->inuse &&
+			proc->numa_id == node_id &&
+			proc_idx != proc_num) {
+			ret_proc = &proc->proc;
+			proc->inuse = true;
+			break;
+		}
+    }
+
+	return ret_proc;
+}
+
+void
+set_processor_number(struct ionic *ionic, ULONG proc_num, bool inuse)
+{
+
+    for (ULONG i = 0; i < ionic->sys_proc_info->NumberOfProcessors; ++i) {
+        struct proc_info *proc = &ionic->proc_tbl[i];
+		ULONG proc_idx = KeGetProcessorIndexFromNumber(&proc->proc);
+
+		if (proc_idx == proc_num) {
+			proc->inuse = inuse;
+			break;
+		}
+    }
+
+	return;
 }
 
 BOOLEAN
@@ -565,6 +604,12 @@ ionic_msi_dpc_handler(NDIS_HANDLE miniport_interrupt_context,
             int_tbl, budget,
             (NDIS_RECEIVE_THROTTLE_PARAMETERS *)receive_throttle_params);
     }
+	else if( int_tbl->qcq->q.type == IONIC_QTYPE_TXQ) {
+		tx_packet_dpc_callback( NULL,
+								int_tbl->qcq,
+								NULL,
+								NULL);
+	}
 
 exit:
     
@@ -729,11 +774,6 @@ ionic_intr_affinitize(struct ionic* ionic, unsigned int index, ULONG message_id)
             int_cfg.TableEntry, int_cfg.MessageNumber,
             status);
     }
-    else {
-        IoPrint("%s tbl_ent %d msg_id %d\n",
-            __FUNCTION__,
-            int_cfg.TableEntry, int_cfg.MessageNumber);
-    }
 
     return status;
 }
@@ -774,7 +814,9 @@ invoke_intr_msgs_rss(struct ionic *ionic, struct lif *lif)
             KIRQL old_irql;
 
             NDIS_RAISE_IRQL_TO_DISPATCH(&old_irql);
-            ionic_rx_napi(intr, intr->qcq->cq.num_descs, &receive_throttle_params);
+			if( intr->qcq->q.type == IONIC_QTYPE_RXQ) {
+	            ionic_rx_napi(intr, intr->qcq->cq.num_descs, &receive_throttle_params);
+			}
             NDIS_LOWER_IRQL(old_irql, DISPATCH_LEVEL);
         }
     }
@@ -785,6 +827,7 @@ dump_intr_tbl(struct ionic *ionic)
 {
     struct intr_msg* intr;
 
+	IoPrint("%s Start\n", __FUNCTION__);
     /* don't touch the control interrupt */
     for (ULONG i = IONIC_CTL_INTR_CNT; i < ionic->intr_msginfo_tbl->MessageCount; ++i) {
         intr = &ionic->intr_msg_tbl[i];
@@ -816,9 +859,13 @@ unuse_intr_msgs_rss(struct ionic *ionic, struct lif *lif)
     for (ULONG i = IONIC_CTL_INTR_CNT; i < ionic->intr_msginfo_tbl->MessageCount; ++i) {
         intr = &ionic->intr_msg_tbl[i];
 
-        if (intr->lif == lif) {
+        if (intr->lif == lif &&
+			!intr->tx_entry) {
             intr->inuse = false;
 			intr->lif = NULL;
+			if( intr->proc_idx != 0) {
+				set_processor_number( ionic, intr->proc_idx, false);
+			}
         }
     }
 }
@@ -857,6 +904,10 @@ find_intr_msg(struct ionic *ionic, ULONG proc_idx)
             if (proc_idx == ANY_PROCESSOR_INDEX) {
                 return intr;
             }
+			if( proc_idx == ANY_PROCESSOR_CLOSE_INDEX &&
+				intr->numa_node == ionic->numa_node) {
+				return intr;
+			}
 			if( proc_idx == ANY_NON_RSS_PROCESSOR_CLOSE_INDEX &&
 				!intr->rss_entry &&
 				intr->numa_node == ionic->numa_node) {
@@ -870,6 +921,24 @@ find_intr_msg(struct ionic *ionic, ULONG proc_idx)
                 intr->affinity_policy == IrqPolicySpecifiedProcessors &&
 				intr->proc_idx == proc_idx) {
                 //intr->affinity == (1ull << proc_idx)) {
+                return intr;
+            }
+        }
+    }
+
+    return NULL;
+}
+
+struct intr_msg *
+find_intr_msg_not_idx(struct ionic *ionic, ULONG proc_idx)
+{
+    struct intr_msg* intr;
+
+    for (ULONG i = 0; i < ionic->intr_msginfo_tbl->MessageCount; ++i) {
+        intr = &ionic->intr_msg_tbl[i];
+        if (!intr->inuse) {
+            if (proc_idx != intr->proc_idx &&
+                intr->affinity_policy == IrqPolicySpecifiedProcessors) {
                 return intr;
             }
         }
