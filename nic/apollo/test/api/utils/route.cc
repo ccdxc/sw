@@ -51,10 +51,12 @@ void
 route_table_feeder::init(std::string base_route_pfx_str,
                          uint8_t af, uint32_t num_routes,
                          uint32_t num_route_tables,
-                         uint32_t id, bool priority_en) {
+                         uint32_t id, bool priority_en,
+                         bool stash) {
     memset(&spec, 0, sizeof(pds_route_table_spec_t));
     spec.key = int2pdsobjkey(id);
     this->base_route_pfx_str = base_route_pfx_str;
+    this->stash_ = stash;
     num_obj = num_route_tables;
     create_route_table_spec(base_route_pfx_str, af, num_routes,
                             num_obj, &spec, priority_en);

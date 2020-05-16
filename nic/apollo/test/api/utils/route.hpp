@@ -46,7 +46,8 @@ public:
               uint32_t num_routes=16,
               uint32_t num_route_tables=1,
               uint32_t id = 1,
-              bool priority_en = false);
+              bool priority_en = false,
+              bool stash = false);
 
     // Iterate helper routines
     void iter_next(int width = 1);
@@ -95,12 +96,6 @@ operator<<(std::ostream& os, const pds_route_table_spec_t *spec) {
                                   spec->route_info->num_routes : 0)
         << " priority enable: " << (spec->route_info ?
                                     spec->route_info->priority_en : false);
-    if (spec->route_info) {
-        for (uint32_t i = 0; i < spec->route_info->num_routes; i++) {
-            os << &spec->route_info->routes[i];
-        }
-    }
-
     return os;
 }
 
