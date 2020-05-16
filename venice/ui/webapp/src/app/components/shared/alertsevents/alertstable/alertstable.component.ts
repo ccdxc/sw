@@ -12,7 +12,6 @@ import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { SearchService } from '@app/services/generated/search.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { Observable, forkJoin, throwError, Subscription } from 'rxjs';
-import { TablevieweditHTMLComponent, TablevieweditAbstract } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 import { AlertsEventsSelector } from '@app/components/shared/alertsevents/alertsevents.component';
 import { IApiStatus } from '@sdk/v1/models/generated/search';
@@ -21,6 +20,9 @@ import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
 import { TimeRangeComponent } from '../../timerange/timerange.component';
 import { ValidationErrors } from '@angular/forms';
 import { IStagingBulkEditAction, IBulkeditBulkEditItem } from '@sdk/v1/models/generated/staging';
+import { PentableComponent } from '@app/components/shared/pentable/pentable.component';
+import { DataComponent } from '@app/components/shared/datacomponent/datacomponent.component';
+import { Eventtypes } from '@app/enum/eventtypes.enum';
 
 @Component({
   selector: 'app-alertstable',
@@ -29,8 +31,10 @@ import { IStagingBulkEditAction, IBulkeditBulkEditItem } from '@sdk/v1/models/ge
   animations: [Animations],
   encapsulation: ViewEncapsulation.None
 })
-export class AlertstableComponent extends TablevieweditAbstract<IMonitoringAlert, MonitoringAlert> implements OnChanges, OnDestroy {
+export class AlertstableComponent extends DataComponent implements OnInit, OnChanges, OnDestroy {
   @ViewChild('timeRangeComponent') timeRangeComponent: TimeRangeComponent;
+  @ViewChild('alertsTable') alertsTable: PentableComponent;
+
   isTabComponent: boolean;
   disableTableWhenRowExpanded: boolean;
   exportFilename: string = 'PSM-alerts';
@@ -63,9 +67,9 @@ export class AlertstableComponent extends TablevieweditAbstract<IMonitoringAlert
   cols: TableCol[] = [
     { field: 'meta.mod-time', header: 'Modification Time', class: 'alertsevents-column-date', sortable: true, width: 15 },
     { field: 'meta.creation-time', header: 'Creation Time', class: 'alertsevents-column-date', sortable: true, width: 15 },
-    { field: 'status.severity', header: 'Severity', class: 'alertsevents-column-severity', sortable: false, width: 10 },
+    { field: 'status.severity', header: 'Severity', class: 'alertsevents-column-severity', sortable: false, width: 8 },
     { field: 'status.message', header: 'Message', class: 'alertsevents-column-message', sortable: false, width: 25 },
-    { field: 'spec.state', header: 'State', class: 'alertsevents-column-state', sortable: false, width: 15 },
+    { field: 'spec.state', header: 'State', class: 'alertsevents-column-state', sortable: false, width: 5 },
     { field: 'status.source', header: 'Source Node & Component', class: 'alerts-column-source', sortable: false },
   ];
 
@@ -106,12 +110,14 @@ export class AlertstableComponent extends TablevieweditAbstract<IMonitoringAlert
     protected uiconfigsService: UIConfigsService,
     protected searchService: SearchService,
     protected monitoringService: MonitoringService,
-    protected cdr: ChangeDetectorRef,
   ) {
-    super(_controllerService, cdr, uiconfigsService);
+    super(_controllerService, uiconfigsService);
   }
 
-  postNgInit(): void {
+  ngOnInit() {
+    this._controllerService.publish(Eventtypes.COMPONENT_INIT, {
+      'component': this.getClassName(), 'state': Eventtypes.COMPONENT_INIT
+    });
     this.alertUpdatable = this.uiconfigsService.isAuthorized(UIRolePermissions.monitoringalert_update);
     this.genQueryBodies();
     // If get alerts/events wasn't triggered by on change
@@ -121,6 +127,22 @@ export class AlertstableComponent extends TablevieweditAbstract<IMonitoringAlert
     if (this.searchedAlert) {
       this.getSearchedAlert();
     }
+  }
+
+  getSelectedDataObjects() {
+    return this.alertsTable.selectedDataObjects;
+  }
+
+  clearSelectedDataObjects() {
+    this.alertsTable.selectedDataObjects = [];
+  }
+
+  clearAlertNumbersObject() {
+    this.alertNumbers = {
+      'info': 0,
+      'warn': 0,
+      'critical': 0,
+    };
   }
 
   getSearchedAlert() {
@@ -151,7 +173,6 @@ export class AlertstableComponent extends TablevieweditAbstract<IMonitoringAlert
     this.alertSubscription = this.monitoringService.WatchAlert(this.alertQuery).subscribe(
       response => {
         this.alertsEventUtility.processEvents(response);
-        this.dataObjects = Utility.getLodash().cloneDeep(this.dataObjects);
         // Reset counters
         Object.keys(MonitoringAlertStatus_severity).forEach(severity => {
           this.alertNumbers[severity] = 0;
@@ -241,17 +262,20 @@ export class AlertstableComponent extends TablevieweditAbstract<IMonitoringAlert
   }
 
   updateAlertOneByOne(newState: MonitoringAlertSpec_state, summary: string, msg: string) {
-    const observables = this.buildObservaleList(newState);
+    const observables = this.buildObservableList(newState);
     this.updateAlertListForkJoin(observables, summary, msg);
   }
 
   updateAlertBulkEdit(newState: MonitoringAlertSpec_state, summary: string, msg: string) {
-
-    const alerts = this.tableContainer.selectedDataObjects;
+    const alerts = this.getSelectedDataObjects();
     const successMsg: string = 'Updated ' + alerts.length + ' alerts';
     const failureMsg: string = 'Failed to update alerts';
     const stagingBulkEditAction = this.buildBulkEditDSCProfilePayload(alerts, newState);
     this.bulkEditHelper(alerts, stagingBulkEditAction, successMsg, failureMsg);
+  }
+
+  onBulkEditSuccess() {
+    this.invokeTimeRangeValidator();
   }
 
   buildBulkEditDSCProfilePayload(updateAlerts: MonitoringAlert[], newState: MonitoringAlertSpec_state, buffername: string = ''): IStagingBulkEditAction {
@@ -330,6 +354,7 @@ export class AlertstableComponent extends TablevieweditAbstract<IMonitoringAlert
       const start = this.alertsSelectedTimeRange.getTime().startTime.toISOString() as any;
       const end = this.alertsSelectedTimeRange.getTime().endTime.toISOString() as any;
       this.alertsTimeConstraints = 'meta.mod-time<' + end + ',' + 'meta.mod-time>' + start;
+      this.clearAlertNumbersObject();
       this.genQueryBodies();
       this.getAlerts();
     }, 0);
@@ -383,11 +408,12 @@ export class AlertstableComponent extends TablevieweditAbstract<IMonitoringAlert
    *      means that we want selected alerts all in open state
    */
   showBatchIconHelper(state: MonitoringAlertSpec_state, reversed: boolean = true): boolean {
-    if (!this.alertUpdatable || !this.tableContainer || !this.tableContainer.selectedDataObjects || this.tableContainer.selectedDataObjects.length === 0) {
+    const alerts = this.getSelectedDataObjects();
+    if (!this.alertUpdatable || !alerts || alerts.length === 0) {
       return false;
     }
-    for (let i = 0; i < this.tableContainer.selectedDataObjects.length; i++) {
-      const alert = this.tableContainer.selectedDataObjects[i];
+    for (let i = 0; i < alerts.length; i++) {
+      const alert = alerts[i];
       if (!reversed) {
         if (alert.spec.state !== state) {
           return false;
@@ -410,7 +436,7 @@ export class AlertstableComponent extends TablevieweditAbstract<IMonitoringAlert
         const isAllOK = Utility.isForkjoinResultAllOK(results);
         if (isAllOK) {
           this._controllerService.invokeSuccessToaster(summary, msg);
-          this.tableContainer.selectedDataObjects = []; // clear this.tableContainer.selectedDataObjects
+          this.clearSelectedDataObjects();
           this.invokeTimeRangeValidator();
         } else {
           const error = Utility.joinErrors(results);
@@ -422,10 +448,11 @@ export class AlertstableComponent extends TablevieweditAbstract<IMonitoringAlert
     );
   }
 
-  buildObservaleList(newState: MonitoringAlertSpec_state): Observable<any>[] {
+  buildObservableList(newState: MonitoringAlertSpec_state): Observable<any>[] {
     const observables = [];
-    for (let i = 0; this.tableContainer.selectedDataObjects && i < this.tableContainer.selectedDataObjects.length; i++) {
-      const observable = this.buildUpdateAlertStateObservable(this.tableContainer.selectedDataObjects[i], newState);
+    const alerts = this.getSelectedDataObjects();
+    for (let i = 0; alerts && i < alerts.length; i++) {
+      const observable = this.buildUpdateAlertStateObservable(alerts[i], newState);
       observables.push(observable);
     }
     return observables;
@@ -479,17 +506,5 @@ export class AlertstableComponent extends TablevieweditAbstract<IMonitoringAlert
     if (this.alertSubscription != null) {
       this.alertSubscription.unsubscribe();
     }
-  }
-
-  deleteRecord(object: MonitoringAlert): Observable<{ body: IMonitoringAlert | IApiStatus | Error; statusCode: number; }> {
-    throw new Error('Method not implemented.');
-  }
-  generateDeleteConfirmMsg(object: MonitoringAlert): string {
-    throw new Error('Method not implemented.');
-  }
-  generateDeleteSuccessMsg(object: MonitoringAlert): string {
-    throw new Error('Method not implemented.');
-  }
-  setDefaultToolbar(): void {
   }
 }

@@ -150,7 +150,7 @@ describe('EventstableComponent', () => {
       });
 
       // Checking that table is blank
-      let tableBody = eventsContainer.query(By.css('.ui-table-scrollable-body-table tbody'));
+      let tableBody = eventsContainer.query(By.css('.ui-table-wrapper tbody'));
       expect(tableBody.children.length).toBe(0);
 
       // Table has one event
@@ -158,7 +158,7 @@ describe('EventstableComponent', () => {
       fixture.detectChanges();
 
       // Checking that the table entry is there
-      tableBody = eventsContainer.query(By.css('.ui-table-scrollable-body-table tbody'));
+      tableBody = eventsContainer.query(By.css('.ui-table-wrapper tbody'));
       fixture.whenRenderingDone().then(() => {
         // Allows rendering for the setTimeout(.., 0) we have
         setTimeout(() => {

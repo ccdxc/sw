@@ -11,14 +11,12 @@
                      [showRowExpand]="false">
   </app-tableviewedit> -->
 
-  <app-tableviewedit style="height: 100%" fxLayout="column" [data]="dataObjects"
-                     [showRowExpand]="showRowExpand"
-                     [cols]="cols" [virtualRowHeight]="36" [sortField]="'meta.mod-time'"
-                     [dataKey]="'meta.name'" [sortOrder]="-1"
-                     [captionTemplate]="captionTemplate" [bodyTemplate]="bodyTemplate"
-                     (rowClick)="selectAlert($event)"
-                     [enableCheckbox]="true" [actionTemplate]="actionTemplate">
-  </app-tableviewedit>
+  <!-- TODO: Add (rowClick)="selectAlert($event)-->
+  <app-pentable #alertsTable [actionTemplate]="actionTemplate" [bodyTemplate]="bodyTemplate"
+                [captionTemplate]="captionTemplate" [columns]="cols" [data]="dataObjects"
+                [dataKey]="'meta.name'" [enableCheckbox]="true"
+                [exportFilename]="exportFilename" [numRows]="25"
+                [rowHeight]="36"></app-pentable>
 
 </div>
 
@@ -44,13 +42,13 @@
   </div>
 </ng-template>
 
-<ng-template #captionTemplate let-count="count">
-  <div fxFlex="auto" fxLayout="column">
-    <div *ngIf="this.selectedAlert" [@slideInOut] fxFlex="auto" fxLayout="row"
+<ng-template #captionTemplate>
+  <div class="alertdetail-caption">
+    <div *ngIf="this.selectedAlert" [@slideInOut] fxFlex="auto"
          class="alertdetail-container">
       <ng-container *ngTemplateOutlet="selectedAlertDetail;"></ng-container>
     </div>
-    <app-tableheader fxFlex title="Alerts" [count]="count" [total]="alerts.length"
+    <app-tableheader fxFlex title="Alerts" [count]="dataObjects.length" [total]="alerts.length"
                      [icon]="alertsIcon"
                      [enableColumnSelect]="false" width="250px">
       <div fxFlex="50" fxLayoutAlign="start center">

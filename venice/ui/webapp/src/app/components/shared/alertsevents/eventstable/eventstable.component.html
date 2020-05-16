@@ -20,21 +20,22 @@
       </div>
     </div>
   </div>
-  <div fxLayout="row" fxFlex="auto">
-    <app-tableviewedit style="height: 100%" fxLayout="column" [data]="dataObjects"
-                       [showRowExpand]="showRowExpand"
-                       [cols]="cols" [virtualRowHeight]="36" [sortField]="'meta.mod-time'"
-                       [dataKey]="'meta.name'" [sortOrder]="-1" [tableLoading]="eventsLoading"
-                       [captionTemplate]="captionTemplate" [bodyTemplate]="bodyTemplate"
-                       [createTemplate]="createTemplate" [creatingMode]="creatingMode"
-                       (rowClick)="selectEvent($event)">
-    </app-tableviewedit>
-  </div>
+  <!--TODO: Add (rowClick)="selectEvent($event)"-->
+  <app-pentable #eventsTable style="height: 100%" [bodyTemplate]="bodyTemplate"
+                [captionTemplate]="captionTemplate"
+                [columns]="cols"
+                [createTemplate]="createTemplate"
+                [data]="dataObjects"
+                [dataKey]="'meta.name'"
+                [exportFilename]="exportFilename"
+                [loading]="eventsLoading"
+                [numRows]="25"
+                [rowHeight]="36"></app-pentable>
 </div>
 
 <ng-template #captionTemplate>
-  <div fxFlex="auto" fxLayout="column">
-    <div *ngIf="this.selectedEvent" [@slideInOut] fxFlex="auto" fxLayout="row"
+  <div class="eventdetail-caption">
+    <div *ngIf="this.selectedEvent" [@slideInOut]
          class="eventdetail-container">
       <ng-container *ngTemplateOutlet="selectedEventDetail;"></ng-container>
     </div>
@@ -88,7 +89,7 @@
                        [hiddenTimeRangeOptions]="['Previous month']"></app-timerange>
       </div>
     </app-tableheader>
-    <div fxLayout="row" *ngIf="showEventsAdvSearch" style="border-top: 1px solid #d9d9d9;">
+    <div *ngIf="showEventsAdvSearch" style="border-top: 1px solid #d9d9d9;">
       <app-advanced-search #advancedSearchComponent
                            (repeaterValues)="handleFieldRepeaterData($event)"
                            [formArray]="fieldFormArray" [cols]="advSearchCols"

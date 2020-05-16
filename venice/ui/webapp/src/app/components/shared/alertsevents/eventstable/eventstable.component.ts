@@ -9,7 +9,6 @@ import { FormControl, FormArray } from '@angular/forms';
 import { FieldsRequirement, FieldsRequirement_operator, ISearchSearchResponse, SearchSearchRequest, SearchTextRequirement, SearchSearchResponse } from '@sdk/v1/models/generated/search';
 import { SearchService } from '@app/services/generated/search.service';
 import { Utility } from '@app/common/Utility';
-import { TablevieweditAbstract } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { ControllerService } from '@app/services/controller.service';
 import { debounceTime, distinctUntilChanged, switchMap, first } from 'rxjs/operators';
@@ -22,7 +21,9 @@ import { IMonitoringArchiveQuery, MonitoringArchiveRequest, MonitoringArchiveReq
 import { ExportLogsComponent } from '../../exportlogs/exportlogs.component';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
-import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
+import { DataComponent } from '@app/components/shared/datacomponent/datacomponent.component';
+import { PentableComponent } from '@app/components/shared/pentable/pentable.component';
+import { Eventtypes } from '@app/enum/eventtypes.enum';
 
 @Component({
   selector: 'app-eventstable',
@@ -31,10 +32,11 @@ import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum'
   animations: [Animations],
   encapsulation: ViewEncapsulation.None
 })
-export class EventstableComponent extends TablevieweditAbstract<IEventsEvent, EventsEvent> implements OnChanges, OnDestroy, AfterViewInit, DoCheck {
+export class EventstableComponent extends DataComponent implements OnInit, OnChanges, OnDestroy, AfterViewInit, DoCheck {
 
   @ViewChild('advancedSearchComponent') advancedSearchComponent: AdvancedSearchComponent;
   @ViewChild('exportLogsComponent') exportLogsComponent: ExportLogsComponent;
+  @ViewChild('eventsTable') eventsTable: PentableComponent;
 
   isTabComponent: boolean = false;
   disableTableWhenRowExpanded: boolean = false;
@@ -139,41 +141,42 @@ export class EventstableComponent extends TablevieweditAbstract<IEventsEvent, Ev
   requestName: string = '';
   firstElem: MonitoringArchiveRequest = null;
   advSearchCols: TableCol[] = [];
-  archivePermissions: boolean = true;
   eventsTimeBased: EventsEvent[] = [];
 
   constructor(protected eventsService: EventsService,
     protected searchService: SearchService,
     protected uiconfigsService: UIConfigsService,
     protected monitoringService: MonitoringService,
-    protected cdr: ChangeDetectorRef,
     protected controllerService: ControllerService,
     protected iterableDiffers: IterableDiffers
     ) {
-      super(controllerService, cdr, uiconfigsService);
+      super(controllerService, uiconfigsService);
       this.arrayDiffers = iterableDiffers.find([]).create(HttpEventUtility.trackBy);
      }
 
 
+  getSelectedDataObjects() {
+    return this.eventsTable.selectedDataObjects;
+  }
+
+  clearSelectedDataObjects() {
+    this.eventsTable.selectedDataObjects = [];
+  }
+
   ngAfterViewInit() {
     // Advanced search panel will only be shown for Alertseventspage HTML and when the user has archive permissions
-    if (this.showEventsAdvSearch && this.archivePermissions) {
+    if (this.showEventsAdvSearch) {
       setTimeout(() => {
         this.getAdvSearchEvents(this.startingSortField, this.startingSortOrder);
       });
     }
   }
 
-  checkPermissions(): boolean {
-    const boolArchiveRequestActions = this.uiconfigsService.isAuthorized(UIRolePermissions['monitoringarchiverequest_all-actions']);
-    const boolObjStoreCreate = this.uiconfigsService.isAuthorized(UIRolePermissions.objstoreobject_create);
-    return (boolObjStoreCreate && boolArchiveRequestActions);
-  }
-
-  postNgInit(): void {
-    // Advanced search panel will only be shown for Alertseventspage HTML and when the user has archive permissions
-    this.archivePermissions = this.checkPermissions();
-    if (this.showEventsAdvSearch && this.archivePermissions) {
+  ngOnInit() {
+    this._controllerService.publish(Eventtypes.COMPONENT_INIT, {
+      'component': this.getClassName(), 'state': Eventtypes.COMPONENT_INIT
+    });
+    if (this.showEventsAdvSearch) {
       this.populateFieldSelector();
       this.buildAdvSearchCols();
       this.watchArchiveObject();
@@ -225,7 +228,7 @@ export class EventstableComponent extends TablevieweditAbstract<IEventsEvent, Ev
    * Allow user to download files on success or cancel when the request is running
    */
   ngDoCheck() {
-    if (this.showEventsAdvSearch && this.archivePermissions) {
+    if (this.showEventsAdvSearch) {
       const changes = this.arrayDiffers.diff(this.exportedArchiveRequests);
       if (changes) {
         this.handleArchiveLogChange();
@@ -268,7 +271,7 @@ export class EventstableComponent extends TablevieweditAbstract<IEventsEvent, Ev
       event.stopPropagation();
     }
     // Should not be able to cancel any record while we are editing
-    if (this.isRowExpanded()) {
+    if (this.eventsTable.showRowExpand) {
       return;
     }
     this.controllerService.invokeConfirm({
@@ -337,7 +340,7 @@ export class EventstableComponent extends TablevieweditAbstract<IEventsEvent, Ev
     this.displayArchPanel = true;
   }
 
-  getAdvSearchEvents(field = this.tableContainer.table.sortField, order = this.tableContainer.table.sortOrder) {
+  getAdvSearchEvents(field = this.eventsTable.sortField, order = this.eventsTable.sortOrder) {
     this.eventsLoading = true;
     try {
         const searchSearchRequest = this.advancedSearchComponent.getSearchRequest(field, order, 'Event', false, this.maxRecords);
@@ -364,8 +367,7 @@ export class EventstableComponent extends TablevieweditAbstract<IEventsEvent, Ev
         }
         this.persistentEvents = entries;
         this.eventsLoading = false;
-        this.eventsTimeBased = this.combineEvents();
-        this.getEvents();
+        this.countOnValidation(this.combineEvents());
       },
       (error) => {
         this.eventsLoading = false;
@@ -439,7 +441,7 @@ export class EventstableComponent extends TablevieweditAbstract<IEventsEvent, Ev
   }
 
   getEvents() {
-    if (!this.showEventsAdvSearch || !this.archivePermissions) {
+    if (!this.showEventsAdvSearch) {
       if (this.eventsSubscription) {
         this.eventsSubscription.unsubscribe();
         this.eventsService.pollingUtility.terminatePolling(this.pollingServiceKey, true);
@@ -449,8 +451,6 @@ export class EventstableComponent extends TablevieweditAbstract<IEventsEvent, Ev
           this.countOnValidation(data);
         }
       );
-    } else {
-      this.countOnValidation(this.eventsTimeBased);
     }
   }
 
@@ -474,10 +474,12 @@ export class EventstableComponent extends TablevieweditAbstract<IEventsEvent, Ev
   }
 
   showDebugPressed() {
-    if (!this.showEventsAdvSearch || !this.archivePermissions) {
+    if (!this.showEventsAdvSearch) {
       this.genQueryBodies();
+      this.getEvents();
+    } else {
+      this.countOnValidation(this.events);
     }
-    this.getEvents();
   }
 
   /**
@@ -594,7 +596,7 @@ export class EventstableComponent extends TablevieweditAbstract<IEventsEvent, Ev
       const start = this.eventsSelectedTimeRange.getTime().startTime.toISOString() as any;
       const end = this.eventsSelectedTimeRange.getTime().endTime.toISOString() as any;
       this.eventsTimeConstraints = 'meta.creation-time<' + end + ',' + 'meta.creation-time>' + start;
-      if (this.showEventsAdvSearch && this.archivePermissions) {
+      if (this.showEventsAdvSearch) {
         this.genTimeBasedSearch();
       } else {
         this.genQueryBodies();
@@ -613,7 +615,7 @@ export class EventstableComponent extends TablevieweditAbstract<IEventsEvent, Ev
         }
         // When page is loaded, this function is called before advanced search. At that time calling combineEvents doesn't make sense
         this.eventsTimeBased = this.persistentEvents.length !== 0 ? this.combineEvents() : this.eventsTimeBased;
-        this.getEvents();
+        this.countOnValidation(this.eventsTimeBased);
       },
       (error) => {
         this.controllerService.invokeRESTErrorToaster('Failed to get events', error);
@@ -648,7 +650,7 @@ export class EventstableComponent extends TablevieweditAbstract<IEventsEvent, Ev
   }
 
   ngOnChanges(change: SimpleChanges) {
-    if (!this.showEventsAdvSearch || !this.archivePermissions) {
+    if (!this.showEventsAdvSearch) {
       if (change.selector) {
         this.genQueryBodies();
         this.getEvents();
@@ -684,18 +686,7 @@ export class EventstableComponent extends TablevieweditAbstract<IEventsEvent, Ev
     return prettyDate.transform(date);
   }
 
-  setDefaultToolbar(): void {
-  }
-
-  deleteRecord(object: EventsEvent): Observable<{ body: IEventsEvent | IApiStatus | Error; statusCode: number; }> {
-    throw new Error('Method not supported.');
-  }
-
-  generateDeleteConfirmMsg(object: EventsEvent): string {
-    throw new Error('Method not supported.');
-  }
-
-  generateDeleteSuccessMsg(object: EventsEvent): string {
-    throw new Error('Method not supported.');
+  creationFormClose() {
+    this.eventsTable.creationFormClose();
   }
 }

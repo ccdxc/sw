@@ -45,7 +45,7 @@ export class AlertseventspageComponent extends BaseComponent implements OnInit, 
           cssClass: 'global-button-primary global-button-padding',
           text: 'EXPORT EVENTS',
           genTooltip: () => this.getTooltip(),
-          computeClass: () => this.alertsEventsComponent.eventsTableComponent.shouldEnableButtons && this.alertsEventsComponent.eventsTableComponent.enableExport ? '' : 'global-button-disabled',
+          computeClass: () => !this.alertsEventsComponent.eventsTableComponent.eventsTable.showRowExpand && this.alertsEventsComponent.eventsTableComponent.enableExport ? '' : 'global-button-disabled',
           callback: () => {
             this.alertsEventsComponent.eventsTableComponent.anyQueryAfterRefresh = true;
             this.alertsEventsComponent.createArchivePanel();

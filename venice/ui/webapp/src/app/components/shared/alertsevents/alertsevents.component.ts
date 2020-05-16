@@ -107,7 +107,7 @@ export class AlertseventsComponent extends BaseComponent implements OnInit {
   }
 
   createArchivePanel() {
-    this.eventsTableComponent.createNewObject();
+    this.eventsTableComponent.eventsTable.createNewObject();
   }
 
 }
