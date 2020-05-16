@@ -91,7 +91,14 @@ sdk_ret_t
 device::get_ptree_(std::string& device_file, ptree& prop_tree)
 {
     if (access(device_file.c_str(), R_OK) < 0) {
-        SDK_TRACE_DEBUG("device file %s has no read permissions/not preset",
+        SDK_TRACE_DEBUG("device file %s has no read "
+                        "permissions/not preset. Using defaults",
+                        device_file.c_str());
+        return SDK_RET_ERR;
+    }
+
+    if (file_is_empty(device_file)) {
+        SDK_TRACE_DEBUG("device file %s is empty. Using defaults",
                         device_file.c_str());
         return SDK_RET_ERR;
     }

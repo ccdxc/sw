@@ -132,6 +132,24 @@ copy32(uint64_t *dst, const uint64_t *src) {
     dst[3] = d;
 }
 
+static inline bool
+file_is_empty (std::string file)
+{
+    FILE *f = fopen(file.c_str(), "r");
+    
+    if (f == NULL) {
+        return true;
+    }
+    if (fseek(f, 0, SEEK_END) != 0) {
+        return true;
+    }
+    size_t sz = ftell(f);
+    if (!sz) {
+        return true;
+    }
+    return false;
+}
+
 }    // namespace lib
 }    // namespace sdk
 
