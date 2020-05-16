@@ -4,11 +4,13 @@ import iota.harness.infra.store as store
 import iota.test.apulu.config.api as config_api
 import iota.test.apulu.config.bringup_workloads as wl_api
 import iota.test.utils.arping as arp
-import iota.test.apollo.config.utils as utils
 import iota.harness.infra.utils.parser as parser
 import iota.test.apulu.utils.connectivity as conn_utils
 import iota.test.apulu.utils.learn as learn_utils
+
+# DOL
 import infra.common.objects as objects
+import apollo.config.utils as utils
 
 lmap_client   = config_api.GetObjClient('lmapping')
 rmap_client   = config_api.GetObjClient('rmapping')
