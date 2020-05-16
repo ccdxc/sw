@@ -33,7 +33,6 @@ nacl_redirect2:
 
 .align
 nacl_redirect_to_arm:
-    phvwr           p.p4i_i2e_session_id, -1
     phvwr           p.p4i_i2e_nexthop_type, \
                         d.u.nacl_redirect_to_arm_d.nexthop_type
     phvwr           p.p4i_i2e_copp_policer_id, \

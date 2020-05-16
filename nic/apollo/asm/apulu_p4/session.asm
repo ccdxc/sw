@@ -24,10 +24,12 @@ session_info:
     phvwr           p.capri_p4_intrinsic_packet_len, r7
     phvwr           p.meter_metadata_meter_len, r7
     phvwr           p.control_metadata_rx_packet, k.p4e_i2e_rx_packet
-    bcf             [c1],session_info_error
+    bcf             [c1], session_info_error
     phvwr           p.control_metadata_update_checksum, \
                         k.p4e_i2e_update_checksum
-
+    seq             c1, k.p4e_i2e_session_id, -1
+    seq.!c1         c1, k.p4e_to_arm_valid, TRUE
+    bcf             [c1], session_redirect
     seq             c1, k.egress_recirc_valid, FALSE
     bcf             [!c1|!c7], session_info_common
     phvwr.c1        p.control_metadata_session_tracking_en, \
@@ -82,6 +84,12 @@ session_stats:
     or              r7, r7, r5[32:27], 58
     add.e           r6, r6, r5[26:0]
     memwr.dx        r6, r7
+
+session_redirect:
+    seq             c1, d.session_info_d.qid_en, TRUE
+    nop.!c1.e
+    phvwr.c1.e      p.p4e_to_p4plus_classic_nic_rss_override, TRUE
+    phvwr.f         p.capri_rxdma_intrinsic_qid, d.session_info_d.qid
 
 session_info_drop:
     add             r6, r6, r5[26:0]

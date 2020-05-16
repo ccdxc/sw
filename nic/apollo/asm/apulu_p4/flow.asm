@@ -12,6 +12,7 @@ struct phv_ p;
 %%
 
 flow_hash:
+    sne             c7, r0, r0
     bbne            d.flow_hash_d.entry_valid, TRUE, label_flow_miss
     phvwr           p.p4i_i2e_entropy_hash, r1
     bcf             [c1], label_flow_hit
@@ -40,9 +41,9 @@ flow_hash:
     sne             c2, d.flow_hash_d.more_hints, r0
     bcf             [c1&c2], label_flow_hash_hit
     add             r2, r0, d.flow_hash_d.more_hints
-    sne             c7, r0, r0
 
 label_flow_miss:
+    phvwr.!c7       p.p4i_i2e_session_id, -1
     phvwrpair.c7    p.p4i_to_arm_flow_hit, TRUE, \
                         p.p4i_to_arm_flow_role, d.flow_hash_d.flow_role
     phvwr.c7        p.p4i_to_arm_session_id, d.{flow_hash_d.session_index}.wx
@@ -52,6 +53,7 @@ label_flow_miss:
 
 label_flow_hit:
     phvwr           p.control_metadata_flow_epoch, d.flow_hash_d.epoch
+    phvwr           p.p4i_i2e_session_id, d.flow_hash_d.session_index
     seq             c7, k.ingress_recirc_defunct_flow, TRUE
     seq.!c7         c7, d.flow_hash_d.force_flow_miss, TRUE
     bcf             [c7], label_flow_miss
@@ -66,7 +68,6 @@ label_flow_hit:
 label_flow_hit_nexthop_done:
     phvwr           p.control_metadata_is_local_to_local, \
                         d.flow_hash_d.is_local_to_local
-    phvwr           p.p4i_i2e_session_id, d.flow_hash_d.session_index
     seq             c2, k.arm_to_p4i_valid, FALSE
     smneb.c2        c2, k.tcp_flags, (TCP_FLAG_FIN|TCP_FLAG_RST), 0
     nop.!c2.e

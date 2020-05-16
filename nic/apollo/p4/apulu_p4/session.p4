@@ -3,7 +3,8 @@
 /*****************************************************************************/
 action session_info(tx_rewrite_flags, tx_xlate_id, tx_xlate_id2,
                     rx_rewrite_flags, rx_xlate_id, rx_xlate_id2,
-                    meter_id, timestamp, session_tracking_en, drop) {
+                    meter_id, timestamp, session_tracking_en, qid_en,
+                    qid, drop) {
     subtract(scratch_metadata.packet_len, capri_p4_intrinsic.frame_size,
              offset_metadata.l2_1);
     modify_field(capri_p4_intrinsic.packet_len, scratch_metadata.packet_len);
@@ -16,11 +17,22 @@ action session_info(tx_rewrite_flags, tx_xlate_id, tx_xlate_id2,
 
     if (p4e_i2e.session_id == 0) {
         egress_drop(P4E_DROP_SESSION_INVALID);
+        // return;
+    }
+
+    if ((p4e_to_arm.valid == TRUE) or (p4e_i2e.session_id == -1)) {
+        modify_field(scratch_metadata.flag, qid_en);
+        if (qid_en == TRUE) {
+            modify_field(p4e_to_p4plus_classic_nic.rss_override, TRUE);
+            modify_field(capri_rxdma_intrinsic.qid, qid);
+        }
+        // return;
     }
 
     modify_field(scratch_metadata.flag, drop);
     if (drop == TRUE) {
         egress_drop(P4E_DROP_SESSION_HIT);
+        // return;
     }
 
     // update stats and state only on first pass through egress pipeline
