@@ -100,10 +100,14 @@ char const * g_eal_args[] = {"fte",
 // Size = MTU + Ethernet header + VLAN + QinQ
 #define MAX_ETH_RX_LEN  JUMBO_FRAME_LEN + 14 + 4 + 4
 
+#define RTE_MBUF_ATHENA_DATAROOM 10240
+#define RTE_MBUF_ATHENA_BUF_SIZE   \
+    (RTE_MBUF_ATHENA_DATAROOM + RTE_PKTMBUF_HEADROOM)
+
 const static enum rte_rmt_call_master_t fte_call_master_type = SKIP_MASTER;
 static uint16_t nb_rxd = FTE_MAX_RXDSCR;
 static uint16_t nb_txd = FTE_MAX_TXDSCR;
-static uint16_t nsegs = ( MAX_ETH_RX_LEN + RTE_MBUF_DEFAULT_DATAROOM - 1) / RTE_MBUF_DEFAULT_DATAROOM;
+static uint16_t nsegs = ( MAX_ETH_RX_LEN + RTE_MBUF_ATHENA_DATAROOM - 1) / RTE_MBUF_ATHENA_DATAROOM;
 
 
 typedef std::vector<uint32_t> pollers_qid_vec_t;
@@ -982,7 +986,7 @@ init_mem (unsigned nb_mbuf)
             pktmbuf_pool[socketid] =
                     rte_pktmbuf_pool_create(s, nb_mbuf,
                             MEMPOOL_CACHE_SIZE, 0,
-                            RTE_MBUF_DEFAULT_BUF_SIZE, socketid);
+                            RTE_MBUF_ATHENA_BUF_SIZE, socketid);
             if (pktmbuf_pool[socketid] == NULL) {
                 rte_exit(EXIT_FAILURE,
                          "Cannot init mbuf pool on socket %d\n",
@@ -1114,6 +1118,7 @@ _init_port (void)
     uint32_t n_tx_queue, nb_lcores;
     int8_t nb_rx_queue, socketid;
     uint16_t queueid, portid;
+
 
     nb_ports = rte_eth_dev_count_avail();
     nb_lcores = rte_lcore_count();
@@ -1282,7 +1287,6 @@ fte_main (pds_cinit_params_t *init_params)
     // launch per-lcore init on every slave lcore
     fte_threads_started = true;
     rte_eal_mp_remote_launch(fte_launch_one_lcore, NULL, fte_call_master_type);
-
    
 skip_dpdk:
     flows_fp_init(&g_flows_fp);
