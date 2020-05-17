@@ -146,7 +146,7 @@ def Trigger(tc):
         iter_opt = ' -D {} '.format(tc.iterators.duration)
         # For scale tests, we noticed all 8 threads not started early,
         # so need to give extra timeout
-        bkg_timeout = tc.iterators.duration + 30
+        bkg_timeout = tc.iterators.duration + 60
 
     if hasattr(tc.iterators, 'count'):
         iter_opt = ' -n {} '.format(tc.iterators.count)

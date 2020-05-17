@@ -82,16 +82,14 @@ def TriggerFcConfigTest(req, tc, w1, w2, fc_type):
     # verification command
     cmd = '/nic/bin/halctl show port'
     # run the command on ionic0 and ionic1
-    '''
     if dev == 0:
-        port = 1
+        port = 'Eth1/1'
     elif dev == 1:
-        port = 5
+        port = 'Eth1/2'
     else:
         api.Logger.info("invalid dev number {}; defaulting to port 1".format(str(dev)))
-        port = 1
-    cmd += ' --port ' + str(port)
-    '''
+        port = 'Eth1/1'
+    cmd += ' --port ' + port
 
     if w1.IsNaples():
         api.Logger.info("Running command {} on node_name {}".format(cmd, w1.node_name))
@@ -99,8 +97,6 @@ def TriggerFcConfigTest(req, tc, w1, w2, fc_type):
         api.Trigger_AddNaplesCommand(req, 
                                      w1.node_name, 
                                      cmd)
-        tc.cmd_cookies.append(cmd)
-
     if w2.IsNaples():
         api.Logger.info("Running command {} on node_name {}".format(cmd, w2.node_name))
 
@@ -333,13 +329,13 @@ def PostTrafficTestCommands(req, tc, w, pcp_or_dscp):
     if w.IsNaples():
         dev = api.GetTestsuiteAttr(w.ip_address+'_device')[-1]
         if dev == '0':
-            port = 1
+            port = 'Eth1/1'
         elif dev == '1':
-            port = 5
+            port = 'Eth1/2'
         else:
             api.Logger.info("invalid dev number {}; defaulting to port 1".format(str(dev)))
-            port = 1
-        cmd = '/nic/bin/halctl show port --port ' + str(port) + ' statistics'
+            port = 'Eth1/1'
+        cmd = '/nic/bin/halctl show port --port ' + port + ' statistics'
 
         api.Logger.info("Running command {} on node_name {} workload_name {}"\
                         .format(cmd, w.node_name, w.workload_name))

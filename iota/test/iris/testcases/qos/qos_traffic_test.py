@@ -232,7 +232,7 @@ def Verify(tc):
         # PFC verification cmd
         elif "halctl show port" in tc.cmd_cookies[cookie_idx]:
             # cmd output
-            # halctl show port --port 1 statistics
+            # halctl show port --port Eth1/1 statistics
             # FRAMES RX PAUSE          0
             # FRAMES RX PRIPAUSE       194074
             # FRAMES TX PAUSE          0
