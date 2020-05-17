@@ -148,7 +148,7 @@ do_learning_ep_lif_update(fte::ctx_t &ctx) {
 
       // Open the cfg db as it could be closed
       // in update if
-      hal::hal_cfg_db_open(hal::CFG_OP_READ);
+      // hal::hal_cfg_db_open(hal::CFG_OP_READ);
 
       sep = find_ep_by_handle(ep_handle);
       if (sep == nullptr) {

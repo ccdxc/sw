@@ -206,7 +206,7 @@ typedef struct flow_monitor_rule_action_s {
     mirror_session_id_t mirror_destinations_sw_id[MAX_MIRROR_SESSION_DEST];   // Mirror session sw ids
     uint32_t    mirr_hw_id_bmp;
     bool        mirror_to_cpu;       // Mirror to cpu - additional mirror dest
-} __PACK__ flow_monitor_rule_action_t;
+} flow_monitor_rule_action_t;
 
 typedef struct flow_monitor_rule_s {
     sdk_spinlock_t  slock;

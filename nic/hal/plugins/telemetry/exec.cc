@@ -102,7 +102,8 @@ update_flow_from_telemetry_rules (fte::ctx_t& ctx, bool mirror_action)
                 // the mirroring as ingress or egress depending on the
                 // flow direction. TBD: Move to user configurable option
                 //
-                SDK_ATOMIC_LOAD_UINT32(&mirr_hw_id_bmp, &(frule->action.mirr_hw_id_bmp));
+                SDK_ATOMIC_LOAD_UINT32(&(frule->action.mirr_hw_id_bmp), &mirr_hw_id_bmp);
+                HAL_TRACE_DEBUG("Mirror bmp: {}", mirr_hw_id_bmp);
                 if (ctx.get_flow_direction() == hal::FLOW_DIR_FROM_DMA) { 
                     mirror_flowupd.mirror_info.egr_mirror_session = mirr_hw_id_bmp;
                 } else {
