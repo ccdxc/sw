@@ -118,35 +118,41 @@ func (v *VCHub) sync() bool {
 	return true
 }
 
+func (v *VCHub) convertHostToEvent(host mo.HostSystem, dcID, dcName string) defs.VCEventMsg {
+	m := defs.VCEventMsg{
+		VcObject:   defs.VirtualMachine,
+		Key:        host.Self.Value,
+		DcID:       dcID,
+		DcName:     dcName,
+		Originator: v.VcID,
+		Changes: []types.PropertyChange{
+			types.PropertyChange{
+				Name: string(defs.HostPropConfig),
+				Op:   "add",
+				Val:  *(host.Config),
+			},
+			types.PropertyChange{
+				Name: string(defs.HostPropName),
+				Op:   "add",
+				Val:  host.Name,
+			},
+		},
+	}
+
+	return m
+}
+
 func (v *VCHub) syncNewHosts(dc mo.Datacenter, vcHosts []mo.HostSystem, vmkMap map[string]bool) {
 	v.Log.Infof("Syncing new hosts on DC %s============", dc.Name)
 
 	// Process all hosts
 	for _, host := range vcHosts {
-		m := defs.VCEventMsg{
-			VcObject:   defs.VirtualMachine,
-			Key:        host.Self.Value,
-			DcID:       dc.Self.Value,
-			DcName:     dc.Name,
-			Originator: v.VcID,
-			Changes: []types.PropertyChange{
-				types.PropertyChange{
-					Name: string(defs.HostPropConfig),
-					Op:   "add",
-					Val:  *(host.Config),
-				},
-				types.PropertyChange{
-					Name: string(defs.HostPropName),
-					Op:   "add",
-					Val:  host.Name,
-				},
-			},
-		}
+		evt := v.convertHostToEvent(host, dc.Self.Value, dc.Name)
 		v.Log.Infof("Process config change for host %s", host.Reference().Value)
 		// check if host is added to PenDVS is not needed here, handleHost() will check it and
 		// delete the host and associated workloads (including vmk workload)
 		vmkMap[v.createVmkWorkloadName(dc.Reference().Value, host.Reference().Value)] = true
-		v.handleHost(m)
+		v.handleHost(evt)
 	}
 }
 

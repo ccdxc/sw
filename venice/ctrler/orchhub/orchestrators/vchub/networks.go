@@ -54,6 +54,13 @@ func (v *VCHub) handleNetworkEvent(evtType kvstore.WatchEventType, nw *network.N
 					v.syncLock.RUnlock()
 					v.fetchVMs(penDC)
 					v.syncLock.RLock()
+
+					dcRef := penDC.dcRef
+					vcHosts := v.ListPensandoHosts(&dcRef)
+					for _, host := range vcHosts {
+						evt := v.convertHostToEvent(host, dcRef.Value, penDC.Name)
+						v.handleHost(evt)
+					}
 				}
 			} else {
 				// err is already logged inside function
