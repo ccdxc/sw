@@ -80,7 +80,7 @@ func init() {
 	securityRuleShowCmd.Flags().StringVarP(&ruleID, "rule-id", "r", "", "Specify rule ID")
 
 	debugCmd.AddCommand(securityProfileUpdateCmd)
-	securityProfileUpdateCmd.Flags().StringVarP(&policyID, "profile-id", "p", "", "Specify profile ID")
+	securityProfileUpdateCmd.Flags().StringVarP(&profileID, "profile-id", "p", "", "Specify profile ID")
 	securityProfileUpdateCmd.Flags().Uint32Var(&tcpIdleTimeout, "tcp-idle-timeout", 600, "Specify TCP idle timeout (Valid: 5-86400)")
 	securityProfileUpdateCmd.Flags().Uint32Var(&udpIdleTimeout, "udp-idle-timeout", 120, "Specify UDP idle timeout (Valid: 5-86400)")
 	securityProfileUpdateCmd.Flags().Uint32Var(&icmpIdleTimeout, "icmp-idle-timeout", 15, "Specify ICMP idle timeout (Valid: 5-86400)")
@@ -725,7 +725,7 @@ func isValidTimeoutArgument(cmd *cobra.Command) bool {
 		return false
 	}
 
-	if !cmd.Flags().Changed("profile") {
+	if !cmd.Flags().Changed("profile-id") {
 		fmt.Printf("Command arguments not provided correctly, profile-id and one of the timeout arguments are required for this CLI\n")
 		return false
 	}
