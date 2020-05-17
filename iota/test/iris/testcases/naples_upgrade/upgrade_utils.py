@@ -32,10 +32,10 @@ def __disset_upg_log(node, logs):
     records = []
 
     for log in logs:
-        r_exp = r"(?P<lvl>[I,D,E]) \[(?P<ts>.*)\] \[(?P<fname>.*)\] (?P<msg>.*)"
+        r_exp = r"(?P<lvl>[I,D,E]) \[(?P<ts>.*)\] \((?P<tid>.*)\) \[(?P<fname>.*)\] (?P<msg>.*)"
         m = re.search(r_exp, log)
         if m:
-            records.append({e: m.group(e) for e in ["lvl", "ts", "fname", "msg"]})
+            records.append({e: m.group(e) for e in ["lvl", "ts", "tid", "fname", "msg"]})
             records[-1]["raw"] = log
         else:
             api.Logger.error(f"Failed to dissect log on {node} : {log}")
