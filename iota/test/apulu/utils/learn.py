@@ -188,6 +188,10 @@ def ValidateBGPPeerNbrStatus(json_out, l2vpn_nbr_list):
 
     # check for total entries in established state
     if total_entry_found != len(l2vpn_nbr_list):
+        # In netagent-IOTA mode, there is only one EVPN Peering with N9K-RR
+        if api.GlobalOptions.netagent and total_entry_found == 1:
+            return True
+
         api.Logger.error("Not all BGP Nbr's in Established state, "
                          "total_entry_found: %s, total L2VPN entries: %s"%(\
                          total_entry_found, len(l2vpn_nbr_list)))
