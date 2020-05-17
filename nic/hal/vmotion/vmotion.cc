@@ -309,7 +309,7 @@ vmotion::run_vmotion(ep_t *ep, vmotion_thread_evt_t event)
     if (event == VMOTION_EVT_EP_MV_COLD) {
         // vMotion is happening from a non-pensando device to locally here.
         // We do - Disable TCP Normalization for the EP that migrated
-        vmotion_ep_migration_normalization_cfg(ep, true);
+        vmotion_ep_migration_normalization_cfg(ep, true, false);
         return;
     }
 
@@ -318,23 +318,6 @@ vmotion::run_vmotion(ep_t *ep, vmotion_thread_evt_t event)
             vmn_ep = create_vmotion_ep(ep, VMOTION_TYPE_MIGRATE_IN);
         } else {
             HAL_TRACE_ERR("vmotion ep already exists");
-        }
-
-        // In the destination host, when vMotion is started, delete the "host" entry of the 
-        // EP in the Input Properties MAC VLAN table. This entry is used to avoid
-        // double count of a packet for statistics, when the packet is arriving back in the
-        // U-Turn traffic. skip_flow_update will be set in this entry.
-        //  For vMotion, this can create problem for scenario where a Local to Remote session
-        //  is getting converted to Local to Local session. So in the middle of the vMotion,
-        //  it is a valid scenario, traffic (with Src MAC as EP MAC) (for the migrating EP)
-        //  could be received in the uplink, this Input Mac Vlan table entry will do skip_flow_update
-        //  for that traffic, and eventually that traffic could get aged out.
-        //
-        //  So, in the start of the vMotion, temporarily delete that entry and when vMotion is over
-        //  add this entry back. 
-        vmotion_ep_inp_mac_vlan_pgm(ep, false);
-        if (vmn_ep) {
-            VMOTION_FLAG_SET_INP_MAC_REMOVED(vmn_ep);
         }
     }
 
@@ -638,15 +621,22 @@ vmotion::vmotion_ep_quiesce_program(ep_t *ep, bool entry_add)
     return ret;
 }
 
+// This function can be called by the vMotion thread (with lock needed).
+// Also from the Main (GRPC) thread in case of Cold vMotion (without lock needed)
 hal_ret_t
-vmotion::vmotion_ep_migration_normalization_cfg(ep_t *ep, bool disable)
+vmotion::vmotion_ep_migration_normalization_cfg(ep_t *ep, bool disable, bool lock_needed)
 {
     hal_ret_t ret;
 
-    VMOTION_PD_LOCK
-    ret = endpoint_migration_normalization_cfg(ep, disable);
-    VMOTION_PD_UNLOCK
+    if (lock_needed) {
+        VMOTION_PD_LOCK
+    }
 
+    ret = endpoint_migration_normalization_cfg(ep, disable);
+
+    if (lock_needed) {
+        VMOTION_PD_UNLOCK
+    }
     return ret;
 }
 

@@ -3358,9 +3358,15 @@ endpoint_migration_normalization_timer_cb(void *timer, uint32_t timer_id, void *
     HAL_TRACE_INFO("vMotion EP:{} Ptr:{:p}", ep_hdl, (void *)ep);
 
     if (ep) {
+        // Take write lock
+        hal_handle_cfg_db_lock(false, true);
+
         endpoint_migration_normalization_cfg(ep, false);
 
         ep->vmotion_state = MigrationState::SUCCESS;
+
+        // Release write lock
+        hal_handle_cfg_db_lock(false, false);
     }
 }
 

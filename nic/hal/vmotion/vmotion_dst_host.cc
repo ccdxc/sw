@@ -165,6 +165,22 @@ vmotion_dst_host_fsm_def::process_start_sync(fsm_state_ctx ctx, fsm_event_data d
 
     VMOTION_FLAG_SET_EP_QUIESCE_ADDED(vmn_ep);
 
+    // In the destination host, when vMotion is started, delete the "host" entry of the 
+    // EP in the Input Properties MAC VLAN table. This entry is used to avoid
+    // double count of a packet for statistics, when the packet is arriving back in the
+    // U-Turn traffic. skip_flow_update will be set in this entry.
+    // For vMotion, this can create problem for scenario where a Local to Remote session
+    // is getting converted to Local to Local session. So in the middle of the vMotion,
+    // it is a valid scenario, traffic (with Src MAC as EP MAC) (for the migrating EP)
+    // could be received in the uplink, this Input Mac Vlan table entry will do skip_flow_update
+    // for that traffic, and eventually that traffic could get aged out.
+    //
+    // So, in the start of the vMotion, temporarily delete that entry and when vMotion is over
+    // add this entry back. 
+    vmn_ep->get_vmotion()->vmotion_ep_inp_mac_vlan_pgm(ep, false);
+
+    VMOTION_FLAG_SET_INP_MAC_REMOVED(vmn_ep);
+
     return true;
 }
 
@@ -323,7 +339,7 @@ vmotion_dst_host_fsm_def::process_term_sync_end(fsm_state_ctx ctx, fsm_event_dat
         return false;
     }
 
-    vmn_ep->get_vmotion()->vmotion_ep_migration_normalization_cfg(ep, true);
+    vmn_ep->get_vmotion()->vmotion_ep_migration_normalization_cfg(ep, true, true);
 
     msg_rsp.set_type(VMOTION_MSG_TYPE_TERM_SYNC_ACK);
 

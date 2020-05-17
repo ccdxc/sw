@@ -32,8 +32,8 @@ namespace hal {
 #define VMOTION_WLOCK   vmotion_.rwlock.wlock();
 #define VMOTION_WUNLOCK vmotion_.rwlock.wunlock();
 
-#define VMOTION_PD_LOCK   vmotion_.pd_lock.wlock();
-#define VMOTION_PD_UNLOCK vmotion_.pd_lock.wunlock();
+#define VMOTION_PD_LOCK   hal_handle_cfg_db_lock(false, true);
+#define VMOTION_PD_UNLOCK hal_handle_cfg_db_lock(false, false);
 
 #define VMOTION_MAX_THREADS \
         (HAL_THREAD_ID_VMOTION_THREADS_MAX - HAL_THREAD_ID_VMOTION_THREADS_MIN + 1)
@@ -190,7 +190,7 @@ public:
     void          migration_done(hal_handle_t ep_handle, MigrationState mig_state);
     static void   delay_delete_thread(sdk::event_thread::event_thread *thr);
     hal_ret_t     vmotion_ep_quiesce_program(ep_t *ep, bool entry_add);
-    hal_ret_t     vmotion_ep_migration_normalization_cfg(ep_t *ep, bool disable);
+    hal_ret_t     vmotion_ep_migration_normalization_cfg(ep_t *ep, bool disable, bool lock_needed);
     hal_ret_t     vmotion_ep_inp_mac_vlan_pgm(ep_t *ep, bool create);
     hal_ret_t     vmotion_ep_migration_if_update(ep_t *ep);
     int           get_master_sock(void) { return master_sock_fd_; } 
@@ -223,7 +223,6 @@ private:
         uint32_t                         max_threads;
         uint32_t                         port;
         sdk::wp_rwlock                   rwlock;
-        sdk::wp_rwlock                   pd_lock;
     } vmotion_t;
 
     vmotion_t                  vmotion_;
