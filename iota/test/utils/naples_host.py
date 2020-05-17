@@ -10,6 +10,8 @@ OS_TYPE_WINDOWS = "windows"
 LinuxDriverPath   = api.HOST_NAPLES_DIR + "/drivers-linux-eth/drivers/eth/ionic/ionic.ko"
 FreeBSDDriverPath = api.HOST_NAPLES_DIR + "/drivers-freebsd-eth/sys/modules/ionic/ionic.ko"
 EsxiDriverPath = api.HOST_NAPLES_DIR + "/drivers-freebsd-eth/sys/modules/ionic/ionic.ko"
+MemStatsCheckToolHostPath = api.HOST_NAPLES_DIR + "/ps_mem.py"
+MemStatsCheckToolNaplesPath = "/tmp/ps_mem.py"
 
 # Get memory slab information in a given node
 def GetMemorySlabInNaples(node_name):
@@ -417,14 +419,14 @@ def runHostCmd(node, hostCmd, fail = False):
     if resp is None:
         api.Logger.error("Failed to run host cmd: %s on host: %s"
                          %(hostCmd, node));
-        return api.types.status.FAILURE
+        return api.types.status.FAILURE, cmd.stderr
 
     for cmd in resp.commands:
         if cmd.exit_code != 0 and not fail:
             api.Logger.error("HOST CMD: %s failed, exit code: %d  stdout: %s stderr: %s" %
                              (hostCmd, cmd.exit_code, cmd.stdout, cmd.stderr))
             api.PrintCommandResults(cmd)
-            return api.types.status.FAILURE
+            return api.types.status.FAILURE, cmd.stderr
 
     return api.types.status.SUCCESS, cmd.stdout
 
@@ -435,14 +437,14 @@ def runNaplesCmd(node, napleCmd, fail = False):
     if resp is None:
         api.Logger.error("Failed to run Naples cmd: %s on host: %s"
                          %(napleCmd, node));
-        return api.types.status.FAILURE
+        return api.types.status.FAILURE, cmd.stderr
 
     for cmd in resp.commands:
         if cmd.exit_code != 0 and not fail:
             api.Logger.error("NAPLES CMD: %s failed, exit code: %d  stdout: %s stderr: %s" %
                              (napleCmd, cmd.exit_code, cmd.stdout, cmd.stderr))
             api.PrintCommandResults(cmd)
-            return api.types.status.FAILURE
+            return api.types.status.FAILURE, cmd.stderr
 
     return api.types.status.SUCCESS, cmd.stdout
 
@@ -451,23 +453,23 @@ def checkForBsdIonicError(node):
     if api.GetNodeOs(node) != OS_TYPE_BSD:
         return api.types.status.FAILURE
 
-    status = runHostCmd(node, 'dmesg')
-    status = runHostCmd(node, 'sysctl dev.ionic ')
-    status = runHostCmd(node, 'vmstat -i ')
+    status, resp = runHostCmd(node, 'dmesg')
+    status, resp = runHostCmd(node, 'sysctl dev.ionic ')
+    status, resp = runHostCmd(node, 'vmstat -i ')
 
     # Check for errors
-    status = runHostCmd(node, 'dmesg | grep "adminq is hung"', True)
+    status, resp = runHostCmd(node, 'dmesg | grep "adminq is hung"', True)
     if status == api.types.status.SUCCESS:
         api.Logger.error("CHECK_ERR: Nicmgr not responding?")
 
-    status = runHostCmd(node, 'dmesg | grep "fw heartbeat stuck"', True)
+    status, resp = runHostCmd(node, 'dmesg | grep "fw heartbeat stuck"', True)
     if status == api.types.status.SUCCESS:
         api.Logger.error("CHECK_ERR: Nicmgr crashed?")
 
     return api.types.status.SUCCESS
 
 def checkNaplesForError(node):
-    status = runNaplesCmd(node, '/nic/bin/halctl show port')
+    status, out = runNaplesCmd(node, '/nic/bin/halctl show port')
     if status != api.types.status.SUCCESS:
         api.Logger.error("CHECK_ERR: HAL running??")
 
@@ -497,3 +499,48 @@ def GetWindowsPortMapping(node):
     entries = json.loads(resp.commands[0].stdout)
     return entries
 
+
+
+def RunMemStatsCheckTool(nodes=None):
+    if not nodes:
+        nodes = api.GetNaplesHostnames()
+
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
+    for node in nodes:
+        api.Trigger_AddNaplesCommand(req, node, MemStatsCheckToolNaplesPath)
+    resp = api.Trigger(req)
+
+    if resp is None:
+        api.Logger.error("Failed to run %s on Naples: %s"
+                         %(MemStatsCheckToolNaplesPath, nodes));
+        return api.types.status.FAILURE
+
+    for cmd in resp.commands:
+        api.PrintCommandResults(cmd)
+
+    return api.types.status.SUCCESS
+
+
+def CopyMemStatsCheckTool(nodes=None):
+    if not nodes:
+        nodes = api.GetNaplesHostnames()
+
+    for node in nodes:
+        # Get the memory stats check tool
+        wget_cmd = "wget http://www.pixelbeat.org/scripts/ps_mem.py -O {}".format(MemStatsCheckToolHostPath)
+        status, resp = runHostCmd(node, wget_cmd)
+
+        if status != api.types.status.SUCCESS:
+            api.Logger.error("Failed to get ps_mem.py tool to naples host: %s"%node)
+            return api.types.status.FAILURE
+
+        copy_cmd = "chmod +x {} && sshpass -p pen123 scp -o  UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no " \
+                   "{} root@{}:{}".format(MemStatsCheckToolHostPath, MemStatsCheckToolHostPath, api.GetNicIntMgmtIP(node), MemStatsCheckToolNaplesPath)
+        status, resp = runHostCmd(node, copy_cmd)
+
+        if status != api.types.status.SUCCESS:
+            api.Logger.error("Failed to copy ps_mem.py tool to naples: %s"%node)
+            return api.types.status.FAILURE
+
+    api.Logger.info("Copied MemStats check tool %s successfully to %s"%(MemStatsCheckToolHostPath, nodes))
+    return api.types.status.SUCCESS

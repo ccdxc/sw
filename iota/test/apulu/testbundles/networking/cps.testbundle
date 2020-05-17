@@ -24,6 +24,10 @@ testcases:
             type: remote_only
             objtype : [ vnic, subnet ]
             triggers : True
+            security_profile:
+                conntrack      : True
+                tcpidletimeout : 100
+                udpidletimeout : 100
         iterators:
             type      : simple
             proto     : [ udp ]
@@ -38,7 +42,7 @@ testcases:
             switchPortFlap   :
                 trigger         : auto
                 run             : repeat
-                sleep_interval  : 15
+                sleep_interval  : 20
                 terminate       : verify
             clearFlows       :
                 trigger         : auto

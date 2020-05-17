@@ -17,25 +17,27 @@ def pdsClearFlows(node_name=None):
     api.Trigger(req)
     return api.types.status.SUCCESS
 
+def SetPdsLogsLevel(level, node_name=None):
+    if not node_name:
+        node_name = api.GetNaplesHostnames()
 
-def SetPdsLogsLevel(node_name, level):
     cmd = '/nic/bin/pdsctl debug trace --level %s'%level
     req = api.Trigger_CreateExecuteCommandsRequest()
 
-    api.Trigger_AddNaplesCommand(req, node_name, cmd)
+    for n in node_name:
+        api.Trigger_AddNaplesCommand(req, n, cmd)
     resp = api.Trigger(req)
     api.PrintCommandResults(resp.commands[0])
     if resp.commands[0].exit_code != 0:
-        raise Exception("Failed to set the PDS trace level to %s on %s"%(level, node_name))
+        api.Logger.error("Failed to set the PDS trace level to %s on %s"%(level, node_name))
+        return api.types.status.FAILURE
+
     return api.types.status.SUCCESS
-
-
 
 def GetPdsDefaultLogLevel(node_name):
     # for now there is not pdsctl to get the current trace level,
     # hence returning default trace level as debug
     return 'debug'
-
 
 def isPdsAlive(node_name=None):
     node_list = []
@@ -50,7 +52,6 @@ def isPdsAlive(node_name=None):
         except:
             return api.types.status.FAILURE
     return api.types.status.SUCCESS
-
 
 def GetPdsPid(node_name):
     if not node_name:
@@ -67,4 +68,3 @@ def GetPdsPid(node_name):
             raise Exception("Could not find the PDS Agent process on %s"%(node_name))
         else:
             return int(cmd.stdout.strip())
-

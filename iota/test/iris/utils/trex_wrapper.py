@@ -520,3 +520,16 @@ class TRexIotaWrapper(ASTFClient):
             cv = "" if k not in client else client[k]
             sv = "" if k not in server else server[k]
             print(f.format(k, cv, sv, v))
+
+    @staticmethod
+    def show_trex_stats(clientHandle, serverHandle, proto='tcp'):
+        cstat = clientHandle.get_stats()
+        sstat = serverHandle.get_stats()
+        ct = cstat['traffic']['client']
+        st = sstat['traffic']['server']
+
+        # dump stats
+        if proto == 'tcp':
+            TRexIotaWrapper.show_tcp_stats(ct, st)
+        elif proto == 'udp':
+            TRexIotaWrapper.show_udp_stats(ct, st)

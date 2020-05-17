@@ -1,4 +1,6 @@
 #! /usr/bin/python3
+import random
+import time
 import iota.harness.api as api
 import iota.test.apulu.utils.misc as misc_utils
 from apollo.config.store import client as EzAccessStoreClient
@@ -11,6 +13,8 @@ operUp = "up"
 operDown = "down"
 adminUp = "up"
 adminDown = "down"
+PORT_OPER_STATUS_UP = 1
+PORT_OPER_STATUS_DOWN = 2
 verifyRetry = 120 #no of seconds to retry for
 uplinkDict = {UPLINK_PREFIX1: "Uplink0", UPLINK_PREFIX2: "Uplink1"}
 
@@ -166,4 +170,68 @@ def NaplesDataPortFlap(tc):
     ret = verifyDataPortState(naples_nodes, adminUp, operUp)
     return ret
 
+def GetUplinkStatus(node_name):
+    uplinkStatus = []
+    status, resp = pdsctl.ExecutePdsctlShowCommand(node_name, "port status", yaml=True, print_op=False)
+    if status != True:
+        return uplinkStatus
+    ptrn = "---"
+    for port in resp.split(ptrn):
+        try:
+            port = yaml.load(port)
+            uplinkStatus.append(port)
+        except:
+            pass
+    return uplinkStatus
+
+def __detectUpLinkState(node, state, cb, tries=6):
+    PORT_TYPE_MGMT = 2
+    while tries:
+        uplink = GetUplinkStatus(node)
+        #print("uplink List : %s"%uplink)
+        arr = [ port['status']['linkstatus']["operstate"] == state for port in uplink if port['spec']['porttype'] != PORT_TYPE_MGMT]
+        if cb(arr):
+            return api.types.status.SUCCESS
+        misc_utils.Sleep(1)
+        tries -= 1
+    return api.types.status.FAILURE
+
+def DetectUpLinkState(nodes, state, cb, tries=6):
+    for node in nodes:
+        ret = __detectUpLinkState(node, state, cb, tries)
+        if ret != api.types.status.SUCCESS:
+            return ret
+    return ret
+
+def FlapSwitchPort(tc, num_ports=1, down_time=0, port='any'):
+    naples_nodes = api.GetNaplesHostnames()
+    api.Logger.info("Flapping switch port on %s ..."%naples_nodes)
+    port_num = 1
+
+    if num_ports == 1 and port is 'any':
+        port_num = random.choice([1, 2])
+
+    ret = api.ShutDataPorts(naples_nodes, num_ports, start_port=port_num)
+    if ret != api.types.status.SUCCESS:
+        api.Logger.error("Failed to Shut the switch port:%s"%start_port)
+        return api.types.status.FAILURE
+
+    ret = DetectUpLinkState(naples_nodes, PORT_OPER_STATUS_DOWN, any)
+    if ret != api.types.status.SUCCESS:
+        api.Logger.error("Failed to detect any uplink(%s) in DOWN state."%start_port)
+        return api.types.status.FAILURE
+
+    misc_utils.Sleep(down_time)
+
+    ret = api.UnShutDataPorts(naples_nodes, num_ports, start_port=port_num)
+    if ret != api.types.status.SUCCESS:
+        api.Logger.error("Failed to UnShut the switch port:%s"%start_port)
+        return api.types.status.FAILURE
+
+    ret = DetectUpLinkState(naples_nodes, PORT_OPER_STATUS_UP, all)
+    if ret != api.types.status.SUCCESS:
+        api.Logger.error("Failed to detect any(%s) uplink in UP state."%start_port)
+        return api.types.status.FAILURE
+
+    return api.types.status.SUCCESS
 

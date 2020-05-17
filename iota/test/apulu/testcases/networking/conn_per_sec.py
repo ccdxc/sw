@@ -2,7 +2,8 @@
 
 import time
 import iota.harness.api as api
-#import iota.test.apulu.utils.port_utils as port_utils
+import iota.test.utils.naples_host as naples_utils
+import iota.test.apulu.utils.portflap as port_utils
 import iota.test.apulu.utils.vppctl as vppctl
 import iota.test.apulu.utils.pdsctl as pdsctl
 import iota.test.apulu.utils.flow as flowutils
@@ -25,7 +26,6 @@ def __getOperations(tc_operation):
         opers = list(map(lambda x:x.capitalize(), tc_operation))
     return opers
 
-
 def StoreCurrentPdsLogLevel(tc):
     tc.pdsLogLevelByNode = {}
     try:
@@ -35,23 +35,42 @@ def StoreCurrentPdsLogLevel(tc):
         api.Logger.error("%s"%e)
     return api.types.status.SUCCESS
 
-
-def SetPdsLogsLevelToError(tc):
-    try:
-        for n in api.GetNaplesHostnames():
-            pds_utils.SetPdsLogsLevel(n, "error")
-    except Exception as e:
-        api.Logger.error("%s"%e)
-    return api.types.status.SUCCESS
-
-
 def RestorePdsLogLevel(tc):
-    try:
-        for n,l in tc.pdsLogLevelByNode.items():
-            pds_utils.SetPdsLogsLevel(n, l)
-    except Exception as e:
-        api.Logger.error("%s"%e)
-    return api.types.status.SUCCESS
+    ret = api.types.status.SUCCESS
+    for n,l in tc.pdsLogLevelByNode.items():
+        rs = pds_utils.SetPdsLogsLevel(l, n)
+        if rs == api.types.status.FAILURE:
+            ret = api.types.status.FAILURE
+            api.Logger.error("Failed to restore PDS trace level node:%s, level:%s"%(n,l))
+    return ret
+
+
+def UpdateSecurityProfileTimeouts(tc):
+    if not hasattr(tc.args, 'security_profile'):
+        return api.types.status.SUCCESS
+    sec_prof_spec = tc.args.security_profile
+    oper = __getOperations(['update'])
+
+    api.Logger.verbose("Update Security Profile Spec: ")
+    api.Logger.verbose("conntrack      : %s "%getattr(sec_prof_spec, 'conntrack', False))
+    api.Logger.verbose("tcpidletimeout : %s "%getattr(sec_prof_spec, 'tcpidletimeout', 0))
+    api.Logger.verbose("udpidletimeout : %s "%getattr(sec_prof_spec, 'udpidletimeout', 0))
+    # Update security profile timeout
+    tc.selected_sec_profile_objs = config_api.SetupConfigObjects('security_profile', allnode=True)
+    ret = api.types.status.SUCCESS
+    for op in oper:
+        res = config_api.ProcessObjectsByOperation(op, tc.selected_sec_profile_objs, sec_prof_spec)
+        if res != api.types.status.SUCCESS:
+            ret = api.types.status.FAILURE
+            api.Logger.error("Failed to %s Security Profile Spec Timeouts"%op)
+        else:
+            api.Logger.info("Successfully %s Security Profile Spec Timeouts"%op)
+
+    nodes = api.GetNaplesHostnames()
+    for node in nodes:
+        res, resp = pdsctl.ExecutePdsctlShowCommand(node, "security-profile",
+                                     None, yaml=False, print_op=True)
+    return ret
 
 
 def showStats(tc):
@@ -63,50 +82,18 @@ def showStats(tc):
     if api.GlobalOptions.dryrun:
         return api.types.status.SUCCESS
 
-    cstat = tc.clientHandle.get_stats()
-    sstat = tc.serverHandle.get_stats()
-    ct = cstat['traffic']['client']
-    st = sstat['traffic']['server']
+    if tc.skip_stats_validation:
+        api.Logger.info("Show MemStats")
+        status = naples_utils.RunMemStatsCheckTool()
 
-    if tc.iterators.proto == 'tcp':
-        api.Logger.debug("Trex Show TCP Stats...")
-        TRexIotaWrapper.show_tcp_stats(ct, st)
-    elif tc.iterators.proto == 'udp':
-        api.Logger.debug("Trex Show UDP Stats...")
-        TRexIotaWrapper.show_udp_stats(ct, st)
+    server, client = tc.workload_pair[0], tc.workload_pair[1]
+    ret, resp = vppctl.ExecuteVPPctlShowCommand(server.node_name, vppctl.__CMD_FLOW_STAT)
+    ret, resp = vppctl.ExecuteVPPctlShowCommand(client.node_name, vppctl.__CMD_FLOW_STAT)
+
+    api.Logger.debug("Show Trex %s Stats..."%((tc.iterators.proto).upper()))
+    TRexIotaWrapper.show_trex_stats(tc.clientHandle, tc.serverHandle, tc.iterators.proto)
 
     api.Logger.debug("Completed Running showStats...")
-    return api.types.status.SUCCESS
-
-
-def FlapPort(tc, num_ports=1, down_time=2):
-    naples_nodes = api.GetNaplesHostnames()
-    api.Logger.info("Flapping switch port on %s ..."%naples_nodes)
-    port_num = 1
-#    ret = api.FlapDataPorts(naples_nodes, num_ports, down_time, flap_count=1, interval=2)
-
-    ret = api.ShutDataPorts(naples_nodes, num_ports, start_port=port_num)
-    if ret != api.types.status.SUCCESS:
-        api.Logger.error("Failed to Shut the switch port")
-        return api.types.status.FAILURE
-
-#    ret = port_utils.DetectUpLinkState(naples_nodes, port_utils.PORT_OPER_STATUS_DOWN, any)
-#    if ret != api.types.status.SUCCESS:
-#        api.Logger.error("Failed to detect any uplink in DOWN state.")
-#        return api.types.status.FAILURE
-
-    time.sleep(down_time)
-
-    ret = api.UnShutDataPorts(naples_nodes, num_ports, start_port=port_num)
-    if ret != api.types.status.SUCCESS:
-        api.Logger.error("Failed to UnShut the switch port")
-        return api.types.status.FAILURE
-
-#    ret = port_utils.DetectUpLinkState(naples_nodes, port_utils.PORT_OPER_STATUS_UP, all)
-#    if ret != api.types.status.SUCCESS:
-#        api.Logger.error("Failed to detect any uplink in UP state.")
-#        return api.types.status.FAILURE
-
     return api.types.status.SUCCESS
 
 
@@ -120,8 +107,8 @@ def switchPortFlap(tc):
         return api.types.status.SUCCESS
     num_ports = 1
     down_time  = 2
-    FlapPort(tc, num_ports, down_time)
-
+    #port_utils.FlapSwitchPort(tc, num_ports, down_time, 'any')
+    port_utils.NaplesDataPortFlap(tc)
     api.Logger.debug("Completed Running switchPortFlap...")
     return api.types.status.SUCCESS
 
@@ -213,17 +200,14 @@ def configurationChangeEvent(tc):
     tc.obj_sel = random.choice(tc.args.objtype)
     tc.selected_objs = config_api.SetupConfigObjects(tc.obj_sel)
 
-
     dumpPdsAgentInfo(tc, "PDS Agent info before configDeleteTrigger...")
 
     if configDeleteTrigger(tc) != api.types.status.SUCCESS:
         api.Logger.error("Failed in configDeleteTrigger...")
-
     dumpPdsAgentInfo(tc, "PDS Agent info after configDeleteTrigger...")
 
     if configRestoreTrigger(tc) != api.types.status.SUCCESS:
         api.Logger.error("Failed in configRestoreTrigger...")
-
     dumpPdsAgentInfo(tc, "PDS Agent info after configRestoreTrigger...")
 
     api.Logger.debug("Completed Running configurationChangeEvent...")
@@ -307,8 +291,13 @@ def Setup(tc):
     tc.cancel = False
     tc.workloads = api.GetWorkloads()
 
+    UpdateSecurityProfileTimeouts(tc)
     chooseWorkload(tc)
     server, client = tc.workload_pair[0], tc.workload_pair[1]
+
+    if tc.skip_stats_validation:
+        naples_utils.CopyMemStatsCheckTool()
+
     api.Logger.info("Server: %s(%s)(%s) <--> Client: %s(%s)(%s)" %\
                     (server.workload_name, server.ip_address,
                      server.mgmt_ip, client.workload_name,
@@ -316,7 +305,7 @@ def Setup(tc):
 
     try:
         StoreCurrentPdsLogLevel(tc)
-        SetPdsLogsLevelToError(tc)
+        pds_utils.SetPdsLogsLevel("error")
     except Exception as e:
         #traceback.print_exc()
         api.Logger.error("Failed to setup cps test workloads : %s"%(e))
@@ -355,8 +344,6 @@ def Setup(tc):
 
 def Trigger(tc):
     try:
-        if tc.skip: return api.types.status.SUCCESS
-
         tc.serverHandle.clear_stats()
         tc.clientHandle.clear_stats()
 
@@ -395,8 +382,6 @@ def Trigger(tc):
 def Verify(tc):
     udp_tolerance = 0.1
     server, client = tc.workload_pair[0], tc.workload_pair[1]
-
-    if tc.skip: return api.types.status.SUCCESS
 
     ret = pds_utils.isPdsAlive()
     if ret != api.types.status.SUCCESS:
@@ -513,6 +498,9 @@ def cleanup(tc):
         pass
 
 def Teardown(tc):
+    for obj in tc.selected_sec_profile_objs:
+        obj.RollbackUpdate()
+
     flowutils.clearFlowTable(tc.workload_pairs)
     __clearVPPEntity("flow statistics")
     __clearVPPEntity("flow entries")

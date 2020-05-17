@@ -231,12 +231,12 @@ def __getObjects(objtype):
             interfaceobjs = objClient.Objects(node, True)
             objs.extend(list(filter(lambda x: x.Type != topo.InterfaceTypes.LOOPBACK, interfaceobjs)))
         else:
-            objs.extend(objClient.Objects(node, True))
+            obj = objClient.Objects(node, True)
+            objs.extend(obj)
     return objs
 
-def __getMaxLimit(objtype):
-    objs = __getObjects(objtype)
-    return len(objs)
+def __getMaxLimit(objtype, objlist):
+    return len(objlist)
 
 def __getRandomSamples(objlist, num = None):
     limit = len(objlist)
@@ -244,20 +244,29 @@ def __getRandomSamples(objlist, num = None):
         num = limit
     return random.sample(objlist, k=num)
 
-def SetupConfigObjects(objtype):
-    maxlimit = __getMaxLimit(objtype)
+def SetupConfigObjects(objtype, allnode=False):
+    objlist = __getObjects(objtype)
+    maxlimit = __getMaxLimit(objtype, objlist)
     select_count = int(maxlimit / 2) if maxlimit >= 2 else maxlimit
-    select_objs = __getRandomSamples(__getObjects(objtype), select_count)
+
+    # For allnode case if the given objtype's maxlimit is 1,
+    # then return all entries in the objlist
+    if allnode:
+        objClient = GetObjClient(objtype)
+        if objtype == 'security_profile' and objClient.Maxlimit == 1:
+            select_count = maxlimit
+    select_objs = __getRandomSamples(objlist, select_count)
+
     api.Logger.verbose(f"selected_objs: {select_objs}")
     return select_objs
 
-def ProcessObjectsByOperation(oper, select_objs):
+def ProcessObjectsByOperation(oper, select_objs, spec=None):
     supported_ops = [ 'Create', 'Read', 'Delete', 'Update' ]
     res = api.types.status.SUCCESS
     if oper is None or oper not in supported_ops:
         return res
     for obj in select_objs:
-        if getattr(obj, oper)():
+        if getattr(obj, oper)(spec):
             if not getattr(obj, 'Read')():
                 api.Logger.error(f"read after {oper} failed for object: {obj}")
                 res = api.types.status.FAILURE

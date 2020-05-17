@@ -44,6 +44,7 @@ class SecurityProfileObject(base.ConfigObjectBase):
        ############### PRIVATE ATTRIBUTES OF SECURITY_PROFILE OBJECT ###############
         self.__spec = spec
         self.DeriveOperInfo()
+        self.Mutable = utils.IsUpdateSupported()
         self.Show()
         return
 
@@ -161,6 +162,47 @@ class SecurityProfileObject(base.ConfigObjectBase):
             for policy in PolicyClient.Objects(self.Node):
                 assert(utils.UpdateObject(policy))
         return True
+
+
+    def UpdateAttributes(self, spec=None):
+        if not spec: return
+        if hasattr(spec, 'conntrack'):
+            self.ConnTrackEn = spec.conntrack
+        if hasattr(spec, 'deffwaction'):
+            self.DefaultFWAction = spec.deffwaction
+        if hasattr(spec, 'tcpidletimeout'):
+            self.TCPIdleTimeout = spec.tcpidletimeout
+        if hasattr(spec, 'udpidletimeout'):
+            self.UDPIdleTimeout = spec.udpidletimeout
+        if hasattr(spec, 'icmpidletimeout'):
+            self.ICMPIdleTimeout = spec.icmpidletimeout
+        if hasattr(spec, 'otheridletimeout'):
+            self.OtherIdleTimeout = spec.otheridletimeout
+        if hasattr(spec, 'tcpsyntimeout'):
+            self.TCPCnxnSetupTimeout = spec.tcpsyntimeout
+        if hasattr(spec, 'tcphalfclosetimeout'):
+            self.TCPHalfCloseTimeout = spec.tcphalfclosetimeout
+        if hasattr(spec, 'tcpclosetimeout'):
+            self.TCPCloseTimeout = spec.tcpclosetimeout
+        if hasattr(spec, 'tcpdroptimeout'):
+            self.TCPDropTimeout = spec.tcpdroptimeout
+        if hasattr(spec, 'udpdroptimeout'):
+            self.UDPDropTimeout = spec.udpdroptimeout
+        if hasattr(spec, 'icmpdroptimeout'):
+            self.ICMPDropTimeout = spec.icmpdroptimeout
+        if hasattr(spec, 'otherdroptimeout'):
+            self.OtherDropTimeout = spec.otherdroptimeout
+        return
+
+    def RollbackAttributes(self):
+        attrlist = ["ConnTrackEn", "DefaultFWAction", "TCPIdleTimeout",
+            "UDPIdleTimeout", "ICMPIdleTimeout", "OtherIdleTimeout",
+            "TCPCnxnSetupTimeout", "TCPHalfCloseTimeout",
+            "TCPCloseTimeout", "TCPDropTimeout", "UDPDropTimeout",
+            "ICMPDropTimeout", "OtherDropTimeout"]
+        self.RollbackMany(attrlist)
+        return
+
 
 class SecurityProfileObjectClient(base.ConfigClientBase):
     def __init__(self):
