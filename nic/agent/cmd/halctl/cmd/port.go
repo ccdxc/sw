@@ -448,12 +448,12 @@ func portStatusShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func portXcvrShowCmdHandler(cmd *cobra.Command, args []string) {
-	if len(args) > 0 {
+	if args != nil && len(args) > 0 {
 		fmt.Printf("Invalid argument\n")
 		return
 	}
 
-	if cmd.Flags().Changed("yaml") {
+	if cmd != nil && cmd.Flags().Changed("yaml") {
 		handlePortDetailShowCmd(cmd, nil)
 		return
 	}
@@ -505,12 +505,12 @@ func portXcvrShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func portShowCmdHandler(cmd *cobra.Command, args []string) {
-	if len(args) > 0 {
+	if args != nil && len(args) > 0 {
 		fmt.Printf("Invalid argument\n")
 		return
 	}
 
-	if cmd.Flags().Changed("yaml") {
+	if cmd != nil && cmd.Flags().Changed("yaml") {
 		handlePortDetailShowCmd(cmd, nil)
 		return
 	}
