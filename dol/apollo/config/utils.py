@@ -128,6 +128,11 @@ class PdsUuid:
         return self.Id
 
     @staticmethod
+    def SetSystemMAC(uuid_mac):
+        global PDS_UUID_SYSTEM_MAC
+        PDS_UUID_SYSTEM_MAC = uuid_mac.to_bytes(PDS_UUID_SYSTEM_MAC_LEN, PDS_NODE_UUID_BYTE_ORDER)
+
+    @staticmethod
     def GetUuidString(uuid):
         # keep this inline with pds_obj_key_s.str()
         uuid_id = PdsUuid.GetIdfromUUID(uuid, "big")

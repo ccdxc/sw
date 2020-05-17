@@ -367,6 +367,7 @@ dependencies:
     - reference: nic/apollo/tools/apulu/sanity/base
     - reference: nic/apollo/tools/athena/sanity/base
     - reference: test/ci_targets/cloud-e2e
+    - reference: test/ci_targets/controlplane-dol
   nic/apollo/tools/dev-docker:
     - reference: nic/apollo/tools/apulu/sanity/customer-docker
     # - reference: nic/apollo/tools/athena/sanity/customer-docker
@@ -402,6 +403,7 @@ dependencies:
   nic/conf/apulu:
     - reference: iota/test/standalone/precheckin/apulu-sdn-pds
     - reference: nic/apollo/tools/apulu/sanity/base
+    - reference: test/ci_targets/controlplane-dol
   nic/debug_cli:
     - reference: iota/test/standalone/precheckin/linux
   nic/delphi:
@@ -451,6 +453,7 @@ dependencies:
     - reference: iota/test/standalone/precheckin/apulu-sdn-pds
     - reference: nic/apollo/tools/apulu/sanity/base
     - reference: nic/apollo/tools/athena/sanity/base
+    - reference: test/ci_targets/controlplane-dol
   nic/sysmgr:
     - reference: iota/test/venice
     - reference: iota/test/standalone/precheckin/linux

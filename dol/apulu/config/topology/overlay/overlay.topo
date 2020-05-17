@@ -14,6 +14,7 @@ node:
         gateway         : None # Taken from resmgr
         encap           : vxlan # vxlan or mplsodup
         overlayrouting  : true
+        system-mac      : macaddr/0000.0100.0025 # MAC address from fru.json
 # Tunnel, nexthop and route-tables are retained for pkt generation. They are
 # not pushed to the model
         tunnel      :

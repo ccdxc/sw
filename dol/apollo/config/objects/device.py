@@ -1,5 +1,4 @@
 #! /usr/bin/python3
-import pdb
 import os
 
 from infra.common.logging import logger
@@ -51,6 +50,12 @@ class DeviceObject(base.ConfigObjectBase):
             self.MACAddr = spec.macaddress
         else:
             self.MACAddr = ResmgrClient[node].DeviceMacAllocator.get()
+
+        if (hasattr(spec, 'system-mac')):
+            systemMAC = getattr(spec, 'system-mac', None)
+            # Use the system MAC from FRU in the UUID derivation
+            utils.PdsUuid.SetSystemMAC(systemMAC.getnum())
+
         self.IP = str(self.IPAddr) # For testspec
         self.EncapType = utils.GetEncapType(spec.encap)
         self.PolicyAnyDeny = getattr(spec, 'any-deny-policy', False)

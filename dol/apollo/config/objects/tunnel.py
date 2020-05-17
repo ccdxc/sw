@@ -208,7 +208,19 @@ class TunnelObject(base.ConfigObjectBase):
                 spec.NexthopGroupId = utils.PdsUuid.GetUUIDfromId(self.NexthopGroupId, ObjectTypes.NEXTHOPGROUP)
         return
 
+    def ValidateSpecDiscovered(self, spec):
+        if spec.MACAddress != self.MACAddr.getnum():
+            logger.error(f"GRPC Get Tunnel {self.RemoteIPAddr} has unexpected MAC address {spec.MACAddress} expected {self.MACAddr} ({self.MACAddr.getnum()})")
+            return False
+        return True
+
     def ValidateSpec(self, spec):
+        if utils.IsDol() and self.DEVICE.IsOverlayRoutingEnabled:
+            return self.ValidateSpecDiscovered(spec)
+
+        # TODO - Enable tunnel validation
+        return True
+
         if spec.Id != self.GetKey():
             return False
         if utils.ValidateTunnelEncap(self.Node, self.EncapValue, spec.Encap) == False:
@@ -238,9 +250,10 @@ class TunnelObject(base.ConfigObjectBase):
         return True
 
     def ValidateYamlSpec(self, spec):
+        # TODO - Enable tunnel validation
+        return True
         if utils.GetYamlSpecAttr(spec) != self.GetKey():
             return False
-        return True
 
     def GetDependees(self, node):
         """
@@ -324,8 +337,9 @@ class TunnelObject(base.ConfigObjectBase):
 class TunnelObjectClient(base.ConfigClientBase):
     def __init__(self):
         super().__init__(ObjectTypes.TUNNEL, Resmgr.MAX_TUNNEL)
+        # Expected discovered tunnel objects in case of overlay routing
         self.DiscoveredObjs = {}
-        self.numDiscoveredObjs = 0
+        self.Parent = None
         return
 
     def AddObject(self, node, obj):
@@ -372,6 +386,44 @@ class TunnelObjectClient(base.ConfigClientBase):
         self.Objs[obj.Node].pop(obj.Id, None)
         return
 
+    def GetKeyfromSpec(self, spec, yaml=False):
+        if utils.IsDol() and self.Parent.IsOverlayRoutingEnabled():
+            # In case of overlay return IP, L3 VNI tuple
+            # to look up against expected DiscoveredObjs
+            if not yaml:
+                vnid = spec.Encap.value.Vnid
+                return (spec.RemoteIP, vnid, False)
+            # TODO enable YAML lookup
+            # spec['remoteip']['af'] = 1
+            # spec['remoteip']['v4addr']
+            # spec['encap']['value'] = None
+            return (0, 0, True)
+        return super().GetKeyfromSpec(spec, yaml)
+
+    def GetObjectByKey(self, node, key):
+        if utils.IsDol() and self.Parent.IsOverlayRoutingEnabled() and isinstance(key, tuple):
+           yaml = key[2]
+           if not yaml:
+               logger.info(f"GetObjectByKey discovered Tunnel {key}")
+               remoteIPKey = key[0]
+               vnid = key[1]
+               if remoteIPKey.Af == types_pb2.IP_AF_INET:
+                   remoteip = remoteIPKey.V4Addr
+               else:
+                   remoteip = remoteIPKey.V6Addr
+               remoteipaddr = ipaddress.ip_address(remoteip)
+               if remoteipaddr not in self.DiscoveredObjs[node]:
+                   return None
+               if vnid not in self.DiscoveredObjs[node][remoteipaddr]:
+                   return None
+               return self.DiscoveredObjs[node][remoteipaddr][vnid]
+           else:
+               # TODO Fix YAML validation. For now return the first object
+               objDict = self.Objs[node]
+               for obj in objDict.values():
+                   return obj
+        return super().GetObjectByKey(node, key)
+
     def GenerateObjects(self, node, parent, tunnelspec):
         def __isTunFeatureSupported(tunnel_type):
             if tunnel_type == 'service':
@@ -385,6 +437,14 @@ class TunnelObjectClient(base.ConfigClientBase):
             return False
 
         # Generate Remote Tunnel object
+        self.Parent = parent
+
+        if parent.IsOverlayRoutingEnabled():
+            if node in self.DiscoveredObjs:
+                discoveredObjs = self.DiscoveredObjs[node]
+            else:
+                self.DiscoveredObjs.update({node: {}})
+                discoveredObjs = self.DiscoveredObjs[node]
         for t in tunnelspec:
             if not __isTunFeatureSupported(t.type):
                 continue
@@ -392,11 +452,10 @@ class TunnelObjectClient(base.ConfigClientBase):
                 obj = TunnelObject(node, parent, t, False)
                 self.Objs[node].update({obj.Id: obj})
                 if parent.IsOverlayRoutingEnabled():
-                    if obj.RemoteIPAddr in self.DiscoveredObjs:
-                        self.DiscoveredObjs[obj.RemoteIPAddr].update({obj.EncapValue: obj})
+                    if obj.RemoteIPAddr in discoveredObjs:
+                        discoveredObjs[obj.RemoteIPAddr].update({obj.EncapValue: obj})
                     else:
-                        self.DiscoveredObjs.update({obj.RemoteIPAddr: {obj.EncapValue: obj}})
-                    self.numDiscoveredObjs = self.numDiscoveredObjs + 1
+                        discoveredObjs.update({obj.RemoteIPAddr: {obj.EncapValue: obj}})
         EzAccessStoreClient[node].SetTunnels(self.Objects(node))
         ResmgrClient[node].CreateInternetTunnels()
         ResmgrClient[node].CreateVnicTunnels()
@@ -404,102 +463,14 @@ class TunnelObjectClient(base.ConfigClientBase):
         ResmgrClient[node].CreateUnderlayTunnels()
         return
 
-    def IsReadSupported(self):
-        return True
-
-    def ValidateGrpcRead(self, node, getResp):
-        if not EzAccessStoreClient[node].IsDeviceOverlayRoutingEnabled():
-            # TODO Enable GRPC Tunnel validation
-            return True
-        # Override base validation for overlay routing case
-        numObjs = 0
-        logger.info("Validate gRPC Tunnel - Overlay Routing enabled")
-        if utils.IsDryRun(): return True
-
-        for obj in getResp:
-            if not utils.ValidateGrpcResponse(obj):
-                logger.error("GRPC get request failed for ", obj)
-                return False
-            resps = obj.Response
-            logger.info(f"GRPC Tunnel Get returned {len(resps)} responses")
-            for resp in resps:
-                numObjs += 1
-                key = self.GetKeyfromSpec(resp.Spec)
-                logger.info(f"Key:{key} Spec:{resp.Spec}")
-                if resp.Spec.RemoteIP.Af == types_pb2.IP_AF_INET:
-                    remoteip = resp.Spec.RemoteIP.V4Addr
-                else:
-                    remoteip = resp.Spec.RemoteIP.V6Addr
-                remoteipaddr = ipaddress.ip_address(remoteip)
-                if remoteipaddr not in self.DiscoveredObjs:
-                    logger.error(f"Tunnel {remoteip} is not expected")
-                    return False
-                discTunObj = self.DiscoveredObjs[remoteipaddr]
-                vnid = resp.Spec.Encap.value.Vnid
-                if vnid not in discTunObj:
-                    if vnid == 0:
-                        logger.error(f"GRPC Get Tunnel {remoteip} without L3 VNID is not expected")
-                    else:
-                        logger.error(f"GRPC Get Tunnel {remoteip} with L3 VNID {vnid} is not expected")
-                    return False
-                logger.info(f"Found Tunnel {remoteip} with VNID {vnid}")
-                tunObj = discTunObj[vnid]
-                print(tunObj)
-                if resp.Spec.MACAddress != tunObj.MACAddr.getnum():
-                    if vnid == 0:
-                        logger.error(f"GRPC Get Tunnel {remoteip} has unexpected MAC address in Spec:{resp.Spec.MACAddress}")
-                    else:
-                        logger.error(f"GRPC Get Tunnel {remoteip} with L3 VNID {vnid} MAC address mismatch Spec:{resp.Spec.MACAddress} Expected:{tunObj.MACAddr}")
-                    #return False
-                tunObj.validateFound = True
-
-        notFound = False
-        for remoteip, discTunObj in self.DiscoveredObjs.items():
-            for vnid, tunObj in discTunObj.items():
-                if not tunObj.validateFound:
-                    if vnid == 0:
-                        logger.error(f"GRPC Get Tunnel {remoteip} not found")
-                    else:
-                        logger.error(f"GRPC Get Tunnel {remoteip} L3 VNID {vnid} not found")
-                    notFound = True
-                else:
-                    tunObj.validateFound = False
-
-        if notFound:
-            # Missing expected tunnels
-            return False
-
-        if numObjs < self.numDiscoveredObjs:
-            logger.error(f"GRPC Get Tunnel returned {numObjs} objects but expected {self.numDiscoveredObjs}")
-            return False
-        return True
-
-    def ValidatePdsctlRead(self, node, ret, stdout):
-        if not EzAccessStoreClient[node].IsDeviceOverlayRoutingEnabled():
-            # TODO Enable pdsctl Tunnel validation
-            return True
-        # Override base validation for overlay routing case
-        logger.info("Validate Pdsctl Tunnel - Overlay Routing enabled")
-        if utils.IsDryRun(): return True
-        if not ret:
-            logger.error("pdsctl show cmd failed for ", self.ObjType)
-            return False
-        # split output per object
-        cmdop = stdout.split("---")
-        numObjs = len(cmdop)-1
-        logger.info(f"PdsCtl Tunnel Get returned {numObjs} responses")
-
-        for op in cmdop:
-            yamlOp = utils.LoadYaml(op)
-            if not yamlOp:
-                continue
-            logger.info (f"Pdsctl show tunnel YAML spec {yamlOp['spec']}")
-        # TODO Hard-conding for now - Later Move this to the Spec
-        # Overlay topo with 3 containers will have 2 Type2 Tunnels and 2 Type5 Tunnels
-        if numObjs < self.numDiscoveredObjs:
-            logger.error(f"Pdsctl show tunnel returned {numObjs} objects but expected {self.numDiscoveredObjs}")
-            return False;
-        return True
+    def GetNumHwObjects(self, node):
+        if utils.IsDol() and self.Parent.IsOverlayRoutingEnabled():
+            count = 0
+            for tunnels in self.DiscoveredObjs[node].values():
+                count = count + len(tunnels)
+            logger.info(f"NumDiscoveredHwObjects returned {count} for {self.ObjType.name} in {node}")
+            return count
+        return super().GetNumHwObjects(node)
 
 client = TunnelObjectClient()
 
