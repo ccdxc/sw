@@ -67,12 +67,14 @@ class CoreCollector(object):
         filelist = ""
         nodes = self.buildNodesFromTestbedFile()
         self.log.debug("gathering cores for nodes {0}".format(nodes))
-        for _dir in ["/var/crash", "/var/core"]:
+        for _dir in ["/var/crash/", "/var/core/"]:
             for node in nodes:
                 coreCount = 0
                 self.log.debug("looking for cores in dir {0} on host {1}".format(_dir, node))
                 try:
-                    corefiles = self.sshCmd(node,"sudo ls -t {0}".format(_dir),verbose=True)
+                    corefiles = self.sshCmd(node,"sudo find {0} -maxdepth 1 -type f".format(_dir),verbose=True)
+                    corefiles = [re.sub(_dir,"",c) for c in corefiles if re.search("[\w]+", c)]
+                    self.log.debug("found raw corefile list: {0}".format(corefiles))
                 except subprocess.CalledProcessError as e:
                     if e.returncode == 1:
                         self.log.debug("directory {0} does not exist on host {1}".format(_dir, node))
@@ -84,8 +86,6 @@ class CoreCollector(object):
                     self.log.debug("failed to search directory {0} on node {1}. error was: {2}".format(_dir, node, traceback.format_exc()))
                     continue
                 for core in corefiles:
-                    if len(core) < 4:
-                        continue
                     if core in self.excluded:
                         self.log.debug("skipping file {0}. in excluded list".format(core))
                         continue
@@ -97,6 +97,7 @@ class CoreCollector(object):
                     try:
                         print("processing core file {0}".format(core))
                         self.sshCmd(node,"sudo cp {0}/{1} /var/".format(_dir,core))
+                        self.sshCmd(node,"sudo chown vm:vm /var/{0}".format(core))
                         self.scpGetFile(node,"/var/{0}".format(core),destFile)
                         self.sshCmd(node,"sudo rm /var/{0}".format(core))
                         filelist += destFile + ' '
