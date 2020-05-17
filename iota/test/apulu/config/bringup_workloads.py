@@ -171,20 +171,21 @@ def __readd_classic_workloads(target_node = None, workloads = []):
             continue
 
         wl_msg = req.workloads.add()
-        wl_msg.ip_prefix = wl.ip_prefix
-        wl_msg.ipv6_prefix = wl.ipv6_prefix
-        wl_msg.sec_ip_prefix.extend(wl.sec_ip_prefixes)
-        wl_msg.mac_address = wl.mac_address
-        wl_msg.encap_vlan = wl.encap_vlan
-        wl_msg.uplink_vlan = wl.uplink_vlan
+        intf = wl_msg.interfaces.add()
+        intf.ip_prefix = wl.ip_prefix
+        intf.ipv6_prefix = wl.ipv6_prefix
+        intf.sec_ip_prefix.extend(wl.sec_ip_prefixes)
+        intf.mac_address = wl.mac_address
+        intf.encap_vlan = wl.encap_vlan
+        intf.uplink_vlan = wl.uplink_vlan
         wl_msg.workload_name = wl.workload_name
         wl_msg.node_name = wl.node_name
-        wl_msg.pinned_port = wl.pinned_port
-        wl_msg.interface_type = wl.interface_type
+        intf.pinned_port = wl.pinned_port
+        intf.interface_type = wl.interface_type
         # Interface to be set to parent intf in vlan case, same as workloads created first time
         interface = wl.parent_interface
-        if interface != None: wl_msg.interface = interface
-        wl_msg.parent_interface = wl.parent_interface
+        if interface != None: intf.interface = interface
+        intf.parent_interface = wl.parent_interface
         wl_msg.workload_type = wl.workload_type
         wl_msg.workload_image = wl.workload_image
         wl_msg.mgmt_ip = api.GetMgmtIPAddress(wl_msg.node_name)

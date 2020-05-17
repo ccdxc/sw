@@ -4,7 +4,7 @@ from datetime import datetime
 import sys
 import re
 
-TIMEOUT = 30
+TIMEOUT = 180
 CONSOLE_SVR_USERNAME = 'admin'
 CONSOLE_SVR_PASSWORD = 'N0isystem$'
 
