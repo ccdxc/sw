@@ -3,6 +3,7 @@
 NICDIR=$1
 export PDSPKG_TOPDIR=$NICDIR
 PIPELINE=$2
+APP_ID=$3
 
 #set -x
 #echo $NICDIR
@@ -15,9 +16,9 @@ mount -t hugetlbfs nodev /dev/hugepages
 #VPP Partial init env variables
 export HAL_CONFIG_PATH=$NICDIR/conf/
 export CONFIG_PATH=$NICDIR/conf/
-export ZMQ_SOC_DIR=$NICDIR
+export ZMQ_SOC_DIR='/sw/nic'
 #This is used in DPDK to chosing DESC/Pkt buffer memory pool
-export DPDK_SIM_APP_ID=1
+export DPDK_SIM_APP_ID=$APP_ID
 export VPP_LOG_FILE=$NICDIR/vpp.log
 
 ulimit -c unlimited

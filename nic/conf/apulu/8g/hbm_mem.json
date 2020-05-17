@@ -356,6 +356,12 @@
             "_comment": "2M * 16B * 2"
         },
         {
+            "name": "port_stats",
+            "kind": "opertbl",
+            "size": "3K",
+            "reset": true
+        },
+        {
             "name": "mapping",
             "kind": "cfgtbl",
             "size": "256M",
@@ -405,17 +411,11 @@
             "size": "1088K"
         },
         {
-            "name": "port_stats",
-            "kind": "opertbl",
-            "size": "3K",
-            "reset": true
-        },
-        {
             "_comment" : "Reserved for upgrade for duplicating the tables",
             "_comment1" : "Consider memory for new table addition also in future",
             "name": "for_upgrade",
             "kind": "upgrade",
-            "size": "0M"
+            "size": "2048M"
         }
     ]
 }

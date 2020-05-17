@@ -355,7 +355,7 @@ asicpd_set_hbm_table_base_addr (void)
 
 
 // called by upgrade in pre-init stage.
-// prepares the property values based on the configuration.
+// prepares the table engine info based on the configuration.
 // this configuration is pushed to the hw during P4 quisce state during
 // the upgrade switch over
 //
@@ -450,6 +450,10 @@ asicpd_tbl_eng_cfg_get (p4pd_pipeline_t pipeline, p4_tbl_eng_cfg_t *cfg,
             p4pluspd_rxdma_table_properties_get(i, &tbl_ctx);
             pc = asicpd_get_p4plus_table_mpu_pc(i);
             if (pc == 0) {
+                SDK_TRACE_INFO("pipeline rxdma, tblname %s, tableid %u, stage %u, "
+                               "stage-tableid %u, skipping",
+                               tbl_ctx.tablename, i, tbl_ctx.stage,
+                               tbl_ctx.stage_tableid);
                 continue;
             }
             SDK_ASSERT(ntbls < cfgs_max);
@@ -459,9 +463,10 @@ asicpd_tbl_eng_cfg_get (p4pd_pipeline_t pipeline, p4_tbl_eng_cfg_t *cfg,
                 cfg[ntbls].mem_offset = INVALID_MEM_ADDRESS;
             }
             SDK_TRACE_INFO("pipeline rxdma, tblname %s, tableid %u, stage %u, "
-                           "stage-tableid %u, mem %lx, ntbl %d",
+                           "stage-tableid %u, mem %lx, ntbl %d, pc %lx",
                            tbl_ctx.tablename, i, tbl_ctx.stage,
-                           tbl_ctx.stage_tableid, (long)cfg[ntbls].mem_offset, ntbls);
+                           tbl_ctx.stage_tableid, (long)cfg[ntbls].mem_offset,
+                           ntbls, pc);
             cfg[ntbls].tableid = i;
             cfg[ntbls].stage = tbl_ctx.stage;
             cfg[ntbls].stage_tableid = tbl_ctx.stage_tableid;
@@ -474,6 +479,10 @@ asicpd_tbl_eng_cfg_get (p4pd_pipeline_t pipeline, p4_tbl_eng_cfg_t *cfg,
             p4pluspd_txdma_table_properties_get(i, &tbl_ctx);
             pc = asicpd_get_p4plus_table_mpu_pc(i);
             if (pc == 0) {
+                SDK_TRACE_INFO("pipeline txdma, tblname %s, tableid %u, stage %u, "
+                               "stage-tableid %u, skipping",
+                               tbl_ctx.tablename, i, tbl_ctx.stage,
+                               tbl_ctx.stage_tableid);
                 continue;
             }
             SDK_ASSERT(ntbls < cfgs_max);
@@ -483,10 +492,10 @@ asicpd_tbl_eng_cfg_get (p4pd_pipeline_t pipeline, p4_tbl_eng_cfg_t *cfg,
                 cfg[ntbls].mem_offset = INVALID_MEM_ADDRESS;
             }
             SDK_TRACE_INFO("pipeline txdma, tblname %s, tableid %u, stage %u, "
-                           "stage-tableid %u, mem %lx, ntbl %d",
+                           "stage-tableid %u, mem %lx, ntbl %d, pc %lx",
                            tbl_ctx.tablename, i, tbl_ctx.stage,
                            tbl_ctx.stage_tableid,
-                           (long) cfg[ntbls].mem_offset, ntbls);
+                           (long) cfg[ntbls].mem_offset, ntbls, pc);
 
             cfg[ntbls].tableid = i;
             cfg[ntbls].stage = tbl_ctx.stage;

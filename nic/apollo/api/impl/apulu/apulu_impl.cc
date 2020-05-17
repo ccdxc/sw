@@ -147,13 +147,20 @@ apulu_impl::table_engine_cfg_update_(p4plus_prog_t *prog) {
     for (idx = 0; idx < num_cfgs; idx++) {
         if (cfg[idx].stage == prog->stageid &&
             cfg[idx].stage_tableid == prog->stage_tableid) {
-            cfg[idx].pc_dyn = 1;
-            cfg[idx].pc_offset = 0;
+            SDK_ASSERT(cfg[idx].asm_base == asm_base); // just a validation
             break;
         }
     }
-    SDK_ASSERT(idx < num_cfgs);
-    SDK_ASSERT(cfg[idx].asm_base == asm_base); // just a validation
+    // add the entry if not found
+    SDK_ASSERT(idx < max_cfgs);
+    cfg[idx].stage = prog->stageid;
+    cfg[idx].stage_tableid = prog->stage_tableid;
+    cfg[idx].pc_dyn = 1;
+    cfg[idx].pc_offset = 0;
+    // increment the count
+    if (idx >= num_cfgs) {
+        g_upg_state->incr_tbl_eng_cfg_count(prog->pipe, 1);
+    }
 }
 
 sdk_ret_t
@@ -698,19 +705,21 @@ apulu_impl::pipeline_upgrade_hitless_init(void) {
     ret = pipeline_p4_hbm_init(&p4pd_cfg, false);
     SDK_ASSERT(ret == SDK_RET_OK);
 
-    // this is not valid
-    SDK_ASSERT(sdk::asic::asic_is_soft_init());
+    // should be in hard init
+    SDK_ASSERT(sdk::asic::asic_is_hard_init());
 
+    ret = sdk::asic::pd::asicpd_table_mpu_base_init(&p4pd_cfg);
+    SDK_ASSERT(ret == SDK_RET_OK);
     ret = sdk::asic::pd::asicpd_p4plus_table_mpu_base_init(&p4pd_cfg);
     SDK_ASSERT(ret == SDK_RET_OK);
+    // backup the existing configuration for save and write scheme
+    upgrade_backup();
     // rss config is not modified across upgrades
     // TODO : confirm this aproach is correct
     // ret = sdk::asic::pd::asicpd_toeplitz_init("apulu_rxdma",
     //                      P4_P4PLUS_RXDMA_TBL_ID_ETH_RX_RSS_INDIR);
     // SDK_ASSERT(ret == SDK_RET_OK);
     ret = p4plus_table_upgrade_init_();
-    SDK_ASSERT(ret == SDK_RET_OK);
-    ret = sdk::asic::pd::asicpd_table_mpu_base_init(&p4pd_cfg);
     SDK_ASSERT(ret == SDK_RET_OK);
 
     g_pds_impl_state.init(&api::g_pds_state);
@@ -799,9 +808,10 @@ apulu_impl::upgrade_switchover(void) {
 }
 
 // backup all the existing configs which will be modified during switchover.
-// during A to B upgrade, this will be invoked by A
+// during A to B upgrade, this will be invoked by A and B
 // if there is a switchover failue from A to B, during rollbacking, this backed up config
 // will be applied as B might have overwritten some of these configs
+// B invokes this to save the current config and during switchover it writes the saved data
 // pipeline switchover and pipeline backup should be in sync
 // sequence : A(backup) -> upgrade -> A2B(switchover) ->
 //          : B(switchover_failure) -> rollback -> B2A(switchover) -> success/failure

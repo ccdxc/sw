@@ -18,16 +18,15 @@ namespace sdk {
 namespace platform {
 namespace capri {
 
-// capri soft initialization for modules which they need to read the capri
-// registers
+// capri hitless initialization
 sdk_ret_t
-capri_soft_init (asic_cfg_t *cfg)
+capri_upgrade_hitless_init (asic_cfg_t *cfg)
 {
     sdk_ret_t    ret;
-    bool         asm_write_to_mem = false;
+    bool         asm_write_to_mem = true;
 
     SDK_ASSERT_TRACE_RETURN((cfg != NULL), SDK_RET_INVALID_ARG, "Invalid cfg");
-    SDK_TRACE_DEBUG("Soft initializing Capri");
+    SDK_TRACE_DEBUG("Initializing Capri for hitless upgrade");
 
     ret = sdk::platform::capri::capri_state_pd_init(cfg);
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,

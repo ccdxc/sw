@@ -3,7 +3,7 @@
 MY_DIR=$( readlink -f $( dirname $0 ))
 
 # clear any upgrade specific data from previous failed run
-rm -rf /data/*       # upgrade init mode
+rm -rf /update/*     # upgrade init mode
 rm -rf /root/.pcie*  # pciemgrd saves here in sim mode
 
 # setup dol
@@ -21,6 +21,8 @@ upg_wait_for_pdsagent
 
 # override trap
 function trap_finish () {
+    rm -rf /update/*     # upgrade init mode
+    rm -rf /root/.pcie*  # pciemgrd saves here in sim mode
     pkill fsm_test
     stop_process
     pkill pciemgrd
@@ -41,7 +43,7 @@ $BUILD_DIR/bin/fsm_test -s sysmgr -i 62 > upgrade_service.log 2>&1 &
 sleep 2
 
 # start upgrade manager
-upg_setup $BUILD_DIR/gen/upgrade_graceful.json
+upg_setup $BUILD_DIR/gen/upgrade_graceful.json upgrade_graceful.json
 $BUILD_DIR/bin/pdsupgmgr -t $PDSPKG_TOPDIR/apollo/tools/apulu/upgrade > upgrade_mgr.log 2>&1 &
 sleep 2
 

@@ -1,10 +1,9 @@
 #! /bin/bash
 
-set -ex
+set -e
 
 export OPERD_REGIONS=$CONFIG_PATH/operd-regions.json
 OPERD_REGION='upgradelog'
-USER=$(stat -c '%U' ${PDSPKG_TOPDIR}/apollo/test/tools/setup_upgrade_gtests.sh)
 
 function upg_operd_init() {
     rm -f $CONFIG_PATH/operd-regions.json
@@ -28,9 +27,13 @@ function upg_init() {
 }
 
 function upg_setup() {
+    if [ $# != 2 ];then
+        echo "Invalid arguments"
+        exit 1
+    fi
     mkdir -p $CONFIG_PATH/gen/
     rm -rf $CONFIG_PATH/gen/upgrade*.json
-    cp $1 $CONFIG_PATH/gen/upgrade_graceful.json
+    cp $1 $CONFIG_PATH/gen/$2
 }
 
 function upg_finish() {
@@ -47,6 +50,7 @@ function upg_finish() {
 }
 
 function checkout_master() {
+    USER=$(stat -c '%U' ${PDSPKG_TOPDIR}/apollo/test/tools/setup_upgrade_gtests.sh)
     cd ${PDSPKG_TOPDIR}/..
     git status
     if [[ $USER == "root" ]];then
@@ -67,6 +71,7 @@ function checkout_master() {
 }
 
 function checkout_pr() {
+    USER=$(stat -c '%U' ${PDSPKG_TOPDIR}/apollo/test/tools/setup_upgrade_gtests.sh)
     cd ${PDSPKG_TOPDIR}/..
     # switch to PR branch from master
     BRANCH=$(git rev-parse --abbrev-ref HEAD)
@@ -94,6 +99,36 @@ function is_modified() {
     fi
 }
 
+
+
+function hitless_copy_files() {
+    # copy the required files to respective dirs
+    dirs="./build/x86_64/apulu ./conf ./apollo/tools ./apollo/test/tools vpp/tools"
+    dirs+=" ./third-party/metaswitch/output/x86_64/ ./sdk/third-party/vpp-pkg/x86_64/ "
+    dirs+=" ./vpp/conf/ ./sdk/upgrade/core/upgmgr_core_base.sh"
+
+    # topdir should be some tmp directory, abort otherwise
+    root_dir=`echo $PDSPKG_TOPDIR |  cut -d '/' -f 2`
+    if [[ "$root_dir" != "tmp" ]];then
+        exit 1
+    fi
+    mkdir -p $PDSPKG_TOPDIR
+    rm -rf $PDSPKG_TOPDIR/*
+    for d in $dirs; do
+        cp -r --parents $d $PDSPKG_TOPDIR
+    done
+    find ./vpp -name "*.mk" | xargs -I '{}'  cp -r --parents '{}' $PDSPKG_TOPDIR
+}
+
+function hitless_cleanup() {
+     rm -f $PDSPKG_TOPDIR/pdsagent.db
+     rm -f $PDSPKG_TOPDIR/pdsagent.db-lock
+     rm -f $PDSPKG_TOPDIR/*.log $PDSPKG_TOPDIR/core.*
+     rm -f $PDSPKG_TOPDIR/conf/pipeline.json
+     rm -f $PDSPKG_TOPDIR/conf/gen/dol_agentcfg.json
+     rm -f $PDSPKG_TOPDIR/conf/gen/device_info.txt
+}
+
 function upg_wait_for_pdsagent() {
     NICMGR_FILE="$PDSPKG_TOPDIR/nicmgr.log"
     counter=600
@@ -108,5 +143,15 @@ function upg_wait_for_pdsagent() {
         echo "Waiting for pds-agent to be up, count - $counter"
         sleep 1
         counter=$(( $counter - 1 ))
+    done
+}
+
+function kill_process() {
+    pid=`pgrep -f "$1"`
+    if [ -z "$pid" ];then
+        return 0
+    fi
+    for p in $pid; do
+        kill -TERM $p
     done
 }

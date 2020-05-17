@@ -25,7 +25,7 @@ typedef enum ipc_svc_dom_id_s {
 } ipc_svc_dom_id_t;
 
 /// ipc callback which expects service name and id filled by the endpoint
-typedef void (*upg_async_response_cb_t)(sdk::ipc::ipc_msg_ptr msg);
+typedef void (*upg_async_response_cb_t)(upg_event_msg_t *event);
 /// broadcast to a domain
 void upg_send_broadcast_request(ipc_svc_dom_id_t dom_id, upg_stage_t stage,
                                 upg_mode_t mode, uint32_t num_svcs,

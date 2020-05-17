@@ -49,7 +49,15 @@ p4_to_arm_hdr_sz (void)
 const char *
 learn_lif_name (void)
 {
-    return "net_ionic1";
+    sdk::upg::upg_dom_t dom = sdk::upg::upg_init_domain();
+
+    // returns hitless init domain id
+    // use default mnic if regular boot and hitless dom-a boot
+    if (sdk::upg::upg_domain_b(dom)) {
+        return "net_ionic3";
+    } else {
+        return "net_ionic1";
+    }
 }
 
 bool

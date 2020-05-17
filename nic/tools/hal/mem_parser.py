@@ -353,14 +353,15 @@ def parse_file():
 
     print >> fd, "\n/////////////////////////////////////////////////////////\n"
     # Error, if table memories exceeds the upgrade reserved
+    ret = 0
     if upgrade_mem and upgrade_mem < (cfgtbl_mem + opertbl_mem):
-        print('Insufficient memory for upgrade, required %ld configured %ld',
-                    cfgtbl_mem + opertbl_mem, upgrade_mem)
-        return -1
+        print('Insufficient memory for upgrade, required %ld configured %ld' \
+                    %(cfgtbl_mem + opertbl_mem, upgrade_mem))
+        ret = -1
     # Error, if kind is not specified for all regions (either all or none)
     if kind_rgns and kind_rgns != idx:
         print('Kind is not specified for some regions')
-        return -1
+        ret = -1
 
     # Total regions count
     print >> fd, "#define %-60s %d" %(name + "COUNT" , idx)
@@ -371,11 +372,11 @@ def parse_file():
 
     if check_max_usage(data, off) != 0:
         print "Max memory usage exceeded for pipeline : " + pipeline
-        return -1
+        ret = -1
 
     print >> fd, "\n/////////////////////////////////////////////////////////\n"
     # memory splits
-    if upgrade_mem:
+    if True:
         print >> fd, "\n#define %-60s %ld" %("CFGTBL_MEMORY_USED_IN_BYTES" , cfgtbl_mem)
         print >> fd, "#define %-60s \"%s\"" %("CFGTBL_MEMORY_USED_IN_UNITS" , convert_size(cfgtbl_mem))
         print >> fd, "#define %-60s %ld" %("OPERTBL_MEMORY_USED_IN_BYTES" , opertbl_mem)
@@ -386,7 +387,7 @@ def parse_file():
         print >> fd, "#define %-60s \"%s\"" %("UPGRADE_MEMORY_USED_IN_UNITS" , convert_size(upgrade_mem))
         print >> fd, "\n/////////////////////////////////////////////////////////\n"
 
-    return 0
+    return ret
 
 def main():
     try:

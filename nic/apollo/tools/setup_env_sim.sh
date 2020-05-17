@@ -24,7 +24,7 @@ else
 fi
 export LOG_DIR=$NON_PERSISTENT_LOGDIR
 
-export ZMQ_SOC_DIR=$PDSPKG_TOPDIR
+export ZMQ_SOC_DIR=${ZMQ_SOC_DIR:-$PDSPKG_TOPDIR}
 
 #GDB='gdb --args'
 #VALGRIND='valgrind --leak-check=full --show-leak-kinds=all --gen-suppressions=all --error-limit=no --verbose --log-file=valgrind-out.txt --track-origins=yes'

@@ -37,7 +37,15 @@ upg_init (pds_init_params_t *params)
         return SDK_RET_ERR;
     }
     g_upg_state->set_upg_init_mode(mode);
-    // TODO update the memory paratition file
+    // offset the memory regions based on the regions in use
+    if (sdk::platform::upgrade_mode_hitless(mode)) {
+        ret = g_pds_state.mempartition()->upgrade_hitless_offset_regions(
+            api::g_pds_state.cfg_path().c_str(), false);
+        if (ret != SDK_RET_OK) {
+            PDS_TRACE_ERR("Upgrade hitless memory offset failed");
+            return ret;
+        }
+    }
     if (shm_create) {
         g_upg_state->set_memory_profile(params->memory_profile);
     } else if (g_upg_state->memory_profile() != params->memory_profile) {

@@ -31,6 +31,8 @@ static sdk_spinlock_t slock;
 static std::map<std::string, uint32_t> lif_map;
 
 #define DPDK_SIM_MEM_START (MREGION_BASE_ADDR + MREGION_RSVD_START_OFFSET)
+// last 64M of HBM (MREGION start from 1G from base)
+#define DPDK_SIM_HIGH_MEM_START (MREGION_BASE_ADDR + (7ULL << 30) - (64ULL << 20))
 #define DPDK_SIM_SIGNATURE 0xbfb0beb1bdb2bcb3ULL
 #define DPDK_SIM_DESC_MAX_PMEM_SIZE (2 << 20) // 2 MB
 #define DPDK_SIM_MBUF_PMEM_BASE     (pmem_base + DPDK_SIM_DESC_MAX_PMEM_SIZE)
@@ -71,7 +73,11 @@ dpdk_sim_init(void)
     /* initialize PAL */
     err = sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_SIM);
     SDK_ASSERT(err == sdk::lib::PAL_RET_OK);
-    pmem_base = DPDK_SIM_MEM_START + (app_id * DPDK_SIM_APP_MEM_SIZE);
+    if (app_id <= 1) {
+        pmem_base = DPDK_SIM_MEM_START + (app_id * DPDK_SIM_APP_MEM_SIZE);
+    } else {
+        pmem_base = DPDK_SIM_HIGH_MEM_START + ((app_id - 2) * DPDK_SIM_APP_MEM_SIZE);
+    }
     /* clear the memory, otherwise upgrade boot breaks */
     if (sdk::platform::upgrade_mode_graceful(mode)) {
         dpdk_sim_mem_reset(pmem_base, DPDK_SIM_APP_MEM_SIZE);
@@ -121,6 +127,8 @@ dpdk_sim_get_bar_addr(const char *dev_name)
     // dpdk name to lif name mapping
     name_map["net_ionic0"] = "cpu_mnic0";
     name_map["net_ionic1"] = "cpu_mnic1";
+    name_map["net_ionic2"] = "cpu_mnic2";
+    name_map["net_ionic3"] = "cpu_mnic3";
 
     std::map<std::string, std::string>::iterator i = name_map.find(dev_name);
     SDK_ASSERT(i != name_map.end());

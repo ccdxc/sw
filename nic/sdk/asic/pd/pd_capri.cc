@@ -871,8 +871,7 @@ asicpd_upgrade_init (asic_cfg_t *cfg)
         // be zeroed out by asic_reset_hbm_regions function during capri_init
         return capri_init(&capri_cfg);
     } else if (sdk::platform::upgrade_mode_hitless(cfg->upg_init_mode)) {
-        SDK_ASSERT(0);
-        // return capri_hitless_init(&capri_cfg);
+        return capri_upgrade_hitless_init(&capri_cfg);
     } else {
         SDK_TRACE_ERR("Invalid upgrade mode");
         SDK_ASSERT(0);

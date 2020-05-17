@@ -30,6 +30,9 @@ sdk::event_thread::prepare_t g_ev_prepare;
 
 namespace nicmgr {
 
+// TODO, save it devmgr. requires iris/apulu intergration of upgrade mode
+static upg_mode_t upg_init_mode;
+
 static void
 prepare_callback (sdk::event_thread::prepare_t *prepare, void *ctx)
 {
@@ -46,7 +49,7 @@ nicmgrapi::nicmgr_thread_init(void *ctxt) {
     string device_cfg_file;
     sdk::event_thread::event_thread *curr_thread;
     devicemgr_cfg_t cfg;
-    upg_mode_t upg_init_mode = api::g_upg_state ?
+    upg_init_mode = api::g_upg_state ?
         api::g_upg_state->upg_init_mode() : upg_mode_t::UPGRADE_MODE_NONE;
     bool init_pci = sdk::platform::upgrade_mode_none(upg_init_mode) &&
                     sdk::asic::asic_is_hard_init();
@@ -94,7 +97,7 @@ nicmgrapi::nicmgr_thread_init(void *ctxt) {
         g_devmgr->UpgradeGracefulInit(&cfg);
         // upgrade graceful init does the state loading
     } else {
-        // upgrade hitless init does the state loading
+        // TODO upgrade hitless init does the state loading
         // g_devmgr->UpgradeHitlessInit(&cfg);
     }
 
@@ -131,7 +134,10 @@ void
 nicmgrapi::hal_up_event_handler_(sdk::ipc::ipc_msg_ptr msg, const void *ctxt) {
     // create mnets
     PDS_TRACE_INFO("Creating mnets ...");
-    g_devmgr->HalEventHandler(true);
+    // TODO Karthi, implementaion for hitless upgrade
+    if (upg_init_mode != upg_mode_t::UPGRADE_MODE_HITLESS) {
+        g_devmgr->HalEventHandler(true);
+    }
 }
 
 void

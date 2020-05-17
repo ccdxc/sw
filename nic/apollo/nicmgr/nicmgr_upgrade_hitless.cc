@@ -26,7 +26,7 @@ static sdk_ret_t
 nicmgr_send_ipc (api::upg_ev_msg_id_t id)
 {
     // TODO
-    return SDK_RET_IN_PROGRESS;
+    return SDK_RET_OK;
 }
 
 static sdk_ret_t

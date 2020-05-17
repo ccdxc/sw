@@ -202,7 +202,8 @@ public:
      *
      * @return SDK_RET_OK on success, failure code on error
      */
-    sdk_ret_t upg_regions(const char *cfg_path, bool oper_table_persist);
+    sdk_ret_t upgrade_hitless_offset_regions(const char *cfg_path,
+                                             bool oper_table_persist);
 
 static inline std::string get_mpart_file_path(std::string cfg_path,
         const char *feature_set, sdk::lib::dev_feature_profile_t profile)

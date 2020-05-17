@@ -24,7 +24,6 @@ namespace learn {
 #define EP_MAX_IP_ENTRY         (EP_MAX_MAC_ENTRY * 32)
 
 #define UIO_DEV_ROOT            "/sys/class/uio/"
-#define LEARN_UIO_DEV_NAME      "cpu_mnic1"
 #define UIO_DEV_SCAN_INTERVAL   1
 #define UIO_DEV_SCAN_MAX_RETRY  600
 

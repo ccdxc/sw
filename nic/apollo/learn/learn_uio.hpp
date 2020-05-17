@@ -21,7 +21,7 @@
 using namespace std;
 
 static bool
-uio_device_ready_hw (void)
+uio_device_ready_hw (const char *dev_name)
 {
     struct dirent *de;
     DIR *dr = opendir(UIO_DEV_ROOT);
@@ -43,7 +43,7 @@ uio_device_ready_hw (void)
         }
         ifs >> file_content;
         ifs.close();
-        if (0 == file_content.compare(LEARN_UIO_DEV_NAME)) {
+        if (0 == file_content.compare(dev_name)) {
             dev_file = "/dev/";
             dev_file += de->d_name;
             int fd = open(dev_file.c_str(), O_RDWR);
@@ -68,7 +68,7 @@ uio_device_ready_hw (void)
 }
 
 static bool
-uio_device_ready_sim (void)
+uio_device_ready_sim (const char *dev_name)
 {
     char *topdir;
     string device_file, line;
@@ -90,7 +90,7 @@ uio_device_ready_sim (void)
     }
 
     while (getline(ifs, line)) {
-        found_pos = line.find(LEARN_UIO_DEV_NAME);
+        found_pos = line.find(dev_name);
         if (found_pos != string::npos) {
             found = true;
             break;
@@ -105,14 +105,24 @@ static bool
 uio_device_ready (void)
 {
     pds_state *state = &api::g_pds_state;
+    sdk::upg::upg_dom_t dom = sdk::upg::upg_init_domain();
+    const char *learn_dev = NULL;
+
+    // returns hitless init domain id
+    // use default mnic if regular boot and hitless dom-a boot
+    if (sdk::upg::upg_domain_b(dom)) {
+        learn_dev = "cpu_mnic3";
+    } else {
+        learn_dev = "cpu_mnic1";
+    }
 
     switch (state->platform_type()) {
     case platform_type_t::PLATFORM_TYPE_HW:
     case platform_type_t::PLATFORM_TYPE_HAPS:
-        return uio_device_ready_hw();
+        return uio_device_ready_hw(learn_dev);
         break;
     case platform_type_t::PLATFORM_TYPE_SIM:
-        return uio_device_ready_sim();
+        return uio_device_ready_sim(learn_dev);
         break;
     default:
         PDS_TRACE_ERR("Invalid platform type[%s], asserting!!",

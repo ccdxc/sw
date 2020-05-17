@@ -50,6 +50,35 @@ SDK_DEFINE_ENUM(upg_ev_id_t, UPG_EV_ENTRIES)
 SDK_DEFINE_ENUM_TO_STR(upg_ev_id_t, UPG_EV_ENTRIES)
 #undef UPG_EV_ENTRIES
 
+// used in hitless upgrade
+#define UPGRADE_DOMAIN(ENTRY)                                     \
+    ENTRY(UPGRADE_DOMAIN_NONE,     0, "UPGRADE_DOMAIN_NONE")    \
+    ENTRY(UPGRADE_DOMAIN_A,        1, "UPGRADE_DOMAIN_A")       \
+    ENTRY(UPGRADE_DOMAIN_B,        2, "UPGRADE_DOMAIN_B")       \
+
+SDK_DEFINE_ENUM(upg_dom_t,        UPGRADE_DOMAIN)
+SDK_DEFINE_ENUM_TO_STR(upg_dom_t, UPGRADE_DOMAIN)
+SDK_DEFINE_MAP_EXTERN(upg_dom_t,  UPGRADE_DOMAIN)
+// #undef UPGRADE_DOMAIN
+
+static inline bool
+upg_domain_none (upg_dom_t dom)
+{
+    return dom == UPGRADE_DOMAIN_NONE;
+}
+
+static inline bool
+upg_domain_a (upg_dom_t dom)
+{
+    return dom == UPGRADE_DOMAIN_A;
+}
+
+static inline bool
+upg_domain_b (upg_dom_t dom)
+{
+    return dom == UPGRADE_DOMAIN_B;
+}
+
 /// \brief asynchronous response callback by the event handler
 /// cookie is passed to the event handler and it should not be modified
 typedef void (*upg_async_ev_response_cb_t)(sdk_ret_t status, const void *cookie);
@@ -72,9 +101,10 @@ upg_stage2event (upg_stage_t stage)
 // file setup by the upgrade loader during bringup
 // if it not set, regular boot is assumed
 #define UPGRADE_INIT_MODE_FILE "/update/upgrade_init_mode.txt"
+#define UPGRADE_INIT_DOM_FILE "upgrade_init_domain.txt"
 
 static inline upg_mode_t
-upg_init_mode(void)
+upg_init_mode (void)
 {
     FILE *fp = fopen(UPGRADE_INIT_MODE_FILE, "r");
     upg_mode_t mode;
@@ -82,10 +112,11 @@ upg_init_mode(void)
 
     if (fp) {
         m = fgets(buf, sizeof(buf), fp);
+        fclose(fp);
     }
 
     if (!m) {
-       return upg_mode_t::UPGRADE_MODE_NONE;
+        return upg_mode_t::UPGRADE_MODE_NONE;
     }
     if (strncmp(m, "graceful", strlen("graceful")) == 0) {
         mode = upg_mode_t::UPGRADE_MODE_GRACEFUL;
@@ -97,6 +128,36 @@ upg_init_mode(void)
         SDK_ASSERT(0);
     }
     return mode;
+}
+
+static inline upg_dom_t
+upg_init_domain (void)
+{
+    FILE *fp;
+    char buf[32], *m = NULL;
+    std::string file;
+    upg_dom_t dom_id;
+
+    if (upg_init_mode() != upg_mode_t::UPGRADE_MODE_HITLESS) {
+        return upg_dom_t::UPGRADE_DOMAIN_NONE;
+    }
+    file = std::string(getenv("CONFIG_PATH")) + "/gen/" +
+        UPGRADE_INIT_DOM_FILE;
+
+    fp = fopen(file.c_str(), "r");
+    SDK_ASSERT(fp != NULL);
+    m = fgets(buf, sizeof(buf), fp);
+    SDK_ASSERT(m != NULL);
+    fclose(fp);
+
+    if (strncmp(m, "dom_a", strlen("dom_a")) == 0) {
+        dom_id = upg_dom_t::UPGRADE_DOMAIN_A;
+    } else if (strncmp(m, "dom_b", strlen("dom_b")) == 0) {
+        dom_id = upg_dom_t::UPGRADE_DOMAIN_B;
+    } else {
+        SDK_ASSERT(0);
+    }
+    return dom_id;
 }
 
 /// \brief upgrade event msg
@@ -172,6 +233,8 @@ typedef struct upg_ev_s {
 void upg_ev_hdlr_register(upg_ev_t &ev);
 
 #undef EV_ID_UPGMGR
+
+
 
 }   // namespace upg
 }   // namespace sdk

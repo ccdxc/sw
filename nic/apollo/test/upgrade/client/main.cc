@@ -4,6 +4,7 @@
 //----------------------------------------------------------------------------
 #include <stdio.h>
 #include <unistd.h>
+#include <getopt.h>
 #include <grpc++/grpc++.h>
 #include "nic/sdk/include/sdk/base.hpp"
 #include "gen/proto/upgrade.grpc.pb.h"
@@ -16,7 +17,7 @@ using grpc::ClientContext;
 
 static std::string g_upg_svc_endpoint_;
 static std::unique_ptr<pds::UpgSvc::Stub>  g_upg_svc_stub_;
-
+static std::string g_upg_mode_ = "";
 
 static sdk_ret_t
 send_upg_grpc (void)
@@ -29,7 +30,11 @@ send_upg_grpc (void)
 
     spec->set_requesttype(pds::UpgradeRequestType::UPGRADE_REQUEST_START);
     spec->set_packagename("naples_fw.tar"); // unused in simulation
-    spec->set_mode(pds::UpgradeMode::UPGRADE_MODE_GRACEFUL);
+    if (g_upg_mode_.empty() || g_upg_mode_ == "graceful") {
+        spec->set_mode(pds::UpgradeMode::UPGRADE_MODE_GRACEFUL);
+    } else {
+        spec->set_mode(pds::UpgradeMode::UPGRADE_MODE_HITLESS);
+    }
 
     ret_status = g_upg_svc_stub_->UpgRequest(&context, req, &rsp);
     printf("Upgrade response, grpc status ok %u, upgmgr rsp %u, upgmgr rspmsg %s\n",
@@ -56,9 +61,41 @@ svc_init (void)
 
 }
 
+static void inline
+print_usage (char **argv)
+{
+    fprintf(stdout, "Usage : %s -m <upgrade mode>\n", argv[0]);
+}
+
 int
 main (int argc, char **argv)
 {
+    int oc;
+    struct option longopts[] = {
+        { "mode",       required_argument, NULL, 'm' },
+        { "help",       no_argument,       NULL, 'h' },
+        { 0,            0,                 0,     0 }
+    };
+
+    while ((oc = getopt_long(argc, argv, ":hm:;", longopts, NULL)) != -1) {
+        switch (oc) {
+        case 'm':
+            if (optarg) {
+                g_upg_mode_ = std::string(optarg);
+            } else {
+                fprintf(stderr, "upgrade mode is not specified\n");
+                print_usage(argv);
+                exit(1);
+            }
+            break;
+        case 'h':
+        default:
+            print_usage(argv);
+            exit(0);
+            break;
+        }
+    }
+
     svc_init();
     if (send_upg_grpc() == SDK_RET_OK) {
         exit(0);

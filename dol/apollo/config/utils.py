@@ -9,6 +9,7 @@ import time
 import yaml
 from collections import OrderedDict
 import os
+from os import environ
 
 import types_pb2 as types_pb2
 import tunnel_pb2 as tunnel_pb2
@@ -1024,15 +1025,19 @@ def DumpTestcaseConfig(obj):
     logger.info("========== Testcase config end ==========")
     return
 
-WS_PATH = os.environ['WS_TOP']
+if environ.get('PDSPKG_TOPDIR') is not None:
+    PDSPKG_TOPDIR=environ.get('PDSPKG_TOPDIR')
+else:
+    PDSPKG_TOPDIR = os.environ['WS_TOP'] + "/nic/"
+
 def GetDeviceJsonPath():
-    rel_path = "nic/conf/%s/device.json" % (GetPipelineName())
-    abs_path = os.path.join(WS_PATH, rel_path)
+    rel_path = "conf/%s/device.json" % (GetPipelineName())
+    abs_path = os.path.join(PDSPKG_TOPDIR, rel_path)
     return abs_path
 
 def GetNicmgrLogPath():
-    rel_path = "nic/nicmgr.log"
-    abs_path = os.path.join(WS_PATH, rel_path)
+    rel_path = "nicmgr.log"
+    abs_path = os.path.join(PDSPKG_TOPDIR, rel_path)
     return abs_path
 
 class rrobiniter:

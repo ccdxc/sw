@@ -144,14 +144,32 @@ upg_graceful_ev_send (sdk::upg::upg_ev_params_t *params)
                       sdk::upg::upg_event2str(params->id));
         SDK_ASSERT(0);
     }
-    return SDK_RET_OK;
+    return ret;
 }
 
 static sdk_ret_t
 upg_hitless_ev_send (sdk::upg::upg_ev_params_t *params)
 {
-    // TODO
-    SDK_ASSERT(0);
+    sdk_ret_t ret;
+    std::list<api::upg_ev_hitless_t> ev_threads;
+    ev_threads = api::g_upg_state->ev_threads_hdlr_hitless();
+    std::list<api::upg_ev_hitless_t>::iterator ev = ev_threads.begin();
+
+    switch(params->id) {
+    case UPG_EV_COMPAT_CHECK:
+        INVOKE_EV_THREAD_HDLR(ev, compat_check_hdlr, UPG_MSG_ID_COMPAT_CHECK);
+        break;
+    case UPG_EV_START:
+        ret = SDK_RET_OK;
+        break;
+    case UPG_EV_BACKUP:
+        INVOKE_EV_THREAD_HDLR(ev, backup_hdlr, UPG_MSG_ID_BACKUP);
+        break;
+    default:
+        // TODO
+        return SDK_RET_OK;
+    }
+    return ret;
 }
 
 sdk_ret_t

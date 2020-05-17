@@ -75,13 +75,14 @@ public:
 
     upg_stage(ev_tstamp svc_rsp_timeout, svc_sequence_list svc_seq,
               event_sequence_t evt_seq, upg_scripts pre_sc,
-              upg_scripts post_sc, bool is_discovery) {
+              upg_scripts post_sc, bool is_discovery, ipc_svc_dom_id_t domain) {
         svc_rsp_timeout_ = svc_rsp_timeout;
         svc_sequence_ = svc_seq;
         svc_event_sequence_ = evt_seq;
         pre_hook_scripts_ = pre_sc;
         post_hook_scripts_ = post_sc;
         is_discovery_ = is_discovery;
+        domain_ = domain;
     };
 
     ~upg_stage(void){};
@@ -98,6 +99,10 @@ public:
 
     bool is_discovery(void) const { return is_discovery_; };
 
+    ipc_svc_dom_id_t domain(void) const { return domain_; };
+
+    void set_domain(ipc_svc_dom_id_t dom ) { domain_ = dom; };
+
 private:
     ev_tstamp svc_rsp_timeout_;
     svc_sequence_list svc_sequence_;
@@ -105,6 +110,7 @@ private:
     upg_scripts pre_hook_scripts_;
     upg_scripts post_hook_scripts_;
     bool is_discovery_;
+    ipc_svc_dom_id_t domain_;
 };
 
 /// \brief A lookup container for stage id and object

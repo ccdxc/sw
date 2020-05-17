@@ -76,6 +76,26 @@
             "txq_count" : 1,
             "adminq_count" : 1,
             "intr_count" : 4
+        },
+        {
+            "name" : "cpu_mnic3",
+            "dev_uuid" : 14,
+            "type": "learn",
+            "lif_count" : 1,
+            "rxq_count" : 4,
+            "txq_count" : 4,
+            "adminq_count" : 1,
+            "intr_count" : 16
+        },
+        {
+            "name" : "cpu_mnic2",
+            "dev_uuid" : 15,
+            "type": "cpu",
+            "lif_count" : 1,
+            "rxq_count" : 4,
+            "txq_count" : 4,
+            "adminq_count" : 1,
+            "intr_count" : 16
         }
     ],
     "eth_dev" : [

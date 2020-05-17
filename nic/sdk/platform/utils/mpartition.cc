@@ -119,7 +119,8 @@ mpartition::dump_regions_info (const char *cfg_path) {
 // It also validates the static offsets which should be consistent
 // across upgrades.
 sdk_ret_t
-mpartition::upg_regions (const char *cfg_path, bool oper_table_persist) {
+mpartition::upgrade_hitless_offset_regions (const char *cfg_path,
+                                            bool oper_table_persist) {
     std::string         file = std::string(cfg_path) + "/gen/" + MPART_INFO_FILE_NAME;
     pt::ptree           json_pt;
     mpartition_region_t *mreg;

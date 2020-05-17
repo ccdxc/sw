@@ -39,9 +39,12 @@ SDK_DEFINE_MAP(upg_stage_t, UPG_STAGE_ENTRIES)
 std::string
 svc_sequence_to_str (const svc_sequence_list svcs)
 {
-    std::string str = "svc sequence list is ";
+    std::string str = "";
     for (auto x: svcs) {
         str += x + "," ;
+    }
+    if (!str.empty()) {
+        str.pop_back();
     }
     return str;
 }

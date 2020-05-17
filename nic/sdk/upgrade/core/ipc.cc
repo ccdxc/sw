@@ -87,7 +87,7 @@ static void
 upg_ev_handler (sdk::ipc::ipc_msg_ptr msg, const void *req_cookie,
                 const void *ctxt)
 {
-    response_cb(msg);
+    response_cb((upg_event_msg_t *)msg->data());
 }
 
 void

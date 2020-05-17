@@ -320,7 +320,7 @@ class ExecutePdsUpgradeFsmTest(object):
         execute(cmd=command, return_check=True)
 
         command = "source {0}".format(self.setup_upgrade_gtests)
-        command += " && upg_setup {0}".format(self.upgrade_gen_json)
+        command += " && upg_setup {0} upgrade_graceful.json".format(self.upgrade_gen_json)
         execute(cmd=command, return_check=True)
 
         execute(cmd="rm -f /dev/shm/upgradelog", return_check=False)

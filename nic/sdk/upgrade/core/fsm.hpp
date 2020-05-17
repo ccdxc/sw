@@ -27,20 +27,23 @@ namespace sdk {
 namespace upg {
 
 // async callback function for upgrade completion
-typedef void (*fsm_completion_cb_t)(upg_status_t status,
-                                    sdk::ipc::ipc_msg_ptr msg_in);
+typedef void (*fsm_completion_cb_t)(upg_status_t status);
+typedef void (*upg_event_fwd_cb_t)(upg_stage_t stage, std::string svc_name,
+                                   uint32_t svc_id);
 
 // fsm initialization parameters
 typedef struct fsm_init_params_s {
     sdk::platform::upg_mode_t upg_mode;     // upgrade mode
     struct ev_loop *ev_loop;                // event loop
     fsm_completion_cb_t fsm_completion_cb;  // fsm completion
-    sdk::ipc::ipc_msg_ptr msg_in;           // used for async response. not used
-                                            // by fsm
+    // fsm event forward handler for hitless upgrade
+    upg_event_fwd_cb_t upg_event_fwd_cb;
     upg_stage_t entry_stage;                // start a specific discovery stage
     std::string tools_dir;                  // tools directory
     std::string fw_pkgname;                 // firmware package name with full path
+    bool interactive_mode;                  // start fsm or interactive mode
 } fsm_init_params_t;
+
 
 class fsm {
 public:
@@ -55,6 +58,7 @@ public:
         prev_stage_rsp_ = SVC_RSP_OK;
         is_pre_hooks_done_ = false;
         is_post_hooks_done_ = false;
+        domain_ = IPC_SVC_DOM_ID_A;
     }
     ~fsm(void){};
     upg_stage_t current_stage(void) const { return current_stage_; }
@@ -79,6 +83,7 @@ public:
     svc_rsp_code_t prev_stage_rsp(void) const { return prev_stage_rsp_; }
     void set_current_stage(const upg_stage_t id);
     void update_stage_progress(const svc_rsp_code_t rsp);
+    void update_stage_progress_interactive(const svc_rsp_code_t rsp);
     bool is_serial_event_sequence(void) const;
     bool is_parallel_event_sequence(void) const;
     bool is_discovery(void) const;
@@ -95,6 +100,8 @@ public:
     void skip_svc(void);
     fsm_init_params_t *init_params(void) { return &init_params_; }
     void set_init_params(fsm_init_params_t *params) { init_params_ = *params; }
+    ipc_svc_dom_id_t domain(void) const { return domain_; };
+    void set_domain(ipc_svc_dom_id_t dom ) { domain_ = dom; };
 private:
     void update_stage_progress_internal_(void);
     upg_stage_t current_stage_;
@@ -108,9 +115,24 @@ private:
     svc_rsp_code_t prev_stage_rsp_;
     bool is_pre_hooks_done_;
     bool is_post_hooks_done_;
+    ipc_svc_dom_id_t domain_;
 };
 
 sdk_ret_t init(fsm_init_params_t *params);
+sdk_ret_t init_interactive(fsm_init_params_t *params);
+void upg_event_handler(upg_event_msg_t *event);
+void upg_event_interactive_handler(upg_event_msg_t *event);
+sdk_ret_t upg_interactive_stage_exec(upg_stage_t stage);
+
+extern struct ev_loop *loop;
+extern ev_timer timeout_watcher;
+extern fsm fsm_states;
+extern upg_stages_map fsm_stages;
+extern upg_svc_map fsm_services;
+extern svc_sequence_list default_svc_names;
+extern stage_map fsm_lookup_tbl;
+extern event_sequence_t event_sequence;
+extern upg_stage_t entry_stage;
 
 }   // namespace upg
 }   // namespace sdk
