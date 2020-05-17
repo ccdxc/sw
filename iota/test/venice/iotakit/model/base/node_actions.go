@@ -983,11 +983,8 @@ func (sm *SysModel) StopFWLogGenOnNaples(naples *objects.NaplesCollection) error
 
 func (sm *SysModel) VerifyFwlogErrors() error {
 	sm.ForEachFakeNaples(func(nc *objects.NaplesCollection) error {
-		stdout, err := sm.RunFakeNaplesCommand(nc,
-			"grep -E -- \"could not put object|dropping, bucket\" /var/log/pensando/pen-tmagent.log")
-		if err != nil {
-			return err
-		}
+		stdout, _ := sm.RunFakeNaplesCommand(nc,
+			"grep -E -- \"could not put object|dropping, bucket\" /var/log/pensando/pen-tmagent.log || [[ $? == 1 ]]")
 		var errorCount = 0
 		for _, output := range stdout {
 			if len(strings.TrimSpace(output)) > 0 {
@@ -997,10 +994,7 @@ func (sm *SysModel) VerifyFwlogErrors() error {
 		if errorCount > 0 {
 			return errors.New(fmt.Sprintf("%d sims with put object| dropping errors", errorCount))
 		}
-		stdout, err = sm.RunFakeNaplesCommand(nc, "grep \"failed to \" /tmp/fwlogs.stdout")
-		if err != nil {
-			return err
-		}
+		stdout, _ = sm.RunFakeNaplesCommand(nc, "grep \"failed to \" /tmp/fwlogs.stdout || [[ $? == 1 ]]")
 		errorCount = 0
 		for _, output := range stdout {
 			if len(strings.TrimSpace(output)) > 0 {
