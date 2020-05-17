@@ -8,8 +8,6 @@
 ///
 //------------------------------------------------------------------------------
 
-// TODO: change file name once it is removed from pdsagent
-
 syntax = "proto3";
 package operd;
 

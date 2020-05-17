@@ -14,7 +14,6 @@
 		interface.proto
 		port.proto
 		event.proto
-		oper.proto
 		cp_route.proto
 		bgp.proto
 		evpn.proto
@@ -186,19 +185,6 @@
 		PortUpdateResponse
 		EventRequest
 		EventResponse
-		TechSupportSpec
-		TechSupportStatus
-		TechSupportStats
-		TechSupport
-		TechSupportRequest
-		TechSupportResponse
-		MetricsGetRequest
-		CounterStatus
-		CountersStatus
-		MetricsGetResponse
-		FlowLog
-		Alert
-		AlertsGetResponse
 		CPRouteStatus
 		CPRouteKey
 		CPRouteKeyHandle

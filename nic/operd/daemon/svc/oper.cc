@@ -6,7 +6,7 @@
 #include <cstdlib>
 #include <string>
 #include <time.h>
-#include "gen/proto/opersvc.grpc.pb.h"
+#include "gen/proto/oper.grpc.pb.h"
 #include "gen/proto/types.pb.h"
 #include "oper.hpp"
 

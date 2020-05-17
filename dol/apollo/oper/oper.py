@@ -9,7 +9,7 @@ import apollo.config.agent.api as api
 import apollo.config.utils as utils
 import apollo.config.objects.base as base
 
-import opersvc_pb2 as oper_pb2
+import oper_pb2 as oper_pb2
 
 class TechSupportStatus(base.StatusObjectBase):
     def __init__(self):

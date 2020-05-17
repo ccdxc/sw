@@ -3,7 +3,7 @@
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = libalerts_operd_con.lib
 MODULE_PIPELINE = apulu
-MODULE_SOLIBS   = pdsproto
+MODULE_SOLIBS   = operdproto
 MODULE_LDLIBS   = ${NIC_THIRDPARTY_GOOGLE_LDLIBS} rt pthread
 MODULE_ARLIBS   =
 MODULE_CFLAGS   = -Werror

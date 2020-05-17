@@ -50,7 +50,6 @@ type ApuluAPI struct {
 	PortClient              halapi.PortSvcClient
 	MirrorClient            halapi.MirrorSvcClient
 	RouteSvcClient          halapi.RouteSvcClient
-	OperClient              halapi.OperSvcClient
 	RoutingClient           msapi.BGPSvcClient
 	EvpnClient              msapi.EvpnSvcClient
 	CPRouteSvcClient        msapi.CPRouteSvcClient
@@ -95,7 +94,6 @@ func NewPipelineAPI(infraAPI types.InfraAPI) (*ApuluAPI, error) {
 		RoutingClient:           msapi.NewBGPSvcClient(conn),
 		EvpnClient:              msapi.NewEvpnSvcClient(conn),
 		MirrorClient:            halapi.NewMirrorSvcClient(conn),
-		OperClient:              halapi.NewOperSvcClient(conn),
 		OperSvcClient:           operdapi.NewOperSvcClient(operdconn),
 		AlertsSvcClient:         operdapi.NewAlertsSvcClient(penoperconn),
 		MetricsSvcClient:        operdapi.NewMetricsSvcClient(penoperconn),

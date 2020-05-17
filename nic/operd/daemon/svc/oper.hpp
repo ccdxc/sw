@@ -7,7 +7,7 @@
 #define __OPERD_SVC_OPER_HPP__
 
 #include "grpc++/grpc++.h"
-#include "gen/proto/opersvc.grpc.pb.h"
+#include "gen/proto/oper.grpc.pb.h"
 
 using grpc::Status;
 using grpc::ServerContext;

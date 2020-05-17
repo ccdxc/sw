@@ -8,7 +8,10 @@ import requests
 import time
 import urllib3
 
-import opersvc_pb2_grpc as oper_pb2_grpc
+# operd proto
+import oper_pb2_grpc as oper_pb2_grpc
+
+# pds proto
 import batch_pb2_grpc as batch_pb2_grpc
 import device_pb2_grpc as device_pb2_grpc
 import vpc_pb2_grpc as vpc_pb2_grpc

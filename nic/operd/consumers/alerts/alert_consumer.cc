@@ -1,8 +1,7 @@
 #include <arpa/inet.h>
 #include <inttypes.h>
 
-#include "gen/proto/oper.pb.h"
-#include "gen/proto/types.pb.h"
+#include "gen/proto/alerts.pb.h"
 #include "lib/operd/operd.hpp"
 
 extern "C" {
@@ -10,9 +9,7 @@ extern "C" {
 void
 handler(sdk::operd::log_ptr entry)
 {
-    pds::Alert alert;
-    pds::FlowLog flow;
-
+    operd::Alert alert;
     bool result = alert.ParseFromArray(entry->data(), entry->data_length());
     assert(result == true);
 

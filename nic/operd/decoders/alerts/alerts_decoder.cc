@@ -6,10 +6,9 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "gen/proto/oper.pb.h"
-#include "gen/proto/types.pb.h"
 #include "nic/sdk/lib/operd/decoder.h"
 #include "gen/alerts/alert_defs.h"
+#include "gen/proto/alerts.pb.h"
 
 static size_t
 alerts_decoder (uint8_t encoder, const char *data, size_t data_length,
@@ -17,7 +16,7 @@ alerts_decoder (uint8_t encoder, const char *data, size_t data_length,
 {
     int alert_id = *(int *)data;
     const char *message = data + sizeof(int);
-    pds::Alert alert;
+    operd::Alert alert;
     alert_t prototype = operd::alerts::alerts[alert_id];
     size_t len;
 
@@ -26,13 +25,13 @@ alerts_decoder (uint8_t encoder, const char *data, size_t data_length,
     alert.set_description(prototype.description);
     alert.set_message(message);
     if (strcmp(prototype.severity, "DEBUG") == 0) {
-        alert.set_severity(pds::DEBUG);
+        alert.set_severity(operd::DEBUG);
     } else if (strcmp(prototype.severity, "INFO") == 0) {
-        alert.set_severity(pds::INFO);
+        alert.set_severity(operd::INFO);
     } else if (strcmp(prototype.severity, "WARN") == 0) {
-        alert.set_severity(pds::WARN);
+        alert.set_severity(operd::WARN);
     } else if (strcmp(prototype.severity, "CRITICAL") == 0){
-        alert.set_severity(pds::CRITICAL);
+        alert.set_severity(operd::CRITICAL);
     }
     
     len = alert.ByteSizeLong();
