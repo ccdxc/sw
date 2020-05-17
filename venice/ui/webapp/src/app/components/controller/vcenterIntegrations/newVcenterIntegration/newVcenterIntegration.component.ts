@@ -27,7 +27,6 @@ export class NewVcenterIntegrationComponent extends CreationForm<IOrchestrationO
   @Input() existingObjects: IOrchestrationOrchestrator[] = [];
 
   DCNAMES_TOOLTIP: string = 'Type in datacenter name and hit enter or space key to add more.';
-  createButtonTooltip: string = 'Ready to submit.';
   ALL_DATACENTERS: string = 'all_namespaces';
 
   credentialTypes = Utility.convertEnumToSelectItem(MonitoringExternalCred_auth_type);
@@ -105,61 +104,59 @@ export class NewVcenterIntegrationComponent extends CreationForm<IOrchestrationO
     }
   }
 
-  getTooltip(): string {
+  isFormValid(): boolean {
     if (Utility.isEmpty(this.newObject.$formGroup.get(['meta', 'name']).value)) {
-      return 'Error: Name field is empty.';
+      this.submitButtonTooltip = 'Error: Name field is empty.';
+      return false;
     }
     if (this.newObject.$formGroup.get(['meta', 'name']).invalid)  {
-      return 'Error: Name field is invalid.';
+      this.submitButtonTooltip = 'Error: Name field is invalid.';
+      return false;
     }
-    return this.createButtonTooltip;
-  }
-
-  isFormValid(): boolean {
     if (this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'uri']))) {
-      this.createButtonTooltip = 'Error: URI is empty.';
+      this.submitButtonTooltip = 'Error: URI is empty.';
       return false;
     }
     if (this.pickedOption !== this.ALL_DATACENTERS && this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'manage-namespaces']))) {
-      this.createButtonTooltip = 'Error: Datacenter names are empty.';
+      this.submitButtonTooltip = 'Error: Datacenter names are empty.';
       return false;
     }
     if (!this.isInline) {
       if (this.newObject.$formGroup.get(['spec', 'credentials', 'auth-type']).value
           === MonitoringExternalCred_auth_type['username-password']) {
         if (this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'username']))) {
-          this.createButtonTooltip = 'Error: Username is empty.';
+          this.submitButtonTooltip = 'Error: Username is empty.';
           return false;
         }
         if (this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'password']))) {
-          this.createButtonTooltip = 'Error: Password is empty.';
+          this.submitButtonTooltip = 'Error: Password is empty.';
           return false;
         }
         if (this.newObject.$formGroup.get(['spec', 'credentials', 'password']).value !==
             this.newObject.$formGroup.get(['spec', 'credentials', 'confirmPassword']).value) {
-          this.createButtonTooltip = 'Error: Password does not match.';
+          this.submitButtonTooltip = 'Error: Password does not match.';
           return false;
         }
       }
       if (this.newObject.$formGroup.get(['spec', 'credentials', 'auth-type']).value
           === MonitoringExternalCred_auth_type.token) {
         if (this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'bearer-token']))) {
-          this.createButtonTooltip = 'Error: Bearer Token is empty.';
+          this.submitButtonTooltip = 'Error: Bearer Token is empty.';
           return false;
         }
       }
       if (this.newObject.$formGroup.get(['spec', 'credentials', 'auth-type']).value
           === MonitoringExternalCred_auth_type.certs) {
         if (this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'key-data']))) {
-          this.createButtonTooltip = 'Error: Private key is empty.';
+          this.submitButtonTooltip = 'Error: Private key is empty.';
           return false;
         }
         if (this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'cert-data']))) {
-          this.createButtonTooltip = 'Error: Cert file is empty.';
+          this.submitButtonTooltip = 'Error: Cert file is empty.';
           return false;
         }
         if (this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'ca-data']))) {
-          this.createButtonTooltip = 'Error: CA bundle file is empty.';
+          this.submitButtonTooltip = 'Error: CA bundle file is empty.';
           return false;
         }
       }
@@ -168,30 +165,30 @@ export class NewVcenterIntegrationComponent extends CreationForm<IOrchestrationO
           === MonitoringExternalCred_auth_type['username-password']) {
         if (this.currentObjCredType !== MonitoringExternalCred_auth_type['username-password']) {
           if (this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'username']))) {
-            this.createButtonTooltip = 'Error: Username is empty.';
+            this.submitButtonTooltip = 'Error: Username is empty.';
             return false;
           }
           if (this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'password']))) {
-            this.createButtonTooltip = 'Error: Password is empty.';
+            this.submitButtonTooltip = 'Error: Password is empty.';
             return false;
           }
         } else {
           if (this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'username'])) &&
               !this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'password']))) {
-            this.createButtonTooltip = 'Error: Username is empty.';
+            this.submitButtonTooltip = 'Error: Username is empty.';
             return false;
           }
         }
         if (this.newObject.$formGroup.get(['spec', 'credentials', 'password']).value &&
             this.newObject.$formGroup.get(['spec', 'credentials', 'password']).value !==
             this.newObject.$formGroup.get(['spec', 'credentials', 'confirmPassword']).value) {
-          this.createButtonTooltip = 'Error: Password does not match.';
+          this.submitButtonTooltip = 'Error: Password does not match.';
           return false;
         }
         if (this.newObject.$formGroup.get(['spec', 'credentials', 'confirmPassword']).value &&
             this.newObject.$formGroup.get(['spec', 'credentials', 'confirmPassword']).value !==
             this.newObject.$formGroup.get(['spec', 'credentials', 'password']).value) {
-          this.createButtonTooltip = 'Error: Password does not match.';
+          this.submitButtonTooltip = 'Error: Password does not match.';
           return false;
         }
       }
@@ -200,7 +197,7 @@ export class NewVcenterIntegrationComponent extends CreationForm<IOrchestrationO
           === MonitoringExternalCred_auth_type.token) {
       if (this.currentObjCredType !==  MonitoringExternalCred_auth_type.token) {
         if (this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'bearer-token']))) {
-          this.createButtonTooltip = 'Error: Bearer Token is empty.';
+          this.submitButtonTooltip = 'Error: Bearer Token is empty.';
           return false;
         }
       }
@@ -209,34 +206,34 @@ export class NewVcenterIntegrationComponent extends CreationForm<IOrchestrationO
           === MonitoringExternalCred_auth_type.certs) {
       if (this.currentObjCredType !==  MonitoringExternalCred_auth_type.certs) {
         if (this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'key-data']))) {
-          this.createButtonTooltip = 'Error: Private key is empty.';
+          this.submitButtonTooltip = 'Error: Private key is empty.';
           return false;
         }
         if (this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'cert-data']))) {
-          this.createButtonTooltip = 'Error: Cert file is empty.';
+          this.submitButtonTooltip = 'Error: Cert file is empty.';
           return false;
         }
         if (this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'ca-data']))) {
-          this.createButtonTooltip = 'Error: CA bundle file is empty.';
+          this.submitButtonTooltip = 'Error: CA bundle file is empty.';
           return false;
         }
       } else {
         if (this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'key-data'])) &&
             (!this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'cert-data'])) ||
             !this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'ca-data'])))) {
-          this.createButtonTooltip = 'Error: Private key is empty.';
+          this.submitButtonTooltip = 'Error: Private key is empty.';
           return false;
         }
         if (this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'cert-data'])) &&
             (!this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'key-data'])) ||
             !this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'ca-data'])))) {
-          this.createButtonTooltip = 'Error: Cert file is empty.';
+          this.submitButtonTooltip = 'Error: Cert file is empty.';
           return false;
         }
         if (this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'cert-data'])) &&
             (!this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'cert-data'])) ||
             !this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'key-data'])))) {
-          this.createButtonTooltip = 'Error: CA bundle file is empty.';
+          this.submitButtonTooltip = 'Error: CA bundle file is empty.';
           return false;
         }
       }
@@ -244,11 +241,11 @@ export class NewVcenterIntegrationComponent extends CreationForm<IOrchestrationO
     // ignore confirmPassword validation error
     if (!this.newObject.$formGroup.valid &&
         this.newObject.$formGroup.get(['spec', 'credentials', 'confirmPassword']).valid) {
-      this.createButtonTooltip = 'Error: Form is invalid.';
+      this.submitButtonTooltip = 'Error: Form is invalid.';
       return false;
     }
 
-    this.createButtonTooltip = 'Ready to submit.';
+    this.submitButtonTooltip = 'Ready to submit.';
     return true;
   }
 
@@ -271,9 +268,9 @@ export class NewVcenterIntegrationComponent extends CreationForm<IOrchestrationO
         {
           cssClass: 'global-button-primary newVcenter-button newVcenter-save',
           text: 'CREATE VCENTER',
-          genTooltip: () => this.getTooltip(),
+          genTooltip: () => this.getSubmitButtonToolTip(),
           callback: () => { this.saveObject(); },
-          computeClass: () => this.computeButtonClass()
+          computeClass: () => this.computeFormSubmitButtonClass()
         },
         {
           cssClass: 'global-button-neutral newVcenter-button newVcenter-cancel',

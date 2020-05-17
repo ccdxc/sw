@@ -1,6 +1,7 @@
-<div fxFlex="auto" fxLayout="column" class="new-network-container">
+<div fxFlex="auto" fxLayout="column" class="psm-form new-network-container">
   <app-inlinebuttons class="new-network" *ngIf="isInline"
-                     [saveButtonClass]="computeInlineButtonClass()" [saveTooltip]="getTooltip()"
+                     [saveButtonClass]="computeFormSubmitButtonClass()"
+                     [saveTooltip]="getSubmitButtonToolTip()"
                      (saveFunc)="editSaveObject()" (cancelFunc)="editCancelObject()">
   </app-inlinebuttons>
   <div fxFlex="noshrink" fxLayout="column" fxLayoutAlign="start center"

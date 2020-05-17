@@ -622,6 +622,8 @@ export abstract class CreationForm<I, T extends BaseModel> extends BaseComponent
 
   isSingleton: boolean = false;
 
+  submitButtonTooltip: string = 'Ready to submit';
+
   oldButtons: ToolbarButton[] = [];
 
   abstract getClassName(): string;
@@ -713,6 +715,20 @@ export abstract class CreationForm<I, T extends BaseModel> extends BaseComponent
     } else {  // disable [SAVE] button
       return 'global-button-disabled';
     }
+  }
+
+  // this is the new api to unify both computeButtonClass() and computeInlineButtonClass()
+  // currently if the form is invalid, then disable the button.
+  // In future, we need to think about diable button if the form is not dirty.
+  // that will be useful for the editting form.
+  // this api can coexist with the old computerbuttonclasses. Those old apis will be removed
+  // when all the creation forms use new api
+  computeFormSubmitButtonClass(): string {
+    return this.isFormValid() ? '' : 'global-button-disabled';
+  }
+
+  getSubmitButtonToolTip(): string {
+    return this.submitButtonTooltip;
   }
 
   // Function should be overriden if some values don't reside in the formGroup

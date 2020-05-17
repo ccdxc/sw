@@ -29,8 +29,6 @@ export class NewnetworkComponent extends CreationForm<INetworkNetwork, NetworkNe
 
   datacenterNames: SelectItem[] = [];
 
-  createButtonTooltip: string = 'Ready to submit';
-
   constructor(protected _controllerService: ControllerService,
     protected uiconfigsService: UIConfigsService,
     protected networkService: NetworkService,
@@ -126,13 +124,21 @@ export class NewnetworkComponent extends CreationForm<INetworkNetwork, NetworkNe
 
   // Empty Hook
   isFormValid() {
+    if (Utility.isEmpty(this.newObject.$formGroup.get(['meta', 'name']).value)) {
+      this.submitButtonTooltip = 'Error: Name field is empty.';
+      return false;
+    }
+    if (this.newObject.$formGroup.get(['meta', 'name']).invalid)  {
+      this.submitButtonTooltip = 'Error: Name field is invalid.';
+      return false;
+    }
     if (Utility.isEmpty(this.newObject.$formGroup.get(['spec', 'vlan-id']).value)) {
-      this.createButtonTooltip = 'Error: VLAN is required.';
+      this.submitButtonTooltip = 'Error: VLAN is required.';
       return false;
     }
 
     if (!this.newObject.$formGroup.get(['spec', 'vlan-id']).valid) {
-      this.createButtonTooltip = 'Error: Invalid VLAN';
+      this.submitButtonTooltip = 'Error: Invalid VLAN';
       return false;
     }
 
@@ -142,23 +148,13 @@ export class NewnetworkComponent extends CreationForm<INetworkNetwork, NetworkNe
       const orchestrator = orchestrators[i];
       if (!Utility.isEmpty(orchestrator.get(['orchestrator-name']).value) &&
           Utility.isEmpty(orchestrator.get(['namespace']).value)) {
-        this.createButtonTooltip = 'Error: Datacenter name is required.';
+        this.submitButtonTooltip = 'Error: Datacenter name is required.';
         return false;
       }
     }
 
-    this.createButtonTooltip = 'Ready to submit';
+    this.submitButtonTooltip = 'Ready to submit';
     return true;
-  }
-
-  getTooltip(): string {
-    if (Utility.isEmpty(this.newObject.$formGroup.get(['meta', 'name']).value)) {
-      return 'Error: Name field is empty.';
-    }
-    if (this.newObject.$formGroup.get(['meta', 'name']).invalid)  {
-      return 'Error: Name field is invalid.';
-    }
-    return this.createButtonTooltip;
   }
 
   getObjectValues(): INetworkNetwork {
@@ -189,8 +185,8 @@ export class NewnetworkComponent extends CreationForm<INetworkNetwork, NetworkNe
           cssClass: 'global-button-primary global-button-padding',
           text: 'CREATE NETWORK',
           callback: () => { this.saveObject(); },
-          computeClass: () => this.computeButtonClass(),
-          genTooltip: () => this.getTooltip(),
+          computeClass: () => this.computeFormSubmitButtonClass(),
+          genTooltip: () => this.getSubmitButtonToolTip(),
         },
         {
           cssClass: 'global-button-neutral global-button-padding',
