@@ -42,7 +42,11 @@ impl_base::init(pds_init_params_t *params, asic_cfg_t *asic_cfg) {
     asic_impl_->asic_init(asic_cfg);
 
     // followed by pipeline initialization
-    pipeline_impl_->pipeline_init();
+    if (sdk::asic::asic_is_hard_init()) {
+        pipeline_impl_->pipeline_init();
+    } else {
+        pipeline_impl_->pipeline_soft_init();
+    }
     // dump the MPU program related details
     pipeline_impl_->program_info_dump(asic_cfg->cfg_path);
 
