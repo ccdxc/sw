@@ -542,6 +542,50 @@ func TestRemoveObjects(t *testing.T) {
 	tu.Assert(t, removeObjectErrCh != nil, "remobj didn't fail on connect error")
 }
 
+func TestSetServiceLifecycle(t *testing.T) {
+	c := gomock.NewController(t)
+	defer c.Finish()
+
+	l, err := net.Listen("tcp", "127.0.0.1:")
+	tu.AssertOk(t, err, "failed listen")
+	minioServer(l)
+	defer l.Close()
+
+	r := mockresolver.New()
+
+	err = r.AddServiceInstance(&types.ServiceInstance{
+		TypeMeta: api.TypeMeta{
+			Kind: "ServiceInstance",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: "server2",
+		},
+		Service: globals.VosMinio,
+		URL:     l.Addr().(*net.TCPAddr).String(),
+	})
+	tu.AssertOk(t, err, "failed to add server2 service")
+
+	retryOpt := WithConnectRetries(1)
+	oc, err := NewClient("ten1", "svc1", r, retryOpt)
+	tu.AssertOk(t, err, "failed create new client")
+	tu.Assert(t, oc != nil, "new client nil")
+
+	mc := mockmc.NewMockobjStoreBackend(c)
+
+	mockClient := &client{
+		client:         mc,
+		bucketName:     "ten1:svc1",
+		accessID:       "miniokey",
+		secretKey:      "minio0523",
+		resolverClient: r,
+	}
+
+	// success case
+	mc.EXPECT().SetServiceLifecycleWithContext(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
+	err = mockClient.SetServiceLifecycleWithContext(context.Background(), "svc1", Lifecycle{true, "", 30})
+	tu.AssertOk(t, err, "SetServiceLifecycleWithContext failed")
+}
+
 func TestGetStreamObjectAtOffset(t *testing.T) {
 	c := gomock.NewController(t)
 	defer c.Finish()

@@ -38,7 +38,7 @@ type httpHandler struct {
 }
 
 func newHTTPHandler(instance *instance, client vos.BackendClient) (*httpHandler, error) {
-	log.InfoLog("msgs", "creating new HTTP backend", "port", globals.VosGRPcPort)
+	log.InfoLog("msgs", "creating new HTTP backend", "port", globals.VosHTTPPort)
 	mux := martini.Classic()
 	return &httpHandler{client: client, handler: mux, instance: instance}, nil
 }

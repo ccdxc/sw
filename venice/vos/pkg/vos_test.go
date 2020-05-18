@@ -35,6 +35,7 @@ type mockBackend struct {
 	delObjFn                                          func(b, n string) error
 	statFunc                                          func(bucketName, objectName string, opts minioclient.StatObjectOptions) (minioclient.ObjectInfo, error)
 	bExistsFunc                                       func(in string) (bool, error)
+	setLifecycleFunc                                  func(bucketName string, lc string) error
 	fObj                                              *fakeStoreObj
 }
 
@@ -109,6 +110,13 @@ func (f *mockBackend) GetStoreObject(ctx context.Context, bucketName, objectName
 	return f.fObj, f.retErr
 }
 
+func (f *mockBackend) SetBucketLifecycleWithContext(ctx context.Context, bucketName, lifecycle string) error {
+	if f.setLifecycleFunc != nil {
+		return f.setLifecycleFunc(bucketName, lifecycle)
+	}
+	return nil
+}
+
 type fakeStoreObj struct {
 	closeErr, statErr error
 	statObjInfo       minioclient.ObjectInfo
@@ -157,8 +165,9 @@ func TestCreateBuckets(t *testing.T) {
 	inst.Init(fb)
 	err := inst.createDefaultBuckets(fb)
 	AssertOk(t, err, "create buckets failed")
-	Assert(t, fb.bucketExists == len(objstore.Buckets_name), "did not find correct number of calls [%v][%v]", fb.bucketExists, len(objstore.Buckets_name))
-	Assert(t, fb.makeBucket == len(objstore.Buckets_name), "did not find correct number of calls [%v][%v]", fb.makeBucket, len(objstore.Buckets_name))
+	// +1 for accounting for meta buckets created for flowlogs
+	Assert(t, fb.bucketExists == len(objstore.Buckets_name)+1, "did not find correct number of calls [%v][%v]", fb.bucketExists, len(objstore.Buckets_name))
+	Assert(t, fb.makeBucket == len(objstore.Buckets_name)+1, "did not find correct number of calls [%v][%v]", fb.makeBucket, len(objstore.Buckets_name))
 	for k := range objstore.Buckets_value {
 		tenantName := "default"
 		if v1, ok := bmap[tenantName+"."+k]; !ok {
@@ -229,4 +238,31 @@ func TestAPIThrottlingSetting(t *testing.T) {
 	updateAPIThrottlingParams()
 	Assert(t, os.Getenv("MINIO_API_REQUESTS_MAX") == "60",
 		"MINIO_API_REQUESTS_MAX setting not updated correclty, current value:", os.Getenv("MINIO_API_REQUESTS_MAX"))
+}
+
+func TestSetBucketLifecycle(t *testing.T) {
+	fb := &mockBackend{}
+	bmap := make(map[string]int)
+	lcmap := make(map[string]string) // key = bucketName, value == lifecycle
+	var makeErr error
+	fb.makeBucketFn = func(name, loc string) error {
+		if v, ok := bmap[name]; ok {
+			bmap[name] = v + 1
+		} else {
+			bmap[name] = 1
+		}
+		return makeErr
+	}
+	fb.setLifecycleFunc = func(bucketName, lc string) error {
+		if lc != "" {
+			lcmap[bucketName] = lc
+		}
+		return nil
+	}
+	maxCreateBucketRetries = 1
+	inst := &instance{}
+	inst.Init(fb)
+	err := inst.createDefaultBuckets(fb)
+	AssertOk(t, err, "create buckets failed")
+	Assert(t, len(lcmap) == 2, "lifecycle not set for fwlogs bucket", len(lcmap))
 }

@@ -14,6 +14,11 @@ import (
 	minio "github.com/minio/minio-go/v6"
 )
 
+const (
+	lifecycleConfig = `<LifecycleConfiguration><Rule><ID>expire-flowlogs</ID><Prefix>%s</Prefix><Status>%s</Status>` +
+		`<Expiration><Days>%d</Days></Expiration></Rule></LifecycleConfiguration>`
+)
+
 // Client is the object store handle
 type Client struct {
 	bucketName string
@@ -266,4 +271,14 @@ func (c *Client) RemoveObjectsWithContext(ctx context.Context, bucketName string
 		}
 	}()
 	return outCh
+}
+
+// SetServiceLifecycleWithContext set the lifecycle on an existing srevice with a context to control cancellations and timeouts.
+func (c *Client) SetServiceLifecycleWithContext(ctx context.Context, serviceName string, enabled bool, prefix string, days int) error {
+	status := "Disabled"
+	if enabled {
+		status = "Enabled"
+	}
+	lc := fmt.Sprintf(lifecycleConfig, prefix, status, days)
+	return c.client.SetBucketLifecycleWithContext(ctx, serviceName, lc)
 }

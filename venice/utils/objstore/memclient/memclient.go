@@ -148,6 +148,11 @@ func (m *memClient) RemoveObjectsWithContext(ctx context.Context, bucketName str
 	return ch
 }
 
+// SetServiceLifecycleWithContext set the lifecycle on an existing srevice with a context to control cancellations and timeouts.
+func (m *memClient) SetServiceLifecycleWithContext(ctx context.Context, serviceName string, lc objstore.Lifecycle) error {
+	return errors.New("unimplemented")
+}
+
 // NewMemObjstore returns a new MemObjstore object
 func NewMemObjstore() objstore.Client {
 	return &memClient{store: make(map[string]memObj)}

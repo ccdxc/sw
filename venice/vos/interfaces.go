@@ -32,6 +32,7 @@ type BaseBackendClient interface {
 	StatObject(bucketName, objectName string, opts minioclient.StatObjectOptions) (minioclient.ObjectInfo, error)
 	GetObjectWithContext(ctx context.Context, bucketName, objectName string, opts minioclient.GetObjectOptions) (*minioclient.Object, error)
 	ListenBucketNotification(bucketName, prefix, suffix string, events []string, doneCh <-chan struct{}) <-chan minioclient.NotificationInfo
+	SetBucketLifecycleWithContext(ctx context.Context, bucketName, lifecycle string) error
 }
 
 // ExtBackendClient exposes extensions to the backend client

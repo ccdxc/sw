@@ -61,6 +61,9 @@ type objStoreBackend interface {
 	// The returned channel is channel of interface{}, which interface{} should be the errors returned by
 	// different types of backends.
 	RemoveObjectsWithContext(ctx context.Context, bucketName string, objectsCh <-chan string) <-chan interface{}
+
+	// SetServiceLifecycleWithContext set the lifecycle on an existing srevice with a context to control cancellations and timeouts.
+	SetServiceLifecycleWithContext(ctx context.Context, serviceName string, enabled bool, prefix string, days int) error
 }
 
 // object store back-end details
@@ -478,6 +481,25 @@ func (c *client) RemoveObject(path string) error {
 		}
 	}
 	return fmt.Errorf("maximum retries exceeded to remove %s", path)
+}
+
+// SetServiceLifecycleWithContext set the lifecycle on an existing srevice with a context to control cancellations and timeouts.
+func (c *client) SetServiceLifecycleWithContext(ctx context.Context, serviceName string, lc Lifecycle) error {
+	for retry := 0; retry < maxRetry; retry++ {
+		err := c.client.SetServiceLifecycleWithContext(ctx, serviceName, lc.Status, lc.Prefix, lc.Days)
+		if err == nil {
+			return nil
+		}
+
+		if !strings.Contains(err.Error(), connectErr) {
+			return err
+		}
+
+		if err := c.connect(); err != nil {
+			return err
+		}
+	}
+	return fmt.Errorf("maximum retries exceeded to configure lifecycle for service %s", serviceName)
 }
 
 // RemoveObjectsWithContext removes all objects whose names are passed into the channel

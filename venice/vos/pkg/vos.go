@@ -43,8 +43,10 @@ const (
 	// We have put a smaller number 60 then 83 for now, but we can change it accordingly.
 	// This number gets set as an environment variable, so while testing it's possible to edit the kubespec
 	// and add the MINIO_API_REQUESTS_MAX env variable and restart pen-vos daemonset.
-	maxAPIRequests    = 60
-	cpuDivisionFactor = 6
+	maxAPIRequests                 = 60
+	cpuDivisionFactor              = 6
+	defaultFlowlogsLifecycleConfig = `<LifecycleConfiguration><Rule><ID>expire-flowlogs</ID><Prefix></Prefix><Status>Enabled</Status>` +
+		`<Expiration><Days>30</Days></Expiration></Rule></LifecycleConfiguration>`
 )
 
 const (
@@ -128,9 +130,22 @@ func (i *instance) createDefaultBuckets(client vos.BackendClient) error {
 		loop = false
 		for _, n := range objstore.Buckets_name {
 			name := "default." + strings.ToLower(n)
-			if err = i.createBucket(name); err != nil {
+			lifecycle := ""
+			if strings.Compare(strings.ToLower(n), globals.FwlogsBucketName) == 0 {
+				lifecycle = defaultFlowlogsLifecycleConfig
+			}
+
+			if err = i.createBucket(name, lifecycle, true); err != nil {
 				log.Errorf("create bucket [%v] failed retry [%d] (%s)", name, retryCount, err)
 				loop = true
+			}
+
+			if strings.Compare(strings.ToLower(n), globals.FwlogsBucketName) == 0 {
+				metaBucketName := "meta-" + name
+				if err = i.createBucket(metaBucketName, lifecycle, false); err != nil {
+					log.Errorf("create bucket [%v] failed retry [%d] (%s)", metaBucketName, retryCount, err)
+					loop = true
+				}
 			}
 		}
 		if loop {
@@ -144,7 +159,7 @@ func (i *instance) createDefaultBuckets(client vos.BackendClient) error {
 	return nil
 }
 
-func (i *instance) createBucket(bucket string) error {
+func (i *instance) createBucket(bucket string, lifecycle string, addWatcher bool) error {
 	ok, err := i.client.BucketExists(strings.ToLower(bucket))
 	if err != nil {
 		return errors.Wrap(err, "client error")
@@ -155,17 +170,26 @@ func (i *instance) createBucket(bucket string) error {
 			return errors.Wrap(err, fmt.Sprintf("MakeBucket operation[%s]", bucket))
 		}
 	}
-	if _, ok := i.watcherMap[bucket]; !ok {
-		watcher := &storeWatcher{bucket: bucket, client: i.client, watchPrefixes: i.pfxWatcher}
-		i.watcherMap[bucket] = watcher
-		i.wg.Add(1)
-		go watcher.Watch(i.ctx, func() {
-			i.Lock()
-			bucket := bucket
-			delete(i.watcherMap, bucket)
-			i.Unlock()
-			i.wg.Done()
-		})
+	if addWatcher {
+		if _, ok := i.watcherMap[bucket]; !ok {
+			watcher := &storeWatcher{bucket: bucket, client: i.client, watchPrefixes: i.pfxWatcher}
+			i.watcherMap[bucket] = watcher
+			i.wg.Add(1)
+			go watcher.Watch(i.ctx, func() {
+				i.Lock()
+				bucket := bucket
+				delete(i.watcherMap, bucket)
+				i.Unlock()
+				i.wg.Done()
+			})
+		}
+	}
+
+	if lifecycle != "" {
+		err := i.client.SetBucketLifecycleWithContext(i.ctx, bucket, lifecycle)
+		if err != nil {
+			return errors.Wrap(err, fmt.Sprintf("SetBucketLifecycle operation[%s]", bucket))
+		}
 	}
 	return nil
 }

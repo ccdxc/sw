@@ -105,7 +105,7 @@ func (g *grpcBackend) AutoAddBucket(ctx context.Context, in *objstore.Bucket) (*
 		return nil, apierrors.ToGrpcError("bucket already exists", []string{"bucket exists"}, int32(codes.AlreadyExists), "", nil)
 	}
 	// XXX-TODO(sanjayt): add a internal file in the store with the contents of the Spec.
-	err = g.instance.createBucket(name)
+	err = g.instance.createBucket(name, "", true)
 	if err != nil {
 		return nil, apierrors.ToGrpcError("bucket creation", []string{err.Error()}, int32(codes.Internal), "", nil)
 	}

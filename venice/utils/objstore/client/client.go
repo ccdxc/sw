@@ -54,7 +54,10 @@ type Client interface {
 	RemoveObject(path string) error
 
 	// RemoveObjectsWithContext removes all objects whose names are passed into the channel
-	RemoveObjectsWithContext(ctx context.Context, bucketName string, objectsCh <-chan string) <-chan RemoveObjectError
+	RemoveObjectsWithContext(ctx context.Context, serviceName string, objectsCh <-chan string) <-chan RemoveObjectError
+
+	// SetServiceLifecycleWithContext sets lifecycle on an existing service with a context to control cancellations and timeouts.
+	SetServiceLifecycleWithContext(ctx context.Context, serviceName string, lifecycle Lifecycle) error
 }
 
 // ObjectStats is the object information returned from stats API
@@ -69,4 +72,11 @@ type ObjectStats struct {
 type RemoveObjectError struct {
 	ObjectName string
 	Err        error
+}
+
+// Lifecycle is used for setting lifecycle on objects
+type Lifecycle struct {
+	Status bool
+	Prefix string
+	Days   int
 }

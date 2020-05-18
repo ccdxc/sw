@@ -150,3 +150,15 @@ func (m *MockobjStoreBackend) RemoveObjectsWithContext(ctx context.Context, buck
 func (mr *MockobjStoreBackendMockRecorder) RemoveObjectsWithContext(ctx, bucketName, objectsCh interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveObjectsWithContext", reflect.TypeOf((*MockobjStoreBackend)(nil).RemoveObjectsWithContext), ctx, bucketName, objectsCh)
 }
+
+// SetServiceLifecycleWithContext mocks base method
+func (m *MockobjStoreBackend) SetServiceLifecycleWithContext(ctx context.Context, serviceName string, enabled bool, prefix string, days int) error {
+	ret := m.ctrl.Call(m, "SetServiceLifecycleWithContext", ctx, serviceName, enabled, prefix, days)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetServiceLifecycleWithContext indicates an expected call of SetServiceLifecycleWithContext
+func (mr *MockobjStoreBackendMockRecorder) SetServiceLifecycleWithContext(ctx, serviceName, enabled, prefix, days interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetServiceLifecycleWithContext", reflect.TypeOf((*MockobjStoreBackend)(nil).SetServiceLifecycleWithContext), ctx, serviceName, enabled, prefix, days)
+}

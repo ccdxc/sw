@@ -1410,6 +1410,11 @@ func (m *fakeOclient) RemoveObjectsWithContext(ctx context.Context, bucketName s
 	return make(chan objstore.RemoveObjectError)
 }
 
+// SetServiceLifecycleWithContext sets lifecycle on an existing service with a context to control cancellations and timeouts.
+func (m *fakeOclient) SetServiceLifecycleWithContext(ctx context.Context, serviceName string, lifecycle objstore.Lifecycle) error {
+	return nil
+}
+
 // Read is a mock implementation
 func (m *fakeOclient) Read(p []byte) (n int, err error) {
 	return int(m.read), nil
