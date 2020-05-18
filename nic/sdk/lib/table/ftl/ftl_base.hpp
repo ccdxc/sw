@@ -14,15 +14,18 @@ namespace table {
 
 class ftl_base {
 private:
-    static thread_local Apictx apictx_[FTL_MAX_API_CONTEXTS + 1];
-    static Apictx *get_apictx(int index) { return &apictx_[index]; }
+    static Apictx apictx_[FTL_MAX_THREADS][FTL_MAX_API_CONTEXTS + 1];
+    static Apictx *get_apictx(uint32_t thread_id, int index) { 
+        return &apictx_[thread_id][index]; 
+    }
 
     void *main_table_;
     apistats astats_[PDS_FLOW_HINT_POOLS_MAX];
     tablestats tstats_[PDS_FLOW_HINT_POOLS_MAX];
 
 private:
-    sdk_ret_t ctxinit_(sdk_table_api_op_t op,
+    sdk_ret_t ctxinit_(uint32_t threadid,
+                       sdk_table_api_op_t op,
                        sdk_table_api_params_t *params,
                        bool skip_hash = false);
 

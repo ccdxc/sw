@@ -4,6 +4,18 @@ meta:
     nics    : [ pensando ]
 
 testcases:
+    -   name    : Trex_CPS_cloud
+        testcase: testcases.networking.conn_per_sec
+        stress  : False
+        ignore  : False
+        args    :
+            type: remote_only
+        iterators:
+            type      : simple
+            proto     : [ udp ]
+            cps       : [ 200000 ]
+            duration  : [ 1 ]
+
     -   name    : Trex_UDP_TCP_Remote_Workloads
         testcase: testcases.networking.conn_per_sec
         stress  : False
@@ -12,9 +24,9 @@ testcases:
             type: remote_only
         iterators:
             type      : simple
-            proto     : [ tcp, udp, tcp ]
-            cps       : [ 10000, 20000, 200 ]
-            duration  : [ 10, 10, 3000 ]
+            proto     : [ tcp, tcp ]
+            cps       : [ 10000, 200 ]
+            duration  : [ 10, 3000 ]
 
     -   name    : Traffic_Test_With_Triggers
         testcase: testcases.networking.conn_per_sec

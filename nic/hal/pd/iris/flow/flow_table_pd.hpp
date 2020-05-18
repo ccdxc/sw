@@ -43,7 +43,7 @@ private:
     std::string table_name_;
     uint32_t table_size_;
     uint32_t oflow_table_size_;
-
+    uint32_t thread_id_;
 };
 
 } // namespace pd

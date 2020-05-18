@@ -20,6 +20,8 @@
 #include <nat.h>
 #include <pds_table.h>
 
+#define VPP_FTLV4_MAX_THREADS 4
+
 using namespace sdk;
 using namespace sdk::table;
 using namespace sdk::platform;
@@ -28,6 +30,7 @@ extern "C" {
 
 extern session_update_cb g_ses_cb;
 extern nat_flow_dealloc_cb g_nat_dealloc_cb;
+
 
 typedef struct ftlv4_cache_s {
     ipv4_flow_hash_entry_t ip4_flow[MAX_FLOW_ENTRIES_PER_BATCH];
@@ -38,7 +41,7 @@ typedef struct ftlv4_cache_s {
     uint16_t count;
 } ftlv4_cache_t;
 
-thread_local ftlv4_cache_t g_ip4_flow_cache;
+ftlv4_cache_t g_ip4_flow_cache[VPP_FTLV4_MAX_THREADS];
 
 ftlv4 *
 ftlv4_create (void *key2str,
@@ -134,10 +137,12 @@ ftlv4_remove (ftlv4 *obj, ipv4_flow_hash_entry_t *entry, uint32_t hash)
 }
 
 int
-ftlv4_get_with_handle (ftlv4 *obj, uint32_t index, bool primary)
+ftlv4_get_with_handle (ftlv4 *obj, uint32_t index, bool primary, 
+                       uint16_t thread_id)
 {
     sdk_table_api_params_t params = {0};
-    ipv4_flow_hash_entry_t *v4entry = &g_ip4_flow_cache.ip4_last_read_flow;
+    ipv4_flow_hash_entry_t *v4entry = 
+        &g_ip4_flow_cache[thread_id].ip4_last_read_flow;
 
     v4entry->clear();
 
@@ -160,25 +165,28 @@ ftlv4_get_with_handle (ftlv4 *obj, uint32_t index, bool primary)
 }
 
 int
-ftlv4_update_cached_entry (ftlv4 *obj)
+ftlv4_update_cached_entry (ftlv4 *obj, uint16_t thread_id)
 {
     uint32_t pindex;
     uint32_t sindex;
-    return ftlv4_insert(obj, &g_ip4_flow_cache.ip4_last_read_flow, 0,
-                        &pindex, &sindex, 1);
+    return ftlv4_insert(obj, &g_ip4_flow_cache[thread_id].ip4_last_read_flow, 
+                        0, &pindex, &sindex, 1);
 }
 
 int
-ftlv4_remove_cached_entry (ftlv4 *obj)
+ftlv4_remove_cached_entry (ftlv4 *obj, uint16_t thread_id)
 {
-    return ftlv4_remove(obj, &g_ip4_flow_cache.ip4_last_read_flow, 0);
+    return ftlv4_remove(obj, 
+                        &g_ip4_flow_cache[thread_id].ip4_last_read_flow, 0);
 }
 
 void
-ftlv4_update_iflow_nat_session (ftlv4 *obj)
+ftlv4_update_iflow_nat_session (ftlv4 *obj, uint16_t thread_id)
 {
-    ipv4_flow_hash_entry_t *v4entry = &g_ip4_flow_cache.ip4_last_read_flow;
-    ipv4_flow_hash_entry_t *v4natentry = &g_ip4_flow_cache.ip4_last_read_nat_session;
+    ipv4_flow_hash_entry_t *v4entry = 
+        &g_ip4_flow_cache[thread_id].ip4_last_read_flow;
+    ipv4_flow_hash_entry_t *v4natentry = 
+        &g_ip4_flow_cache[thread_id].ip4_last_read_nat_session;
     v4natentry->set_key_metadata_ipv4_dst(v4entry->get_key_metadata_ipv4_dst());
     v4natentry->set_key_metadata_dport(v4entry->get_key_metadata_dport());
     v4natentry->set_key_metadata_proto(v4entry->get_key_metadata_proto());
@@ -189,10 +197,12 @@ ftlv4_update_iflow_nat_session (ftlv4 *obj)
 }
 
 void
-ftlv4_update_rflow_nat_session (ftlv4 *obj)
+ftlv4_update_rflow_nat_session (ftlv4 *obj, uint16_t thread_id)
 {
-    ipv4_flow_hash_entry_t *v4entry = &g_ip4_flow_cache.ip4_last_read_flow;
-    ipv4_flow_hash_entry_t *v4natentry = &g_ip4_flow_cache.ip4_last_read_nat_session;
+    ipv4_flow_hash_entry_t *v4entry = 
+                        &g_ip4_flow_cache[thread_id].ip4_last_read_flow;
+    ipv4_flow_hash_entry_t *v4natentry = 
+                        &g_ip4_flow_cache[thread_id].ip4_last_read_nat_session;
     v4natentry->set_key_metadata_ipv4_src(v4entry->get_key_metadata_ipv4_dst());
     if (likely(v4entry->get_key_metadata_proto() != IP_PROTO_ICMP)) {
         v4natentry->set_key_metadata_sport(v4entry->get_key_metadata_dport());
@@ -200,13 +210,14 @@ ftlv4_update_rflow_nat_session (ftlv4 *obj)
 }
 
 int
-ftlv4_remove_nat_session (uint32_t vpc_id, ftlv4 *obj)
+ftlv4_remove_nat_session (uint32_t vpc_id, ftlv4 *obj, uint16_t thread_id)
 {
     uint32_t sip, dip;
     uint16_t sport, dport;
     uint8_t proto;
 
-    ipv4_flow_hash_entry_t *v4entry = &g_ip4_flow_cache.ip4_last_read_nat_session;
+    ipv4_flow_hash_entry_t *v4entry = 
+                        &g_ip4_flow_cache[thread_id].ip4_last_read_nat_session;
     sip = v4entry->get_key_metadata_ipv4_src();
     dip = v4entry->get_key_metadata_ipv4_dst();
     sport = v4entry->get_key_metadata_sport();
@@ -545,8 +556,8 @@ ftlv4_read_session_index (ftlv4 *obj, uint32_t src, uint32_t dst,
     int retcode = 0;
     ipv4_flow_hash_entry_t entry;
 
-    retcode = ftlv4_read_hw_entry(obj, src, dst, ip_proto, sport, dport, lookup_id,
-                                  &entry);
+    retcode = ftlv4_read_hw_entry(obj, src, dst, ip_proto, sport, dport, 
+                                  lookup_id, &entry);
     if (retcode != -1) {
         *ses_id = entry.session_index;
     }
@@ -562,8 +573,8 @@ ftlv4_dump_hw_entry (ftlv4 *obj, uint32_t src, uint32_t dst,
     int retcode = 0;
     ipv4_flow_hash_entry_t entry;
 
-    retcode = ftlv4_read_hw_entry(obj, src, dst, ip_proto, sport, dport, lookup_id,
-                                  &entry);
+    retcode = ftlv4_read_hw_entry(obj, src, dst, ip_proto, sport, dport, 
+                                  lookup_id, &entry);
     if (retcode != -1) {
         entry.tostr(buf, max_len);
     }
@@ -643,60 +654,61 @@ ftlv4_set_flow_role(ipv4_flow_hash_entry_t *entry, uint8_t flow_role)
 }
 
 void
-ftlv4_cache_set_hash_log (uint32_t val, uint8_t log)
+ftlv4_cache_set_hash_log (uint32_t val, uint8_t log, uint16_t tid)
 {
-    g_ip4_flow_cache.ip4_hash[g_ip4_flow_cache.count] = val;
-    g_ip4_flow_cache.flags[g_ip4_flow_cache.count].log = log;
+    g_ip4_flow_cache[tid].ip4_hash[g_ip4_flow_cache[tid].count] = val;
+    g_ip4_flow_cache[tid].flags[g_ip4_flow_cache[tid].count].log = log;
 }
 
 void
-ftlv4_cache_set_update_flag (uint8_t update)
+ftlv4_cache_set_update_flag (uint8_t update, uint16_t tid)
 {
-    g_ip4_flow_cache.flags[g_ip4_flow_cache.count].update = update;
+    g_ip4_flow_cache[tid].flags[g_ip4_flow_cache[tid].count].update = update;
 }
 
 void
-ftlv4_cache_set_napt_flag (uint8_t napt)
+ftlv4_cache_set_napt_flag (uint8_t napt, uint16_t tid)
 {
-    g_ip4_flow_cache.flags[g_ip4_flow_cache.count].napt = napt;
+    g_ip4_flow_cache[tid].flags[g_ip4_flow_cache[tid].count].napt = napt;
 }
 
 uint8_t
-ftlv4_cache_get_napt_flag (int id)
+ftlv4_cache_get_napt_flag (int id, uint16_t thread_id)
 {
-    return g_ip4_flow_cache.flags[id].napt;
+    return g_ip4_flow_cache[thread_id].flags[id].napt;
 }
 
 void
-ftlv4_cache_set_host_origin (uint8_t host_origin)
+ftlv4_cache_set_host_origin (uint8_t host_origin, uint16_t tid)
 {
-    g_ip4_flow_cache.flags[g_ip4_flow_cache.count].host_origin = host_origin & 1;
+    g_ip4_flow_cache[tid].flags[g_ip4_flow_cache[tid].count].host_origin = 
+                                                               host_origin & 1;
 }
 
 void
-ftlv4_cache_set_flow_miss_hit (uint8_t val)
+ftlv4_cache_set_flow_miss_hit (uint8_t val, uint16_t thread_id)
 {
-    ftlv4_set_entry_flow_miss_hit(g_ip4_flow_cache.ip4_flow + g_ip4_flow_cache.count,
+    ftlv4_set_entry_flow_miss_hit(g_ip4_flow_cache[thread_id].ip4_flow + g_ip4_flow_cache[thread_id].count,
                                   val);
 }
 
 void
-ftlv4_cache_set_flow_role(uint8_t flow_role)
+ftlv4_cache_set_flow_role(uint8_t flow_role, uint16_t thread_id)
 {
-    ftlv4_set_flow_role(g_ip4_flow_cache.ip4_flow + g_ip4_flow_cache.count,
+    ftlv4_set_flow_role(g_ip4_flow_cache[thread_id].ip4_flow + g_ip4_flow_cache[thread_id].count,
                         flow_role);
 }
 
 void
-ftlv4_cache_set_counter_index (uint8_t ctr_idx)
+ftlv4_cache_set_counter_index (uint8_t ctr_idx, uint16_t tid)
 {
-    g_ip4_flow_cache.flags[g_ip4_flow_cache.count].ctr_idx = ctr_idx;
+    g_ip4_flow_cache[tid].flags[g_ip4_flow_cache[tid].count].ctr_idx = ctr_idx;
 }
 
 uint8_t
-ftlv4_cache_get_counter_index (int id)
+ftlv4_cache_get_counter_index (int id, uint16_t thread_id)
 {
-    return g_ip4_flow_cache.flags[id].ctr_idx;
+    return g_ip4_flow_cache[thread_id].flags[id].ctr_idx;
 }
 
 static uint32_t
@@ -712,9 +724,9 @@ ftlv4_get_proto(ipv4_flow_hash_entry_t *entry)
 }
 
 void
-ftlv4_cache_batch_init (void)
+ftlv4_cache_batch_init (uint16_t thread_id)
 {
-   g_ip4_flow_cache.count = 0;
+   g_ip4_flow_cache[thread_id].count = 0;
 }
 
 void
@@ -723,9 +735,10 @@ ftlv4_cache_set_key (uint32_t sip,
                      uint8_t ip_proto,
                      uint16_t src_port,
                      uint16_t dst_port,
-                     uint16_t lookup_id)
+                     uint16_t lookup_id,
+                     uint16_t tid)
 {
-   ftlv4_set_key(g_ip4_flow_cache.ip4_flow + g_ip4_flow_cache.count,
+   ftlv4_set_key(g_ip4_flow_cache[tid].ip4_flow + g_ip4_flow_cache[tid].count,
                  sip, dip, ip_proto, src_port, dst_port, lookup_id);
 }
 
@@ -733,80 +746,83 @@ void
 ftlv4_cache_set_nexthop (uint32_t nhid,
                          uint32_t nhtype,
                          uint8_t nh_valid,
-                         uint8_t priority)
+                         uint8_t priority,
+                         uint16_t tid)
 {
-   ftlv4_set_entry_nexthop(g_ip4_flow_cache.ip4_flow + g_ip4_flow_cache.count,
+   ftlv4_set_entry_nexthop(g_ip4_flow_cache[tid].ip4_flow + g_ip4_flow_cache[tid].count,
                            nhid, nhtype, nh_valid, priority);
 }
 
 int
-ftlv4_cache_get_count (void)
+ftlv4_cache_get_count (uint16_t thread_id)
 {
-    return g_ip4_flow_cache.count;
+    return g_ip4_flow_cache[thread_id].count;
 }
 
 void
-ftlv4_cache_advance_count (int val)
+ftlv4_cache_advance_count (int val, uint16_t thread_id)
 {
-    g_ip4_flow_cache.count += val;
+    g_ip4_flow_cache[thread_id].count += val;
 }
 
 int
-ftlv4_cache_program_index (ftlv4 *obj, uint16_t id, uint32_t *pindex,
-                           uint32_t *sindex)
+ftlv4_cache_program_index (ftlv4 *obj, uint16_t id, uint32_t *pindex, 
+                           uint32_t *sindex, uint16_t thread_id)
 {
-    return ftlv4_insert(obj, g_ip4_flow_cache.ip4_flow + id,
-                        g_ip4_flow_cache.ip4_hash[id], pindex, sindex,
-                        g_ip4_flow_cache.flags[id].update);
+    return ftlv4_insert(obj, g_ip4_flow_cache[thread_id].ip4_flow + id,
+                        g_ip4_flow_cache[thread_id].ip4_hash[id], 
+                        pindex, 
+                        sindex,
+                        g_ip4_flow_cache[thread_id].flags[id].update);
 }
 
 int
-ftlv4_cache_delete_index (ftlv4 *obj, uint16_t id)
+ftlv4_cache_delete_index (ftlv4 *obj, uint16_t id, uint16_t thread_id)
 {
-    return ftlv4_remove(obj, g_ip4_flow_cache.ip4_flow + id,
-                        g_ip4_flow_cache.ip4_hash[id]);
+    return ftlv4_remove(obj, g_ip4_flow_cache[thread_id].ip4_flow + id,
+                        g_ip4_flow_cache[thread_id].ip4_hash[id]);
 }
 
 void
-ftlv4_cache_set_session_index (uint32_t val)
+ftlv4_cache_set_session_index (uint32_t val, uint16_t thread_id)
 {
-    ftlv4_set_session_index(g_ip4_flow_cache.ip4_flow + g_ip4_flow_cache.count, val);
+    ftlv4_set_session_index(g_ip4_flow_cache[thread_id].ip4_flow + g_ip4_flow_cache[thread_id].count, val);
 }
 
 uint32_t
-ftlv4_cache_get_session_index (int id)
+ftlv4_cache_get_session_index (int id, uint16_t thread_id)
 {
-    return ftlv4_get_session_id(g_ip4_flow_cache.ip4_flow + id);
+    return ftlv4_get_session_id(g_ip4_flow_cache[thread_id].ip4_flow + id);
 }
 
 uint8_t
-ftlv4_cache_get_proto(int id)
+ftlv4_cache_get_proto(int id, uint16_t thread_id)
 {
-    return ftlv4_get_proto(g_ip4_flow_cache.ip4_flow + id);
+    return ftlv4_get_proto(g_ip4_flow_cache[thread_id].ip4_flow + id);
 }
 
 int
-ftlv4_cache_log_session(uint16_t iid, uint16_t rid, uint8_t reason)
+ftlv4_cache_log_session(uint16_t iid, uint16_t rid, uint8_t reason, uint16_t tid)
 {
-    if ((!g_ip4_flow_cache.flags[iid].log) &&
-        (!g_ip4_flow_cache.flags[rid].log)) {
+    if ((!g_ip4_flow_cache[tid].flags[iid].log) &&
+        (!g_ip4_flow_cache[tid].flags[rid].log)) {
         return 0;
     }
-    return ftlv4_export_with_entry(g_ip4_flow_cache.ip4_flow + iid,
-                                   g_ip4_flow_cache.ip4_flow + rid, reason,
-                                   g_ip4_flow_cache.flags[iid].host_origin);
+    return ftlv4_export_with_entry(g_ip4_flow_cache[tid].ip4_flow + iid,
+                                   g_ip4_flow_cache[tid].ip4_flow + rid, reason,
+                                   g_ip4_flow_cache[tid].flags[iid].host_origin);
 }
 
 void
-ftlv4_cache_set_epoch (uint8_t val)
+ftlv4_cache_set_epoch (uint8_t val, uint16_t thread_id)
 {
-    ftlv4_set_epoch(g_ip4_flow_cache.ip4_flow + g_ip4_flow_cache.count, val);
+    ftlv4_set_epoch(g_ip4_flow_cache[thread_id].ip4_flow + g_ip4_flow_cache[thread_id].count, val);
 }
 
 void
-ftlv4_cache_set_l2l (uint8_t val)
+ftlv4_cache_set_l2l (uint8_t val, uint16_t thread_id)
 {
-    ftlv4_set_entry_l2l(g_ip4_flow_cache.ip4_flow + g_ip4_flow_cache.count, val);
+    ftlv4_set_entry_l2l(g_ip4_flow_cache[thread_id].ip4_flow + g_ip4_flow_cache[thread_id].count, val);
 }
 
 /*
@@ -816,21 +832,25 @@ ftlv4_cache_batch_flush (ftlv4 *obj, int *status)
     int i;
     uint32_t pindex, sindex;
 
-    for (i = 0; i < g_ip4_flow_cache.count; i++) {
-       status[i] = ftlv4_insert(obj, g_ip4_flow_cache.ip4_flow + i,
-                                g_ip4_flow_cache.ip4_hash[i],
+    for (i = 0; i < g_ip4_flow_cache[thread_id].count; i++) {
+       status[i] = ftlv4_insert(obj, g_ip4_flow_cache[thread_id].ip4_flow + i,
+                                g_ip4_flow_cache[thread_id].ip4_hash[i],
                                 &pindex, &sindex,
-                                g_ip4_flow_cache.flags[i].log,
-                                g_ip4_flow_cache.flags[i].update);
+                                g_ip4_flow_cache[thread_id].flags[i].log,
+                                g_ip4_flow_cache[thread_id].flags[i].update);
     }
 }
 */
 
 void
-ftlv4_get_last_read_session_info (uint32_t *sip, uint32_t *dip, uint16_t *sport,
-                                  uint16_t *dport, uint16_t *lkd_id)
+ftlv4_get_last_read_session_info (uint32_t *sip, 
+                                  uint32_t *dip, 
+                                  uint16_t *sport,
+                                  uint16_t *dport, 
+                                  uint16_t *lkd_id, 
+                                  uint16_t tid)
 {
-    ipv4_flow_hash_entry_t *v4entry = &g_ip4_flow_cache.ip4_last_read_flow;
+    ipv4_flow_hash_entry_t *v4entry = &g_ip4_flow_cache[tid].ip4_last_read_flow;
     *sip = v4entry->get_key_metadata_ipv4_src();
     *dip = v4entry->get_key_metadata_ipv4_dst();
     *sport = v4entry->get_key_metadata_sport();
@@ -839,16 +859,16 @@ ftlv4_get_last_read_session_info (uint32_t *sip, uint32_t *dip, uint16_t *sport,
 }
 
 void
-ftlv4_set_last_read_entry_epoch (uint8_t epoch)
+ftlv4_set_last_read_entry_epoch (uint8_t epoch, uint16_t tid)
 {
-    ipv4_flow_hash_entry_t *v4entry = &g_ip4_flow_cache.ip4_last_read_flow;
+    ipv4_flow_hash_entry_t *v4entry = &g_ip4_flow_cache[tid].ip4_last_read_flow;
     ftlv4_set_epoch(v4entry, epoch);
 }
 
 void
-ftlv4_get_last_read_entry_epoch (uint8_t *epoch)
+ftlv4_get_last_read_entry_epoch (uint8_t *epoch, uint16_t tid)
 {
-    ipv4_flow_hash_entry_t *v4entry = &g_ip4_flow_cache.ip4_last_read_flow;
+    ipv4_flow_hash_entry_t *v4entry = &g_ip4_flow_cache[tid].ip4_last_read_flow;
     *epoch = ftlv4_get_entry_epoch(v4entry);
 }
 
@@ -856,16 +876,17 @@ void
 ftlv4_set_last_read_entry_nexthop (uint32_t nhid,
                                    uint32_t nhtype,
                                    uint8_t nh_valid,
-                                   uint8_t priority)
+                                   uint8_t priority,
+                                   uint16_t tid)
 {
-   ipv4_flow_hash_entry_t *v4entry = &g_ip4_flow_cache.ip4_last_read_flow;
+   ipv4_flow_hash_entry_t *v4entry = &g_ip4_flow_cache[tid].ip4_last_read_flow;
    ftlv4_set_entry_nexthop(v4entry, nhid, nhtype, nh_valid, priority);
 }
 
 void
-ftlv4_set_last_read_entry_miss_hit (uint8_t flow_miss)
+ftlv4_set_last_read_entry_miss_hit (uint8_t flow_miss, uint16_t tid)
 {
-    ipv4_flow_hash_entry_t *v4entry = &g_ip4_flow_cache.ip4_last_read_flow;
+    ipv4_flow_hash_entry_t *v4entry = &g_ip4_flow_cache[tid].ip4_last_read_flow;
     ftlv4_set_entry_flow_miss_hit(v4entry, flow_miss);
 }
 

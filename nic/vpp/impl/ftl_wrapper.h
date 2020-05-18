@@ -172,7 +172,7 @@ int ftlv4_clear(ftlv4 *obj, bool clear_global_state,
 
 uint64_t ftlv4_get_flow_count(ftlv4 *obj);
 
-void ftlv4_cache_batch_init(void);
+void ftlv4_cache_batch_init(uint16_t thread_id);
 
 void ftlv4_cache_set_key(
              uint32_t sip,
@@ -180,48 +180,52 @@ void ftlv4_cache_set_key(
              uint8_t ip_proto,
              uint16_t src_port,
              uint16_t dst_port,
-             uint16_t lookup_id);
+             uint16_t lookup_id,
+             uint16_t thread_id);
 
 void ftlv4_cache_set_nexthop(
              uint32_t nhid,
              uint32_t nhtype,
              uint8_t nh_valid,
-             uint8_t priority);
+             uint8_t priority,
+             uint16_t thread_id);
 
-int ftlv4_cache_get_count(void);
+int ftlv4_cache_get_count(uint16_t thread_id);
 
-void ftlv4_cache_advance_count(int val);
+void ftlv4_cache_advance_count(int val, uint16_t thread_id);
 
 int ftlv4_cache_program_index(ftlv4 *obj, uint16_t id,
-                              uint32_t *pindex, uint32_t *sindex);
+                              uint32_t *pindex, 
+                              uint32_t *sindex,
+                              uint16_t thread_id);
 
-int ftlv4_cache_delete_index(ftlv4 *obj, uint16_t id);
+int ftlv4_cache_delete_index(ftlv4 *obj, uint16_t id, uint16_t thread_id);
 
-void ftlv4_cache_set_session_index(uint32_t val);
+void ftlv4_cache_set_session_index(uint32_t val, uint16_t thread_id);
 
-void ftlv4_cache_set_flow_role(uint8_t flow_role);
+void ftlv4_cache_set_flow_role(uint8_t flow_role, uint16_t thread_id);
 
-uint32_t ftlv4_cache_get_session_index(int id);
+uint32_t ftlv4_cache_get_session_index(int id, uint16_t thread_id);
 
-uint8_t ftlv4_cache_get_proto(int id);
+uint8_t ftlv4_cache_get_proto(int id, uint16_t thread_id);
 
-void ftlv4_cache_set_epoch(uint8_t val);
+void ftlv4_cache_set_epoch(uint8_t val, uint16_t thread_id);
 
-void ftlv4_cache_set_l2l(uint8_t val);
+void ftlv4_cache_set_l2l(uint8_t val, uint16_t thread_id);
 
-void ftlv4_cache_set_hash_log(uint32_t val, uint8_t log);
+void ftlv4_cache_set_hash_log(uint32_t val, uint8_t log, uint16_t thread_id);
 
-void ftlv4_cache_set_flow_miss_hit(uint8_t val);
+void ftlv4_cache_set_flow_miss_hit(uint8_t val, uint16_t thread_id);
 
-void ftlv4_cache_set_update_flag(uint8_t update);
+void ftlv4_cache_set_update_flag(uint8_t update, uint16_t thread_id);
 
-void ftlv4_cache_set_napt_flag(uint8_t napt);
+void ftlv4_cache_set_napt_flag(uint8_t napt, uint16_t thread_id);
 
-uint8_t ftlv4_cache_get_napt_flag (int id);
+uint8_t ftlv4_cache_get_napt_flag (int id, uint16_t thread_id);
 
-void ftlv4_cache_set_counter_index(uint8_t ctr_idx);
+void ftlv4_cache_set_counter_index(uint8_t ctr_idx, uint16_t thread_id);
 
-uint8_t ftlv4_cache_get_counter_index(int id);
+uint8_t ftlv4_cache_get_counter_index(int id, uint16_t thread_id);
 
 void ftlv4_cache_batch_flush(ftlv4 *obj, int *status);
 
@@ -332,29 +336,35 @@ void ftll2_set_key(flow_entry *entry,
 
 int ftlv4_remove(ftlv4 *obj, v4_flow_entry *entry, uint32_t hash);
 
-int ftlv4_remove_cached_entry(ftlv4 *obj);
+int ftlv4_remove_cached_entry(ftlv4 *obj, uint16_t thread_id);
 
-void ftlv4_update_iflow_nat_session (ftlv4 *obj);
-void ftlv4_update_rflow_nat_session (ftlv4 *obj);
-int ftlv4_remove_nat_session(uint32_t vpc_id, ftlv4 *obj);
+void ftlv4_update_iflow_nat_session (ftlv4 *obj, uint16_t thread_id);
+void ftlv4_update_rflow_nat_session (ftlv4 *obj, uint16_t thread_id);
+int ftlv4_remove_nat_session(uint32_t vpc_id, ftlv4 *obj, uint16_t thread_id);
 
-int ftlv4_update_cached_entry(ftlv4 *obj);
+int ftlv4_update_cached_entry(ftlv4 *obj, uint16_t thread_id);
 
-int ftlv4_get_with_handle(ftlv4 *obj, uint32_t index, bool primary);
+int ftlv4_get_with_handle(ftlv4 *obj, uint32_t index, 
+                          bool primary, uint16_t thread_id);
 
-void ftlv4_get_last_read_session_info(uint32_t *sip, uint32_t *dip, uint16_t *sport,
-                                      uint16_t *dport, uint16_t *lkp_id);
+void ftlv4_get_last_read_session_info(uint32_t *sip, 
+                                      uint32_t *dip, 
+                                      uint16_t *sport,
+                                      uint16_t *dport, 
+                                      uint16_t *lkp_id, 
+                                      uint16_t thread_id);
 
-void ftlv4_set_last_read_entry_epoch(uint8_t epoch);
+void ftlv4_set_last_read_entry_epoch(uint8_t epoch, uint16_t thread_id);
 
-void ftlv4_get_last_read_entry_epoch(uint8_t *epoch);
+void ftlv4_get_last_read_entry_epoch(uint8_t *epoch, uint16_t thread_id);
 
 void ftlv4_set_last_read_entry_nexthop(uint32_t nhid,
                                        uint32_t nhtype,
                                        uint8_t nh_valid,
-                                       uint8_t priority);
+                                       uint8_t priority,
+                                       uint16_t thread_id);
 
-void ftlv4_set_last_read_entry_miss_hit(uint8_t flow_miss);
+void ftlv4_set_last_read_entry_miss_hit(uint8_t flow_miss, uint16_t thread_id);
 
 enum flow_export_reason_e {
     FLOW_EXPORT_REASON_ADD,
@@ -371,9 +381,10 @@ int ftlv4_export_with_entry(v4_flow_entry *iv4entry,
                             v4_flow_entry *rv4entry,
                             uint8_t reason, bool host_origin);
 
-int ftlv4_cache_log_session(uint16_t iid, uint16_t rid, uint8_t reason);
+int ftlv4_cache_log_session(uint16_t iid, uint16_t rid, 
+                            uint8_t reason, uint16_t thread_id);
 
-void ftlv4_cache_set_host_origin(uint8_t host_origin);
+void ftlv4_cache_set_host_origin(uint8_t host_origin, uint16_t thread_id);
 
 int ftlv6_cache_log_session(uint16_t iid, uint16_t rid, uint8_t reason);
 
@@ -385,8 +396,11 @@ int ftlv6_remove_cached_entry(ftlv6 *obj);
 
 int ftlv6_get_with_handle(ftlv6 *obj, uint32_t index, bool primary);
 
-void ftlv6_get_last_read_session_info (uint8_t *sip, uint8_t *dip, uint16_t *sport,
-                                       uint16_t *dport, uint16_t *lkp_id);
+void ftlv6_get_last_read_session_info (uint8_t *sip, 
+                                       uint8_t *dip,
+                                       uint16_t *sport,
+                                       uint16_t *dport, 
+                                       uint16_t *lkp_id);
 
 void ftlv6_set_thread_id(ftlv6 *obj, uint32_t thread_id);
 

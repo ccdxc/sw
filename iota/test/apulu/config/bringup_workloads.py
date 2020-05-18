@@ -57,6 +57,12 @@ def __add_iptables_to_workloads(workloads=[]):
         api.Trigger_AddCommand(req, wl.node_name, wl.workload_name,
                 "iptables -A INPUT -p tcp -i %s --dst %s -j DROP" % (wl.interface, wl.ip_prefix))
         api.Logger.info(f"iptables -A INPUT -p tcp -i {wl.interface} --dst {wl.ip_prefix} -j DROP")
+        api.Trigger_AddCommand(req, wl.node_name, wl.workload_name,
+                "iptables -A INPUT -p udp -i %s --src %s -j DROP" % (wl.interface, wl.ip_prefix))
+        api.Logger.info(f"iptables -A INPUT -p udp -i {wl.interface} --src {wl.ip_prefix} -j DROP")
+        api.Trigger_AddCommand(req, wl.node_name, wl.workload_name,
+                "iptables -A INPUT -p udp -i %s --dst %s -j DROP" % (wl.interface, wl.ip_prefix))
+        api.Logger.info(f"iptables -A INPUT -p udp -i {wl.interface} --dst {wl.ip_prefix} -j DROP")
 
     resp = api.Trigger(req)
     if resp is None:

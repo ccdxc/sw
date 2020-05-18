@@ -94,7 +94,7 @@ protected:
     }
 
     void assign_thread_id() {
-        for (auto i=0; i < g_no_of_threads; i++) {
+        for (auto i=1; i <= g_no_of_threads; i++) {
             enqueue_job(i, &multi_thread::set_thread_id, this, i);
         }
     }

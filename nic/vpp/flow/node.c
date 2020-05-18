@@ -504,7 +504,8 @@ always_inline void
 pds_l2l_def_rflow_prog_internal (vlib_buffer_t *p0,
                                  u32 session_id,
                                  u8 is_ip4, u8 is_l2,
-                                 u16 *next, u32 *counter)
+                                 u16 *next, u32 *counter,
+                                 u16 thread_index)
 {
     u8                  miss_hit = 1;
     pds_flow_hw_ctx_t   *session = pds_flow_get_hw_ctx(session_id);
@@ -523,7 +524,8 @@ pds_l2l_def_rflow_prog_internal (vlib_buffer_t *p0,
         pds_flow_hw_ctx_lock(session);
         ret = ftlv4_get_with_handle(table4,
                                     session->rflow.table_id,
-                                    session->rflow.primary);
+                                    session->rflow.primary,
+                                    thread_index);
         pds_flow_hw_ctx_unlock(session);
         if (PREDICT_FALSE(ret != 0)) {
             *next = FLOW_PROG_NEXT_DROP;
@@ -531,7 +533,7 @@ pds_l2l_def_rflow_prog_internal (vlib_buffer_t *p0,
             goto del;
         }
 
-        ftlv4_get_last_read_entry_epoch(&epoch);
+        ftlv4_get_last_read_entry_epoch(&epoch, thread_index);
         if (pds_get_flow_epoch(p0) == epoch) {
             // this is duplicate packet, drop
             *next = FLOW_PROG_NEXT_DROP;
@@ -542,7 +544,8 @@ pds_l2l_def_rflow_prog_internal (vlib_buffer_t *p0,
         pds_flow_hw_ctx_lock(session);
         ret = ftlv4_get_with_handle(table4,
                                     session->iflow.table_id,
-                                    session->iflow.primary);
+                                    session->iflow.primary,
+                                    thread_index);
         pds_flow_hw_ctx_unlock(session);
         if (PREDICT_FALSE(ret != 0)) {
             *next = FLOW_PROG_NEXT_DROP;
@@ -550,8 +553,9 @@ pds_l2l_def_rflow_prog_internal (vlib_buffer_t *p0,
             goto del;
         }
 
-        ftlv4_set_last_read_entry_miss_hit(miss_hit);
-        if (PREDICT_FALSE(ftlv4_update_cached_entry(table4) != 0)) {
+        ftlv4_set_last_read_entry_miss_hit(miss_hit, thread_index);
+        if (PREDICT_FALSE(ftlv4_update_cached_entry(table4, 
+                                                    thread_index) != 0)) {
             *next = FLOW_PROG_NEXT_DROP;
             counter[FLOW_PROG_COUNTER_FLOW_FAILED]++;
             goto del;
@@ -573,17 +577,18 @@ always_inline void
 pds_l2l_def_iflow_prog_internal (vlib_buffer_t *p0,
                                  u32 session_id,
                                  u8 is_ip4, u8 is_l2,
-                                 u16 *next, u32 *counter)
+                                 u16 *next, u32 *counter,
+                                 u16 thread_index)
 {
     u8                  miss_hit = 1;
     pds_flow_hw_ctx_t   *session = pds_flow_get_hw_ctx(session_id);
     u8                  epoch;
     int                 ret;
-    u16                 nh_id;
-    u8                  nh_type,
-                        nh_valid,
-                        nh_priority,
-                        drop;
+    u16                 nh_id = 0;
+    u8                  nh_type = 0;
+    u8                  nh_valid = 0;
+    u8                  nh_priority = 0;
+    u8                  drop = 0;
 
     if (!session) {
         *next = FLOW_PROG_NEXT_DROP;
@@ -597,7 +602,8 @@ pds_l2l_def_iflow_prog_internal (vlib_buffer_t *p0,
         pds_flow_hw_ctx_lock(session);
         ret = ftlv4_get_with_handle(table4,
                                     session->iflow.table_id,
-                                    session->iflow.primary);
+                                    session->iflow.primary,
+                                    thread_index);
         pds_flow_hw_ctx_unlock(session);
         if (PREDICT_FALSE(ret != 0)) {
             *next = FLOW_PROG_NEXT_DROP;
@@ -606,15 +612,17 @@ pds_l2l_def_iflow_prog_internal (vlib_buffer_t *p0,
         }
 
         epoch = pds_get_flow_epoch(p0);
-        ftlv4_set_last_read_entry_miss_hit(miss_hit);
-        ftlv4_set_last_read_entry_epoch(epoch);
+        ftlv4_set_last_read_entry_miss_hit(miss_hit, thread_index);
+        ftlv4_set_last_read_entry_epoch(epoch, thread_index);
         pds_l2l_flow_extract_nexthop_info(p0, &nh_id, &nh_type,
                                           &nh_valid, &nh_priority,
                                           &drop);
         ftlv4_set_last_read_entry_nexthop(nh_id, nh_type,
-                                          nh_valid, nh_priority);
+                                          nh_valid, nh_priority,
+                                          thread_index);
 
-        if (PREDICT_FALSE(ftlv4_update_cached_entry(table4) != 0)) {
+        if (PREDICT_FALSE(ftlv4_update_cached_entry(table4, 
+                                                    thread_index) != 0)) {
             *next = FLOW_PROG_NEXT_DROP;
             counter[FLOW_PROG_COUNTER_FLOW_FAILED]++;
             goto del;
@@ -656,20 +664,20 @@ pds_l2l_def_flow_prog (vlib_main_t *vm,
             if (!pds_is_rflow(b0)) {
                 pds_l2l_def_iflow_prog_internal(b0, session_id0, is_ip4, 0,
                                                 PDS_PACKET_NEXT_NODE_PTR(0),
-                                                counter);
+                                                counter, node->thread_index);
             } else {
                 pds_l2l_def_rflow_prog_internal(b0, session_id0, is_ip4, 0,
                                                 PDS_PACKET_NEXT_NODE_PTR(0),
-                                                counter);
+                                                counter, node->thread_index);
             }
             if (!pds_is_rflow(b1)) {
                 pds_l2l_def_iflow_prog_internal(b1, session_id1, is_ip4, 0,
                                                 PDS_PACKET_NEXT_NODE_PTR(1),
-                                                counter);
+                                                counter, node->thread_index);
             } else {
                 pds_l2l_def_rflow_prog_internal(b1, session_id1, is_ip4, 0,
                                                 PDS_PACKET_NEXT_NODE_PTR(1),
-                                                counter);
+                                                counter, node->thread_index);
             }
             offset0 = pds_l2l_def_flow_prog_get_next_offset(b0);
             offset1 = pds_l2l_def_flow_prog_get_next_offset(b1);
@@ -688,11 +696,11 @@ pds_l2l_def_flow_prog (vlib_main_t *vm,
             if (!pds_is_rflow(b0)) {
                 pds_l2l_def_iflow_prog_internal(b0, session_id0, is_ip4, 0,
                                                 PDS_PACKET_NEXT_NODE_PTR(0),
-                                                counter);
+                                                counter, node->thread_index);
             } else {
                 pds_l2l_def_rflow_prog_internal(b0, session_id0, is_ip4, 0,
                                                 PDS_PACKET_NEXT_NODE_PTR(0),
-                                                counter);
+                                                counter, node->thread_index);
             }
             offset0 = pds_l2l_def_flow_prog_get_next_offset(b0);
             vlib_buffer_advance(b0, offset0);
@@ -753,7 +761,8 @@ always_inline void
 pds_l2l_rx_flow_prog_internal (vlib_buffer_t *p0,
                             u32 session_id,
                             u8 is_ip4, u8 is_l2,
-                            u16 *next, u32 *counter)
+                            u16 *next, u32 *counter,
+                            u16 thread_index)
 {
     u8                  miss_hit;
     pds_flow_hw_ctx_t   *session = pds_flow_get_hw_ctx(session_id);
@@ -776,7 +785,8 @@ pds_l2l_rx_flow_prog_internal (vlib_buffer_t *p0,
 
         if (PREDICT_FALSE(ftlv4_get_with_handle(table4,
                                                 session->iflow.table_id,
-                                                session->iflow.primary) != 0)) {
+                                                session->iflow.primary,
+                                                thread_index) != 0)) {
             *next = FLOW_PROG_NEXT_DROP;
             counter[FLOW_PROG_COUNTER_FLOW_FAILED]++;
             goto del;
@@ -784,8 +794,9 @@ pds_l2l_rx_flow_prog_internal (vlib_buffer_t *p0,
 
         epoch = pds_get_flow_epoch(p0);
         miss_hit = 0;
-        ftlv4_set_last_read_entry_miss_hit(miss_hit);
-        if (PREDICT_FALSE(ftlv4_update_cached_entry(table4) != 0)) {
+        ftlv4_set_last_read_entry_miss_hit(miss_hit, thread_index);
+        if (PREDICT_FALSE(ftlv4_update_cached_entry(table4, 
+                                                    thread_index) != 0)) {
             *next = FLOW_PROG_NEXT_DROP;
             counter[FLOW_PROG_COUNTER_FLOW_FAILED]++;
             goto del;
@@ -793,15 +804,17 @@ pds_l2l_rx_flow_prog_internal (vlib_buffer_t *p0,
 
         if (PREDICT_FALSE(ftlv4_get_with_handle(table4,
                                                 session->rflow.table_id,
-                                                session->rflow.primary) != 0)) {
+                                                session->rflow.primary,
+                                                thread_index) != 0)) {
             *next = FLOW_PROG_NEXT_DROP;
             counter[FLOW_PROG_COUNTER_FLOW_FAILED]++;
             goto del;
         }
 
-        ftlv4_set_last_read_entry_epoch(epoch);
-        ftlv4_set_last_read_entry_miss_hit(miss_hit);
-        if (PREDICT_FALSE(ftlv4_update_cached_entry(table4) != 0)) {
+        ftlv4_set_last_read_entry_epoch(epoch, thread_index);
+        ftlv4_set_last_read_entry_miss_hit(miss_hit, thread_index);
+        if (PREDICT_FALSE(ftlv4_update_cached_entry(table4, 
+                                                    thread_index) != 0)) {
             *next = FLOW_PROG_NEXT_DROP;
             counter[FLOW_PROG_COUNTER_FLOW_FAILED]++;
             goto del;
@@ -828,7 +841,7 @@ pds_l2l_rx_flow_prog (vlib_main_t *vm,
     pds_flow_main_t *fm = &pds_flow_main;
 
     if (is_ip4) {
-        ftlv4_cache_batch_init();
+        ftlv4_cache_batch_init(node->thread_index);
     } else {
         ftlv6_cache_batch_init();
     }
@@ -845,10 +858,10 @@ pds_l2l_rx_flow_prog (vlib_main_t *vm,
             session_id1 = vnet_buffer(b1)->pds_flow_data.ses_id;
             pds_l2l_rx_flow_prog_internal(b0, session_id0, is_ip4, 0,
                                           PDS_PACKET_NEXT_NODE_PTR(0),
-                                          counter);
+                                          counter, vm->thread_index);
             pds_l2l_rx_flow_prog_internal(b1, session_id1, is_ip4, 0,
                                           PDS_PACKET_NEXT_NODE_PTR(1),
-                                          counter);
+                                          counter, vm->thread_index);
             offset0 = pds_l2l_rx_flow_prog_get_next_offset(b0);
             offset1 = pds_l2l_rx_flow_prog_get_next_offset(b1);
             vlib_buffer_advance(b0, offset0);
@@ -865,7 +878,7 @@ pds_l2l_rx_flow_prog (vlib_main_t *vm,
             session_id0 = vnet_buffer(b0)->pds_flow_data.ses_id;
             pds_l2l_rx_flow_prog_internal(b0, session_id0, is_ip4, 0,
                                           PDS_PACKET_NEXT_NODE_PTR(0),
-                                          counter);
+                                          counter, vm->thread_index);
             offset0 = pds_l2l_rx_flow_prog_get_next_offset(b0);
             vlib_buffer_advance(b0, offset0);
         } PDS_PACKET_SINGLE_LOOP_END;
@@ -920,7 +933,8 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
                                u32 session_id,
                                u8 is_ip4, u8 is_l2,
                                u8 flow_exists,
-                               u8 ses_valid)
+                               u8 ses_valid,
+                               u16 thread_index)
 {
     tcp_header_t        *tcp0 = NULL;
     icmp46_header_t     *icmp0;
@@ -932,7 +946,7 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
 
     vnet_buffer(p0)->pds_flow_data.ses_id = session_id;
     if (PREDICT_FALSE(!ses_valid)) {
-        ftlv4_cache_advance_count(2);
+        ftlv4_cache_advance_count(2, thread_index);
         return;
     }
 
@@ -956,9 +970,11 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
         if (PREDICT_TRUE(((ip40->protocol == IP_PROTOCOL_TCP) ||
                           (ip40->protocol == IP_PROTOCOL_UDP)))) {
             if (ip40->protocol == IP_PROTOCOL_TCP) {
-                ftlv4_cache_set_counter_index(FLOW_TYPE_COUNTER_TCPV4);
+                ftlv4_cache_set_counter_index(FLOW_TYPE_COUNTER_TCPV4, 
+                                              thread_index);
             } else {
-                ftlv4_cache_set_counter_index(FLOW_TYPE_COUNTER_UDPV4);
+                ftlv4_cache_set_counter_index(FLOW_TYPE_COUNTER_UDPV4, 
+                                              thread_index);
             }
             tcp0 = (tcp_header_t *)(((u8 *) ip40) +
                    (vnet_buffer(p0)->l4_hdr_offset - vnet_buffer(p0)->l3_hdr_offset));
@@ -979,27 +995,29 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
             } else {
                 r_dport = dport;
             }
-            ftlv4_cache_set_counter_index(FLOW_TYPE_COUNTER_ICMPV4);
+            ftlv4_cache_set_counter_index(FLOW_TYPE_COUNTER_ICMPV4, 
+                                          thread_index);
         } else {
             sport = dport = r_sport = r_dport = 0;
-            ftlv4_cache_set_counter_index(FLOW_TYPE_COUNTER_OTHERV4);
+            ftlv4_cache_set_counter_index(FLOW_TYPE_COUNTER_OTHERV4, 
+                                          thread_index);
         }
         ftlv4_cache_set_key(src_ip, dst_ip,
-                            protocol, sport, dport, lkp_id);
-        ftlv4_cache_set_session_index(session_id);
-        ftlv4_cache_set_flow_role(TCP_FLOW_INITIATOR);
-        ftlv4_cache_set_epoch(pds_get_flow_epoch(p0));
+                            protocol, sport, dport, lkp_id, thread_index);
+        ftlv4_cache_set_session_index(session_id, thread_index);
+        ftlv4_cache_set_flow_role(TCP_FLOW_INITIATOR, thread_index);
+        ftlv4_cache_set_epoch(pds_get_flow_epoch(p0), thread_index);
         if (PREDICT_FALSE(pds_is_flow_l2l(p0))) {
             pds_flow_handle_l2l(p0, flow_exists, &miss_hit, ses);
             l2l = 1;
         }
-        ftlv4_cache_set_l2l(l2l);
-        ftlv4_cache_set_flow_miss_hit(miss_hit);
-        ftlv4_cache_set_update_flag(flow_exists);
-        pds_flow_extract_nexthop_info(p0, 1, 1);
+        ftlv4_cache_set_l2l(l2l, thread_index);
+        ftlv4_cache_set_flow_miss_hit(miss_hit, thread_index);
+        ftlv4_cache_set_update_flag(flow_exists, thread_index);
+        pds_flow_extract_nexthop_info(p0, 1, 1, thread_index);
         ftlv4_cache_set_hash_log(vnet_buffer(p0)->pds_flow_data.flow_hash,
-                                 pds_get_flow_log_en(p0));
-        ftlv4_cache_set_host_origin(pds_is_rx_pkt(p0));
+                                 pds_get_flow_log_en(p0), thread_index);
+        ftlv4_cache_set_host_origin(pds_is_rx_pkt(p0), thread_index);
 
         if (pds_is_flow_napt_en(p0)) {
             // NAPT - both port and ip are changed
@@ -1022,20 +1040,20 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
             r_src_ip = vnet_buffer2(p0)->pds_nat_data.xlate_addr2;
         }
         lkp_id = vnet_buffer(p0)->pds_flow_data.egress_lkp_id;
-        ftlv4_cache_set_napt_flag(napt);
-        ftlv4_cache_advance_count(1);
+        ftlv4_cache_set_napt_flag(napt, thread_index);
+        ftlv4_cache_advance_count(1, thread_index);
         ftlv4_cache_set_key(r_src_ip, r_dst_ip,
-                            protocol, r_sport, r_dport, lkp_id);
-        ftlv4_cache_set_session_index(session_id);
-        ftlv4_cache_set_flow_role(TCP_FLOW_RESPONDER);
-        ftlv4_cache_set_epoch(pds_get_flow_epoch(p0));
-        ftlv4_cache_set_l2l(l2l);
-        ftlv4_cache_set_flow_miss_hit(miss_hit);
-        ftlv4_cache_set_update_flag(flow_exists);
-        pds_flow_extract_nexthop_info(p0, 1, 0);
-        ftlv4_cache_set_hash_log(0, pds_get_flow_log_en(p0));
-        ftlv4_cache_set_napt_flag(napt);
-        ftlv4_cache_advance_count(1);
+                            protocol, r_sport, r_dport, lkp_id, thread_index);
+        ftlv4_cache_set_session_index(session_id, thread_index);
+        ftlv4_cache_set_flow_role(TCP_FLOW_RESPONDER, thread_index);
+        ftlv4_cache_set_epoch(pds_get_flow_epoch(p0), thread_index);
+        ftlv4_cache_set_l2l(l2l, thread_index);
+        ftlv4_cache_set_flow_miss_hit(miss_hit, thread_index);
+        ftlv4_cache_set_update_flag(flow_exists, thread_index);
+        pds_flow_extract_nexthop_info(p0, 1, 0, thread_index);
+        ftlv4_cache_set_hash_log(0, pds_get_flow_log_en(p0), thread_index);
+        ftlv4_cache_set_napt_flag(napt, thread_index);
+        ftlv4_cache_advance_count(1, thread_index);
 
         if (fm->con_track_en && tcp0) {
             vnet_buffer(p0)->pds_flow_data.tcp_seq_no = clib_net_to_host_u32(tcp0->seq_number);
@@ -1111,7 +1129,7 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
                 ftlv6_cache_set_counter_index(FLOW_TYPE_COUNTER_OTHERV6);
             }
             ftlv6_cache_set_key(src, dst, protocol, sport, dport, lkp_id);
-            pds_flow_extract_nexthop_info(p0, 0, 1);
+            pds_flow_extract_nexthop_info(p0, 0, 1, thread_index);
         }
         ftlv6_cache_set_session_index(session_id);
         ftlv6_cache_set_flow_role(TCP_FLOW_INITIATOR);
@@ -1131,7 +1149,7 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
             ftll2_cache_set_key(dst, src, ether_type, lkp_id);
         } else {
             ftlv6_cache_set_key(dst, src, protocol, r_sport, r_dport, lkp_id);
-            pds_flow_extract_nexthop_info(p0, 0, 0);
+            pds_flow_extract_nexthop_info(p0, 0, 0, thread_index);
         }
         ftlv6_cache_set_session_index(session_id);
         ftlv6_cache_set_flow_role(TCP_FLOW_RESPONDER);
@@ -1146,9 +1164,10 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
 }
 
 always_inline void
-pds_flow_program_hw_ip4 (vlib_buffer_t **b, u16 *next, u32 *counter)
+pds_flow_program_hw_ip4 (vlib_buffer_t **b, u16 *next, 
+                         u32 *counter, u16 thread_index)
 {
-    int i, ret, size = ftlv4_cache_get_count();
+    int i, ret, size = ftlv4_cache_get_count(thread_index);
     u32 i_pindex, i_sindex, r_pindex, r_sindex;
     ftlv4 *table = pds_flow_prog_get_table4();
     vlib_buffer_t *p0;
@@ -1164,11 +1183,13 @@ pds_flow_program_hw_ip4 (vlib_buffer_t **b, u16 *next, u32 *counter)
             goto err;
         }
 
-        ret = ftlv4_cache_program_index(table, i, &i_pindex, &i_sindex);
+        ret = ftlv4_cache_program_index(table, i, &i_pindex, 
+                                        &i_sindex, thread_index);
         if (PREDICT_FALSE(ret != 0)) {
             goto err_iflow;
         }
-        ret = ftlv4_cache_program_index(table, i+1, &r_pindex, &r_sindex);
+        ret = ftlv4_cache_program_index(table, i+1, &r_pindex, 
+                                        &r_sindex, thread_index);
         if (PREDICT_FALSE(ret != 0)) {
             if (pds_is_flow_session_present(p0)) {
                 // no need to delete flow as delete session will take care
@@ -1176,24 +1197,25 @@ pds_flow_program_hw_ip4 (vlib_buffer_t **b, u16 *next, u32 *counter)
             }
             goto err_rflow;
         }
-        ses_ctr[ftlv4_cache_get_counter_index(i)]++;
+        ses_ctr[ftlv4_cache_get_counter_index(i, thread_index)]++;
         pds_session_set_data(session_id, i_pindex,
                              i_sindex, r_pindex,
                              r_sindex,
-                             pds_flow_trans_proto(ftlv4_cache_get_proto(i)),
+                             pds_flow_trans_proto(ftlv4_cache_get_proto(i, 
+                                                                thread_index)),
                              vnet_buffer2(p0)->pds_nat_data.vnic_id,
                              true, pds_is_rx_pkt(p0),
                              vnet_buffer(p0)->pds_flow_data.packet_type,
                              pds_is_flow_drop(p0));
         counter[FLOW_PROG_COUNTER_FLOW_SUCCESS]++;
         next[i/2] = pds_flow_prog_get_next_node();
-        ftlv4_cache_log_session(i, i+1, FLOW_EXPORT_REASON_ADD);
+        ftlv4_cache_log_session(i, i+1, FLOW_EXPORT_REASON_ADD, thread_index);
         continue;
 
     err_rflow:
         // Remove last entry as local flow succeeded
         // but remote entry failed
-        ret = ftlv4_cache_delete_index(table, i);
+        ret = ftlv4_cache_delete_index(table, i, thread_index);
         if (PREDICT_FALSE(0 != ret)) {
             counter[FLOW_PROG_COUNTER_FLOW_DELETE_FAILED]++;
         }
@@ -1208,7 +1230,7 @@ pds_flow_program_hw_ip4 (vlib_buffer_t **b, u16 *next, u32 *counter)
             }
         }
     err:
-        if (ftlv4_cache_get_napt_flag(i)) {
+        if (ftlv4_cache_get_napt_flag(i, thread_index)) {
             int offset0 = pds_flow_prog_get_nat_drop_next_offset(p0);
             vlib_buffer_advance(p0, offset0);
             next[i/2] = FLOW_PROG_NEXT_NAT_DROP;
@@ -1257,7 +1279,7 @@ pds_flow_program_hw_ip6_or_l2 (vlib_buffer_t **b, u16 *next, u32 *counter)
             }
             goto err_rflow;
         }
-        ses_ctr[ftlv4_cache_get_counter_index(i)]++;
+        ses_ctr[ftlv6_cache_get_counter_index(i)]++;
         p0 = b[i/2];
         pds_session_set_data(session_id, i_pindex,
                              i_sindex, r_pindex,
@@ -1311,7 +1333,7 @@ pds_flow_prog (vlib_main_t *vm,
     pds_flow_main_t *fm = &pds_flow_main;
 
     if (is_ip4) {
-        ftlv4_cache_batch_init();
+        ftlv4_cache_batch_init(node->thread_index);
     } else {
         ftlv6_cache_batch_init();
     }
@@ -1341,7 +1363,8 @@ pds_flow_prog (vlib_main_t *vm,
                 }
             }
             pds_flow_extract_prog_args_x1(b0, session_id0, is_ip4, is_l2,
-                                          flow_exists0, ses_valid0);
+                                          flow_exists0, ses_valid0, 
+                                          node->thread_index);
             if (0 == session_id1) {
                 session_id1 = pds_session_id_alloc();
                 flow_exists1 = 0;
@@ -1355,7 +1378,8 @@ pds_flow_prog (vlib_main_t *vm,
                 }
             }
             pds_flow_extract_prog_args_x1(b1, session_id1, is_ip4, is_l2,
-                                          flow_exists1, ses_valid1);
+                                          flow_exists1, ses_valid1, 
+                                          node->thread_index);
             offset0 = pds_flow_prog_get_next_offset(b0, is_l2);
             offset1 = pds_flow_prog_get_next_offset(b1, is_l2);
             vlib_buffer_advance(b0, offset0);
@@ -1384,7 +1408,8 @@ pds_flow_prog (vlib_main_t *vm,
                 }
             }
             pds_flow_extract_prog_args_x1(b0, session_id0, is_ip4, is_l2,
-                                          flow_exists0, ses_valid0);
+                                          flow_exists0, ses_valid0, 
+                                          node->thread_index);
             offset0 = pds_flow_prog_get_next_offset(b0, is_l2);
             vlib_buffer_advance(b0, offset0);
         } PDS_PACKET_SINGLE_LOOP_END;
@@ -1392,7 +1417,7 @@ pds_flow_prog (vlib_main_t *vm,
 
     if (is_ip4) {
         pds_flow_program_hw_ip4(PDS_PACKET_BUFFER_ARR, PDS_PACKET_NEXT_NODE_ARR,
-                                counter);
+                                counter, node->thread_index);
     } else {
         pds_flow_program_hw_ip6_or_l2(PDS_PACKET_BUFFER_ARR,
                                       PDS_PACKET_NEXT_NODE_ARR, counter);

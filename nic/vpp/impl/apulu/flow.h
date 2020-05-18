@@ -113,7 +113,6 @@ pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
         next[0] = SESSION_PROG_NEXT_DROP;
         return;
     }
-    //clib_memset(&actiondata, 0, sizeof(actiondata));
     if (pds_is_flow_napt_en(b)) {
         actiondata.tx_xlate_id =
             vnet_buffer2(b)->pds_nat_data.xlate_idx;
@@ -467,8 +466,9 @@ pds_l2l_flow_extract_nexthop_info (vlib_buffer_t *p0,
 }
 
 always_inline void
-pds_flow_extract_nexthop_info (vlib_buffer_t *p0,
-                               u8 is_ip4, u8 iflow)
+pds_flow_extract_nexthop_info(vlib_buffer_t *p0,
+                              u8 is_ip4, u8 iflow,
+                              u16 thread_index)
 {
     u32 nexthop = 0;
     pds_impl_db_vnic_entry_t *vnic0;
@@ -479,7 +479,7 @@ pds_flow_extract_nexthop_info (vlib_buffer_t *p0,
         nexthop = vnet_buffer(p0)->pds_flow_data.nexthop;
         if (is_ip4) {
             ftlv4_cache_set_nexthop(fm->drop_nexthop, NEXTHOP_TYPE_NEXTHOP, 1,
-                                    PDS_FLOW_NH_PRIO_GET(nexthop));
+                                    PDS_FLOW_NH_PRIO_GET(nexthop), thread_index);
         } else {
             ftlv6_cache_set_nexthop(fm->drop_nexthop, NEXTHOP_TYPE_NEXTHOP, 1,
                                     PDS_FLOW_NH_PRIO_GET(nexthop));
@@ -516,9 +516,10 @@ pds_flow_extract_nexthop_info (vlib_buffer_t *p0,
         if (PDS_FLOW_NH_ID_GET(nexthop)) {
             ftlv4_cache_set_nexthop(PDS_FLOW_NH_ID_GET(nexthop),
                                     PDS_FLOW_NH_TYPE_GET(nexthop),
-                                    1, PDS_FLOW_NH_PRIO_GET(nexthop));
+                                    1, PDS_FLOW_NH_PRIO_GET(nexthop),
+                                    thread_index);
         } else {
-            ftlv4_cache_set_nexthop(0, 0, 0, 0);
+            ftlv4_cache_set_nexthop(0, 0, 0, 0, thread_index);
         }
     } else {
         if (nexthop & 0xffff) {

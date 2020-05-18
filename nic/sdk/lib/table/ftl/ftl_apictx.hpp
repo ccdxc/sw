@@ -8,6 +8,7 @@
 #include "include/sdk/base_table_entry.hpp"
 
 #define FTL_MAX_API_CONTEXTS 8
+#define FTL_MAX_THREADS      8 
 
 namespace sdk {
 namespace table {

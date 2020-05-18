@@ -82,22 +82,19 @@ pds_session_get_xlate_ids (uint32_t session_id, uint16_t *rx_xlate_id,
                            uint16_t *rx_xlate_id2,
                            uint16_t *tx_xlate_id2)
 {
-    p4pd_error_t p4pd_ret;
-    session_swkey_t key;
-    session_actiondata_t ses_data;
+    session_info_entry_t session_info_entry;
+    sdk_ret_t retval = SDK_RET_OK;
 
-    key.p4e_i2e_session_id = session_id;
-    p4pd_ret = p4pd_global_entry_read(P4TBL_ID_SESSION, key.p4e_i2e_session_id,
-                                      NULL, NULL, &ses_data);
-    assert(p4pd_ret == P4PD_SUCCESS);
-    if (p4pd_ret != P4PD_SUCCESS) {
+    retval = session_info_entry.read(session_id);
+    
+    if (retval != SDK_RET_OK) {
         return false;
     }
 
-    *rx_xlate_id = ses_data.action_u.session_session_info.rx_xlate_id;
-    *tx_xlate_id = ses_data.action_u.session_session_info.tx_xlate_id;
-    *rx_xlate_id2 = ses_data.action_u.session_session_info.rx_xlate_id2;
-    *tx_xlate_id2 = ses_data.action_u.session_session_info.tx_xlate_id2;
+    *rx_xlate_id = session_info_entry.get_rx_xlate_id();
+    *tx_xlate_id = session_info_entry.get_tx_xlate_id();
+    *rx_xlate_id2 = session_info_entry.get_rx_xlate_id2();
+    *tx_xlate_id2 = session_info_entry.get_tx_xlate_id2();
 
     return true;
 }
@@ -162,7 +159,8 @@ pds_session_track_get_info (uint32_t session_id, session_track_info_t *info)
     session_track_actiondata_t ses_data;
 
     key.p4e_i2e_session_id = session_id;
-    p4pd_ret = p4pd_global_entry_read(P4TBL_ID_SESSION_TRACK, key.p4e_i2e_session_id,
+    p4pd_ret = p4pd_global_entry_read(P4TBL_ID_SESSION_TRACK, 
+                                      key.p4e_i2e_session_id,
                                       NULL, NULL, &ses_data);
     assert(p4pd_ret == P4PD_SUCCESS);
 

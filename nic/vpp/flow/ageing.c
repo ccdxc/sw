@@ -473,7 +473,8 @@ pds_flow_age_setup (vlib_main_t *vm,
                 counter[FLOW_AGE_SETUP_COUNTER_SYN]++;
             } else if (tcp_flags0 & TCP_FLAG_FIN) {
                 rflow0 = pds_is_rflow(b0);
-                pds_flow_age_setup_fin_x1(session_id0, node->thread_index, rflow0);
+                pds_flow_age_setup_fin_x1(session_id0, 
+                                          node->thread_index, rflow0);
                 counter[FLOW_AGE_SETUP_COUNTER_FIN]++;
             } else if (PREDICT_FALSE(tcp_flags0 & TCP_FLAG_RST)) {
                 pds_flow_age_setup_rst_x1(session_id0, node->thread_index);
@@ -626,33 +627,37 @@ pds_flow_delete_session (u32 ses_id)
                                      session->iflow_rx);
         }
         session = pds_flow_get_hw_ctx_lock(ses_id);
-        if (PREDICT_FALSE(ftlv4_get_with_handle(table4, session->iflow.table_id,
-                                                session->iflow.primary) != 0)) {
+        if (PREDICT_FALSE(ftlv4_get_with_handle(table4, 
+                                                session->iflow.table_id,
+                                                session->iflow.primary, 
+                                                thread) != 0)) {
             goto end;
         }
         pds_flow_hw_ctx_unlock(session);
         if (PREDICT_FALSE(session->nat)) {
-            ftlv4_update_iflow_nat_session(table4);
+            ftlv4_update_iflow_nat_session(table4, thread);
         }
-        if (PREDICT_FALSE(ftlv4_remove_cached_entry(table4)) != 0) {
+        if (PREDICT_FALSE(ftlv4_remove_cached_entry(table4, thread)) != 0) {
             return;
         }
 
         session = pds_flow_get_hw_ctx_lock(ses_id);
-        if (PREDICT_FALSE(ftlv4_get_with_handle(table4, session->rflow.table_id,
-                                                session->rflow.primary) != 0)) {
+        if (PREDICT_FALSE(ftlv4_get_with_handle(table4, 
+                                                session->rflow.table_id,
+                                                session->rflow.primary, 
+                                                thread) != 0)) {
             goto end;
         }
         pds_flow_hw_ctx_unlock(session);
         if (PREDICT_FALSE(session->nat)) {
-            ftlv4_update_rflow_nat_session(table4);
+            ftlv4_update_rflow_nat_session(table4, thread);
         }
-        if (PREDICT_FALSE(ftlv4_remove_cached_entry(table4)) != 0) {
+        if (PREDICT_FALSE(ftlv4_remove_cached_entry(table4, thread)) != 0) {
             return;
         }
         if (PREDICT_FALSE(session->nat)) {
             u32 vpc_id = pds_vnic_vpc_id_get(session->vnic_id);
-            ftlv4_remove_nat_session(vpc_id, table4);
+            ftlv4_remove_nat_session(vpc_id, table4, thread);
         }
     } else {
         ftl *table = (ftl *)pds_flow_get_table6_or_l2();
@@ -735,11 +740,12 @@ pds_flow_send_keep_alive_helper (pds_flow_hw_ctx_t *session,
     if (session->v4) {
         ftlv4 *table4 = pds_flow_prog_get_table4();
         if (ftlv4_get_with_handle(table4, flow_index.table_id,
-                                  flow_index.primary) != 0) {
+                                  flow_index.primary, vm->thread_index) != 0) {
             return -1;
         }
 
-        ftlv4_get_last_read_session_info(&sip, &dip, &sport, &dport, &lkp_id);
+        ftlv4_get_last_read_session_info(&sip, &dip, &sport, &dport, 
+                                         &lkp_id, vm->thread_index);
         // Fill in IP and TCP header details
         h->ip4_hdr.src_address.as_u32 = clib_host_to_net_u32(sip);
         h->ip4_hdr.dst_address.as_u32 = clib_host_to_net_u32(dip);
