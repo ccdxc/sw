@@ -1610,7 +1610,7 @@ port::port_disable(void)
         port_event_notify(port_event_t::PORT_EVENT_LINK_DOWN);
     }
 
-    return SDK_RET_OK;;
+    return SDK_RET_OK;
 }
 
 sdk_ret_t

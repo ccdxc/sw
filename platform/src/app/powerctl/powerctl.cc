@@ -4,7 +4,13 @@
 
 #include <iostream>
 #include <string>
+#ifdef ELBA
+#include "third-party/asic/elba/verif/apis/elb_platform_api.h"
+#define SET_MARGIN_BY_VALUE elb_set_margin_by_value
+#else
 #include "third-party/asic/capri/verif/apis/cap_platform_api.h"
+#define SET_MARGIN_BY_VALUE cap_set_margin_by_value
+#endif
 #include "nic/sdk/lib/catalog/catalog.hpp"
 #include "nic/sdk/platform/sensor/sensor.hpp"
 
@@ -53,7 +59,7 @@ main(int argc, char *argv[])
                     // Already at the desired voltage.
                     printf("%dmV observed. No change required.\n", voltage.vout1);
                 } else {
-                    cap_set_margin_by_value("vdd", startup_vdd);
+                    SET_MARGIN_BY_VALUE("vdd", startup_vdd);
                     printf("%dmV observed. Changing to %dmV.\n", voltage.vout1, startup_vdd);
                 }
             }

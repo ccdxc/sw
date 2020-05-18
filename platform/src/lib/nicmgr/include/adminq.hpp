@@ -10,10 +10,6 @@
 #include "nic/include/adminq.h"
 #include "nic/sdk/platform/evutils/include/evutils.h"
 
-#include "cap_top_csr_defines.h"
-#include "cap_pics_c_hdr.h"
-#include "cap_wa_c_hdr.h"
-
 #include "pd_client.hpp"
 #include "pal_compat.hpp"
 #include "nicmgr_utils.hpp"

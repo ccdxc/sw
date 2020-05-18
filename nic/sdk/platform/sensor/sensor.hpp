@@ -12,8 +12,12 @@
 #include <errno.h>
 #include "include/sdk/base.hpp"
 #include "platform/drivers/xcvr_qsfp.hpp"
+#ifdef ELBA
+using namespace std;
+#else
 #include "third-party/asic/capri/verif/apis/cap_nwl_sbus_api.h"
 #include "third-party/asic/capri/verif/apis/cap_sbus_api.h"
+#endif
 
 namespace sdk {
 namespace platform {

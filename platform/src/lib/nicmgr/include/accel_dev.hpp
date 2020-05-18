@@ -26,6 +26,7 @@
 #include "elb_wa_csr_define.h"
 #include "elb_ms_csr_define.h"
 #include "elb_soc_c_hdr.h"
+
 /* TBD-ELBA-REBASE: use capri for DOL bring-up */
 #include "capri_cpdc.hpp"
 #include "nic/sdk/platform/capri/capri_barco_crypto.hpp"

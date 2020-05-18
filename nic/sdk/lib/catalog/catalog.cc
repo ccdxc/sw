@@ -420,7 +420,7 @@ catalog::populate_clock_info (ptree &prop_tree)
 {
     uint8_t  num_freq = 0;
 
-    catalog_db_.num_clock_info = prop_tree.get<uint32_t>("num_clock_info", 0); 
+    catalog_db_.num_clock_info = prop_tree.get<uint32_t>("num_clock_info", 0);
     for (ptree::value_type &clock_info : prop_tree.get_child("clock_info")) {
          if (num_freq < MAX_CLOCK_FREQ) {
              catalog_db_.clock_info[num_freq].clock_freq = clock_info.second.get<uint16_t>("freq", 0);
@@ -777,7 +777,8 @@ catalog::factory(std::string catalog_file_path, std::string catalog_file_name,
 
     if (catalog_file_name.empty()) {
 
-        if (platform == platform_type_t::PLATFORM_TYPE_HW) {
+        if ((platform == platform_type_t::PLATFORM_TYPE_HW) ||
+            (platform == platform_type_t::PLATFORM_TYPE_HAPS)) {
             std::string part_num(32, '\0');
             std::string part_id;
 
