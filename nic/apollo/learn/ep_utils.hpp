@@ -42,6 +42,9 @@ sdk_ret_t delete_mac_entry(ep_mac_entry *mac_entry);
 /// this deletes MAC entry and all associated IP entries of the endpoint
 sdk_ret_t delete_ep(ep_mac_entry *mac_entry);
 
+/// \bried delete all VNICs and IP mappings belonging to a subnet
+sdk_ret_t delete_all_eps_in_subnet(pds_obj_key_t key);
+
 /// \brief send ARP probe for associated IP
 void send_arp_probe(ep_ip_entry *ip_entry);
 
@@ -62,6 +65,7 @@ broadcast_learn_event (event_t *event)
     sdk::ipc::broadcast(event->event_id, event, sizeof(*event));
 }
 
+/// \brief utility function to get l2 mapping key from ep key
 static inline void
 ep_mac_to_pds_mapping_key (ep_mac_key_t *ep_mac_key, pds_mapping_key_t *mkey)
 {
@@ -70,6 +74,7 @@ ep_mac_to_pds_mapping_key (ep_mac_key_t *ep_mac_key, pds_mapping_key_t *mkey)
     MAC_ADDR_COPY(mkey->mac_addr, ep_mac_key->mac_addr);
 }
 
+/// \brief utility function to get l3 mapping key from ep key
 static inline void
 ep_ip_to_pds_mapping_key (ep_ip_key_t *ep_ip_key, pds_mapping_key_t *mkey)
 {
@@ -78,8 +83,26 @@ ep_ip_to_pds_mapping_key (ep_ip_key_t *ep_ip_key, pds_mapping_key_t *mkey)
     mkey->ip_addr = ep_ip_key->ip_addr;
 }
 
+/// \brief ageout MAC entry
 sdk_ret_t mac_ageout(ep_mac_entry *mac_entry);
+
+/// \brief ageout IP entry
 sdk_ret_t ip_ageout(ep_ip_entry *ip_entry);
+
+/// \brief clear IP entry
+sdk_ret_t ep_ip_entry_clear(ep_ip_key_t *ip_key);
+
+/// \brief clear all IP entries
+sdk_ret_t ep_ip_entry_clear_all(void);
+
+/// \brief clear a MAC entry and all associated IP entries
+sdk_ret_t ep_mac_entry_clear(ep_mac_key_t *mac_key);
+
+/// \brief clear all MAC entries and their associated IP entries
+sdk_ret_t ep_mac_entry_clear_all(void);
+
+/// \brief clear all MAC and IP entries belonging to a subnet
+sdk_ret_t clear_all_eps_in_subnet(pds_obj_key_t key);
 
 }    // namespace learn
 

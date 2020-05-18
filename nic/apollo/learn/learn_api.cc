@@ -68,15 +68,6 @@ api_batch_commit (pds_batch_ctxt_t bctxt)
     return SDK_RET_OK;
 }
 
-static inline bool
-passthrough_api_batch (api::api_msg_t *api_msg)
-{
-    api_ctxt_t *api_ctxt = *(api_msg->batch.apis.begin());
-
-    SDK_ASSERT(api_ctxt);
-    return (api_ctxt->obj_id != OBJ_ID_MAPPING);
-}
-
 static sdk_ret_t
 process_passthrough_api_batch (api::api_msg_t *api_msg)
 {
@@ -140,8 +131,8 @@ process_api (api_ctxt_t *api_ctxt, pds_batch_ctxt_t bctxt,
 }
 
 #ifdef BATCH_SUPPORT
-sdk_ret_t
-process_api_batch (api::api_msg_t *api_msg)
+static sdk_ret_t
+process_mapping_api_batch (api::api_msg_t *api_msg)
 {
     sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
@@ -149,12 +140,6 @@ process_api_batch (api::api_msg_t *api_msg)
     auto apis = &api_msg->batch.apis;
     pds_batch_params_t batch_params {learn_db()->epoch_next(), false, nullptr,
                                      nullptr};
-
-    // if this is not a mapping API batch, relay it directly to API thread
-    if (passthrough_api_batch(api_msg)) {
-        PDS_TRACE_DEBUG("Rcvd passthrough API batch");
-        return process_passthrough_api_batch(api_msg);
-    }
 
     memset(&lbctxt.counters, 0, sizeof(lbctxt.counters));
     // create a new sync batch
@@ -185,18 +170,12 @@ process_api_batch (api::api_msg_t *api_msg)
 }
 #else
 // temporary workround until we resolve batching issues for mapping object
-sdk_ret_t
-process_api_batch (api::api_msg_t *api_msg)
+static sdk_ret_t
+process_mapping_api_batch (api::api_msg_t *api_msg)
 {
     sdk_ret_t ret;
     learn_batch_ctxt_t lbctxt;
     auto apis = &api_msg->batch.apis;
-
-    // if this is not a mapping API batch, relay it directly to API thread
-    if (passthrough_api_batch(api_msg)) {
-        PDS_TRACE_DEBUG("Rcvd passthrough API batch");
-        return process_passthrough_api_batch(api_msg);
-    }
 
     // process each API in the batch individually
     for (auto it = apis->begin(); it != apis->end(); ++it) {
@@ -215,5 +194,70 @@ process_api_batch (api::api_msg_t *api_msg)
     return SDK_RET_OK;
 }
 #endif
+
+static inline sdk_ret_t
+process_subnet_delete (pds_obj_key_t key)
+{
+    sdk_ret_t ret;
+
+    ret = clear_all_eps_in_subnet(key);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to clear endpoints for subnet %s, error code "
+                      "%u", key.str(), ret);
+        return ret;
+    }
+    return pds_subnet_delete(&key, PDS_BATCH_CTXT_INVALID);
+}
+
+static inline sdk_ret_t
+process_subnet_update (pds_subnet_spec_t *spec)
+{
+    sdk_ret_t ret;
+    subnet_entry  *subnet;
+
+    subnet = subnet_db()->find(&spec->key);
+    if (subnet == nullptr) {
+        PDS_TRACE_ERR("Failed to lookup subnet %s", spec->key.str());
+        return SDK_RET_ENTRY_NOT_FOUND;
+    }
+
+    // if subnet is being attached to a different host if, clear the
+    // VNICs and mappings learnt on old host if
+    if (subnet->host_if() != spec->host_if)  {
+        ret = clear_all_eps_in_subnet(spec->key);
+        if (ret != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to clear endpoints for subnet %s, error code "
+                          "%u", spec->key.str(), ret);
+            return ret;
+        }
+    }
+    return pds_subnet_update(spec, PDS_BATCH_CTXT_INVALID);
+}
+
+sdk_ret_t
+process_api_batch (api::api_msg_t *api_msg)
+{
+    api_ctxt_t *api_ctxt = *(api_msg->batch.apis.begin());
+
+    // process subnet delete/update
+    if (api_ctxt->obj_id == OBJ_ID_SUBNET) {
+        SDK_ASSERT(api_msg->batch.apis.size() == 1);
+        if (api_ctxt->api_op == API_OP_DELETE) {
+            return process_subnet_delete(api_ctxt->api_params->key);
+        }
+        if (api_ctxt->api_op == API_OP_UPDATE) {
+            return process_subnet_update(&api_ctxt->api_params->subnet_spec);
+        }
+    }
+
+    // process passthrough batch
+    if (api_ctxt->obj_id != OBJ_ID_MAPPING) {
+        PDS_TRACE_VERBOSE("Rcvd passthrough API batch");
+        return process_passthrough_api_batch(api_msg);
+    }
+
+    // process mapping batch
+    return process_mapping_api_batch(api_msg);
+}
 
 }   // namespace learn

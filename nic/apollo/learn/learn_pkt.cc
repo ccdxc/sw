@@ -494,6 +494,7 @@ process_learn_pkt (void *mbuf)
                                       nullptr};
 #endif
     bool has_learn_info = false;
+    bool drop_pkt_on_err = true;
 
     ctxt.ctxt_type = LEARN_CTXT_TYPE_PKT;
     memset(&lbctxt.counters, 0, sizeof(lbctxt.counters));
@@ -523,6 +524,12 @@ process_learn_pkt (void *mbuf)
     // all required info is gathered, validate the learn
     ret = validate_learn(&ctxt);
     if (unlikely(ret != SDK_RET_OK)) {
+        // if this is a DHCP packet, reinject it instead of dropping
+        if (ctxt.pkt_ctxt.impl_info.pkt_type == PKT_TYPE_DHCP) {
+            if (reinject_pkt_to_p4(mbuf, &ctxt) == SDK_RET_OK) {
+                drop_pkt_on_err = false;
+            }
+        }
         goto error;
     }
 
@@ -585,9 +592,10 @@ error:
         update_batch_counters(&lbctxt, false);
         LEARN_COUNTER_INCR(rx_pkt_type[ctxt.pkt_ctxt.pkt_type]);
     }
-
+    if (drop_pkt_on_err) {
+        learn_lif_drop_pkt(mbuf, ctxt.pkt_ctxt.pkt_drop_reason);
+    }
     // clean up any allocated resources
-    learn_lif_drop_pkt(mbuf, ctxt.pkt_ctxt.pkt_drop_reason);
     ctxt.reset();
 }
 

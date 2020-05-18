@@ -26,6 +26,11 @@ namespace event = sdk::event_thread;
 
 namespace learn {
 
+typedef struct ep_mac_clear_args_s {
+    pds_obj_key_t subnet;
+    sdk_ret_t retcode;
+} ep_mac_clear_args_t;
+
 sdk_ret_t
 delete_local_ip_mapping (ep_ip_entry *ip_entry, pds_batch_ctxt_t bctxt)
 {
@@ -228,6 +233,103 @@ ip_ageout (ep_ip_entry *ip_entry)
     }
     broadcast_learn_event(&event);
     return SDK_RET_OK;
+}
+
+static bool
+ep_ip_entry_clear_cb (void *entry, void *retcode)
+{
+    ep_ip_entry *ip_entry = (ep_ip_entry *)entry;
+    sdk_ret_t *ret = (sdk_ret_t *)retcode;
+
+    *ret = ip_ageout(ip_entry);
+    if (*ret != SDK_RET_OK) {
+        // stop iterating
+        return true;
+    }
+    return false;
+}
+
+static bool
+ep_mac_entry_clear_cb (void *entry, void *ctxt)
+{
+    ep_mac_entry *mac_entry = (ep_mac_entry *)entry;
+    ep_mac_clear_args_t *args = (ep_mac_clear_args_t *)ctxt;
+
+    if (args->subnet != k_pds_obj_key_invalid &&
+        args->subnet != mac_entry->key()->subnet) {
+        // MAC belongs to a different subnet, skip this
+        return false;
+    }
+    mac_entry->walk_ip_list(ep_ip_entry_clear_cb, &args->retcode);
+    if (args->retcode == SDK_RET_OK) {
+        args->retcode = mac_ageout(mac_entry);
+    }
+    if (args->retcode != SDK_RET_OK) {
+        // stop iterating
+        return true;
+    }
+    return false;
+}
+
+sdk_ret_t
+ep_mac_entry_clear (ep_mac_key_t *mac_key)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    ep_mac_entry *mac_entry;
+
+    mac_entry = learn_db()->ep_mac_db()->find(mac_key);
+    if (mac_entry == nullptr) {
+        return SDK_RET_ENTRY_NOT_FOUND;
+    }
+    // clear all IPs linked to this MAC first
+    mac_entry->walk_ip_list(ep_ip_entry_clear_cb, &ret);
+    if (ret == SDK_RET_OK) {
+        ret = mac_ageout(mac_entry);
+    }
+    return ret;
+}
+
+sdk_ret_t
+ep_mac_entry_clear_all (void)
+{
+    ep_mac_clear_args_t args;
+
+    args.subnet = k_pds_obj_key_invalid;
+    args.retcode = SDK_RET_OK;
+    learn_db()->ep_mac_db()->walk(ep_mac_entry_clear_cb, &args);
+    return args.retcode;
+}
+
+sdk_ret_t
+ep_ip_entry_clear (ep_ip_key_t *ip_key)
+{
+    ep_ip_entry *ip_entry;
+
+    ip_entry = learn_db()->ep_ip_db()->find(ip_key);
+    if (ip_entry == nullptr) {
+        return SDK_RET_ENTRY_NOT_FOUND;
+    }
+    return ip_ageout(ip_entry);
+}
+
+sdk_ret_t
+ep_ip_entry_clear_all (void)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+
+    learn_db()->ep_ip_db()->walk(ep_ip_entry_clear_cb, &ret);
+    return ret;
+}
+
+sdk_ret_t
+clear_all_eps_in_subnet (pds_obj_key_t key)
+{
+    ep_mac_clear_args_t args;
+
+    args.subnet = key;
+    args.retcode = SDK_RET_OK;
+    learn_db()->ep_mac_db()->walk(ep_mac_entry_clear_cb, &args);
+    return args.retcode;
 }
 
 void
