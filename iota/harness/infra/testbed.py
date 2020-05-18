@@ -408,7 +408,7 @@ class _Testbed:
         driver_reimage_only = kwargs.get('driver_reimage_only', False)
         devices = kwargs.get('devices', {})
         images = self.curr_ts.GetImages()
-
+        devicePipeline = None
         #if [n for n in self.__tbspec.Instances if n.NodeOs in ["linux","freebsd"]]:
         #    self.__verifyImagePath()
 
@@ -417,6 +417,8 @@ class _Testbed:
                 if instance.ID not in devices:
                     Logger.debug("skipping recover testbed for device {0}".format(instance))
                     continue
+                else:
+                    devicePipeline = devices[instance.ID]['pipeline']
             cmd = ["timeout", "2400"]
 
             if self.__has_naples_device(instance):
@@ -445,7 +447,11 @@ class _Testbed:
                 cmd.extend(["--naples", images.naples_type])
                 if hasattr(images, "build"):
                     cmd.extend(["--image-build", images.build])
-                cmd.extend(["--pipeline", GlobalOptions.pipeline])
+                #this will need to be changed when multi nics are supported.
+                if devicePipeline:
+                    cmd.extend(["--pipeline", devicePipeline])
+                else:
+                    cmd.extend(["--pipeline", GlobalOptions.pipeline])
                 # cmd.extend(["--mnic-ip", instance.NicIntMgmtIP])
                 nics = getattr(instance, "Nics", None)
                 if nics != None and len(nics) != 0:

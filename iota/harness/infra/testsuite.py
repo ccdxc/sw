@@ -554,7 +554,7 @@ class TestSuite:
                             api.DownloadAssets(pl.version)
                             alreadyDownloaded.append(pl.version)
                         Logger.info("upgrading node:nic {0}:{1}".format(topoNode.MgmtIpAddress(),pl.nicNumber))
-                        devices = {instId : { "nics":[pl.nicNumber], "nodeName":pl.node} }
+                        devices = {instId : { "nics":[pl.nicNumber], "nodeName":pl.node, "pipeline":pl.pipeline} }
                         Logger.debug("writing updated warmd.json to {0}".format(nwarmd))
                         with open(nwarmd,'w') as outfile:
                             json.dump(warmd,outfile,indent=4)
