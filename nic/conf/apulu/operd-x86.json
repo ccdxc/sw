@@ -1,0 +1,26 @@
+[
+    {
+        "output": {
+            "type": "binary",
+            "command": "/sw/nic/build/x86_64/apulu/bin/operdvppconsumer /sw/nic/vpp_flow.log"
+        },
+        "input": ["vpp"]
+    },
+    {
+        "name": "pensando_default",
+        "description": "Operd plugin to export alerts & metrics over grpc",
+        "provider": "pensando.io",
+        "output": {
+            "type": "library",
+            "location": "/sw/nic/build/x86_64/apulu/lib/libpen_oper.so"
+        },
+        "input": ["alerts"]
+    },
+    {
+        "output": {
+            "type": "library",
+            "location": "/sw/nic/build/x86_64/apulu/lib/libalerts_operd_con.so"
+        },
+        "input": ["alerts"]
+    }
+]

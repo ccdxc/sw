@@ -10,6 +10,7 @@ import urllib3
 
 # operd proto
 import oper_pb2_grpc as oper_pb2_grpc
+import alerts_pb2_grpc as alerts_pb2_grpc
 
 # pds proto
 import batch_pb2_grpc as batch_pb2_grpc
@@ -54,7 +55,6 @@ import cp_route_pb2 as cp_route_pb2
 import evpn_pb2 as evpn_pb2
 import policer_pb2 as policer_pb2
 
-import infra.common.defs as defs
 from infra.common.glopts  import GlobalOptions
 from infra.common.logging import logger
 
@@ -70,6 +70,7 @@ class AgentPorts(enum.IntEnum):
     DSCAGENTREST = 8888
     PDSAGENT = 11357
     OPERD = 11359
+    PEN_OPER = 11360
 
 class ApiOps(enum.IntEnum):
     NONE = 0
@@ -121,6 +122,12 @@ class OperdObjectTypes(enum.IntEnum):
     NONE = 0
     TECHSUPPORT = 1
     MAX = 2
+
+class PenOperObjectTypes(enum.IntEnum):
+    NONE = 0
+    ALERTS = 1
+    METRICS = 2
+    MAX = 3
 
 class ClientModule:
     def __init__(self, module, msg_prefix):
@@ -400,6 +407,27 @@ class OperdClient(AgentClientBase):
     def CreateMsgReqTable(self):
         return
 
+class PenOperClient(AgentClientBase):
+    def __init__(self, ip = None):
+        super().__init__('pen_oper', PenOperObjectTypes, ip)
+        return
+
+    def GetAgentPort(self):
+        try:
+            port = os.environ['PEN_OPER_GRPC_PORT']
+        except:
+            port = f'{AgentPorts.PEN_OPER.value}'
+        return port;
+
+    def CreateStubs(self):
+        if GlobalOptions.dryrun: return
+        self.Stubs[PenOperObjectTypes.ALERTS] = ClientStub(alerts_pb2_grpc.AlertsSvcStub,
+                                                           self.Channel, 'Alerts')
+        return
+
+    def CreateMsgReqTable(self):
+        return
+
 class PdsAgentClient(AgentClientBase):
     def __init__(self, ip = None):
         super().__init__('agent', ObjectTypes, ip)
@@ -568,10 +596,11 @@ class PdsAgentClient(AgentClientBase):
 
 client = dict()
 operdclient = dict()
+penOperClient = dict()
 def Init(node, ip=None):
     global client
     global operdclient
+    global penOperClient
     client[node] = PdsAgentClient(ip)
-    if defs.TEST_TYPE != "DOL":
-        # instantiate operdClient only for IOTA
-        operdclient[node] = OperdClient(ip)
+    operdclient[node] = OperdClient(ip)
+    penOperClient[node] = PenOperClient(ip)

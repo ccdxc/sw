@@ -47,6 +47,9 @@ class BatchObject(base.ConfigObjectBase):
     def SetBatchCookie(self, batchCookie):
         self.cookie = batchCookie
 
+    def Epoch(self):
+        return self.epoch
+
     def SetNextEpoch(self):
         self.epoch += 1
         return
@@ -98,17 +101,21 @@ class BatchObjectClient:
         return
 
     def Start(self, node):
-        self.GetObjectByKey(node).SetNextEpoch()
-        status = api.client[node].Start(api.ObjectTypes.BATCH, self.GetObjectByKey(node).GetBatchSpec())
+        batchObj = self.GetObjectByKey(node)
+        batchObj.SetNextEpoch()
+        logger.info(f"Starting a batch for config objects with epoch {batchObj.Epoch()}")
+        status = api.client[node].Start(api.ObjectTypes.BATCH, batchObj.GetBatchSpec())
         # update batch context
         self.__updateObject(node, status)
         return status
 
     def Commit(self, node):
+        batchObj = self.GetObjectByKey(node)
         if self.__commit_for_flows:
-            api.client[node].Start(api.ObjectTypes.BATCH, self.GetObjectByKey(node).GetInvalidBatchSpec())
+            api.client[node].Start(api.ObjectTypes.BATCH, batchObj.GetInvalidBatchSpec())
             self.__commit_for_flows = False
-        status = api.client[node].Commit(api.ObjectTypes.BATCH, self.GetObjectByKey(node).GetBatchContext())
+        logger.info(f"Committing the batch with cookie 0x{batchObj.GetBatchCookie():0x}")
+        status = api.client[node].Commit(api.ObjectTypes.BATCH, batchObj.GetBatchContext())
         # invalidate batch context
         self.__updateObject(node, None, status)
         return

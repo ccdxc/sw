@@ -52,6 +52,7 @@ function stop_process () {
     #dump backtrace of agent process to file, useful for debugging if process hangs
     pstack `pgrep pdsagent` &> $PDSPKG_TOPDIR/pdsagent_bt.log
     pkill agent
+    pkill operd
     if [ $START_DHCP_SERVER == 1 ]; then
         pkill dhcpd
     fi
@@ -66,6 +67,10 @@ function start_vpp () {
             exit 1
         fi
     fi
+}
+
+function start_operd () {
+    operd $PIPELINE_CONFIG_PATH/operd-x86.json $PIPELINE_CONFIG_PATH/operd-decoders-x86.json > operd.log 2>&1 &
 }
 
 function start_dhcp_server() {
@@ -85,8 +90,10 @@ function start_model () {
 }
 
 function start_process () {
+    # TODO: start sysmgr instead
     $PDSPKG_TOPDIR/apollo/tools/$PIPELINE/start-agent-sim.sh > agent.log 2>&1 &
     start_dhcp_server
+    start_operd
     start_vpp
 }
 

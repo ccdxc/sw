@@ -1,0 +1,28 @@
+feature:
+    id          : operd
+    sub         : alerts
+    package     : test.operd
+    module      : operd
+    runorder    : 10
+    enable      : True
+    ignore      : False
+
+modules:
+
+    - module:
+        name    : LINK_DOWN
+        spec    : link_event.testspec
+        args    :
+            - object    : interface
+              operation : LinkDown
+        iterate :
+            - port : filter://any
+
+    - module:
+        name    : LINK_UP
+        spec    : link_event.testspec
+        args    :
+            - object    : interface
+              operation : LinkUp
+        iterate :
+            - port : filter://any

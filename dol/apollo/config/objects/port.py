@@ -13,6 +13,12 @@ import apollo.config.utils as utils
 import apollo.config.topo as topo
 import apollo.config.objects.base as base
 
+from apollo.oper.alerts import client as AlertsClient
+
+import apollo.test.utils.pdsctl as pdsctl
+
+import alerts_pb2 as alerts_pb2
+
 class UplinkPorts(enum.IntEnum):
     # In DOL, it starts with 1
     UplinkPort0 = 1
@@ -25,6 +31,8 @@ class PortObject(base.ConfigObjectBase):
         self.PortId = next(ResmgrClient[node].PortIdAllocator)
         self.GID("Port ID:%s"%self.PortId)
         self.Port = port
+        self.EthIfIndex = topo.PortToEthIfIdx(self.PortId)
+        self.UUID = utils.PdsUuid(self.EthIfIndex)
         self.Mode = mode
         self.AdminState = state
         ################# PRIVATE ATTRIBUTES OF PORT OBJECT #####################
@@ -32,12 +40,15 @@ class PortObject(base.ConfigObjectBase):
         return
 
     def __repr__(self):
-        return "PortId:%d|Port:%d|AdminState:%s|Mode:%s" % \
-                (self.PortId, self.Port, self.AdminState, self.Mode)
+        return f"PortId:{self.PortId}|UUID:{self.UUID}"
 
     def Show(self):
         logger.info("PortObject:")
         logger.info("- %s" % repr(self))
+        logger.info(f"- Mode: {self.Mode}")
+        logger.info(f"- Port: {self.Port}")
+        logger.info(f"- EthIfIndex: 0x{self.EthIfIndex:0x}")
+        logger.info(f"- AdminState: {self.AdminState}")
         return
 
     def IsHostPort(self):
@@ -45,6 +56,47 @@ class PortObject(base.ConfigObjectBase):
 
     def IsSwitchPort(self):
         return self.Mode == topo.PortTypes.SWITCH
+
+    def LinkDown(self, spec=None):
+        self.AdminState = 'DOWN'
+        cmd = f" port -p {self.UUID.String()} -a down "
+        return pdsctl.UpdatePort(cmd)
+
+    def LinkUp(self, spec=None):
+        self.AdminState = 'UP'
+        cmd = f" port -p {self.UUID.String()} -a up "
+        return pdsctl.UpdatePort(cmd)
+
+    def __validate_link_alert(self, alert):
+        logger.info(f"Validating link alert {alert} against {self}")
+        if not alert or not utils.ValidateGrpcResponse(alert):
+            return False
+        spec = alert.Response
+        if spec.Name != f"LINK_{self.AdminState}":
+            return False
+        if spec.Category != "Network":
+            return False
+        if spec.Severity != alerts_pb2.INFO:
+            return False
+        if spec.Description != f"Port link is {self.AdminState.lower()}":
+            return False
+        if not self.UUID.String() in spec.Message:
+            return False
+        return True
+
+    def VerifyLinkAlert(self, spec=None):
+        alertsObj = AlertsClient.Objects(self.Node)
+        try:
+            alert = next(alertsObj.GetAlerts())
+        except:
+            logger.error(f"Got no alerts from {self.Node} for {self}")
+            return True if utils.IsDryRun() else False
+        return self.__validate_link_alert(alert)
+
+    def SetupTestcaseConfig(self, obj):
+        obj.root = self
+        obj.alert = AlertsClient.Objects(self.Node)
+        return
 
 class PortObjectClient:
     def __init__(self):
@@ -85,6 +137,6 @@ class PortObjectClient:
         return
 
 client = PortObjectClient()
+
 def GetMatchingObjects(selectors):
     return client.Objects()
-

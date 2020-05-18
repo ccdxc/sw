@@ -127,6 +127,9 @@ class PdsUuid:
     def GetId(self):
         return self.Id
 
+    def String(self):
+        return self.UuidStr
+
     @staticmethod
     def SetSystemMAC(uuid_mac):
         global PDS_UUID_SYSTEM_MAC

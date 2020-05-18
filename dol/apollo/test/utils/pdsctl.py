@@ -10,6 +10,7 @@ import apollo.config.utils as utils
 
 asic = os.environ.get('ASIC', 'capri')
 __CMDTYPE_SHOW  = ' show '
+__CMDTYPE_DEBUG = ' debug '
 __CMDTYPE_CLEAR = ' clear '
 
 __CMDFLAG_YAML = ' --yaml '
@@ -34,8 +35,7 @@ def __execute_pdsctl(cmd):
     except subprocess.CalledProcessError as e:
         output = "Command execution failed."
         retval = False
-    logger.info("pdsctl: command[%s], output[%s], retval[%d]" \
-                % (cmd, output, retval))
+    logger.info(f"pdsctl: command[{cmd}], output[{output}], retval[{retval}]")
     return retval, output
 
 def ExecutePdsctlCommand(cmd, args=None, yaml=True):
@@ -51,9 +51,19 @@ def ExecutePdsctlShowCommand(cmd, args=None, yaml=True):
     cmd = __CMDTYPE_SHOW + cmd
     return ExecutePdsctlCommand(cmd, args, yaml)
 
+def ExecutePdsctlDebugCommand(cmd, args=None):
+    cmd = __CMDTYPE_DEBUG + cmd
+    return ExecutePdsctlCommand(cmd, args, False)
+
 def ExecutePdsctlClearCommand(cmd, args=None):
     cmd = __CMDTYPE_CLEAR + cmd
     return ExecutePdsctlCommand(cmd, args, False)
+
+def UpdatePort(cmd):
+    ret, stdout = ExecutePdsctlDebugCommand(cmd)
+    if not ret: return False
+    if utils.IsDryRun(): return True
+    return True if "Update port succeeded" in stdout else False
 
 def GetObjects(node, objtype):
     # TODO: as part of container support, need to make sure this runs on appropriate node

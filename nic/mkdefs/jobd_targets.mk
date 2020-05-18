@@ -553,6 +553,10 @@ jobd/dol/apulu/lpm: ${JOBD_PREREQS}
 jobd/dol/apulu/learn: ${JOBD_PREREQS}
 	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --topo learn --feature learn
 
+.PHONY: jobd/dol/apulu/operd
+jobd/dol/apulu/operd: ${JOBD_PREREQS}
+	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --topo hostvxlan --feature operd
+
 .PHONY: jobd/athena/gtests
 jobd/athena/gtests: ${JOBD_PREREQS}
 	${NICDIR}/apollo/test/tools/athena/run_gtests.sh ${COVERAGE_OPTS}

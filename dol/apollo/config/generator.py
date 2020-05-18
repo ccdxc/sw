@@ -6,6 +6,7 @@ import apollo.config.resmgr as resmgr
 from apollo.config.agent.api import ObjectTypes as APIObjTypes
 import apollo.config.agent.api as agentapi
 
+from apollo.oper.alerts import client as AlertsClient
 from apollo.oper.oper import client as OperClient
 from apollo.config.objects.batch import client as BatchClient
 from apollo.config.objects.device import client as DeviceClient
@@ -119,6 +120,7 @@ def __generate(node, topospec):
 
     # Generate Oper objects
     OperClient.GenerateObjects(node)
+    AlertsClient.GenerateObjects(node)
 
     # Validate configuration
     __validate(node)
@@ -171,6 +173,8 @@ def __create(node):
 
     # Commit the Batch
     BatchClient.Commit(node)
+
+    AlertsClient.CreateObjects(node)
 
     # Create remote mapping objects one by one
     # RmappingClient.OperateObjects(node, 'Create')

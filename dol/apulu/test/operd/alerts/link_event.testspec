@@ -1,0 +1,22 @@
+selectors:
+    root: ref://store/templates/id=PORT
+    maxlimits: 1
+    port: filter://any
+
+session:
+    - step:
+        trigger:
+            configs:
+                - object: ref://testcase/config/root
+                  method: callback://common/config/GetCfgOperFn
+
+        expect:
+            delay : 10
+
+            configs:
+                # TODO: enable port status verification once port.py is fixed
+                #- object: ref://testcase/config/root
+                #  method: Read
+
+                - object: ref://testcase/config/root
+                  method: VerifyLinkAlert
