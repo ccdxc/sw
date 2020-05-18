@@ -16,7 +16,6 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include "platform/elbtrace/elbtrace.hpp"
-#include "platform/elbtrace/elb_phv_intr.hpp"
 
 using boost::property_tree::ptree;
 using std::string;
