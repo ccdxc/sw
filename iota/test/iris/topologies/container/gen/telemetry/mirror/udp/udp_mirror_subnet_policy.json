@@ -11,7 +11,7 @@
                 "tenant": "default"
             }, 
             "spec": {
-                "span-id": "1",
+                "span-id": 1,
                 "packet-size": 128, 
                 "match-rules": [
                     {
