@@ -33,7 +33,6 @@ import { ConfirmationService } from 'primeng/primeng';
 import { BehaviorSubject, Observable, ReplaySubject } from 'rxjs';
 import { NaplesdetailComponent } from './naplesdetail.component';
 import { NaplesdetailchartsComponent } from './widgets/naplesdetailcharts.component';
-import { NaplesdetailstatsComponent } from './widgets/naplesdetailstats.component';
 import { NaplesdetailIftopologyComponent } from './widgets/naplesdetailiftopology.component';
 import { NaplesdetailIftableComponent } from './widgets/naplesdetailiftable.component';
 import { NaplesdetailIfstatsComponent } from './widgets/naplesdetailifstats.component';
@@ -148,7 +147,6 @@ describe('NaplesdetailComponent', () => {
       declarations: [
         NaplesdetailComponent,
         NaplesdetailchartsComponent,
-        NaplesdetailstatsComponent,
         NaplesdetailIftopologyComponent,
         NaplesdetailIftableComponent,
         NaplesdetailIfstatsComponent,

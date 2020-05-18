@@ -6,14 +6,14 @@ import { Animations } from '@app/animations';
 import { Utility } from '@app/common/Utility';
 
 @Component({
-  selector: 'app-naplesdetail-stats',
-  templateUrl: 'naplesdetailstats.component.html',
-  styleUrls: ['naplesdetailstats.component.scss'],
+  selector: 'app-cpu-memory-storage-stats',
+  templateUrl: 'cpumemorystoragestats.component.html',
+  styleUrls: ['cpumemorystoragestats.component.scss'],
   animations: [Animations],
   encapsulation: ViewEncapsulation.None
 })
 
-export class NaplesdetailstatsComponent implements OnInit, OnChanges {
+export class CpuMemoryStorageStatsComponent implements OnInit, OnChanges {
   @ViewChild('cpuLineGraph') cpuLineGraphComponent: LinegraphComponent;
   @ViewChild('memoryLineGraph') memoryLineGraphComponent: LinegraphComponent;
   @ViewChild('storageLineGraph') storageLineGraphComponent: LinegraphComponent;

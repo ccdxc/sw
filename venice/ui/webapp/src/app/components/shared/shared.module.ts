@@ -24,6 +24,7 @@ import { HerocardComponent } from './herocard/herocard.component';
 import { WidgetsModule } from 'web-app-framework';
 import { FieldContainerComponent } from './form/layout/fieldcontainer.component';
 import { InlineButtonsComponent } from './form/layout/inlinebuttons.component';
+import { CpuMemoryStorageStatsComponent } from './cpu-memory-storage-chart/cpumemorystoragestats.component';
 import { SorticonComponent } from './sorticon/sorticon.component';
 import { BasecardComponent } from './basecard/basecard.component';
 import { LinegraphComponent } from './linegraph/linegraph.component';
@@ -82,6 +83,7 @@ import { ExportLogsComponent } from './exportlogs/exportlogs.component';
     HerocardComponent,
     FieldContainerComponent,
     InlineButtonsComponent,
+    CpuMemoryStorageStatsComponent,
     SorticonComponent,
     BasecardComponent,
     LinegraphComponent,
@@ -127,6 +129,7 @@ import { ExportLogsComponent } from './exportlogs/exportlogs.component';
     HerocardComponent,
     FieldContainerComponent,
     InlineButtonsComponent,
+    CpuMemoryStorageStatsComponent,
     SorticonComponent,
     BasecardComponent,
     LinegraphComponent,

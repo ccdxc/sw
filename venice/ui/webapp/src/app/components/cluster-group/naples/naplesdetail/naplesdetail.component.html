@@ -357,10 +357,9 @@
     </div>
     <div fxFlex="" class="detail-card detail-card-wrapper">
       <div class="detail-card-border"></div>
-      <app-naplesdetail-stats class="naplesdetail-stats-container"
-                              *ngIf="detailLoaded" [heroCards]="heroCards"
-                              [lastUpdateTime]="lastUpdateTime">
-      </app-naplesdetail-stats>
+      <app-cpu-memory-storage-stats *ngIf="detailLoaded"
+                                    [heroCards]="heroCards" [lastUpdateTime]="lastUpdateTime">
+      </app-cpu-memory-storage-stats>
       <div class="detail-card-border" *ngIf="detailLoaded"></div>
     </div>
   </div>

@@ -4,9 +4,13 @@ $cpu-color: #b592e3;
 $memory-color: #e57553;
 $storage-color: #70bab4;
 
-.naplesdetail-interface-charts-container .naplesdetail-stats-container {
+.cpumemorystorage-stats-container {
   min-width: 590px;
   height: 345px;
+
+  .lastupdateTime {
+    @include primary-font(12px, $mediumGray, 300);
+  }
 
   .cpu-color {
     color: $cpu-color;
@@ -87,21 +91,21 @@ $storage-color: #70bab4;
     font-size: 20px;
   }
 
-  .naplesdetail-stats-svg-table-container {
+  .cpumemorystorage-stats-svg-table-container {
     width: 100%;
   }
 
-  .naplesdetail-stats-svg-container {
+  .cpumemorystorage-stats-svg-container {
     width: 100%;
   }
 
-  .naplesdetail-stats-table {
+  .cpumemorystorage-stats-table {
     width: 320px;
     height: 240px;
     margin-right: 10px;
     background-image: url("/assets/images/misc/gray-gradient-bg.svg");
 
-    .naplesdetail-stats-row {
+    .cpumemorystorage-stats-row {
       width: 320px;
       height: 78px;
       padding: 5px 0 0 5px;
@@ -110,16 +114,16 @@ $storage-color: #70bab4;
       letter-spacing: normal;
       cursor: pointer;
 
-      .naplesdetail-stats-col1 {
+      .cpumemorystorage-stats-col1 {
         width: 88px;
 
-        .naplesdetail-stats-col1-up {
+        .cpumemorystorage-stats-col1-up {
           font-size: 20px;
           font-weight: normal;
           color: rgb(103, 103, 99);
         }
 
-        .naplesdetail-stats-col1-down {
+        .cpumemorystorage-stats-col1-down {
           margin-top: 25px;
           font-size: 14px;
           font-weight: 300;
@@ -127,7 +131,7 @@ $storage-color: #70bab4;
         }
       }
 
-      .naplesdetail-stats-col2 {
+      .cpumemorystorage-stats-col2 {
         text-align: center;
         width: 106px;
         padding-top: 10px;
@@ -135,42 +139,42 @@ $storage-color: #70bab4;
         font-weight: normal;
       }
 
-      .naplesdetail-stats-col3 {
+      .cpumemorystorage-stats-col3 {
         width: 80px;
         padding-top: 30px;
         font-size: 13px;
         font-weight: 300;
       }
 
-      .naplesdetail-stats-col4 {
+      .cpumemorystorage-stats-col4 {
         padding-right: 10px;
         padding-top: 30px;
         font-size: 13px;
         font-weight: 300;
 
-        .naplesdetail-stats-usage {
+        .cpumemorystorage-stats-usage {
           text-align: right;
         }
       }
     }
 
-    .naplesdetail-stats-row.selectedrow {
+    .cpumemorystorage-stats-row.selectedrow {
       opacity: 1;
       cursor: default;
       background-image: linear-gradient(to left, rgba(160, 160, 156, 0) 40%, rgba(103, 103, 99, 0.3));
     }
   }
 
-  .naplesdetail-stats-chart-container {
+  .cpumemorystorage-stats-chart-container {
     width: 100%;
     position: relative;
     top: -50px;
 
-    .naplesdetail-stats-chart-content {
+    .cpumemorystorage-stats-chart-content {
       height: 56px;
     }
 
-    .naplesdetail-stats-chart-content.storage {
+    .cpumemorystorage-stats-chart-content.storage {
       z-index: 3000;
     }
   }
