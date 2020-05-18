@@ -168,10 +168,7 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
 
     this.setMomentJSSettings();
 
-    // Control whether to enable data cache. - change config.json to enable -  "dataCache"
-    if (this.uiconfigsService && this.uiconfigsService.isFeatureEnabled(Features.dataCache)) {
-      Utility.getInstance().setEnableDataCache(true);
-    }
+
 
     this.clocktimer = setInterval(() => {
       this.clock = new Date();

@@ -5,7 +5,7 @@
     <mat-tab label="API Capture">
       <ng-container *ngTemplateOutlet="ApiCaptureTemplate"></ng-container>
     </mat-tab>
-    <mat-tab label="Live API Capture">
+    <mat-tab label="Live API Capture" *ngIf="enableLiveCapture">
       <ng-container *ngTemplateOutlet="ApiCaptureTemplate"></ng-container>
     </mat-tab>
   </mat-tab-group>

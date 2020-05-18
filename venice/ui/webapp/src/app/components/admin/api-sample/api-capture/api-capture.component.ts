@@ -54,9 +54,7 @@ export class ApiCaptureComponent implements OnInit, OnChanges {
   ngOnInit() {
 
     this.controllerService.publish(Eventtypes.COMPONENT_INIT, { 'component': 'ApiSampleComponent', 'state': Eventtypes.COMPONENT_INIT });
-    this.controllerService.setToolbarData({
-      breadcrumb: [{ label: 'API Capture', url: Utility.getBaseUIUrl() + 'admin/api' }]
-    });
+
 
     this.headerList = (this.cols).filter((el) => {
       return el.field;

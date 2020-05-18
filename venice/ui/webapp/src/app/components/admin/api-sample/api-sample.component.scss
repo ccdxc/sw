@@ -1,4 +1,12 @@
+@import 'src/global-mixins';
+
 .api-samples-capture .mat-expansion-panel-content,
 .api-samples-capture .mat-expansion-panel-content .mat-expansion-panel-body {
   height: 100%;
+}
+
+
+.api-samples-button {
+  padding-left: 10px;
+  padding-right: 10px;
 }

@@ -20,7 +20,6 @@ export enum UIFeatures {
   showDebugMetrics = 'showDebugMetrics',
   troubleshooting = 'troubleshooting',
   securitygroup = 'securitygroup',
-  dataCache = 'dataCache',
 
   // derived features
   cloud = 'cloud',
@@ -41,13 +40,13 @@ const derivedFeatures: { [key in UIFeatures]?: derivedFeaturesFn } = {
 
 // TODO: this should come from venice-sdk once PSM feature flags are moved to proto file
 export enum BackendFeatures {
-  OverlayRouting         = 'OverlayRouting',
+  OverlayRouting = 'OverlayRouting',
   SubnetSecurityPolicies = 'SubnetSecurityPolicies',
-  SecurityALG            = 'SecurityALG',
+  SecurityALG = 'SecurityALG',
 }
 
 export const Features = { ...UIFeatures, ...BackendFeatures };
-export type Features =  UIFeatures | BackendFeatures;
+export type Features = UIFeatures | BackendFeatures;
 
 interface MetricsQuery {
   startTimeLength?: string;
@@ -158,7 +157,7 @@ export class UIConfigsService implements OnDestroy {
     },
     'monitoring/fwlogs': {
       requiredPerm: [
-       UIRolePermissions.fwlog_read,
+        UIRolePermissions.fwlog_read,
       ],
     },
     'monitoring/flowexport': {
@@ -278,6 +277,12 @@ export class UIConfigsService implements OnDestroy {
     this.subscriptions.forEach(s => {
       s.unsubscribe();
     });
+  }
+
+  setOneFeature(featurename: string, enabled: boolean) {
+    if (this.features) {
+      this.features[featurename] = enabled;
+    }
   }
 
   setFeatures() {

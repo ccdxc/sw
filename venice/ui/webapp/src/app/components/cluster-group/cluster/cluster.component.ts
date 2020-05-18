@@ -94,9 +94,12 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
   }
 
   ngOnInit() {
-    this.getCluster();
-    this.getNodes();
-    this.getMetrics();
+    // VS-1581 - try to avoid collision getMetrics() call and other fetch data REST call.
+     this.getCluster();
+     this.getNodes();
+    setTimeout(() => {
+      this.getMetrics();
+    }, 1000);
 
     this._controllerService.setToolbarData({
       breadcrumb: [{ label: 'Cluster', url: Utility.getBaseUIUrl() + 'cluster/cluster' }]

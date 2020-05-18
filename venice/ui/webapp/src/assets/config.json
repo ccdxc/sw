@@ -1,6 +1,5 @@
 {
   "enabled-features" : [
-    "dataCache"
   ],
   "disabled-features": [],
   "condition-thresholds": {

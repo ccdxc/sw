@@ -294,7 +294,10 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
   }
 
   ngOnInit() {
-    this.getNaples();
+    // VS-1581 - try to avoid collision getMetrics() call and getNaples() call.
+    setTimeout(() => {
+      this.getNaples();
+    }, 1000);
     this.getMetrics();
     // Linegraph data needs to read from cluster measurement
     if (this.uiconfigsService.isAuthorized(UIRolePermissions.clustercluster_read)) {
