@@ -333,7 +333,7 @@ pipeline_invoke_exec_(pipeline_t *pipeline, ctx_t &ctx, uint8_t start,
             rc = feature->exec_handler(ctx);
         };
         if (rc != PIPELINE_CONTINUE) {
-            HAL_TRACE_DEBUG("feature={} pipeline={} event={} action={}",
+            HAL_TRACE_VERBOSE("feature={} pipeline={} event={} action={}",
                             feature->name, pipeline->name, ctx.pipeline_event(),
                             rc);
             break;
@@ -458,7 +458,7 @@ execute_pipeline(ctx_t &ctx)
             return HAL_RET_INVALID_ARG;
         }
 
-        HAL_TRACE_DEBUG("fte: executing pipeline {} lifq={} dir={}",
+        HAL_TRACE_VERBOSE("fte: executing pipeline {} lifq={} dir={}",
                         pipeline->name, pipeline->lifq, ctx.direction());
 
         iflow_start = 0;

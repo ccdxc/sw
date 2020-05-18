@@ -210,9 +210,6 @@ ctx_t::init(const lifqid_t &lifq, feature_state_t feature_state[], uint16_t num_
         feature_state_init(feature_state_, num_features_);
     }
 
-    HAL_TRACE_DEBUG("VRF:{} sl2seg:{:p} sep:{:p} dep:{:p}", key_.lkpvrf,
-                      (void *)sl2seg_, (void *)sep_, (void *)dep_); 
-
     return HAL_RET_OK;
 }
 
@@ -242,12 +239,14 @@ ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len, bool copied_pk
     hal_ret_t ret;
 
     if (unlikely(hal::utils::hal_trace_level() >= ::utils::trace_debug)) {
-        HAL_TRACE_DEBUG("fte: rxpkt{} cpu_rxhdr={}",
+        HAL_TRACE_VERBOSE("fte: rxpkt{} cpu_rxhdr={}",
                     copied_pkt ? "(copy)" : "", hex_str((uint8_t*)cpu_rxhdr, sizeof(*cpu_rxhdr)));
 
-        HAL_TRACE_DEBUG("fte: rxpkt len={} pkt={}", pkt_len, hex_str(pkt, (pkt_len >=128)?128:pkt_len));
+        HAL_TRACE_DEBUG("fte: rxpkt slif={} lif={} qtype={} qid={} len={} pkt={}", 
+                        cpu_rxhdr->src_lif, cpu_rxhdr->lif, cpu_rxhdr->qtype, cpu_rxhdr->qid,
+                         pkt_len, hex_str(pkt, (pkt_len >=128)?128:pkt_len));
 
-        HAL_TRACE_DEBUG("fte: rxpkt slif={} lif={} qtype={} qid={} vrf={} "
+        HAL_TRACE_VERBOSE("fte: rxpkt slif={} lif={} qtype={} qid={} vrf={} "
                     "src_app_id={} lkp_dir={} lkp_inst={} lkp_type={} flags={} "
                     "l2={} l3={} l4={} payload={} src_lport={}",
                     cpu_rxhdr->src_lif, cpu_rxhdr->lif, cpu_rxhdr->qtype,

@@ -60,7 +60,6 @@ ctx_t::extract_flow_key()
 
     direction_ = (hal::flow_direction_t)cpu_rxhdr_->lkp_dir;
     key_.lkpvrf = cpu_rxhdr_->lkp_vrf;
-    HAL_TRACE_DEBUG("Lkp vrf: {}", key_.lkpvrf);
     args.flow_lkupid = cpu_rxhdr_->lkp_vrf;
     args.obj_id = &obj_id;
     args.pi_obj = &obj;
@@ -194,7 +193,7 @@ ctx_t::lookup_flow_objs (void)
             SDK_ASSERT_RETURN(dl2seg_, HAL_RET_L2SEG_NOT_FOUND);
         }
 
-        HAL_TRACE_DEBUG("VRF:{} l2seg_id:{}, sl2seg:{:p} sep:{:p} dep:{:p}", key_.lkpvrf,
+        HAL_TRACE_VERBOSE("VRF:{} l2seg_id:{}, sl2seg:{:p} sep:{:p} dep:{:p}", key_.lkpvrf,
                       (sl2seg_)?sl2seg_->seg_id:0, (void *)sl2seg_, (void *)sep_, (void *)dep_);
 
         if (sep_) {
@@ -311,11 +310,11 @@ ctx_t::lookup_session()
 {
     session_ = hal::session_lookup(key_, &role_);
     if (!session_) {
-        HAL_TRACE_DEBUG("fte: session not found role:{}", role_);
+        HAL_TRACE_VERBOSE("fte: session not found role:{}", role_);
         return HAL_RET_SESSION_NOT_FOUND;
     }
 
-    HAL_TRACE_DEBUG("fte: found existing session");
+    HAL_TRACE_VERBOSE("fte: found existing session");
 
     init_ctxt_from_session(session_);
 
@@ -345,7 +344,6 @@ ctx_t::create_session()
         memcpy(l2_info.dmac, ethhdr->dmac, sizeof(l2_info.dmac));
     }
 
-    HAL_TRACE_DEBUG("Key: {}", key_);
     for (int i = 0; i < MAX_STAGES; i++) {
         iflow_[i]->set_key(key_);
         iflow_[i]->set_direction(direction_);
@@ -543,7 +541,6 @@ ctx_t::update_flow_table()
     }
 
     if (ignore_session_create()) {
-        HAL_TRACE_DEBUG("Sesssion create ignored");
         goto end;
     }
 
@@ -956,7 +953,6 @@ ctx_t::update_for_snat(hal::flow_role_t role, const header_rewrite_info_t& heade
 
 void free_flow_miss_pkt(uint8_t * pkt)
 {
-    HAL_TRACE_DEBUG("free flow miss packet");
     hal::free_to_slab(hal::HAL_SLAB_CPU_PKT, (pkt-sizeof(cpu_rxhdr_t)));
 }
 
@@ -1184,7 +1180,7 @@ ctx_t::send_queued_pkts_new (hal::pd::cpupkt_ctxt_t* arm_ctx)
 
 	// Issue a callback to free the packet
 	if (pkt_info->cb) {
-	    HAL_TRACE_DEBUG(" packet buffer/cpu_rx header {:#x} {:#x}", (long)cpu_rxhdr_, (long)pkt_);
+	    HAL_TRACE_VERBOSE(" packet buffer/cpu_rx header {:#x} {:#x}", (long)cpu_rxhdr_, (long)pkt_);
 	    pkt_info->cb(pkt_info->pkt);
 	}
     }
@@ -1214,7 +1210,7 @@ ctx_t::apply_session_limit(void)
         goto end;
     }
 
-    HAL_TRACE_DEBUG("Security profile handle: {}", 
+    HAL_TRACE_VERBOSE("Security profile handle: {}", 
                      hal::g_hal_state->customer_default_security_profile_hdl());
     // check for flood protection limits
     switch (key_.flow_type) {

@@ -1543,11 +1543,11 @@ pd_cpupkt_page_alloc (pd_func_args_t *pd_func_args)
     }
 
     // PI/CI check
-    if(((cpu_tx_page_pindex + 1) % wring_meta->num_slots) == cpu_tx_page_cindex) {
-        HAL_TRACE_ERR2("No free page entries available: pi: {}, ci: {}",
+    if (((cpu_tx_page_pindex + 1) % wring_meta->num_slots) == cpu_tx_page_cindex) {
+         HAL_TRACE_VERBOSE("No free page entries available: pi: {}, ci: {}",
                       cpu_tx_page_pindex, cpu_tx_page_cindex);
-    cpu_tx_page_full_err++;
-        return HAL_RET_NO_RESOURCE;
+         cpu_tx_page_full_err++;
+         return HAL_RET_NO_RESOURCE;
     }
 
     ret = pd_cpupkt_get_slot_addr_for_ring(wring_meta, base_addr, tg_cpu_id,
@@ -1809,7 +1809,7 @@ pd_cpupkt_send (pd_func_args_t *pd_func_args)
     ret = pd_cpupkt_page_alloc(&pd_func_args1);
     if (ret != HAL_RET_OK) {
         qinst_info.ctr.tx_page_alloc_err++;
-        HAL_TRACE_ERR2("failed to allocate page for the packet, err: {}", ret);
+        HAL_TRACE_VERBOSE("failed to allocate page for the packet, err: {}", ret);
         goto cleanup;
     }
     HAL_TRACE_DEBUG2("Allocated page at address {:#x}", page_addr);

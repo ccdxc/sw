@@ -587,7 +587,7 @@
             "cache1": "p4eg"
         },
         {
-            "name": "p4iclock",
+            "name": "p4i_clock",
             "size": "64B",
             "base_region": "clock",
             "_comment" : "alias to clock"

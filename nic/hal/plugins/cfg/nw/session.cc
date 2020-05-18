@@ -258,7 +258,7 @@ extract_mirror_sessions (const FlowSpec& spec, uint8_t *ingress, uint8_t *egress
             return HAL_RET_INVALID_ARG;
         }
         *ingress = *ingress | (1 << id);
-        HAL_TRACE_DEBUG("  Adding ingress session {}", id);
+        HAL_TRACE_VERBOSE("  Adding ingress session {}", id);
     }
     for (i = 0; i < flinfo.egr_mirror_sessions_size(); ++i) {
         uint32_t id = flinfo.egr_mirror_sessions(i).mirrorsession_id();
@@ -266,7 +266,7 @@ extract_mirror_sessions (const FlowSpec& spec, uint8_t *ingress, uint8_t *egress
             return HAL_RET_INVALID_ARG;
         }
         *egress = *egress | (1 << id);
-        HAL_TRACE_DEBUG("  Adding egress session {}", id);
+        HAL_TRACE_VERBOSE("  Adding egress session {}", id);
     }
     return HAL_RET_OK;
 }
@@ -351,7 +351,7 @@ extract_flow_key_from_spec (vrf_id_t tid, flow_key_t *key,
             key->icmp_id = flow_spec_key.v6_key().icmp().id();
             // only echo request and reply
             if(key->icmp_type < 128 || key->icmp_type > 136) {
-                HAL_TRACE_DEBUG("fte: invalid icmp type {}", key->icmp_type);
+                HAL_TRACE_ERR("fte: invalid icmp type {}", key->icmp_type);
                 return HAL_RET_INVALID_ARG;
             }
         } else if (key->proto == IPPROTO_ESP) {

@@ -315,7 +315,7 @@ p4pd_add_upd_session_state_table_entry (pd_session_t *session_pd,
         SDK_ASSERT(params.handle.pvalid());
         session_pd->session_state_idx = params.handle.pindex();
     }
-    HAL_TRACE_DEBUG("sess table updt:{} Index:{}", update, session_pd->session_state_idx);
+    HAL_TRACE_VERBOSE("sess table updt:{} Index:{}", update, session_pd->session_state_idx);
     action_pc =
         sdk::asic::pd::asicpd_get_action_pc(P4TBL_ID_SESSION_STATE,
                                             SESSION_STATE_TCP_SESSION_STATE_INFO_ID);
@@ -586,7 +586,7 @@ p4pd_add_upd_flow_info_table_entry (pd_session_create_args_t *args, pd_flow_t *f
         sdk::lib::memrev((uint8_t *)&t_clock,
                          d.action_u.flow_info_flow_info.start_timestamp,
                          sizeof(d.action_u.flow_info_flow_info.start_timestamp));
-        HAL_TRACE_DEBUG("Writing flow info start timestamp {} to flow index {} action id {}",
+        HAL_TRACE_VERBOSE("Writing flow info start timestamp {} to flow index {} action id {}",
                         t_clock, flow_pd->assoc_hw_id, d.action_id);
         params.handle.pindex(flow_pd->assoc_hw_id);
         params.actiondata = &d;

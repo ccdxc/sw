@@ -87,7 +87,7 @@ sync_session_in_fte (fte_session_args_t *sess_args)
         ret = ctx.init(&spec, &status, &stats, l2seg, sess_args->vrf_handle, iflow, rflow,
                        feature_state, num_features);
         if (ret == HAL_RET_ENTRY_EXISTS) {
-            HAL_TRACE_DEBUG("fte: local session exists");
+            HAL_TRACE_VERBOSE("fte: local session exists");
             updt_ep_to_session_db(ctx.sep(), ctx.dep(), ctx.session(), false);
             continue;
         } else if (ret != HAL_RET_OK) {
@@ -126,7 +126,7 @@ session_create (SessionSpec& spec, SessionResponse *rsp)
         }, &fn_ctx);
 
 
-    HAL_TRACE_DEBUG("----------------------- API End ------------------------");
+    HAL_TRACE_VERBOSE("----------------------- API End ------------------------");
 
     return fn_ctx.ret;
 }
@@ -162,7 +162,7 @@ session_delete_in_fte (hal_handle_t session_handle, bool force_delete)
 
     session = hal::find_session_by_handle(session_handle);
     if (session == NULL) {
-        HAL_TRACE_DEBUG("Invalid session handle {}", session_handle);
+        HAL_TRACE_VERBOSE("Invalid session handle {}", session_handle);
         return  HAL_RET_HANDLE_INVALID;
     }
     session->deleting = 1;
@@ -222,7 +222,7 @@ session_delete_async (hal::session_t *session, bool force_delete)
             fn_ctx_t *fn_ctx = (fn_ctx_t *) data;
             fn_ctx->ret = session_delete_in_fte(fn_ctx->session_handle, fn_ctx->force_delete);
             if (fn_ctx->ret != HAL_RET_OK) {
-                HAL_TRACE_DEBUG("session delete in fte failed for handle: {}", fn_ctx->session_handle);
+                HAL_TRACE_VERBOSE("session delete in fte failed for handle: {}", fn_ctx->session_handle);
             }
         HAL_FREE(hal::HAL_MEM_ALLOC_SESS_DEL_DATA, fn_ctx);
         }, fn_ctx);
@@ -243,7 +243,7 @@ session_update_in_fte (hal_handle_t session_handle, uint64_t featureid_bitmap)
 
     session = hal::find_session_by_handle(session_handle);
     if (session == NULL) {
-        HAL_TRACE_DEBUG("Invalid session handle {}", session_handle);
+        HAL_TRACE_VERBOSE("Invalid session handle {}", session_handle);
         return  HAL_RET_HANDLE_INVALID;
     }
 

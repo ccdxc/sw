@@ -125,7 +125,7 @@ do_learning_ep_lif_update(fte::ctx_t &ctx) {
         lif = hal::find_lif_by_hw_lif_id(cpu_hdr->src_lif);
 
         if (lif == NULL) {
-            HAL_TRACE_INFO("Could not find lif object for hw_lif{}.", cpu_hdr->src_lif);
+            HAL_TRACE_DEBUG("Could not find lif object for hw_lif{}.", cpu_hdr->src_lif);
             return HAL_RET_LIF_NOT_FOUND;
         }
 
@@ -194,7 +194,7 @@ fte::pipeline_action_t ep_learn_exec(fte::ctx_t &ctx) {
     }
 
     if (is_dhcp_flow(&ctx.key()) && is_dhcp_ep_learning_enabled(ctx)) {
-            HAL_TRACE_INFO("EP_LEARN : DHCP packet processing...");
+            HAL_TRACE_DEBUG("EP_LEARN : DHCP packet processing...");
             ret = dhcp_process_packet(ctx);
 
             if (ret != HAL_RET_OK) {
@@ -204,7 +204,7 @@ fte::pipeline_action_t ep_learn_exec(fte::ctx_t &ctx) {
             }
             ctx.set_valid_rflow(false);
             if (is_broadcast(ctx)) {
-                HAL_TRACE_INFO("EP_LEARN: Ignore Session create for DHCP flood.");
+                HAL_TRACE_DEBUG("EP_LEARN: Ignore Session create for DHCP flood.");
                 ctx.set_ignore_session_create(true);
                 /*
                  * TODO : Have to clean up the unicast flows.
@@ -214,7 +214,7 @@ fte::pipeline_action_t ep_learn_exec(fte::ctx_t &ctx) {
     } else if (is_arp_flow(&ctx.key())) {
         if (is_host_originated_packet(ctx) &&
                 is_arp_ep_learning_enabled(ctx)) {
-            HAL_TRACE_INFO("EP_LEARN : ARP packet processing...");
+            HAL_TRACE_DEBUG("EP_LEARN : ARP packet processing...");
             ret = arp_process_packet(ctx);
             if (ret != HAL_RET_OK) {
                 HAL_TRACE_ERR("Error in processing ARP packet.");
@@ -226,7 +226,7 @@ fte::pipeline_action_t ep_learn_exec(fte::ctx_t &ctx) {
         ctx.set_valid_rflow(false);
     } else if (is_neighbor_discovery_flow(&ctx.key()) &&
             is_arp_ep_learning_enabled(ctx)) {
-        HAL_TRACE_INFO("EP_LEARN : NDP packet processing...");
+        HAL_TRACE_DEBUG("EP_LEARN : NDP packet processing...");
         ret = neighbor_disc_process_packet(ctx);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Error in processing NDP packet.");
@@ -234,14 +234,14 @@ fte::pipeline_action_t ep_learn_exec(fte::ctx_t &ctx) {
             ctx.update_flow(flowupd, FLOW_ROLE_INITIATOR);
         }
     } else if (is_rarp_flow(&ctx.key()) && is_host_originated_packet(ctx)) {
-        HAL_TRACE_INFO("EP_LEARN : RARP packet processing...");
+        HAL_TRACE_VERBOSE("EP_LEARN : RARP packet processing...");
         if (process_vmotion_rarp(&ctx) != true) {
             HAL_TRACE_ERR("Err in processing vmotion rarp packet");
         }
     } else if (is_host_originated_packet(ctx) &&
             is_dpkt_ep_learning_enabled(ctx) &&
             dpkt_learn_required(ctx)) {
-            HAL_TRACE_INFO("EP_LEARN : Flow miss packet processing...");
+            HAL_TRACE_DEBUG("EP_LEARN : Flow miss packet processing...");
         ret = dpkt_learn_process_packet(ctx);
         if (ret != HAL_RET_OK) {
             ctx.set_feature_status(ret);

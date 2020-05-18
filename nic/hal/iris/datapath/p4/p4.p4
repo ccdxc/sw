@@ -120,7 +120,7 @@ header_type control_metadata_t {
         p4i_clock_idx               : 1;
         clock_idx                   : 1;
         current_time_in_ns          : 64;
-        current_time_in_ms          : 40;
+        current_time_in_ms          : 48;
         if_label_check_en           : 1;
         if_label_check_fail_drop    : 1;
         skip_flow_update            : 1;
@@ -168,8 +168,8 @@ header_type scratch_metadata_t {
         cond_processed             : 1;
         flow_packets               : 64;
         flow_bytes                 : 64;
-        flow_start_timestamp       : 40;
-        flow_last_seen_timestamp   : 40;
+        flow_start_timestamp       : 48;
+        flow_last_seen_timestamp   : 48;
         tx_drop_count              : 16;
         policer_packets            : 4;
         policer_bytes              : 18;

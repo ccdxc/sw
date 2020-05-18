@@ -210,7 +210,8 @@ process_tcp_syn(fte::ctx_t& ctx)
 
     tcp_flags = cpu_rxhdr->tcp_flags;
 
-    HAL_TRACE_DEBUG("Processing TCP SYN Flags:{} Existing:{}", tcp_flags, ctx.existing_session());
+    HAL_TRACE_VERBOSE("Processing TCP SYN Flags:{} Existing:{}", 
+                      tcp_flags, ctx.existing_session());
 
     if (!ctx.existing_session()) {
         if (tcp_flags & TCP_FLAG_SYN) {

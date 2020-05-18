@@ -104,13 +104,13 @@ net_sfw_check_security_policy(ctx_t &ctx, net_sfw_match_result_t *match_rslt)
     const hal::ipv4_rule_t *rule = NULL;
     const acl::acl_ctx_t *acl_ctx = NULL;
 
-    HAL_TRACE_DEBUG("sfw::net_sfw_check_security_policy acl rule lookup for key={} vrf={}",
+    HAL_TRACE_VERBOSE("sfw::net_sfw_check_security_policy acl rule lookup for key={} vrf={}",
                    ctx.key(), hal::g_hal_state->customer_default_vrf());
 
     const char *ctx_name = nwsec_acl_ctx_name(hal::g_hal_state->customer_default_vrf());
     acl_ctx = acl::acl_get(ctx_name);
     if (acl_ctx == NULL) {
-        HAL_TRACE_DEBUG("sfw::net_sfw_check_security_policy failed to lookup acl_ctx {}", ctx_name);
+        HAL_TRACE_VERBOSE("sfw::net_sfw_check_security_policy failed to lookup acl_ctx {}", ctx_name);
         return HAL_RET_FTE_RULE_NO_MATCH;
     }
 
@@ -137,7 +137,7 @@ net_sfw_check_security_policy(ctx_t &ctx, net_sfw_match_result_t *match_rslt)
         acl_key.port_dst = ctx.key().dport;
         break;
     default:
-        HAL_TRACE_DEBUG("Any proto:{}", ctx.key().proto);
+        HAL_TRACE_VERBOSE("Any proto:{}", ctx.key().proto);
     }
 
     sep = ctx.sep();
@@ -193,14 +193,14 @@ net_sfw_check_security_policy(ctx_t &ctx, net_sfw_match_result_t *match_rslt)
             rule_ctr->rule_stats->udp_hits++;
             break;
         default:
-            HAL_TRACE_DEBUG("Stats: Any proto:{}", ctx.key().proto);
+            HAL_TRACE_VERBOSE("Stats: Any proto:{}", ctx.key().proto);
             rule_ctr->rule_stats->other_hits++;
         }
 
         if (!dllist_empty(&nwsec_rule->appid_list_head)) {
             net_sfw_match_app_redir(ctx, nwsec_rule, match_rslt);
         } else {
-            HAL_TRACE_DEBUG("sfw::net_sfw_check_security_policy matched acl rule {} action={} alg={}",
+            HAL_TRACE_VERBOSE("sfw::net_sfw_check_security_policy matched acl rule {} action={} alg={}",
                     nwsec_rule->rule_id, nwsec_rule->fw_rule_action.sec_action, nwsec_rule->fw_rule_action.alg);
             match_rslt->valid = 1;
             if (nwsec_rule->fw_rule_action.sec_action == nwsec::SECURITY_RULE_ACTION_ALLOW) {
@@ -216,7 +216,7 @@ net_sfw_check_security_policy(ctx_t &ctx, net_sfw_match_result_t *match_rslt)
             match_rslt->idle_timeout = nwsec_rule->fw_rule_action.idle_timeout;
         }
     } else {
-        HAL_TRACE_DEBUG("sfw::net_sfw_check_security_policy rule lookup failed ret={}", ret);
+        HAL_TRACE_VERBOSE("sfw::net_sfw_check_security_policy rule lookup failed ret={}", ret);
     }
 
     if (acl_ctx) {

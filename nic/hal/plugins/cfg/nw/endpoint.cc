@@ -2872,7 +2872,7 @@ ep_add_session (ep_t *ep, session_t *session, bool ep_create)
 
 end:
 
-    HAL_TRACE_DEBUG("add ep {}/{} => session {}, ret : {}",
+    HAL_TRACE_VERBOSE("add ep {}/{} => session {}, ret : {}",
                     ep_l2_key_to_str(ep), ep->hal_handle,
                     session->hal_handle, ret);
     return ret;
