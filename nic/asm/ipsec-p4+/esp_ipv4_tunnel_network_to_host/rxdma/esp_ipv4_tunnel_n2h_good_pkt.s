@@ -7,10 +7,6 @@ struct common_p4plus_stage0_app_header_table_k k;
 struct phv_ p;
 
 %%
-        .param          esp_ipv4_tunnel_n2h_allocate_input_desc_semaphore
-        .param          esp_ipv4_tunnel_n2h_allocate_output_desc_semaphore
-        .param          esp_ipv4_tunnel_n2h_allocate_input_page_semaphore
-        .param          esp_ipv4_tunnel_n2h_allocate_output_page_semaphore
         .align
 ipsec_esp_v4_tunnel_n2h_good_pkt:
     nop.e

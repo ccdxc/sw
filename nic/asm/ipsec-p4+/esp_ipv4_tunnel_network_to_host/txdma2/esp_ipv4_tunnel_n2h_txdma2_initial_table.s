@@ -8,7 +8,6 @@ struct phv_ p;
 
 %%
         .param esp_ipv4_tunnel_n2h_load_barco_req 
-        .param esp_v4_tunnel_n2h_txdma2_increment_global_ci 
         .param IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
         .align
 esp_ipv4_tunnel_n2h_txdma2_initial_table:

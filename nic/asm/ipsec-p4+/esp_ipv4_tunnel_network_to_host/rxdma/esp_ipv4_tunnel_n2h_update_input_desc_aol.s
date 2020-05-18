@@ -9,8 +9,6 @@ struct rx_table_s3_t0_rx_table_s3_t0_cfg_action_d d;
 struct phv_ p;
 
 %%
-        .param esp_ipv4_tunnel_n2h_ipsec_cb_tail_enqueue_input_desc 
-        .param IPSEC_CB_BASE
         .param IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
         .align
 

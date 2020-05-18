@@ -8,7 +8,6 @@ struct rx_table_s4_t0_ipsec_cb_tail_enqueue_input_desc_d d;
 struct phv_ p;
 
 %%
-        .param IPSEC_CB_BASE
         .param IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_H2N
         .param esp_ipv4_tunnel_h2n_rxdma_ipsec_update_rx_stats
         .param IPSEC_PAGE_ADDR_RX

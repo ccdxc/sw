@@ -7,8 +7,6 @@ struct tx_table_s2_t0_esp_v4_tunnel_n2h_txdma2_load_in_desc_d d;
 struct phv_ p;
 
 %%
-        .param esp_v4_tunnel_n2h_txdma2_build_decap_packet 
-        .param IPSEC_CB_BASE
         .align
 esp_ipv4_tunnel_n2h_txdma2_load_in_desc:
     seq c1, d.ci[CAPRI_BARCO_GCM_DECRYPT_BUG_REQ_STRIDE_SHIFT-1:0], 0

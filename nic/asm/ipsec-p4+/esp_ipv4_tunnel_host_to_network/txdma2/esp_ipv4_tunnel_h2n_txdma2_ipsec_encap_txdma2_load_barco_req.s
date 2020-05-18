@@ -8,7 +8,6 @@ struct phv_ p;
 
 %%
         .param esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_load_in_desc 
-        .param esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_load_out_desc
         .param esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_load_ipsec_int
         .param IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_H2N
         .align

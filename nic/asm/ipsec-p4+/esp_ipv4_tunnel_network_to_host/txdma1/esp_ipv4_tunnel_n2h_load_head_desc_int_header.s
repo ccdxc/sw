@@ -9,7 +9,6 @@ struct phv_ p;
 %%
         .param esp_v4_tunnel_n2h_write_barco_req
         .param IPSEC_PAGE_ADDR_RX
-        .param IPSEC_PAGE_ADDR_TX
         .param IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
         .align
 esp_v4_tunnel_n2h_txdma1_load_head_desc_int_header:

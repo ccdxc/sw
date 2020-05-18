@@ -1,7 +1,7 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = ipsec_p4plus_esp_v4_tun_hton.p4bin
-MODULE_PIPELINE = iris gft
+MODULE_PIPELINE = iris gft apulu
 MODULE_SRCS     = ${MODULE_SRC_DIR}/esp_ipv4_tunnel_h2n_rxdma.p4 \
                   ${MODULE_SRC_DIR}/esp_ipv4_tunnel_h2n_txdma1.p4 \
                   ${MODULE_SRC_DIR}/esp_ipv4_tunnel_h2n_txdma2.p4

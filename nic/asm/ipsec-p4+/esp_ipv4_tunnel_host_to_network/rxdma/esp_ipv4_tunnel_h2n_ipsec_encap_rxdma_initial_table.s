@@ -8,7 +8,6 @@ struct common_p4plus_stage0_app_header_table_k_ k;
 struct phv_ p;
 
 %%
-        .param          IPSEC_PAD_BYTES_HBM_TABLE_BASE
         .param          esp_ipv4_tunnel_h2n_allocate_input_desc_semaphore
         .param          IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_H2N
         .param          IPSEC_ENC_NMDR_PI

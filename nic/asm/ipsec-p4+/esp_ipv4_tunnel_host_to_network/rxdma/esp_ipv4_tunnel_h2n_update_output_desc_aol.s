@@ -9,7 +9,6 @@ struct phv_ p;
 %%
         .param esp_ipv4_tunnel_h2n_ipsec_cb_tail_enqueue_input_desc
         .param esp_ipv4_tunnel_h2n_ipsec_cb_tail_enqueue_input_desc2
-        .param esp_ipv4_tunnel_h2n_rxdma_ipsec_update_rx_stats
         .align
 
 esp_ipv4_tunnel_h2n_update_output_desc_aol:

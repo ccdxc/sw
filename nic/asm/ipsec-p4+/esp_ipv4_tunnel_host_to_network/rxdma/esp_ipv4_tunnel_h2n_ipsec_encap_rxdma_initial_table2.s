@@ -7,13 +7,7 @@ struct common_p4plus_stage0_app_header_table_k k;
 struct phv_ p;
 
 %%
-        .param          esp_ipv4_tunnel_h2n_allocate_input_desc_semaphore
-        .param          esp_ipv4_tunnel_h2n_allocate_output_desc_semaphore
-        .param          esp_ipv4_tunnel_h2n_allocate_input_page_semaphore
-        .param          esp_ipv4_tunnel_h2n_allocate_output_page_semaphore
-        .param IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_H2N
 
-        .align
 esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table2:
     smeqb c3, d.flags, IPSEC_FLAGS_RANDOM_MASK, IPSEC_FLAGS_RANDOM_MASK
     phvwr.c3 p.ipsec_to_stage2_is_random, 1

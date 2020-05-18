@@ -146,6 +146,203 @@
             "_comment": "1K descriptors of size 128B"
         },
         {
+              "name": "ipsec-global-drop-stats",
+              "kind": "static",
+              "size": "2K"
+        },
+        {
+             "name": "ipsec-cb",
+             "kind": "static",
+             "size": "128K",
+             "cache": "p4plus-all"
+        },
+        {
+             "name": "ipsec_cb_barco",
+             "kind": "static",
+             "size": "8192K",
+             "cache": "p4plus-all"
+        },
+        {
+             "name": "ipsec-nmdr-tx",
+             "kind": "static",
+             "size": "128K"
+        },
+        {
+             "name": "ipsec-nmdr-rx",
+             "kind": "static",
+             "size": "128K"
+        },
+        {
+             "name": "ipsec-big-nmdr-tx",
+             "kind": "static",
+             "size": "128K"
+        },
+        {
+             "name": "ipsec-big-nmdr-rx",
+             "kind": "static",
+             "size": "128K"
+        },
+        {
+             "name": "nmdr-tx-gc",
+             "kind": "static",
+             "size": "128K"
+        },
+        {
+             "name": "nmdr-rx-gc",
+             "kind": "static",
+             "size": "128K"
+        },
+        {
+            "name": "ipsec-nmpr-tx",
+            "kind": "static",
+            "size": "1024K"
+        },
+        {
+            "name": "ipsec-nmpr-rx",
+            "kind": "static",
+            "size": "1024K"
+        },
+        {
+            "name": "ipsec-nmpr-big-tx",
+            "kind": "static",
+            "size": "10240K"
+        },
+        {
+            "name": "ipsec-nmpr-big-rx",
+            "kind": "static",
+            "size": "10240K"
+        },
+        {
+            "name": "ipsec-descriptor-tx",
+            "kind": "static",
+            "size": "2048K"
+        },
+        {
+            "name": "ipsec-descriptor-rx",
+            "kind": "static",
+            "size": "2048K"
+        },
+        {
+            "name": "ipsec-big-descriptor-tx",
+            "kind": "static",
+            "size": "2048K"
+        },
+        {
+            "name": "ipsec-big-descriptor-rx",
+            "kind": "static",
+            "size": "2048K"
+        },
+        {
+            "name": "enc-page-big-tx",
+            "kind": "static",
+            "size": "40960K"
+        },
+        {
+            "name": "enc-page-big-rx",
+            "kind": "static",
+            "size": "40960K"
+        },
+        {
+            "name": "dec-page-big-tx",
+            "kind": "static",
+            "size": "40960K"
+        },
+        {
+            "name": "dec-page-big-rx",
+            "kind": "static",
+            "size": "40960K"
+        },
+        {
+            "name": "key-mem",
+            "kind": "static",
+            "size": "4096K"
+        },
+        {
+            "name": "crypto-asym-key-desc-array",
+            "kind": "static",
+            "size": "1024K"
+        },
+        {
+            "name": "ipsec_pad_table",
+            "kind": "static",
+            "size": "1K"
+        },
+        {
+            "name": "brq-ring-gcm0",
+            "kind": "static",
+            "size": "128K"
+        },
+        {
+            "name": "brq-ring-gcm1",
+            "kind": "static",
+            "size": "128K"
+        },
+        {
+            "name": "brq-ring-asym",
+            "kind": "static",
+            "size": "32K"
+        },
+        {
+            "name": "crypto-asym-dma-descr",
+            "kind": "static",
+            "size": "24K"
+        },
+        {
+            "name": "brq-ring-mpp0",
+            "kind": "static",
+            "size": "128K"
+        },
+        {
+            "name": "brq-ring-mpp1",
+            "kind": "static",
+            "size": "128K"
+        },
+        {
+            "name": "brq-ring-mpp2",
+            "kind": "static",
+            "size": "128K"
+        },
+        {
+            "name": "brq-ring-mpp3",
+            "kind": "static",
+            "size": "128K"
+        },
+        {
+            "name": "brq-ring-cp",
+            "kind": "static",
+            "size": "256K"
+        },
+        {
+            "name": "brq-ring-cp-hot",
+            "kind": "static",
+            "size": "256K"
+        },
+        {
+            "name": "brq-ring-dc",
+            "kind": "static",
+            "size": "256K"
+        },
+        {
+            "name": "brq-ring-dc-hot",
+            "kind": "static",
+            "size": "256K"
+        },
+        {
+            "name": "crypto-sym-msg-descr",
+            "kind": "static",
+            "size": "64K"
+        },
+        {
+            "name": "crypto-hbm-mem",
+            "kind": "static",
+            "size": "512K"
+        },
+        {
+            "name": "tls_proxy_pad_table",
+            "kind": "static",
+            "size": "1K"
+        },
+        {
             "name": "p4_program",
             "kind": "cfgtbl",
             "size": "1024K"

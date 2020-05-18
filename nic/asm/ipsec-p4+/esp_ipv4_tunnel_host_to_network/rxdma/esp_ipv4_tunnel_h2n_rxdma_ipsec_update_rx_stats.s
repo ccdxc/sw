@@ -9,7 +9,6 @@ struct phv_ p;
 
 %%
         .align
-        .param IPSEC_PAGE_ADDR_RX
 esp_ipv4_tunnel_h2n_rxdma_ipsec_update_rx_stats:
     //tbladd.f d.h2n_rx_pkts, 1
     phvwri p.{app_header_table0_valid...app_header_table3_valid}, 0

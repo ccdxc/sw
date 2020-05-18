@@ -8,7 +8,6 @@ struct rx_table_s4_t2_ipsec_cb_tail_enqueue_input_desc2_d d;
 struct phv_ p;
 
 %%
-        .param IPSEC_CB_BASE
         .param IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_H2N
         .align
 

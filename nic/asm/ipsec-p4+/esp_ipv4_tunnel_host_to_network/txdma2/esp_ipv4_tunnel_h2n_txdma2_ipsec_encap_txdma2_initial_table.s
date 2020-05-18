@@ -8,7 +8,6 @@ struct phv_ p;
 
 %%
         .param esp_ipv4_tunnel_h2n_txdma2_ipsec_dummy 
-        .param BRQ_BASE
         .param IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_H2N
         .align
 esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_initial_table:
