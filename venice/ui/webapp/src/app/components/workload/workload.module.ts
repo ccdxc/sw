@@ -28,6 +28,7 @@ import { WorkloadModalComponent } from './workloadmodal/workloadmodal.component'
 import { SharedModule } from '@app/components/shared//shared.module';
 import { LabelselectorComponent } from '@app/components/workload/labelselector/labelselector.component';
 import { NewworkloadComponent } from './newworkload/newworkload.component';
+import { WorkloaddetailComponent } from './workloaddetail/workloaddetail.component';
 
 
 @NgModule({
@@ -48,7 +49,7 @@ import { NewworkloadComponent } from './newworkload/newworkload.component';
     SharedModule
 
   ],
-  declarations: [WorkloadComponent, WorkloadwidgetComponent, NewworkloadComponent, WorkloadModalComponent, LabelselectorComponent],
+  declarations: [WorkloadComponent, WorkloaddetailComponent, WorkloadwidgetComponent, NewworkloadComponent, WorkloadModalComponent, LabelselectorComponent],
   exports: [WorkloadComponent, WorkloadwidgetComponent],
   entryComponents: [
     WorkloadwidgetComponent,

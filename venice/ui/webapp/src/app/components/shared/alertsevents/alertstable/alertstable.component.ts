@@ -270,7 +270,7 @@ export class AlertstableComponent extends DataComponent implements OnInit, OnCha
     const alerts = this.getSelectedDataObjects();
     const successMsg: string = 'Updated ' + alerts.length + ' alerts';
     const failureMsg: string = 'Failed to update alerts';
-    const stagingBulkEditAction = this.buildBulkEditDSCProfilePayload(alerts, newState);
+    const stagingBulkEditAction = this.buildBulkEditUpdateAlertsPayload(alerts, newState);
     this.bulkEditHelper(alerts, stagingBulkEditAction, successMsg, failureMsg);
   }
 
@@ -278,7 +278,7 @@ export class AlertstableComponent extends DataComponent implements OnInit, OnCha
     this.invokeTimeRangeValidator();
   }
 
-  buildBulkEditDSCProfilePayload(updateAlerts: MonitoringAlert[], newState: MonitoringAlertSpec_state, buffername: string = ''): IStagingBulkEditAction {
+  buildBulkEditUpdateAlertsPayload(updateAlerts: MonitoringAlert[], newState: MonitoringAlertSpec_state, buffername: string = ''): IStagingBulkEditAction {
 
     const stagingBulkEditAction: IStagingBulkEditAction = Utility.buildStagingBulkEditAction(buffername);
     stagingBulkEditAction.spec.items = [];

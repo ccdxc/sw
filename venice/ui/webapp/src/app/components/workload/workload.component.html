@@ -65,7 +65,11 @@
 <ng-template #bodyTemplate let-rowData let-col="col" let-hovered="hovered">
   <ng-container [ngSwitch]="col.field">
     <ng-container *ngSwitchCase="'meta.name'">
-      <div class="ellipsisText" [title]="rowData.meta.name">{{rowData.meta.name}}</div>
+      <div class="ellipsisText" [title]="rowData.meta.name">
+        <a routerLink="./{{rowData.meta.name}}">
+          {{rowData.meta.name}}
+        </a>
+      </div>
       <div class="ellipsisText" [title]="rowData.meta.labels['io.pensando.vcenter.display-name']"
            *ngIf="rowData.meta.labels && rowData.meta.labels['io.pensando.vcenter.display-name']">
         ({{rowData.meta.labels['io.pensando.vcenter.display-name']}})

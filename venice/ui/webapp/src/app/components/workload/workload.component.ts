@@ -702,18 +702,7 @@ export class WorkloadComponent extends DataComponent  implements OnInit {
   }
 
   isWorkloadSystemGenerated(rowData: WorkloadWorkload): boolean {
-    if (rowData && rowData.meta.labels) {
-      if (rowData.meta.labels['io.pensando.namespace']) {
-        return true;
-      }
-      if (rowData.meta.labels['io.pensando.orch-name']) {
-        return true;
-      }
-      if (rowData.meta.labels['io.pensando.vcenter.display-name']) {
-        return true;
-      }
-    }
-    return false;
+    return Utility.isWorkloadSystemGenerated(rowData);
   }
 
   disableMultiDelIcons() {

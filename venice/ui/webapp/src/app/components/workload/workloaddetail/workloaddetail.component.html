@@ -1,0 +1,110 @@
+<app-pagebody [icon]="bodyicon" [header]="selectedObj?.meta.name" [transparent]="true">
+  <div class="workloaddetail">
+    <ng-container *ngTemplateOutlet="details"></ng-container>
+    <ng-container *ngTemplateOutlet="interfaces"></ng-container>
+  </div>
+</app-pagebody>
+
+<ng-template #details>
+  <div class="detail-card-wrapper">
+    <div class="detail-card">
+      <div class="detail-card-border"></div>
+      <div class="workloaddetail-detail-card" fxLayout="row">
+        <div fxFlex="noshrink">
+          <div class="detail-card-header">WORKLOAD DETAILS</div>
+          <div class="detail-card-border"></div>
+          <div fxLayout="row" fxLayoutGap="60px">
+            <div class="workloaddetail-col-1" fxFlex="noshrink">
+              <div fxLayout="row">
+                <div class="detail-card-label">Host:</div>
+                <div class="detail-card-value">{{ selectedObj?.spec['host-name'] }}</div>
+              </div>
+              <div fxLayout="row">
+                <div class="detail-card-label">DSC:</div>
+                <div class="detail-card-value">
+                  <div *ngFor="let dsc of naples">
+                    {{ dsc.spec.id }}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="workloaddetail-col-2" fxFlex="noshrink">
+              <div fxLayout="row">
+                <div class="detail-card-label">Last Modified:</div>
+                <div class="detail-card-value">
+                  {{ selectedObj?.meta['mod-time'] | PrettyDate }}
+                </div>
+              </div>
+              <div fxLayout="row">
+                <div class="detail-card-label">Created:</div>
+                <div class="detail-card-value">
+                  {{ selectedObj?.meta['creation-time'] | PrettyDate }}
+                </div>
+              </div>
+              <ng-container *featureGuard="'enterprise'">
+                <div fxLayout="row">
+                  <div class="detail-card-label">Tenant:</div>
+                  <div class="detail-card-value">{{ selectedObj?.meta.tenant }}</div>
+                </div>
+                <div fxLayout="row">
+                  <div class="detail-card-label">Namespace:</div>
+                  <div class="detail-card-value">{{ selectedObj?.meta.namespace }}</div>
+                </div>
+              </ng-container>
+            </div>
+          </div>
+        </div>
+        <div class="workloaddetail-col-3">
+          <div class="detail-card-border"></div>
+          <div class="detail-card-header-sm">Labels</div>
+          <div class="detail-card-border"></div>
+          <app-pentable #labelTable
+                        [bodyTemplate]="labelBodyTemplate"
+                        [columns]="labelColumns"
+                        [data]="labelData"
+                        [dataKey]="'key'"
+                        [loading]="loading">
+          </app-pentable>
+        </div>
+      </div>
+      <div class="detail-card-border"></div>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #interfaces>
+  <div class="detail-card-wrapper">
+    <div class="detail-card">
+      <div class="detail-card-border"></div>
+      <div class="detail-card-header">INTERFACES</div>
+      <div class="detail-card-border"></div>
+      <ng-container *ngIf="!loading">
+        <app-pentable #interfaceTable
+                      [bodyTemplate]="interfaceBodyTemplate"
+                      [columns]="interfaceColumns"
+                      [data]="selectedObj?.spec.interfaces || []"
+                      [dataKey]="'mac-address'"
+                      [loading]="loading">
+        </app-pentable>
+        <div class="detail-card-border"></div>
+      </ng-container>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #interfaceBodyTemplate let-rowData let-col="col">
+  <ng-container [ngSwitch]="col.field">
+    <ng-container *ngSwitchCase="'ip-addresses'">
+      <ng-container *ngFor="let ipAddress of rowData['ip-addresses']">
+        <div>{{ ipAddress }}</div>
+      </ng-container>
+    </ng-container>
+    <ng-container *ngSwitchDefault>
+      {{ rowData[col.field] }}
+    </ng-container>
+  </ng-container>
+</ng-template>
+
+<ng-template #labelBodyTemplate let-rowData let-col="col">
+  {{ rowData[col.field] }}
+</ng-template>

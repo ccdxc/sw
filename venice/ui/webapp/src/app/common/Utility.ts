@@ -2226,6 +2226,10 @@ export class Utility {
     return names;
   }
 
+  public static isWorkloadSystemGenerated(rowData: WorkloadWorkload): boolean {
+    return rowData && rowData.meta.labels && Object.keys(rowData.meta.labels).some(key => key.indexOf('io.pensando') >= 0);
+  }
+
   // this function is used to determin whether an interface should be filtered
   // for display
   // rules are here.
