@@ -1680,6 +1680,7 @@ func (a *ApuluAPI) handleHostInterface(spec *halapi.LifSpec, status *halapi.LifS
 		log.Infof("Skipping LIF_CREATE event for lif %v, type %v", uid.String(), spec.GetType().String())
 		return nil
 	}
+	log.Infof("Got host If update Spec:[%+v] Status [%+v]", spec, status)
 	// create host interface instance
 	i := netproto.Interface{
 		TypeMeta: api.TypeMeta{
@@ -1701,6 +1702,7 @@ func (a *ApuluAPI) handleHostInterface(spec *halapi.LifSpec, status *halapi.LifS
 			DSCID:       a.InfraAPI.GetConfig().DSCID,
 			InterfaceID: uint64(status.GetIfIndex()),
 			IFHostStatus: netproto.InterfaceHostStatus{
+				MacAddress: apuluutils.Uint64ToMac(spec.MacAddress),
 				HostIfName: status.GetName(),
 			},
 			OperStatus: status.GetStatus().String(),

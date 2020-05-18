@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"net"
 	"strings"
 	"sync"
 	"time"
@@ -34,6 +35,8 @@ type networkHooks struct {
 	logger    log.Logger
 	vnidMapMu sync.Mutex
 	vnidMap   map[uint32]string
+	netwMapMu sync.Mutex
+	netwMap   map[string]map[string]*net.IPNet
 }
 
 func (h *networkHooks) validateIPAMPolicyConfig(i interface{}, ver string, ignStatus, ignoreSpec bool) []error {
@@ -655,6 +658,48 @@ func (h *networkHooks) networkVNIReserve(ctx context.Context, i interface{}, kvs
 	return nil, nil
 }
 
+func (h *networkHooks) networkSubnetReserve(ctx context.Context, i interface{}, kvs kvstore.Interface, key string, dryrun bool) (apiserver.ResourceRollbackFn, error) {
+	n, ok := i.(network.Network)
+	if !ok {
+		log.Errorf("networkSubnetReserve; invalid kind")
+		return nil, fmt.Errorf("invalid kind received")
+	}
+	var err error
+	var ret *net.IPNet
+
+	if n.Spec.IPv4Subnet != "" {
+		h.netwMapMu.Lock()
+		_, ret, err = net.ParseCIDR(n.Spec.IPv4Subnet)
+		if err != nil {
+			log.Errorf("failed to parse [%v](%s)", n.Spec.IPv4Subnet, err)
+			h.netwMapMu.Unlock()
+			return nil, fmt.Errorf("could not parse network")
+		}
+		m, ok := h.netwMap[n.Tenant+"/"+n.Spec.VirtualRouter]
+		if !ok {
+			m = make(map[string]*net.IPNet)
+			m[n.Name] = ret
+			h.netwMap[n.Tenant+"/"+n.Spec.VirtualRouter] = m
+		} else {
+			for k, s := range m {
+				if k != n.Name {
+					if s.Contains(ret.IP) || ret.Contains(s.IP) {
+						log.Errorf("overlapping subnet, existing[%v][%v] new[%v][%v]", k, s.IP.String(), n.Name, ret.IP.String())
+						h.netwMapMu.Unlock()
+						return nil, fmt.Errorf("IP subnet overlaps with %v", k)
+					}
+				}
+			}
+			m[n.Name] = ret
+			h.netwMap[n.Tenant+"/"+n.Spec.VirtualRouter] = m
+		}
+		h.netwMapMu.Unlock()
+	}
+	return func(ctx context.Context, i interface{}, _ kvstore.Interface, key string, dryrun bool) {
+		h.releaseNetworkIPNet(n)
+	}, nil
+}
+
 func (h *networkHooks) vrouterVNIReserve(ctx context.Context, i interface{}, kvs kvstore.Interface, key string, dryrun bool) (apiserver.ResourceRollbackFn, error) {
 	n, ok := i.(network.VirtualRouter)
 	if !ok {
@@ -682,6 +727,20 @@ func (h *networkHooks) vrouterVNIReserve(ctx context.Context, i interface{}, kvs
 	return nil, nil
 }
 
+func (h *networkHooks) releaseNetworkIPNet(n network.Network) {
+	if n.Spec.IPv4Subnet != "" {
+		h.netwMapMu.Lock()
+		m, ok := h.netwMap[n.Tenant+"/"+n.Spec.VirtualRouter]
+		if ok {
+			delete(m, n.Name)
+		}
+		if len(m) == 0 {
+			delete(h.netwMap, n.Tenant+"/"+n.Spec.VirtualRouter)
+		}
+		h.netwMapMu.Unlock()
+	}
+}
+
 func (h *networkHooks) releaseNetworkResources(ctx context.Context, oper apiintf.APIOperType, i interface{}, dryRun bool) {
 	n, ok := i.(network.Network)
 	if !ok {
@@ -689,18 +748,23 @@ func (h *networkHooks) releaseNetworkResources(ctx context.Context, oper apiintf
 		return
 	}
 	if n.Spec.VxlanVNI != 0 {
-		defer h.vnidMapMu.Unlock()
 		h.vnidMapMu.Lock()
 		if v, ok := h.vnidMap[n.Spec.VxlanVNI]; ok {
 			k := "Network/" + n.Tenant + "/" + n.Name
 			if v != k {
 				log.Errorf("current resource did not match [%v][%v]", v, k)
+				h.vnidMapMu.Unlock()
 				return
 			}
 			delete(h.vnidMap, n.Spec.VxlanVNI)
 		} else {
 			log.Errorf("could not find VNI in map [%v/%v][%v]", n.Tenant, n.Name, n.Spec.VxlanVNI)
 		}
+		h.vnidMapMu.Unlock()
+	}
+
+	if n.Spec.IPv4Subnet != "" {
+		h.releaseNetworkIPNet(n)
 	}
 }
 
@@ -765,15 +829,16 @@ func (h *networkHooks) restoreResourceMap(kvs kvstore.Interface, logger log.Logg
 func registerNetworkHooks(svc apiserver.Service, logger log.Logger) {
 	hooks := networkHooks{
 		vnidMap: make(map[uint32]string),
+		netwMap: make(map[string]map[string]*net.IPNet),
 	}
 	hooks.svc = svc
 	hooks.logger = logger
 	logger.InfoLog("Service", "NetworkV1", "msg", "registering networkAction hook")
 	svc.GetCrudService("IPAMPolicy", apiintf.CreateOper).GetRequestType().WithValidate(hooks.validateIPAMPolicyConfig)
 	svc.GetCrudService("IPAMPolicy", apiintf.UpdateOper).GetRequestType().WithValidate(hooks.validateIPAMPolicyConfig)
-	svc.GetCrudService("Network", apiintf.CreateOper).WithPreCommitHook(hooks.checkNetworkCreateConfig).WithResourceAllocHook(hooks.networkVNIReserve)
+	svc.GetCrudService("Network", apiintf.CreateOper).WithPreCommitHook(hooks.checkNetworkCreateConfig).WithResourceAllocHook(hooks.networkVNIReserve).WithResourceAllocHook(hooks.networkSubnetReserve)
 	svc.GetCrudService("Network", apiintf.UpdateOper).GetRequestType().WithValidate(hooks.validateNetworkConfig)
-	svc.GetCrudService("Network", apiintf.UpdateOper).WithPreCommitHook(hooks.networkOrchConfigPrecommit)
+	svc.GetCrudService("Network", apiintf.UpdateOper).WithPreCommitHook(hooks.networkOrchConfigPrecommit).WithResourceAllocHook(hooks.networkSubnetReserve)
 	svc.GetCrudService("Network", apiintf.UpdateOper).WithPreCommitHook(hooks.checkNetworkMutableFields)
 	svc.GetCrudService("Network", apiintf.DeleteOper).WithPostCommitHook(hooks.releaseNetworkResources)
 	svc.GetCrudService("NetworkInterface", apiintf.UpdateOper).GetRequestType().WithValidate(hooks.validateNetworkIntfConfig)

@@ -131,6 +131,19 @@ func MacStrtoUint64(macStr string) uint64 {
 	return mac
 }
 
+// Uint64ToMac converts a MAC from uint64 to string
+func Uint64ToMac(in uint64) string {
+	b := make([]byte, 8)
+
+	binary.BigEndian.PutUint64(b, in)
+	mac := net.HardwareAddr(b[2:])
+	s := strings.Replace(mac.String(), ":", "", -1)
+	for i := 4; i < len(s); i += 5 {
+		s = s[:i] + "." + s[i:]
+	}
+	return s
+}
+
 // ConvertIPAddress converts IP Address string to hal ip address. TODO v6
 func ConvertIPAddress(address string) (ipAddress *halapi.IPAddress) {
 	addr := net.ParseIP(address)

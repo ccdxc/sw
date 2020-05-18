@@ -209,16 +209,16 @@ func (k *CfgWatcherService) runUntilCancel() {
 	defer k.Done()
 
 	var err error
-	opts := api.ListWatchOptions{}
+	dscopts := api.ListWatchOptions{FieldChangeSelector: []string{"Spec", "Status.AdmissionPhase"}}
 
 	// Init SmartNIC watcher
-	k.smartNICWatcher, err = k.svcsClient.ClusterV1().DistributedServiceCard().Watch(k.ctx, &opts)
+	k.smartNICWatcher, err = k.svcsClient.ClusterV1().DistributedServiceCard().Watch(k.ctx, &dscopts)
 	ii := 0
 	for err != nil {
 		select {
 		case <-time.After(time.Second):
 
-			k.smartNICWatcher, err = k.svcsClient.ClusterV1().DistributedServiceCard().Watch(k.ctx, &opts)
+			k.smartNICWatcher, err = k.svcsClient.ClusterV1().DistributedServiceCard().Watch(k.ctx, &dscopts)
 			ii++
 			if ii%10 == 0 {
 				k.logger.Errorf("Waiting for DistributedServiceCard watch to succeed for %v seconds", ii)

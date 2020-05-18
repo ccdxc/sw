@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"net"
 	"testing"
 	"time"
 
@@ -1019,6 +1020,7 @@ func TestVNIDResorceMap(t *testing.T) {
 	nh := &networkHooks{
 		logger:  l,
 		vnidMap: make(map[uint32]string),
+		netwMap: make(map[string]map[string]*net.IPNet),
 	}
 
 	netwlist := network.NetworkList{
@@ -1135,4 +1137,53 @@ func TestVNIDResorceMap(t *testing.T) {
 
 	nh.releaseVRouterResources(ctx, apiintf.DeleteOper, *vrList.Items[1], false)
 	Assert(t, len(nh.vnidMap) == 2, "expecting 2 VNIDS to be restored, got %v", len(nh.vnidMap))
+
+	netw.Spec.VxlanVNI = 0
+	netw.Spec.IPv4Subnet = "10.1.1.0/24"
+	netw.Spec.VirtualRouter = "vrf1"
+
+	_, err = nh.networkSubnetReserve(ctx, netw, kvs, "/test", false)
+	AssertOk(t, err, "expecting to succeed")
+	Assert(t, len(nh.netwMap) == 1, "expecting size of map to be 1")
+	Assert(t, len(nh.netwMap["tenant1/vrf1"]) == 1, "expecting size of network map to be 1")
+
+	netw.Spec.IPv4Subnet = "10.1.2.0/24"
+	netw.Spec.VirtualRouter = "vrf1"
+	netw.Name = "net2"
+
+	_, err = nh.networkSubnetReserve(ctx, netw, kvs, "/test", false)
+	AssertOk(t, err, "expecting to succeed")
+	Assert(t, len(nh.netwMap) == 1, "expecting size of map to be 1")
+	Assert(t, len(nh.netwMap["tenant1/vrf1"]) == 2, "expecting size of network map to be 2 got %d", len(nh.netwMap["tenant1/vrf1"]))
+
+	netw.Spec.IPv4Subnet = "10.1.1.0/24"
+	netw.Spec.VirtualRouter = "vrf1"
+	netw.Name = "net3"
+
+	_, err = nh.networkSubnetReserve(ctx, netw, kvs, "/test", false)
+	Assert(t, err != nil, "expecting to fail")
+	Assert(t, len(nh.netwMap) == 1, "expecting size of map to be 1")
+	Assert(t, len(nh.netwMap["tenant1/vrf1"]) == 2, "expecting size of network map to be 2")
+
+	netw.Spec.IPv4Subnet = "10.1.1.0/24"
+	netw.Spec.VirtualRouter = "vrf2"
+	netw.Name = "net1"
+
+	_, err = nh.networkSubnetReserve(ctx, netw, kvs, "/test", false)
+	AssertOk(t, err, "expecting to succeed")
+	Assert(t, len(nh.netwMap) == 2, "expecting size of map to be 2")
+	Assert(t, len(nh.netwMap["tenant1/vrf1"]) == 2, "expecting size of network map to be 2")
+	Assert(t, len(nh.netwMap["tenant1/vrf2"]) == 1, "expecting size of network map to be 1")
+
+	nh.releaseNetworkResources(ctx, apiintf.DeleteOper, netw, false)
+	Assert(t, len(nh.netwMap) == 1, "expecting size of map to be 1")
+	Assert(t, len(nh.netwMap["tenant1/vrf1"]) == 2, "expecting size of network map to be 2")
+
+	// rb2(ctx, nil, nil, "", false)
+	// Assert(t, len(nh.netwMap) == 1, "expecting size of map to be 1")
+	// Assert(t, len(nh.netwMap["tenant1/vrf1"]) == 1, "expecting size of network map to be 1")
+	//
+	// rb1(ctx, nil, nil, "", false)
+	// Assert(t, len(nh.netwMap) == 0, "expecting size of map to be 0")
+
 }

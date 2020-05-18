@@ -690,6 +690,14 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (retRe
 	// currently resource reservation only supported on on staged requests
 	rollbackFns := []apiserver.ResourceRollbackFn{}
 	if bufid == "" {
+		// rollback in case of failure.
+		defer func() {
+			if retErr != nil {
+				for _, f := range rollbackFns {
+					f(ctx, i, kv, key, dryRun)
+				}
+			}
+		}()
 		for _, f := range m.resourceAllocFn {
 			rollbackFn, err := f(ctx, i, kv, key, dryRun)
 			if err != nil {
@@ -700,14 +708,6 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (retRe
 			}
 		}
 	}
-	// rollback in case of failure.
-	defer func() {
-		if retErr != nil {
-			for _, f := range rollbackFns {
-				f(ctx, i, kv, key, dryRun)
-			}
-		}
-	}()
 
 	// Label updates perform a kv consistent update and skips the kv write
 	if kvwrite && oper == apiintf.LabelOper {

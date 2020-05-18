@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"encoding/binary"
 	"fmt"
 	"net"
 	goruntime "runtime"
@@ -14,6 +15,7 @@ import (
 	diagapi "github.com/pensando/sw/api/generated/diagnostics"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/routing"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	pdstypes "github.com/pensando/sw/nic/apollo/agent/gen/pds"
 	msTypes "github.com/pensando/sw/nic/metaswitch/gen/agent"
 	"github.com/pensando/sw/venice/globals"
@@ -21,6 +23,8 @@ import (
 	"github.com/pensando/sw/venice/perseus/types"
 	"github.com/pensando/sw/venice/utils/diagnostics"
 	diagsvc "github.com/pensando/sw/venice/utils/diagnostics/service"
+	"github.com/pensando/sw/venice/utils/events"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/k8s"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
@@ -33,6 +37,29 @@ type snicT struct {
 	ip     string
 	uuid   string
 	pushed bool
+}
+
+type peerState struct {
+	state bool
+	epoch uint64
+}
+
+func pdsStateToString(in pdstypes.BGPPeerState) string {
+	switch in {
+	case pdstypes.BGPPeerState_BGP_PEER_STATE_ESTABLISHED:
+		return "Established"
+	case pdstypes.BGPPeerState_BGP_PEER_STATE_ACTIVE:
+		return "Active"
+	case pdstypes.BGPPeerState_BGP_PEER_STATE_CONNECT:
+		return "Connect"
+	case pdstypes.BGPPeerState_BGP_PEER_STATE_IDLE:
+		return "Idle"
+	case pdstypes.BGPPeerState_BGP_PEER_STATE_OPENCONFIRM:
+		return "OpenConfirm"
+	case pdstypes.BGPPeerState_BGP_PEER_STATE_OPENSENT:
+		return "OpenSent"
+	}
+	return "Unknown"
 }
 
 // ServiceHandlers holds all the servies to be supported
@@ -53,6 +80,8 @@ type ServiceHandlers struct {
 	monitorPort    net.Listener
 	stallMonitor   bool
 	grpcSvc        *rpckit.RPCServer
+	evRecorder     events.Recorder
+	peerTracker    map[string]*peerState
 }
 
 // NewServiceHandlers returns a Service Handler
@@ -65,8 +94,17 @@ func NewServiceHandlers() *ServiceHandlers {
 	m.cfgWatcherSvc.SetRoutingConfigEventHandler(m.HandleRoutingConfigEvent)
 	m.cfgWatcherSvc.SetNodeConfigEventHandler(m.HandleNodeConfigEvent)
 	m.snicMap = make(map[string]*snicT)
+	m.peerTracker = make(map[string]*peerState)
 	m.pegasusURL = globals.Localhost + ":" + globals.PegasusGRPCPort
+	m.ctx, m.cancelFn = context.WithCancel(context.Background())
 	m.connectToPegasus()
+	var err error
+	m.evRecorder, err = recorder.NewRecorder(&recorder.Config{
+		Component: globals.Perseus}, log.GetDefaultInstance())
+	if err != nil {
+		log.Fatalf("failed to create events recorder, err: %v", err)
+	}
+	go m.pollPeerState()
 	m.setupLBIf()
 
 	grpcSvc, err := rpckit.NewRPCServer(globals.Perseus, ":"+globals.PerseusGRPCPort)
@@ -298,7 +336,7 @@ func (m *ServiceHandlers) handleCreateUpdateSmartNICObject(evtNIC *cmd.Distribut
 	snic.name = evtNIC.ObjectMeta.Name
 	snic.phase = evtNIC.Status.AdmissionPhase
 	snic.uuid = evtNIC.UUID
-	snic.pushed = false
+	// snic.pushed = false
 	m.snicMap[evtNIC.ObjectMeta.Name] = snic
 	m.configurePeer(snic, false)
 }
@@ -396,6 +434,89 @@ func (m *ServiceHandlers) HandleNetworkInterfaceEvent(et kvstore.WatchEventType,
 		log.Fatalf("unexpected event received")
 	}
 	return
+}
+
+func (m *ServiceHandlers) pollPeerState() {
+	log.Infof("Starting BGP Peer polling")
+	tick := time.Tick(time.Second * 5)
+	var epoch, ups, downs uint64
+	for {
+		select {
+		case <-m.ctx.Done():
+			log.Infof("got cancel, exiting BGP Peer polling")
+		case <-tick:
+			epoch++
+			resp, err := m.pegasusClient.BGPPeerGet(context.Background(), &pdstypes.BGPPeerGetRequest{})
+			if err == nil && resp.ApiStatus == pdstypes.ApiStatus_API_STATUS_OK {
+				if epoch%12 == 0 {
+					log.Infof("epoch [%v] got [%d] peers : ups [%d] downs[%d]", epoch, len(resp.Response), ups, downs)
+				}
+				for _, peer := range resp.Response {
+					p, ok := m.peerTracker[pdsIPToString(peer.Spec.PeerAddr)]
+					if !ok {
+						state := peerStateToBool(peer.Status)
+						m.peerTracker[pdsIPToString(peer.Spec.PeerAddr)] = &peerState{epoch: epoch, state: state}
+						if state {
+							recorder.Event(eventtypes.BGP_SESSION_ESTABLISHED, fmt.Sprintf("Peer %v, State %s", pdsIPToString(peer.Spec.PeerAddr), pdsStateToString(peer.Status.Status)), nil)
+							log.Infof("Peer EVENT: Peer up [%v]", pdsIPToString(peer.Spec.PeerAddr))
+							ups++
+						} else {
+							recorder.Event(eventtypes.BGP_SESSION_DOWN, fmt.Sprintf("Peer %v, State %s", pdsIPToString(peer.Spec.PeerAddr), pdsStateToString(peer.Status.Status)), nil)
+							log.Infof("Peer EVENT: Peer down [%v]", pdsIPToString(peer.Spec.PeerAddr))
+							downs++
+						}
+					} else {
+						if p.state != peerStateToBool(peer.Status) {
+							if peerStateToBool(peer.Status) {
+								recorder.Event(eventtypes.BGP_SESSION_ESTABLISHED, fmt.Sprintf("Peer %v, State %s", pdsIPToString(peer.Spec.PeerAddr), pdsStateToString(peer.Status.Status)), nil)
+								log.Infof("Peer EVENT: Peer up [%v]", pdsIPToString(peer.Spec.PeerAddr))
+								ups++
+							} else {
+								recorder.Event(eventtypes.BGP_SESSION_DOWN, fmt.Sprintf("Peer %v, State %s", pdsIPToString(peer.Spec.PeerAddr), pdsStateToString(peer.Status.Status)), nil)
+								log.Infof("Peer EVENT: Peer down [%v]", pdsIPToString(peer.Spec.PeerAddr))
+								downs++
+							}
+						}
+						p.epoch = epoch
+						p.state = peerStateToBool(peer.Status)
+						m.peerTracker[pdsIPToString(peer.Spec.PeerAddr)] = p
+					}
+				}
+				delKeys := []string{}
+				for k, p := range m.peerTracker {
+					if p.epoch != epoch {
+						recorder.Event(eventtypes.BGP_SESSION_DOWN, fmt.Sprintf("Peer %v, State Deleted", k), nil)
+						log.Infof("Peer EVENT: Peer deleted [%v]", k)
+						downs++
+						delKeys = append(delKeys, k)
+					}
+				}
+				for _, k := range delKeys {
+					delete(m.peerTracker, k)
+				}
+			}
+		}
+	}
+
+}
+
+func pdsIPToString(in *pdstypes.IPAddress) string {
+	if in == nil {
+		return ""
+	}
+	if in.Af == pdstypes.IPAF_IP_AF_INET {
+		ip := make(net.IP, 4)
+		binary.BigEndian.PutUint32(ip, in.GetV4Addr())
+		return ip.String()
+	}
+	return ""
+}
+
+func peerStateToBool(p *pdstypes.BGPPeerStatus) bool {
+	if p == nil {
+		return false
+	}
+	return p.Status == pdstypes.BGPPeerState_BGP_PEER_STATE_ESTABLISHED
 }
 
 type monitorSvc struct{}

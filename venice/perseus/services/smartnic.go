@@ -350,45 +350,13 @@ func (m *ServiceHandlers) HandleNodeConfigEvent(et kvstore.WatchEventType, evtNo
 	}
 }
 
-var pollBGPStatus bool
-
 // HandleDebugAction handles debug commands
 func (m *ServiceHandlers) HandleDebugAction(action string, params map[string]string) (interface{}, error) {
 	switch action {
 	case "list-neighbors":
 		return m.pegasusClient.BGPPeerGet(context.TODO(), &pdstypes.BGPPeerGetRequest{})
-	case "poll-bgp-status":
-		pollBGPStatus = true
-		return "set to periodically poll BGP status", nil
 	default:
 		return fmt.Sprintf("unknown action [%v]", action), nil
 	}
 
-}
-
-func (m *ServiceHandlers) pollStatus() {
-	go func() {
-		for {
-			time.Sleep(30 * time.Second)
-			if !pollBGPStatus {
-				return
-			}
-			var req pdstypes.BGPPeerGetRequest
-			for _, v := range pReq.Request {
-				peer := pdstypes.BGPPeerKeyHandle{
-					IdOrKey: &pdstypes.BGPPeerKeyHandle_Key{Key: &pdstypes.BGPPeerKey{PeerAddr: v.PeerAddr, LocalAddr: v.LocalAddr}},
-				}
-				req.Request = append(req.Request, &peer)
-			}
-			resp, err := m.pegasusClient.BGPPeerGet(context.TODO(), &req)
-			if err != nil {
-				log.Errorf("failed to get BGP Peer Get All (%ss)", err)
-			} else {
-				log.Infof("Got BGP Peer [%v][%v]", resp.ApiStatus, len(resp.Response))
-				for _, v := range resp.Response {
-					log.Infof("Peer: [%+v]", *v)
-				}
-			}
-		}
-	}()
 }
