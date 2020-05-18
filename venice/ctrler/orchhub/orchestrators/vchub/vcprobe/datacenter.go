@@ -12,10 +12,14 @@ import (
 // This is for testing since we don't really create DC
 func (v *VCProbe) AddPenDC(dcName string, retry int) error {
 	fn := func() (interface{}, error) {
-		client := v.GetClientWithRLock()
-		defer v.ReleaseClientsRLock()
+		err := v.ReserveClient()
+		if err != nil {
+			return nil, err
+		}
+		defer v.ReleaseClient()
+		client := v.GetClient()
 		folder := object.NewRootFolder(client.Client)
-		_, err := folder.CreateDatacenter(v.ClientCtx, dcName)
+		_, err = folder.CreateDatacenter(v.ClientCtx, dcName)
 		if err != nil {
 			v.Log.Errorf("Couldn't create datacenter: %s, err: %s", dcName, err)
 		}
@@ -54,8 +58,12 @@ func (v *VCProbe) getDCObj(dcName string, client *govmomi.Client) (*object.Datac
 // RenameDC renames the DC
 func (v *VCProbe) RenameDC(oldName, newName string, retry int) error {
 	fn := func() (interface{}, error) {
-		client := v.GetClientWithRLock()
-		defer v.ReleaseClientsRLock()
+		err := v.ReserveClient()
+		if err != nil {
+			return nil, err
+		}
+		defer v.ReleaseClient()
+		client := v.GetClient()
 		dcObj, err := v.getDCObj(oldName, client)
 		if err != nil {
 			v.Log.Errorf("Failed to rename PG %s to %s, failed to find PG: err %s", oldName, newName, err)
@@ -87,8 +95,12 @@ func (v *VCProbe) RenameDC(oldName, newName string, retry int) error {
 // This is for testing since we don't really delete DC
 func (v *VCProbe) RemovePenDC(dcName string, retry int) error {
 	fn := func() (interface{}, error) {
-		client := v.GetClientWithRLock()
-		defer v.ReleaseClientsRLock()
+		err := v.ReserveClient()
+		if err != nil {
+			return nil, err
+		}
+		defer v.ReleaseClient()
+		client := v.GetClient()
 
 		dc, err := v.getDCObj(dcName, client)
 		if err != nil {

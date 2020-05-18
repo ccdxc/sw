@@ -110,8 +110,13 @@ func (t *tagsProbe) SetupBaseTags() bool {
 			return false
 		}
 		t.Log.Info("Creating tags category....")
-		tc := t.GetTagClientWithRLock()
-		defer t.ReleaseClientsRLock()
+		err = t.ReserveClient()
+		if err != nil {
+			return false
+		}
+		defer t.ReleaseClient()
+		tc := t.GetTagClient()
+
 		tagCategory, err = tc.GetCategory(ctx, defs.VCTagCategory)
 		if err == nil {
 			t.writeTagInfo[defs.VCTagCategory] = tagCategory.ID
@@ -150,8 +155,13 @@ func (t *tagsProbe) SetupBaseTags() bool {
 		t.writeLock.Lock()
 		defer t.writeLock.Unlock()
 		t.Log.Info("Getting tags in category....")
-		tc := t.GetTagClientWithRLock()
-		defer t.ReleaseClientsRLock()
+		err = t.ReserveClient()
+		if err != nil {
+			return false
+		}
+		defer t.ReleaseClient()
+		tc := t.GetTagClient()
+
 		var err error
 		tagObjs, err = tc.GetTagsForCategory(t.ClientCtx, tagCategory.ID)
 		if err == nil {
@@ -183,8 +193,13 @@ func (t *tagsProbe) SetupBaseTags() bool {
 		t.writeLock.Lock()
 		defer t.writeLock.Unlock()
 		t.Log.Info("Creating tag managed....")
-		tc := t.GetTagClientWithRLock()
-		defer t.ReleaseClientsRLock()
+		err := t.ReserveClient()
+		if err != nil {
+			return false
+		}
+		defer t.ReleaseClient()
+		tc := t.GetTagClient()
+
 		if _, ok := t.writeTagInfo[t.managedTagName]; ok {
 			t.Log.Infof("Pensando managed tag already exists")
 			return true
@@ -229,8 +244,12 @@ func (t *tagsProbe) TagObjsAsManaged(refs []types.ManagedObjectReference) error 
 	if !ok {
 		return fmt.Errorf("Tag pensando managed does not exist")
 	}
-	tc := t.GetTagClientWithRLock()
-	defer t.ReleaseClientsRLock()
+	err := t.ReserveClient()
+	if err != nil {
+		return err
+	}
+	defer t.ReleaseClient()
+	tc := t.GetTagClient()
 
 	var moRefs []mo.Reference
 	for _, ref := range refs {
@@ -252,8 +271,12 @@ func (t *tagsProbe) GetPensandoTagsOnObjects(refs []types.ManagedObjectReference
 	t.writeLock.Lock()
 	defer t.writeLock.Unlock()
 
-	tc := t.GetTagClientWithRLock()
-	defer t.ReleaseClientsRLock()
+	err := t.ReserveClient()
+	if err != nil {
+		return nil, err
+	}
+	defer t.ReleaseClient()
+	tc := t.GetTagClient()
 
 	t.Log.Debugf("Retrieving pensando tags on %d objects", len(refs))
 	var moRefs []mo.Reference
@@ -336,8 +359,13 @@ func (t *tagsProbe) TagObjAsManaged(ref types.ManagedObjectReference) error {
 	if !ok {
 		return fmt.Errorf("Tag pensando managed does not exist")
 	}
-	tc := t.GetTagClientWithRLock()
-	defer t.ReleaseClientsRLock()
+	err := t.ReserveClient()
+	if err != nil {
+		return err
+	}
+	defer t.ReleaseClient()
+	tc := t.GetTagClient()
+
 	t.Log.Debugf("Tagging object %s as pensando managed", ref.Value)
 	return tc.AttachTag(t.ClientCtx, id, ref)
 }
@@ -349,8 +377,12 @@ func (t *tagsProbe) RemoveTagObjManaged(ref types.ManagedObjectReference) error 
 	if !ok {
 		return fmt.Errorf("Tag pensando managed does not exist")
 	}
-	tc := t.GetTagClientWithRLock()
-	defer t.ReleaseClientsRLock()
+	err := t.ReserveClient()
+	if err != nil {
+		return err
+	}
+	defer t.ReleaseClient()
+	tc := t.GetTagClient()
 	t.Log.Debugf("Removing tag managed from object %s", ref.Value)
 	return tc.DetachTag(t.ClientCtx, id, ref)
 }
@@ -359,8 +391,12 @@ func (t *tagsProbe) TagObjWithVlan(ref types.ManagedObjectReference, vlanValue i
 	t.writeLock.Lock()
 	defer t.writeLock.Unlock()
 
-	tc := t.GetTagClientWithRLock()
-	defer t.ReleaseClientsRLock()
+	err := t.ReserveClient()
+	if err != nil {
+		return err
+	}
+	defer t.ReleaseClient()
+	tc := t.GetTagClient()
 	t.Log.Debugf("Tagging object %s with vlan %d", ref.Value, vlanValue)
 	tagName := fmt.Sprintf("%s%d", defs.VCTagVlanPrefix, vlanValue)
 	var tagID string
@@ -393,8 +429,12 @@ func (t *tagsProbe) RemoveTag(ref types.ManagedObjectReference, tagName string) 
 	t.writeLock.Lock()
 	defer t.writeLock.Unlock()
 
-	tc := t.GetTagClientWithRLock()
-	defer t.ReleaseClientsRLock()
+	err := t.ReserveClient()
+	if err != nil {
+		return err
+	}
+	defer t.ReleaseClient()
+	tc := t.GetTagClient()
 	t.Log.Debugf("Removing vlan tag from object %s", ref.Value)
 
 	tagID, ok := t.writeTagInfo[tagName]
@@ -437,9 +477,13 @@ func (t *tagsProbe) DestroyTags() error {
 	}
 
 	_, err := t.retry(func() (interface{}, error) {
-		tc := t.GetTagClientWithRLock()
-		defer t.ReleaseClientsRLock()
-		err := tc.DeleteCategory(t.ClientCtx, &tags.Category{ID: catID})
+		err := t.ReserveClient()
+		if err != nil {
+			return nil, err
+		}
+		defer t.ReleaseClient()
+		tc := t.GetTagClient()
+		err = tc.DeleteCategory(t.ClientCtx, &tags.Category{ID: catID})
 		if err != nil {
 			t.Log.Errorf("Failed to delete category, %s", err)
 		}
@@ -454,8 +498,12 @@ func (t *tagsProbe) RemoveTagObjVlan(ref types.ManagedObjectReference) error {
 	t.writeLock.Lock()
 	defer t.writeLock.Unlock()
 
-	tc := t.GetTagClientWithRLock()
-	defer t.ReleaseClientsRLock()
+	err := t.ReserveClient()
+	if err != nil {
+		return err
+	}
+	defer t.ReleaseClient()
+	tc := t.GetTagClient()
 	t.Log.Debugf("Removing vlan tag from object %s", ref.Value)
 
 	tags, err := tc.GetAttachedTags(t.ClientCtx, ref)
@@ -484,8 +532,12 @@ func (t *tagsProbe) RemovePensandoTags(ref types.ManagedObjectReference) []error
 	t.writeLock.Lock()
 	defer t.writeLock.Unlock()
 
-	tc := t.GetTagClientWithRLock()
-	defer t.ReleaseClientsRLock()
+	err := t.ReserveClient()
+	if err != nil {
+		return []error{err}
+	}
+	defer t.ReleaseClient()
+	tc := t.GetTagClient()
 	t.Log.Debugf("Removing all pensando tags from object %s", ref.Value)
 
 	errs := []error{}
@@ -588,10 +640,17 @@ func (t *tagsProbe) fetchTags() {
 	for _, vmChunk := range chunkedVms {
 		for retryCount := 3; retryCount > 0; retryCount-- {
 			t.Log.Debugf("Getting attached tags on %d objects", len(vmChunk))
-			tc := t.GetTagClientWithRLock()
+
+			err := t.ReserveClient()
+			if err != nil {
+				return
+			}
+			tc := t.GetTagClient()
 			res, err := tc.ListAttachedTagsOnObjects(t.ClientCtx, vmChunk)
 			ctx := t.ClientCtx
-			t.ReleaseClientsRLock()
+
+			t.ReleaseClient()
+
 			if err != nil {
 				t.Log.Errorf("Failed to get attached tags: %s", err)
 				if t.IsREST401(err) {
@@ -806,8 +865,12 @@ func (t *tagsProbe) retry(fn func() (interface{}, error), operName string, delay
 
 //
 func (t *tagsProbe) fetchSingleTagInfo(tagID string) {
-	tc := t.GetTagClientWithRLock()
-	defer t.ReleaseClientsRLock()
+	err := t.ReserveClient()
+	if err != nil {
+		return
+	}
+	defer t.ReleaseClient()
+	tc := t.GetTagClient()
 
 	fn := func() (interface{}, error) {
 		return tc.GetTag(t.ClientCtx, tagID)
@@ -864,8 +927,12 @@ func (t *tagsProbe) fetchSingleTagInfo(tagID string) {
 // The next time the poll runs, it will generate correct update events for them.
 // This is an expensive operation, but tags/categories should not be renamed that often
 func (t *tagsProbe) fetchTagInfo() {
-	tc := t.GetTagClientWithRLock()
-	defer t.ReleaseClientsRLock()
+	err := t.ReserveClient()
+	if err != nil {
+		return
+	}
+	defer t.ReleaseClient()
+	tc := t.GetTagClient()
 
 	// GetTags synchronously does GetTag for each return tag ID
 	// Perform ListTag and then call the GetTag APIs concurrently ourselves.

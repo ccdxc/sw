@@ -84,7 +84,7 @@ func TestTags(t *testing.T) {
 		DvsIDMap:   map[string]types.ManagedObjectReference{},
 	}
 	vcp := NewVCProbe(storeCh, nil, state)
-	vcp.Start(false)
+	vcp.Start()
 
 	defer func() {
 		cancel()
@@ -140,7 +140,10 @@ func TestTags(t *testing.T) {
 		Cardinality:     "10",
 		AssociableTypes: []string{"VirtualMachine"},
 	}
-	tc := th.tp.GetTagClientWithRLock()
+
+	th.tp.ReserveClient()
+	tc := th.tp.GetTagClient()
+
 	tc.CreateCategory(th.tp.Ctx, defaultCat)
 	_, err = tc.CreateTag(th.tp.Ctx, tagZone1)
 	AssertOk(t, err, "CreateTag failed")
@@ -148,7 +151,8 @@ func TestTags(t *testing.T) {
 	AssertOk(t, err, "CreateTag failed")
 	_, err = tc.CreateTag(th.tp.Ctx, tagZone3)
 	AssertOk(t, err, "CreateTag failed")
-	th.tp.ReleaseClientsRLock()
+
+	th.tp.ReleaseClient()
 
 	// Attach some VMs
 	th.attachTag("tagZone1", vm1)
@@ -289,7 +293,7 @@ func TestTagWriting(t *testing.T) {
 		DvsIDMap:   map[string]types.ManagedObjectReference{},
 	}
 	vcp := NewVCProbe(storeCh, nil, state)
-	vcp.Start(false)
+	vcp.Start()
 
 	defer func() {
 		cancel()
@@ -321,7 +325,8 @@ func TestTagWriting(t *testing.T) {
 	th.verifyTags(expMap)
 
 	// Verify Venice default tags have been created
-	tc := th.tp.GetTagClientWithRLock()
+	th.tp.ReserveClient()
+	tc := th.tp.GetTagClient()
 	cat, err := tc.GetCategory(th.tp.Ctx, defs.VCTagCategory)
 	AssertOk(t, err, "Failed to get category")
 	AssertEquals(t, defs.VCTagCategoryDescription, cat.Description, "Description for category did not match")
@@ -329,7 +334,7 @@ func TestTagWriting(t *testing.T) {
 	tagObjs, err := tc.GetTagsForCategory(th.tp.Ctx, cat.ID)
 	AssertOk(t, err, "Failed to get tags for category")
 	AssertEquals(t, 1, len(tagObjs), "Category should have had two tags in it, had %v", tagObjs)
-	th.tp.ReleaseClientsRLock()
+	th.tp.ReleaseClient()
 
 	tagsMap := map[string]tags.Tag{}
 	for _, t := range tagObjs {
@@ -395,7 +400,7 @@ func TestTagWriting(t *testing.T) {
 
 	// Switch tags into new client
 	vcp = NewVCProbe(storeCh, nil, state)
-	vcp.Start(true)
+	vcp.Start()
 	AssertEventually(t, func() (bool, interface{}) {
 		if !vcp.IsSessionReady() {
 			return false, fmt.Errorf("Session not ready")
@@ -428,46 +433,51 @@ type testHelper struct {
 }
 
 func (h *testHelper) attachTag(tagID string, vm *simulator.VirtualMachine) {
-	tc := h.tp.GetTagClientWithRLock()
+	h.tp.ReserveClient()
+	defer h.tp.ReleaseClient()
+	tc := h.tp.GetTagClient()
 	err := tc.AttachTag(h.tp.Ctx, tagID, vm.Reference())
-	h.tp.ReleaseClientsRLock()
 	AssertOk(h.t, err, "AttachTag failed")
 }
 
 func (h *testHelper) detachTag(tagID string, vm *simulator.VirtualMachine) {
-	tc := h.tp.GetTagClientWithRLock()
+	h.tp.ReserveClient()
+	defer h.tp.ReleaseClient()
+	tc := h.tp.GetTagClient()
 	err := tc.DetachTag(h.tp.Ctx, tagID, vm.Reference())
-	h.tp.ReleaseClientsRLock()
 	AssertOk(h.t, err, "AttachTag failed")
 }
 
 func (h *testHelper) deleteTag(tagID string) {
-	tc := h.tp.GetTagClientWithRLock()
+	h.tp.ReserveClient()
+	defer h.tp.ReleaseClient()
+	tc := h.tp.GetTagClient()
 	tag, err := tc.GetTag(h.tp.Ctx, tagID)
 	AssertOk(h.t, err, "GetTagByName failed")
 	err = tc.DeleteTag(h.tp.Ctx, tag)
 	AssertOk(h.t, err, "deleteTag failed")
-	h.tp.ReleaseClientsRLock()
 }
 
 func (h *testHelper) renameTag(tagName string, newName string) {
-	tc := h.tp.GetTagClientWithRLock()
+	h.tp.ReserveClient()
+	defer h.tp.ReleaseClient()
+	tc := h.tp.GetTagClient()
 	tag, err := tc.GetTag(h.tp.Ctx, tagName)
 	AssertOk(h.t, err, "GetTagByName failed")
 	tag.Name = newName
 	err = tc.UpdateTag(h.tp.Ctx, tag)
 	AssertOk(h.t, err, "UpdateTag failed")
-	h.tp.ReleaseClientsRLock()
 }
 
 func (h *testHelper) renameCategory(catName string, newName string) {
-	tc := h.tp.GetTagClientWithRLock()
+	h.tp.ReserveClient()
+	defer h.tp.ReleaseClient()
+	tc := h.tp.GetTagClient()
 	cat, err := tc.GetCategory(h.tp.Ctx, catName)
 	AssertOk(h.t, err, "GetTagByName failed")
 	cat.Name = newName
 	err = tc.UpdateCategory(h.tp.Ctx, cat)
 	AssertOk(h.t, err, "UpdateTag failed")
-	h.tp.ReleaseClientsRLock()
 }
 
 func (h *testHelper) verifyTags(expMap map[string][]string) {

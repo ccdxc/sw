@@ -70,4 +70,7 @@ func TestDeltaSet(t *testing.T) {
 	d4.ApplyDiff(d5)
 	d4.Add(testSet1)
 	Assert(t, d4.Count() == 6, "Add failed")
+
+	d4.MarkAllForDeletion()
+	AssertEquals(t, len(d4.Items()), len(d4.Deletions()), "Mark all for deletion failed")
 }

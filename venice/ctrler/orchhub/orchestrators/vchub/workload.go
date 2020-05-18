@@ -220,6 +220,12 @@ func (v *VCHub) handleVM(m defs.VCEventMsg) {
 		}
 	}
 
+	interfaces := workloadObj.Spec.Interfaces
+	sort.Slice(interfaces, func(i, j int) bool {
+		return interfaces[i].MACAddress < interfaces[j].MACAddress
+	})
+	workloadObj.Spec.Interfaces = interfaces
+
 	if len(v.OrchConfig.Name) > 0 {
 		utils.AddOrchNameLabel(workloadObj.Labels, v.OrchConfig.GetName())
 		if workloadObj.Spec.HostName != "" {

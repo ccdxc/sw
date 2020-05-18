@@ -104,14 +104,13 @@ func TestListAndWatch(t *testing.T) {
 		t.Fatalf("Failed to create state manager. Err : %v", err)
 		return
 	}
-	ctx, cancel := context.WithCancel(context.Background())
 
 	orchConfig := smmock.GetOrchestratorConfig(testParams.TestHostName, testParams.TestUser, testParams.TestPassword)
 	err = sm.Controller().Orchestrator().Create(orchConfig)
 	state := &defs.State{
 		VcURL:      u,
 		VcID:       "vcenter",
-		Ctx:        ctx,
+		Ctx:        context.Background(),
 		Log:        logger,
 		StateMgr:   sm,
 		OrchConfig: orchConfig,
@@ -120,11 +119,10 @@ func TestListAndWatch(t *testing.T) {
 		DvsIDMap:   map[string]types.ManagedObjectReference{},
 	}
 	vcp := NewVCProbe(storeCh, eventCh, state)
-	vcp.Start(false)
+	vcp.Start()
 
 	defer func() {
-		cancel()
-		state.Wg.Wait()
+		vcp.Stop()
 	}()
 	AssertEventually(t, func() (bool, interface{}) {
 		if !vcp.IsSessionReady() {
@@ -241,6 +239,12 @@ func TestListAndWatch(t *testing.T) {
 	// 1 extra PG for the uplink PG
 	AssertEquals(t, testParams.TestNumPG+1, len(pgs), "List PG response length did not match exp")
 
+	// This method doesn't work with sim unless using mockprobe
+	// Calling to increase coverage
+	_ = vcp.ListDVS(nil)
+
+	vcp.StopWatchForDC(testParams.TestDCName, dc.Obj.Reference().Value)
+
 }
 
 func TestDVSAndPG(t *testing.T) {
@@ -299,14 +303,13 @@ func TestDVSAndPG(t *testing.T) {
 		t.Fatalf("Failed to create state manager. Err : %v", err)
 		return
 	}
-	ctx, cancel := context.WithCancel(context.Background())
 
 	orchConfig := smmock.GetOrchestratorConfig(testParams.TestHostName, testParams.TestUser, testParams.TestPassword)
 	err = sm.Controller().Orchestrator().Create(orchConfig)
 	state := &defs.State{
 		VcURL:      u,
 		VcID:       "vcenter",
-		Ctx:        ctx,
+		Ctx:        context.Background(),
 		Log:        logger,
 		StateMgr:   sm,
 		OrchConfig: orchConfig,
@@ -315,12 +318,10 @@ func TestDVSAndPG(t *testing.T) {
 		DvsIDMap:   map[string]types.ManagedObjectReference{},
 	}
 	vcp := NewVCProbe(storeCh, eventCh, state)
-	vcp.Start(false)
+	vcp.Start()
 
 	defer func() {
-
-		cancel()
-		state.Wg.Wait()
+		vcp.Stop()
 	}()
 
 	AssertEventually(t, func() (bool, interface{}) {
@@ -404,7 +405,7 @@ func TestDVSAndPG(t *testing.T) {
 	AssertOk(t, err, "Failed to get DVS %s", testParams.TestDVSName)
 
 	var dvs mo.DistributedVirtualSwitch
-	err = dvsObj.Properties(ctx, dvsObj.Reference(), nil, &dvs)
+	err = dvsObj.Properties(context.Background(), dvsObj.Reference(), nil, &dvs)
 	AssertOk(t, err, "Failed to get properties for DVS")
 
 	numPG = len(dvs.Summary.PortgroupName)
@@ -496,23 +497,21 @@ func TestEventReceiver(t *testing.T) {
 
 	storeCh := make(chan defs.Probe2StoreMsg, 24)
 	eventCh := make(chan defs.Probe2StoreMsg, 24)
-	ctx, cancel := context.WithCancel(context.Background())
 	state := &defs.State{
 		VcURL:    vcURL,
 		VcID:     "vcenter",
-		Ctx:      ctx,
+		Ctx:      context.Background(),
 		Log:      logger,
 		Wg:       &sync.WaitGroup{},
 		DcIDMap:  map[string]types.ManagedObjectReference{},
 		DvsIDMap: map[string]types.ManagedObjectReference{},
 	}
-	defer func() {
-		cancel()
-		state.Wg.Wait()
-	}()
 	vmEventArg := types.VmEventArgument{Vm: vm1.Reference()}
 	destHost := types.HostEventArgument{Host: penHost1.Obj.Reference()}
 	vcp := NewVCProbe(storeCh, eventCh, state)
+	defer func() {
+		vcp.Stop()
+	}()
 
 	// build a bunch of events and call event receiver
 	events1 := []types.BaseEvent{

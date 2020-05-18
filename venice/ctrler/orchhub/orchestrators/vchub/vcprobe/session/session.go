@@ -16,6 +16,7 @@ import (
 	"github.com/vmware/govmomi/view"
 
 	"github.com/pensando/sw/api/generated/orchestration"
+	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -57,7 +58,7 @@ type ConnectionState struct {
 // Session is a struct for maintaining vCenter client objects.
 type Session struct {
 	ctx        context.Context
-	ConnUpdate chan ConnectionState
+	ConnUpdate chan<- defs.Probe2StoreMsg
 	vcURL      *url.URL
 	logger     log.Logger
 	OrchConfig *orchestration.Orchestrator
@@ -71,27 +72,26 @@ type Session struct {
 	ClientCtx    context.Context
 	clientCancel context.CancelFunc
 
-	clientLock sync.RWMutex
-
 	CheckSession    bool
 	CheckTagSession bool
 	// SessionReady indicates whether watchers should join the wg or not.
 	// When we cancel the watcherWg, we don't want watchers adding themselves back on before
 	// all of them have finished cancelling.
+	sessionLock      sync.Mutex
 	SessionReady     bool
 	LastEvent        map[string]int32 // last event processed for a given vc object (datacenter)
 	EventTrackerLock sync.Mutex
 }
 
 // NewSession returns a new session object
-func NewSession(ctx context.Context, VcURL *url.URL, logger log.Logger, orchConfig *orchestration.Orchestrator) *Session {
+func NewSession(ctx context.Context, outbox chan<- defs.Probe2StoreMsg, VcURL *url.URL, logger log.Logger, orchConfig *orchestration.Orchestrator) *Session {
 	return &Session{
 		ctx:        ctx,
 		vcURL:      VcURL,
 		logger:     logger,
 		OrchConfig: orchConfig,
 		WatcherWg:  &sync.WaitGroup{},
-		ConnUpdate: make(chan ConnectionState, 100),
+		ConnUpdate: outbox,
 		LastEvent:  make(map[string]int32),
 	}
 }
@@ -106,59 +106,54 @@ func (s *Session) CreateFinder(c *govmomi.Client) *find.Finder {
 	return find.NewFinder(c.Client, true)
 }
 
-// GetEventManagerWithRLock returns EventManager while holding read lock
-func (s *Session) GetEventManagerWithRLock() *event.Manager {
-	s.clientLock.RLock()
+// ReserveClient increments the wg. Caller must call ReleaseClient when done
+func (s *Session) ReserveClient() error {
+	s.sessionLock.Lock()
+	if !s.SessionReady {
+		s.sessionLock.Unlock()
+		return fmt.Errorf("session is not ready")
+	}
+	s.WatcherWg.Add(1)
+	s.sessionLock.Unlock()
+	return nil
+}
+
+// ReleaseClient releases a reserved client
+func (s *Session) ReleaseClient() {
+	s.WatcherWg.Done()
+}
+
+// GetEventManager returns EventManager. Caller should have already called ReserveClient
+func (s *Session) GetEventManager() *event.Manager {
 	return s.eventMgr
 }
 
-// GetClientsWithRLock acquires a reader lock and returns the client objects
-// Caller must call ReleaseClientsRLock when they are done
-func (s *Session) GetClientsWithRLock() (*govmomi.Client, *view.Manager, *tags.Manager) {
-	// Get lock
-	s.clientLock.RLock()
+// GetClients returns all clients. Caller should have already called ReserveClient
+func (s *Session) GetClients() (*govmomi.Client, *view.Manager, *tags.Manager) {
 	return s.client, s.viewMgr, s.tagClient
 }
 
-// GetClientWithRLock acquires a reader lock and returns the govmomi client
-// Caller must call ReleaseClientsRLock when they are done
-func (s *Session) GetClientWithRLock() *govmomi.Client {
-	// Get lock
-	s.clientLock.RLock()
+// GetClient returns govmomi client. Caller should have already called ReserveClient
+func (s *Session) GetClient() *govmomi.Client {
 	return s.client
 }
 
-// GetViewManagerWithRLock acquires a reader lock and returns the view manager object
-// Caller must call ReleaseClientsRLock when they are done
-func (s *Session) GetViewManagerWithRLock() *view.Manager {
-	// Get lock
-	s.clientLock.RLock()
+// GetViewManager returns view manager. Caller should have already called ReserveClient
+func (s *Session) GetViewManager() *view.Manager {
 	return s.viewMgr
 }
 
-// GetTagClientWithRLock acquires a reader lock and returns the tag client object
-// Caller must call ReleaseClientsRLock when they are done
-func (s *Session) GetTagClientWithRLock() *tags.Manager {
-	// Get lock
-	s.clientLock.RLock()
+// GetTagClient returns tag client. Caller should have already called ReserveClient
+func (s *Session) GetTagClient() *tags.Manager {
 	return s.tagClient
 }
 
-// ReleaseClientsRLock releases the client lock
-func (s *Session) ReleaseClientsRLock() {
-	s.clientLock.RUnlock()
-}
-
-// ClearSessionWithLock Acquires clientLock and sets internal state to be nil
-func (s *Session) ClearSessionWithLock() {
-	s.clientLock.Lock()
-	defer s.clientLock.Unlock()
-	s.clearSession()
-}
-
-func (s *Session) clearSession() {
+// ClearSession tears down the session
+func (s *Session) ClearSession() {
 	s.logger.Infof("Clearing session")
+	s.sessionLock.Lock()
 	s.SessionReady = false
+	s.sessionLock.Unlock()
 	if s.client != nil {
 		// Using background context since it's likely that
 		// VCHub's context has been cancelled
@@ -217,7 +212,7 @@ func (s *Session) PeriodicSessionCheck(wg *sync.WaitGroup) {
 
 	s.logger.Infof("Starting session check")
 
-	s.clientLock.Lock()
+	s.SessionReady = false
 	// Connect and login to vcenter
 	for {
 		if s.ctx.Err() != nil {
@@ -247,7 +242,7 @@ func (s *Session) PeriodicSessionCheck(wg *sync.WaitGroup) {
 					orchestration.OrchestratorStatus_Success.String(),
 					nil,
 				}
-				s.ConnUpdate <- evt
+				s.sendConnEvent(evt)
 				s.logger.Infof("Connection success")
 				break
 			}
@@ -263,12 +258,11 @@ func (s *Session) PeriodicSessionCheck(wg *sync.WaitGroup) {
 			} else {
 				evt.Err = err
 			}
-			s.ConnUpdate <- evt
+			s.sendConnEvent(evt)
 
 			s.logger.Errorf("login failed: %v", err)
 			select {
 			case <-s.ctx.Done():
-				s.clientLock.Unlock()
 				s.logger.Infof("Session check exiting")
 				return
 			case <-time.After(retryDelay):
@@ -283,7 +277,6 @@ func (s *Session) PeriodicSessionCheck(wg *sync.WaitGroup) {
 
 		s.CheckSession = false
 		s.CheckTagSession = false
-		s.SessionReady = true
 
 		err := s.tagClient.Login(s.ClientCtx, s.vcURL.User)
 		if err != nil {
@@ -292,14 +285,21 @@ func (s *Session) PeriodicSessionCheck(wg *sync.WaitGroup) {
 			s.CheckTagSession = true
 		}
 
-		s.clientLock.Unlock()
+		// Watchers will now be able to use the session
+		s.SessionReady = true
 
 		s.logger.Infof("Tags session check starting...")
 
 		// Start tag session check
-		s.WatcherWg.Add(1)
+		err = s.ReserveClient()
+		if err != nil {
+			// This shouldn't happen. Only possibility is ClearSession was called by another
+			// goroutine.
+			s.logger.Errorf("ReserveClient failed unexpectedly %s", err)
+			return
+		}
 		go func() {
-			defer s.WatcherWg.Done()
+			defer s.ReleaseClient()
 
 			ctx := s.ClientCtx
 			if ctx == nil {
@@ -313,7 +313,7 @@ func (s *Session) PeriodicSessionCheck(wg *sync.WaitGroup) {
 				case <-time.After(tagCheckDelay):
 					if s.CheckTagSession {
 						// Re-authenticate tag session
-						s.clientLock.Lock()
+						// TODO: prevent multiple tag users?
 						err := s.tagClient.Login(ctx, s.vcURL.User)
 						if err != nil {
 							s.logger.Errorf("Tags client failed to login, %s", err)
@@ -321,16 +321,15 @@ func (s *Session) PeriodicSessionCheck(wg *sync.WaitGroup) {
 								orchestration.OrchestratorStatus_Degraded.String(),
 								fmt.Errorf("Tags client received authentication error due to an invalid username or password. Tags/Labels functionality may be impacted"),
 							}
-							s.ConnUpdate <- evt
+							s.sendConnEvent(evt)
 						} else {
 							s.CheckTagSession = false
 							evt := ConnectionState{
 								orchestration.OrchestratorStatus_Success.String(),
 								nil,
 							}
-							s.ConnUpdate <- evt
+							s.sendConnEvent(evt)
 						}
-						s.clientLock.Unlock()
 					}
 				}
 			}
@@ -345,7 +344,15 @@ func (s *Session) PeriodicSessionCheck(wg *sync.WaitGroup) {
 			case <-time.After(sessionCheckDelay):
 				// if any of the watchers is experiencing the problem, check the session state
 				if s.CheckSession {
-					client := s.GetClientWithRLock()
+					err := s.ReserveClient()
+					if err != nil {
+						// This should never happen as this goroutine is the only one
+						// managing the connection
+						count--
+						s.logger.Errorf("get client error while testing session: %s", err)
+						break
+					}
+					client := s.GetClient()
 					active, err := client.SessionManager.SessionIsActive(s.ClientCtx)
 					if err != nil {
 						count--
@@ -358,7 +365,7 @@ func (s *Session) PeriodicSessionCheck(wg *sync.WaitGroup) {
 						count--
 						s.logger.Infof("Session is not active.. retrying, attempts left %d", count)
 					}
-					s.ReleaseClientsRLock()
+					s.ReleaseClient()
 				}
 			}
 		}
@@ -368,18 +375,16 @@ func (s *Session) PeriodicSessionCheck(wg *sync.WaitGroup) {
 			orchestration.OrchestratorStatus_Unknown.String(),
 			nil,
 		}
-		s.ConnUpdate <- evt
+		s.sendConnEvent(evt)
 
 		// Logout, stop watchers and retry
 		// Lock will not be released until
 		// we re-establish the client, or the ctx is cancelled
-		s.clientLock.Lock()
-		s.clearSession()
+		s.ClearSession()
 		s.logger.Infof("Attempting to rebuild session")
 		// Hold onto lock
 	}
 	// Exiting run release lock
-	s.clientLock.Unlock()
 	s.logger.Infof("Session check exiting")
 }
 
@@ -394,4 +399,18 @@ func (s *Session) checkSupportedVersion(c *govmomi.Client) error {
 		}
 	}
 	return fmt.Errorf("%s - %s", utils.UnsupportedVersionMsg, aboutInfo.Version)
+}
+
+func (s *Session) sendConnEvent(evt ConnectionState) {
+	if s.ConnUpdate != nil {
+		m := defs.Probe2StoreMsg{
+			MsgType: defs.VCConnectionStatus,
+			Val:     evt,
+		}
+		select {
+		case <-s.ctx.Done():
+			return
+		case s.ConnUpdate <- m:
+		}
+	}
 }

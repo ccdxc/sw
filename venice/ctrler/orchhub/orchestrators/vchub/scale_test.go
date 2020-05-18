@@ -74,7 +74,7 @@ func TestVCScaleHost(t *testing.T) {
 	vcp := vcprobe.NewVCProbe(vchub.vcReadCh, vchub.vcEventCh, vchub.State)
 	mockProbe := mock.NewProbeMock(vcp)
 	vchub.probe = mockProbe
-	mockProbe.Start(false)
+	mockProbe.Start()
 	AssertEventually(t, func() (bool, interface{}) {
 		if !mockProbe.IsSessionReady() {
 			return false, fmt.Errorf("Session not ready")

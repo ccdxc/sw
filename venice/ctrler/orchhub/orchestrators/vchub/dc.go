@@ -87,9 +87,8 @@ func (v *VCHub) NewPenDC(dcName, dcID string) (*PenDC, error) {
 func (v *VCHub) RemovePenDC(dcName string) {
 	v.Log.Infof("Stopping management of DC %v", dcName)
 	v.DcMapLock.Lock()
-	defer v.DcMapLock.Unlock()
-
 	existingDC, ok := v.DcMap[dcName]
+	v.DcMapLock.Unlock()
 	if !ok {
 		// nothing to do
 		v.Log.Errorf("Remove DC called on %s but there is no entry for it", dcName)
@@ -134,8 +133,10 @@ func (v *VCHub) RemovePenDC(dcName string) {
 	}
 
 	// Delete entries in map
+	v.DcMapLock.Lock()
 	delete(v.DcMap, existingDC.Name)
 	delete(v.DcID2NameMap, existingDC.dcRef.Value)
+	v.DcMapLock.Unlock()
 
 	v.State.DcMapLock.Lock()
 	delete(v.State.DcIDMap, existingDC.Name)

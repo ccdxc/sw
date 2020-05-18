@@ -718,6 +718,9 @@ func (v *DVS) AddHost(host *Host) error {
 	host.Obj.Config.Network.ProxySwitch = append(host.Obj.Config.Network.ProxySwitch, dvsProxy)
 	v.Obj.Config.GetDVSConfigInfo().Host = append(v.Obj.Config.GetDVSConfigInfo().Host, newMember)
 	d := simulator.Map.Get(v.Obj.Reference())
+	if d == nil {
+		return fmt.Errorf("failed to add host: dvs reference %v was not in simulator map. DVS obj: %+v", v.Obj.Reference(), v.Obj)
+	}
 	simulator.Map.Update(d, []types.PropertyChange{
 		{Name: "config", Val: v.Obj.Config},
 	})

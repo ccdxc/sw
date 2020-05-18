@@ -59,7 +59,6 @@ func TestTagSync(t *testing.T) {
 
 	sm, _, err := smmock.NewMockStateManager()
 	if err != nil {
-		s.Destroy()
 		t.Fatalf("Failed to create state manager. Err : %v", err)
 		return
 	}
@@ -95,11 +94,6 @@ func TestTagSync(t *testing.T) {
 	AssertEventually(t, func() (bool, interface{}) {
 		return vchub.IsSyncDone(), nil
 	}, "VCHub sync never finished")
-
-	defer func() {
-		vchub.Destroy(false)
-		defer s.Destroy()
-	}()
 
 	orchInfo1 := []*network.OrchestratorInfo{
 		{
@@ -289,9 +283,11 @@ func TestTagSync(t *testing.T) {
 		CategoryID:  catID,
 	}
 	tagID, err := tagClient.CreateTag(context.Background(), tag)
+	AssertOk(t, err, "Failed to create tag")
 	tagSyncEventRecorder.ClearEvents()
 
-	tagClient.AttachTag(context.Background(), tagID, dc1.Obj.Reference())
+	err = tagClient.AttachTag(context.Background(), tagID, dc1.Obj.Reference())
+	AssertOk(t, err, "Failed to attach tag")
 
 	vchub = LaunchVCHub(sm, orchConfig, logger, WithTagSyncDelay(2*time.Second))
 

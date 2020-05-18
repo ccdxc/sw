@@ -35,6 +35,9 @@ type VCProbe struct {
 	*defs.State
 	*session.Session
 	TagsProbeInf
+	probeCtx     context.Context
+	probeCancel  context.CancelFunc
+	ProbeWg      sync.WaitGroup
 	outbox       chan<- defs.Probe2StoreMsg
 	eventCh      chan<- defs.Probe2StoreMsg
 	Started      bool
@@ -81,10 +84,10 @@ type DVSConfigDiff func(spec *types.DVSCreateSpec, config *mo.DistributedVirtual
 
 // ProbeInf is the interface Probe implements
 type ProbeInf interface {
-	// Start runs the probe. If in vcWriteOnly mode, probe will only perform writes to vcenter
-	Start(vcWriteOnly bool) error
+	// Start runs the probe.
+	Start() error
+	Stop()
 	IsSessionReady() bool
-	ClearState()
 	StartWatchers()
 	ListVM(dcRef *types.ManagedObjectReference) []mo.VirtualMachine
 	ListDC() []mo.Datacenter
@@ -126,13 +129,16 @@ type ProbeInf interface {
 
 // NewVCProbe returns a new probe
 func NewVCProbe(hOutbox, hEventCh chan<- defs.Probe2StoreMsg, state *defs.State) *VCProbe {
+	probeCtx, probeCancel := context.WithCancel(state.Ctx)
 	probe := &VCProbe{
-		State:    state,
-		Started:  false,
-		outbox:   hOutbox,
-		eventCh:  hEventCh,
-		Session:  session.NewSession(state.Ctx, state.VcURL, state.Log, state.OrchConfig),
-		dcCtxMap: map[string]dcCtxEntry{},
+		State:       state,
+		Started:     false,
+		probeCtx:    probeCtx,
+		probeCancel: probeCancel,
+		outbox:      hOutbox,
+		eventCh:     hEventCh,
+		Session:     session.NewSession(probeCtx, hOutbox, state.VcURL, state.Log, state.OrchConfig),
+		dcCtxMap:    map[string]dcCtxEntry{},
 	}
 	probe.newTagsProbe()
 	return probe
@@ -141,7 +147,7 @@ func NewVCProbe(hOutbox, hEventCh chan<- defs.Probe2StoreMsg, state *defs.State)
 
 // Start creates a client and view manager
 // vcWriteOnly indicates that this probe is only used for writing to vcenter
-func (v *VCProbe) Start(vcWriteOnly bool) error {
+func (v *VCProbe) Start() error {
 	v.Log.Info("Starting probe")
 	v.vcProbeLock.Lock()
 	if v.Started {
@@ -149,77 +155,36 @@ func (v *VCProbe) Start(vcWriteOnly bool) error {
 		return errors.New("Already Started")
 	}
 	v.Started = true
-	v.Wg.Add(1)
-	go v.PeriodicSessionCheck(v.Wg)
+	v.ProbeWg.Add(1)
+	go v.PeriodicSessionCheck(&v.ProbeWg)
 
-	if !vcWriteOnly {
-		v.Wg.Add(1)
-		go v.run()
-	}
 	v.vcProbeLock.Unlock()
 
 	return nil
 }
 
-func (v *VCProbe) run() {
-	defer v.Wg.Done()
-	v.Log.Infof("Probe Run Started")
-	// Listen for session updates
-	v.connectionListen()
-
-	// Context must have been cancelled
-	v.waitForExit()
-}
-
-// WaitForExit stops the sessions
-func (v *VCProbe) waitForExit() {
-	v.Log.Info("Stopping vcprobe")
+// Stop stops the probe
+func (v *VCProbe) Stop() {
+	v.Log.Info("Stopping vcprobe...")
 	v.vcProbeLock.Lock()
-	v.WatcherWg.Wait()
 	v.Started = false
+	v.probeCancel()
+	v.ProbeWg.Wait()
+	v.Log.Info("vcprobe wg stopped")
+	v.ClearSession()
 	v.vcProbeLock.Unlock()
-}
-
-// ClearState tears down Session state
-func (v *VCProbe) ClearState() {
-	v.vcProbeLock.Lock()
-	v.ClearSessionWithLock()
-	v.vcProbeLock.Unlock()
-}
-
-// Run runs the probe
-func (v *VCProbe) connectionListen() {
-	// Send status event to vchub store
-	// Store writes status
-	v.Log.Infof("Connection listen Started")
-	// Listen to the session connection and update orch object
-	for {
-		select {
-		case <-v.Ctx.Done():
-			return
-		case connErr := <-v.ConnUpdate:
-			v.Log.Infof("Connection status %s, Error: %s", connErr.State, connErr.Err)
-
-			if v.outbox != nil {
-				m := defs.Probe2StoreMsg{
-					MsgType: defs.VCConnectionStatus,
-					Val:     connErr,
-				}
-				v.outbox <- m
-			}
-
-		}
-	}
+	v.Log.Info("vcprobe stopped")
 }
 
 // If fn returns false, the function will not retry
 func (v *VCProbe) tryForever(fn func() bool) {
-	if !v.SessionReady {
+	err := v.ReserveClient()
+	if err != nil {
 		return
 	}
-	v.WatcherWg.Add(1)
 	go func() {
-		defer v.WatcherWg.Done()
+		defer v.ReleaseClient()
+
 		for {
 			ctx := v.ClientCtx
 			if ctx == nil {
@@ -364,8 +329,14 @@ func (v *VCProbe) StartWatchForDC(dcName, dcID string) {
 		return true
 	})
 
-	v.WatcherWg.Add(1)
-	go v.runEventReceiver(ref)
+	err := v.ReserveClient()
+	if err != nil {
+		return
+	}
+	go func() {
+		defer v.ReleaseClient()
+		v.runEventReceiver(ref)
+	}()
 }
 
 func (v *VCProbe) startWatch(ctx context.Context, vcKind defs.VCObject, props []string, updateFn func(objUpdate types.ObjectUpdate, kind defs.VCObject), container *types.ManagedObjectReference) {
@@ -373,8 +344,7 @@ func (v *VCProbe) startWatch(ctx context.Context, vcKind defs.VCObject, props []
 	kind := string(vcKind)
 
 	var err error
-	client, viewMgr, _ := v.GetClientsWithRLock()
-	v.ReleaseClientsRLock()
+	client, viewMgr, _ := v.GetClients()
 
 	root := client.ServiceContent.RootFolder
 	if container == nil {
@@ -436,7 +406,11 @@ func (v *VCProbe) sendVCEvent(update types.ObjectUpdate, kind defs.VCObject) {
 	}
 	v.Log.Debugf("Sending message to store, key: %s, obj: %s, props: %+v", key, kind, update.ChangeSet)
 	if v.outbox != nil {
-		v.outbox <- m
+		select {
+		case <-v.probeCtx.Done():
+			return
+		case v.outbox <- m:
+		}
 	}
 }
 
@@ -457,7 +431,11 @@ func (v *VCProbe) vcEventHandlerForDC(dcID string, dcName string) func(update ty
 		}
 		v.Log.Debugf("Sending message to store, key: %s, obj: %s", key, kind)
 		if v.outbox != nil {
-			v.outbox <- m
+			select {
+			case <-v.probeCtx.Done():
+				return
+			case v.outbox <- m:
+			}
 		}
 	}
 }
@@ -488,8 +466,12 @@ func (v *VCProbe) vcEventHandlerForDC(dcID string, dcName string) func(update ty
 
 // ListObj performs a list operation in vCenter
 func (v *VCProbe) ListObj(vcKind defs.VCObject, props []string, dst interface{}, container *types.ManagedObjectReference) error {
-	client, viewMgr, _ := v.GetClientsWithRLock()
-	defer v.ReleaseClientsRLock()
+	err := v.ReserveClient()
+	if err != nil {
+		return err
+	}
+	defer v.ReleaseClient()
+	client, viewMgr, _ := v.GetClients()
 
 	root := client.ServiceContent.RootFolder
 
@@ -497,12 +479,12 @@ func (v *VCProbe) ListObj(vcKind defs.VCObject, props []string, dst interface{},
 		container = &root
 	}
 	kinds := []string{}
-	cView, err := viewMgr.CreateContainerView(v.Ctx, *container, kinds, true)
+	cView, err := viewMgr.CreateContainerView(v.probeCtx, *container, kinds, true)
 	if err != nil {
 		return err
 	}
-	defer cView.Destroy(v.Ctx)
-	err = cView.Retrieve(v.Ctx, []string{string(vcKind)}, props, dst)
+	defer cView.Destroy(v.probeCtx)
+	err = cView.Retrieve(v.probeCtx, []string{string(vcKind)}, props, dst)
 	return err
 }
 
@@ -557,15 +539,19 @@ func (v *VCProbe) ListHosts(dcRef *types.ManagedObjectReference) []mo.HostSystem
 // GetVM fetches the given VM by ID
 func (v *VCProbe) GetVM(vmID string, retry int) (mo.VirtualMachine, error) {
 	fn := func() (interface{}, error) {
-		client := v.GetClientWithRLock()
-		defer v.ReleaseClientsRLock()
+		err := v.ReserveClient()
+		if err != nil {
+			return nil, err
+		}
+		defer v.ReleaseClient()
+		client := v.GetClient()
 		vmRef := types.ManagedObjectReference{
 			Type:  string(defs.VirtualMachine),
 			Value: vmID,
 		}
 		var vm mo.VirtualMachine
 		objVM := object.NewVirtualMachine(client.Client, vmRef)
-		err := objVM.Properties(v.ClientCtx, vmRef, vmProps, &vm)
+		err = objVM.Properties(v.ClientCtx, vmRef, vmProps, &vm)
 		return vm, err
 	}
 	ret, err := v.withRetry(fn, retry)
@@ -648,7 +634,6 @@ func (v *VCProbe) deleteEventTracker(ref types.ManagedObjectReference) {
 }
 
 func (v *VCProbe) runEventReceiver(ref types.ManagedObjectReference) {
-	defer v.WatcherWg.Done()
 	v.initEventTracker(ref)
 	defer v.deleteEventTracker(ref)
 
@@ -671,8 +656,7 @@ releaseEventTracker:
 			case <-time.After(50 * time.Millisecond):
 			}
 		}
-		eventMgr := v.GetEventManagerWithRLock()
-		v.ReleaseClientsRLock()
+		eventMgr := v.GetEventManager()
 		if eventMgr == nil {
 			break releaseEventTracker
 		}
@@ -804,7 +788,7 @@ func (v *VCProbe) receiveEvents(ref types.ManagedObjectReference, events []types
 			s := strings.Split(e.EventTypeId, ".")
 			evType := s[len(s)-1]
 			if evType == "VmHotMigratingWithEncryptionEvent" {
-				v.Log.Debugf("EventEx %d - %s - TypeId %s", e.GetEvent().Key, ref.Value, e.EventTypeId)
+				v.Log.Infof("EventEx %d - %s - TypeId %s", e.GetEvent().Key, ref.Value, e.EventTypeId)
 				msg := defs.VMotionStartMsg{
 					VMKey:        e.Vm.Vm.Value,
 					DcID:         ref.Value,
@@ -840,9 +824,10 @@ func (v *VCProbe) generateMigrationEvent(msgType defs.VCNotificationType, msg in
 		return
 	}
 
+	var m defs.Probe2StoreMsg
 	switch msgType {
 	case defs.VMotionStart:
-		v.eventCh <- defs.Probe2StoreMsg{
+		m = defs.Probe2StoreMsg{
 			MsgType: defs.VCNotification,
 			Val: defs.VCNotificationMsg{
 				Type: msgType,
@@ -850,7 +835,7 @@ func (v *VCProbe) generateMigrationEvent(msgType defs.VCNotificationType, msg in
 			},
 		}
 	case defs.VMotionFailed:
-		v.eventCh <- defs.Probe2StoreMsg{
+		m = defs.Probe2StoreMsg{
 			MsgType: defs.VCNotification,
 			Val: defs.VCNotificationMsg{
 				Type: msgType,
@@ -858,7 +843,7 @@ func (v *VCProbe) generateMigrationEvent(msgType defs.VCNotificationType, msg in
 			},
 		}
 	case defs.VMotionDone:
-		v.eventCh <- defs.Probe2StoreMsg{
+		m = defs.Probe2StoreMsg{
 			MsgType: defs.VCNotification,
 			Val: defs.VCNotificationMsg{
 				Type: msgType,
@@ -866,5 +851,13 @@ func (v *VCProbe) generateMigrationEvent(msgType defs.VCNotificationType, msg in
 			},
 		}
 	default:
+		v.Log.Infof("Migration event received unknown msg type %s", msgType)
+		return
+	}
+
+	select {
+	case <-v.probeCtx.Done():
+		return
+	case v.eventCh <- m:
 	}
 }

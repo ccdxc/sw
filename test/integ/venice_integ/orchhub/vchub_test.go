@@ -513,6 +513,12 @@ func TestAPIServerRestart(t *testing.T) {
 	// Make it Pensando host
 	err = hostSystem1.AddNic("vmnic0", conv.MacString(pNicMac))
 
+	// Create non pensando host 2
+	hostSystem2, err := dc1.AddHost("host2")
+	AssertOk(t, err, "failed host2 create")
+	err = dvs.AddHost(hostSystem2)
+	AssertOk(t, err, "failed to add Host to DVS")
+
 	// Trigger vchub
 	_, err = createOrchConfig("vc1", vcInfo.uri, vcInfo.user, vcInfo.pass, dcName)
 	AssertOk(t, err, "Error creating orch config")
@@ -525,12 +531,7 @@ func TestAPIServerRestart(t *testing.T) {
 
 	tinfo.l.Infof("API Server shutdown")
 
-	// Create new host while apiserver is down
-	hostSystem2, err := dc1.AddHost("host2")
-	AssertOk(t, err, "failed host2 create")
-	err = dvs.AddHost(hostSystem2)
-	AssertOk(t, err, "failed to add Host to DVS")
-
+	// Make it pensando host
 	pNicMac2 := net.HardwareAddr{}
 	pNicMac2 = append(pNicMac2, globals.PensandoOUI[0], globals.PensandoOUI[1], globals.PensandoOUI[2])
 	pNicMac2 = append(pNicMac2, 0xaa, 0x00, 0x11)

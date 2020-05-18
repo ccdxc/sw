@@ -225,7 +225,6 @@ func (v *VCHub) handleDC(m defs.VCEventMsg) {
 			v.DcMapLock.Unlock()
 			return
 		}
-		v.probe.StopWatchForDC(existingDC.Name, m.Key)
 		// Cleanup internal state
 		v.RemovePenDC(existingDC.Name)
 		v.removeDiscoveredDC(existingDC.Name)

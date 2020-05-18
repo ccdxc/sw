@@ -66,11 +66,11 @@ type VCHub struct {
 	processVeniceEvents     bool
 	processVeniceEventsLock sync.Mutex
 	// Opts is options used during creation of this instance
-	opts               []Option
-	useMockProbe       bool
-	tagSyncDelay       time.Duration
-	initialTagSyncDone bool
-	orchUpdateLock     sync.Mutex
+	opts                  []Option
+	useMockProbe          bool
+	tagSyncDelay          time.Duration
+	tagSyncInitializedMap map[string]bool
+	orchUpdateLock        sync.Mutex
 }
 
 // Option specifies optional values for vchub
@@ -165,6 +165,7 @@ func (v *VCHub) setupVCHub(stateMgr *statemgr.Statemgr, config *orchestration.Or
 	v.tagSyncDelay = defaultTagSyncDelay
 	v.opts = opts
 	v.discoveredDCs = []string{}
+	v.tagSyncInitializedMap = map[string]bool{}
 
 	v.setupPCache()
 
@@ -198,17 +199,17 @@ func (v *VCHub) createProbe(config *orchestration.Orchestrator) {
 	} else {
 		v.probe = probe
 	}
-	v.probe.Start(false)
+	v.probe.Start()
 }
 
 // Destroy tears down VCHub instance
 func (v *VCHub) Destroy(delete bool) {
 	// Teardown probe and store
 	v.Log.Infof("Destroying VCHub....")
-
 	v.cancel()
 	v.Wg.Wait()
-	v.probe.ClearState()
+	v.probe.Stop()
+	v.Log.Infof("vchub waitgroup stopped")
 
 	if delete {
 		ctx, cancel := context.WithCancel(context.Background())
@@ -221,7 +222,7 @@ func (v *VCHub) Destroy(delete bool) {
 		// Copy over tag info so it doesn't need to be fetched again
 		probe.SetWriteTags(v.probe.GetWriteTags())
 		v.probe = probe
-		v.probe.Start(true)
+		v.probe.Start()
 
 		v.Log.Infof("Cleaning up state on VCenter.")
 		waitCh := make(chan bool, 1)
@@ -251,7 +252,7 @@ func (v *VCHub) Destroy(delete bool) {
 		}
 		v.cancel()
 		v.Wg.Wait()
-		v.probe.ClearState()
+		v.probe.Stop()
 
 		v.DeleteHosts()
 	}

@@ -250,15 +250,25 @@ func (m *MockProbeInf) EXPECT() *MockProbeInfMockRecorder {
 }
 
 // Start mocks base method
-func (m *MockProbeInf) Start(vcWriteOnly bool) error {
-	ret := m.ctrl.Call(m, "Start", vcWriteOnly)
+func (m *MockProbeInf) Start() error {
+	ret := m.ctrl.Call(m, "Start")
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Start indicates an expected call of Start
-func (mr *MockProbeInfMockRecorder) Start(vcWriteOnly interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Start", reflect.TypeOf((*MockProbeInf)(nil).Start), vcWriteOnly)
+func (mr *MockProbeInfMockRecorder) Start() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Start", reflect.TypeOf((*MockProbeInf)(nil).Start))
+}
+
+// Stop mocks base method
+func (m *MockProbeInf) Stop() {
+	m.ctrl.Call(m, "Stop")
+}
+
+// Stop indicates an expected call of Stop
+func (mr *MockProbeInfMockRecorder) Stop() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Stop", reflect.TypeOf((*MockProbeInf)(nil).Stop))
 }
 
 // IsSessionReady mocks base method
@@ -271,16 +281,6 @@ func (m *MockProbeInf) IsSessionReady() bool {
 // IsSessionReady indicates an expected call of IsSessionReady
 func (mr *MockProbeInfMockRecorder) IsSessionReady() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsSessionReady", reflect.TypeOf((*MockProbeInf)(nil).IsSessionReady))
-}
-
-// ClearState mocks base method
-func (m *MockProbeInf) ClearState() {
-	m.ctrl.Call(m, "ClearState")
-}
-
-// ClearState indicates an expected call of ClearState
-func (mr *MockProbeInfMockRecorder) ClearState() *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClearState", reflect.TypeOf((*MockProbeInf)(nil).ClearState))
 }
 
 // StartWatchers mocks base method

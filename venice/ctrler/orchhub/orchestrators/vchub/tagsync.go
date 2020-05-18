@@ -47,6 +47,10 @@ func (v *VCHub) tagSync() {
 		return
 	}
 
+	if v.tagSyncInitializedMap == nil {
+		v.tagSyncInitializedMap = map[string]bool{}
+	}
+
 	idToName := map[string]string{}
 
 	managedObj := []types.ManagedObjectReference{}
@@ -76,6 +80,12 @@ func (v *VCHub) tagSync() {
 		dc.Unlock()
 	}
 	v.DcMapLock.Unlock()
+
+	if len(managedObj) == 0 {
+		// Nothing to do
+		v.Log.Debugf("No managed objects to tag")
+		return
+	}
 
 	// Get pensando tags on all managed objects
 	tagMap, err := v.probe.GetPensandoTagsOnObjects(managedObj)
@@ -110,8 +120,8 @@ func (v *VCHub) tagSync() {
 				// Cleanup ourselves first time we see this.
 				// If we see this tag again, we know that there is an active
 				// Venice writing back the tag
-				if !v.initialTagSyncDone {
-					// Delete tag from thi sobject
+				if _, ok := v.tagSyncInitializedMap[obj.Value]; !ok {
+					// First time getting tags on this object, delete tag from thi sobject
 					toDel[tag] = append(toDel[tag], obj)
 				} else {
 					// Another Venice is/has managed this DC
@@ -141,6 +151,7 @@ func (v *VCHub) tagSync() {
 		if !managed {
 			toTagAsManaged = append(toTagAsManaged, obj)
 		}
+		v.tagSyncInitializedMap[obj.Value] = true
 	}
 
 	v.Log.Debugf("Tagging as managed %v", toTagAsManaged)
@@ -171,5 +182,4 @@ func (v *VCHub) tagSync() {
 			v.Log.Infof("Deleting tag %s on obj %s returned %s", tag, r.Value, err)
 		}
 	}
-	v.initialTagSyncDone = true
 }

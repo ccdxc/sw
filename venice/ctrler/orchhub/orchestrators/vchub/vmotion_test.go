@@ -76,7 +76,7 @@ func TestVmotion(t *testing.T) {
 	vcp := vcprobe.NewVCProbe(vchub.vcReadCh, vchub.vcEventCh, vchub.State)
 	mockProbe := mock.NewProbeMock(vcp)
 	vchub.probe = mockProbe
-	mockProbe.Start(false)
+	mockProbe.Start()
 	AssertEventually(t, func() (bool, interface{}) {
 		if !mockProbe.IsSessionReady() {
 			return false, fmt.Errorf("Session not ready")
@@ -482,7 +482,7 @@ func TestVmotionWithWatchers(t *testing.T) {
 
 	vcp := vcprobe.NewVCProbe(nil, nil, &state)
 	mockProbe := mock.NewProbeMock(vcp)
-	mockProbe.Start(true)
+	mockProbe.Start()
 	AssertEventually(t, func() (bool, interface{}) {
 		if !mockProbe.IsSessionReady() {
 			return false, fmt.Errorf("Session not ready")

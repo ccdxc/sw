@@ -41,12 +41,15 @@ func (v *VCProbe) AddPenDVS(dcName string, dvsCreateSpec *types.DVSCreateSpec, d
 	}
 
 	fn := func() (interface{}, error) {
-		client := v.GetClientWithRLock()
-		defer v.ReleaseClientsRLock()
+		err := v.ReserveClient()
+		if err != nil {
+			return nil, err
+		}
+		defer v.ReleaseClient()
+		client := v.GetClient()
 
 		// Check if it exists first
 		var task *object.Task
-		var err error
 		dvsObj, dvs, isEqual, err := getAndCheck(client)
 		if err == nil {
 			if isEqual {
@@ -108,8 +111,12 @@ func (v *VCProbe) AddPenDVS(dcName string, dvsCreateSpec *types.DVSCreateSpec, d
 // GetPenDVS returns the DVS if it exists or an error
 func (v *VCProbe) GetPenDVS(dcName, dvsName string, retry int) (*object.DistributedVirtualSwitch, error) {
 	fn := func() (interface{}, error) {
-		client := v.GetClientWithRLock()
-		defer v.ReleaseClientsRLock()
+		err := v.ReserveClient()
+		if err != nil {
+			return nil, err
+		}
+		defer v.ReleaseClient()
+		client := v.GetClient()
 		return v.getDVSObj(dcName, dvsName, client)
 	}
 	ret, err := v.withRetry(fn, retry)
@@ -192,8 +199,12 @@ func (v *VCProbe) RenameDVS(dcName string, oldName string, newName string, retry
 // RemovePenDVS removes the DVS
 func (v *VCProbe) RemovePenDVS(dcName, dvsName string, retry int) error {
 	fn := func() (interface{}, error) {
-		client := v.GetClientWithRLock()
-		defer v.ReleaseClientsRLock()
+		err := v.ReserveClient()
+		if err != nil {
+			return nil, err
+		}
+		defer v.ReleaseClient()
+		client := v.GetClient()
 
 		objDvs, err := v.getDVSObj(dcName, dvsName, client)
 		if err != nil {
@@ -221,8 +232,12 @@ func (v *VCProbe) RemovePenDVS(dcName, dvsName string, retry int) error {
 // GetPenDVSPorts returns the port configuration of the given dvs
 func (v *VCProbe) GetPenDVSPorts(dcName, dvsName string, criteria *types.DistributedVirtualSwitchPortCriteria, retry int) ([]types.DistributedVirtualPort, error) {
 	fn := func() (interface{}, error) {
-		client := v.GetClientWithRLock()
-		defer v.ReleaseClientsRLock()
+		err := v.ReserveClient()
+		if err != nil {
+			return nil, err
+		}
+		defer v.ReleaseClient()
+		client := v.GetClient()
 		return v.getPenDVSPorts(dcName, dvsName, criteria, client)
 	}
 	ret, err := v.withRetry(fn, retry)
@@ -304,8 +319,12 @@ func (v *VCProbe) UpdateDVSPortsVlan(dcName, dvsName string, portsSetting PenDVS
 	}
 
 	fn := func() (interface{}, error) {
-		client := v.GetClientWithRLock()
-		defer v.ReleaseClientsRLock()
+		err := v.ReserveClient()
+		if err != nil {
+			return nil, err
+		}
+		defer v.ReleaseClient()
+		client := v.GetClient()
 
 		portSpecs, isEqual, err := getAndCheck(client)
 		if err != nil {

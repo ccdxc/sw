@@ -302,13 +302,8 @@ func TestWorkloads(t *testing.T) {
 					Spec: workload.WorkloadSpec{
 						Interfaces: []workload.WorkloadIntfSpec{
 							workload.WorkloadIntfSpec{
-								MACAddress:  "aabb.ccdd.eeff",
-								Network:     "PG1",
-								IpAddresses: []string{},
-							},
-							workload.WorkloadIntfSpec{
-								MACAddress:  "aabb.ccdd.ddff",
-								Network:     "PG2",
+								MACAddress:  "aabb.ccdd.ccee",
+								Network:     "PG4",
 								IpAddresses: []string{},
 							},
 							workload.WorkloadIntfSpec{
@@ -317,8 +312,13 @@ func TestWorkloads(t *testing.T) {
 								IpAddresses: []string{},
 							},
 							workload.WorkloadIntfSpec{
-								MACAddress:  "aabb.ccdd.ccee",
-								Network:     "PG4",
+								MACAddress:  "aabb.ccdd.ddff",
+								Network:     "PG2",
+								IpAddresses: []string{},
+							},
+							workload.WorkloadIntfSpec{
+								MACAddress:  "aabb.ccdd.eeff",
+								Network:     "PG1",
 								IpAddresses: []string{},
 							},
 						},
@@ -562,9 +562,9 @@ func TestWorkloads(t *testing.T) {
 					Spec: workload.WorkloadSpec{
 						Interfaces: []workload.WorkloadIntfSpec{
 							workload.WorkloadIntfSpec{
-								MACAddress:  "aabb.ccdd.eeff",
-								Network:     "PG1",
-								IpAddresses: []string{"1.1.1.2"},
+								MACAddress:  "aaaa.aadd.ddff",
+								Network:     "PG2",
+								IpAddresses: []string{},
 							},
 							workload.WorkloadIntfSpec{
 								MACAddress:  "aaaa.ccdd.ddff",
@@ -572,9 +572,9 @@ func TestWorkloads(t *testing.T) {
 								IpAddresses: []string{},
 							},
 							workload.WorkloadIntfSpec{
-								MACAddress:  "aaaa.aadd.ddff",
-								Network:     "PG2",
-								IpAddresses: []string{},
+								MACAddress:  "aabb.ccdd.eeff",
+								Network:     "PG1",
+								IpAddresses: []string{"1.1.1.2"},
 							},
 						},
 					},
@@ -773,13 +773,13 @@ func TestWorkloads(t *testing.T) {
 					Spec: workload.WorkloadSpec{
 						Interfaces: []workload.WorkloadIntfSpec{
 							workload.WorkloadIntfSpec{
-								MACAddress:  "aabb.ccdd.eeff",
-								Network:     "PG1",
+								MACAddress:  "aabb.ccdd.ddff",
+								Network:     "PG2",
 								IpAddresses: []string{},
 							},
 							workload.WorkloadIntfSpec{
-								MACAddress:  "aabb.ccdd.ddff",
-								Network:     "PG2",
+								MACAddress:  "aabb.ccdd.eeff",
+								Network:     "PG1",
 								IpAddresses: []string{},
 							},
 						},

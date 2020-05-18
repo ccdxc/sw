@@ -352,7 +352,9 @@ func (p *PCache) writeStateMgr(in interface{}) error {
 			}
 			obj.Labels = labels
 			// Object exists and is changed
-			if !reflect.DeepEqual(&currObj.Workload, obj) {
+			if !reflect.DeepEqual(&currObj.Workload.Spec, obj.Spec) ||
+				!reflect.DeepEqual(&currObj.Workload.Status, obj.Status) ||
+				!reflect.DeepEqual(&currObj.Workload.Labels, obj.Labels) {
 				for i := 0; i < writeRetries; i++ {
 					// CAS check is needed in case user adds labels to an object
 					obj.ResourceVersion = currObj.ResourceVersion
@@ -389,7 +391,9 @@ func (p *PCache) writeStateMgr(in interface{}) error {
 			}
 			obj.Labels = labels
 			// Object exists and is changed
-			if !reflect.DeepEqual(&currObj.Host, obj) {
+			if !reflect.DeepEqual(&currObj.Host.Spec, obj.Spec) ||
+				!reflect.DeepEqual(&currObj.Host.Status, obj.Status) ||
+				!reflect.DeepEqual(&currObj.Host.Labels, obj.Labels) {
 				p.Log.Debugf("%s %s statemgr update called", HostKind, meta.GetKey())
 				writeErr = ctrler.Host().SyncUpdate(obj)
 			}
