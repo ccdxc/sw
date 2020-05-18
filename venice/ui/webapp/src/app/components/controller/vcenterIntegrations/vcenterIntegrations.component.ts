@@ -78,9 +78,10 @@ export class VcenterIntegrationsComponent extends TablevieweditAbstract<IOrchest
   cols: TableCol[] = [
     { field: 'meta.name', header: 'Name', class: 'vcenter-integration-column-name', sortable: true, width: '150px' },
     { field: 'meta.creation-time', header: 'Creation Time', class: 'vcenter-integration-column-date', sortable: true, width: '180px' },
-    { field: 'spec.uri', header: 'URI', class: 'vcenter-integration-column-url', sortable: true, width: '180px' },
+    { field: 'spec.uri', header: 'URI', class: 'vcenter-integration-column-url', sortable: true, width: '150px' },
     { field: 'spec.manage-namespaces', header: 'Managed Datacenters', class: 'vcenter-integration-column-namespaces', sortable: false, width: 30 },
     { field: 'associatedWorkloads', header: 'Workloads', class: '', sortable: false, localSearch: true, width: 40 },
+    { field: 'status.orch-id', header: 'Orchestrator ID', class: 'vcenter-integration-column-orchid', sortable: true, width: '120px' },
     { field: 'status.connection-status', header: 'Connection Status', class: 'vcenter-integration-column-status', sortable: true, width: 30 },
     { field: 'status.last-transition-time', header: 'Connection Transition Time', class: 'vcenter-integration-column-lastconnected', sortable: true, width: '180px' },
   ];

@@ -71,19 +71,21 @@
                        type="text" pInputText>
               </span>
               <div fxFlex="15px"></div>
-              <span
+              <span *ngIf="!isInline"
                     [ngClass]="{requiredField: isPasswordRequired()}">
                 <input fxFlex="nogrow" class="newVcenter-input" formControlName="password"
                        appErrorTooltip spellcheck="false" appFloatLabel="Password"
                        type="password" pInputText>
               </span>
-              <div fxFlex="15px"></div>
-              <span [ngClass]="{requiredField: isConfirmPwdRequired()}">
-                <input fxFlex="nogrow" class="newVcenter-input" formControlName="confirmPassword"
-                       appErrorTooltip spellcheck="false" appFloatLabel="Confirm Password"
-                       type="password" pInputText>
-              </span>
-              <div fxFlex="10px"></div>
+              <div *ngIf="isInline" fxLayout="column"
+                   [ngClass]="{requiredField: isPasswordRequired()}">
+                <input fxFlex="nogrow" class="newVcenter-input newVcenter-hardcoded-password"
+                       formControlName="password" appErrorTooltip spellcheck="false" type="password"
+                       appFloatLabel="**********************************************************"
+                       pInputText>
+                <span class="newVcenter-hardcoded-password-label">Password</span>
+              </div>
+              <div *ngIf="!isInline" fxFlex="10px"></div>
               <span fxFlex="none" fxLayout="column">
                 <span class="newVcenter-toggle-label">Disable Server Authentication</span>
                 <p-inputSwitch class="newVcenter-toggle" appendTo="body"

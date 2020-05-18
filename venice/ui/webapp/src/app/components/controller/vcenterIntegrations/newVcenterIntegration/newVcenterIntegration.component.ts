@@ -70,13 +70,6 @@ export class NewVcenterIntegrationComponent extends CreationForm<IOrchestrationO
       // disable name field
       this.newObject.$formGroup.get(['meta', 'name']).disable();
     }
-    const credForm: FormGroup = newObject.$formGroup.get(['spec', 'credentials']) as FormGroup;
-    credForm.addControl('confirmPassword', CustomFormControl(new FormControl('', [
-      Utility.isControlValueMatchOtherControlValueValidator(
-        newObject.$formGroup.get(['spec', 'credentials', 'password']),
-        'confirmPassword',
-        Utility.CONFIRM_PASSWORD_MESSAGE)
-    ]), {}));
   }
 
   processVcenterIntegration() {
@@ -132,11 +125,6 @@ export class NewVcenterIntegrationComponent extends CreationForm<IOrchestrationO
           this.submitButtonTooltip = 'Error: Password is empty.';
           return false;
         }
-        if (this.newObject.$formGroup.get(['spec', 'credentials', 'password']).value !==
-            this.newObject.$formGroup.get(['spec', 'credentials', 'confirmPassword']).value) {
-          this.submitButtonTooltip = 'Error: Password does not match.';
-          return false;
-        }
       }
       if (this.newObject.$formGroup.get(['spec', 'credentials', 'auth-type']).value
           === MonitoringExternalCred_auth_type.token) {
@@ -178,18 +166,6 @@ export class NewVcenterIntegrationComponent extends CreationForm<IOrchestrationO
             this.submitButtonTooltip = 'Error: Username is empty.';
             return false;
           }
-        }
-        if (this.newObject.$formGroup.get(['spec', 'credentials', 'password']).value &&
-            this.newObject.$formGroup.get(['spec', 'credentials', 'password']).value !==
-            this.newObject.$formGroup.get(['spec', 'credentials', 'confirmPassword']).value) {
-          this.submitButtonTooltip = 'Error: Password does not match.';
-          return false;
-        }
-        if (this.newObject.$formGroup.get(['spec', 'credentials', 'confirmPassword']).value &&
-            this.newObject.$formGroup.get(['spec', 'credentials', 'confirmPassword']).value !==
-            this.newObject.$formGroup.get(['spec', 'credentials', 'password']).value) {
-          this.submitButtonTooltip = 'Error: Password does not match.';
-          return false;
         }
       }
     }
@@ -237,12 +213,6 @@ export class NewVcenterIntegrationComponent extends CreationForm<IOrchestrationO
           return false;
         }
       }
-    }
-    // ignore confirmPassword validation error
-    if (!this.newObject.$formGroup.valid &&
-        this.newObject.$formGroup.get(['spec', 'credentials', 'confirmPassword']).valid) {
-      this.submitButtonTooltip = 'Error: Form is invalid.';
-      return false;
     }
 
     this.submitButtonTooltip = 'Ready to submit.';
@@ -318,8 +288,6 @@ export class NewVcenterIntegrationComponent extends CreationForm<IOrchestrationO
       currValue.spec['manage-namespaces'] = [this.ALL_DATACENTERS];
     }
     Utility.removeObjectProperties(currValue, 'status');
-    const formGrp: any = currValue.spec.credentials;
-    Utility.removeObjectProperties(formGrp, 'confirmPassword');
     const credential: IMonitoringExternalCred = currValue.spec.credentials;
     if (credential['auth-type'] === MonitoringExternalCred_auth_type['username-password']) {
       Utility.removeObjectProperties(credential, ['bearer-token', 'key-data', 'ca-data', 'cert-data']);
@@ -359,8 +327,7 @@ export class NewVcenterIntegrationComponent extends CreationForm<IOrchestrationO
     if (this.currentObjCredType !== MonitoringExternalCred_auth_type['username-password']) {
       return true;
     }
-    return !this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'password'])) ||
-        !this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'confirmPassword']));
+    return !this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'password']));
   }
 
   isPasswordRequired() {
@@ -374,21 +341,7 @@ export class NewVcenterIntegrationComponent extends CreationForm<IOrchestrationO
     if (this.currentObjCredType !== MonitoringExternalCred_auth_type['username-password']) {
       return true;
     }
-    return !this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'confirmPassword']));
-  }
-
-  isConfirmPwdRequired() {
-    if (!this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'confirmPassword']))) {
-      return false;
-    }
-    if (!this.isInline) {
-      return this.newObject.$formGroup.get(['spec', 'credentials', 'auth-type']).value
-        === MonitoringExternalCred_auth_type['username-password'];
-    }
-    if (this.currentObjCredType !== MonitoringExternalCred_auth_type['username-password']) {
-      return true;
-    }
-    return !this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'password']));
+    return false;
   }
 
   isTokenRequired() {

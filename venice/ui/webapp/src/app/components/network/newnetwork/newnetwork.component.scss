@@ -17,7 +17,6 @@ $dary-grey: #a9a9a9;
       width: 300px;
     }
 
-    .new-network-autocomplete,
     .new-network-input,
     .new-network-select {
       width: 100%;
@@ -30,45 +29,48 @@ $dary-grey: #a9a9a9;
       }
     }
 
-    p-multiselect.ng-invalid .ui-multiselect {
-      border-color: rgb(214, 214, 214) !important;
-    }
+    .new-network-orchestrators-container {
+      width: 826px;
 
-    p-multiselect.ng-invalid .ui-multiselect-open {
-      border: solid 1px #6ba0e5 !important;
-      box-shadow: inset 5px 0 0 0 #6ba0e5 !important;
-    }
+      .new-network-radio-hidden {
+        visibility: hidden;
+      }
 
-    p-multiselect.ng-invalid .ui-multiselect-open .ui-multiselect-label {
-      box-shadow: inset 5px 0 0 0 #6ba0e5 !important;
-    }
+      .new-network-radio-format {
+        margin-left: 5px;
+        margin-top: 9px;
+        @include global-mat-radio(12px);
+        position: relative;
+        top: 10px;
+      }
 
-    .new-network-orchestrator-selectbox,
-    .new-network-orchestrator-inputbox {
-      width: 265px;
-    }
+      p-multiselect.ng-invalid .ui-multiselect {
+        border-color: rgb(214, 214, 214) !important;
+      }
 
-    .new-network-orchestrator-selectbox.requiredField p-autocomplete:first-of-type {
-      width: calc(100% - 2px) !important;
+      p-multiselect.ng-invalid .ui-multiselect-open {
+        border: solid 1px #6ba0e5 !important;
+        box-shadow: inset 5px 0 0 0 #6ba0e5 !important;
+      }
 
-      input {
-        width: 229px !important;
+      p-multiselect.ng-invalid .ui-multiselect-open .ui-multiselect-label {
+        box-shadow: inset 5px 0 0 0 #6ba0e5 !important;
+      }
+
+      .new-network-orchestrator-selectbox,
+      .new-network-orchestrator-inputbox {
+        width: 265px;
+      }
+
+      .new-network-add-orchestrator {
+        cursor: pointer;
+        width: 100px;
+        margin-left: 10px;
+      }
+
+      .new-network-orchestrator-delete-icon {
+        margin-left: 5px;
       }
     }
-
-    .new-network-add-orchestrator {
-      cursor: pointer;
-      width: 100px;
-      margin-left: 10px;
-    }
-
-    .new-network-orchestrator-delete-icon {
-      margin-left: 5px;
-    }
   }
-}
-
-.network-table-caption .tableheader-title {
-  min-width: 150px;
-  text-align: left;
 }

@@ -67,10 +67,31 @@ $dary-grey: #a9a9a9;
       }
     }
 
+    .newVcenter-hardcoded-password-label,
     .newVcenter-toggle-label {
       color: #898989;
       font-size: 12px;
       width: 200px;
+    }
+
+    .newVcenter-hardcoded-password-label {
+      position: relative;
+      top: -45px;
+    }
+
+    .newVcenter-hardcoded-password {
+      &:hover+.newVcenter-hardcoded-password-label {
+        color: #6ba0e5;
+      }
+
+      &~label {
+        margin-top: -1em;
+      }
+
+      &.ui-state-filled~label,
+      &:focus~label {
+        display: none;
+      }
     }
 
     textarea.ui-inputtext {

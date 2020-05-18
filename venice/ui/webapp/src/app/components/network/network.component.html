@@ -30,7 +30,6 @@
       </app-tableheader>
     </div>
   </div>
-
 </ng-template>
 
 <ng-template #createTemplate>
@@ -95,6 +94,7 @@
 <ng-template #expandTemplate let-rowData let-columns="columns">
   <app-newnetwork [style.width]="'100%'" [objectData]="rowData" [isInline]="true"
                   (editFormClose)="editFormClose(rowData)" fxFlex="none"
+                  [existingObjects]='dataObjects'
                   [vcenters]="vcenters" [vcenterOptions]='vcenterOptions'>
   </app-newnetwork>
 </ng-template>

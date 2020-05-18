@@ -30,7 +30,7 @@
       </span>
     </div>
     <div fxFlex="15px"></div>
-    <app-fieldcontainer fieldTitle="Orchestrators">
+    <app-fieldcontainer fieldTitle="Orchestrators" class="new-network-orchestrators-container">
       <div fxFlex="none" fxLayout="column" fxLayoutGap="15px"
            [formGroup]="newObject.$formGroup.get(['spec', 'orchestrators'])">
         <div fxFlex="nogrow" [formGroupName]="index" [@fastSlideInOut]
@@ -47,9 +47,20 @@
               </p-dropdown>
             </span>
             <div fxFlex="15px"></div>
-            <span fxFlex="none" fxLayout="row" [ngClass]="{
-              'new-network-orchestrator-selectbox': true,
-              'requiredField': !isFieldEmpty(orchestrator.get(['orchestrator-name'])) &&
+            <mat-radio-group class="new-network-radio-format" formControlName="datacenterChoice"
+                             [ngClass]="{'new-network-radio-hidden': !showDatacenterChoices(orchestrator)}"
+                             fxLayout="column" fxLayoutAlign="start bottom"
+                             (change)="onDatacenterChoiceChange($event, orchestrator)">
+              <mat-radio-button fxFlex="nogrow" color="primary" [disableRipple]="true"
+                                *ngFor="let option of chooseOptions" [value]="option.value">
+                {{option.label}}
+              </mat-radio-button>
+            </mat-radio-group>
+            <div fxFlex="15px"></div>
+            <span *ngIf="showDatacenterNames(orchestrator)"
+                  fxFlex="none" fxLayout="row" [ngClass]="{
+                'new-network-orchestrator-selectbox': true,
+                'requiredField': !isFieldEmpty(orchestrator.get(['orchestrator-name'])) &&
                               isFieldEmpty(orchestrator.get(['namespace']))
             }">
               <p-multiSelect appFloatLabel="datacenter Names" appendTo="body"
