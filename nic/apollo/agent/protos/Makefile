@@ -9,7 +9,7 @@ $(info ${HAL_PB_GO_FILES})
 default: create-gen-dir meta-proto pds-proto doc-gen
 	echo 'goimports -w -l *.go'
 
-pds-proto: clean-proto
+pds-proto:
 	LC_ALL=C LD_LIBRARY_PATH=$(LD_LIBRARY_PATH) protoc --proto_path=${CURDIR} -I${CURDIR} \
                                 -I${TOP_DIR} -I$(TOP_DIR)/vendor/github.com/gogo/protobuf/gogoproto \
                                 -I$(TOP_DIR)/nic/hal/third-party/google/include -I${CURDIR}/meta \

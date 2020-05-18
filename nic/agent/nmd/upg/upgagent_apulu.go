@@ -1,20 +1,25 @@
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
 
-// +build !apulu
+// +build apulu
 
 package upg
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
 	"os/exec"
 	"sync"
+	"time"
+
+	utils "github.com/pensando/sw/nic/agent/nmd/utils"
 
 	"github.com/pensando/sw/nic/agent/nmd/api"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 
+	"github.com/pensando/sw/nic/apollo/agent/gen/pds"
 	clientAPI "github.com/pensando/sw/nic/delphi/gosdk/client_api"
 	"github.com/pensando/sw/nic/upgrade_manager/export/upggosdk"
 )
@@ -69,27 +74,50 @@ func (u *NaplesUpgClient) StartUpgOnNextHostReboot(firmwarePkgName string) error
 func (u *NaplesUpgClient) StartDisruptiveUpgrade(firmwarePkgName string) error {
 	if u.upgsdk != nil {
 		return u.upgsdk.StartDisruptiveUpgrade(firmwarePkgName)
+
 	}
 	if val, ok := os.LookupEnv("NAPLES_PIPELINE"); ok {
 		log.Infof("NAPLES_PIPELINE is %v", val)
 		if val == globals.NaplesPipelineApollo {
-			log.Infof("Found Apulu pipeline")
-			_, err := os.Stat("/nic/tools/fwupdate")
-			if err == nil {
-				_, err = os.Stat("/update/" + firmwarePkgName)
-				if err != nil {
-					return err
-				}
-			}
-			//fwupdate -p /update/naples_fw_venice.tar -i all ; fwupdate -s altfw ; reboot
-			cmdString := fmt.Sprintf("/update/clear_nic_config.sh remove-config ; /nic/tools/fwupdate -p /update/%s -i all ; fwupdate -s altfw ; reboot", firmwarePkgName)
-			log.Infof("command string %s", cmdString)
-			cmd := exec.Command("bash", "-c", cmdString)
-			if err = cmd.Run(); err != nil {
-				log.Infof("fwupdate execution error %v", err)
+			log.Infof("Starting rollout for apollo pipeline with %s", firmwarePkgName)
+			cmd := exec.Command("/nic/tools/start-upgmgr.sh", "-n")
+			log.Infof("Starting upgmgr and waiting for it to come up...")
+			err := cmd.Start()
+			if err != nil {
+				log.Errorf("Failed to start upgmgr %v", err)
 				return err
 			}
-
+			//Wait 10seconds for upgmgr to comeup
+			time.Sleep(10 * time.Second)
+			log.Infof("Connect to Upgmgr")
+			cc, err := utils.CreateUPGMGRNewGRPCClient()
+			if err != nil {
+				log.Infof("Could not connect to the Upgmgr, %v", err)
+				return err
+			}
+			pdsUpgSvcClient := pds.NewUpgSvcClient(cc)
+			if pdsUpgSvcClient == nil {
+				log.Infof("Failed to init service client to Upgmgr")
+				return errors.New("Failed to init Upgmgr service client")
+			}
+			var upgradeSpec pds.UpgradeSpec
+			upgradeSpec.Mode = pds.UpgradeMode_UPGRADE_MODE_GRACEFUL
+			upgradeSpec.PackageName = "/update/" + firmwarePkgName
+			upgradeSpec.RequestType = pds.UpgradeRequestType_UPGRADE_REQUEST_START
+			var req pds.UpgradeRequest
+			req.Request = &upgradeSpec
+			log.Infof("Send upgrade request")
+			ctx, cancel := context.WithTimeout(context.Background(), time.Minute*3)
+			defer cancel()
+			resp, err := pdsUpgSvcClient.UpgRequest(ctx, &req)
+			if err != nil {
+				log.Errorf("Triggering rollout failed %v", err)
+				return err
+			}
+			log.Infof("Rollout response for Upgrade %+v", resp)
+			if resp.Status != pds.UpgradeStatus_UPGRADE_STATUS_OK {
+				return fmt.Errorf("DSC Upgrade Failed: %s", resp.Status.String())
+			}
 		}
 	} else {
 		log.Infof("Errored. NAPLES_PIPELINE is %v ok %v", val, ok)

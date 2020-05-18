@@ -5,9 +5,9 @@ MODULE_TARGET   := nmd.gobin
 ifeq ($(PIPELINE), iris)
 MODULE_PREREQS  := agent_halproto.submake nmd_halproto.submake nmd_delphi.submake agent_delphidp.submake
 else
-MODULE_PREREQS  := nmd_delphi.submake sysmgr_delphidp.submake upg.submake
+MODULE_PREREQS  := nmd_delphi.submake sysmgr_delphidp.submake upg.submake agent_pdsupgproto.submake
 endif
 MODULE_PIPELINE := iris apulu
-MODULE_FLAGS    := -ldflags="-s -w"
+MODULE_FLAGS    := -tags ${PIPELINE} -ldflags="-s -w"
 MODULE_DEPS     := $(shell find ${NICDIR}/agent/nmd -name '*.go')
 include ${MKDEFS}/post.mk

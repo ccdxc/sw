@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pensando/sw/venice/globals"
+
 	"github.com/pensando/sw/venice/utils/imagestore"
 
 	"github.com/davecgh/go-spew/spew"
@@ -164,6 +166,19 @@ func (n *NMD) issueNextPendingOp() {
 	log.Infof("On entry of issueNextPendingOp state is completed:%s inProgress:%s pending:%s", spew.Sdump(n.ro.CompletedOps), n.ro.InProgressOp, spew.Sdump(n.ro.PendingOps))
 	if n.ro.InProgressOp.Op != protos.DSCOp_DSCNoOp {
 		log.Infof("An op is currently in progress.  %v", n.ro.InProgressOp.Op)
+		//For integration with apulu upgmgr
+		if val, ok := os.LookupEnv("NAPLES_PIPELINE"); ok {
+			log.Infof("NAPLES_PIPELINE is %v", val)
+			if val == globals.NaplesPipelineApollo {
+				if _, err := os.Stat("/update/pds_upg_status.txt"); os.IsNotExist(err) {
+					log.Errorf("File /update/pds_upg_status.txt not found.")
+					go n.UpgFailed(&[]string{fmt.Sprintf("upgrade status not found %s", err)})
+				} else {
+					log.Infof("Found the status file from upgmgr. Upgrade successful")
+					go n.UpgSuccessful()
+				}
+			}
+		}
 		return // an op is already in progress...
 	}
 
