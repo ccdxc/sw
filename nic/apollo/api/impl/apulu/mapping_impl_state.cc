@@ -585,7 +585,7 @@ do_insert_dhcp_binding (dhcpctl_handle *dhcp_connection,
 
     // ip address
     memset(&ipaddr, 0, sizeof ipaddr);
-    ret = omapi_data_string_new (&ipaddr, IP4_ADDR8_LEN, MDL);
+    ret = omapi_data_string_new(&ipaddr, IP4_ADDR8_LEN, MDL);
     if (ret != ISC_R_SUCCESS) {
         PDS_TRACE_ERR("Failed to allocate data string, err %u", ret);
         omapi_object_dereference(&host, MDL);

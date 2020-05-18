@@ -21,6 +21,9 @@ namespace api {
 // forward declaration
 class dhcp_state;
 
+// attribute update bits for DHCP policy object
+#define PDS_SUBNET_UPD_DHCP_PROXY_POLICY    0x1
+
 /// \defgroup PDS_DHCP_POLICY - DHCP policy functionality
 /// \ingroup PDS_DHCP
 /// @{
@@ -106,10 +109,7 @@ public:
     /// \param[in]    obj_ctxt    transient state associated with this API
     ///                           processing
     /// \return       SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t add_deps(api_obj_ctxt_t *obj_ctxt) override {
-        // no other objects are effected if DHCP config is modified
-        return SDK_RET_OK;
-    }
+    virtual sdk_ret_t add_deps(api_obj_ctxt_t *obj_ctxt) override;
 
     /// \brief    update all h/w tables relevant to this object except stage 0
     ///           table(s), if any, by updating packed entries with latest
@@ -180,7 +180,7 @@ public:
     pds_dhcp_policy_type_t type(void) const { return type_; }
 
     /// \brief     return server IP of the DHCP policy object
-    /// \return    server IP 
+    /// \return    server IP
     const ip_addr_t server_ip(void) const { return server_ip_; }
 
     /// \brief     return mtu of the DHCP policy object
@@ -188,23 +188,23 @@ public:
     uint32_t mtu(void) const { return mtu_; }
 
     /// \brief     return gateway IP of the DHCP policy object
-    /// \return    gateway IP 
+    /// \return    gateway IP
     const ip_addr_t gateway_ip(void) const { return gateway_ip_; }
 
     /// \brief     return DNS server IP of the DHCP policy object
-    /// \return    DNS server IP 
+    /// \return    DNS server IP
     const ip_addr_t dns_server_ip(void) const { return dns_server_ip_; }
 
     /// \brief     return NTP server IP of the DHCP policy object
-    /// \return    NTP server IP 
+    /// \return    NTP server IP
     const ip_addr_t ntp_server_ip(void) const { return ntp_server_ip_; }
 
     /// \brief     return ptr to the domain name of the DHCP policy object
     /// \return    ptr to domain name
     const char *domain_name(void) const { return domain_name_; }
-    
+
     /// \brief     return ptr to the boot filename of the DHCP policy object
-    /// \return    ptr to boot filename 
+    /// \return    ptr to boot filename
     const char *boot_filename(void) const { return boot_filename_; }
 
     /// \brief     return the lease timeout  of the DHCP policy object
@@ -234,46 +234,34 @@ private:
 private:
     /// DHCP policy entry key
     pds_obj_key_t key_;
-
     /// DHCP policy type
     pds_dhcp_policy_type_t type_;
-
     /// DHCP proxy configuration
     union {
         struct {
             /// DHCP server IP
             ip_addr_t server_ip_;
-
             /// MTU specified to clients
             uint32_t mtu_;
-
             /// gateway IP
             ip_addr_t gateway_ip_;
-
             /// DNS server IP
             ip_addr_t dns_server_ip_;
-
             /// NTP server IP
             ip_addr_t ntp_server_ip_;
-
             /// domain_name
             char domain_name_[PDS_MAX_DOMAIN_NAME_LEN + 1];
-
             /// boot_filename
             char boot_filename_[PDS_MAX_BOOT_FILENAME_LEN + 1];
-            
             /// DHCP lease timeout
             uint32_t lease_timeout_;
-            
         };
     };
 
     /// hash table context
     ht_ctxt_t ht_ctxt_;
-
     ///< impl object instance
     impl_base     *impl_;
-
     /// dhcp_state is friend of dhcp_policy
     friend class dhcp_state;
 } __PACK__;

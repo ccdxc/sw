@@ -87,8 +87,11 @@ public:
     /// \return   SDK_RET_OK on success, failure status code on error
     sdk_ret_t remove_dhcp_binding(const char *hostname);
 
-private:
+    /// \brief return instance of LOCAL_MAPPING table
+    /// \return   pointer to the LOCAL_MAPPING table instance
     mem_hash *local_mapping_tbl(void) { return local_mapping_tbl_; }
+
+private:
     mem_hash *mapping_tbl(void) { return mapping_tbl_; }
     mem_hash *rxdma_mapping_tbl(void) { return rxdma_mapping_tbl_; }
     rte_indexer *ip_mac_binding_idxr(void) { return ip_mac_binding_idxr_; }

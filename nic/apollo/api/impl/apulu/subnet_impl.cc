@@ -789,6 +789,54 @@ subnet_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
     return ret;
 }
 
+static void
+local_mapping_dhcp_binding_upd_cb_ (sdk_table_api_params_t *params)
+{
+    uint16_t bd_id;
+    vnic_impl *vnic;
+    subnet_entry *subnet;
+    ip_addr_t mapping_ip;
+    local_mapping_swkey_t *key;
+    subnet_impl *subnet_impl_obj;
+    local_mapping_appdata_t *data;
+
+    subnet = (subnet_entry *)api_framework_obj((api_base *)(params->cbdata));
+    SDK_ASSERT(subnet != NULL);
+    bd_id = ((subnet_impl *)subnet->impl())->hw_id();
+    key = (local_mapping_swkey_t *)(params->key);
+    if (key->key_metadata_local_mapping_lkp_type != KEY_TYPE_IPV4) {
+        // not interested in non-IPv4 entries
+        return;
+    }
+    if (key->key_metadata_local_mapping_lkp_id != bd_id) {
+        // this mapping doesn't belong to this affected subnet
+        return;
+    }
+    data = (local_mapping_appdata_t *)(params->appdata);
+    vnic = vnic_impl_db()->find(data->vnic_id);
+    SDK_ASSERT(vnic != NULL);
+    memset(&mapping_ip, 0, sizeof(mapping_ip));
+    mapping_ip.af = IP_AF_IPV4;
+    mapping_ip.addr.v4_addr =
+        *(uint32_t *)key->key_metadata_local_mapping_lkp_addr;
+
+    // TODO:
+    // now we have MAC, IP, subnet etc. all details
+}
+
+sdk_ret_t
+subnet_impl::reactivate_hw(api_base *api_obj, pds_epoch_t epoch,
+                           api_obj_ctxt_t *obj_ctxt) {
+    sdk_table_api_params_t api_params = { 0 };
+
+    if (obj_ctxt->upd_bmap & PDS_SUBNET_UPD_DHCP_PROXY_POLICY) {
+        api_params.itercb = local_mapping_dhcp_binding_upd_cb_;
+        api_params.cbdata = api_obj;
+        mapping_impl_db()->local_mapping_tbl()->iterate(&api_params);
+    }
+    return SDK_RET_OK;
+}
+
 void
 subnet_impl::fill_status_(pds_subnet_status_t *status) {
     status->hw_id = hw_id_;

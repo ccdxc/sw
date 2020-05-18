@@ -248,9 +248,9 @@ public:
         return num_ing_v6_policy_;
     }
 
-    /// \brief          return ingress IPv6 security policy of the subnet
+    /// \brief          return nth ingress IPv6 security policy of the subnet
     /// \param[in] n    policy number being queried
-    /// \return         ingress IPv6 security policy of the subnet
+    /// \return         nth ingress IPv6 security policy of the subnet
     pds_obj_key_t ing_v6_policy(uint32_t n) const {
         return ing_v6_policy_[n];
     }
@@ -261,9 +261,9 @@ public:
         return num_egr_v4_policy_;
     }
 
-    /// \brief          return egress IPv4 security policy of the subnet
+    /// \brief          return nth egress IPv4 security policy of the subnet
     /// \param[in] n    policy number being queried
-    /// \return         egress IPv4 security policy of the subnet
+    /// \return         nth egress IPv4 security policy of the subnet
     pds_obj_key_t egr_v4_policy(uint32_t n) const {
         return egr_v4_policy_[n];
     }
@@ -287,8 +287,15 @@ public:
         return num_dhcp_policy_;
     }
 
-    /// \brief          return dhcp proxy policy on the subnet
-    /// \return         dhcp proxy policy on the subnet
+    /// \brief          return nth DHCP policy on the subnet
+    /// \param[in] n    policy number being queried
+    /// \return         nth DHCP policy of the subnet
+    pds_obj_key_t dhcp_policy(uint32_t n) const {
+        return dhcp_policy_[n];
+    }
+
+    /// \brief     return dhcp proxy policy on the subnet
+    /// \return    dhcp proxy policy on the subnet
     pds_obj_key_t dhcp_proxy_policy(void) const {
         return dhcp_policy_[0];
     }

@@ -117,9 +117,9 @@ void
 mapping_dump_cb (sdk_table_api_params_t *params)
 {
     int fd = *(int *)(params->cbdata);
-
     local_ip_mapping_swkey_t *key = (local_ip_mapping_swkey_t *)(params->key);
-    local_ip_mapping_appdata_t *data =(local_ip_mapping_appdata_t *)(params->appdata);
+    local_ip_mapping_appdata_t *data =
+        (local_ip_mapping_appdata_t *)(params->appdata);
 
     dprintf(fd, "%-7u%-16s%-7u%-8u%-6s\n",
             key->key_metadata_lkp_id,

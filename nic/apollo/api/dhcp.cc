@@ -20,6 +20,12 @@
 
 namespace api {
 
+typedef struct dhcp_policy_upd_ctxt_s {
+    dhcp_policy *dhcp_policy_obj;
+    api_obj_ctxt_t *obj_ctxt;
+    uint64_t upd_bmap;
+} __PACK__ dhcp_policy_upd_ctxt_t;
+
 dhcp_policy::dhcp_policy() {
     impl_ = NULL;
     server_ip_ = {0};
@@ -30,7 +36,7 @@ dhcp_policy::dhcp_policy() {
     memset(domain_name_, '\0', sizeof(domain_name_));
     memset(boot_filename_, '\0', sizeof(boot_filename_));
     lease_timeout_ = 0;
- 
+
     ht_ctxt_.reset();
 }
 
@@ -204,9 +210,48 @@ dhcp_policy::compute_update(api_obj_ctxt_t *obj_ctxt) {
     return SDK_RET_OK;
 }
 
+static bool
+subnet_upd_walk_cb_ (void *api_obj, void *ctxt) {
+    subnet_entry *subnet;
+    dhcp_policy_upd_ctxt_t *upd_ctxt = (dhcp_policy_upd_ctxt_t *)ctxt;
+
+    subnet = (subnet_entry *)api_framework_obj((api_base *)api_obj);
+    for (uint32_t i = 0; i < subnet->num_dhcp_policy(); i++) {
+        if (subnet->dhcp_policy(i) == upd_ctxt->dhcp_policy_obj->key()) {
+            api_obj_add_to_deps(upd_ctxt->obj_ctxt->api_op,
+                                OBJ_ID_DHCP_POLICY, upd_ctxt->dhcp_policy_obj,
+                                OBJ_ID_SUBNET, (api_base *)api_obj,
+                                upd_ctxt->upd_bmap);
+            goto end;
+        }
+    }
+
+end:
+
+    return false;
+}
+
+sdk_ret_t
+dhcp_policy::add_deps(api_obj_ctxt_t *obj_ctxt) {
+    dhcp_policy_upd_ctxt_t upd_ctxt = { 0 };
+
+    // if this is DHCP relay policy, nothing to do
+    if (type_ != PDS_DHCP_POLICY_TYPE_PROXY) {
+        return SDK_RET_OK;
+    }
+
+    // for DHCP proxy/suppression policy we need to update
+    // internal DHCP server with latest configuration
+    upd_ctxt.dhcp_policy_obj = this;
+    upd_ctxt.obj_ctxt = obj_ctxt;
+    upd_ctxt.upd_bmap = PDS_SUBNET_UPD_DHCP_PROXY_POLICY;
+    subnet_db()->walk(subnet_upd_walk_cb_, &upd_ctxt);
+    return SDK_RET_OK;
+}
+
 sdk_ret_t
 dhcp_policy::activate_config(pds_epoch_t epoch, api_op_t api_op,
-                            api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
+                             api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     if (impl_) {
         return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
     }

@@ -149,13 +149,7 @@ public:
     /// NOTE: this method is called when an object is in the dependent/puppet
     ///       object list
     virtual sdk_ret_t reactivate_hw(api_base *api_obj, pds_epoch_t epoch,
-                                    api_obj_ctxt_t *obj_ctxt) override {
-        // other object updates don't affect subnet h/w programming when subnet
-        // is sitting in the dependent object list, any updates to route
-        // table(s) and/or policy table(s) that subnet is pointing to are
-        // propagated to  respective vnics by now
-        return SDK_RET_OK;
-    }
+                                    api_obj_ctxt_t *obj_ctxt);
 
     /// \brief      read spec, statistics and status from hw tables
     /// \param[in]  api_obj  API object

@@ -311,9 +311,9 @@ func (m *DeviceSpec) GetFwPolicyXposnScheme() FwPolicyXposn {
 
 // operational status of the device, if any
 type DeviceStatus struct {
-	// operaional state of the device
+	// operational state of the device
 	State DeviceState `protobuf:"varint,1,opt,name=State,proto3,enum=pds.DeviceState" json:"State,omitempty"`
-	// System MAC address (can be used to uniquely identify the device in cluster)
+	// system MAC address (can be used to uniquely identify the device in cluster)
 	SystemMACAddress uint64 `protobuf:"varint,2,opt,name=SystemMACAddress,proto3" json:"SystemMACAddress,omitempty"`
 	// serial number of the device
 	SerialNumber string `protobuf:"bytes,3,opt,name=SerialNumber,proto3" json:"SerialNumber,omitempty"`
@@ -321,41 +321,41 @@ type DeviceStatus struct {
 	Sku string `protobuf:"bytes,4,opt,name=Sku,proto3" json:"Sku,omitempty"`
 	// version of the firmware running
 	FirmwareVersion string `protobuf:"bytes,5,opt,name=FirmwareVersion,proto3" json:"FirmwareVersion,omitempty"`
-	// Memory Capacity
+	// memory capacity
 	Memory uint32 `protobuf:"varint,6,opt,name=Memory,proto3" json:"Memory,omitempty"`
-	// Product Name
+	// product name
 	ProductName string `protobuf:"bytes,7,opt,name=ProductName,proto3" json:"ProductName,omitempty"`
-	// Manufacturing date
+	// manufacturing date
 	ManufacturingDate string `protobuf:"bytes,8,opt,name=ManufacturingDate,proto3" json:"ManufacturingDate,omitempty"`
-	// Device Description
+	// device description
 	Description string `protobuf:"bytes,9,opt,name=Description,proto3" json:"Description,omitempty"`
-	// Vendor ID
+	// vendor identifier
 	VendorID string `protobuf:"bytes,10,opt,name=VendorID,proto3" json:"VendorID,omitempty"`
-	// Chip Type
+	// chip type
 	ChipType AsicType `protobuf:"varint,11,opt,name=ChipType,proto3,enum=types.AsicType" json:"ChipType,omitempty"`
-	// Hardware Revision
+	// hardware revision
 	HardwareRevision string `protobuf:"bytes,12,opt,name=HardwareRevision,proto3" json:"HardwareRevision,omitempty"`
-	// CPU Vendor
+	// CPU vendor
 	CpuVendor string `protobuf:"bytes,13,opt,name=CpuVendor,proto3" json:"CpuVendor,omitempty"`
-	// CPU Specification
+	// CPU specification
 	CpuSpecification string `protobuf:"bytes,14,opt,name=CpuSpecification,proto3" json:"CpuSpecification,omitempty"`
-	// SOC OS Version
+	// SoC OS version
 	SocOSVersion string `protobuf:"bytes,15,opt,name=SocOSVersion,proto3" json:"SocOSVersion,omitempty"`
-	// Soc Disk Size
+	// SoC disk size
 	SocDiskSize string `protobuf:"bytes,16,opt,name=SocDiskSize,proto3" json:"SocDiskSize,omitempty"`
-	// PCIe Specification
+	// PCIe specification
 	PCIeSpecification string `protobuf:"bytes,17,opt,name=PCIeSpecification,proto3" json:"PCIeSpecification,omitempty"`
-	// PCIe Bus Information
+	// PCIe bus information
 	PCIeBusInfo string `protobuf:"bytes,18,opt,name=PCIeBusInfo,proto3" json:"PCIeBusInfo,omitempty"`
-	// Number of PCIe Ports
+	// number of PCIe ports
 	NumPCIePorts uint32 `protobuf:"varint,19,opt,name=NumPCIePorts,proto3" json:"NumPCIePorts,omitempty"`
-	// Number of Uplink Ports
+	// Number of uplink ports
 	NumPorts uint32 `protobuf:"varint,20,opt,name=NumPorts,proto3" json:"NumPorts,omitempty"`
-	// Vendor Name
+	// vendor name
 	VendorName string `protobuf:"bytes,21,opt,name=VendorName,proto3" json:"VendorName,omitempty"`
-	// PXE Version
+	// PXE version
 	PXEVersion float32 `protobuf:"fixed32,22,opt,name=PXEVersion,proto3" json:"PXEVersion,omitempty"`
-	// UEFI Version
+	// UEFI version
 	UEFIVersion float32 `protobuf:"fixed32,23,opt,name=UEFIVersion,proto3" json:"UEFIVersion,omitempty"`
 	// number of host interfaces
 	NumHostIf uint32 `protobuf:"varint,24,opt,name=NumHostIf,proto3" json:"NumHostIf,omitempty"`

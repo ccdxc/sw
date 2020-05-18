@@ -28,12 +28,12 @@ static bool g_asicrw_ready_;
 // thread's queue whenever asic read/write is attempted by any thread
 //------------------------------------------------------------------------------
 typedef struct asicrw_entry_ {
-    uint8_t              opn;        // operation requested to perform
-    bool                 done;       // TRUE if thread performed operation
-    sdk_ret_t            status;     // result status of operation requested
-    uint64_t             addr;       // address to write to or read from
-    uint32_t             len;        // length of data to read or write
-    uint8_t              *data;      // data to write or buffer to copy data to for mem read/write
+    uint8_t   opn;    // operation requested to perform
+    bool      done;   // TRUE if thread performed operation
+    sdk_ret_t status; // result status of operation requested
+    uint64_t  addr;   // address to write to or read from
+    uint32_t  len;    // length of data to read or write
+    uint8_t   *data;  // data to write or buffer to copy data to for mem read/write
 } asicrw_entry_t;
 
 //------------------------------------------------------------------------------
@@ -41,10 +41,10 @@ typedef struct asicrw_entry_ {
 // operations by thread, thus avoiding locking altogether
 //------------------------------------------------------------------------------
 typedef struct asicrw_queue_s {
-    uint32_t                 nentries;    // no. of entries in the queue
-    uint16_t                 pindx;       // producer index
-    uint16_t                 cindx;       // consumer index
-    asicrw_entry_t          entries[ASICRW_Q_SIZE];    // entries
+    uint32_t       nentries;    // no. of entries in the queue
+    uint16_t       pindx;       // producer index
+    uint16_t       cindx;       // consumer index
+    asicrw_entry_t entries[ASICRW_Q_SIZE];    // entries
 } asicrw_queue_t;
 
 // per producer read/write request queues
