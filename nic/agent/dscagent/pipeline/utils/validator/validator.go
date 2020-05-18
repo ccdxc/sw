@@ -594,12 +594,13 @@ func generateRuleHash(r *netproto.PolicyRule, key string) uint64 {
 	return h.Sum64()
 }
 
-// ValidateNwAttach checks if this subnet is attached to any host-pfs
-func ValidateNwAttach(i types.InfraAPI, tenant, namespace, name string) (bool, []byte) {
+// ValidateNwAttach checks if this subnet is attached to any host-pfs and returns the UUIDs for host-pfs
+func ValidateNwAttach(i types.InfraAPI, tenant, namespace, name string) (bool, [][]byte) {
+	var intfUUIDs [][]byte
 	data, err := i.List("Interface")
 	if err != nil {
 		log.Error(errors.Wrapf(types.ErrBadRequest, "Interfaces not found: Err: %v", types.ErrObjNotFound))
-		return false, nil
+		return false, intfUUIDs
 	}
 
 	for _, intf := range data {
@@ -618,13 +619,17 @@ func ValidateNwAttach(i types.InfraAPI, tenant, namespace, name string) (bool, [
 			uid, err := uuid.FromString(nwIf.UUID)
 			if err != nil {
 				log.Errorf("Interface: %s could not get UUID [%v] | Err: %s", nwIf.GetKey(), nwIf.UUID, err)
-				return false, nil
+				continue
 			}
-			return true, uid.Bytes()
+			intfUUIDs = append(intfUUIDs, uid.Bytes())
 		}
 	}
 
-	return false, nil
+	if len(intfUUIDs) > 0 {
+		return true, intfUUIDs
+	}
+
+	return false, intfUUIDs
 }
 
 // ValidateIPAMPolicy performs static field validations on server IP and named reference validation on underlay vp

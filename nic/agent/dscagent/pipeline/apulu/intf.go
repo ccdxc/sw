@@ -5,6 +5,7 @@
 package apulu
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"net"
@@ -112,8 +113,8 @@ func updateInterfaceHandler(infraAPI types.InfraAPI, client halapi.IfSvcClient, 
 		log.Infof("Interface: %v mapping changed [%v/%v] -> [%v/%v]",
 			intf.UUID, oldIntf.Spec.VrfName, oldIntf.Spec.Network,
 			intf.Spec.VrfName, intf.Spec.Network)
-		updateSubnet := func(tenant, netw string, uid []byte) error {
-			log.Infof("Subnet: %v/%v attach interface %v | begin", tenant, netw, string(uid))
+		updateSubnet := func(tenant, netw string, uid []byte, attach bool) error {
+			log.Infof("Subnet: %v/%v attach %v interface %v | begin", tenant, netw, attach, string(uid))
 			nw := netproto.Network{
 				TypeMeta: api.TypeMeta{
 					Kind: "Network",
@@ -144,11 +145,35 @@ func updateInterfaceHandler(infraAPI types.InfraAPI, client halapi.IfSvcClient, 
 				log.Errorf("Network: %s could not convert | Err: %s", nw.GetKey(), err)
 				return errors.Wrapf(types.ErrDatapathHandling, "Network: %s could not Convert | Err: %s", nw.GetKey(), err)
 			}
-			updsubnet.Request[0].HostIf[0] = uid
-			if uid != nil {
+			if attach {
+				// Add a deduped intf uuid
+				found := false
+				for _, uuid := range updsubnet.Request[0].HostIf {
+					if bytes.Equal(uuid, uid) {
+						found = true
+						break
+					}
+				}
+				if !found {
+					updsubnet.Request[0].HostIf = append(updsubnet.Request[0].HostIf, uid)
+				}
 				// since boltDB is not updated for the interface yet, convertNetworkToSubnet doesn't populate the polciy IDs
 				updsubnet.Request[0].IngV4SecurityPolicyId = utils.ConvertIDs(getPolicyUuid(nw.Spec.IngV4SecurityPolicies, true, nw, infraAPI)...)
 				updsubnet.Request[0].EgV4SecurityPolicyId = utils.ConvertIDs(getPolicyUuid(nw.Spec.EgV4SecurityPolicies, true, nw, infraAPI)...)
+			} else {
+				// Remove the uid from subnet's hostIf
+				length := len(updsubnet.Request[0].HostIf)
+				index := -1
+				for idx, uuid := range updsubnet.Request[0].HostIf {
+					if bytes.Equal(uuid, uid) {
+						index = idx
+						break
+					}
+				}
+				if index != -1 {
+					updsubnet.Request[0].HostIf[index] = updsubnet.Request[0].HostIf[length-1]
+					updsubnet.Request[0].HostIf = updsubnet.Request[0].HostIf[:length-1]
+				}
 			}
 
 			resp, err := subnetcl.SubnetUpdate(context.TODO(), updsubnet)
@@ -164,14 +189,14 @@ func updateInterfaceHandler(infraAPI types.InfraAPI, client halapi.IfSvcClient, 
 			return nil
 		}
 		if oldIntf.Spec.Network != "" {
-			if err = updateSubnet(oldIntf.Spec.VrfName, oldIntf.Spec.Network, nil); err != nil {
+			if err = updateSubnet(oldIntf.Spec.VrfName, oldIntf.Spec.Network, uid.Bytes(), false); err != nil {
 				return errors.Wrapf(types.ErrDatapathHandling, "Interface: %s updating old subnet| Err: %s", oldIntf.GetKey(), err)
 			}
 		}
 
 		if intf.Spec.Network != "" {
 			log.Infof("Updating Subnet [%v/%v] with Interface binding - [%s]", intf.Spec.VrfName, intf.Spec.Network, uid)
-			if err = updateSubnet(intf.Spec.VrfName, intf.Spec.Network, uid.Bytes()); err != nil {
+			if err = updateSubnet(intf.Spec.VrfName, intf.Spec.Network, uid.Bytes(), true); err != nil {
 				return errors.Wrapf(types.ErrDatapathHandling, "Interface: %s updating new subnet| Err: %s", oldIntf.GetKey(), err)
 			}
 		}

@@ -620,9 +620,9 @@ func convertNetworkToSubnet(infraAPI types.InfraAPI, nw netproto.Network, uplink
 	}
 
 	// check if the network is attached to any host-pfs
-	attached, intfUid := validator.ValidateNwAttach(infraAPI, nw.Tenant, nw.Namespace, nw.Name)
-	if attached == true {
-		log.Infof("subnet %s attached to interface uid: %v", nw.GetKey(), intfUid)
+	attached, intfUUIDs := validator.ValidateNwAttach(infraAPI, nw.Tenant, nw.Namespace, nw.Name)
+	if attached {
+		log.Infof("subnet %s attached to interface uids: %v", nw.GetKey(), intfUUIDs)
 	}
 
 	var ipamuuids [][]byte
@@ -673,7 +673,7 @@ func convertNetworkToSubnet(infraAPI types.InfraAPI, nw netproto.Network, uplink
 				},
 				V4Prefix:              v4Prefix,
 				V6Prefix:              v6Prefix,
-				HostIf:                [][]byte{intfUid},
+				HostIf:                intfUUIDs,
 				DHCPPolicyId:          ipamuuids,
 				IngV4SecurityPolicyId: utils.ConvertIDs(getPolicyUuid(nw.Spec.IngV4SecurityPolicies, attached, nw, infraAPI)...),
 				EgV4SecurityPolicyId:  utils.ConvertIDs(getPolicyUuid(nw.Spec.EgV4SecurityPolicies, attached, nw, infraAPI)...),
