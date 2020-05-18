@@ -61,7 +61,7 @@ var _ = Describe("venice cluster tests", func() {
 
 		}
 
-		It("should be able to save and restore configuration", func() {
+		It("tags:regression=true should be able to save and restore configuration", func() {
 			Expect(ts.model.VeniceNodeCreateSnapshotConfig(ts.model.VeniceNodes())).Should(Succeed())
 			ss, err := ts.model.VeniceNodeTakeSnapshot(ts.model.VeniceNodes())
 			Expect(err).To(BeNil())
@@ -69,7 +69,7 @@ var _ = Describe("venice cluster tests", func() {
 			Expect(ts.model.VeniceNodeRestoreConfig(ts.model.VeniceNodes(), name)).Should(Succeed())
 		})
 
-		It("Should be able reload venice nodes and cluster should come back to normal state", func() {
+		It("tags:regression=true Should be able reload venice nodes and cluster should come back to normal state", func() {
 			// reload each host
 			ts.model.ForEachVeniceNode(func(vnc *objects.VeniceNodeCollection) error {
 				Expect(ts.model.ReloadVeniceNodes(vnc)).Should(Succeed())
@@ -83,7 +83,7 @@ var _ = Describe("venice cluster tests", func() {
 			})
 		})
 
-		It("Should be able reload host nodes and cluster should come back to normal state", func() {
+		It("tags:regression=true Should be able reload host nodes and cluster should come back to normal state", func() {
 			// reload each host
 			ts.model.ForEachHost(func(vnc *objects.HostCollection) error {
 				Expect(ts.model.ReloadHosts(vnc)).Should(Succeed())
@@ -97,7 +97,7 @@ var _ = Describe("venice cluster tests", func() {
 			})
 		})
 
-		It("Should be able reload model exclusive nodes and make sure cluster is in good state", func() {
+		It("tags:regression=true Should be able reload model exclusive nodes and make sure cluster is in good state", func() {
 			// reload the leader node
 			svcs, _ := ts.model.GetExclusiveServices()
 			for _, svc := range svcs {
@@ -118,7 +118,7 @@ var _ = Describe("venice cluster tests", func() {
 			}
 		})
 
-		It("Flap links and Reload nodees and make good state", func() {
+		It("tags:regression=true Flap links and Reload nodees and make good state", func() {
 			if !ts.scaleData || ts.tb.HasNaplesSim() {
 				Skip("Skipping scale connection runs")
 			}
@@ -146,7 +146,7 @@ var _ = Describe("venice cluster tests", func() {
 
 		})
 
-		It("Venice Leader shutdown should not affect the cluster", func() {
+		It("tags:regression=true Venice Leader shutdown should not affect the cluster", func() {
 
 			naples := ts.model.Naples()
 			leader := ts.model.VeniceNodes().Leader()
@@ -167,7 +167,7 @@ var _ = Describe("venice cluster tests", func() {
 			}).Should(Succeed())
 		})
 
-		It("Venice Non-Leader shutdown should not affect the cluster", func() {
+		It("tags:regression=true Venice Non-Leader shutdown should not affect the cluster", func() {
 
 			naples := ts.model.Naples()
 
@@ -190,7 +190,7 @@ var _ = Describe("venice cluster tests", func() {
 
 		})
 
-		It("Venice all Leader and non-leader shutdown bring non-leader back to establish quorum", func() {
+		It("tags:regression=true Venice all Leader and non-leader shutdown bring non-leader back to establish quorum", func() {
 			naples := ts.model.Naples()
 			leader := ts.model.VeniceNodes().Leader()
 			//Pick one non-leader
@@ -219,7 +219,7 @@ var _ = Describe("venice cluster tests", func() {
 			}).Should(Succeed())
 		})
 
-		It("Venice all node shutdown bring back all to establish quorum", func() {
+		It("tags:regression=true Venice all node shutdown bring back all to establish quorum", func() {
 			naples := ts.model.Naples()
 			nodes := ts.model.VeniceNodes()
 			err := ts.model.DisconnectVeniceNodesFromCluster(nodes, naples)
@@ -237,7 +237,7 @@ var _ = Describe("venice cluster tests", func() {
 
 		})
 
-		It("Venice Leader Shutdown, policy push and make sure traffic is good", func() {
+		It("tags:regression=true Venice Leader Shutdown, policy push and make sure traffic is good", func() {
 			naples := ts.model.Naples()
 			leader := ts.model.VeniceNodes().Leader()
 			err := ts.model.DisconnectVeniceNodesFromCluster(leader, naples)
@@ -274,7 +274,7 @@ var _ = Describe("venice cluster tests", func() {
 
 		})
 
-		It("Venice Shutdown NPM node, policy push and make sure traffic is good", func() {
+		It("tags:regression=true Venice Shutdown NPM node, policy push and make sure traffic is good", func() {
 			naples := ts.model.Naples()
 			npmNode, err := ts.model.VeniceNodes().GetVeniceNodeWithService("pen-npm")
 			Expect(err).ShouldNot(HaveOccurred())
@@ -311,7 +311,7 @@ var _ = Describe("venice cluster tests", func() {
 			}).Should(Succeed())
 		})
 
-		It("Venice Shutdown APIServer node, policy push and make sure traffic is good", func() {
+		It("tags:regression=true Venice Shutdown APIServer node, policy push and make sure traffic is good", func() {
 			naples := ts.model.Naples()
 			apiServerNode, err := ts.model.VeniceNodes().GetVeniceNodeWithService("pen-apiserver")
 			Expect(err).ShouldNot(HaveOccurred())
@@ -348,7 +348,7 @@ var _ = Describe("venice cluster tests", func() {
 			}).Should(Succeed())
 		})
 
-		It("Venice Shutdown 2 nodes, make sure traffic is good", func() {
+		It("tags:regression=true Venice Shutdown 2 nodes, make sure traffic is good", func() {
 			naples := ts.model.Naples()
 			nodes := ts.model.VeniceNodes().Any(2)
 			err := ts.model.DisconnectVeniceNodesFromCluster(nodes, naples)
@@ -367,7 +367,7 @@ var _ = Describe("venice cluster tests", func() {
 			}).Should(Succeed())
 		})
 
-		It("Venice Shutdown 2 nodes, restart naples and make sure traffic good", func() {
+		It("tags:regression=true Venice Shutdown 2 nodes, restart naples and make sure traffic good", func() {
 			naples := ts.model.Naples()
 			nodes := ts.model.VeniceNodes().Any(2)
 			err := ts.model.DisconnectVeniceNodesFromCluster(nodes, naples)
@@ -388,7 +388,7 @@ var _ = Describe("venice cluster tests", func() {
 
 		})
 
-		It("Should be able disconnect/reconnect model exclusive nodes and make sure cluster is in good state", func() {
+		It("tags:regression=true Should be able disconnect/reconnect model exclusive nodes and make sure cluster is in good state", func() {
 			// reload the leader node
 			naples := ts.model.Naples()
 			svcs, _ := ts.model.GetExclusiveServices()
@@ -411,7 +411,7 @@ var _ = Describe("venice cluster tests", func() {
 			}
 		})
 
-		It("Should be able reload venice leader node and cluster should come back to normal state", func() {
+		It("tags:regression=true Should be able reload venice leader node and cluster should come back to normal state", func() {
 			// reload the leader node
 			for i := 0; i < 3; i++ {
 				Expect(ts.model.ReloadVeniceNodes(ts.model.VeniceNodes().Leader())).Should(Succeed())
@@ -423,7 +423,7 @@ var _ = Describe("venice cluster tests", func() {
 			}
 		})
 
-		It("Venice removed and added back to cluster as a cleanode", func() {
+		It("tags:regression=true Venice removed and added back to cluster as a cleanode", func() {
 			Expect(ts.model.ForEachVeniceNode(func(vnc *objects.VeniceNodeCollection) error {
 				Expect(ts.model.RemoveVenice(vnc)).Should(Succeed())
 				// wait for cluster to be back in good state
