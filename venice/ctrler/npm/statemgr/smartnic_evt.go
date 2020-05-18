@@ -22,6 +22,7 @@ type DistributedServiceCardState struct {
 	stateMgr               *Statemgr                     // pointer to state manager
 	recvHandle             objReceiver.Receiver
 	profileVersion         dscProfileVersion
+	decommissioned         bool
 	// ToRevisit: Should DSC be updated with correct profile, then we need
 	//  below code
 	//NodeVersion            cluster.DSCProfileVersion
@@ -225,12 +226,34 @@ func (sm *Statemgr) addDSCRelatedobjects(smartNic *ctkit.DistributedServiceCard,
 func (sm *Statemgr) OnDistributedServiceCardUpdate(smartNic *ctkit.DistributedServiceCard, nsnic *cluster.DistributedServiceCard) error {
 	defer sm.sendDscUpdateNotification(nsnic)
 	defer sm.ProcessDSCEvent(UpdateEvent, &smartNic.DistributedServiceCard)
-	sns, err := sm.updateDSC(smartNic, nsnic)
+
+	sns, err := DistributedServiceCardStateFromObj(smartNic)
 	if err != nil {
+		log.Errorf("Error finding smartnic. Err: %v", err)
 		return err
 	}
 
-	sm.updateDSCRelatedObjects(sns, nsnic, true)
+	if !sns.decommissioned {
+		if nsnic.Status.AdmissionPhase == cluster.DistributedServiceCardStatus_DECOMMISSIONED.String() {
+			sns.decommissioned = true
+			sm.deleteDsc(smartNic)
+		}
+	} else {
+		if nsnic.Status.AdmissionPhase == cluster.DistributedServiceCardStatus_ADMITTED.String() {
+			sns.decommissioned = false
+			_, err = sm.AddDsc(smartNic)
+			log.Errorf("Error Adding smartnic. Err: %v", err)
+			return err
+		}
+	}
+
+	if !sns.decommissioned {
+		sns, err = sm.updateDSC(smartNic, nsnic)
+		if err != nil {
+			return err
+		}
+	}
+
 	sm.PeriodicUpdaterPush(sns)
 	return nil
 }
@@ -301,29 +324,6 @@ func (sm *Statemgr) updateDSC(smartNic *ctkit.DistributedServiceCard, nsnic *clu
 	return sns, nil
 }
 
-func (sm *Statemgr) updateDSCRelatedObjects(sns *DistributedServiceCardState, nsnic *cluster.DistributedServiceCard, sgPolicyUpdate bool) {
-	//TODO : Not sure why bekiw code is required, commenting out for now
-	/*if sgPolicyUpdate {
-		// Update SGPolicies
-		policies, _ := sm.ListSgpolicies()
-		for _, policy := range policies {
-			policy.NetworkSecurityPolicy.Lock()
-			policy.processDSCUpdate(nsnic)
-			policy.NetworkSecurityPolicy.Unlock()
-		}
-	}
-
-	// update firewall profiles
-	fwprofiles, _ := sm.ListFirewallProfiles()
-	for _, fwprofile := range fwprofiles {
-		if sm.isDscAdmitted(nsnic) {
-			fwprofile.FirewallProfile.Lock()
-			fwprofile.processDSCUpdate(nsnic)
-			fwprofile.FirewallProfile.Unlock()
-		}
-	} */
-}
-
 // OnDistributedServiceCardDelete handles smartNic deletion
 func (sm *Statemgr) OnDistributedServiceCardDelete(smartNic *ctkit.DistributedServiceCard) error {
 	defer sm.ProcessDSCEvent(DeleteEvent, &smartNic.DistributedServiceCard)
@@ -368,24 +368,27 @@ func (sm *Statemgr) deleteDsc(smartNic *ctkit.DistributedServiceCard) (*Distribu
 	return hs, nil
 }
 
-func (sm *Statemgr) deleteDscRelatedObjects(smartNic *ctkit.DistributedServiceCard, hs *DistributedServiceCardState, sgPolicyDelete bool) error {
-	//TODO : Not sure why bekiw code is required, commenting out for now
-	/*if sgPolicyDelete {
-		// Update SGPolicies
-		policies, _ := sm.ListSgpolicies()
-		for _, policy := range policies {
-			policy.NetworkSecurityPolicy.Lock()
-			policy.stopDSCTracking(&hs.DistributedServiceCard.DistributedServiceCard)
-			policy.NetworkSecurityPolicy.Unlock()
-		}
+//AddDsc add DSC as a receiver
+func (sm *Statemgr) AddDsc(smartNic *ctkit.DistributedServiceCard) (*DistributedServiceCardState, error) {
+	// see if we have the smartNic
+	hs, err := DistributedServiceCardStateFromObj(smartNic)
+	if err != nil {
+		log.Errorf("Could not find the smartNic %v. Err: %v", smartNic, err)
+		return nil, err
 	}
 
-	fwprofiles, _ := sm.ListFirewallProfiles()
-	for _, fwprofile := range fwprofiles {
-		fwprofile.FirewallProfile.Lock()
-		fwprofile.stopDSCTracking(&hs.DistributedServiceCard.DistributedServiceCard)
-		fwprofile.FirewallProfile.Unlock()
-	} */
+	log.Infof("Add smart nic: %+v", smartNic)
+	hs.recvHandle, err = sm.mbus.AddReceiver(smartNic.Status.PrimaryMAC)
+	if err != nil {
+		log.Errorf("Error adding receiver %v", err.Error())
+		return hs, err
+	}
+	log.Infof("Add DSC %v as a receiver", hs.DistributedServiceCard.Status.PrimaryMAC)
+
+	return hs, nil
+}
+
+func (sm *Statemgr) deleteDscRelatedObjects(smartNic *ctkit.DistributedServiceCard, hs *DistributedServiceCardState, sgPolicyDelete bool) error {
 
 	hosts, err := sm.ctrler.Host().List(context.Background(), &api.ListWatchOptions{})
 	if err != nil {

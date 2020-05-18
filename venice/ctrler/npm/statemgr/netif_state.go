@@ -51,6 +51,12 @@ func convertNetifObj(nodeID string, agentNetif *netproto.Interface) *network.Net
 	default:
 		netif.Spec.AdminStatus = network.IFStatus_UP.String()
 	}
+
+	if netif.Spec.AdminStatus == network.IFStatus_DOWN.String() {
+		log.Infof("Ignoring admin status down from agent for interface %v", netif.Name)
+		netif.Spec.AdminStatus = network.IFStatus_UP.String()
+	}
+
 	switch strings.ToUpper(agentNetif.Status.OperStatus) {
 	case "UP":
 		netif.Status.OperStatus = network.IFStatus_UP.String()
@@ -120,8 +126,13 @@ func (sm *Statemgr) OnInterfaceCreateReq(nodeID string, agentNetif *netproto.Int
 		log.Infof("Ignore interface create for %v DSC ID not set ", agentNetif.Name)
 		return nil
 	}
+	_, err := sm.mbus.FindReceiver(agentNetif.Status.DSCID)
+	if err != nil {
+		log.Errorf("Ignoring interface create as DSC %v not registered yet %v", agentNetif.Status.DSCID, err)
+		return err
+	}
 
-	_, err := smgrNetworkInterface.FindNetworkInterface(agentNetif.Name)
+	_, err = smgrNetworkInterface.FindNetworkInterface(agentNetif.Name)
 	if err == nil {
 		return sm.OnInterfaceUpdateReq(nodeID, agentNetif)
 	}

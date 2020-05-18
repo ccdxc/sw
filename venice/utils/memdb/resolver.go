@@ -9,7 +9,9 @@ type resolver interface {
 	//Check object resolved
 	resolvedCheck(key string, obj Object) bool
 	//trigger recursive dep check once resolved
-	trigger(key string, obj Object) error
+	trigger(key string) error
+	// revaluate key when reference is removed as part of update
+	revaluate(kind string, keys []string) error
 }
 
 type resolverBase struct {
@@ -115,15 +117,19 @@ func (r *deleteResolver) resolvedCheck(key string, obj Object) bool {
 
 type transitQueue struct {
 	key string
-	obj Object
+	//obj Object
 }
 
-func (r *addResolver) trigger(key string, obj Object) error {
+func (r *addResolver) revaluate(kind string, keys []string) error {
+	return nil
+}
 
-	inFlightObjects := []transitQueue{transitQueue{key: key, obj: obj}}
+func (r *addResolver) trigger(key string) error {
+
+	inFlightObjects := []transitQueue{transitQueue{key: key}}
 	pendingObjects := []Event{}
 
-	processReferencesInternal := func(key string, obj Object, pendingObjs []Event) ([]Event, error) {
+	processReferencesInternal := func(key string, pendingObjs []Event) ([]Event, error) {
 		node := r.md.objGraph.Referrers(key)
 		if node == nil {
 			//This node had no referrers, so nothing to process.
@@ -140,8 +146,7 @@ func (r *addResolver) trigger(key string, obj Object) error {
 				if referrerObj != nil {
 					referrerObj.Lock()
 					if !referrerObj.isResolved() {
-						inFlightObjects = append(inFlightObjects, transitQueue{key: referrerObj.Key(),
-							obj: referrerObj.Object()})
+						inFlightObjects = append(inFlightObjects, transitQueue{key: referrerObj.Key()})
 						if r.resolvedCheck(referrerObj.Key(), referrerObj.Object()) {
 							log.Infof("Object key %v resolved\n", referrerObj.Key())
 							if referrerObj.isUpdateUnResolved() {
@@ -177,7 +182,7 @@ func (r *addResolver) trigger(key string, obj Object) error {
 		}
 		var err error
 		for _, inFlight := range inFlightObjects {
-			pendingObjects, err = processReferencesInternal(inFlight.key, inFlight.obj, pendingObjects)
+			pendingObjects, err = processReferencesInternal(inFlight.key, pendingObjects)
 			if err != nil {
 				log.Errorf("Error in processsing references %v", err)
 			}
@@ -194,12 +199,12 @@ func (r *addResolver) trigger(key string, obj Object) error {
 	return nil
 }
 
-func (r *deleteResolver) trigger(key string, obj Object) error {
+func (r *deleteResolver) trigger(key string) error {
 
-	inFlightObjects := []transitQueue{transitQueue{key: key, obj: obj}}
+	inFlightObjects := []transitQueue{transitQueue{key: key}}
 	pendingObjects := []Event{}
 
-	processReferencesInternal := func(key string, obj Object, pendingObjs []Event) ([]Event, error) {
+	processReferencesInternal := func(key string, pendingObjs []Event) ([]Event, error) {
 		node := r.md.objGraph.References(key)
 		if node == nil {
 			//This node had no referrers, so nothing to process.
@@ -217,8 +222,7 @@ func (r *deleteResolver) trigger(key string, obj Object) error {
 					if referenceObj.isDelUnResolved() {
 						if r.resolvedCheck(referenceObj.Key(), referenceObj.Object()) {
 							//Put the deleted node to run as next loop
-							inFlightObjects = append(inFlightObjects, transitQueue{key: referenceObj.Key(),
-								obj: referenceObj.Object()})
+							inFlightObjects = append(inFlightObjects, transitQueue{key: referenceObj.Key()})
 							log.Infof("Object key %v resolved\n", referenceObj.Key())
 							r.md.topoHandler.handleDeleteEvent(referenceObj.Object(), key)
 							objDB.deleteObject(getRefKey(reference))
@@ -227,10 +231,13 @@ func (r *deleteResolver) trigger(key string, obj Object) error {
 								pendingObjs = append(pendingObjs, pobj)
 							}
 						} else {
+							log.Infof("Refenence object %v still unresolved", referenceObj.Key())
 							//Break out as this is still not resolved.
 							referenceObj.Unlock()
 							break L
 						}
+					} else {
+						log.Infof("Refenence object %v unresolved", referenceObj.Key())
 					}
 					referenceObj.Unlock()
 				}
@@ -247,7 +254,7 @@ func (r *deleteResolver) trigger(key string, obj Object) error {
 		}
 		var err error
 		for _, inFlight := range inFlightObjects {
-			pendingObjects, err = processReferencesInternal(inFlight.key, inFlight.obj, pendingObjects)
+			pendingObjects, err = processReferencesInternal(inFlight.key, pendingObjects)
 			if err != nil {
 				log.Errorf("Error in processsing references %v", err)
 			}
@@ -255,6 +262,56 @@ func (r *deleteResolver) trigger(key string, obj Object) error {
 			r.md.clearReferences(inFlight.key)
 		}
 		inFlightObjects = inFlightObjects[currLen:]
+	}
+
+	//Process all pending ones which were waiting for object
+	for _, pobj := range pendingObjects {
+		//When objected is deleted, only create/update events will be queued
+		if pobj.EventType == CreateEvent {
+			r.md.AddObjectWithReferences(pobj.key, pobj.Obj, pobj.refs)
+		} else if pobj.EventType == UpdateEvent {
+			err := r.md.UpdateObjectWithReferences(pobj.key, pobj.Obj, pobj.refs)
+			if err == errObjNotFound {
+				log.Errorf("Ignore object update as it i not found")
+			}
+		}
+	}
+
+	return nil
+}
+
+func (r *deleteResolver) revaluate(kind string, keys []string) error {
+
+	inFlightObjects := []transitQueue{}
+	pendingObjects := []Event{}
+
+	objDB := r.md.getObjectDB(kind)
+	objDB.Lock()
+
+	for _, reference := range keys {
+		log.Infof("Reevaluate Delete %v", reference)
+		referenceObj := objDB.getObject(getRefKey(reference))
+		if referenceObj != nil {
+			referenceObj.Lock()
+			if referenceObj.isDelUnResolved() {
+				if r.resolvedCheck(referenceObj.Key(), referenceObj.Object()) {
+					//Put the deleted node to run as next loop
+					inFlightObjects = append(inFlightObjects, transitQueue{key: referenceObj.Key()})
+					log.Infof("Object key %v resolved\n", referenceObj.Key())
+					r.md.topoHandler.handleDeleteEvent(referenceObj.Object(), referenceObj.Key())
+					objDB.deleteObject(getRefKey(reference))
+					objDB.watchEvent(r.md, referenceObj, DeleteEvent)
+					for _, pobj := range referenceObj.getAndClearPending() {
+						pendingObjects = append(pendingObjects, pobj)
+					}
+				}
+			}
+			referenceObj.Unlock()
+		}
+	}
+	objDB.Unlock()
+	for _, inFlight := range inFlightObjects {
+		r.trigger(inFlight.key)
 	}
 
 	//Process all pending ones which were waiting for object

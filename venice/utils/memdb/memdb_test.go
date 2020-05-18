@@ -137,6 +137,31 @@ func sendObjects(op doOperation, kind string, start, end int) error {
 	return nil
 }
 
+func sendObjectsWithNoRefs(op doOperation, kind string, start, end int) error {
+	// add an object
+	if start == 0 && end == 0 {
+		end = len(testObjStore[kind])
+	}
+	objs := testObjStore[kind][start:end]
+	errs := make(chan error, len(objs))
+	for _, obj := range objs {
+		obj := obj
+		go func() {
+			refs := make(map[string]apiintf.ReferenceObj)
+			//obj.References(obj.GetObjectMeta().GetTenant(), "", refs)
+			errs <- op(obj.GetObjectMeta().GetKey(), &obj, refs)
+		}()
+	}
+
+	for ii := 0; ii < len(objs); ii++ {
+		err := <-errs
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 type doPushOperation func(key string, obj Object, refs map[string]apiintf.ReferenceObj, recvrs []objReceiver.Receiver) (PushObjectHandle, error)
 type doPushObjOperation func(key string, obj Object, refs map[string]apiintf.ReferenceObj) error
 
@@ -1374,6 +1399,188 @@ func TestMemdbDepDelAddTest_3(t *testing.T) {
 	kindMap[CreateEvent]["c"] = 100
 	kindMap[CreateEvent]["d"] = 100
 	err = verifyObjects(t, md, &watcher, kindMap, time.Duration(200*time.Millisecond))
+	AssertOk(t, err, "Error verifying objects")
+}
+
+func TestMemdbDepDelAddTest_4(t *testing.T) {
+	initObjectStore()
+	kindMap := make(map[EventType]map[string]int)
+
+	relations := []relation{
+		{"a", "b", 0, 1},
+	}
+
+	generateObjectReferences(relations)
+	// create a new memdb
+	md := NewMemdb()
+	registerKinds(md)
+	// start watch on objects
+	watcher := Watcher{}
+	watcher.Channel = make(chan Event, WatchLen)
+	md.WatchObjects("a", &watcher)
+	md.WatchObjects("b", &watcher)
+
+	err := sendObjects(md.AddObjectWithReferences, "a", 0, 1)
+	AssertOk(t, err, "Error creating object")
+	err = sendObjects(md.AddObjectWithReferences, "b", 0, 1)
+	AssertOk(t, err, "Error creating object")
+	//Make sure we receive objects of b as it has no deps
+	kindMap = make(map[EventType]map[string]int)
+	kindMap[CreateEvent] = make(map[string]int)
+	kindMap[CreateEvent]["a"] = 1
+	kindMap[CreateEvent]["b"] = 1
+	err = verifyObjects(t, md, &watcher, kindMap, time.Duration(50*time.Millisecond))
+	AssertOk(t, err, "Error verifying objects")
+
+	err = sendObjects(md.DeleteObjectWithReferences, "b", 0, 1)
+	AssertOk(t, err, "Error deleting object")
+
+	//Make sure we receive no objects
+	kindMap = make(map[EventType]map[string]int)
+	err = verifyObjects(t, md, &watcher, kindMap, time.Duration(500*time.Millisecond))
+	AssertOk(t, err, "Error verifying objects")
+
+	//Now lets send add of b kind as they are still in marked for delete state
+	err = sendObjects(md.AddObjectWithReferences, "b", 0, 1)
+	AssertOk(t, err, "Error creating object")
+
+	//Make sure we receive no objects
+	kindMap = make(map[EventType]map[string]int)
+	err = verifyObjects(t, md, &watcher, kindMap, time.Duration(50*time.Millisecond))
+	AssertOk(t, err, "Error verifying objects")
+
+	err = sendObjectsWithNoRefs(md.UpdateObjectWithReferences, "a", 0, 1)
+	AssertOk(t, err, "Error deleting object")
+	//Make sure we receive objects of b as it has no deps
+	kindMap = make(map[EventType]map[string]int)
+	kindMap[DeleteEvent] = make(map[string]int)
+	kindMap[CreateEvent] = make(map[string]int)
+	kindMap[UpdateEvent] = make(map[string]int)
+	kindMap[UpdateEvent]["a"] = 1
+	kindMap[DeleteEvent]["b"] = 1
+	kindMap[CreateEvent]["b"] = 1
+	err = verifyObjects(t, md, &watcher, kindMap, time.Duration(50*time.Millisecond))
+	AssertOk(t, err, "Error verifying objects")
+}
+
+func TestMemdbDepDelAddTest_5(t *testing.T) {
+	initObjectStore()
+	kindMap := make(map[EventType]map[string]int)
+
+	relations := []relation{
+		{"a", "b", 0, 100},
+	}
+
+	generateObjectReferences(relations)
+	// create a new memdb
+	md := NewMemdb()
+	registerKinds(md)
+	// start watch on objects
+	watcher := Watcher{}
+	watcher.Channel = make(chan Event, WatchLen)
+	md.WatchObjects("a", &watcher)
+	md.WatchObjects("b", &watcher)
+
+	err := sendObjects(md.AddObjectWithReferences, "a", 0, 100)
+	AssertOk(t, err, "Error creating object")
+	err = sendObjects(md.AddObjectWithReferences, "b", 0, 100)
+	AssertOk(t, err, "Error creating object")
+	//Make sure we receive objects of b as it has no deps
+	kindMap = make(map[EventType]map[string]int)
+	kindMap[CreateEvent] = make(map[string]int)
+	kindMap[CreateEvent]["a"] = 100
+	kindMap[CreateEvent]["b"] = 100
+	err = verifyObjects(t, md, &watcher, kindMap, time.Duration(50*time.Millisecond))
+	AssertOk(t, err, "Error verifying objects")
+
+	err = sendObjects(md.DeleteObjectWithReferences, "b", 0, 100)
+	AssertOk(t, err, "Error deleting object")
+
+	//Make sure we receive no objects
+	kindMap = make(map[EventType]map[string]int)
+	err = verifyObjects(t, md, &watcher, kindMap, time.Duration(500*time.Millisecond))
+	AssertOk(t, err, "Error verifying objects")
+
+	//Now lets send add of b kind as they are still in marked for delete state
+	err = sendObjects(md.AddObjectWithReferences, "b", 0, 100)
+	AssertOk(t, err, "Error creating object")
+
+	//Make sure we receive no objects
+	kindMap = make(map[EventType]map[string]int)
+	err = verifyObjects(t, md, &watcher, kindMap, time.Duration(50*time.Millisecond))
+	AssertOk(t, err, "Error verifying objects")
+
+	err = sendObjectsWithNoRefs(md.UpdateObjectWithReferences, "a", 0, 100)
+	AssertOk(t, err, "Error deleting object")
+	//Make sure we receive objects of b as it has no deps
+	kindMap = make(map[EventType]map[string]int)
+	kindMap[DeleteEvent] = make(map[string]int)
+	kindMap[CreateEvent] = make(map[string]int)
+	kindMap[UpdateEvent] = make(map[string]int)
+	kindMap[UpdateEvent]["a"] = 100
+	kindMap[DeleteEvent]["b"] = 100
+	kindMap[CreateEvent]["b"] = 100
+	err = verifyObjects(t, md, &watcher, kindMap, time.Duration(50*time.Millisecond))
+	AssertOk(t, err, "Error verifying objects")
+}
+
+func TestMemdbDepDelAddTest_6(t *testing.T) {
+	initObjectStore()
+	kindMap := make(map[EventType]map[string]int)
+
+	relations := []relation{
+		{"a", "b", 0, 100},
+		{"b", "c", 0, 50},
+	}
+
+	generateObjectReferences(relations)
+	// create a new memdb
+	md := NewMemdb()
+	registerKinds(md)
+	// start watch on objects
+	watcher := Watcher{}
+	watcher.Channel = make(chan Event, WatchLen)
+	md.WatchObjects("a", &watcher)
+	md.WatchObjects("b", &watcher)
+	md.WatchObjects("c", &watcher)
+
+	err := sendObjects(md.AddObjectWithReferences, "a", 0, 100)
+	AssertOk(t, err, "Error creating object")
+	err = sendObjects(md.AddObjectWithReferences, "b", 0, 100)
+	AssertOk(t, err, "Error creating object")
+	err = sendObjects(md.AddObjectWithReferences, "c", 0, 50)
+	AssertOk(t, err, "Error creating object")
+	//Make sure we receive objects of b as it has no deps
+	kindMap = make(map[EventType]map[string]int)
+	kindMap[CreateEvent] = make(map[string]int)
+	kindMap[CreateEvent]["a"] = 100
+	kindMap[CreateEvent]["b"] = 100
+	kindMap[CreateEvent]["c"] = 50
+	err = verifyObjects(t, md, &watcher, kindMap, time.Duration(50*time.Millisecond))
+	AssertOk(t, err, "Error verifying objects")
+
+	err = sendObjects(md.DeleteObjectWithReferences, "c", 0, 50)
+	AssertOk(t, err, "Error deleting object")
+
+	err = sendObjects(md.DeleteObjectWithReferences, "b", 0, 100)
+	AssertOk(t, err, "Error deleting object")
+
+	//Make sure we receive no objects
+	kindMap = make(map[EventType]map[string]int)
+	err = verifyObjects(t, md, &watcher, kindMap, time.Duration(500*time.Millisecond))
+	AssertOk(t, err, "Error verifying objects")
+
+	err = sendObjectsWithNoRefs(md.UpdateObjectWithReferences, "a", 0, 100)
+	AssertOk(t, err, "Error deleting object")
+	//Make sure we receive objects of b as it has no deps
+	kindMap = make(map[EventType]map[string]int)
+	kindMap[DeleteEvent] = make(map[string]int)
+	//kindMap[CreateEvent] = make(map[string]int)
+	kindMap[UpdateEvent] = make(map[string]int)
+	kindMap[UpdateEvent]["a"] = 100
+	kindMap[DeleteEvent]["b"] = 100
+	kindMap[DeleteEvent]["c"] = 50
+	err = verifyObjects(t, md, &watcher, kindMap, time.Duration(50*time.Millisecond))
 	AssertOk(t, err, "Error verifying objects")
 }
 

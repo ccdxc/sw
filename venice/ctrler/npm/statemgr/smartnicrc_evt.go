@@ -74,7 +74,6 @@ func (dscMgr *DSCMgrRc) OnDistributedServiceCardUpdate(smartNic *ctkit.Distribut
 		return nil
 	}
 
-	dscMgr.sm.updateDSCRelatedObjects(sns, nsnic, false)
 	dscMgr.sm.PeriodicUpdaterPush(sns)
 	if oldRt != newRt {
 		log.Infof("Sending routing config dsc: %s | rtcfg old: %s, new: %s", smartNic.Name, oldRt, newRt)

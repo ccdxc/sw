@@ -91,6 +91,7 @@ func (sg *SecurityGroupState) DelEndpoint(ep *EndpointState) error {
 		sg.SecurityGroup, references(sg.SecurityGroup))
 }
 
+/*
 // AddPolicy adds a policcy to sg
 func (sg *SecurityGroupState) AddPolicy(sgp *SgpolicyState) error {
 	// if policy exists, dont try to add it
@@ -123,6 +124,8 @@ func (sg *SecurityGroupState) DeletePolicy(sgp *SgpolicyState) error {
 	return sg.stateMgr.mbus.UpdateObjectWithReferences(sg.SecurityGroup.MakeKey("security"),
 		sg.SecurityGroup, references(sg.SecurityGroup))
 }
+
+*/
 
 // SecurityGroupStateFromObj conerts from memdb object to network state
 func SecurityGroupStateFromObj(obj runtime.Object) (*SecurityGroupState, error) {

@@ -10,6 +10,8 @@ import (
 	"strings"
 	"sync"
 
+	mapset "github.com/deckarep/golang-set"
+
 	"github.com/pensando/sw/api/graph"
 	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/utils/log"
@@ -757,7 +759,7 @@ func (md *Memdb) addObject(od objDBInterface, key string, obj objIntf, refs map[
 		obj.Unlock()
 		md.topoHandler.handleAddEvent(obj.Object(), key)
 		od.watchEvent(md, obj, CreateEvent)
-		md.dbAddResolver.trigger(key, obj.Object())
+		md.dbAddResolver.trigger(key)
 	} else {
 		obj.Lock()
 		obj.addUnResolved()
@@ -798,6 +800,7 @@ func (md *Memdb) updateObject(od objDBInterface, key string, obj objIntf, refs m
 		return nil
 	}
 
+	log.Infof("Update for obj %v", key)
 	md.updateReferences(key, obj.Object(), refs)
 	old := ostate.Object()
 	ostate.SetValue(obj.Object())
@@ -820,7 +823,7 @@ func (md *Memdb) updateObject(od objDBInterface, key string, obj objIntf, refs m
 		}
 
 		od.watchEvent(md, ostate, event)
-		md.dbAddResolver.trigger(key, obj.Object())
+		md.dbAddResolver.trigger(key)
 	} else {
 		log.Infof("Update Object key %v unresolved", key)
 		ostate.updateUnResolved()
@@ -880,25 +883,63 @@ func (md *Memdb) clearReferences(key string) {
 	md.objGraph.UpdateNode(&node)
 }
 
+//When object is updated, find out refs which are removed and call corresponding deletes
 func (md *Memdb) updateReferences(key string, obj Object, refs map[string]apiintf.ReferenceObj) {
-	if refs == nil {
-		return
-	}
-	node := graph.Node{
+
+	oldNode := md.objGraph.References(key)
+
+	newNode := graph.Node{
 		This: key,
 		Refs: make(map[string][]string),
 	}
 
 	for field, refs := range refs {
 		objKey := getKeyForGraphDB(obj.GetObjectKind(), refs.RefKind, field)
-		node.Refs[objKey] = []string{}
+		newNode.Refs[objKey] = []string{}
 		for _, ref := range refs.Refs {
-			node.Refs[objKey] = append(node.Refs[objKey], ref)
+			newNode.Refs[objKey] = append(newNode.Refs[objKey], ref)
 		}
 	}
+	md.objGraph.UpdateNode(&newNode)
 
-	log.Infof("updating Node with references for [%v][%v]", key, node.Refs)
-	md.objGraph.UpdateNode(&node)
+	//Find Removed refernces if any
+
+	oldnodeRemove := graph.Node{
+		This: key,
+		Refs: make(map[string][]string),
+	}
+
+	if oldNode != nil {
+		for refs, vals := range oldNode.Refs {
+			newVals, ok := newNode.Refs[refs]
+			if !ok {
+				oldnodeRemove.Refs[refs] = append(oldnodeRemove.Refs[refs], vals...)
+				continue
+			}
+			var nset, oset []interface{}
+			for i := range newVals {
+				nset = append(nset, newVals[i])
+			}
+			for i := range vals {
+				oset = append(oset, vals[i])
+			}
+
+			ns := mapset.NewSetFromSlice(nset)
+			os := mapset.NewSetFromSlice(oset)
+			del := os.Difference(ns).ToSlice()
+			for _, key := range del {
+				oldnodeRemove.Refs[refs] = append(oldnodeRemove.Refs[refs], key.(string))
+			}
+		}
+
+		for key, refs := range oldnodeRemove.Refs {
+			_, dkind, _ := getSKindDKindFieldKey(key)
+			md.dbDelResolver.revaluate(dkind, refs)
+		}
+
+	}
+
+	return
 }
 
 // DeleteObjectWithReferences deletes an object from memdb and sends out watch notifications
@@ -933,7 +974,7 @@ func (md *Memdb) deleteObject(od objDBInterface, key string, obj objIntf, refs m
 		od.Unlock()
 		md.topoHandler.handleDeleteEvent(obj.Object(), key)
 		od.watchEvent(md, existingObj, DeleteEvent)
-		md.dbDelResolver.trigger(key, obj.Object())
+		md.dbDelResolver.trigger(key)
 	} else {
 		log.Infof("Delete Object key %v unresolved, refs %v", key, refs)
 		existingObj.deleteUnResolved()

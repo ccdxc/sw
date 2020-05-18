@@ -2801,7 +2801,7 @@ func TestHostCreateDelete(t *testing.T) {
 }
 
 func TestHostUpdates(t *testing.T) {
-	t.Skip("Skipping as workload create fails if DSC is not created")
+	//t.Skip("Skipping as workload create fails if DSC is not created")
 	// create network state manager
 	stateMgr, err := newStatemgr()
 	defer stateMgr.Stop()
@@ -2813,6 +2813,24 @@ func TestHostUpdates(t *testing.T) {
 	// create tenant
 	err = createTenant(t, stateMgr, "default")
 	AssertOk(t, err, "Error creating the tenant")
+
+	// create the smartnic
+	snic := cluster.DistributedServiceCard{
+		TypeMeta: api.TypeMeta{Kind: "DistributedServiceCard"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "testDistributedServiceCard",
+		},
+		Spec: cluster.DistributedServiceCardSpec{
+			ID: "test-snic",
+		},
+		Status: cluster.DistributedServiceCardStatus{
+			PrimaryMAC:     "0001.0203.0405",
+			AdmissionPhase: "admitted",
+		},
+	}
+
+	err = stateMgr.ctrler.DistributedServiceCard().Create(&snic)
+	AssertOk(t, err, "Could not create the smartNic")
 
 	// host params
 	host := cluster.Host{
@@ -2869,37 +2887,6 @@ func TestHostUpdates(t *testing.T) {
 	// create the workload
 	err = stateMgr.ctrler.Workload().Create(&wr)
 	AssertOk(t, err, "workload create failed")
-
-	AssertEventually(t, func() (bool, interface{}) {
-		_, err := stateMgr.FindEndpoint("default", "testWorkload-0001.0203.0405")
-		if err != nil {
-			return true, nil
-		}
-		return false, nil
-	}, "Endpoint found", "1ms", "2s")
-
-	// verify we can not find the endpoint associated with the workload
-	_, err = stateMgr.FindEndpoint("default", "testWorkload-0001.0203.0405")
-	Assert(t, err != nil, "Endpoint got created without smartnic")
-
-	// create the smartnic
-	snic := cluster.DistributedServiceCard{
-		TypeMeta: api.TypeMeta{Kind: "DistributedServiceCard"},
-		ObjectMeta: api.ObjectMeta{
-			Name: "testDistributedServiceCard",
-		},
-		Spec: cluster.DistributedServiceCardSpec{
-			ID: "test-snic",
-		},
-		Status: cluster.DistributedServiceCardStatus{
-			PrimaryMAC:     "0001.0203.0405",
-			AdmissionPhase: "admitted",
-		},
-	}
-
-	// create the smartNic
-	err = stateMgr.ctrler.DistributedServiceCard().Create(&snic)
-	AssertOk(t, err, "Could not create the smartNic")
 
 	AssertEventually(t, func() (bool, interface{}) {
 		foundEP, err := stateMgr.FindEndpoint("default", "testWorkload-0001.0203.0405")
