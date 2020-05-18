@@ -24,6 +24,7 @@ using pds::InterfaceDeleteRequest;
 using pds::InterfaceDeleteResponse;
 using pds::InterfaceGetRequest;
 using pds::InterfaceGetResponse;
+using types::Empty;
 
 class IfSvcImpl final : public IfSvc::Service {
 public:
@@ -37,6 +38,8 @@ public:
                         pds::InterfaceGetResponse *rsp) override;
     Status LifGet(ServerContext *context, const pds::LifGetRequest *req,
                   pds::LifGetResponse *rsp) override;
+    Status LifStatsReset(ServerContext *context, const types::Id *req,
+                         Empty *rsp) override;
 };
 
 #endif    // __AGENT_SVC_LIF_HPP__

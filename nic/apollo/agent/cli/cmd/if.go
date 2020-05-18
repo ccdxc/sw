@@ -38,15 +38,68 @@ var ifShowCmd = &cobra.Command{
 	Run:   ifShowCmdHandler,
 }
 
+var lifClearCmd = &cobra.Command{
+	Use:   "lif",
+	Short: "clear lif information",
+	Long:  "clear lif information",
+}
+
+var lifClearStatsCmd = &cobra.Command{
+	Use:   "statistics",
+	Short: "clear lif statistics",
+	Long:  "clear lif statistics",
+	Run:   lifClearStatsCmdHandler,
+}
+
 func init() {
 	showCmd.AddCommand(lifShowCmd)
 	showCmd.AddCommand(ifShowCmd)
 	lifShowCmd.Flags().StringVar(&lifID, "id", "", "Specify Lif ID")
 	lifShowCmd.Flags().Bool("yaml", true, "Output in yaml")
 	lifShowCmd.Flags().Bool("summary", false, "Display number of objects")
-	ifShowCmd.Flags().StringVar(&ifID, "id", "", "Specify interface ID")
+	ifShowCmd.Flags().StringVar(&ifID, "id", "", "Specify Lif ID")
 	ifShowCmd.Flags().Bool("yaml", true, "Output in yaml")
 	ifShowCmd.Flags().Bool("summary", false, "Display number of objects")
+
+	clearCmd.AddCommand(lifClearCmd)
+	lifClearCmd.AddCommand(lifClearStatsCmd)
+	lifClearStatsCmd.Flags().StringVar(&lifID, "id", "", "Specify Lif ID")
+}
+
+func lifClearStatsCmdHandler(cmd *cobra.Command, args []string) {
+	// connect to PDS
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
+		return
+	}
+	defer c.Close()
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
+	client := pds.NewIfSvcClient(c)
+	var req *pds.Id
+	if cmd != nil && cmd.Flags().Changed("id") {
+		// clear stats for given lif
+		req = &pds.Id{
+			Id: uuid.FromStringOrNil(lifID).Bytes(),
+		}
+	} else {
+		// clear stats for all vnics
+		req = &pds.Id{
+			Id: []byte{},
+		}
+	}
+
+	// PDS call
+	_, err = client.LifStatsReset(context.Background(), req)
+	if err != nil {
+		fmt.Printf("Clearing lif stats failed, err %v\n", err)
+		return
+	}
 }
 
 func ifShowCmdHandler(cmd *cobra.Command, args []string) {

@@ -50,3 +50,11 @@ PortSvcImpl::PortUpdate(ServerContext *context,
 
     return Status::OK;
 }
+
+Status
+PortSvcImpl::PortStatsReset(ServerContext *context, const types::Id *req,
+                            Empty *rsp) {
+    // TODO:
+    PDS_TRACE_DEBUG("Rcvd port statistics clear request");
+    return Status::OK;
+}

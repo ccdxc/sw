@@ -13,6 +13,8 @@ import "types.proto";
 service PortSvc {
   rpc PortGet (PortGetRequest) returns (PortGetResponse) {}
   rpc PortUpdate (PortUpdateRequest) returns (PortUpdateResponse) {}
+  // given a uuid of a port, clear its stats or else clear stats of all ports
+  rpc PortStatsReset (types.Id) returns (types.Empty) {}
 }
 
 //------------------------------------------------------------------------------

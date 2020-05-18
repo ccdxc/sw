@@ -24,6 +24,8 @@ public:
                    pds::PortGetResponse *rsp) override;
     Status PortUpdate(ServerContext *context, const pds::PortUpdateRequest *req,
                       pds::PortUpdateResponse *rsp) override;
+    Status PortStatsReset(ServerContext *context, const types::Id *req,
+                          Empty *rsp) override;
 };
 
 #endif    // __AGENT_SVC_PORT_HPP__

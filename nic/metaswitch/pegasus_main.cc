@@ -117,6 +117,12 @@ IfSvcImpl::LifGet(ServerContext *context,
     return Status::OK;
 }
 
+Status
+IfSvcImpl::LifStatsReset(ServerContext *context,
+                         const types::Id *proto_req, types::Empty *proto_rsp) {
+    return Status::OK;
+}
+
 static void
 svc_reg (void)
 {

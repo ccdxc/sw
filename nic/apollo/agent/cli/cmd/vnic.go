@@ -36,6 +36,19 @@ var vnicShowStatisticsCmd = &cobra.Command{
 	Run:   vnicShowStatisticsCmdHandler,
 }
 
+var vnicClearCmd = &cobra.Command{
+	Use:   "vnic",
+	Short: "clear vnic information",
+	Long:  "clear vnic information",
+}
+
+var vnicClearStatsCmd = &cobra.Command{
+	Use:   "statistics",
+	Short: "clear vnic statistics",
+	Long:  "clear vnic statistics",
+	Run:   vnicClearStatsCmdHandler,
+}
+
 func init() {
 	showCmd.AddCommand(vnicShowCmd)
 	vnicShowCmd.Flags().Bool("yaml", false, "Output in yaml")
@@ -46,6 +59,46 @@ func init() {
 	vnicShowCmd.AddCommand(vnicShowStatisticsCmd)
 	vnicShowStatisticsCmd.Flags().Bool("yaml", false, "Output in yaml")
 	vnicShowStatisticsCmd.Flags().StringVarP(&vnicID, "id", "i", "", "Specify vnic ID")
+
+	clearCmd.AddCommand(vnicClearCmd)
+	vnicClearCmd.AddCommand(vnicClearStatsCmd)
+	vnicClearStatsCmd.Flags().StringVarP(&vnicID, "id", "i", "", "Specify vnic ID")
+}
+
+func vnicClearStatsCmdHandler(cmd *cobra.Command, args []string) {
+	// connect to PDS
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
+		return
+	}
+	defer c.Close()
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
+	client := pds.NewVnicSvcClient(c)
+	var req *pds.Id
+	if cmd != nil && cmd.Flags().Changed("id") {
+		// clear stats for given vnic
+		req = &pds.Id{
+			Id: uuid.FromStringOrNil(vnicID).Bytes(),
+		}
+	} else {
+		// clear stats for all vnics
+		req = &pds.Id{
+			Id: []byte{},
+		}
+	}
+
+	// PDS call
+	_, err = client.VnicStatsReset(context.Background(), req)
+	if err != nil {
+		fmt.Printf("Clearing vnic stats failed, err %v\n", err)
+		return
+	}
 }
 
 func vnicShowCmdHandler(cmd *cobra.Command, args []string) {

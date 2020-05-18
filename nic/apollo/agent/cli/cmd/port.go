@@ -104,6 +104,19 @@ var portInternalStatsCmd = &cobra.Command{
 	Run:   portInternalStatsCmdHandler,
 }
 
+var portClearCmd = &cobra.Command{
+	Use:   "port",
+	Short: "clear port information",
+	Long:  "clear port information",
+}
+
+var portClearStatsCmd = &cobra.Command{
+	Use:   "statistics",
+	Short: "clear port statistics",
+	Long:  "clear port statistics",
+	Run:   portClearStatsCmdHandler,
+}
+
 func init() {
 	showCmd.AddCommand(portShowCmd)
 	portShowCmd.AddCommand(portStatsShowCmd)
@@ -130,6 +143,46 @@ func init() {
 	portUpdateCmd.Flags().StringVar(&portAutoNeg, "auto-neg", "enable", "Enable or disable auto-neg using enable | disable")
 	portUpdateCmd.Flags().StringVar(&portSpeed, "speed", "", "Set port speed - none, 1g, 10g, 25g, 40g, 50g, 100g")
 	portUpdateCmd.MarkFlagRequired("port")
+
+	clearCmd.AddCommand(portClearCmd)
+	portClearCmd.AddCommand(portClearStatsCmd)
+	portClearStatsCmd.Flags().StringVarP(&portID, "port", "p", "", "Specify port uuid")
+}
+
+func portClearStatsCmdHandler(cmd *cobra.Command, args []string) {
+	// connect to PDS
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
+		return
+	}
+	defer c.Close()
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
+	client := pds.NewPortSvcClient(c)
+	var req *pds.Id
+	if cmd != nil && cmd.Flags().Changed("port") {
+		// clear stats for given port
+		req = &pds.Id{
+			Id: uuid.FromStringOrNil(portID).Bytes(),
+		}
+	} else {
+		// clear stats for all ports
+		req = &pds.Id{
+			Id: []byte{},
+		}
+	}
+
+	// PDS call
+	_, err = client.PortStatsReset(context.Background(), req)
+	if err != nil {
+		fmt.Printf("Clearing port stats failed, err %v\n", err)
+		return
+	}
 }
 
 func portUpdateCmdHandler(cmd *cobra.Command, args []string) {

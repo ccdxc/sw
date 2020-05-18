@@ -16,6 +16,8 @@ service VnicSvc {
   rpc VnicUpdate (VnicRequest) returns (VnicResponse) {}
   rpc VnicGet (VnicGetRequest) returns (VnicGetResponse) {}
   rpc VnicDelete (VnicDeleteRequest) returns (VnicDeleteResponse) {}
+  // given a uuid of a vnic, clear its stats or else clear stats of all vnics
+  rpc VnicStatsReset(types.Id) returns (types.Empty) {}
 }
 
 // VNIC specification

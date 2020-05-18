@@ -14,8 +14,8 @@ import (
 // clearCmd represents the clear command
 var clearCmd = &cobra.Command{
 	Use:   "clear",
-	Short: "Clear commands",
-	Long:  "Clear commands",
+	Short: "clear commands",
+	Long:  "clear commands",
 }
 
 func init() {

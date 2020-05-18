@@ -76,6 +76,10 @@ func (h Hal) LifGet(ctx context.Context, req *apuluproto.LifGetRequest) (*apulup
 	return nil, nil
 }
 
+func (h Hal) LifStatsReset(ctx context.Context, id *apuluproto.Id) (*apuluproto.Empty, error) {
+	return nil, nil
+}
+
 // DHCPPolicyGet stubbed out
 func (h Hal) DHCPPolicyGet(ctx context.Context, req *apuluproto.DHCPPolicyGetRequest) (*apuluproto.DHCPPolicyGetResponse, error) {
 	dat, _ := json.MarshalIndent(req, "", "  ")

@@ -15,6 +15,7 @@ using pds::VnicSvc;
 using pds::VnicRequest;
 using pds::VnicSpec;
 using pds::VnicResponse;
+using types::Empty;
 
 class VnicSvcImpl final : public VnicSvc::Service {
 public:
@@ -28,6 +29,8 @@ public:
     Status VnicGet(ServerContext *context,
                    const pds::VnicGetRequest *proto_req,
                    pds::VnicGetResponse *proto_rsp) override;
+    Status VnicStatsReset(ServerContext *context, const types::Id *req,
+                          Empty *rsp) override;
 };
 
 #endif    // __AGENT_SVC_VNIC_HPP__

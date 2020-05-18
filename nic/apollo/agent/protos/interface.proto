@@ -16,6 +16,8 @@ service IfSvc {
   rpc InterfaceDelete (InterfaceDeleteRequest) returns (InterfaceDeleteResponse) {}
   rpc InterfaceGet (InterfaceGetRequest) returns (InterfaceGetResponse) {}
   rpc LifGet (LifGetRequest) returns (LifGetResponse) {}
+  // given a uuid of a lif, clear its stats or else clear stats of all lifs
+  rpc LifStatsReset(types.Id) returns (types.Empty) {}
 }
 
 // types of interfaces
