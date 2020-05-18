@@ -65,6 +65,8 @@ type MethodHdlr struct {
 	makeMethDBKey apiserver.MakeMethDbKeyFunc
 	// resourceAllocFn is callback for resource allocation
 	resourceAllocFn []apiserver.ResourceAllocFunc
+	// serverStreamFn is a streaming function handler
+	serverStreamFn apiserver.ServerStreamHandler
 }
 
 type errorStatus struct {
@@ -173,6 +175,12 @@ func (m *MethodHdlr) WithMethDbKey(fn apiserver.MakeMethDbKeyFunc) apiserver.Met
 // WithResourceAllocHook registers a resource allocation callback.
 func (m *MethodHdlr) WithResourceAllocHook(fn apiserver.ResourceAllocFunc) apiserver.Method {
 	m.resourceAllocFn = append(m.resourceAllocFn, fn)
+	return m
+}
+
+// WithServerStreamHandler is a handler for custom server streaming operations
+func (m *MethodHdlr) WithServerStreamHandler(fn apiserver.ServerStreamHandler) apiserver.Method {
+	m.serverStreamFn = fn
 	return m
 }
 

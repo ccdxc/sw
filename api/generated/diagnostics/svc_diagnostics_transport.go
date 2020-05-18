@@ -36,59 +36,55 @@ type grpcServerDiagnosticsV1 struct {
 
 // MakeGRPCServerDiagnosticsV1 creates a GRPC server for DiagnosticsV1 service
 func MakeGRPCServerDiagnosticsV1(ctx context.Context, endpoints EndpointsDiagnosticsV1Server, logger log.Logger) DiagnosticsV1Server {
-	options := []grpctransport.ServerOption{
-		grpctransport.ServerErrorLogger(logger),
-		grpctransport.ServerBefore(recoverVersion),
-	}
 	return &grpcServerDiagnosticsV1{
 		Endpoints: endpoints,
 		AutoAddModuleHdlr: grpctransport.NewServer(
 			endpoints.AutoAddModuleEndpoint,
 			DecodeGrpcReqModule,
 			EncodeGrpcRespModule,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddModule", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddModule", logger)))...,
 		),
 
 		AutoDeleteModuleHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteModuleEndpoint,
 			DecodeGrpcReqModule,
 			EncodeGrpcRespModule,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteModule", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteModule", logger)))...,
 		),
 
 		AutoGetModuleHdlr: grpctransport.NewServer(
 			endpoints.AutoGetModuleEndpoint,
 			DecodeGrpcReqModule,
 			EncodeGrpcRespModule,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetModule", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetModule", logger)))...,
 		),
 
 		AutoLabelModuleHdlr: grpctransport.NewServer(
 			endpoints.AutoLabelModuleEndpoint,
 			DecodeGrpcReqLabel,
 			EncodeGrpcRespModule,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelModule", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelModule", logger)))...,
 		),
 
 		AutoListModuleHdlr: grpctransport.NewServer(
 			endpoints.AutoListModuleEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespModuleList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListModule", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListModule", logger)))...,
 		),
 
 		AutoUpdateModuleHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateModuleEndpoint,
 			DecodeGrpcReqModule,
 			EncodeGrpcRespModule,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateModule", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateModule", logger)))...,
 		),
 
 		DebugHdlr: grpctransport.NewServer(
 			endpoints.DebugEndpoint,
 			DecodeGrpcReqDiagnosticsRequest,
 			EncodeGrpcRespDiagnosticsResponse,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("Debug", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("Debug", logger)))...,
 		),
 	}
 }
@@ -219,7 +215,7 @@ func decodeHTTPrespDiagnosticsV1Debug(_ context.Context, r *http.Response) (inte
 	return &resp, err
 }
 
-func (s *grpcServerDiagnosticsV1) AutoWatchSvcDiagnosticsV1(in *api.ListWatchOptions, stream DiagnosticsV1_AutoWatchSvcDiagnosticsV1Server) error {
+func (s *grpcServerDiagnosticsV1) AutoWatchSvcDiagnosticsV1(in *api.AggWatchOptions, stream DiagnosticsV1_AutoWatchSvcDiagnosticsV1Server) error {
 	return s.Endpoints.AutoWatchSvcDiagnosticsV1(in, stream)
 }
 

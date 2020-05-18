@@ -17,7 +17,7 @@ var _ api.ObjectMeta
 
 // ServiceRoutingV1Client  is the client interface for the service.
 type ServiceRoutingV1Client interface {
-	AutoWatchSvcRoutingV1(ctx context.Context, in *api.ListWatchOptions) (RoutingV1_AutoWatchSvcRoutingV1Client, error)
+	AutoWatchSvcRoutingV1(ctx context.Context, in *api.AggWatchOptions) (RoutingV1_AutoWatchSvcRoutingV1Client, error)
 
 	AutoAddNeighbor(ctx context.Context, t *Neighbor) (*Neighbor, error)
 	AutoDeleteNeighbor(ctx context.Context, t *Neighbor) (*Neighbor, error)
@@ -31,7 +31,7 @@ type ServiceRoutingV1Client interface {
 
 // ServiceRoutingV1Server is the server interface for the service.
 type ServiceRoutingV1Server interface {
-	AutoWatchSvcRoutingV1(in *api.ListWatchOptions, stream RoutingV1_AutoWatchSvcRoutingV1Server) error
+	AutoWatchSvcRoutingV1(in *api.AggWatchOptions, stream RoutingV1_AutoWatchSvcRoutingV1Server) error
 
 	AutoAddNeighbor(ctx context.Context, t Neighbor) (Neighbor, error)
 	AutoDeleteNeighbor(ctx context.Context, t Neighbor) (Neighbor, error)

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	goruntime "runtime"
+	"strings"
 	"sync"
 
 	"github.com/pkg/errors"
@@ -221,6 +222,17 @@ func (a *apiSrv) RegisterRestoreCallback(cb apiserver.RestoreCb) {
 // GetService returns the registered service object give the name of the service.
 func (a *apiSrv) GetService(name string) apiserver.Service {
 	return a.services[name]
+}
+
+// GetServiceForGroup(grp string) []Service
+func (a *apiSrv) GetServiceForGroup(grp string) []apiserver.Service {
+	var ret []apiserver.Service
+	for k, v := range a.services {
+		if strings.HasPrefix(k, grp+".") {
+			ret = append(ret, v)
+		}
+	}
+	return ret
 }
 
 // GetMessage returns the registered service object give the name of the service.

@@ -20,6 +20,8 @@ import (
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/ctxutils"
+	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -42,7 +44,7 @@ type sbrowserSvc_browserBackend struct {
 
 type eBrowserV1Endpoints struct {
 	Svc                     sbrowserSvc_browserBackend
-	fnAutoWatchSvcBrowserV1 func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
+	fnAutoWatchSvcBrowserV1 func(in *api.AggWatchOptions, stream grpc.ServerStream, svcprefix string) error
 
 	fnQuery      func(ctx context.Context, t interface{}) (interface{}, error)
 	fnReferences func(ctx context.Context, t interface{}) (interface{}, error)
@@ -112,6 +114,31 @@ func (s *sbrowserSvc_browserBackend) regWatchersFunc(ctx context.Context, logger
 
 	// Add Watchers
 	{
+		// Service watcher
+		svc := s.Services["browser.BrowserV1"]
+		if svc != nil {
+			svc.WithKvWatchFunc(func(l log.Logger, options *api.AggWatchOptions, kvs kvstore.Interface, stream interface{}, txfnMap map[string]func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
+				for _, o := range options.WatchOptions {
+					if o.Group != "browser" {
+						return fmt.Errorf("invalid group [%s] in watch options", o.Group)
+					}
+				}
+				if len(options.WatchOptions) == 0 {
+					options.WatchOptions = append(options.WatchOptions, api.KindWatchOptions{Group: "browser"})
+				}
+				wstream := stream.(grpc.ServerStream)
+				nctx, cancel := context.WithCancel(wstream.Context())
+				id := fmt.Sprintf("%s-%x", ctxutils.GetPeerID(nctx), &options)
+				nctx = ctxutils.SetContextID(nctx, id)
+				defer cancel()
+				watcher, err := kvs.WatchAggregate(nctx, *options)
+				if err != nil {
+					l.ErrorLog("msg", "error starting Watch for service", "err", err, "service", "BrowserV1")
+					return err
+				}
+				return listerwatcher.SvcWatch(nctx, watcher, wstream, txfnMap, version, l)
+			})
+		}
 
 	}
 
@@ -157,7 +184,7 @@ func (e *eBrowserV1Endpoints) Referrers(ctx context.Context, t browser.BrowseReq
 
 }
 
-func (e *eBrowserV1Endpoints) AutoWatchSvcBrowserV1(in *api.ListWatchOptions, stream browser.BrowserV1_AutoWatchSvcBrowserV1Server) error {
+func (e *eBrowserV1Endpoints) AutoWatchSvcBrowserV1(in *api.AggWatchOptions, stream browser.BrowserV1_AutoWatchSvcBrowserV1Server) error {
 	return e.fnAutoWatchSvcBrowserV1(in, stream, "")
 }
 

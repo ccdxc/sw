@@ -15,10 +15,9 @@ import (
 var _ context.Context
 var _ api.ObjectMeta
 var _ kvstore.Interface
-
+{{$isApiSrvSvc := (isAPIServerServed .)}}
 {{range .Messages}}{{if isSpecStatusMessage .}}
 const Kind{{.Name}} ObjKind = "{{.Name}}" {{end}}{{end}}
-
 {{range .Services}}{{$svc := . }}{{$srvname := .Name}}{{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}
 {{$crudobjs := getSvcCrudObjects .}}{{range $crudobjs}}
 // {{$srvname}}{{.}}Interface exposes the CRUD methods for {{.}}
@@ -34,10 +33,10 @@ type {{$srvname}}{{.}}Interface interface {
 	Allowed(oper apiintf.APIOperType) bool {{$actions := getSvcActionEndpoints $svc .}}{{range $actions}}
   {{.Name}}(ctx context.Context, in *{{.Request}}) (*{{.Response}}, error) {{end}}
 }
-{{end}}
-// {{$srvname}}Interface exposes objects with CRUD operations allowed by the service
-type {{$srvname}}Interface interface { {{range $cruds}}
-    {{.}}() {{$srvname}}{{.}}Interface {{end}}
-    Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-}
 {{end}}{{end}}
+// {{$srvname}}Interface exposes objects with CRUD operations allowed by the service
+type {{$srvname}}Interface interface { {{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{range $cruds}}
+    {{.}}() {{$srvname}}{{.}}Interface {{end}}{{end}}{{ if $isApiSrvSvc}}
+    Watch(ctx context.Context, options *api.AggWatchOptions) (kvstore.Watcher, error){{end}}
+}
+{{end}}

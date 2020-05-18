@@ -13,7 +13,7 @@ function generateUIPermissionsFile(manifestData) {
     var permActions = authSwagger.definitions.authPermission.properties.actions.enum;
     var permEnum = [];
     Object.keys(manifestData).forEach(function (category) {
-        if (category === "bookstore") {
+        if ((category === "bookstore") || (category === "aggwatch") || (category === "browser")) {
             // Skipping the bookstore exampe
             return;
         }

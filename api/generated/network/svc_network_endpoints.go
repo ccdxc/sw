@@ -164,7 +164,7 @@ type MiddlewareNetworkV1Server func(ServiceNetworkV1Server) ServiceNetworkV1Serv
 
 // EndpointsNetworkV1Server is the server endpoints
 type EndpointsNetworkV1Server struct {
-	svcWatchHandlerNetworkV1 func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	svcWatchHandlerNetworkV1 func(options *api.AggWatchOptions, stream grpc.ServerStream) error
 
 	AutoAddIPAMPolicyEndpoint          endpoint.Endpoint
 	AutoAddLbPolicyEndpoint            endpoint.Endpoint
@@ -897,7 +897,7 @@ type respNetworkV1AutoUpdateVirtualRouter struct {
 	Err error
 }
 
-func (e EndpointsNetworkV1Client) AutoWatchSvcNetworkV1(ctx context.Context, in *api.ListWatchOptions) (NetworkV1_AutoWatchSvcNetworkV1Client, error) {
+func (e EndpointsNetworkV1Client) AutoWatchSvcNetworkV1(ctx context.Context, in *api.AggWatchOptions) (NetworkV1_AutoWatchSvcNetworkV1Client, error) {
 	return e.Client.AutoWatchSvcNetworkV1(ctx, in)
 }
 
@@ -1997,13 +1997,13 @@ func MakeNetworkV1AutoUpdateVirtualRouterEndpoint(s ServiceNetworkV1Server, logg
 	return trace.ServerEndpoint("NetworkV1:AutoUpdateVirtualRouter")(f)
 }
 
-func (e EndpointsNetworkV1Server) AutoWatchSvcNetworkV1(in *api.ListWatchOptions, stream NetworkV1_AutoWatchSvcNetworkV1Server) error {
+func (e EndpointsNetworkV1Server) AutoWatchSvcNetworkV1(in *api.AggWatchOptions, stream NetworkV1_AutoWatchSvcNetworkV1Server) error {
 	return e.svcWatchHandlerNetworkV1(in, stream)
 }
 
 // MakeAutoWatchSvcNetworkV1Endpoint creates the Watch endpoint for the service
-func MakeAutoWatchSvcNetworkV1Endpoint(s ServiceNetworkV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
-	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+func MakeAutoWatchSvcNetworkV1Endpoint(s ServiceNetworkV1Server, logger log.Logger) func(options *api.AggWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.AggWatchOptions, stream grpc.ServerStream) error {
 		wstream := stream.(NetworkV1_AutoWatchSvcNetworkV1Server)
 		return s.AutoWatchSvcNetworkV1(options, wstream)
 	}
@@ -2833,7 +2833,7 @@ func (m loggingNetworkV1MiddlewareClient) AutoUpdateVirtualRouter(ctx context.Co
 	return
 }
 
-func (m loggingNetworkV1MiddlewareClient) AutoWatchSvcNetworkV1(ctx context.Context, in *api.ListWatchOptions) (resp NetworkV1_AutoWatchSvcNetworkV1Client, err error) {
+func (m loggingNetworkV1MiddlewareClient) AutoWatchSvcNetworkV1(ctx context.Context, in *api.AggWatchOptions) (resp NetworkV1_AutoWatchSvcNetworkV1Client, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -3577,7 +3577,7 @@ func (m loggingNetworkV1MiddlewareServer) AutoUpdateVirtualRouter(ctx context.Co
 	return
 }
 
-func (m loggingNetworkV1MiddlewareServer) AutoWatchSvcNetworkV1(in *api.ListWatchOptions, stream NetworkV1_AutoWatchSvcNetworkV1Server) (err error) {
+func (m loggingNetworkV1MiddlewareServer) AutoWatchSvcNetworkV1(in *api.AggWatchOptions, stream NetworkV1_AutoWatchSvcNetworkV1Server) (err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -4019,7 +4019,7 @@ func makeURINetworkV1AutoWatchServiceWatchOper(in *api.ListWatchOptions) string 
 }
 
 //
-func makeURINetworkV1AutoWatchSvcNetworkV1WatchOper(in *api.ListWatchOptions) string {
+func makeURINetworkV1AutoWatchSvcNetworkV1WatchOper(in *api.AggWatchOptions) string {
 	return ""
 
 }

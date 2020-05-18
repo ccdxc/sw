@@ -45,5 +45,4 @@ type ObjstoreV1ObjectInterface interface {
 type ObjstoreV1Interface interface {
 	Bucket() ObjstoreV1BucketInterface
 	Object() ObjstoreV1ObjectInterface
-	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
 }

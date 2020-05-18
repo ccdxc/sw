@@ -599,6 +599,197 @@ func TestCacheWatch(t *testing.T) {
 	c.Close()
 }
 
+func TestWatchAggregate(t *testing.T) {
+	b := testObj{}
+	b1 := testObj2{}
+	bl := testObjList{}
+	b1l := testObj2List{}
+
+	scheme := runtime.GetDefaultScheme()
+	types := map[string]*api.Struct{
+		"test.TestKind1": &api.Struct{
+			Kind:     "TestKind1",
+			APIGroup: "test",
+			Scopes:   []string{"Tenant"},
+			Fields: map[string]api.Field{
+				"Fld1": api.Field{Name: "Fld1", JSONTag: "fld1", Pointer: false, Slice: true, Map: false, Type: "test.Type2"},
+				"Fld2": api.Field{Name: "Fld2", JSONTag: "fld2", Pointer: false, Slice: true, Map: false, Type: "TYPE_INT32"},
+			},
+			GetTypeFn: func() reflect.Type { return reflect.TypeOf(b) },
+		},
+		"test.TestKind2": &api.Struct{
+			Kind:     "TestKind2",
+			APIGroup: "test",
+			Scopes:   []string{"Tenant"},
+			Fields: map[string]api.Field{
+				"Fld1": api.Field{Name: "Fld1", JSONTag: "fld1", Pointer: false, Slice: true, Map: false, Type: "test.Type2"},
+				"Fld2": api.Field{Name: "Fld2", JSONTag: "fld2", Pointer: false, Slice: true, Map: false, Type: "TYPE_INT32"},
+			},
+			GetTypeFn: func() reflect.Type { return reflect.TypeOf(b1) },
+		},
+		"test.testObjList": &api.Struct{
+			Kind:     "",
+			APIGroup: "",
+			Scopes:   []string{"Tenant"},
+			Fields: map[string]api.Field{
+				"Fld1": api.Field{Name: "Fld1", JSONTag: "fld1", Pointer: false, Slice: true, Map: false, Type: "test.Type2"},
+				"Fld2": api.Field{Name: "Fld2", JSONTag: "fld2", Pointer: false, Slice: true, Map: false, Type: "TYPE_INT32"},
+			},
+			GetTypeFn: func() reflect.Type { return reflect.TypeOf(bl) },
+		},
+		"test.testObj2List": &api.Struct{
+			Kind:     "",
+			APIGroup: "",
+			Scopes:   []string{"Tenant"},
+			Fields: map[string]api.Field{
+				"Fld1": api.Field{Name: "Fld1", JSONTag: "fld1", Pointer: false, Slice: true, Map: false, Type: "test.Type2"},
+				"Fld2": api.Field{Name: "Fld2", JSONTag: "fld2", Pointer: false, Slice: true, Map: false, Type: "TYPE_INT32"},
+			},
+			GetTypeFn: func() reflect.Type { return reflect.TypeOf(b1l) },
+		},
+		"test2.Test2Kind1": &api.Struct{
+			Kind:     "Test2Kind1",
+			APIGroup: "test2",
+			Scopes:   []string{"Tenant"},
+			Fields: map[string]api.Field{
+				"Fld1": api.Field{Name: "Fld1", JSONTag: "fld1", Pointer: false, Slice: true, Map: false, Type: "test.Type2"},
+				"Fld2": api.Field{Name: "Fld2", JSONTag: "fld2", Pointer: false, Slice: true, Map: false, Type: "TYPE_INT32"},
+			},
+			GetTypeFn: func() reflect.Type { return reflect.TypeOf(b) },
+		},
+	}
+	scheme.AddKnownTypes(&b, &b1, &bl, &b1l)
+	scheme.AddSchema(types)
+	defer runtime.ResetDefaultSchema()
+	kstr, err := memkv.NewMemKv([]string{"test-cluster"}, runtime.NewJSONCodec(scheme))
+	if err != nil {
+		t.Fatalf("unable to create memkv")
+	}
+	str := &cachemocks.FakeStore{}
+	fakeqs := &mocks.FakeWatchPrefixes{}
+	c := cache{
+		store:  str,
+		pool:   &connPool{},
+		queues: fakeqs,
+		logger: log.GetNewLogger(log.GetDefaultConfig("cacheTest")),
+		active: true,
+	}
+	c.pool.AddToPool(kstr)
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	wch := make(chan kvstore.WatchEvent)
+	dqfn := func(inctx context.Context, fromver uint64, cb apiintf.EventHandlerFn, cleanupfn func()) {
+		for {
+			select {
+			case ev := <-wch:
+				cb(ctx, ev.Type, ev.Object, nil, nil)
+			case <-inctx.Done():
+				cleanupfn()
+				return
+			}
+		}
+	}
+
+	fakeq := mocks.FakeWatchEventQ{
+		DqCh: make(chan error),
+		DQFn: dqfn,
+	}
+	addAggfn := func(paths []string, peer string) watchstream.WatchEventQ {
+		return &fakeq
+	}
+	addfn := func(path string) watchstream.WatchEventQ {
+		return &fakeq
+	}
+	fakeqs.AddAggFn = addAggfn
+	fakeqs.Addfn = addfn
+
+	wopts := api.AggWatchOptions{
+		WatchOptions: []api.KindWatchOptions{},
+	}
+	_, err = c.WatchAggregate(ctx, wopts)
+	Assert(t, err != nil, "expecting watch to fail")
+
+	wopts.WatchOptions = []api.KindWatchOptions{
+		{
+			Group:   "test",
+			Kind:    "TestKind1",
+			Options: api.ListWatchOptions{},
+		},
+	}
+	watcher, err := c.WatchAggregate(ctx, wopts)
+	AssertOk(t, err, "expecitng Watch aggregate to pass got {%s)", err)
+	<-fakeq.DqCh
+	closeCh := make(chan error)
+	evCount := struct {
+		creates int
+		deletes int
+		updates int
+		bulks   int
+	}{}
+	go func() {
+		for {
+			select {
+			case ev, ok := <-watcher.EventChan():
+				if ok {
+					switch ev.Type {
+					case kvstore.Created:
+						evCount.creates++
+					case kvstore.Updated:
+						evCount.updates++
+					case kvstore.Deleted:
+						evCount.deletes++
+					}
+				}
+
+			case <-closeCh:
+				return
+			}
+		}
+	}()
+
+	wch <- kvstore.WatchEvent{Type: kvstore.Created, Object: &b}
+	wch <- kvstore.WatchEvent{Type: kvstore.Created, Object: &b1}
+	wch <- kvstore.WatchEvent{Type: kvstore.Updated, Object: &b1}
+	time.Sleep(100 * time.Millisecond)
+	Assert(t, evCount.creates == 2, "expecting 2 creates got [%d]", evCount.creates)
+	Assert(t, evCount.updates == 1, "expecting 1 updates got [%d]", evCount.updates)
+
+	wopts.WatchOptions = []api.KindWatchOptions{
+		{
+			Group:   "test",
+			Kind:    "TestKind1",
+			Options: api.ListWatchOptions{},
+		},
+		{
+			Group:   "test",
+			Kind:    "TestKind2",
+			Options: api.ListWatchOptions{},
+		},
+	}
+	cancel()
+
+	ctx, cancel = context.WithCancel(context.Background())
+	fakeq.DqCh = make(chan error)
+
+	watcher, err = c.WatchAggregate(ctx, wopts)
+	AssertOk(t, err, "expecitng Watch aggregate to pass got {%s)", err)
+	<-fakeq.DqCh
+	closeCh = make(chan error)
+	evCount.creates, evCount.updates, evCount.deletes = 0, 0, 0
+
+	wch <- kvstore.WatchEvent{Type: kvstore.Created, Object: &b}
+	wch <- kvstore.WatchEvent{Type: kvstore.Created, Object: &b1}
+	wch <- kvstore.WatchEvent{Type: kvstore.Updated, Object: &b1}
+	time.Sleep(100 * time.Millisecond)
+	Assert(t, evCount.creates == 2, "expecting 2 creates got [%d]", evCount.creates)
+	Assert(t, evCount.updates == 1, "expecting 1 updates got [%d]", evCount.updates)
+
+	cancel()
+	close(closeCh)
+	c.Close()
+}
+
 func TestPrefixWatcher(t *testing.T) {
 	kstr := &cachemocks.FakeKvStore{}
 	str := &cachemocks.FakeStore{}

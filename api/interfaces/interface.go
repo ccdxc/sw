@@ -223,7 +223,7 @@ type Store interface {
 }
 
 // EventHandlerFn is for handling watch events
-type EventHandlerFn func(inctx context.Context, evType kvstore.WatchEventType, item, prev runtime.Object)
+type EventHandlerFn func(inctx context.Context, evType kvstore.WatchEventType, item, prev runtime.Object, control *kvstore.WatchControl)
 
 //CtkitEvent represent object and associated event
 type CtkitEvent struct {

@@ -30,7 +30,7 @@ func (h *RPCHandler) GenerateNodeToken(ctx context.Context, req *tokenauth.NodeT
 }
 
 // AutoWatchSvcTokenAuthV1 is an unimplemented method of the TokenAuthV1Server interface
-func (h *RPCHandler) AutoWatchSvcTokenAuthV1(*api.ListWatchOptions, tokenauth.TokenAuthV1_AutoWatchSvcTokenAuthV1Server) error {
+func (h *RPCHandler) AutoWatchSvcTokenAuthV1(*api.AggWatchOptions, tokenauth.TokenAuthV1_AutoWatchSvcTokenAuthV1Server) error {
 	return fmt.Errorf("AutoWatchSvcTokenAuth not implemented")
 }
 

@@ -94,7 +94,7 @@ type MiddlewareRolloutV1Server func(ServiceRolloutV1Server) ServiceRolloutV1Serv
 
 // EndpointsRolloutV1Server is the server endpoints
 type EndpointsRolloutV1Server struct {
-	svcWatchHandlerRolloutV1 func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	svcWatchHandlerRolloutV1 func(options *api.AggWatchOptions, stream grpc.ServerStream) error
 
 	AutoAddRolloutEndpoint          endpoint.Endpoint
 	AutoAddRolloutActionEndpoint    endpoint.Endpoint
@@ -341,7 +341,7 @@ type respRolloutV1UpdateRollout struct {
 	Err error
 }
 
-func (e EndpointsRolloutV1Client) AutoWatchSvcRolloutV1(ctx context.Context, in *api.ListWatchOptions) (RolloutV1_AutoWatchSvcRolloutV1Client, error) {
+func (e EndpointsRolloutV1Client) AutoWatchSvcRolloutV1(ctx context.Context, in *api.AggWatchOptions) (RolloutV1_AutoWatchSvcRolloutV1Client, error) {
 	return e.Client.AutoWatchSvcRolloutV1(ctx, in)
 }
 
@@ -707,13 +707,13 @@ func MakeRolloutV1UpdateRolloutEndpoint(s ServiceRolloutV1Server, logger log.Log
 	return trace.ServerEndpoint("RolloutV1:UpdateRollout")(f)
 }
 
-func (e EndpointsRolloutV1Server) AutoWatchSvcRolloutV1(in *api.ListWatchOptions, stream RolloutV1_AutoWatchSvcRolloutV1Server) error {
+func (e EndpointsRolloutV1Server) AutoWatchSvcRolloutV1(in *api.AggWatchOptions, stream RolloutV1_AutoWatchSvcRolloutV1Server) error {
 	return e.svcWatchHandlerRolloutV1(in, stream)
 }
 
 // MakeAutoWatchSvcRolloutV1Endpoint creates the Watch endpoint for the service
-func MakeAutoWatchSvcRolloutV1Endpoint(s ServiceRolloutV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
-	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+func MakeAutoWatchSvcRolloutV1Endpoint(s ServiceRolloutV1Server, logger log.Logger) func(options *api.AggWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.AggWatchOptions, stream grpc.ServerStream) error {
 		wstream := stream.(RolloutV1_AutoWatchSvcRolloutV1Server)
 		return s.AutoWatchSvcRolloutV1(options, wstream)
 	}
@@ -1011,7 +1011,7 @@ func (m loggingRolloutV1MiddlewareClient) UpdateRollout(ctx context.Context, in 
 	return
 }
 
-func (m loggingRolloutV1MiddlewareClient) AutoWatchSvcRolloutV1(ctx context.Context, in *api.ListWatchOptions) (resp RolloutV1_AutoWatchSvcRolloutV1Client, err error) {
+func (m loggingRolloutV1MiddlewareClient) AutoWatchSvcRolloutV1(ctx context.Context, in *api.AggWatchOptions) (resp RolloutV1_AutoWatchSvcRolloutV1Client, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -1261,7 +1261,7 @@ func (m loggingRolloutV1MiddlewareServer) UpdateRollout(ctx context.Context, in 
 	return
 }
 
-func (m loggingRolloutV1MiddlewareServer) AutoWatchSvcRolloutV1(in *api.ListWatchOptions, stream RolloutV1_AutoWatchSvcRolloutV1Server) (err error) {
+func (m loggingRolloutV1MiddlewareServer) AutoWatchSvcRolloutV1(in *api.AggWatchOptions, stream RolloutV1_AutoWatchSvcRolloutV1Server) (err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -1411,7 +1411,7 @@ func makeURIRolloutV1AutoWatchRolloutActionWatchOper(in *api.ListWatchOptions) s
 }
 
 //
-func makeURIRolloutV1AutoWatchSvcRolloutV1WatchOper(in *api.ListWatchOptions) string {
+func makeURIRolloutV1AutoWatchSvcRolloutV1WatchOper(in *api.AggWatchOptions) string {
 	return ""
 
 }

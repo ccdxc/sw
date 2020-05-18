@@ -23,16 +23,16 @@ Group{{title $key}} APIGroup = "{{$key}}" {{end}}
 type Services interface {
     Close() error
     {{range $key, $value := $pkgs}}{{$pkgname := $key}}{{range $k, $v := $value.Svcs}}
-    // Package is {{$key}} and len of messages is {{len $v.Messages}}{{if (ne 0 (len $v.Messages))}}
-    {{$k}}() {{$pkgname}}.{{$k}}Interface{{end}}{{end}}{{end}}
+    // Package is {{$key}} and len of messages is {{len $v.Messages}}
+    {{$k}}() {{$pkgname}}.{{$k}}Interface{{end}}{{end}}
 }
 
 type apiGrpcServerClient struct {
     url string
     logger log.Logger
     client *rpckit.RPCClient
-    {{range $key, $value := $pkgs}}{{$pkgname := $key}}{{range $k, $v := $value.Svcs}}{{if (ne 0 (len $v.Messages))}}
-    a{{$k}} {{$pkgname}}.{{$k}}Interface {{end}}{{end}}{{end}}
+    {{range $key, $value := $pkgs}}{{$pkgname := $key}}{{range $k, $v := $value.Svcs}}
+    a{{$k}} {{$pkgname}}.{{$k}}Interface {{end}}{{end}}
 }
 
 // Close closes the client
@@ -65,8 +65,8 @@ type apiRestServerClient struct {
     url string
     logger log.Logger
     httpTransport *http.Transport
-    {{range $key, $value := $pkgs}}{{$pkgname := $key}}{{range $k, $v := $value.Svcs}}{{if (ne 0 (len $v.Messages))}}
-    a{{$k}} {{$pkgname}}.{{$k}}Interface {{end}}{{end}}{{end}}
+    {{range $key, $value := $pkgs}}{{$pkgname := $key}}{{range $k, $v := $value.Svcs}}
+    a{{$k}} {{$pkgname}}.{{$k}}Interface {{end}}{{end}}
 }
 
 // Close closes the client

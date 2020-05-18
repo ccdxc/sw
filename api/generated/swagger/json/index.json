@@ -1,4 +1,8 @@
 {
+    "aggwatch": {
+      "description": "Aggwatch API reference",
+      "path": "/swagger/aggwatch"
+    },
     "audit": {
       "description": "Audit logs for the cluster and related APIs",
       "path": "/swagger/audit"

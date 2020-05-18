@@ -28,7 +28,7 @@ import (
 	"github.com/pensando/sw/api/bulkedit"
 	"github.com/pensando/sw/api/cache"
 	"github.com/pensando/sw/api/client"
-	apierrors "github.com/pensando/sw/api/errors"
+	"github.com/pensando/sw/api/errors"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/bookstore"
 	"github.com/pensando/sw/api/generated/browser"
@@ -41,9 +41,9 @@ import (
 	"github.com/pensando/sw/api/labels"
 	apiutils "github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/test/utils"
-	apigwpkg "github.com/pensando/sw/venice/apigw/pkg"
+	"github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apiserver"
-	apisrvpkg "github.com/pensando/sw/venice/apiserver/pkg"
+	"github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/globals"
 	. "github.com/pensando/sw/venice/utils/authn/testutils"
 	"github.com/pensando/sw/venice/utils/featureflags"
@@ -235,7 +235,8 @@ func TestCrudOps(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to start watch (%s)\n", err)
 		}
-		srvWatcher, err := apicl.BookstoreV1().Watch(wctx, &opts)
+		aopts := api.AggWatchOptions{}
+		srvWatcher, err := apicl.BookstoreV1().Watch(wctx, &aopts)
 		if err != nil {
 			t.Fatalf("Failed to start watch (%s)\n", err)
 		}
@@ -5626,4 +5627,369 @@ func TestStagingBulkEdit(t *testing.T) {
 		t.Fatalf("expecting 0 objects in list, got %d", len(wlRet))
 	}
 
+}
+
+type aggEvents struct {
+	Type kvstore.WatchEventType
+	Kind string
+	Seq  int
+}
+
+func TestAggregateWatcher(t *testing.T) {
+	apiserverAddr := "localhost" + ":" + tinfo.apiserverport
+	apicl, err := client.NewGrpcUpstream("test", apiserverAddr, tinfo.l)
+	if err != nil {
+		t.Fatalf("cannot create grpc client")
+	}
+	defer apicl.Close()
+	wopts := api.AggWatchOptions{
+		WatchOptions: []api.KindWatchOptions{
+			{
+				Group:   string(apiclient.GroupNetwork),
+				Kind:    string(network.KindNetwork),
+				Options: api.ListWatchOptions{},
+			},
+			{
+				Group:   string(apiclient.GroupWorkload),
+				Kind:    string(workload.KindWorkload),
+				Options: api.ListWatchOptions{},
+			},
+			{
+				Group:   string(apiclient.GroupCluster),
+				Kind:    string(cluster.KindHost),
+				Options: api.ListWatchOptions{},
+			},
+			{
+				Group:   string(apiclient.GroupCluster),
+				Kind:    string(cluster.KindDistributedServiceCard),
+				Options: api.ListWatchOptions{},
+			},
+		},
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	kvEvents, kvErrors, kvCtrls := 0, 0, 0
+	var gotEvs []aggEvents
+	var gotEvMu sync.Mutex
+	var wg sync.WaitGroup
+	wg.Add(1)
+	startWatcher := func(startCh, listCh chan error, watcher kvstore.Watcher) {
+		close(startCh)
+		defer wg.Done()
+		listDone := false
+		for {
+			select {
+			case ev, ok := <-watcher.EventChan():
+				if ok {
+					switch ev.Type {
+					case kvstore.Created, kvstore.Updated, kvstore.Deleted:
+						objm := ev.Object.(runtime.ObjectMetaAccessor).GetObjectMeta()
+						if m, ok := objm.Labels["TestID"]; ok {
+							if m == "AggregateWatchers" {
+								kvEvents++
+								gotEvMu.Lock()
+								gotEvs = append(gotEvs, aggEvents{Type: ev.Type, Kind: ev.Object.GetObjectKind()})
+								gotEvMu.Unlock()
+								log.Infof("Got Event [%s][%s][%v]", ev.Type, ev.Object.GetObjectKind(), ev.Object)
+								t.Logf("Got Event [%s][%s][%v]", ev.Type, ev.Object.GetObjectKind(), ev.Object)
+							}
+						}
+					case kvstore.WatcherError:
+						kvErrors++
+						gotEvMu.Lock()
+						gotEvs = append(gotEvs, aggEvents{Type: ev.Type})
+						gotEvMu.Unlock()
+						log.Infof("Got WatchError [%s][%v]", ev.Type, ev.Object)
+						t.Logf("Got WatchError [%s][%v]", ev.Type, ev.Object)
+					case kvstore.WatcherControl:
+						kvCtrls++
+						gotEvMu.Lock()
+						gotEvs = append(gotEvs, aggEvents{Type: ev.Type})
+						gotEvMu.Unlock()
+						log.Infof("Got WatchControl [%s][%v]", ev.Type, ev.Control)
+						t.Logf("Got WatchControl [%s][%v]", ev.Type, ev.Control)
+						listDone = true
+						close(listCh)
+					}
+				} else {
+					if !listDone {
+						close(listCh)
+					}
+					return
+				}
+
+			}
+		}
+	}
+	validateReceived := func(got []aggEvents, need []aggEvents) (bool, string) {
+		if len(got) != len(need) {
+			return false, fmt.Sprintf("lengths do not match got [%d], need [%d]", len(got), len(need))
+		}
+		curSeq := 0
+		var pending []aggEvents
+		for i := range got {
+			if curSeq != need[i].Seq {
+				if len(pending) != 0 {
+					return false, fmt.Sprintf("failed to receive events in seq [%d]: [%v]", curSeq, pending)
+				}
+				curSeq = need[i].Seq
+			}
+			if got[i].Type != need[i].Type || got[i].Kind != need[i].Kind {
+				found := false
+				for ii, e := range pending {
+					if e.Kind == need[i].Kind && e.Type == need[i].Type {
+						// delete the entry from pending
+						pending = append(pending[:ii], pending[ii+1:]...)
+						found = true
+						break
+					}
+				}
+				if !found {
+					pending = append(pending, got[i])
+				}
+
+			}
+		}
+		return true, ""
+	}
+	// Delete all relevant objects
+	wll, err := apicl.WorkloadV1().Workload().List(ctx, &api.ListWatchOptions{})
+	AssertOk(t, err, "failed to get list of workloads")
+	for _, w := range wll {
+		apicl.ClusterV1().Host().Delete(ctx, &w.ObjectMeta)
+	}
+
+	// Delete all relevant objects
+	hl, err := apicl.ClusterV1().Host().List(ctx, &api.ListWatchOptions{})
+	AssertOk(t, err, "failed to get list of hosts")
+	for _, h := range hl {
+		apicl.ClusterV1().Host().Delete(ctx, &h.ObjectMeta)
+	}
+
+	dl, err := apicl.ClusterV1().DistributedServiceCard().List(ctx, &api.ListWatchOptions{})
+	AssertOk(t, err, "failed to get list of dscs")
+	for _, d := range dl {
+		apicl.ClusterV1().DistributedServiceCard().Delete(ctx, &d.ObjectMeta)
+	}
+	nl, err := apicl.NetworkV1().Network().List(ctx, &api.ListWatchOptions{})
+	AssertOk(t, err, "failed to get list of networks")
+	for _, n := range nl {
+		apicl.ClusterV1().Host().Delete(ctx, &n.ObjectMeta)
+	}
+
+	w1, err := apicl.AggWatchV1().Watch(ctx, &wopts)
+	AssertOk(t, err, "establishing aggregate watch failed (%s)", err)
+	startCh := make(chan error)
+	listCh := make(chan error)
+	go startWatcher(startCh, listCh, w1)
+	<-startCh
+	<-listCh
+
+	// Create Network
+	netw := network.Network{
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    globals.DefaultTenant,
+			Name:      "AggWatchNetwork",
+			Namespace: globals.DefaultNamespace,
+			Labels:    map[string]string{"TestID": "AggregateWatchers"},
+		},
+		Spec: network.NetworkSpec{
+			Type:   network.NetworkType_Bridged.String(),
+			VlanID: 10,
+		},
+	}
+	_, err = apicl.NetworkV1().Network().Create(ctx, &netw)
+	AssertOk(t, err, "nework create should succeed")
+
+	// Create DSC
+	dsc := cluster.DistributedServiceCard{
+		ObjectMeta: api.ObjectMeta{
+			Name:   "0000.1111.2222",
+			Labels: map[string]string{"TestID": "AggregateWatchers"},
+		},
+		Spec: cluster.DistributedServiceCardSpec{
+			Admit: true,
+
+			ID:          "0000.1111.2222",
+			MgmtMode:    cluster.DistributedServiceCardSpec_NETWORK.String(),
+			NetworkMode: cluster.DistributedServiceCardSpec_OOB.String(),
+			MgmtVlan:    10,
+			Controllers: []string{"10.1.1.1"},
+		},
+		Status: cluster.DistributedServiceCardStatus{
+			AdmissionPhase: cluster.DistributedServiceCardStatus_PENDING.String(),
+		},
+	}
+	_, err = apicl.ClusterV1().DistributedServiceCard().Create(ctx, &dsc)
+	AssertOk(t, err, "dsc create should succeed")
+
+	// Create Host
+	host := cluster.Host{
+		ObjectMeta: api.ObjectMeta{
+			Name:   "aggWatchHost",
+			Labels: map[string]string{"TestID": "AggregateWatchers"},
+		},
+		Spec: cluster.HostSpec{
+			DSCs: []cluster.DistributedServiceCardID{{ID: "0000.1111.2222"}},
+		},
+	}
+	_, err = apicl.ClusterV1().Host().Create(ctx, &host)
+	AssertOk(t, err, "host create should succeed")
+
+	// Create Workload
+	wl := workload.Workload{
+		ObjectMeta: api.ObjectMeta{
+			Name:      "aggWatchWorkload",
+			Tenant:    globals.DefaultTenant,
+			Namespace: globals.DefaultNamespace,
+			Labels:    map[string]string{"TestID": "AggregateWatchers"},
+		},
+		Spec: workload.WorkloadSpec{
+			HostName: "aggWatchHost",
+		},
+	}
+
+	_, err = apicl.WorkloadV1().Workload().Create(ctx, &wl)
+	AssertOk(t, err, "workload create should succeed")
+
+	expEvs := []aggEvents{
+		{Type: kvstore.WatcherControl, Seq: 0},
+		{Type: kvstore.Created, Kind: "Network", Seq: 1},
+		{Type: kvstore.Created, Kind: "DistributedServiceCard", Seq: 2},
+		{Type: kvstore.Created, Kind: "Host", Seq: 3},
+		{Type: kvstore.Created, Kind: "Workload", Seq: 4},
+		{Type: kvstore.Updated, Kind: "Host", Seq: 4}, // Due to Reference update.
+	}
+	AssertEventually(t, func() (bool, interface{}) {
+		return kvEvents+kvCtrls == len(expEvs), "waiting for events to get to 6"
+	}, fmt.Sprintf("failed to receive 6 events, got [%d/%d]", kvEvents, kvCtrls))
+
+	ok, msg := validateReceived(gotEvs, expEvs)
+	Assert(t, ok, msg)
+	cancel()
+	wg.Wait()
+
+	t.Logf("== Starting Agg watch with filters ==")
+	// Create a new aggregate watcher with Filters. Testing along with Bulk End
+	expEvs = []aggEvents{
+		{Type: kvstore.Created, Kind: "Workload"},
+		{Type: kvstore.Created, Kind: "Host"},
+		{Type: kvstore.Created, Kind: "DistributedServiceCard"},
+		{Type: kvstore.WatcherControl},
+		{Type: kvstore.Created, Kind: "Network"},
+	}
+	w1opts := api.AggWatchOptions{
+		WatchOptions: []api.KindWatchOptions{
+			{
+				Group:   string(apiclient.GroupNetwork),
+				Kind:    string(network.KindNetwork),
+				Options: api.ListWatchOptions{FieldSelector: "spec.vlan-id=11"},
+			},
+			{
+				Group:   string(apiclient.GroupWorkload),
+				Kind:    string(workload.KindWorkload),
+				Options: api.ListWatchOptions{},
+			},
+			{
+				Group:   string(apiclient.GroupCluster),
+				Kind:    string(cluster.KindHost),
+				Options: api.ListWatchOptions{},
+			},
+			{
+				Group:   string(apiclient.GroupCluster),
+				Kind:    string(cluster.KindDistributedServiceCard),
+				Options: api.ListWatchOptions{},
+			},
+		},
+	}
+	ctx, cancel = context.WithCancel(context.Background())
+	kvEvents, kvErrors, kvCtrls = 0, 0, 0
+	gotEvMu.Lock()
+	gotEvs = nil
+	gotEvMu.Unlock()
+	w2, err := apicl.AggWatchV1().Watch(ctx, &w1opts)
+	AssertOk(t, err, "establishing aggregate watch failed (%s)", err)
+	wg.Add(1)
+	var w3rcvd, w4rcvd, w5rcvd []string
+
+	w3, err := apicl.NetworkV1().Network().Watch(ctx, &api.ListWatchOptions{})
+	// should receive
+	w4, err := apicl.NetworkV1().Network().Watch(ctx, &api.ListWatchOptions{FieldSelector: "spec.vlan-id=11"})
+	// should not receive
+	w5, err := apicl.NetworkV1().Network().Watch(ctx, &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: "UnknownTenant"}})
+	startCh = make(chan error)
+	listCh = make(chan error)
+	go startWatcher(startCh, listCh, w2)
+	<-startCh
+	<-listCh
+	go func() {
+		add := func(to []string, evt *kvstore.WatchEvent) []string {
+			switch evt.Type {
+			case kvstore.Created, kvstore.Updated, kvstore.Deleted:
+				n := evt.Object.(*network.Network)
+				to = append(to, fmt.Sprintf("%v:%v", evt.Type.String(), n.Name))
+			case kvstore.WatcherError:
+				to = append(to, fmt.Sprintf("watchererror"))
+			case kvstore.WatcherControl:
+				to = append(to, fmt.Sprintf("controls:%v:%v", evt.Control.Code, evt.Control.Message))
+			}
+			return to
+		}
+		for {
+			select {
+			case ev, ok := <-w3.EventChan():
+				if ok {
+					t.Logf("W3 received event [%v]", ev)
+					w3rcvd = add(w3rcvd, ev)
+				}
+			case ev, ok := <-w4.EventChan():
+				if ok {
+					t.Logf("W4 received event [%v]", ev)
+					w4rcvd = add(w4rcvd, ev)
+				}
+			case ev, ok := <-w5.EventChan():
+				if ok {
+					t.Logf("W5 received event [%v]", ev)
+					w5rcvd = add(w5rcvd, ev)
+				}
+			case <-ctx.Done():
+				return
+			}
+		}
+
+	}()
+
+	netw1 := network.Network{
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    globals.DefaultTenant,
+			Name:      "AggWatchnNetwork1",
+			Namespace: globals.DefaultNamespace,
+		},
+		Spec: network.NetworkSpec{
+			Type:   network.NetworkType_Bridged.String(),
+			VlanID: 11,
+		},
+	}
+	_, err = apicl.NetworkV1().Network().Create(ctx, &netw1)
+	AssertOk(t, err, "nework create should succeed")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		return kvEvents+kvCtrls == len(expEvs), "waiting for events to get to 6"
+	}, fmt.Sprintf("failed to receive %v events, got [%d/%d]", len(expEvs), kvEvents, kvCtrls))
+	ok, msg = validateReceived(gotEvs, expEvs)
+	Assert(t, ok, msg)
+
+	AssertEventually(t, func() (bool, interface{}) {
+		return len(w3rcvd) == 2, "waiting for w3 to receive 2 events"
+	}, fmt.Sprintf("failed to receive 2 events on watcher 3 got[%v]", w3rcvd))
+	AssertEventually(t, func() (bool, interface{}) {
+		return len(w4rcvd) == 1, "waiting for w4 to receive 1 events"
+	}, fmt.Sprintf("failed to receive 1 events on watcher 4 got[%v]", w4rcvd))
+	AssertEventually(t, func() (bool, interface{}) {
+		return kvEvents+kvCtrls == len(expEvs), fmt.Sprintf("waiting for events to get to %d", len(expEvs))
+	}, fmt.Sprintf("failed to receive %v events, got [%d/%d]", len(expEvs), kvEvents, kvCtrls))
+	ok, msg = validateReceived(gotEvs, expEvs)
+	Assert(t, ok, msg)
+	Assert(t, len(w5rcvd) == 0, "not expecting anything on watcher 5 , got [%v]", w5rcvd)
+	cancel()
 }

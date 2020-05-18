@@ -17,7 +17,7 @@ var _ api.ObjectMeta
 {{range .Services}}{{$svcname := .Name}}{{$svcname := .Name}}
 // Service{{.Name}}Client  is the client interface for the service.
 type Service{{.Name}}Client interface {
-	AutoWatchSvc{{$svcname}}(ctx context.Context, in *api.ListWatchOptions) ({{$svcname}}_AutoWatchSvc{{$svcname}}Client, error)
+	AutoWatchSvc{{$svcname}}(ctx context.Context, in *api.AggWatchOptions) ({{$svcname}}_AutoWatchSvc{{$svcname}}Client, error)
 	{{range .Methods}}{{$params := (getMethodParams .)}}{{if isStreaming .}} {{else}}
 	{{.Name}}(ctx context.Context, t *{{getInputType $pkgname . false}}) (*{{getOutputType $pkgname . false}}, error) {{end}}{{end}}
 	{{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{range $cruds}}
@@ -31,7 +31,7 @@ type Service{{.Name}}Client interface {
 {{range .Services}}{{$svcname := .Name}}{{$svcname := .Name}}
 // Service{{.Name}}Server is the server interface for the service.
 type Service{{.Name}}Server interface {
-	AutoWatchSvc{{$svcname}}(in *api.ListWatchOptions, stream {{$svcname}}_AutoWatchSvc{{$svcname}}Server) error
+	AutoWatchSvc{{$svcname}}(in *api.AggWatchOptions, stream {{$svcname}}_AutoWatchSvc{{$svcname}}Server) error
 	{{range .Methods}}{{$params := (getMethodParams .)}}{{if isStreaming .}} {{else}}
 	{{.Name}}(ctx context.Context, t {{getInputType $pkgname . false}}) ({{getOutputType $pkgname . false}}, error) {{end}}{{end}}
 	{{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{range $cruds}}

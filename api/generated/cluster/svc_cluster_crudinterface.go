@@ -161,5 +161,5 @@ type ClusterV1Interface interface {
 	SnapshotRestore() ClusterV1SnapshotRestoreInterface
 	License() ClusterV1LicenseInterface
 	DSCProfile() ClusterV1DSCProfileInterface
-	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
+	Watch(ctx context.Context, options *api.AggWatchOptions) (kvstore.Watcher, error)
 }

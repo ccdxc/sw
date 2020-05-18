@@ -1,6 +1,7 @@
 
 |API group   | Description    |
 |:-----------|:---------------|
+| [Aggwatch](generated/apiref/aggwatch/index.html) | Aggwatch API reference |
 | [Audit](generated/apiref/audit/index.html) | Audit logs for the cluster and related APIs |
 | [Auth](generated/apiref/auth/index.html) | Authentication and Authorization related APIs |
 | [Browser](generated/apiref/browser/index.html) | browse configuration objects and relations |

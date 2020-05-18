@@ -186,5 +186,5 @@ type MonitoringV1Interface interface {
 	TechSupportRequest() MonitoringV1TechSupportRequestInterface
 	ArchiveRequest() MonitoringV1ArchiveRequestInterface
 	AuditPolicy() MonitoringV1AuditPolicyInterface
-	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
+	Watch(ctx context.Context, options *api.AggWatchOptions) (kvstore.Watcher, error)
 }

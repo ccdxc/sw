@@ -77,7 +77,7 @@ func (a *auditHandler) GetEvent(ctx context.Context, r *audit.AuditEventRequest)
 }
 
 // AutoWatchSvcAuditV1 is not implemented
-func (a *auditHandler) AutoWatchSvcAuditV1(*api.ListWatchOptions, audit.AuditV1_AutoWatchSvcAuditV1Server) error {
+func (a *auditHandler) AutoWatchSvcAuditV1(*api.AggWatchOptions, audit.AuditV1_AutoWatchSvcAuditV1Server) error {
 	return errors.New("not implemented")
 }
 

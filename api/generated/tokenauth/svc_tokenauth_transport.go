@@ -9,7 +9,6 @@ package tokenauth
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"net/http"
 
 	grpctransport "github.com/go-kit/kit/transport/grpc"
@@ -31,17 +30,13 @@ type grpcServerTokenAuthV1 struct {
 
 // MakeGRPCServerTokenAuthV1 creates a GRPC server for TokenAuthV1 service
 func MakeGRPCServerTokenAuthV1(ctx context.Context, endpoints EndpointsTokenAuthV1Server, logger log.Logger) TokenAuthV1Server {
-	options := []grpctransport.ServerOption{
-		grpctransport.ServerErrorLogger(logger),
-		grpctransport.ServerBefore(recoverVersion),
-	}
 	return &grpcServerTokenAuthV1{
 		Endpoints: endpoints,
 		GenerateNodeTokenHdlr: grpctransport.NewServer(
 			endpoints.GenerateNodeTokenEndpoint,
 			DecodeGrpcReqNodeTokenRequest,
 			EncodeGrpcRespNodeTokenResponse,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("GenerateNodeToken", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("GenerateNodeToken", logger)))...,
 		),
 	}
 }
@@ -64,6 +59,6 @@ func decodeHTTPrespTokenAuthV1GenerateNodeToken(_ context.Context, r *http.Respo
 	return &resp, err
 }
 
-func (s *grpcServerTokenAuthV1) AutoWatchSvcTokenAuthV1(in *api.ListWatchOptions, stream TokenAuthV1_AutoWatchSvcTokenAuthV1Server) error {
-	return errors.New("not implemented")
+func (s *grpcServerTokenAuthV1) AutoWatchSvcTokenAuthV1(in *api.AggWatchOptions, stream TokenAuthV1_AutoWatchSvcTokenAuthV1Server) error {
+	return s.Endpoints.AutoWatchSvcTokenAuthV1(in, stream)
 }

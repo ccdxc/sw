@@ -218,7 +218,7 @@ func (a adapterOrchestratorV1) AutoUpdateOrchestrator(oldctx oldcontext.Context,
 	return ret.(*orchestration.Orchestrator), err
 }
 
-func (a adapterOrchestratorV1) AutoWatchSvcOrchestratorV1(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (orchestration.OrchestratorV1_AutoWatchSvcOrchestratorV1Client, error) {
+func (a adapterOrchestratorV1) AutoWatchSvcOrchestratorV1(oldctx oldcontext.Context, in *api.AggWatchOptions, options ...grpc.CallOption) (orchestration.OrchestratorV1_AutoWatchSvcOrchestratorV1Client, error) {
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoWatchSvcOrchestratorV1")
 	if err != nil {
@@ -228,7 +228,7 @@ func (a adapterOrchestratorV1) AutoWatchSvcOrchestratorV1(oldctx oldcontext.Cont
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
-		in := i.(*api.ListWatchOptions)
+		in := i.(*api.AggWatchOptions)
 		iws, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwWebSocketWatch)
 		if ok && iws.(bool) {
 			nctx, cancel := context.WithCancel(ctx)

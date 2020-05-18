@@ -84,7 +84,7 @@ func (s *ServiceHdlr) WithKvWatchFunc(fn apiserver.WatchSvcKvFunc) apiserver.Ser
 }
 
 // WatchFromKv implements the watch function from KV store and bridges it to the grpc stream
-func (s *ServiceHdlr) WatchFromKv(options *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error {
+func (s *ServiceHdlr) WatchFromKv(options *api.AggWatchOptions, stream grpc.ServerStream, svcprefix string) error {
 	if !singletonAPISrv.getRunState() {
 		return errShuttingDown.makeError(nil, []string{}, "")
 	}
@@ -133,6 +133,13 @@ func (s *ServiceHdlr) WithCrudServices(msgs []apiserver.Message) apiserver.Servi
 		s.prepMsgMap[msg.GetKind()] = msg.PrepareMsg
 	}
 	return s
+}
+
+// PopulateTxfmMap populates the message transformation map for all kinds known to the service.
+func (s *ServiceHdlr) PopulateTxfmMap(in map[string]func(from, to string, i interface{}) (interface{}, error)) {
+	for k, v := range s.prepMsgMap {
+		in[k] = v
+	}
 }
 
 // NewService initializes and returns a new service object.

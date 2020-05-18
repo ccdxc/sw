@@ -48,7 +48,7 @@ type sdiagnosticsSvc_diagnosticsBackend struct {
 
 type eDiagnosticsV1Endpoints struct {
 	Svc                         sdiagnosticsSvc_diagnosticsBackend
-	fnAutoWatchSvcDiagnosticsV1 func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
+	fnAutoWatchSvcDiagnosticsV1 func(in *api.AggWatchOptions, stream grpc.ServerStream, svcprefix string) error
 
 	fnAutoAddModule    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteModule func(ctx context.Context, t interface{}) (interface{}, error)
@@ -217,16 +217,24 @@ func (s *sdiagnosticsSvc_diagnosticsBackend) regWatchersFunc(ctx context.Context
 
 	// Add Watchers
 	{
-
 		// Service watcher
 		svc := s.Services["diagnostics.DiagnosticsV1"]
 		if svc != nil {
-			svc.WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfnMap map[string]func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
-				key := globals.ConfigRootPrefix + "/diagnostics"
+			svc.WithKvWatchFunc(func(l log.Logger, options *api.AggWatchOptions, kvs kvstore.Interface, stream interface{}, txfnMap map[string]func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
+				for _, o := range options.WatchOptions {
+					if o.Group != "diagnostics" {
+						return fmt.Errorf("invalid group [%s] in watch options", o.Group)
+					}
+				}
+				if len(options.WatchOptions) == 0 {
+					options.WatchOptions = append(options.WatchOptions, api.KindWatchOptions{Group: "diagnostics"})
+				}
 				wstream := stream.(grpc.ServerStream)
 				nctx, cancel := context.WithCancel(wstream.Context())
+				id := fmt.Sprintf("%s-%x", ctxutils.GetPeerID(nctx), &options)
+				nctx = ctxutils.SetContextID(nctx, id)
 				defer cancel()
-				watcher, err := kvs.WatchFiltered(nctx, key, *options)
+				watcher, err := kvs.WatchAggregate(nctx, *options)
 				if err != nil {
 					l.ErrorLog("msg", "error starting Watch for service", "err", err, "service", "DiagnosticsV1")
 					return err
@@ -417,7 +425,7 @@ func (e *eDiagnosticsV1Endpoints) Debug(ctx context.Context, t diagnostics.Diagn
 func (e *eDiagnosticsV1Endpoints) AutoWatchModule(in *api.ListWatchOptions, stream diagnostics.DiagnosticsV1_AutoWatchModuleServer) error {
 	return e.fnAutoWatchModule(in, stream, "diagnostics")
 }
-func (e *eDiagnosticsV1Endpoints) AutoWatchSvcDiagnosticsV1(in *api.ListWatchOptions, stream diagnostics.DiagnosticsV1_AutoWatchSvcDiagnosticsV1Server) error {
+func (e *eDiagnosticsV1Endpoints) AutoWatchSvcDiagnosticsV1(in *api.AggWatchOptions, stream diagnostics.DiagnosticsV1_AutoWatchSvcDiagnosticsV1Server) error {
 	return e.fnAutoWatchSvcDiagnosticsV1(in, stream, "")
 }
 

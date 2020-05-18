@@ -6,10 +6,14 @@ import (
 	"crypto/tls"
 	"net/http"
 
+	aggwatch "github.com/pensando/sw/api/generated/aggwatch"
+	aggwatchClient "github.com/pensando/sw/api/generated/aggwatch/grpc/client"
 	auth "github.com/pensando/sw/api/generated/auth"
 	authClient "github.com/pensando/sw/api/generated/auth/grpc/client"
 	bookstore "github.com/pensando/sw/api/generated/bookstore"
 	bookstoreClient "github.com/pensando/sw/api/generated/bookstore/grpc/client"
+	browser "github.com/pensando/sw/api/generated/browser"
+	browserClient "github.com/pensando/sw/api/generated/browser/grpc/client"
 	cluster "github.com/pensando/sw/api/generated/cluster"
 	clusterClient "github.com/pensando/sw/api/generated/cluster/grpc/client"
 	diagnostics "github.com/pensando/sw/api/generated/diagnostics"
@@ -41,8 +45,10 @@ import (
 type APIGroup string
 
 const (
+	GroupAggwatch      APIGroup = "aggwatch"
 	GroupAuth          APIGroup = "auth"
 	GroupBookstore     APIGroup = "bookstore"
+	GroupBrowser       APIGroup = "browser"
 	GroupCluster       APIGroup = "cluster"
 	GroupDiagnostics   APIGroup = "diagnostics"
 	GroupMonitoring    APIGroup = "monitoring"
@@ -60,10 +66,14 @@ const (
 type Services interface {
 	Close() error
 
+	// Package is aggwatch and len of messages is 0
+	AggWatchV1() aggwatch.AggWatchV1Interface
 	// Package is auth and len of messages is 5
 	AuthV1() auth.AuthV1Interface
 	// Package is bookstore and len of messages is 6
 	BookstoreV1() bookstore.BookstoreV1Interface
+	// Package is browser and len of messages is 0
+	BrowserV1() browser.BrowserV1Interface
 	// Package is cluster and len of messages is 10
 	ClusterV1() cluster.ClusterV1Interface
 	// Package is diagnostics and len of messages is 1
@@ -93,8 +103,10 @@ type apiGrpcServerClient struct {
 	logger log.Logger
 	client *rpckit.RPCClient
 
+	aAggWatchV1     aggwatch.AggWatchV1Interface
 	aAuthV1         auth.AuthV1Interface
 	aBookstoreV1    bookstore.BookstoreV1Interface
+	aBrowserV1      browser.BrowserV1Interface
 	aClusterV1      cluster.ClusterV1Interface
 	aDiagnosticsV1  diagnostics.DiagnosticsV1Interface
 	aMonitoringV1   monitoring.MonitoringV1Interface
@@ -113,12 +125,20 @@ func (a *apiGrpcServerClient) Close() error {
 	return a.client.Close()
 }
 
+func (a *apiGrpcServerClient) AggWatchV1() aggwatch.AggWatchV1Interface {
+	return a.aAggWatchV1
+}
+
 func (a *apiGrpcServerClient) AuthV1() auth.AuthV1Interface {
 	return a.aAuthV1
 }
 
 func (a *apiGrpcServerClient) BookstoreV1() bookstore.BookstoreV1Interface {
 	return a.aBookstoreV1
+}
+
+func (a *apiGrpcServerClient) BrowserV1() browser.BrowserV1Interface {
+	return a.aBrowserV1
 }
 
 func (a *apiGrpcServerClient) ClusterV1() cluster.ClusterV1Interface {
@@ -178,8 +198,10 @@ func NewGrpcAPIClient(clientName, url string, logger log.Logger, opts ...rpckit.
 		client: client,
 		logger: logger,
 
+		aAggWatchV1:     aggwatchClient.NewGrpcCrudClientAggWatchV1(client.ClientConn, logger),
 		aAuthV1:         authClient.NewGrpcCrudClientAuthV1(client.ClientConn, logger),
 		aBookstoreV1:    bookstoreClient.NewGrpcCrudClientBookstoreV1(client.ClientConn, logger),
+		aBrowserV1:      browserClient.NewGrpcCrudClientBrowserV1(client.ClientConn, logger),
 		aClusterV1:      clusterClient.NewGrpcCrudClientClusterV1(client.ClientConn, logger),
 		aDiagnosticsV1:  diagnosticsClient.NewGrpcCrudClientDiagnosticsV1(client.ClientConn, logger),
 		aMonitoringV1:   monitoringClient.NewGrpcCrudClientMonitoringV1(client.ClientConn, logger),
@@ -199,8 +221,10 @@ type apiRestServerClient struct {
 	logger        log.Logger
 	httpTransport *http.Transport
 
+	aAggWatchV1     aggwatch.AggWatchV1Interface
 	aAuthV1         auth.AuthV1Interface
 	aBookstoreV1    bookstore.BookstoreV1Interface
+	aBrowserV1      browser.BrowserV1Interface
 	aClusterV1      cluster.ClusterV1Interface
 	aDiagnosticsV1  diagnostics.DiagnosticsV1Interface
 	aMonitoringV1   monitoring.MonitoringV1Interface
@@ -222,12 +246,20 @@ func (a *apiRestServerClient) Close() error {
 	return nil
 }
 
+func (a *apiRestServerClient) AggWatchV1() aggwatch.AggWatchV1Interface {
+	return a.aAggWatchV1
+}
+
 func (a *apiRestServerClient) AuthV1() auth.AuthV1Interface {
 	return a.aAuthV1
 }
 
 func (a *apiRestServerClient) BookstoreV1() bookstore.BookstoreV1Interface {
 	return a.aBookstoreV1
+}
+
+func (a *apiRestServerClient) BrowserV1() browser.BrowserV1Interface {
+	return a.aBrowserV1
 }
 
 func (a *apiRestServerClient) ClusterV1() cluster.ClusterV1Interface {
@@ -288,8 +320,10 @@ func NewRestAPIClient(url string) (Services, error) {
 		logger:        log.WithContext("module", "RestAPIClient"),
 		httpTransport: ht,
 
+		aAggWatchV1:     aggwatchClient.NewRestCrudClientAggWatchV1(url, httpClient),
 		aAuthV1:         authClient.NewRestCrudClientAuthV1(url, httpClient),
 		aBookstoreV1:    bookstoreClient.NewRestCrudClientBookstoreV1(url, httpClient),
+		aBrowserV1:      browserClient.NewRestCrudClientBrowserV1(url, httpClient),
 		aClusterV1:      clusterClient.NewRestCrudClientClusterV1(url, httpClient),
 		aDiagnosticsV1:  diagnosticsClient.NewRestCrudClientDiagnosticsV1(url, httpClient),
 		aMonitoringV1:   monitoringClient.NewRestCrudClientMonitoringV1(url, httpClient),
@@ -318,8 +352,10 @@ func NewStagedRestAPIClient(url string, bufferId string) (Services, error) {
 		logger:        log.WithContext("module", "RestAPIClient"),
 		httpTransport: ht,
 
+		aAggWatchV1:     aggwatchClient.NewStagedRestCrudClientAggWatchV1(url, bufferId, httpClient),
 		aAuthV1:         authClient.NewStagedRestCrudClientAuthV1(url, bufferId, httpClient),
 		aBookstoreV1:    bookstoreClient.NewStagedRestCrudClientBookstoreV1(url, bufferId, httpClient),
+		aBrowserV1:      browserClient.NewStagedRestCrudClientBrowserV1(url, bufferId, httpClient),
 		aClusterV1:      clusterClient.NewStagedRestCrudClientClusterV1(url, bufferId, httpClient),
 		aDiagnosticsV1:  diagnosticsClient.NewStagedRestCrudClientDiagnosticsV1(url, bufferId, httpClient),
 		aMonitoringV1:   monitoringClient.NewStagedRestCrudClientMonitoringV1(url, bufferId, httpClient),

@@ -849,7 +849,7 @@ func (ma *APIClient) License() cmd.ClusterV1LicenseInterface {
 }
 
 // Watch implements a watch on the service - nill till we need this functionality
-func (ma *APIClient) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+func (ma *APIClient) Watch(ctx context.Context, options *api.AggWatchOptions) (kvstore.Watcher, error) {
 	return nil, nil
 }
 

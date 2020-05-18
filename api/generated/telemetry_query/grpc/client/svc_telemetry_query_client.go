@@ -3,6 +3,10 @@
 package grpcclient
 
 import (
+	"context"
+	"errors"
+	"net/http"
+
 	"github.com/go-kit/kit/endpoint"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
 	"google.golang.org/grpc"
@@ -64,4 +68,35 @@ func NewTelemetryV1Backend(conn *grpc.ClientConn, logger log.Logger) telemetry_q
 	cl := NewTelemetryV1(conn, logger)
 	cl = telemetry_query.LoggingTelemetryV1MiddlewareClient(logger)(cl)
 	return cl
+}
+
+type crudClientTelemetryV1 struct {
+	logger log.Logger
+	client telemetry_query.ServiceTelemetryV1Client
+}
+
+// NewGrpcCrudClientTelemetryV1 creates a GRPC client for the service
+func NewGrpcCrudClientTelemetryV1(conn *grpc.ClientConn, logger log.Logger) telemetry_query.TelemetryV1Interface {
+	client := NewTelemetryV1Backend(conn, logger)
+	return &crudClientTelemetryV1{
+		logger: logger,
+		client: client,
+	}
+}
+
+type crudRestClientTelemetryV1 struct {
+}
+
+// NewRestCrudClientTelemetryV1 creates a REST client for the service.
+func NewRestCrudClientTelemetryV1(url string, httpClient *http.Client) telemetry_query.TelemetryV1Interface {
+	return &crudRestClientTelemetryV1{}
+}
+
+// NewStagedRestCrudClientTelemetryV1 creates a REST client for the service.
+func NewStagedRestCrudClientTelemetryV1(url string, id string, httpClient *http.Client) telemetry_query.TelemetryV1Interface {
+	return &crudRestClientTelemetryV1{}
+}
+
+func (a *crudRestClientTelemetryV1) Watch(ctx context.Context, options *api.AggWatchOptions) (kvstore.Watcher, error) {
+	return nil, errors.New("method unimplemented")
 }

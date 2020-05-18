@@ -465,6 +465,12 @@ func (e *etcdStore) WatchFiltered(ctx context.Context, key string, opts api.List
 	return w, nil
 }
 
+// WatchAggregate watches changes on all objects with filters specified
+// by opts applied.
+func (e *etcdStore) WatchAggregate(ctx context.Context, opts api.AggWatchOptions) (kvstore.Watcher, error) {
+	return nil, errors.New("not implemented")
+}
+
 // Contest creates a new contender in an election. name is the name of the
 // election. id is the identifier of the contender. When a leader is elected,
 // the leader's lease is automatically refreshed. ttl is the timeout for lease

@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"sort"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -73,7 +74,9 @@ type WatchQueueStat struct {
 // WatchedPrefixes is an interface for managing WatchEventQueues
 type WatchedPrefixes interface {
 	Add(path, peer string) WatchEventQ
-	Del(path, peer string) WatchEventQ
+	AddAggregate(paths []string, peer string) WatchEventQ
+	DelAggregate(paths []string, peer string) error
+	Del(path, peer string) error
 	Get(path string) []WatchEventQ
 	GetExact(path string) WatchEventQ
 	Stats() map[string][]WatchQueueStat
@@ -137,12 +140,18 @@ type watchEventQ struct {
 	sync.Mutex
 	// path is the KV path pertaining to the eventQueue
 	path string
+	// multiPath is set to true if this is a aggregate watch queue
+	multiPath bool
+	// paths is valid if  multiPath is set to true
+	paths []string
 	// Store for the cache
 	store apiintf.Store
 	// eventList is the queue of events
 	eventList *safelist.SafeList
 	// watcherList is the list of watchers currently active
 	watcherList *safelist.SafeList
+	// mpathQueues is the list of aggregate watchers also interested in this path.
+	mpathQueues *safelist.SafeList
 	// refCount is the number of references to this watchEventQ
 	refCount int
 	// cond is the condition variable that will be signaled on enqueue
@@ -207,13 +216,29 @@ func NewWatchedPrefixes(logger log.Logger, store apiintf.Store, config WatchEven
 	return ret
 }
 
-// Add adds a new Watcher to the cache.
-func (w *watchedPrefixes) Add(path, peer string) WatchEventQ {
-	w.log.DebugLog("oper", "AddWatchedPrefix", "prefix", path)
+func (w *watchedPrefixes) AddAggregate(paths []string, peer string) WatchEventQ {
+	w.log.DebugLog("oper", "AddAggregate", "prefixes", paths)
+	// For aggregate watches a new watch queue is created and mpath elements are added to all the paths
+	//  so as to receive events. Reuseability is achieved by inserting a composite key made of all paths.
 	defer w.Unlock()
 	w.Lock()
-	prefix := patricia.Prefix(path)
-	i := w.trie.Get(prefix)
+
+	if len(paths) < 1 {
+		log.ErrorLog("msg", "received 0 paths in AddAggregate", "Peer-Id", peer)
+		return nil
+	}
+	// if the number of paths is 1 fallback to the regular WatchQ
+	if len(paths) == 1 {
+		return w.Add(paths[0], peer)
+	}
+
+	keys := []string{}
+	for _, s := range paths {
+		keys = append(keys, s)
+	}
+	sort.Strings(keys)
+	aprefix := patricia.Prefix(strings.Join(keys, ":"))
+	i := w.trie.Get(aprefix)
 	if i != nil {
 		q := i.(*watchEventQ)
 		defer q.Unlock()
@@ -221,19 +246,95 @@ func (w *watchedPrefixes) Add(path, peer string) WatchEventQ {
 		q.refCount++
 		return q
 	}
+
 	ret := &watchEventQ{
 		log: w.log,
 	}
-	ret.eventList = safelist.New()
-	ret.watcherList = safelist.New()
-	ret.refCount = 1
-	ret.cond = &sync.Cond{L: &sync.Mutex{}}
-	ret.stopCh = make(chan error)
-	ret.notifyCh = make(chan error, 1)
+	ret.init()
+	ret.paths = paths
+	ret.store = w.store
+	ret.config = w.watchConfig
+	ret.multiPath = true
+	for _, p := range paths {
+		w.addOne(p, peer, ret)
+	}
+	w.trie.Insert(aprefix, ret)
+	w.log.InfoLog("oper", "AddAggregateWatch", "paths", fmt.Sprintf("%v", paths), "peer", peer, "msg", "starting watcher")
+	ret.start()
+	return ret
+}
+
+func (w *watchedPrefixes) DelAggregate(paths []string, peer string) error {
+	w.log.DebugLog("oper", "AddAggregate", "prefixes", paths)
+	// For aggregate watches a new watch queue is created and mpath elements are added to all the paths
+	//  so as to receive events. Reuseability is achieved by inserting a composite key made of all paths.
+	defer w.Unlock()
+	w.Lock()
+
+	if len(paths) < 1 {
+		log.ErrorLog("msg", "received 0 paths in AddAggregate", "Peer-Id", peer)
+		return fmt.Errorf("invalid arguments, got 0 paths")
+	}
+	// if the number of paths is 1 fallback to the regular WatchQ
+	if len(paths) == 1 {
+		w.Del(paths[0], peer)
+		return nil
+	}
+
+	keys := []string{}
+	for _, s := range paths {
+		keys = append(keys, s)
+	}
+	sort.Strings(keys)
+	aprefix := patricia.Prefix(strings.Join(keys, ":"))
+	i := w.trie.Get(aprefix)
+	if i != nil {
+		q := i.(*watchEventQ)
+		for _, p := range paths {
+			w.delOne(p, peer)
+		}
+		q.refCount--
+		if q.refCount != 0 {
+			return nil
+		}
+		last := q.Stop()
+		if last {
+			w.log.InfoLog("oper", "DelWatchedAggregate", "prefix", paths, "peer", peer, "msg", "last watcher")
+			w.trie.Delete(aprefix)
+		}
+		return nil
+	}
+
+	return fmt.Errorf("not found")
+}
+
+func (w *watchedPrefixes) addOne(path, peer string, mpath *watchEventQ) WatchEventQ {
+	prefix := patricia.Prefix(path)
+	i := w.trie.Get(prefix)
+	if i != nil {
+		q := i.(*watchEventQ)
+		defer q.Unlock()
+		q.Lock()
+		if mpath != nil {
+			// multipath watcher add
+			if q.multiPath {
+				log.Fatalf("attempt to add a multipath watcher to a multipath queue [%v]/[%v]/[%v]", path, mpath.paths, q.path)
+			}
+			q.mpathQueues.Insert(mpath)
+		}
+		q.refCount++
+		return q
+	}
+	ret := &watchEventQ{
+		log: w.log,
+	}
+	ret.init()
 	ret.path = path
 	ret.store = w.store
 	ret.config = w.watchConfig
-	ret.versioner = runtime.NewObjectVersioner()
+	if mpath != nil {
+		ret.mpathQueues.Insert(mpath)
+	}
 	w.trie.Insert(prefix, ret)
 
 	w.log.InfoLog("oper", "AddWatchedPrefix", "prefix", path, "peer", peer, "msg", "starting watcher")
@@ -241,12 +342,7 @@ func (w *watchedPrefixes) Add(path, peer string) WatchEventQ {
 	return ret
 }
 
-// Del removes a Watcher from the cache. This will free up any events pending in the queue
-// and cleanup any watchers using the Queue.
-func (w *watchedPrefixes) Del(path, peer string) WatchEventQ {
-	w.log.DebugLog("oper", "DelWatchedPrefix", "prefix", path)
-	defer w.Unlock()
-	w.Lock()
+func (w *watchedPrefixes) delOne(path, peer string) error {
 	prefix := patricia.Prefix(path)
 	i := w.trie.Get(prefix)
 	if i != nil {
@@ -261,13 +357,41 @@ func (w *watchedPrefixes) Del(path, peer string) WatchEventQ {
 	return nil
 }
 
+// Add adds a new Watcher to the cache.
+func (w *watchedPrefixes) Add(path, peer string) WatchEventQ {
+	w.log.DebugLog("oper", "AddWatchedPrefix", "prefix", path)
+	defer w.Unlock()
+	w.Lock()
+	return w.addOne(path, peer, nil)
+}
+
+// Del removes a Watcher from the cache. This will free up any events pending in the queue
+// and cleanup any watchers using the Queue.
+func (w *watchedPrefixes) Del(path, peer string) error {
+	w.log.DebugLog("oper", "DelWatchedPrefix", "prefix", path)
+	defer w.Unlock()
+	w.Lock()
+	w.delOne(path, peer)
+	return nil
+}
+
 // Get returns all watcher Queues for the path, including all parents.
 func (w *watchedPrefixes) Get(path string) []WatchEventQ {
 	defer w.RUnlock()
 	w.RLock()
 	var ret []WatchEventQ
+	collectFromList := func(in interface{}) bool {
+		mq := in.(*watchEventQ)
+		ret = append(ret, mq)
+		return true
+	}
 	collectfn := func(prefix patricia.Prefix, item patricia.Item) error {
-		ret = append(ret, item.(*watchEventQ))
+		q := item.(*watchEventQ)
+		if q.watcherList.Len() != 0 {
+			ret = append(ret, q)
+		}
+		// add any multi-path receivers
+		q.mpathQueues.Iterate(collectFromList)
 		return nil
 	}
 	w.trie.VisitPrefixes(patricia.Prefix(path), collectfn)
@@ -338,6 +462,14 @@ func (w *watchEventQ) Enqueue(evType kvstore.WatchEventType, obj, prev runtime.O
 	}
 	w.eventList.Insert(i)
 	w.notify()
+	mpathInsertFn := func(in interface{}) bool {
+		q := in.(*watchEventQ)
+		q.eventList.Insert(i)
+		q.notify()
+		q.stats.enqueues.Add(1)
+		return true
+	}
+	w.mpathQueues.Iterate(mpathInsertFn)
 	w.stats.enqueues.Add(1)
 	histogram.Record("watch.Enqueue", time.Since(start))
 	return nil
@@ -374,8 +506,8 @@ func (w *watchEventQ) Dequeue(ctx context.Context,
 
 		histogram.Record("watch.DequeueLatency", time.Since(obj.enqts))
 		go func() {
-			w.log.DebugLog("oper", "WatchEventQDequeue", "msg", "Send", "type", obj.evType, "path", w.path, "ResVersion", obj.version, "peer", peer)
-			cb(tracker.ctx, obj.evType, obj.item, obj.prev)
+			w.log.InfoLog("oper", "WatchEventQDequeue", "msg", "Send", "type", obj.evType, "path", w.path, "ResVersion", obj.version, "peer", peer)
+			cb(tracker.ctx, obj.evType, obj.item, obj.prev, nil)
 			close(sendCh)
 		}()
 		select {
@@ -388,6 +520,22 @@ func (w *watchEventQ) Dequeue(ctx context.Context,
 		w.stats.dequeues.Add(1)
 	}
 
+	sendControl := func(control *kvstore.WatchControl) {
+		sendCh := make(chan error)
+
+		go func() {
+			w.log.InfoLog("oper", "WatchEventQDequeue", "msg", "Send", "type", "Control", "path", w.path, "Code", control.Code, "ControlMessage", control.Message, "peer", peer)
+			cb(tracker.ctx, kvstore.WatcherControl, nil, nil, control)
+			close(sendCh)
+		}()
+		select {
+		case <-sendCh:
+		}
+		tracker.Lock()
+		tracker.lastUpd = time.Now()
+		tracker.Unlock()
+		w.stats.dequeues.Add(1)
+	}
 	// Freeze the janitor at its current version
 	tracker.Lock()
 	w.janitorVerMu.Lock()
@@ -409,19 +557,13 @@ func (w *watchEventQ) Dequeue(ctx context.Context,
 		// if there have been recent deletes.
 		var item *list.Element
 		var qver uint64
+		var err error
 		item = w.eventList.Back()
 		if item != nil {
 			obj := item.Value.(*watchEvent)
 			qver = obj.version
 		}
-		kind := ""
-		k, ok := apiutils.GetVar(ctx, apiutils.CtxKeyObjKind)
-		if ok {
-			kind = k.(string)
-		}
-		// List all objects
-		objs, err := w.store.List(w.path, kind, lopts)
-		if err == nil {
+		sendList := func(objs []runtime.Object) {
 			sort.Slice(objs, func(i int, j int) bool {
 				v1, err := w.versioner.GetVersion(objs[i])
 				if err != nil {
@@ -449,18 +591,52 @@ func (w *watchEventQ) Dequeue(ctx context.Context,
 					panic("could not retrieve object version")
 				}
 				w.log.InfoLog("oper", "WatchEventQDequeue", "msg", "Send", "reason", "list", "type", kvstore.Created, "path", w.path, "peer", peer, "ResVersion", ver)
-				cb(tracker.ctx, kvstore.Created, obj, nil)
+				cb(tracker.ctx, kvstore.Created, obj, nil, nil)
 				tracker.Lock()
 				tracker.version = ver
 				tracker.lastUpd = time.Now()
 				tracker.Unlock()
 			}
 		}
-		startVer = maxver + 1
-		if qver+1 > startVer {
-			startVer = qver + 1
+		if w.multiPath {
+			// multipath Dequeue.
+			//  - take a snapshot of the store for consistency.
+			//  - list all objects in order of kinds provided in watch
+			//  - use the snapshot ver as the from ver and start incremental watch
+			snapVer := w.store.StartSnapshot()
+			for _, p := range w.paths {
+				// XXX- FIX NOW get kind for fieldselectors
+				objs, err := w.store.ListFromSnapshot(snapVer, p, "", api.ListWatchOptions{})
+				if err == nil {
+					sendList(objs)
+				}
+			}
+			w.store.DeleteSnapshot(snapVer)
+			control := &kvstore.WatchControl{
+				Code:    api.WatchControlCodeListDone,
+				Message: "Listing for multipath watch complete",
+			}
+			sendControl(control)
+			startVer = snapVer + 1
+			w.log.InfoLog("oper", "WatchEventQDequeue", "startVer", startVer, "path", fmt.Sprintf("%v", w.paths), "fromVer", fromver, "peer", peer)
+		} else {
+			kind := ""
+			k, ok := apiutils.GetVar(ctx, apiutils.CtxKeyObjKind)
+			if ok {
+				kind = k.(string)
+			}
+			// List all objects
+			objs, err := w.store.List(w.path, kind, *opts)
+			if err == nil {
+				sendList(objs)
+			}
+			startVer = maxver + 1
+			if qver+1 > startVer {
+				startVer = qver + 1
+			}
+			w.log.InfoLog("oper", "WatchEventQDequeue", "startVer", startVer, "path", w.path, "fromVer", fromver, "peer", peer)
 		}
-		w.log.InfoLog("oper", "WatchEventQDequeue", "startVer", startVer, "path", w.path, "fromVer", fromver, "peer", peer)
+
 	} else {
 		startVer = fromver
 	}
@@ -480,7 +656,7 @@ func (w *watchEventQ) Dequeue(ctx context.Context,
 				Code:    http.StatusGone,
 			}
 			w.log.InfoLog("oper", "WatchEventQDequeueSend", "type", kvstore.WatcherError, "path", w.path, "reason", "catch up", "peer", peer)
-			cb(tracker.ctx, kvstore.WatcherError, &errmsg, nil)
+			cb(tracker.ctx, kvstore.WatcherError, &errmsg, nil, nil)
 			return
 		}
 		// ignore events older than startVer
@@ -497,6 +673,7 @@ func (w *watchEventQ) Dequeue(ctx context.Context,
 				// bail out here instead of iterating through items and then exiting.
 				return
 			default:
+				log.Infof("semd 1 [%+v]", item)
 				sendevent(item)
 				prev = item
 				item = item.Next()
@@ -511,7 +688,7 @@ func (w *watchEventQ) Dequeue(ctx context.Context,
 				Code:    http.StatusGone,
 			}
 			w.log.InfoLog("oper", "WatchEventQDequeueSend", "type", kvstore.WatcherError, "path", w.path, "reason", "catch up", "peer", peer)
-			cb(tracker.ctx, kvstore.WatcherError, &errmsg, nil)
+			cb(tracker.ctx, kvstore.WatcherError, &errmsg, nil, nil)
 			return
 		}
 	}
@@ -691,6 +868,18 @@ func (w *watchEventQ) start() {
 	}
 	go w.janitor()
 	go w.notifier()
+}
+
+func (w *watchEventQ) init() {
+	w.eventList = safelist.New()
+	w.watcherList = safelist.New()
+	w.mpathQueues = safelist.New()
+	w.refCount = 1
+	w.cond = &sync.Cond{L: &sync.Mutex{}}
+	w.stopCh = make(chan error)
+	w.notifyCh = make(chan error, 1)
+
+	w.versioner = runtime.NewObjectVersioner()
 }
 
 // Stop cleans up the WatchEventQ

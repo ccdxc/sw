@@ -13,3 +13,7 @@ import (
 var _ context.Context
 var _ api.ObjectMeta
 var _ kvstore.Interface
+
+// SearchV1Interface exposes objects with CRUD operations allowed by the service
+type SearchV1Interface interface {
+}

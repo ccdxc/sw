@@ -9,6 +9,7 @@ package searchGwService
 import (
 	"context"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -22,6 +23,7 @@ import (
 	search "github.com/pensando/sw/api/generated/search"
 	grpcclient "github.com/pensando/sw/api/generated/search/grpc/client"
 	"github.com/pensando/sw/api/interfaces"
+	"github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apiserver"
@@ -97,8 +99,58 @@ func (a adapterSearchV1) Query(oldctx oldcontext.Context, t *search.SearchReques
 	return ret.(*search.SearchResponse), err
 }
 
-func (a adapterSearchV1) AutoWatchSvcSearchV1(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (search.SearchV1_AutoWatchSvcSearchV1Client, error) {
-	return nil, errors.New("not implemented")
+func (a adapterSearchV1) AutoWatchSvcSearchV1(oldctx oldcontext.Context, in *api.AggWatchOptions, options ...grpc.CallOption) (search.SearchV1_AutoWatchSvcSearchV1Client, error) {
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoWatchSvcSearchV1")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group := apiintf.WatchOper, "", in.Tenant, in.Namespace, "search"
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.AggWatchOptions)
+		iws, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwWebSocketWatch)
+		if ok && iws.(bool) {
+			nctx, cancel := context.WithCancel(ctx)
+			ir, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwHTTPReq)
+			if !ok {
+				return nil, errors.New("unable to retrieve request")
+			}
+			iw, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwHTTPWriter)
+			if !ok {
+				return nil, errors.New("unable to retrieve writer")
+			}
+			conn, err := wsUpgrader.Upgrade(iw.(http.ResponseWriter), ir.(*http.Request), nil)
+			if err != nil {
+				log.Errorf("WebSocket Upgrade failed (%s)", err)
+				return nil, err
+			}
+			ctx = apiutils.SetVar(nctx, apiutils.CtxKeyAPIGwWebSocketConn, conn)
+			conn.SetCloseHandler(func(code int, text string) error {
+				cancel()
+				log.Infof("received close notification on websocket [AutoWatchSearchV1] (%v/%v)", code, text)
+				return nil
+			})
+			// start a dummy reciever
+			go func() {
+				for {
+					_, _, err := conn.ReadMessage()
+					if err != nil {
+						log.Errorf("received error on websocket receive (%s)", err)
+						cancel()
+						return
+					}
+				}
+			}()
+		}
+		return a.service.AutoWatchSvcSearchV1(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, in, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(search.SearchV1_AutoWatchSvcSearchV1Client), err
 }
 
 func (e *sSearchV1GwService) setupSvcProfile() {

@@ -88,7 +88,7 @@ type MiddlewareObjstoreV1Server func(ServiceObjstoreV1Server) ServiceObjstoreV1S
 
 // EndpointsObjstoreV1Server is the server endpoints
 type EndpointsObjstoreV1Server struct {
-	svcWatchHandlerObjstoreV1 func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	svcWatchHandlerObjstoreV1 func(options *api.AggWatchOptions, stream grpc.ServerStream) error
 
 	AutoAddBucketEndpoint    endpoint.Endpoint
 	AutoAddObjectEndpoint    endpoint.Endpoint
@@ -275,7 +275,7 @@ type respObjstoreV1AutoUpdateObject struct {
 	Err error
 }
 
-func (e EndpointsObjstoreV1Client) AutoWatchSvcObjstoreV1(ctx context.Context, in *api.ListWatchOptions) (ObjstoreV1_AutoWatchSvcObjstoreV1Client, error) {
+func (e EndpointsObjstoreV1Client) AutoWatchSvcObjstoreV1(ctx context.Context, in *api.AggWatchOptions) (ObjstoreV1_AutoWatchSvcObjstoreV1Client, error) {
 	return e.Client.AutoWatchSvcObjstoreV1(ctx, in)
 }
 
@@ -560,13 +560,13 @@ func MakeObjstoreV1AutoUpdateObjectEndpoint(s ServiceObjstoreV1Server, logger lo
 	return trace.ServerEndpoint("ObjstoreV1:AutoUpdateObject")(f)
 }
 
-func (e EndpointsObjstoreV1Server) AutoWatchSvcObjstoreV1(in *api.ListWatchOptions, stream ObjstoreV1_AutoWatchSvcObjstoreV1Server) error {
+func (e EndpointsObjstoreV1Server) AutoWatchSvcObjstoreV1(in *api.AggWatchOptions, stream ObjstoreV1_AutoWatchSvcObjstoreV1Server) error {
 	return e.svcWatchHandlerObjstoreV1(in, stream)
 }
 
 // MakeAutoWatchSvcObjstoreV1Endpoint creates the Watch endpoint for the service
-func MakeAutoWatchSvcObjstoreV1Endpoint(s ServiceObjstoreV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
-	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+func MakeAutoWatchSvcObjstoreV1Endpoint(s ServiceObjstoreV1Server, logger log.Logger) func(options *api.AggWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.AggWatchOptions, stream grpc.ServerStream) error {
 		wstream := stream.(ObjstoreV1_AutoWatchSvcObjstoreV1Server)
 		return s.AutoWatchSvcObjstoreV1(options, wstream)
 	}
@@ -815,7 +815,7 @@ func (m loggingObjstoreV1MiddlewareClient) AutoUpdateObject(ctx context.Context,
 	return
 }
 
-func (m loggingObjstoreV1MiddlewareClient) AutoWatchSvcObjstoreV1(ctx context.Context, in *api.ListWatchOptions) (resp ObjstoreV1_AutoWatchSvcObjstoreV1Client, err error) {
+func (m loggingObjstoreV1MiddlewareClient) AutoWatchSvcObjstoreV1(ctx context.Context, in *api.AggWatchOptions) (resp ObjstoreV1_AutoWatchSvcObjstoreV1Client, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -1040,7 +1040,7 @@ func (m loggingObjstoreV1MiddlewareServer) AutoUpdateObject(ctx context.Context,
 	return
 }
 
-func (m loggingObjstoreV1MiddlewareServer) AutoWatchSvcObjstoreV1(in *api.ListWatchOptions, stream ObjstoreV1_AutoWatchSvcObjstoreV1Server) (err error) {
+func (m loggingObjstoreV1MiddlewareServer) AutoWatchSvcObjstoreV1(in *api.AggWatchOptions, stream ObjstoreV1_AutoWatchSvcObjstoreV1Server) (err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -1195,7 +1195,7 @@ func makeURIObjstoreV1AutoWatchObjectWatchOper(in *api.ListWatchOptions) string 
 }
 
 //
-func makeURIObjstoreV1AutoWatchSvcObjstoreV1WatchOper(in *api.ListWatchOptions) string {
+func makeURIObjstoreV1AutoWatchSvcObjstoreV1WatchOper(in *api.AggWatchOptions) string {
 	return ""
 
 }

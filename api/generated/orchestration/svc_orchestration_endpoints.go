@@ -72,7 +72,7 @@ type MiddlewareOrchestratorV1Server func(ServiceOrchestratorV1Server) ServiceOrc
 
 // EndpointsOrchestratorV1Server is the server endpoints
 type EndpointsOrchestratorV1Server struct {
-	svcWatchHandlerOrchestratorV1 func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	svcWatchHandlerOrchestratorV1 func(options *api.AggWatchOptions, stream grpc.ServerStream) error
 
 	AutoAddOrchestratorEndpoint    endpoint.Endpoint
 	AutoDeleteOrchestratorEndpoint endpoint.Endpoint
@@ -168,7 +168,7 @@ type respOrchestratorV1AutoUpdateOrchestrator struct {
 	Err error
 }
 
-func (e EndpointsOrchestratorV1Client) AutoWatchSvcOrchestratorV1(ctx context.Context, in *api.ListWatchOptions) (OrchestratorV1_AutoWatchSvcOrchestratorV1Client, error) {
+func (e EndpointsOrchestratorV1Client) AutoWatchSvcOrchestratorV1(ctx context.Context, in *api.AggWatchOptions) (OrchestratorV1_AutoWatchSvcOrchestratorV1Client, error) {
 	return e.Client.AutoWatchSvcOrchestratorV1(ctx, in)
 }
 
@@ -309,13 +309,13 @@ func MakeOrchestratorV1AutoUpdateOrchestratorEndpoint(s ServiceOrchestratorV1Ser
 	return trace.ServerEndpoint("OrchestratorV1:AutoUpdateOrchestrator")(f)
 }
 
-func (e EndpointsOrchestratorV1Server) AutoWatchSvcOrchestratorV1(in *api.ListWatchOptions, stream OrchestratorV1_AutoWatchSvcOrchestratorV1Server) error {
+func (e EndpointsOrchestratorV1Server) AutoWatchSvcOrchestratorV1(in *api.AggWatchOptions, stream OrchestratorV1_AutoWatchSvcOrchestratorV1Server) error {
 	return e.svcWatchHandlerOrchestratorV1(in, stream)
 }
 
 // MakeAutoWatchSvcOrchestratorV1Endpoint creates the Watch endpoint for the service
-func MakeAutoWatchSvcOrchestratorV1Endpoint(s ServiceOrchestratorV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
-	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+func MakeAutoWatchSvcOrchestratorV1Endpoint(s ServiceOrchestratorV1Server, logger log.Logger) func(options *api.AggWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.AggWatchOptions, stream grpc.ServerStream) error {
 		wstream := stream.(OrchestratorV1_AutoWatchSvcOrchestratorV1Server)
 		return s.AutoWatchSvcOrchestratorV1(options, wstream)
 	}
@@ -459,7 +459,7 @@ func (m loggingOrchestratorV1MiddlewareClient) AutoUpdateOrchestrator(ctx contex
 	return
 }
 
-func (m loggingOrchestratorV1MiddlewareClient) AutoWatchSvcOrchestratorV1(ctx context.Context, in *api.ListWatchOptions) (resp OrchestratorV1_AutoWatchSvcOrchestratorV1Client, err error) {
+func (m loggingOrchestratorV1MiddlewareClient) AutoWatchSvcOrchestratorV1(ctx context.Context, in *api.AggWatchOptions) (resp OrchestratorV1_AutoWatchSvcOrchestratorV1Client, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -566,7 +566,7 @@ func (m loggingOrchestratorV1MiddlewareServer) AutoUpdateOrchestrator(ctx contex
 	return
 }
 
-func (m loggingOrchestratorV1MiddlewareServer) AutoWatchSvcOrchestratorV1(in *api.ListWatchOptions, stream OrchestratorV1_AutoWatchSvcOrchestratorV1Server) (err error) {
+func (m loggingOrchestratorV1MiddlewareServer) AutoWatchSvcOrchestratorV1(in *api.AggWatchOptions, stream OrchestratorV1_AutoWatchSvcOrchestratorV1Server) (err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -657,7 +657,7 @@ func makeURIOrchestratorV1AutoWatchOrchestratorWatchOper(in *api.ListWatchOption
 }
 
 //
-func makeURIOrchestratorV1AutoWatchSvcOrchestratorV1WatchOper(in *api.ListWatchOptions) string {
+func makeURIOrchestratorV1AutoWatchSvcOrchestratorV1WatchOper(in *api.AggWatchOptions) string {
 	return ""
 
 }

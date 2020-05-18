@@ -40,6 +40,11 @@ func (f *FakeCache) Watchfiltered(ctx context.Context, key string, opts api.List
 	return nil, nil
 }
 
+// WatchAggregate is mock implementation
+func (f *FakeCache) WatchAggregate(ctx context.Context, opts api.AggWatchOptions) (kvstore.Watcher, error) {
+	return nil, nil
+}
+
 // Start is mock implementation
 func (f *FakeCache) Start() error {
 	return nil
@@ -122,6 +127,7 @@ type FakeKvStore struct {
 	Updatefn                       func(ctx context.Context, key string, obj runtime.Object) error
 	Watchfn                        func(ctx context.Context, key string, fromVersion string) (kvstore.Watcher, error)
 	Fwatchfn                       func(ctx context.Context, key string, opts api.ListWatchOptions) kvstore.Watcher
+	FwatchAggfn                    func(ctx context.Context, opts api.AggWatchOptions) kvstore.Watcher
 	Getfn                          func(ctx context.Context, key string, into runtime.Object) error
 	Listfn                         func(ctx context.Context, prefix string, into runtime.Object) error
 	Txn                            *FakeTxn
@@ -210,6 +216,15 @@ func (f *FakeKvStore) WatchFiltered(ctx context.Context, key string, opts api.Li
 	return nil, nil
 }
 
+// WatchAggregate is mock implementation
+func (f *FakeKvStore) WatchAggregate(ctx context.Context, opts api.AggWatchOptions) (kvstore.Watcher, error) {
+	f.Watchfiltereds++
+	if f.FwatchAggfn != nil {
+		return f.FwatchAggfn(ctx, opts), nil
+	}
+	return nil, nil
+}
+
 // PrefixWatch is mock implementation
 func (f *FakeKvStore) PrefixWatch(ctx context.Context, prefix string, fromVersion string) (kvstore.Watcher, error) {
 	f.Prefixwatches++
@@ -265,6 +280,7 @@ type FakeStore struct {
 	Sets, Gets, Deletes       uint64
 	Lists, Flushes, Stats     uint64
 	Marks, Sweeps, DelDeleted uint64
+	SnapShotRev               uint64
 	Setfn                     func(key string, rev uint64, obj runtime.Object, cb apiintf.SuccessCbFunc) error
 	Getfn                     func(key string) (runtime.Object, error)
 	Deletefn                  func(key string, rev uint64, cb apiintf.SuccessCbFunc) (runtime.Object, error)
@@ -355,7 +371,7 @@ func (f *FakeStore) ListFromSnapshot(rev uint64, key, kind string, opts api.List
 
 // StartSnapshot is a mock implementation
 func (f *FakeStore) StartSnapshot() uint64 {
-	return 0
+	return f.SnapShotRev
 }
 
 // DeleteSnapshot is a mock implementation

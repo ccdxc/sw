@@ -91,7 +91,7 @@ func TestSvcWatch(t *testing.T) {
 	var pass bool
 	var called int
 	var err error
-	watchFn := func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfnMap map[string]func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
+	watchFn := func(l log.Logger, options *api.AggWatchOptions, kvs kvstore.Interface, stream interface{}, txfnMap map[string]func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
 		pass = reflect.DeepEqual(txfnMap, svc.prepMsgMap)
 		if !pass {
 			t.Errorf("Maps does not match got [%+v] want [%+v]", txfnMap, svc.prepMsgMap)

@@ -62,6 +62,34 @@
     }
   },
   "definitions": {
+    "apiAggWatchOptions": {
+      "type": "object",
+      "properties": {
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "watch-options": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiKindWatchOptions"
+          }
+        }
+      }
+    },
+    "apiKindWatchOptions": {
+      "type": "object",
+      "properties": {
+        "group": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "options": {
+          "$ref": "#/definitions/apiListWatchOptions"
+        }
+      }
+    },
     "apiListWatchOptions": {
       "type": "object",
       "required": [
@@ -336,6 +364,18 @@
         }
       }
     },
+    "apiWatchControl": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
     "apiWatchEvent": {
       "type": "object",
       "properties": {
@@ -344,6 +384,9 @@
         },
         "object": {
           "$ref": "#/definitions/googleprotobufAny"
+        },
+        "control": {
+          "$ref": "#/definitions/apiWatchControl"
         }
       }
     },

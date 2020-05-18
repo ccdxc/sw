@@ -2,6 +2,7 @@ package watchstream
 
 import (
 	"context"
+	"reflect"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -24,6 +25,7 @@ func TestWatchedPrefixes(t *testing.T) {
 	}
 	wp := watchedPrefixes{
 		log:         log.GetNewLogger(log.GetDefaultConfig("cacheWatchTest")),
+		store:       &mocks.FakeStore{},
 		watchConfig: wconfig,
 	}
 	wp.init()
@@ -47,15 +49,37 @@ func TestWatchedPrefixes(t *testing.T) {
 		t.Errorf("expecting refcount 2 got %d/%d", o1.refCount, o2.refCount)
 	}
 
-	wp.Add("/testpath/one/two", "peer1")
+	cbfunc := func(inctx context.Context, evType kvstore.WatchEventType, obj, prev runtime.Object, control *kvstore.WatchControl) {
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	t3 := wp.Add("/testpath/one/two", "peer1")
 	r = wp.Get("/testpath/")
 	if len(r) != 0 {
 		t.Errorf("expecting 0 found %d", len(r))
 	}
 	r = wp.Get("/testpath/one")
+	if len(r) != 0 {
+		t.Errorf("expecting 1 found %d", len(r))
+	}
+	go o1.Dequeue(ctx, 0, false, cbfunc, func() {}, &api.ListWatchOptions{})
+	testutils.AssertEventually(t, func() (bool, interface{}) {
+		return o1.watcherList.Len() == 1, nil
+	}, "expecting 1 error", "5ms", "100ms")
+
+	r = wp.Get("/testpath/one")
 	if len(r) != 1 {
 		t.Errorf("expecting 1 found %d", len(r))
 	}
+	r = wp.Get("/testpath/one/two")
+	if len(r) != 1 {
+		t.Errorf("expecting 2 found %d", len(r))
+	}
+
+	go t3.Dequeue(ctx, 0, false, cbfunc, func() {}, &api.ListWatchOptions{})
+	testutils.AssertEventually(t, func() (bool, interface{}) {
+		return o1.watcherList.Len() == 1, nil
+	}, "expecting 1 error", "5ms", "100ms")
 	r = wp.Get("/testpath/one/two")
 	if len(r) != 2 {
 		t.Errorf("expecting 2 found %d", len(r))
@@ -78,8 +102,8 @@ func TestWatchedPrefixes(t *testing.T) {
 	if r := wp.Get("/testpath/one"); len(r) != 1 {
 		t.Errorf("expecting 1 found %d", len(r))
 	}
-	if r := wp.Get("/testpath/two"); len(r) != 1 {
-		t.Errorf("expecting 1 found %d", len(r))
+	if r := wp.Get("/testpath/two"); len(r) != 0 {
+		t.Errorf("expecting 0 found %d", len(r))
 	}
 	wp.Del("/testpath/one", "peer1")
 	wp.Del("/testpath/two", "peer1")
@@ -112,8 +136,8 @@ func TestWatchEventQ(t *testing.T) {
 	ctx := context.Background()
 	rcvdEvents := int32(0)
 	rcvdErrors := int32(0)
-	cbfunc := func(id string) func(inctx context.Context, evType kvstore.WatchEventType, obj, prev runtime.Object) {
-		return func(inctx context.Context, evType kvstore.WatchEventType, obj, prev runtime.Object) {
+	cbfunc := func(id string) func(inctx context.Context, evType kvstore.WatchEventType, obj, prev runtime.Object, control *kvstore.WatchControl) {
+		return func(inctx context.Context, evType kvstore.WatchEventType, obj, prev runtime.Object, control *kvstore.WatchControl) {
 			t.Logf("Q [%s] received event %s object %+v", id, evType, obj)
 			if evType == kvstore.WatcherError {
 				atomic.AddInt32(&rcvdErrors, 1)
@@ -272,8 +296,8 @@ func TestWatchEventQ(t *testing.T) {
 	t.Logf(" --> janitor slow watchers")
 	slowrcvd := int32(0)
 	slowBlockCount := int32(3)
-	slowcb := func(id string) func(inctx context.Context, evType kvstore.WatchEventType, obj, prev runtime.Object) {
-		return func(inctx context.Context, evType kvstore.WatchEventType, obj, prev runtime.Object) {
+	slowcb := func(id string) func(inctx context.Context, evType kvstore.WatchEventType, obj, prev runtime.Object, conteol *kvstore.WatchControl) {
+		return func(inctx context.Context, evType kvstore.WatchEventType, obj, prev runtime.Object, control *kvstore.WatchControl) {
 			atomic.AddInt32(&slowrcvd, 1)
 			t.Logf("q[%s] slowCb called", id)
 			if slowrcvd < slowBlockCount {
@@ -420,4 +444,187 @@ func TestWatchEventQ(t *testing.T) {
 
 		return cleanupCalled == 1, nil
 	}, "expecting to hit 3 dequeuesd", "10ms", "1000ms")
+}
+
+func TestAggregateWatchers(t *testing.T) {
+	// Override the watch configuration
+	wconfig := WatchEventQConfig{
+		SweepInterval:     (120 * time.Second),
+		RetentionDuration: time.Nanosecond,
+		RetentionDepthMax: 0,
+		EvictInterval:     10 * time.Second,
+	}
+	fakeStore := &mocks.FakeStore{}
+	wp := watchedPrefixes{
+		log:         log.GetNewLogger(log.GetDefaultConfig("cacheWatchTest")),
+		store:       fakeStore,
+		watchConfig: wconfig,
+	}
+	wp.init()
+
+	// Test cases
+	//  - Add multipath aggregate without a path watcher
+	//  - Add path watcher while an aggregate watcher exists
+	//  - Add multipath aggregatw with hybrid of existing and new paths
+	//  - Ensure Get() returns all needed watch Queues
+	//  - Ensure Dequeue does consistent list of events
+	//  - Ensure Dequeue sends in order between kinds.
+	//  - tear down Multipath before kind watcher.
+	//  - tear down path before multipath and then kind watcher
+
+	cb := func(inctx context.Context, evType kvstore.WatchEventType, obj, prev runtime.Object, control *kvstore.WatchControl) {
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	paths := []string{"/testpath/one", "/testpath2/one"}
+	wp.AddAggregate(paths, "peer1")
+
+	q1 := wp.Get("/testpath/one")
+	q2 := wp.Get("/testpath2/one")
+	q3 := wp.Get("/testpath2/two")
+	testutils.Assert(t, q1 != nil, "q1 is nil")
+	testutils.Assert(t, len(q1) == 1, "expecting len to be 2 got [%d]", len(q1))
+	testutils.Assert(t, q2 != nil, "q2 is nil")
+	testutils.Assert(t, len(q2) == 1, "expecting len to be 2 got [%d]", len(q2))
+	testutils.Assert(t, q3 == nil, "q3 is not nil")
+
+	// add a new path watchers
+	w1 := wp.Add("/testpath2/one", "peer1")
+	w1q := w1.(*watchEventQ)
+	go w1.Dequeue(ctx, 0, false, cb, func() {}, &api.ListWatchOptions{})
+	testutils.AssertEventually(t, func() (bool, interface{}) {
+		return w1q.watcherList.Len() == 1, nil
+	}, "expecting 1 error", "5ms", "100ms")
+
+	q1 = wp.Get("/testpath/one")
+	q2 = wp.Get("/testpath2/one")
+	q3 = wp.Get("/testpath2/two")
+	testutils.Assert(t, q1 != nil, "q1 is nil")
+	testutils.Assert(t, len(q1) == 1, "expecting len to be 2 got [%d]", len(q1))
+	testutils.Assert(t, q2 != nil, "q2 is nil")
+	testutils.Assert(t, len(q2) == 2, "expecting len to be 2 got [%d]", len(q2))
+	testutils.Assert(t, q3 == nil, "q3 is not nil")
+
+	w2 := wp.Add("/testpath2/two", "peer1")
+	w2q := w2.(*watchEventQ)
+	go w2.Dequeue(ctx, 0, false, cb, func() {}, &api.ListWatchOptions{})
+	testutils.AssertEventually(t, func() (bool, interface{}) {
+		return w2q.watcherList.Len() == 1, nil
+	}, "expecting 1 error", "5ms", "100ms")
+	q1 = wp.Get("/testpath/one")
+	q2 = wp.Get("/testpath2/one")
+	q3 = wp.Get("/testpath2/two")
+	testutils.Assert(t, q1 != nil, "q1 is nil")
+	testutils.Assert(t, len(q1) == 1, "expecting len to be 2 got [%d]", len(q1))
+	testutils.Assert(t, q2 != nil, "q2 is nil")
+	testutils.Assert(t, len(q2) == 2, "expecting len to be 2 got [%d]", len(q2))
+	testutils.Assert(t, q3 != nil, "q3 is nil")
+	testutils.Assert(t, len(q3) == 1, "expecting len to be 1 got [%d]", len(q3))
+
+	paths = []string{"/testpath/one", "/testpath2/two"}
+	wp.AddAggregate(paths, "peer1")
+	q1 = wp.Get("/testpath/one")
+	q2 = wp.Get("/testpath2/one")
+	q3 = wp.Get("/testpath2/two")
+	testutils.Assert(t, q1 != nil, "q1 is nil")
+	testutils.Assert(t, len(q1) == 2, "expecting len to be 2 got [%d]", len(q1))
+	testutils.Assert(t, q2 != nil, "q2 is nil")
+	testutils.Assert(t, len(q2) == 2, "expecting len to be 2 got [%d]", len(q2))
+	testutils.Assert(t, q3 != nil, "q3 is nil")
+	testutils.Assert(t, len(q3) == 2, "expecting len to be 2 got [%d]", len(q3))
+
+	// should reuse
+	paths = []string{"/testpath/one", "/testpath2/two"}
+	wp.AddAggregate(paths, "peer1")
+	q1 = wp.Get("/testpath/one")
+	q2 = wp.Get("/testpath2/one")
+	q3 = wp.Get("/testpath2/two")
+	testutils.Assert(t, q1 != nil, "q1 is nil")
+	testutils.Assert(t, len(q1) == 2, "expecting len to be 2 got [%d]", len(q1))
+	testutils.Assert(t, q2 != nil, "q2 is nil")
+	testutils.Assert(t, len(q2) == 2, "expecting len to be 2 got [%d]", len(q2))
+	testutils.Assert(t, q3 != nil, "q3 is nil")
+	testutils.Assert(t, len(q3) == 2, "expecting len to be 2 got [%d]", len(q3))
+
+	// Test Dequeue
+	rcvdEvents := int32(0)
+	rcvdErrors := int32(0)
+	recvdCtrls := int32(0)
+	recvdObjs := []string{}
+	cbfunc := func(id string) func(inctx context.Context, evType kvstore.WatchEventType, obj, prev runtime.Object, control *kvstore.WatchControl) {
+		return func(inctx context.Context, evType kvstore.WatchEventType, obj, prev runtime.Object, control *kvstore.WatchControl) {
+			t.Logf("Q [%s] received event %s object %+v", id, evType, obj)
+			if evType == kvstore.WatcherError {
+				atomic.AddInt32(&rcvdErrors, 1)
+			} else {
+				atomic.AddInt32(&rcvdEvents, 1)
+			}
+			if evType == kvstore.WatcherControl {
+				atomic.AddInt32(&recvdCtrls, 1)
+			} else {
+				robj := obj.(*apitest.TestObj)
+				recvdObjs = append(recvdObjs, robj.Name)
+			}
+
+		}
+	}
+
+	b1 := apitest.TestObj{}
+	b1.ResourceVersion = "110"
+	b1.Name = "obj1"
+	b2 := apitest.TestObj{}
+	b2.ResourceVersion = "111"
+	b2.Name = "obj2"
+	b3 := apitest.TestObj{}
+	b3.ResourceVersion = "112"
+	b3.Name = "obj3"
+	b4 := apitest.TestObj{}
+	b4.ResourceVersion = "113"
+	b4.Name = "obj4"
+	b5 := apitest.TestObj{}
+	b5.ResourceVersion = "114"
+	b5.Name = "obj5"
+	b6 := apitest.TestObj{}
+	b6.ResourceVersion = "115"
+	b6.Name = "obj6"
+
+	listFromSnapshotFn := func(rev uint64, key, kind string, opts api.ListWatchOptions) ([]runtime.Object, error) {
+		t.Logf("got getSnapshot for [%v]", key)
+		var ret []runtime.Object
+		if key == "/testpath/one" {
+			ret = []runtime.Object{&b2, &b3}
+		}
+		if key == "/testpath2/one" {
+			ret = []runtime.Object{&b4, &b5}
+		}
+		return ret, nil
+	}
+
+	fakeStore.SnapShotRev = uint64(112)
+	fakeStore.ListFromSnapshotFn = listFromSnapshotFn
+
+	qs := wp.Get("/testpath2/one")
+	testutils.Assert(t, len(qs) == 2, "expecting 2 entries got [%d]", len(qs))
+	var q *watchEventQ
+	for _, i := range qs {
+		if i.(*watchEventQ).multiPath {
+			q = i.(*watchEventQ)
+			break
+		}
+	}
+	testutils.Assert(t, q != nil, "did not find multipath queue")
+	q.start()
+	q.Enqueue(kvstore.Created, &b1, nil)
+	q.Enqueue(kvstore.Created, &b6, nil)
+	d := time.Now().Add(50000 * time.Millisecond)
+	nctx, cancel := context.WithDeadline(ctx, d)
+	go q.Dequeue(nctx, 0, false, cbfunc("multipath"), nil, nil)
+	testutils.AssertEventually(t, func() (bool, interface{}) {
+		t.Logf("dequeues are %d", q.stats.dequeues.Value())
+		return (q.stats.dequeues.Value()) == 2, nil
+	}, "expecting to hit 2 dequeuesd", "10ms", "1000ms")
+	cancel()
+	exp := []string{"obj2", "obj3", "obj4", "obj5", "obj6"}
+	testutils.Assert(t, reflect.DeepEqual(exp, recvdObjs), "recvd objects does not match [%v][%v]", recvdObjs, exp)
 }

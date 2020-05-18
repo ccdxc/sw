@@ -36,7 +36,7 @@ var (
 )
 
 type service interface {
-	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
+	Watch(ctx context.Context, options *api.AggWatchOptions) (kvstore.Watcher, error)
 }
 
 // Create watchers for API-server objects
@@ -72,8 +72,8 @@ func (idr *Indexer) createWatchers() error {
 				idr.logger.Infof("API Group %s does not have a watch method", key)
 				continue
 			}
-			opts := api.ListWatchOptions{}
-			opts.FieldChangeSelector = []string{"Spec"}
+			opts := api.AggWatchOptions{}
+			// opts.FieldChangeSelector = []string{"Spec"}
 			// if entry, ok := idr.writerMap[key]; ok && entry.resVersion != "" {
 			// 	opts.ObjectMeta = api.ObjectMeta{
 			// 		ResourceVersion: entry.resVersion,

@@ -35,6 +35,7 @@ sgpolicy.proto security true
 smartnic.proto cluster true
 snapshot.proto cluster true
 staging.proto staging true
+svc_aggwatch.proto aggwatch true
 svc_audit.proto audit false
 svc_auth.proto auth true
 svc_browser.proto browser true

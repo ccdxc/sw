@@ -32,5 +32,5 @@ type DiagnosticsV1ModuleInterface interface {
 // DiagnosticsV1Interface exposes objects with CRUD operations allowed by the service
 type DiagnosticsV1Interface interface {
 	Module() DiagnosticsV1ModuleInterface
-	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
+	Watch(ctx context.Context, options *api.AggWatchOptions) (kvstore.Watcher, error)
 }

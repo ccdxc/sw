@@ -60,12 +60,14 @@ func (t *testAPISrvService) GetCrudService(in string, oper apiintf.APIOperType) 
 	return nil
 }
 func (t *testAPISrvService) AddMethod(n string, m apisrv.Method) apisrv.Method { return nil }
-func (t *testAPISrvService) WatchFromKv(options *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error {
+func (t *testAPISrvService) WatchFromKv(options *api.AggWatchOptions, stream grpc.ServerStream, svcprefix string) error {
 	return nil
 }
 func (t *testAPISrvService) WithKvWatchFunc(fn apisrv.WatchSvcKvFunc) apisrv.Service { return t }
 func (t *testAPISrvService) WithCrudServices(msgs []apisrv.Message) apisrv.Service   { return t }
 func (t *testAPISrvService) Name() string                                            { return "" }
+func (t *testAPISrvService) PopulateTxfmMap(in map[string]func(from, to string, i interface{}) (interface{}, error)) {
+}
 
 func TestRegistration(t *testing.T) {
 	// Parallel is not needed since init happens in a single thread.

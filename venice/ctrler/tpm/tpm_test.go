@@ -139,7 +139,7 @@ func (m *mockMonitoringV1) AlertDestination() telemetry.MonitoringV1AlertDestina
 func (m *mockMonitoringV1) MirrorSession() telemetry.MonitoringV1MirrorSessionInterface {
 	return nil
 }
-func (m *mockMonitoringV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+func (m *mockMonitoringV1) Watch(ctx context.Context, options *api.AggWatchOptions) (kvstore.Watcher, error) {
 	return nil, nil
 }
 func (m *mockMonitoringV1) TroubleshootingSession() telemetry.MonitoringV1TroubleshootingSessionInterface {
@@ -201,7 +201,7 @@ func (m mockClusterV1) DSCProfile() cluster.ClusterV1DSCProfileInterface {
 	return nil
 }
 
-func (m mockClusterV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+func (m mockClusterV1) Watch(ctx context.Context, options *api.AggWatchOptions) (kvstore.Watcher, error) {
 	return nil, nil
 }
 

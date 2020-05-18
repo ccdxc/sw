@@ -1,4 +1,5 @@
 
+true aggwatch svc_aggwatch.proto 
 true audit audit.proto svc_audit.proto 
 true auth auth.proto svc_auth.proto 
 true bookstore example.proto 

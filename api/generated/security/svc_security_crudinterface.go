@@ -101,5 +101,5 @@ type SecurityV1Interface interface {
 	FirewallProfile() SecurityV1FirewallProfileInterface
 	Certificate() SecurityV1CertificateInterface
 	TrafficEncryptionPolicy() SecurityV1TrafficEncryptionPolicyInterface
-	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
+	Watch(ctx context.Context, options *api.AggWatchOptions) (kvstore.Watcher, error)
 }

@@ -31,17 +31,13 @@ type grpcServer{{$svcname}} struct {
 
 // MakeGRPCServer{{.Name}} creates a GRPC server for {{.Name}} service
 func MakeGRPCServer{{.Name}}(ctx context.Context, endpoints Endpoints{{.Name}}Server, logger log.Logger) {{.Name}}Server {
-	options := []grpctransport.ServerOption{
-		grpctransport.ServerErrorLogger(logger),
-		grpctransport.ServerBefore(recoverVersion),
-	}
 	return &grpcServer{{$svcname}}{
 		Endpoints: endpoints, {{range .Methods}}{{$params := (getMethodParams .)}}{{if isStreaming .}}{{else}}
 		{{.Name}}Hdlr: grpctransport.NewServer(
 			endpoints.{{.Name}}Endpoint,
 			DecodeGrpcReq{{.RequestType.Name}},
 			EncodeGrpcResp{{.ResponseType.Name}},
-            append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("{{.Name}}", logger)))...,
+            append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("{{.Name}}", logger)))...,
 		),
 		{{end}}{{end}}
 	}
@@ -65,19 +61,15 @@ func decodeHTTPresp{{$svcname}}{{.Name}}(_ context.Context, r *http.Response) (i
 	return &resp, err
 }
 {{end}}{{end}}
-{{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{$prefix := (getExtension "venice.apiPrefix" .)}}
-func (s *grpcServer{{$svcname}}) AutoWatchSvc{{$svcname}}(in *api.ListWatchOptions, stream {{$svcname}}_AutoWatchSvc{{$svcname}}Server) error {
+
+func (s *grpcServer{{$svcname}}) AutoWatchSvc{{$svcname}}(in *api.AggWatchOptions, stream {{$svcname}}_AutoWatchSvc{{$svcname}}Server) error {
 	return s.Endpoints.AutoWatchSvc{{$svcname}}(in, stream)
 }
-{{range $cruds}}
+{{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{range $cruds}}
 func (s *grpcServer{{$svcname}}) AutoWatch{{.}}(in *api.ListWatchOptions, stream {{$svcname}}_AutoWatch{{.}}Server) error {
 	return s.Endpoints.AutoWatch{{.}}(in, stream)
 }
-{{end}}{{else}}
-func (s *grpcServer{{$svcname}}) AutoWatchSvc{{$svcname}}(in *api.ListWatchOptions, stream {{$svcname}}_AutoWatchSvc{{$svcname}}Server) error {
-	return errors.New("not implemented")
-}
-{{end}}
+{{end}}{{end}}
 {{range .Methods}}{{$params := (getMethodParams .)}}{{if isStreaming .}}{{if (strEq $params.Oper "WatchOper")}} {{else}}{{if isClientStreaming .}}
 func (s *grpcServer{{$svcname}}) {{.Name}}(stream {{$svcname}}_{{.Name}}Server) error {
 	return s.Endpoints.{{.Name}}(stream)

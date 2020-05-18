@@ -58,7 +58,7 @@ type MiddlewareTokenAuthV1Server func(ServiceTokenAuthV1Server) ServiceTokenAuth
 
 // EndpointsTokenAuthV1Server is the server endpoints
 type EndpointsTokenAuthV1Server struct {
-	svcWatchHandlerTokenAuthV1 func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	svcWatchHandlerTokenAuthV1 func(options *api.AggWatchOptions, stream grpc.ServerStream) error
 
 	GenerateNodeTokenEndpoint endpoint.Endpoint
 }
@@ -77,8 +77,8 @@ type respTokenAuthV1GenerateNodeToken struct {
 	Err error
 }
 
-func (e EndpointsTokenAuthV1Client) AutoWatchSvcTokenAuthV1(ctx context.Context, in *api.ListWatchOptions) (TokenAuthV1_AutoWatchSvcTokenAuthV1Client, error) {
-	return nil, errors.New("not implemented")
+func (e EndpointsTokenAuthV1Client) AutoWatchSvcTokenAuthV1(ctx context.Context, in *api.AggWatchOptions) (TokenAuthV1_AutoWatchSvcTokenAuthV1Client, error) {
+	return e.Client.AutoWatchSvcTokenAuthV1(ctx, in)
 }
 
 // GenerateNodeToken implementation on server Endpoint
@@ -103,10 +103,15 @@ func MakeTokenAuthV1GenerateNodeTokenEndpoint(s ServiceTokenAuthV1Server, logger
 	return trace.ServerEndpoint("TokenAuthV1:GenerateNodeToken")(f)
 }
 
+func (e EndpointsTokenAuthV1Server) AutoWatchSvcTokenAuthV1(in *api.AggWatchOptions, stream TokenAuthV1_AutoWatchSvcTokenAuthV1Server) error {
+	return e.svcWatchHandlerTokenAuthV1(in, stream)
+}
+
 // MakeAutoWatchSvcTokenAuthV1Endpoint creates the Watch endpoint for the service
-func MakeAutoWatchSvcTokenAuthV1Endpoint(s ServiceTokenAuthV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
-	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
-		return errors.New("not implemented")
+func MakeAutoWatchSvcTokenAuthV1Endpoint(s ServiceTokenAuthV1Server, logger log.Logger) func(options *api.AggWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.AggWatchOptions, stream grpc.ServerStream) error {
+		wstream := stream.(TokenAuthV1_AutoWatchSvcTokenAuthV1Server)
+		return s.AutoWatchSvcTokenAuthV1(options, wstream)
 	}
 }
 
@@ -163,8 +168,18 @@ func (m loggingTokenAuthV1MiddlewareClient) GenerateNodeToken(ctx context.Contex
 	return
 }
 
-func (m loggingTokenAuthV1MiddlewareClient) AutoWatchSvcTokenAuthV1(ctx context.Context, in *api.ListWatchOptions) (TokenAuthV1_AutoWatchSvcTokenAuthV1Client, error) {
-	return nil, errors.New("not implemented")
+func (m loggingTokenAuthV1MiddlewareClient) AutoWatchSvcTokenAuthV1(ctx context.Context, in *api.AggWatchOptions) (resp TokenAuthV1_AutoWatchSvcTokenAuthV1Client, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "TokenAuthV1", "method", "AutoWatchSvcTokenAuthV1", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoWatchSvcTokenAuthV1(ctx, in)
+	return
 }
 
 func (m loggingTokenAuthV1MiddlewareServer) GenerateNodeToken(ctx context.Context, in NodeTokenRequest) (resp NodeTokenResponse, err error) {
@@ -181,8 +196,18 @@ func (m loggingTokenAuthV1MiddlewareServer) GenerateNodeToken(ctx context.Contex
 	return
 }
 
-func (m loggingTokenAuthV1MiddlewareServer) AutoWatchSvcTokenAuthV1(in *api.ListWatchOptions, stream TokenAuthV1_AutoWatchSvcTokenAuthV1Server) error {
-	return errors.New("Not implemented")
+func (m loggingTokenAuthV1MiddlewareServer) AutoWatchSvcTokenAuthV1(in *api.AggWatchOptions, stream TokenAuthV1_AutoWatchSvcTokenAuthV1Server) (err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(stream.Context(), "service", "TokenAuthV1", "method", "AutoWatchSvcTokenAuthV1", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	err = m.next.AutoWatchSvcTokenAuthV1(in, stream)
+	return
 }
 
 func (r *EndpointsTokenAuthV1RestClient) updateHTTPHeader(ctx context.Context, header *http.Header) {
@@ -213,7 +238,7 @@ func (r *EndpointsTokenAuthV1RestClient) getHTTPRequest(ctx context.Context, in 
 }
 
 //
-func makeURITokenAuthV1AutoWatchSvcTokenAuthV1WatchOper(in *api.ListWatchOptions) string {
+func makeURITokenAuthV1AutoWatchSvcTokenAuthV1WatchOper(in *api.AggWatchOptions) string {
 	return ""
 
 }

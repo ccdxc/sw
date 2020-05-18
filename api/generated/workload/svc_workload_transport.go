@@ -45,122 +45,118 @@ type grpcServerWorkloadV1 struct {
 
 // MakeGRPCServerWorkloadV1 creates a GRPC server for WorkloadV1 service
 func MakeGRPCServerWorkloadV1(ctx context.Context, endpoints EndpointsWorkloadV1Server, logger log.Logger) WorkloadV1Server {
-	options := []grpctransport.ServerOption{
-		grpctransport.ServerErrorLogger(logger),
-		grpctransport.ServerBefore(recoverVersion),
-	}
 	return &grpcServerWorkloadV1{
 		Endpoints: endpoints,
 		AbortMigrationHdlr: grpctransport.NewServer(
 			endpoints.AbortMigrationEndpoint,
 			DecodeGrpcReqWorkload,
 			EncodeGrpcRespWorkload,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AbortMigration", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AbortMigration", logger)))...,
 		),
 
 		AutoAddEndpointHdlr: grpctransport.NewServer(
 			endpoints.AutoAddEndpointEndpoint,
 			DecodeGrpcReqEndpoint,
 			EncodeGrpcRespEndpoint,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddEndpoint", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddEndpoint", logger)))...,
 		),
 
 		AutoAddWorkloadHdlr: grpctransport.NewServer(
 			endpoints.AutoAddWorkloadEndpoint,
 			DecodeGrpcReqWorkload,
 			EncodeGrpcRespWorkload,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddWorkload", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddWorkload", logger)))...,
 		),
 
 		AutoDeleteEndpointHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteEndpointEndpoint,
 			DecodeGrpcReqEndpoint,
 			EncodeGrpcRespEndpoint,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteEndpoint", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteEndpoint", logger)))...,
 		),
 
 		AutoDeleteWorkloadHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteWorkloadEndpoint,
 			DecodeGrpcReqWorkload,
 			EncodeGrpcRespWorkload,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteWorkload", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteWorkload", logger)))...,
 		),
 
 		AutoGetEndpointHdlr: grpctransport.NewServer(
 			endpoints.AutoGetEndpointEndpoint,
 			DecodeGrpcReqEndpoint,
 			EncodeGrpcRespEndpoint,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetEndpoint", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetEndpoint", logger)))...,
 		),
 
 		AutoGetWorkloadHdlr: grpctransport.NewServer(
 			endpoints.AutoGetWorkloadEndpoint,
 			DecodeGrpcReqWorkload,
 			EncodeGrpcRespWorkload,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetWorkload", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetWorkload", logger)))...,
 		),
 
 		AutoLabelEndpointHdlr: grpctransport.NewServer(
 			endpoints.AutoLabelEndpointEndpoint,
 			DecodeGrpcReqLabel,
 			EncodeGrpcRespEndpoint,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelEndpoint", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelEndpoint", logger)))...,
 		),
 
 		AutoLabelWorkloadHdlr: grpctransport.NewServer(
 			endpoints.AutoLabelWorkloadEndpoint,
 			DecodeGrpcReqLabel,
 			EncodeGrpcRespWorkload,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelWorkload", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelWorkload", logger)))...,
 		),
 
 		AutoListEndpointHdlr: grpctransport.NewServer(
 			endpoints.AutoListEndpointEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespEndpointList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListEndpoint", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListEndpoint", logger)))...,
 		),
 
 		AutoListWorkloadHdlr: grpctransport.NewServer(
 			endpoints.AutoListWorkloadEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespWorkloadList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListWorkload", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListWorkload", logger)))...,
 		),
 
 		AutoUpdateEndpointHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateEndpointEndpoint,
 			DecodeGrpcReqEndpoint,
 			EncodeGrpcRespEndpoint,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateEndpoint", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateEndpoint", logger)))...,
 		),
 
 		AutoUpdateWorkloadHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateWorkloadEndpoint,
 			DecodeGrpcReqWorkload,
 			EncodeGrpcRespWorkload,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateWorkload", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateWorkload", logger)))...,
 		),
 
 		FinalSyncMigrationHdlr: grpctransport.NewServer(
 			endpoints.FinalSyncMigrationEndpoint,
 			DecodeGrpcReqWorkload,
 			EncodeGrpcRespWorkload,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("FinalSyncMigration", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("FinalSyncMigration", logger)))...,
 		),
 
 		FinishMigrationHdlr: grpctransport.NewServer(
 			endpoints.FinishMigrationEndpoint,
 			DecodeGrpcReqWorkload,
 			EncodeGrpcRespWorkload,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("FinishMigration", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("FinishMigration", logger)))...,
 		),
 
 		StartMigrationHdlr: grpctransport.NewServer(
 			endpoints.StartMigrationEndpoint,
 			DecodeGrpcReqWorkload,
 			EncodeGrpcRespWorkload,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("StartMigration", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("StartMigration", logger)))...,
 		),
 	}
 }
@@ -453,7 +449,7 @@ func decodeHTTPrespWorkloadV1StartMigration(_ context.Context, r *http.Response)
 	return &resp, err
 }
 
-func (s *grpcServerWorkloadV1) AutoWatchSvcWorkloadV1(in *api.ListWatchOptions, stream WorkloadV1_AutoWatchSvcWorkloadV1Server) error {
+func (s *grpcServerWorkloadV1) AutoWatchSvcWorkloadV1(in *api.AggWatchOptions, stream WorkloadV1_AutoWatchSvcWorkloadV1Server) error {
 	return s.Endpoints.AutoWatchSvcWorkloadV1(in, stream)
 }
 

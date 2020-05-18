@@ -17,7 +17,7 @@ var _ api.ObjectMeta
 
 // ServiceStagingV1Client  is the client interface for the service.
 type ServiceStagingV1Client interface {
-	AutoWatchSvcStagingV1(ctx context.Context, in *api.ListWatchOptions) (StagingV1_AutoWatchSvcStagingV1Client, error)
+	AutoWatchSvcStagingV1(ctx context.Context, in *api.AggWatchOptions) (StagingV1_AutoWatchSvcStagingV1Client, error)
 
 	AutoAddBuffer(ctx context.Context, t *Buffer) (*Buffer, error)
 	AutoDeleteBuffer(ctx context.Context, t *Buffer) (*Buffer, error)
@@ -34,7 +34,7 @@ type ServiceStagingV1Client interface {
 
 // ServiceStagingV1Server is the server interface for the service.
 type ServiceStagingV1Server interface {
-	AutoWatchSvcStagingV1(in *api.ListWatchOptions, stream StagingV1_AutoWatchSvcStagingV1Server) error
+	AutoWatchSvcStagingV1(in *api.AggWatchOptions, stream StagingV1_AutoWatchSvcStagingV1Server) error
 
 	AutoAddBuffer(ctx context.Context, t Buffer) (Buffer, error)
 	AutoDeleteBuffer(ctx context.Context, t Buffer) (Buffer, error)

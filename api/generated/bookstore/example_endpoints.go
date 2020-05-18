@@ -146,7 +146,7 @@ type MiddlewareBookstoreV1Server func(ServiceBookstoreV1Server) ServiceBookstore
 
 // EndpointsBookstoreV1Server is the server endpoints
 type EndpointsBookstoreV1Server struct {
-	svcWatchHandlerBookstoreV1 func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	svcWatchHandlerBookstoreV1 func(options *api.AggWatchOptions, stream grpc.ServerStream) error
 
 	AddOutageEndpoint           endpoint.Endpoint
 	ApplydiscountEndpoint       endpoint.Endpoint
@@ -757,7 +757,7 @@ type respBookstoreV1Restock struct {
 	Err error
 }
 
-func (e EndpointsBookstoreV1Client) AutoWatchSvcBookstoreV1(ctx context.Context, in *api.ListWatchOptions) (BookstoreV1_AutoWatchSvcBookstoreV1Client, error) {
+func (e EndpointsBookstoreV1Client) AutoWatchSvcBookstoreV1(ctx context.Context, in *api.AggWatchOptions) (BookstoreV1_AutoWatchSvcBookstoreV1Client, error) {
 	return e.Client.AutoWatchSvcBookstoreV1(ctx, in)
 }
 
@@ -1671,13 +1671,13 @@ func MakeBookstoreV1RestockEndpoint(s ServiceBookstoreV1Server, logger log.Logge
 	return trace.ServerEndpoint("BookstoreV1:Restock")(f)
 }
 
-func (e EndpointsBookstoreV1Server) AutoWatchSvcBookstoreV1(in *api.ListWatchOptions, stream BookstoreV1_AutoWatchSvcBookstoreV1Server) error {
+func (e EndpointsBookstoreV1Server) AutoWatchSvcBookstoreV1(in *api.AggWatchOptions, stream BookstoreV1_AutoWatchSvcBookstoreV1Server) error {
 	return e.svcWatchHandlerBookstoreV1(in, stream)
 }
 
 // MakeAutoWatchSvcBookstoreV1Endpoint creates the Watch endpoint for the service
-func MakeAutoWatchSvcBookstoreV1Endpoint(s ServiceBookstoreV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
-	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+func MakeAutoWatchSvcBookstoreV1Endpoint(s ServiceBookstoreV1Server, logger log.Logger) func(options *api.AggWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.AggWatchOptions, stream grpc.ServerStream) error {
 		wstream := stream.(BookstoreV1_AutoWatchSvcBookstoreV1Server)
 		return s.AutoWatchSvcBookstoreV1(options, wstream)
 	}
@@ -2367,7 +2367,7 @@ func (m loggingBookstoreV1MiddlewareClient) Restock(ctx context.Context, in *Res
 	return
 }
 
-func (m loggingBookstoreV1MiddlewareClient) AutoWatchSvcBookstoreV1(ctx context.Context, in *api.ListWatchOptions) (resp BookstoreV1_AutoWatchSvcBookstoreV1Client, err error) {
+func (m loggingBookstoreV1MiddlewareClient) AutoWatchSvcBookstoreV1(ctx context.Context, in *api.AggWatchOptions) (resp BookstoreV1_AutoWatchSvcBookstoreV1Client, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -2981,7 +2981,7 @@ func (m loggingBookstoreV1MiddlewareServer) Restock(ctx context.Context, in Rest
 	return
 }
 
-func (m loggingBookstoreV1MiddlewareServer) AutoWatchSvcBookstoreV1(in *api.ListWatchOptions, stream BookstoreV1_AutoWatchSvcBookstoreV1Server) (err error) {
+func (m loggingBookstoreV1MiddlewareServer) AutoWatchSvcBookstoreV1(in *api.AggWatchOptions, stream BookstoreV1_AutoWatchSvcBookstoreV1Server) (err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -3344,7 +3344,7 @@ func makeURIBookstoreV1AutoWatchStoreWatchOper(in *api.ListWatchOptions) string 
 }
 
 //
-func makeURIBookstoreV1AutoWatchSvcBookstoreV1WatchOper(in *api.ListWatchOptions) string {
+func makeURIBookstoreV1AutoWatchSvcBookstoreV1WatchOper(in *api.AggWatchOptions) string {
 	return ""
 
 }

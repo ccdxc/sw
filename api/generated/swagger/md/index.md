@@ -3,6 +3,7 @@
 
 |API group   | Description    |
 |:---------- |:-------------- |
+| [aggwatch](/swagger/aggwatch) | Aggwatch API reference |
 | [audit](/swagger/audit) | Audit logs for the cluster and related APIs |
 | [auth](/swagger/auth) | Authentication and Authorization related APIs |
 | [browser](/swagger/browser) | browse configuration objects and relations |

@@ -31,5 +31,4 @@ type RoutingV1NeighborInterface interface {
 // RoutingV1Interface exposes objects with CRUD operations allowed by the service
 type RoutingV1Interface interface {
 	Neighbor() RoutingV1NeighborInterface
-	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
 }

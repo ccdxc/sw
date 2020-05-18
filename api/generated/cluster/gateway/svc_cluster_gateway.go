@@ -1811,7 +1811,7 @@ func (a adapterClusterV1) UpdateTLSConfig(oldctx oldcontext.Context, t *cluster.
 	return ret.(*cluster.Cluster), err
 }
 
-func (a adapterClusterV1) AutoWatchSvcClusterV1(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (cluster.ClusterV1_AutoWatchSvcClusterV1Client, error) {
+func (a adapterClusterV1) AutoWatchSvcClusterV1(oldctx oldcontext.Context, in *api.AggWatchOptions, options ...grpc.CallOption) (cluster.ClusterV1_AutoWatchSvcClusterV1Client, error) {
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoWatchSvcClusterV1")
 	if err != nil {
@@ -1821,7 +1821,7 @@ func (a adapterClusterV1) AutoWatchSvcClusterV1(oldctx oldcontext.Context, in *a
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
-		in := i.(*api.ListWatchOptions)
+		in := i.(*api.AggWatchOptions)
 		iws, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwWebSocketWatch)
 		if ok && iws.(bool) {
 			nctx, cancel := context.WithCancel(ctx)

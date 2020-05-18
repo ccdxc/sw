@@ -773,6 +773,20 @@
     }
   },
   "definitions": {
+    "apiAggWatchOptions": {
+      "type": "object",
+      "properties": {
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "watch-options": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiKindWatchOptions"
+          }
+        }
+      }
+    },
     "apiAny": {
       "type": "object",
       "properties": {
@@ -785,6 +799,20 @@
         }
       },
       "description": "Any is wrapper around the proto Any object."
+    },
+    "apiKindWatchOptions": {
+      "type": "object",
+      "properties": {
+        "group": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "options": {
+          "$ref": "#/definitions/apiListWatchOptions"
+        }
+      }
     },
     "apiLabel": {
       "type": "object",
@@ -1132,6 +1160,18 @@
       },
       "description": "TypeMeta contains the metadata about kind and version for all API objects."
     },
+    "apiWatchControl": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
     "apiWatchEvent": {
       "type": "object",
       "properties": {
@@ -1140,6 +1180,9 @@
         },
         "object": {
           "$ref": "#/definitions/googleprotobufAny"
+        },
+        "control": {
+          "$ref": "#/definitions/apiWatchControl"
         }
       }
     },

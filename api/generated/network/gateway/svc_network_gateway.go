@@ -1385,7 +1385,7 @@ func (a adapterNetworkV1) AutoUpdateVirtualRouter(oldctx oldcontext.Context, t *
 	return ret.(*network.VirtualRouter), err
 }
 
-func (a adapterNetworkV1) AutoWatchSvcNetworkV1(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (network.NetworkV1_AutoWatchSvcNetworkV1Client, error) {
+func (a adapterNetworkV1) AutoWatchSvcNetworkV1(oldctx oldcontext.Context, in *api.AggWatchOptions, options ...grpc.CallOption) (network.NetworkV1_AutoWatchSvcNetworkV1Client, error) {
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoWatchSvcNetworkV1")
 	if err != nil {
@@ -1395,7 +1395,7 @@ func (a adapterNetworkV1) AutoWatchSvcNetworkV1(oldctx oldcontext.Context, in *a
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
-		in := i.(*api.ListWatchOptions)
+		in := i.(*api.AggWatchOptions)
 		iws, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwWebSocketWatch)
 		if ok && iws.(bool) {
 			nctx, cancel := context.WithCancel(ctx)

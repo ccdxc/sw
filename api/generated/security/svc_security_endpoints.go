@@ -138,7 +138,7 @@ type MiddlewareSecurityV1Server func(ServiceSecurityV1Server) ServiceSecurityV1S
 
 // EndpointsSecurityV1Server is the server endpoints
 type EndpointsSecurityV1Server struct {
-	svcWatchHandlerSecurityV1 func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	svcWatchHandlerSecurityV1 func(options *api.AggWatchOptions, stream grpc.ServerStream) error
 
 	AutoAddAppEndpoint                        endpoint.Endpoint
 	AutoAddCertificateEndpoint                endpoint.Endpoint
@@ -689,7 +689,7 @@ type respSecurityV1AutoUpdateTrafficEncryptionPolicy struct {
 	Err error
 }
 
-func (e EndpointsSecurityV1Client) AutoWatchSvcSecurityV1(ctx context.Context, in *api.ListWatchOptions) (SecurityV1_AutoWatchSvcSecurityV1Client, error) {
+func (e EndpointsSecurityV1Client) AutoWatchSvcSecurityV1(ctx context.Context, in *api.AggWatchOptions) (SecurityV1_AutoWatchSvcSecurityV1Client, error) {
 	return e.Client.AutoWatchSvcSecurityV1(ctx, in)
 }
 
@@ -1515,13 +1515,13 @@ func MakeSecurityV1AutoUpdateTrafficEncryptionPolicyEndpoint(s ServiceSecurityV1
 	return trace.ServerEndpoint("SecurityV1:AutoUpdateTrafficEncryptionPolicy")(f)
 }
 
-func (e EndpointsSecurityV1Server) AutoWatchSvcSecurityV1(in *api.ListWatchOptions, stream SecurityV1_AutoWatchSvcSecurityV1Server) error {
+func (e EndpointsSecurityV1Server) AutoWatchSvcSecurityV1(in *api.AggWatchOptions, stream SecurityV1_AutoWatchSvcSecurityV1Server) error {
 	return e.svcWatchHandlerSecurityV1(in, stream)
 }
 
 // MakeAutoWatchSvcSecurityV1Endpoint creates the Watch endpoint for the service
-func MakeAutoWatchSvcSecurityV1Endpoint(s ServiceSecurityV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
-	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+func MakeAutoWatchSvcSecurityV1Endpoint(s ServiceSecurityV1Server, logger log.Logger) func(options *api.AggWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.AggWatchOptions, stream grpc.ServerStream) error {
 		wstream := stream.(SecurityV1_AutoWatchSvcSecurityV1Server)
 		return s.AutoWatchSvcSecurityV1(options, wstream)
 	}
@@ -2155,7 +2155,7 @@ func (m loggingSecurityV1MiddlewareClient) AutoUpdateTrafficEncryptionPolicy(ctx
 	return
 }
 
-func (m loggingSecurityV1MiddlewareClient) AutoWatchSvcSecurityV1(ctx context.Context, in *api.ListWatchOptions) (resp SecurityV1_AutoWatchSvcSecurityV1Client, err error) {
+func (m loggingSecurityV1MiddlewareClient) AutoWatchSvcSecurityV1(ctx context.Context, in *api.AggWatchOptions) (resp SecurityV1_AutoWatchSvcSecurityV1Client, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -2717,7 +2717,7 @@ func (m loggingSecurityV1MiddlewareServer) AutoUpdateTrafficEncryptionPolicy(ctx
 	return
 }
 
-func (m loggingSecurityV1MiddlewareServer) AutoWatchSvcSecurityV1(in *api.ListWatchOptions, stream SecurityV1_AutoWatchSvcSecurityV1Server) (err error) {
+func (m loggingSecurityV1MiddlewareServer) AutoWatchSvcSecurityV1(in *api.AggWatchOptions, stream SecurityV1_AutoWatchSvcSecurityV1Server) (err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -3058,7 +3058,7 @@ func makeURISecurityV1AutoWatchSecurityGroupWatchOper(in *api.ListWatchOptions) 
 }
 
 //
-func makeURISecurityV1AutoWatchSvcSecurityV1WatchOper(in *api.ListWatchOptions) string {
+func makeURISecurityV1AutoWatchSvcSecurityV1WatchOper(in *api.AggWatchOptions) string {
 	return ""
 
 }

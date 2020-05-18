@@ -60,7 +60,7 @@ type MiddlewareFwLogV1Server func(ServiceFwLogV1Server) ServiceFwLogV1Server
 
 // EndpointsFwLogV1Server is the server endpoints
 type EndpointsFwLogV1Server struct {
-	svcWatchHandlerFwLogV1 func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	svcWatchHandlerFwLogV1 func(options *api.AggWatchOptions, stream grpc.ServerStream) error
 
 	DownloadFwLogFileContentEndpoint endpoint.Endpoint
 	GetLogsEndpoint                  endpoint.Endpoint
@@ -94,8 +94,8 @@ type respFwLogV1GetLogs struct {
 	Err error
 }
 
-func (e EndpointsFwLogV1Client) AutoWatchSvcFwLogV1(ctx context.Context, in *api.ListWatchOptions) (FwLogV1_AutoWatchSvcFwLogV1Client, error) {
-	return nil, errors.New("not implemented")
+func (e EndpointsFwLogV1Client) AutoWatchSvcFwLogV1(ctx context.Context, in *api.AggWatchOptions) (FwLogV1_AutoWatchSvcFwLogV1Client, error) {
+	return e.Client.AutoWatchSvcFwLogV1(ctx, in)
 }
 
 // DownloadFwLogFileContent implementation on server Endpoint
@@ -142,10 +142,15 @@ func MakeFwLogV1GetLogsEndpoint(s ServiceFwLogV1Server, logger log.Logger) endpo
 	return trace.ServerEndpoint("FwLogV1:GetLogs")(f)
 }
 
+func (e EndpointsFwLogV1Server) AutoWatchSvcFwLogV1(in *api.AggWatchOptions, stream FwLogV1_AutoWatchSvcFwLogV1Server) error {
+	return e.svcWatchHandlerFwLogV1(in, stream)
+}
+
 // MakeAutoWatchSvcFwLogV1Endpoint creates the Watch endpoint for the service
-func MakeAutoWatchSvcFwLogV1Endpoint(s ServiceFwLogV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
-	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
-		return errors.New("not implemented")
+func MakeAutoWatchSvcFwLogV1Endpoint(s ServiceFwLogV1Server, logger log.Logger) func(options *api.AggWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.AggWatchOptions, stream grpc.ServerStream) error {
+		wstream := stream.(FwLogV1_AutoWatchSvcFwLogV1Server)
+		return s.AutoWatchSvcFwLogV1(options, wstream)
 	}
 }
 
@@ -216,8 +221,18 @@ func (m loggingFwLogV1MiddlewareClient) GetLogs(ctx context.Context, in *FwLogQu
 	return
 }
 
-func (m loggingFwLogV1MiddlewareClient) AutoWatchSvcFwLogV1(ctx context.Context, in *api.ListWatchOptions) (FwLogV1_AutoWatchSvcFwLogV1Client, error) {
-	return nil, errors.New("not implemented")
+func (m loggingFwLogV1MiddlewareClient) AutoWatchSvcFwLogV1(ctx context.Context, in *api.AggWatchOptions) (resp FwLogV1_AutoWatchSvcFwLogV1Client, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "FwLogV1", "method", "AutoWatchSvcFwLogV1", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoWatchSvcFwLogV1(ctx, in)
+	return
 }
 
 func (m loggingFwLogV1MiddlewareServer) DownloadFwLogFileContent(ctx context.Context, in api.ListWatchOptions) (resp FwLogList, err error) {
@@ -247,8 +262,18 @@ func (m loggingFwLogV1MiddlewareServer) GetLogs(ctx context.Context, in FwLogQue
 	return
 }
 
-func (m loggingFwLogV1MiddlewareServer) AutoWatchSvcFwLogV1(in *api.ListWatchOptions, stream FwLogV1_AutoWatchSvcFwLogV1Server) error {
-	return errors.New("Not implemented")
+func (m loggingFwLogV1MiddlewareServer) AutoWatchSvcFwLogV1(in *api.AggWatchOptions, stream FwLogV1_AutoWatchSvcFwLogV1Server) (err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(stream.Context(), "service", "FwLogV1", "method", "AutoWatchSvcFwLogV1", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	err = m.next.AutoWatchSvcFwLogV1(in, stream)
+	return
 }
 
 func (r *EndpointsFwLogV1RestClient) updateHTTPHeader(ctx context.Context, header *http.Header) {
@@ -279,7 +304,7 @@ func (r *EndpointsFwLogV1RestClient) getHTTPRequest(ctx context.Context, in inte
 }
 
 //
-func makeURIFwLogV1AutoWatchSvcFwLogV1WatchOper(in *api.ListWatchOptions) string {
+func makeURIFwLogV1AutoWatchSvcFwLogV1WatchOper(in *api.AggWatchOptions) string {
 	return ""
 
 }

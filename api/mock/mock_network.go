@@ -1248,7 +1248,7 @@ func (mr *MockNetworkV1InterfaceMockRecorder) RouteTable() *gomock.Call {
 }
 
 // Watch mocks base method
-func (m *MockNetworkV1Interface) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+func (m *MockNetworkV1Interface) Watch(ctx context.Context, options *api.AggWatchOptions) (kvstore.Watcher, error) {
 	ret := m.ctrl.Call(m, "Watch", ctx, options)
 	ret0, _ := ret[0].(kvstore.Watcher)
 	ret1, _ := ret[1].(error)

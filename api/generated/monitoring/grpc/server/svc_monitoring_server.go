@@ -48,7 +48,7 @@ type smonitoringSvc_monitoringBackend struct {
 
 type eMonitoringV1Endpoints struct {
 	Svc                        smonitoringSvc_monitoringBackend
-	fnAutoWatchSvcMonitoringV1 func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
+	fnAutoWatchSvcMonitoringV1 func(in *api.AggWatchOptions, stream grpc.ServerStream, svcprefix string) error
 
 	fnAutoAddAlert                     func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddAlertDestination          func(ctx context.Context, t interface{}) (interface{}, error)
@@ -1514,16 +1514,24 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 
 	// Add Watchers
 	{
-
 		// Service watcher
 		svc := s.Services["monitoring.MonitoringV1"]
 		if svc != nil {
-			svc.WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfnMap map[string]func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
-				key := globals.ConfigRootPrefix + "/monitoring"
+			svc.WithKvWatchFunc(func(l log.Logger, options *api.AggWatchOptions, kvs kvstore.Interface, stream interface{}, txfnMap map[string]func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
+				for _, o := range options.WatchOptions {
+					if o.Group != "monitoring" {
+						return fmt.Errorf("invalid group [%s] in watch options", o.Group)
+					}
+				}
+				if len(options.WatchOptions) == 0 {
+					options.WatchOptions = append(options.WatchOptions, api.KindWatchOptions{Group: "monitoring"})
+				}
 				wstream := stream.(grpc.ServerStream)
 				nctx, cancel := context.WithCancel(wstream.Context())
+				id := fmt.Sprintf("%s-%x", ctxutils.GetPeerID(nctx), &options)
+				nctx = ctxutils.SetContextID(nctx, id)
 				defer cancel()
-				watcher, err := kvs.WatchFiltered(nctx, key, *options)
+				watcher, err := kvs.WatchAggregate(nctx, *options)
 				if err != nil {
 					l.ErrorLog("msg", "error starting Watch for service", "err", err, "service", "MonitoringV1")
 					return err
@@ -3443,7 +3451,7 @@ func (e *eMonitoringV1Endpoints) AutoWatchArchiveRequest(in *api.ListWatchOption
 func (e *eMonitoringV1Endpoints) AutoWatchAuditPolicy(in *api.ListWatchOptions, stream monitoring.MonitoringV1_AutoWatchAuditPolicyServer) error {
 	return e.fnAutoWatchAuditPolicy(in, stream, "monitoring")
 }
-func (e *eMonitoringV1Endpoints) AutoWatchSvcMonitoringV1(in *api.ListWatchOptions, stream monitoring.MonitoringV1_AutoWatchSvcMonitoringV1Server) error {
+func (e *eMonitoringV1Endpoints) AutoWatchSvcMonitoringV1(in *api.AggWatchOptions, stream monitoring.MonitoringV1_AutoWatchSvcMonitoringV1Server) error {
 	return e.fnAutoWatchSvcMonitoringV1(in, stream, "")
 }
 

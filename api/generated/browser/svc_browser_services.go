@@ -17,7 +17,7 @@ var _ api.ObjectMeta
 
 // ServiceBrowserV1Client  is the client interface for the service.
 type ServiceBrowserV1Client interface {
-	AutoWatchSvcBrowserV1(ctx context.Context, in *api.ListWatchOptions) (BrowserV1_AutoWatchSvcBrowserV1Client, error)
+	AutoWatchSvcBrowserV1(ctx context.Context, in *api.AggWatchOptions) (BrowserV1_AutoWatchSvcBrowserV1Client, error)
 
 	Query(ctx context.Context, t *BrowseRequestList) (*BrowseResponseList, error)
 	References(ctx context.Context, t *BrowseRequest) (*BrowseResponse, error)
@@ -26,7 +26,7 @@ type ServiceBrowserV1Client interface {
 
 // ServiceBrowserV1Server is the server interface for the service.
 type ServiceBrowserV1Server interface {
-	AutoWatchSvcBrowserV1(in *api.ListWatchOptions, stream BrowserV1_AutoWatchSvcBrowserV1Server) error
+	AutoWatchSvcBrowserV1(in *api.AggWatchOptions, stream BrowserV1_AutoWatchSvcBrowserV1Server) error
 
 	Query(ctx context.Context, t BrowseRequestList) (BrowseResponseList, error)
 	References(ctx context.Context, t BrowseRequest) (BrowseResponse, error)

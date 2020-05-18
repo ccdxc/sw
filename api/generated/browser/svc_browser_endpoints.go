@@ -62,7 +62,7 @@ type MiddlewareBrowserV1Server func(ServiceBrowserV1Server) ServiceBrowserV1Serv
 
 // EndpointsBrowserV1Server is the server endpoints
 type EndpointsBrowserV1Server struct {
-	svcWatchHandlerBrowserV1 func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	svcWatchHandlerBrowserV1 func(options *api.AggWatchOptions, stream grpc.ServerStream) error
 
 	QueryEndpoint      endpoint.Endpoint
 	ReferencesEndpoint endpoint.Endpoint
@@ -111,8 +111,8 @@ type respBrowserV1Referrers struct {
 	Err error
 }
 
-func (e EndpointsBrowserV1Client) AutoWatchSvcBrowserV1(ctx context.Context, in *api.ListWatchOptions) (BrowserV1_AutoWatchSvcBrowserV1Client, error) {
-	return nil, errors.New("not implemented")
+func (e EndpointsBrowserV1Client) AutoWatchSvcBrowserV1(ctx context.Context, in *api.AggWatchOptions) (BrowserV1_AutoWatchSvcBrowserV1Client, error) {
+	return e.Client.AutoWatchSvcBrowserV1(ctx, in)
 }
 
 // Query implementation on server Endpoint
@@ -181,10 +181,15 @@ func MakeBrowserV1ReferrersEndpoint(s ServiceBrowserV1Server, logger log.Logger)
 	return trace.ServerEndpoint("BrowserV1:Referrers")(f)
 }
 
+func (e EndpointsBrowserV1Server) AutoWatchSvcBrowserV1(in *api.AggWatchOptions, stream BrowserV1_AutoWatchSvcBrowserV1Server) error {
+	return e.svcWatchHandlerBrowserV1(in, stream)
+}
+
 // MakeAutoWatchSvcBrowserV1Endpoint creates the Watch endpoint for the service
-func MakeAutoWatchSvcBrowserV1Endpoint(s ServiceBrowserV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
-	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
-		return errors.New("not implemented")
+func MakeAutoWatchSvcBrowserV1Endpoint(s ServiceBrowserV1Server, logger log.Logger) func(options *api.AggWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.AggWatchOptions, stream grpc.ServerStream) error {
+		wstream := stream.(BrowserV1_AutoWatchSvcBrowserV1Server)
+		return s.AutoWatchSvcBrowserV1(options, wstream)
 	}
 }
 
@@ -269,8 +274,18 @@ func (m loggingBrowserV1MiddlewareClient) Referrers(ctx context.Context, in *Bro
 	return
 }
 
-func (m loggingBrowserV1MiddlewareClient) AutoWatchSvcBrowserV1(ctx context.Context, in *api.ListWatchOptions) (BrowserV1_AutoWatchSvcBrowserV1Client, error) {
-	return nil, errors.New("not implemented")
+func (m loggingBrowserV1MiddlewareClient) AutoWatchSvcBrowserV1(ctx context.Context, in *api.AggWatchOptions) (resp BrowserV1_AutoWatchSvcBrowserV1Client, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "BrowserV1", "method", "AutoWatchSvcBrowserV1", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoWatchSvcBrowserV1(ctx, in)
+	return
 }
 
 func (m loggingBrowserV1MiddlewareServer) Query(ctx context.Context, in BrowseRequestList) (resp BrowseResponseList, err error) {
@@ -313,8 +328,18 @@ func (m loggingBrowserV1MiddlewareServer) Referrers(ctx context.Context, in Brow
 	return
 }
 
-func (m loggingBrowserV1MiddlewareServer) AutoWatchSvcBrowserV1(in *api.ListWatchOptions, stream BrowserV1_AutoWatchSvcBrowserV1Server) error {
-	return errors.New("Not implemented")
+func (m loggingBrowserV1MiddlewareServer) AutoWatchSvcBrowserV1(in *api.AggWatchOptions, stream BrowserV1_AutoWatchSvcBrowserV1Server) (err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(stream.Context(), "service", "BrowserV1", "method", "AutoWatchSvcBrowserV1", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	err = m.next.AutoWatchSvcBrowserV1(in, stream)
+	return
 }
 
 func (r *EndpointsBrowserV1RestClient) updateHTTPHeader(ctx context.Context, header *http.Header) {
@@ -345,7 +370,7 @@ func (r *EndpointsBrowserV1RestClient) getHTTPRequest(ctx context.Context, in in
 }
 
 //
-func makeURIBrowserV1AutoWatchSvcBrowserV1WatchOper(in *api.ListWatchOptions) string {
+func makeURIBrowserV1AutoWatchSvcBrowserV1WatchOper(in *api.AggWatchOptions) string {
 	return ""
 
 }

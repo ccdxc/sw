@@ -3,6 +3,10 @@
 package grpcclient
 
 import (
+	"context"
+	"errors"
+	"net/http"
+
 	"github.com/go-kit/kit/endpoint"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
 	"google.golang.org/grpc"
@@ -64,4 +68,35 @@ func NewSearchV1Backend(conn *grpc.ClientConn, logger log.Logger) search.Service
 	cl := NewSearchV1(conn, logger)
 	cl = search.LoggingSearchV1MiddlewareClient(logger)(cl)
 	return cl
+}
+
+type crudClientSearchV1 struct {
+	logger log.Logger
+	client search.ServiceSearchV1Client
+}
+
+// NewGrpcCrudClientSearchV1 creates a GRPC client for the service
+func NewGrpcCrudClientSearchV1(conn *grpc.ClientConn, logger log.Logger) search.SearchV1Interface {
+	client := NewSearchV1Backend(conn, logger)
+	return &crudClientSearchV1{
+		logger: logger,
+		client: client,
+	}
+}
+
+type crudRestClientSearchV1 struct {
+}
+
+// NewRestCrudClientSearchV1 creates a REST client for the service.
+func NewRestCrudClientSearchV1(url string, httpClient *http.Client) search.SearchV1Interface {
+	return &crudRestClientSearchV1{}
+}
+
+// NewStagedRestCrudClientSearchV1 creates a REST client for the service.
+func NewStagedRestCrudClientSearchV1(url string, id string, httpClient *http.Client) search.SearchV1Interface {
+	return &crudRestClientSearchV1{}
+}
+
+func (a *crudRestClientSearchV1) Watch(ctx context.Context, options *api.AggWatchOptions) (kvstore.Watcher, error) {
+	return nil, errors.New("method unimplemented")
 }

@@ -111,7 +111,7 @@ func listener(ctx context.Context) {
 			}
 		}
 	}
-	watcher, err := tinfo.apicl.ClusterV1().Watch(ctx, &api.ListWatchOptions{})
+	watcher, err := tinfo.apicl.ClusterV1().Watch(ctx, &api.AggWatchOptions{})
 	if err != nil {
 		tinfo.l.Fatalf("unable start watcher")
 	}

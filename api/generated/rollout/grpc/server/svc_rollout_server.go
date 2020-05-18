@@ -48,7 +48,7 @@ type srolloutSvc_rolloutBackend struct {
 
 type eRolloutV1Endpoints struct {
 	Svc                     srolloutSvc_rolloutBackend
-	fnAutoWatchSvcRolloutV1 func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
+	fnAutoWatchSvcRolloutV1 func(in *api.AggWatchOptions, stream grpc.ServerStream, svcprefix string) error
 
 	fnAutoAddRollout          func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddRolloutAction    func(ctx context.Context, t interface{}) (interface{}, error)
@@ -328,16 +328,24 @@ func (s *srolloutSvc_rolloutBackend) regWatchersFunc(ctx context.Context, logger
 
 	// Add Watchers
 	{
-
 		// Service watcher
 		svc := s.Services["rollout.RolloutV1"]
 		if svc != nil {
-			svc.WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfnMap map[string]func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
-				key := globals.ConfigRootPrefix + "/rollout"
+			svc.WithKvWatchFunc(func(l log.Logger, options *api.AggWatchOptions, kvs kvstore.Interface, stream interface{}, txfnMap map[string]func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
+				for _, o := range options.WatchOptions {
+					if o.Group != "rollout" {
+						return fmt.Errorf("invalid group [%s] in watch options", o.Group)
+					}
+				}
+				if len(options.WatchOptions) == 0 {
+					options.WatchOptions = append(options.WatchOptions, api.KindWatchOptions{Group: "rollout"})
+				}
 				wstream := stream.(grpc.ServerStream)
 				nctx, cancel := context.WithCancel(wstream.Context())
+				id := fmt.Sprintf("%s-%x", ctxutils.GetPeerID(nctx), &options)
+				nctx = ctxutils.SetContextID(nctx, id)
 				defer cancel()
-				watcher, err := kvs.WatchFiltered(nctx, key, *options)
+				watcher, err := kvs.WatchAggregate(nctx, *options)
 				if err != nil {
 					l.ErrorLog("msg", "error starting Watch for service", "err", err, "service", "RolloutV1")
 					return err
@@ -706,7 +714,7 @@ func (e *eRolloutV1Endpoints) AutoWatchRollout(in *api.ListWatchOptions, stream 
 func (e *eRolloutV1Endpoints) AutoWatchRolloutAction(in *api.ListWatchOptions, stream rollout.RolloutV1_AutoWatchRolloutActionServer) error {
 	return e.fnAutoWatchRolloutAction(in, stream, "rollout")
 }
-func (e *eRolloutV1Endpoints) AutoWatchSvcRolloutV1(in *api.ListWatchOptions, stream rollout.RolloutV1_AutoWatchSvcRolloutV1Server) error {
+func (e *eRolloutV1Endpoints) AutoWatchSvcRolloutV1(in *api.AggWatchOptions, stream rollout.RolloutV1_AutoWatchSvcRolloutV1Server) error {
 	return e.fnAutoWatchSvcRolloutV1(in, stream, "")
 }
 

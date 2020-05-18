@@ -51,7 +51,7 @@ type sbookstoreExampleBackend struct {
 
 type eBookstoreV1Endpoints struct {
 	Svc                       sbookstoreExampleBackend
-	fnAutoWatchSvcBookstoreV1 func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
+	fnAutoWatchSvcBookstoreV1 func(in *api.AggWatchOptions, stream grpc.ServerStream, svcprefix string) error
 
 	fnAddOutage           func(ctx context.Context, t interface{}) (interface{}, error)
 	fnApplydiscount       func(ctx context.Context, t interface{}) (interface{}, error)
@@ -3237,16 +3237,24 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 
 	// Add Watchers
 	{
-
 		// Service watcher
 		svc := s.Services["bookstore.BookstoreV1"]
 		if svc != nil {
-			svc.WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfnMap map[string]func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
-				key := globals.ConfigRootPrefix + "/bookstore"
+			svc.WithKvWatchFunc(func(l log.Logger, options *api.AggWatchOptions, kvs kvstore.Interface, stream interface{}, txfnMap map[string]func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
+				for _, o := range options.WatchOptions {
+					if o.Group != "bookstore" {
+						return fmt.Errorf("invalid group [%s] in watch options", o.Group)
+					}
+				}
+				if len(options.WatchOptions) == 0 {
+					options.WatchOptions = append(options.WatchOptions, api.KindWatchOptions{Group: "bookstore"})
+				}
 				wstream := stream.(grpc.ServerStream)
 				nctx, cancel := context.WithCancel(wstream.Context())
+				id := fmt.Sprintf("%s-%x", ctxutils.GetPeerID(nctx), &options)
+				nctx = ctxutils.SetContextID(nctx, id)
 				defer cancel()
-				watcher, err := kvs.WatchFiltered(nctx, key, *options)
+				watcher, err := kvs.WatchAggregate(nctx, *options)
 				if err != nil {
 					l.ErrorLog("msg", "error starting Watch for service", "err", err, "service", "BookstoreV1")
 					return err
@@ -4238,7 +4246,7 @@ func (e *eBookstoreV1Endpoints) AutoWatchCoupon(in *api.ListWatchOptions, stream
 func (e *eBookstoreV1Endpoints) AutoWatchCustomer(in *api.ListWatchOptions, stream bookstore.BookstoreV1_AutoWatchCustomerServer) error {
 	return e.fnAutoWatchCustomer(in, stream, "bookstore")
 }
-func (e *eBookstoreV1Endpoints) AutoWatchSvcBookstoreV1(in *api.ListWatchOptions, stream bookstore.BookstoreV1_AutoWatchSvcBookstoreV1Server) error {
+func (e *eBookstoreV1Endpoints) AutoWatchSvcBookstoreV1(in *api.AggWatchOptions, stream bookstore.BookstoreV1_AutoWatchSvcBookstoreV1Server) error {
 	return e.fnAutoWatchSvcBookstoreV1(in, stream, "")
 }
 

@@ -1151,7 +1151,7 @@ func (a adapterBookstoreV1) Restock(oldctx oldcontext.Context, t *bookstore.Rest
 	return ret.(*bookstore.RestockResponse), err
 }
 
-func (a adapterBookstoreV1) AutoWatchSvcBookstoreV1(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (bookstore.BookstoreV1_AutoWatchSvcBookstoreV1Client, error) {
+func (a adapterBookstoreV1) AutoWatchSvcBookstoreV1(oldctx oldcontext.Context, in *api.AggWatchOptions, options ...grpc.CallOption) (bookstore.BookstoreV1_AutoWatchSvcBookstoreV1Client, error) {
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoWatchSvcBookstoreV1")
 	if err != nil {
@@ -1161,7 +1161,7 @@ func (a adapterBookstoreV1) AutoWatchSvcBookstoreV1(oldctx oldcontext.Context, i
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
-		in := i.(*api.ListWatchOptions)
+		in := i.(*api.AggWatchOptions)
 		iws, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwWebSocketWatch)
 		if ok && iws.(bool) {
 			nctx, cancel := context.WithCancel(ctx)

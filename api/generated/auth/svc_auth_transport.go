@@ -65,262 +65,258 @@ type grpcServerAuthV1 struct {
 
 // MakeGRPCServerAuthV1 creates a GRPC server for AuthV1 service
 func MakeGRPCServerAuthV1(ctx context.Context, endpoints EndpointsAuthV1Server, logger log.Logger) AuthV1Server {
-	options := []grpctransport.ServerOption{
-		grpctransport.ServerErrorLogger(logger),
-		grpctransport.ServerBefore(recoverVersion),
-	}
 	return &grpcServerAuthV1{
 		Endpoints: endpoints,
 		AutoAddAuthenticationPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoAddAuthenticationPolicyEndpoint,
 			DecodeGrpcReqAuthenticationPolicy,
 			EncodeGrpcRespAuthenticationPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddAuthenticationPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddAuthenticationPolicy", logger)))...,
 		),
 
 		AutoAddRoleHdlr: grpctransport.NewServer(
 			endpoints.AutoAddRoleEndpoint,
 			DecodeGrpcReqRole,
 			EncodeGrpcRespRole,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddRole", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddRole", logger)))...,
 		),
 
 		AutoAddRoleBindingHdlr: grpctransport.NewServer(
 			endpoints.AutoAddRoleBindingEndpoint,
 			DecodeGrpcReqRoleBinding,
 			EncodeGrpcRespRoleBinding,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddRoleBinding", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddRoleBinding", logger)))...,
 		),
 
 		AutoAddUserHdlr: grpctransport.NewServer(
 			endpoints.AutoAddUserEndpoint,
 			DecodeGrpcReqUser,
 			EncodeGrpcRespUser,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddUser", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddUser", logger)))...,
 		),
 
 		AutoAddUserPreferenceHdlr: grpctransport.NewServer(
 			endpoints.AutoAddUserPreferenceEndpoint,
 			DecodeGrpcReqUserPreference,
 			EncodeGrpcRespUserPreference,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddUserPreference", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddUserPreference", logger)))...,
 		),
 
 		AutoDeleteAuthenticationPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteAuthenticationPolicyEndpoint,
 			DecodeGrpcReqAuthenticationPolicy,
 			EncodeGrpcRespAuthenticationPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteAuthenticationPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteAuthenticationPolicy", logger)))...,
 		),
 
 		AutoDeleteRoleHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteRoleEndpoint,
 			DecodeGrpcReqRole,
 			EncodeGrpcRespRole,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteRole", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteRole", logger)))...,
 		),
 
 		AutoDeleteRoleBindingHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteRoleBindingEndpoint,
 			DecodeGrpcReqRoleBinding,
 			EncodeGrpcRespRoleBinding,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteRoleBinding", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteRoleBinding", logger)))...,
 		),
 
 		AutoDeleteUserHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteUserEndpoint,
 			DecodeGrpcReqUser,
 			EncodeGrpcRespUser,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteUser", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteUser", logger)))...,
 		),
 
 		AutoDeleteUserPreferenceHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteUserPreferenceEndpoint,
 			DecodeGrpcReqUserPreference,
 			EncodeGrpcRespUserPreference,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteUserPreference", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteUserPreference", logger)))...,
 		),
 
 		AutoGetAuthenticationPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoGetAuthenticationPolicyEndpoint,
 			DecodeGrpcReqAuthenticationPolicy,
 			EncodeGrpcRespAuthenticationPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetAuthenticationPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetAuthenticationPolicy", logger)))...,
 		),
 
 		AutoGetRoleHdlr: grpctransport.NewServer(
 			endpoints.AutoGetRoleEndpoint,
 			DecodeGrpcReqRole,
 			EncodeGrpcRespRole,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetRole", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetRole", logger)))...,
 		),
 
 		AutoGetRoleBindingHdlr: grpctransport.NewServer(
 			endpoints.AutoGetRoleBindingEndpoint,
 			DecodeGrpcReqRoleBinding,
 			EncodeGrpcRespRoleBinding,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetRoleBinding", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetRoleBinding", logger)))...,
 		),
 
 		AutoGetUserHdlr: grpctransport.NewServer(
 			endpoints.AutoGetUserEndpoint,
 			DecodeGrpcReqUser,
 			EncodeGrpcRespUser,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetUser", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetUser", logger)))...,
 		),
 
 		AutoGetUserPreferenceHdlr: grpctransport.NewServer(
 			endpoints.AutoGetUserPreferenceEndpoint,
 			DecodeGrpcReqUserPreference,
 			EncodeGrpcRespUserPreference,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetUserPreference", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetUserPreference", logger)))...,
 		),
 
 		AutoLabelAuthenticationPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoLabelAuthenticationPolicyEndpoint,
 			DecodeGrpcReqLabel,
 			EncodeGrpcRespAuthenticationPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelAuthenticationPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelAuthenticationPolicy", logger)))...,
 		),
 
 		AutoLabelRoleHdlr: grpctransport.NewServer(
 			endpoints.AutoLabelRoleEndpoint,
 			DecodeGrpcReqLabel,
 			EncodeGrpcRespRole,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelRole", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelRole", logger)))...,
 		),
 
 		AutoLabelRoleBindingHdlr: grpctransport.NewServer(
 			endpoints.AutoLabelRoleBindingEndpoint,
 			DecodeGrpcReqLabel,
 			EncodeGrpcRespRoleBinding,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelRoleBinding", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelRoleBinding", logger)))...,
 		),
 
 		AutoLabelUserHdlr: grpctransport.NewServer(
 			endpoints.AutoLabelUserEndpoint,
 			DecodeGrpcReqLabel,
 			EncodeGrpcRespUser,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelUser", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelUser", logger)))...,
 		),
 
 		AutoLabelUserPreferenceHdlr: grpctransport.NewServer(
 			endpoints.AutoLabelUserPreferenceEndpoint,
 			DecodeGrpcReqLabel,
 			EncodeGrpcRespUserPreference,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelUserPreference", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelUserPreference", logger)))...,
 		),
 
 		AutoListAuthenticationPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoListAuthenticationPolicyEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespAuthenticationPolicyList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListAuthenticationPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListAuthenticationPolicy", logger)))...,
 		),
 
 		AutoListRoleHdlr: grpctransport.NewServer(
 			endpoints.AutoListRoleEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespRoleList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListRole", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListRole", logger)))...,
 		),
 
 		AutoListRoleBindingHdlr: grpctransport.NewServer(
 			endpoints.AutoListRoleBindingEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespRoleBindingList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListRoleBinding", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListRoleBinding", logger)))...,
 		),
 
 		AutoListUserHdlr: grpctransport.NewServer(
 			endpoints.AutoListUserEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespUserList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListUser", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListUser", logger)))...,
 		),
 
 		AutoListUserPreferenceHdlr: grpctransport.NewServer(
 			endpoints.AutoListUserPreferenceEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespUserPreferenceList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListUserPreference", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListUserPreference", logger)))...,
 		),
 
 		AutoUpdateAuthenticationPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateAuthenticationPolicyEndpoint,
 			DecodeGrpcReqAuthenticationPolicy,
 			EncodeGrpcRespAuthenticationPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateAuthenticationPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateAuthenticationPolicy", logger)))...,
 		),
 
 		AutoUpdateRoleHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateRoleEndpoint,
 			DecodeGrpcReqRole,
 			EncodeGrpcRespRole,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateRole", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateRole", logger)))...,
 		),
 
 		AutoUpdateRoleBindingHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateRoleBindingEndpoint,
 			DecodeGrpcReqRoleBinding,
 			EncodeGrpcRespRoleBinding,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateRoleBinding", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateRoleBinding", logger)))...,
 		),
 
 		AutoUpdateUserHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateUserEndpoint,
 			DecodeGrpcReqUser,
 			EncodeGrpcRespUser,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateUser", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateUser", logger)))...,
 		),
 
 		AutoUpdateUserPreferenceHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateUserPreferenceEndpoint,
 			DecodeGrpcReqUserPreference,
 			EncodeGrpcRespUserPreference,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateUserPreference", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateUserPreference", logger)))...,
 		),
 
 		IsAuthorizedHdlr: grpctransport.NewServer(
 			endpoints.IsAuthorizedEndpoint,
 			DecodeGrpcReqSubjectAccessReviewRequest,
 			EncodeGrpcRespUser,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("IsAuthorized", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("IsAuthorized", logger)))...,
 		),
 
 		LdapBindCheckHdlr: grpctransport.NewServer(
 			endpoints.LdapBindCheckEndpoint,
 			DecodeGrpcReqAuthenticationPolicy,
 			EncodeGrpcRespAuthenticationPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("LdapBindCheck", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("LdapBindCheck", logger)))...,
 		),
 
 		LdapConnectionCheckHdlr: grpctransport.NewServer(
 			endpoints.LdapConnectionCheckEndpoint,
 			DecodeGrpcReqAuthenticationPolicy,
 			EncodeGrpcRespAuthenticationPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("LdapConnectionCheck", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("LdapConnectionCheck", logger)))...,
 		),
 
 		PasswordChangeHdlr: grpctransport.NewServer(
 			endpoints.PasswordChangeEndpoint,
 			DecodeGrpcReqPasswordChangeRequest,
 			EncodeGrpcRespUser,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("PasswordChange", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("PasswordChange", logger)))...,
 		),
 
 		PasswordResetHdlr: grpctransport.NewServer(
 			endpoints.PasswordResetEndpoint,
 			DecodeGrpcReqPasswordResetRequest,
 			EncodeGrpcRespUser,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("PasswordReset", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("PasswordReset", logger)))...,
 		),
 
 		TokenSecretGenerateHdlr: grpctransport.NewServer(
 			endpoints.TokenSecretGenerateEndpoint,
 			DecodeGrpcReqTokenSecretRequest,
 			EncodeGrpcRespAuthenticationPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("TokenSecretGenerate", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("TokenSecretGenerate", logger)))...,
 		),
 	}
 }
@@ -973,7 +969,7 @@ func decodeHTTPrespAuthV1TokenSecretGenerate(_ context.Context, r *http.Response
 	return &resp, err
 }
 
-func (s *grpcServerAuthV1) AutoWatchSvcAuthV1(in *api.ListWatchOptions, stream AuthV1_AutoWatchSvcAuthV1Server) error {
+func (s *grpcServerAuthV1) AutoWatchSvcAuthV1(in *api.AggWatchOptions, stream AuthV1_AutoWatchSvcAuthV1Server) error {
 	return s.Endpoints.AutoWatchSvcAuthV1(in, stream)
 }
 

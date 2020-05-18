@@ -49,5 +49,5 @@ type RolloutV1RolloutActionInterface interface {
 type RolloutV1Interface interface {
 	Rollout() RolloutV1RolloutInterface
 	RolloutAction() RolloutV1RolloutActionInterface
-	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
+	Watch(ctx context.Context, options *api.AggWatchOptions) (kvstore.Watcher, error)
 }

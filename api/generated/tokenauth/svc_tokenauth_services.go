@@ -17,14 +17,14 @@ var _ api.ObjectMeta
 
 // ServiceTokenAuthV1Client  is the client interface for the service.
 type ServiceTokenAuthV1Client interface {
-	AutoWatchSvcTokenAuthV1(ctx context.Context, in *api.ListWatchOptions) (TokenAuthV1_AutoWatchSvcTokenAuthV1Client, error)
+	AutoWatchSvcTokenAuthV1(ctx context.Context, in *api.AggWatchOptions) (TokenAuthV1_AutoWatchSvcTokenAuthV1Client, error)
 
 	GenerateNodeToken(ctx context.Context, t *NodeTokenRequest) (*NodeTokenResponse, error)
 }
 
 // ServiceTokenAuthV1Server is the server interface for the service.
 type ServiceTokenAuthV1Server interface {
-	AutoWatchSvcTokenAuthV1(in *api.ListWatchOptions, stream TokenAuthV1_AutoWatchSvcTokenAuthV1Server) error
+	AutoWatchSvcTokenAuthV1(in *api.AggWatchOptions, stream TokenAuthV1_AutoWatchSvcTokenAuthV1Server) error
 
 	GenerateNodeToken(ctx context.Context, t NodeTokenRequest) (NodeTokenResponse, error)
 }

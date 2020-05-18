@@ -9,7 +9,6 @@ package browser
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"net/http"
 
 	grpctransport "github.com/go-kit/kit/transport/grpc"
@@ -33,31 +32,27 @@ type grpcServerBrowserV1 struct {
 
 // MakeGRPCServerBrowserV1 creates a GRPC server for BrowserV1 service
 func MakeGRPCServerBrowserV1(ctx context.Context, endpoints EndpointsBrowserV1Server, logger log.Logger) BrowserV1Server {
-	options := []grpctransport.ServerOption{
-		grpctransport.ServerErrorLogger(logger),
-		grpctransport.ServerBefore(recoverVersion),
-	}
 	return &grpcServerBrowserV1{
 		Endpoints: endpoints,
 		QueryHdlr: grpctransport.NewServer(
 			endpoints.QueryEndpoint,
 			DecodeGrpcReqBrowseRequestList,
 			EncodeGrpcRespBrowseResponseList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("Query", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("Query", logger)))...,
 		),
 
 		ReferencesHdlr: grpctransport.NewServer(
 			endpoints.ReferencesEndpoint,
 			DecodeGrpcReqBrowseRequest,
 			EncodeGrpcRespBrowseResponse,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("References", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("References", logger)))...,
 		),
 
 		ReferrersHdlr: grpctransport.NewServer(
 			endpoints.ReferrersEndpoint,
 			DecodeGrpcReqBrowseRequest,
 			EncodeGrpcRespBrowseResponse,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("Referrers", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("Referrers", logger)))...,
 		),
 	}
 }
@@ -116,6 +111,6 @@ func decodeHTTPrespBrowserV1Referrers(_ context.Context, r *http.Response) (inte
 	return &resp, err
 }
 
-func (s *grpcServerBrowserV1) AutoWatchSvcBrowserV1(in *api.ListWatchOptions, stream BrowserV1_AutoWatchSvcBrowserV1Server) error {
-	return errors.New("not implemented")
+func (s *grpcServerBrowserV1) AutoWatchSvcBrowserV1(in *api.AggWatchOptions, stream BrowserV1_AutoWatchSvcBrowserV1Server) error {
+	return s.Endpoints.AutoWatchSvcBrowserV1(in, stream)
 }

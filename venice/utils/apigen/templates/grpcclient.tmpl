@@ -289,13 +289,13 @@ func (a *restObj{{$srvname}}{{$crudop}}) {{.Name}}(ctx context.Context, in *{{$p
 	return a.endpoints.{{.Name}}{{$crudop}}(ctx, in)
 }{{end}}
 {{end}}{{end}}{{end}}
-
-{{range .Services}}{{$srvname := .Name}}{{if (hasExtension "venice.apiGrpcCrudService" .)}}
+{{$isApiSrvSvc := (isAPIServerServed .) }}
+{{range .Services}}{{$srvname := .Name}}
 type crudClient{{$srvname}} struct {
 	logger log.Logger
 	client {{$pkgname}}.Service{{$srvname}}Client
-	{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{range $cruds}}
-	grpc{{.}} {{$pkgname}}.{{$srvname}}{{.}}Interface{{end}}
+{{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{range $cruds}}
+	grpc{{.}} {{$pkgname}}.{{$srvname}}{{.}}Interface{{end}}{{end}}
 }
 
 // NewGrpcCrudClient{{$srvname}} creates a GRPC client for the service
@@ -304,17 +304,18 @@ func NewGrpcCrudClient{{$srvname}}(conn *grpc.ClientConn, logger log.Logger) {{$
 	return &crudClient{{$srvname}}{
 		logger: logger,
 		client: client,
-		{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{range $cruds}}
-		grpc{{.}}: &grpcObj{{$srvname}}{{.}}{ client: client, logger: logger },{{end}}
+{{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{range $cruds}}
+		grpc{{.}}: &grpcObj{{$srvname}}{{.}}{ client: client, logger: logger },{{end}}{{end}}
 	}
 }
-{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{range $cruds}}
+{{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{range $cruds}}
 func (a *crudClient{{$srvname}}) {{title .}}() {{$pkgname}}.{{$srvname}}{{.}}Interface {
 	return a.grpc{{.}}
 }
-{{end}}{{$version := getExtension "venice.apiVersion" .}}
+{{end}}{{end}}{{$version := getExtension "venice.apiVersion" .}}
 
-func (a *crudClient{{$srvname}}) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+{{if  $isApiSrvSvc}}
+func (a *crudClient{{$srvname}}) Watch(ctx context.Context, options *api.AggWatchOptions) (kvstore.Watcher, error) {
 	a.logger.DebugLog("msg", "received call", "object", "{{.Name}}", "oper", "WatchOper")
 	nctx := addVersion(ctx, "{{$version}}")
 	if options == nil {
@@ -335,13 +336,21 @@ func (a *crudClient{{$srvname}}) Watch(ctx context.Context, options *api.ListWat
 			}
 			for _, e := range r.Events {
 				ev := kvstore.WatchEvent{Type:   kvstore.WatchEventType(e.Type)}
-				robj, err := listerwatcher.GetObject(e)
-				if err != nil {
-					a.logger.ErrorLog("msg", "error on receive unmarshall", "err", err)
-	 				close(lw.OutCh)
-	 				return
+				switch e.Type {
+				case string(kvstore.Created), string(kvstore.Updated), string(kvstore.Deleted):
+					robj, err := listerwatcher.GetObject(e)
+					if err != nil {
+						a.logger.ErrorLog("msg", "error on receive unmarshall", "err", err)
+						close(lw.OutCh)
+						return
+					}
+					ev.Object = robj
+				case string(kvstore.WatcherControl):
+					ev.Control = &kvstore.WatchControl{
+						Code:    e.Control.Code,
+						Message: e.Control.Message,
+					}
 				}
-				ev.Object = robj
 				select {
 				case lw.OutCh <- &ev:
 				case <-wstream.Context().Done():
@@ -354,44 +363,45 @@ func (a *crudClient{{$srvname}}) Watch(ctx context.Context, options *api.ListWat
 	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)
 	lw.Run()
 	return lw, nil
-}
+} {{end}}
 
 type crudRestClient{{$srvname}} struct {
-	{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{range $cruds}}
-	rest{{.}} {{$pkgname}}.{{$srvname}}{{.}}Interface{{end}}
+{{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{range $cruds}}
+	rest{{.}} {{$pkgname}}.{{$srvname}}{{.}}Interface{{end}}{{end}}
 }
 
 // NewRestCrudClient{{$srvname}} creates a REST client for the service.
-func NewRestCrudClient{{$srvname}}(url string, httpClient *http.Client) {{$pkgname}}.{{$srvname}}Interface {
+func NewRestCrudClient{{$srvname}}(url string, httpClient *http.Client) {{$pkgname}}.{{$srvname}}Interface { {{if (hasExtension "venice.apiGrpcCrudService" .)}}
 	endpoints, err := {{$pkgname}}.Make{{$srvname}}RestClientEndpoints(url, httpClient)
 	if err != nil {
 		oldlog.Fatal("failed to create client")
-	}
+	}{{end}}
 	return &crudRestClient{{$srvname}}{
-		{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{range $cruds}}
-		rest{{.}}: &restObj{{$srvname}}{{.}}{ endpoints: endpoints, instance: url},{{end}}
-	}
+{{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{range $cruds}}
+		rest{{.}}: &restObj{{$srvname}}{{.}}{ endpoints: endpoints, instance: url},{{end}}{{end}}
+    }
 }
 
 // NewStagedRestCrudClient{{$srvname}} creates a REST client for the service.
-func NewStagedRestCrudClient{{$srvname}}(url string, id string, httpClient *http.Client) {{$pkgname}}.{{$srvname}}Interface {
+func NewStagedRestCrudClient{{$srvname}}(url string, id string, httpClient *http.Client) {{$pkgname}}.{{$srvname}}Interface {  {{if (hasExtension "venice.apiGrpcCrudService" .)}}
 	endpoints, err := {{$pkgname}}.Make{{$srvname}}StagedRestClientEndpoints(url, id, httpClient)
 	if err != nil {
 		oldlog.Fatal("failed to create client")
-	}
+	}{{end}}
 	return &crudRestClient{{$srvname}}{
-		{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{range $cruds}}
-		rest{{.}}: &restObj{{$srvname}}{{.}}{ endpoints: endpoints, instance: url},{{end}}
+{{if  (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{range $cruds}}
+		rest{{.}}: &restObj{{$srvname}}{{.}}{ endpoints: endpoints, instance: url},{{end}}{{end}}
 	}
 }
 
-{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{range $cruds}}
+{{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{range $cruds}}
 func (a *crudRestClient{{$srvname}}) {{title .}}() {{$pkgname}}.{{$srvname}}{{.}}Interface {
 	return a.rest{{.}}
 }
-{{end}}
+{{end}}{{end}}
 
-func (a *crudRestClient{{$srvname}}) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+func (a *crudRestClient{{$srvname}}) Watch(ctx context.Context, options *api.AggWatchOptions) (kvstore.Watcher, error) {
 	return nil, errors.New("method unimplemented")
 }
-{{end}}{{end}}
+
+{{end}}

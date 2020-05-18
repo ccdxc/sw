@@ -60,7 +60,7 @@ type MiddlewareTelemetryV1Server func(ServiceTelemetryV1Server) ServiceTelemetry
 
 // EndpointsTelemetryV1Server is the server endpoints
 type EndpointsTelemetryV1Server struct {
-	svcWatchHandlerTelemetryV1 func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	svcWatchHandlerTelemetryV1 func(options *api.AggWatchOptions, stream grpc.ServerStream) error
 
 	FwlogsEndpoint  endpoint.Endpoint
 	MetricsEndpoint endpoint.Endpoint
@@ -94,8 +94,8 @@ type respTelemetryV1Metrics struct {
 	Err error
 }
 
-func (e EndpointsTelemetryV1Client) AutoWatchSvcTelemetryV1(ctx context.Context, in *api.ListWatchOptions) (TelemetryV1_AutoWatchSvcTelemetryV1Client, error) {
-	return nil, errors.New("not implemented")
+func (e EndpointsTelemetryV1Client) AutoWatchSvcTelemetryV1(ctx context.Context, in *api.AggWatchOptions) (TelemetryV1_AutoWatchSvcTelemetryV1Client, error) {
+	return e.Client.AutoWatchSvcTelemetryV1(ctx, in)
 }
 
 // Fwlogs implementation on server Endpoint
@@ -142,10 +142,15 @@ func MakeTelemetryV1MetricsEndpoint(s ServiceTelemetryV1Server, logger log.Logge
 	return trace.ServerEndpoint("TelemetryV1:Metrics")(f)
 }
 
+func (e EndpointsTelemetryV1Server) AutoWatchSvcTelemetryV1(in *api.AggWatchOptions, stream TelemetryV1_AutoWatchSvcTelemetryV1Server) error {
+	return e.svcWatchHandlerTelemetryV1(in, stream)
+}
+
 // MakeAutoWatchSvcTelemetryV1Endpoint creates the Watch endpoint for the service
-func MakeAutoWatchSvcTelemetryV1Endpoint(s ServiceTelemetryV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
-	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
-		return errors.New("not implemented")
+func MakeAutoWatchSvcTelemetryV1Endpoint(s ServiceTelemetryV1Server, logger log.Logger) func(options *api.AggWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.AggWatchOptions, stream grpc.ServerStream) error {
+		wstream := stream.(TelemetryV1_AutoWatchSvcTelemetryV1Server)
+		return s.AutoWatchSvcTelemetryV1(options, wstream)
 	}
 }
 
@@ -216,8 +221,18 @@ func (m loggingTelemetryV1MiddlewareClient) Metrics(ctx context.Context, in *Met
 	return
 }
 
-func (m loggingTelemetryV1MiddlewareClient) AutoWatchSvcTelemetryV1(ctx context.Context, in *api.ListWatchOptions) (TelemetryV1_AutoWatchSvcTelemetryV1Client, error) {
-	return nil, errors.New("not implemented")
+func (m loggingTelemetryV1MiddlewareClient) AutoWatchSvcTelemetryV1(ctx context.Context, in *api.AggWatchOptions) (resp TelemetryV1_AutoWatchSvcTelemetryV1Client, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "TelemetryV1", "method", "AutoWatchSvcTelemetryV1", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoWatchSvcTelemetryV1(ctx, in)
+	return
 }
 
 func (m loggingTelemetryV1MiddlewareServer) Fwlogs(ctx context.Context, in FwlogsQueryList) (resp FwlogsQueryResponse, err error) {
@@ -247,8 +262,18 @@ func (m loggingTelemetryV1MiddlewareServer) Metrics(ctx context.Context, in Metr
 	return
 }
 
-func (m loggingTelemetryV1MiddlewareServer) AutoWatchSvcTelemetryV1(in *api.ListWatchOptions, stream TelemetryV1_AutoWatchSvcTelemetryV1Server) error {
-	return errors.New("Not implemented")
+func (m loggingTelemetryV1MiddlewareServer) AutoWatchSvcTelemetryV1(in *api.AggWatchOptions, stream TelemetryV1_AutoWatchSvcTelemetryV1Server) (err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(stream.Context(), "service", "TelemetryV1", "method", "AutoWatchSvcTelemetryV1", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	err = m.next.AutoWatchSvcTelemetryV1(in, stream)
+	return
 }
 
 func (r *EndpointsTelemetryV1RestClient) updateHTTPHeader(ctx context.Context, header *http.Header) {
@@ -279,7 +304,7 @@ func (r *EndpointsTelemetryV1RestClient) getHTTPRequest(ctx context.Context, in 
 }
 
 //
-func makeURITelemetryV1AutoWatchSvcTelemetryV1WatchOper(in *api.ListWatchOptions) string {
+func makeURITelemetryV1AutoWatchSvcTelemetryV1WatchOper(in *api.AggWatchOptions) string {
 	return ""
 
 }

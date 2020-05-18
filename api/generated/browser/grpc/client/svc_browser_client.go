@@ -3,6 +3,10 @@
 package grpcclient
 
 import (
+	"context"
+	"errors"
+	"net/http"
+
 	"github.com/go-kit/kit/endpoint"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
 	"google.golang.org/grpc"
@@ -79,4 +83,85 @@ func NewBrowserV1Backend(conn *grpc.ClientConn, logger log.Logger) browser.Servi
 	cl := NewBrowserV1(conn, logger)
 	cl = browser.LoggingBrowserV1MiddlewareClient(logger)(cl)
 	return cl
+}
+
+type crudClientBrowserV1 struct {
+	logger log.Logger
+	client browser.ServiceBrowserV1Client
+}
+
+// NewGrpcCrudClientBrowserV1 creates a GRPC client for the service
+func NewGrpcCrudClientBrowserV1(conn *grpc.ClientConn, logger log.Logger) browser.BrowserV1Interface {
+	client := NewBrowserV1Backend(conn, logger)
+	return &crudClientBrowserV1{
+		logger: logger,
+		client: client,
+	}
+}
+
+func (a *crudClientBrowserV1) Watch(ctx context.Context, options *api.AggWatchOptions) (kvstore.Watcher, error) {
+	a.logger.DebugLog("msg", "received call", "object", "BrowserV1", "oper", "WatchOper")
+	nctx := addVersion(ctx, "v1")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	stream, err := a.client.AutoWatchSvcBrowserV1(nctx, options)
+	if err != nil {
+		return nil, err
+	}
+	wstream := stream.(browser.BrowserV1_AutoWatchSvcBrowserV1Client)
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			r, err := wstream.Recv()
+			if err != nil {
+				a.logger.ErrorLog("msg", "error on receive", "err", err)
+				close(lw.OutCh)
+				return
+			}
+			for _, e := range r.Events {
+				ev := kvstore.WatchEvent{Type: kvstore.WatchEventType(e.Type)}
+				switch e.Type {
+				case string(kvstore.Created), string(kvstore.Updated), string(kvstore.Deleted):
+					robj, err := listerwatcher.GetObject(e)
+					if err != nil {
+						a.logger.ErrorLog("msg", "error on receive unmarshall", "err", err)
+						close(lw.OutCh)
+						return
+					}
+					ev.Object = robj
+				case string(kvstore.WatcherControl):
+					ev.Control = &kvstore.WatchControl{
+						Code:    e.Control.Code,
+						Message: e.Control.Message,
+					}
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-wstream.Context().Done():
+					close(lw.OutCh)
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)
+	lw.Run()
+	return lw, nil
+}
+
+type crudRestClientBrowserV1 struct {
+}
+
+// NewRestCrudClientBrowserV1 creates a REST client for the service.
+func NewRestCrudClientBrowserV1(url string, httpClient *http.Client) browser.BrowserV1Interface {
+	return &crudRestClientBrowserV1{}
+}
+
+// NewStagedRestCrudClientBrowserV1 creates a REST client for the service.
+func NewStagedRestCrudClientBrowserV1(url string, id string, httpClient *http.Client) browser.BrowserV1Interface {
+	return &crudRestClientBrowserV1{}
+}
+
+func (a *crudRestClientBrowserV1) Watch(ctx context.Context, options *api.AggWatchOptions) (kvstore.Watcher, error) {
+	return nil, errors.New("method unimplemented")
 }

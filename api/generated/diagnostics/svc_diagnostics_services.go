@@ -17,7 +17,7 @@ var _ api.ObjectMeta
 
 // ServiceDiagnosticsV1Client  is the client interface for the service.
 type ServiceDiagnosticsV1Client interface {
-	AutoWatchSvcDiagnosticsV1(ctx context.Context, in *api.ListWatchOptions) (DiagnosticsV1_AutoWatchSvcDiagnosticsV1Client, error)
+	AutoWatchSvcDiagnosticsV1(ctx context.Context, in *api.AggWatchOptions) (DiagnosticsV1_AutoWatchSvcDiagnosticsV1Client, error)
 
 	AutoAddModule(ctx context.Context, t *Module) (*Module, error)
 	AutoDeleteModule(ctx context.Context, t *Module) (*Module, error)
@@ -32,7 +32,7 @@ type ServiceDiagnosticsV1Client interface {
 
 // ServiceDiagnosticsV1Server is the server interface for the service.
 type ServiceDiagnosticsV1Server interface {
-	AutoWatchSvcDiagnosticsV1(in *api.ListWatchOptions, stream DiagnosticsV1_AutoWatchSvcDiagnosticsV1Server) error
+	AutoWatchSvcDiagnosticsV1(in *api.AggWatchOptions, stream DiagnosticsV1_AutoWatchSvcDiagnosticsV1Server) error
 
 	AutoAddModule(ctx context.Context, t Module) (Module, error)
 	AutoDeleteModule(ctx context.Context, t Module) (Module, error)

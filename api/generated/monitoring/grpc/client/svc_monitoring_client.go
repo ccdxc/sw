@@ -3735,7 +3735,7 @@ func (a *crudClientMonitoringV1) AuditPolicy() monitoring.MonitoringV1AuditPolic
 	return a.grpcAuditPolicy
 }
 
-func (a *crudClientMonitoringV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+func (a *crudClientMonitoringV1) Watch(ctx context.Context, options *api.AggWatchOptions) (kvstore.Watcher, error) {
 	a.logger.DebugLog("msg", "received call", "object", "MonitoringV1", "oper", "WatchOper")
 	nctx := addVersion(ctx, "v1")
 	if options == nil {
@@ -3756,13 +3756,21 @@ func (a *crudClientMonitoringV1) Watch(ctx context.Context, options *api.ListWat
 			}
 			for _, e := range r.Events {
 				ev := kvstore.WatchEvent{Type: kvstore.WatchEventType(e.Type)}
-				robj, err := listerwatcher.GetObject(e)
-				if err != nil {
-					a.logger.ErrorLog("msg", "error on receive unmarshall", "err", err)
-					close(lw.OutCh)
-					return
+				switch e.Type {
+				case string(kvstore.Created), string(kvstore.Updated), string(kvstore.Deleted):
+					robj, err := listerwatcher.GetObject(e)
+					if err != nil {
+						a.logger.ErrorLog("msg", "error on receive unmarshall", "err", err)
+						close(lw.OutCh)
+						return
+					}
+					ev.Object = robj
+				case string(kvstore.WatcherControl):
+					ev.Control = &kvstore.WatchControl{
+						Code:    e.Control.Code,
+						Message: e.Control.Message,
+					}
 				}
-				ev.Object = robj
 				select {
 				case lw.OutCh <- &ev:
 				case <-wstream.Context().Done():
@@ -3886,6 +3894,6 @@ func (a *crudRestClientMonitoringV1) AuditPolicy() monitoring.MonitoringV1AuditP
 	return a.restAuditPolicy
 }
 
-func (a *crudRestClientMonitoringV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+func (a *crudRestClientMonitoringV1) Watch(ctx context.Context, options *api.AggWatchOptions) (kvstore.Watcher, error) {
 	return nil, errors.New("method unimplemented")
 }

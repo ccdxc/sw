@@ -6,6 +6,8 @@ Package cliutils is a auto generated package.
 package cliutils
 
 import (
+	// blank import to pull in aggwatch service into cli utils
+	_ "github.com/pensando/sw/api/generated/aggwatch/cli"
 	// blank import to pull in audit service into cli utils
 	_ "github.com/pensando/sw/api/generated/audit/cli"
 	// blank import to pull in auth service into cli utils

@@ -60,7 +60,7 @@ type MiddlewareEventsV1Server func(ServiceEventsV1Server) ServiceEventsV1Server
 
 // EndpointsEventsV1Server is the server endpoints
 type EndpointsEventsV1Server struct {
-	svcWatchHandlerEventsV1 func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	svcWatchHandlerEventsV1 func(options *api.AggWatchOptions, stream grpc.ServerStream) error
 
 	GetEventEndpoint  endpoint.Endpoint
 	GetEventsEndpoint endpoint.Endpoint
@@ -94,8 +94,8 @@ type respEventsV1GetEvents struct {
 	Err error
 }
 
-func (e EndpointsEventsV1Client) AutoWatchSvcEventsV1(ctx context.Context, in *api.ListWatchOptions) (EventsV1_AutoWatchSvcEventsV1Client, error) {
-	return nil, errors.New("not implemented")
+func (e EndpointsEventsV1Client) AutoWatchSvcEventsV1(ctx context.Context, in *api.AggWatchOptions) (EventsV1_AutoWatchSvcEventsV1Client, error) {
+	return e.Client.AutoWatchSvcEventsV1(ctx, in)
 }
 
 // GetEvent implementation on server Endpoint
@@ -142,10 +142,15 @@ func MakeEventsV1GetEventsEndpoint(s ServiceEventsV1Server, logger log.Logger) e
 	return trace.ServerEndpoint("EventsV1:GetEvents")(f)
 }
 
+func (e EndpointsEventsV1Server) AutoWatchSvcEventsV1(in *api.AggWatchOptions, stream EventsV1_AutoWatchSvcEventsV1Server) error {
+	return e.svcWatchHandlerEventsV1(in, stream)
+}
+
 // MakeAutoWatchSvcEventsV1Endpoint creates the Watch endpoint for the service
-func MakeAutoWatchSvcEventsV1Endpoint(s ServiceEventsV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
-	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
-		return errors.New("not implemented")
+func MakeAutoWatchSvcEventsV1Endpoint(s ServiceEventsV1Server, logger log.Logger) func(options *api.AggWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.AggWatchOptions, stream grpc.ServerStream) error {
+		wstream := stream.(EventsV1_AutoWatchSvcEventsV1Server)
+		return s.AutoWatchSvcEventsV1(options, wstream)
 	}
 }
 
@@ -216,8 +221,18 @@ func (m loggingEventsV1MiddlewareClient) GetEvents(ctx context.Context, in *api.
 	return
 }
 
-func (m loggingEventsV1MiddlewareClient) AutoWatchSvcEventsV1(ctx context.Context, in *api.ListWatchOptions) (EventsV1_AutoWatchSvcEventsV1Client, error) {
-	return nil, errors.New("not implemented")
+func (m loggingEventsV1MiddlewareClient) AutoWatchSvcEventsV1(ctx context.Context, in *api.AggWatchOptions) (resp EventsV1_AutoWatchSvcEventsV1Client, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "EventsV1", "method", "AutoWatchSvcEventsV1", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoWatchSvcEventsV1(ctx, in)
+	return
 }
 
 func (m loggingEventsV1MiddlewareServer) GetEvent(ctx context.Context, in GetEventRequest) (resp Event, err error) {
@@ -247,8 +262,18 @@ func (m loggingEventsV1MiddlewareServer) GetEvents(ctx context.Context, in api.L
 	return
 }
 
-func (m loggingEventsV1MiddlewareServer) AutoWatchSvcEventsV1(in *api.ListWatchOptions, stream EventsV1_AutoWatchSvcEventsV1Server) error {
-	return errors.New("Not implemented")
+func (m loggingEventsV1MiddlewareServer) AutoWatchSvcEventsV1(in *api.AggWatchOptions, stream EventsV1_AutoWatchSvcEventsV1Server) (err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(stream.Context(), "service", "EventsV1", "method", "AutoWatchSvcEventsV1", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	err = m.next.AutoWatchSvcEventsV1(in, stream)
+	return
 }
 
 func (r *EndpointsEventsV1RestClient) updateHTTPHeader(ctx context.Context, header *http.Header) {
@@ -279,7 +304,7 @@ func (r *EndpointsEventsV1RestClient) getHTTPRequest(ctx context.Context, in int
 }
 
 //
-func makeURIEventsV1AutoWatchSvcEventsV1WatchOper(in *api.ListWatchOptions) string {
+func makeURIEventsV1AutoWatchSvcEventsV1WatchOper(in *api.AggWatchOptions) string {
 	return ""
 
 }

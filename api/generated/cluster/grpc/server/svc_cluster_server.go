@@ -48,7 +48,7 @@ type sclusterSvc_clusterBackend struct {
 
 type eClusterV1Endpoints struct {
 	Svc                     sclusterSvc_clusterBackend
-	fnAutoWatchSvcClusterV1 func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
+	fnAutoWatchSvcClusterV1 func(in *api.AggWatchOptions, stream grpc.ServerStream, svcprefix string) error
 
 	fnAuthBootstrapComplete            func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddCluster                   func(ctx context.Context, t interface{}) (interface{}, error)
@@ -1136,16 +1136,24 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 
 	// Add Watchers
 	{
-
 		// Service watcher
 		svc := s.Services["cluster.ClusterV1"]
 		if svc != nil {
-			svc.WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfnMap map[string]func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
-				key := globals.ConfigRootPrefix + "/cluster"
+			svc.WithKvWatchFunc(func(l log.Logger, options *api.AggWatchOptions, kvs kvstore.Interface, stream interface{}, txfnMap map[string]func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
+				for _, o := range options.WatchOptions {
+					if o.Group != "cluster" {
+						return fmt.Errorf("invalid group [%s] in watch options", o.Group)
+					}
+				}
+				if len(options.WatchOptions) == 0 {
+					options.WatchOptions = append(options.WatchOptions, api.KindWatchOptions{Group: "cluster"})
+				}
 				wstream := stream.(grpc.ServerStream)
 				nctx, cancel := context.WithCancel(wstream.Context())
+				id := fmt.Sprintf("%s-%x", ctxutils.GetPeerID(nctx), &options)
+				nctx = ctxutils.SetContextID(nctx, id)
 				defer cancel()
-				watcher, err := kvs.WatchFiltered(nctx, key, *options)
+				watcher, err := kvs.WatchAggregate(nctx, *options)
 				if err != nil {
 					l.ErrorLog("msg", "error starting Watch for service", "err", err, "service", "ClusterV1")
 					return err
@@ -2753,7 +2761,7 @@ func (e *eClusterV1Endpoints) AutoWatchLicense(in *api.ListWatchOptions, stream 
 func (e *eClusterV1Endpoints) AutoWatchDSCProfile(in *api.ListWatchOptions, stream cluster.ClusterV1_AutoWatchDSCProfileServer) error {
 	return e.fnAutoWatchDSCProfile(in, stream, "cluster")
 }
-func (e *eClusterV1Endpoints) AutoWatchSvcClusterV1(in *api.ListWatchOptions, stream cluster.ClusterV1_AutoWatchSvcClusterV1Server) error {
+func (e *eClusterV1Endpoints) AutoWatchSvcClusterV1(in *api.AggWatchOptions, stream cluster.ClusterV1_AutoWatchSvcClusterV1Server) error {
 	return e.fnAutoWatchSvcClusterV1(in, stream, "")
 }
 

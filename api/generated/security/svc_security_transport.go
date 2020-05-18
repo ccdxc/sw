@@ -65,262 +65,258 @@ type grpcServerSecurityV1 struct {
 
 // MakeGRPCServerSecurityV1 creates a GRPC server for SecurityV1 service
 func MakeGRPCServerSecurityV1(ctx context.Context, endpoints EndpointsSecurityV1Server, logger log.Logger) SecurityV1Server {
-	options := []grpctransport.ServerOption{
-		grpctransport.ServerErrorLogger(logger),
-		grpctransport.ServerBefore(recoverVersion),
-	}
 	return &grpcServerSecurityV1{
 		Endpoints: endpoints,
 		AutoAddAppHdlr: grpctransport.NewServer(
 			endpoints.AutoAddAppEndpoint,
 			DecodeGrpcReqApp,
 			EncodeGrpcRespApp,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddApp", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddApp", logger)))...,
 		),
 
 		AutoAddCertificateHdlr: grpctransport.NewServer(
 			endpoints.AutoAddCertificateEndpoint,
 			DecodeGrpcReqCertificate,
 			EncodeGrpcRespCertificate,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddCertificate", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddCertificate", logger)))...,
 		),
 
 		AutoAddFirewallProfileHdlr: grpctransport.NewServer(
 			endpoints.AutoAddFirewallProfileEndpoint,
 			DecodeGrpcReqFirewallProfile,
 			EncodeGrpcRespFirewallProfile,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddFirewallProfile", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddFirewallProfile", logger)))...,
 		),
 
 		AutoAddNetworkSecurityPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoAddNetworkSecurityPolicyEndpoint,
 			DecodeGrpcReqNetworkSecurityPolicy,
 			EncodeGrpcRespNetworkSecurityPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddNetworkSecurityPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddNetworkSecurityPolicy", logger)))...,
 		),
 
 		AutoAddSecurityGroupHdlr: grpctransport.NewServer(
 			endpoints.AutoAddSecurityGroupEndpoint,
 			DecodeGrpcReqSecurityGroup,
 			EncodeGrpcRespSecurityGroup,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddSecurityGroup", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddSecurityGroup", logger)))...,
 		),
 
 		AutoAddTrafficEncryptionPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoAddTrafficEncryptionPolicyEndpoint,
 			DecodeGrpcReqTrafficEncryptionPolicy,
 			EncodeGrpcRespTrafficEncryptionPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddTrafficEncryptionPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddTrafficEncryptionPolicy", logger)))...,
 		),
 
 		AutoDeleteAppHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteAppEndpoint,
 			DecodeGrpcReqApp,
 			EncodeGrpcRespApp,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteApp", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteApp", logger)))...,
 		),
 
 		AutoDeleteCertificateHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteCertificateEndpoint,
 			DecodeGrpcReqCertificate,
 			EncodeGrpcRespCertificate,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteCertificate", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteCertificate", logger)))...,
 		),
 
 		AutoDeleteFirewallProfileHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteFirewallProfileEndpoint,
 			DecodeGrpcReqFirewallProfile,
 			EncodeGrpcRespFirewallProfile,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteFirewallProfile", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteFirewallProfile", logger)))...,
 		),
 
 		AutoDeleteNetworkSecurityPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteNetworkSecurityPolicyEndpoint,
 			DecodeGrpcReqNetworkSecurityPolicy,
 			EncodeGrpcRespNetworkSecurityPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteNetworkSecurityPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteNetworkSecurityPolicy", logger)))...,
 		),
 
 		AutoDeleteSecurityGroupHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteSecurityGroupEndpoint,
 			DecodeGrpcReqSecurityGroup,
 			EncodeGrpcRespSecurityGroup,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteSecurityGroup", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteSecurityGroup", logger)))...,
 		),
 
 		AutoDeleteTrafficEncryptionPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteTrafficEncryptionPolicyEndpoint,
 			DecodeGrpcReqTrafficEncryptionPolicy,
 			EncodeGrpcRespTrafficEncryptionPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteTrafficEncryptionPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteTrafficEncryptionPolicy", logger)))...,
 		),
 
 		AutoGetAppHdlr: grpctransport.NewServer(
 			endpoints.AutoGetAppEndpoint,
 			DecodeGrpcReqApp,
 			EncodeGrpcRespApp,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetApp", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetApp", logger)))...,
 		),
 
 		AutoGetCertificateHdlr: grpctransport.NewServer(
 			endpoints.AutoGetCertificateEndpoint,
 			DecodeGrpcReqCertificate,
 			EncodeGrpcRespCertificate,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetCertificate", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetCertificate", logger)))...,
 		),
 
 		AutoGetFirewallProfileHdlr: grpctransport.NewServer(
 			endpoints.AutoGetFirewallProfileEndpoint,
 			DecodeGrpcReqFirewallProfile,
 			EncodeGrpcRespFirewallProfile,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetFirewallProfile", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetFirewallProfile", logger)))...,
 		),
 
 		AutoGetNetworkSecurityPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoGetNetworkSecurityPolicyEndpoint,
 			DecodeGrpcReqNetworkSecurityPolicy,
 			EncodeGrpcRespNetworkSecurityPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetNetworkSecurityPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetNetworkSecurityPolicy", logger)))...,
 		),
 
 		AutoGetSecurityGroupHdlr: grpctransport.NewServer(
 			endpoints.AutoGetSecurityGroupEndpoint,
 			DecodeGrpcReqSecurityGroup,
 			EncodeGrpcRespSecurityGroup,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetSecurityGroup", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetSecurityGroup", logger)))...,
 		),
 
 		AutoGetTrafficEncryptionPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoGetTrafficEncryptionPolicyEndpoint,
 			DecodeGrpcReqTrafficEncryptionPolicy,
 			EncodeGrpcRespTrafficEncryptionPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetTrafficEncryptionPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetTrafficEncryptionPolicy", logger)))...,
 		),
 
 		AutoLabelAppHdlr: grpctransport.NewServer(
 			endpoints.AutoLabelAppEndpoint,
 			DecodeGrpcReqLabel,
 			EncodeGrpcRespApp,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelApp", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelApp", logger)))...,
 		),
 
 		AutoLabelCertificateHdlr: grpctransport.NewServer(
 			endpoints.AutoLabelCertificateEndpoint,
 			DecodeGrpcReqLabel,
 			EncodeGrpcRespCertificate,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelCertificate", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelCertificate", logger)))...,
 		),
 
 		AutoLabelFirewallProfileHdlr: grpctransport.NewServer(
 			endpoints.AutoLabelFirewallProfileEndpoint,
 			DecodeGrpcReqLabel,
 			EncodeGrpcRespFirewallProfile,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelFirewallProfile", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelFirewallProfile", logger)))...,
 		),
 
 		AutoLabelNetworkSecurityPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoLabelNetworkSecurityPolicyEndpoint,
 			DecodeGrpcReqLabel,
 			EncodeGrpcRespNetworkSecurityPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelNetworkSecurityPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelNetworkSecurityPolicy", logger)))...,
 		),
 
 		AutoLabelSecurityGroupHdlr: grpctransport.NewServer(
 			endpoints.AutoLabelSecurityGroupEndpoint,
 			DecodeGrpcReqLabel,
 			EncodeGrpcRespSecurityGroup,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelSecurityGroup", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelSecurityGroup", logger)))...,
 		),
 
 		AutoLabelTrafficEncryptionPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoLabelTrafficEncryptionPolicyEndpoint,
 			DecodeGrpcReqLabel,
 			EncodeGrpcRespTrafficEncryptionPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelTrafficEncryptionPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelTrafficEncryptionPolicy", logger)))...,
 		),
 
 		AutoListAppHdlr: grpctransport.NewServer(
 			endpoints.AutoListAppEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespAppList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListApp", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListApp", logger)))...,
 		),
 
 		AutoListCertificateHdlr: grpctransport.NewServer(
 			endpoints.AutoListCertificateEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespCertificateList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListCertificate", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListCertificate", logger)))...,
 		),
 
 		AutoListFirewallProfileHdlr: grpctransport.NewServer(
 			endpoints.AutoListFirewallProfileEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespFirewallProfileList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListFirewallProfile", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListFirewallProfile", logger)))...,
 		),
 
 		AutoListNetworkSecurityPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoListNetworkSecurityPolicyEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespNetworkSecurityPolicyList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListNetworkSecurityPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListNetworkSecurityPolicy", logger)))...,
 		),
 
 		AutoListSecurityGroupHdlr: grpctransport.NewServer(
 			endpoints.AutoListSecurityGroupEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespSecurityGroupList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListSecurityGroup", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListSecurityGroup", logger)))...,
 		),
 
 		AutoListTrafficEncryptionPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoListTrafficEncryptionPolicyEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespTrafficEncryptionPolicyList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListTrafficEncryptionPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListTrafficEncryptionPolicy", logger)))...,
 		),
 
 		AutoUpdateAppHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateAppEndpoint,
 			DecodeGrpcReqApp,
 			EncodeGrpcRespApp,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateApp", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateApp", logger)))...,
 		),
 
 		AutoUpdateCertificateHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateCertificateEndpoint,
 			DecodeGrpcReqCertificate,
 			EncodeGrpcRespCertificate,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateCertificate", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateCertificate", logger)))...,
 		),
 
 		AutoUpdateFirewallProfileHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateFirewallProfileEndpoint,
 			DecodeGrpcReqFirewallProfile,
 			EncodeGrpcRespFirewallProfile,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateFirewallProfile", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateFirewallProfile", logger)))...,
 		),
 
 		AutoUpdateNetworkSecurityPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateNetworkSecurityPolicyEndpoint,
 			DecodeGrpcReqNetworkSecurityPolicy,
 			EncodeGrpcRespNetworkSecurityPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateNetworkSecurityPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateNetworkSecurityPolicy", logger)))...,
 		),
 
 		AutoUpdateSecurityGroupHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateSecurityGroupEndpoint,
 			DecodeGrpcReqSecurityGroup,
 			EncodeGrpcRespSecurityGroup,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateSecurityGroup", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateSecurityGroup", logger)))...,
 		),
 
 		AutoUpdateTrafficEncryptionPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateTrafficEncryptionPolicyEndpoint,
 			DecodeGrpcReqTrafficEncryptionPolicy,
 			EncodeGrpcRespTrafficEncryptionPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateTrafficEncryptionPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateTrafficEncryptionPolicy", logger)))...,
 		),
 	}
 }
@@ -973,7 +969,7 @@ func decodeHTTPrespSecurityV1AutoUpdateTrafficEncryptionPolicy(_ context.Context
 	return &resp, err
 }
 
-func (s *grpcServerSecurityV1) AutoWatchSvcSecurityV1(in *api.ListWatchOptions, stream SecurityV1_AutoWatchSvcSecurityV1Server) error {
+func (s *grpcServerSecurityV1) AutoWatchSvcSecurityV1(in *api.AggWatchOptions, stream SecurityV1_AutoWatchSvcSecurityV1Server) error {
 	return s.Endpoints.AutoWatchSvcSecurityV1(in, stream)
 }
 

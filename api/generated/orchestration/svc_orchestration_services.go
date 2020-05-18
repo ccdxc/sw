@@ -17,7 +17,7 @@ var _ api.ObjectMeta
 
 // ServiceOrchestratorV1Client  is the client interface for the service.
 type ServiceOrchestratorV1Client interface {
-	AutoWatchSvcOrchestratorV1(ctx context.Context, in *api.ListWatchOptions) (OrchestratorV1_AutoWatchSvcOrchestratorV1Client, error)
+	AutoWatchSvcOrchestratorV1(ctx context.Context, in *api.AggWatchOptions) (OrchestratorV1_AutoWatchSvcOrchestratorV1Client, error)
 
 	AutoAddOrchestrator(ctx context.Context, t *Orchestrator) (*Orchestrator, error)
 	AutoDeleteOrchestrator(ctx context.Context, t *Orchestrator) (*Orchestrator, error)
@@ -31,7 +31,7 @@ type ServiceOrchestratorV1Client interface {
 
 // ServiceOrchestratorV1Server is the server interface for the service.
 type ServiceOrchestratorV1Server interface {
-	AutoWatchSvcOrchestratorV1(in *api.ListWatchOptions, stream OrchestratorV1_AutoWatchSvcOrchestratorV1Server) error
+	AutoWatchSvcOrchestratorV1(in *api.AggWatchOptions, stream OrchestratorV1_AutoWatchSvcOrchestratorV1Server) error
 
 	AutoAddOrchestrator(ctx context.Context, t Orchestrator) (Orchestrator, error)
 	AutoDeleteOrchestrator(ctx context.Context, t Orchestrator) (Orchestrator, error)

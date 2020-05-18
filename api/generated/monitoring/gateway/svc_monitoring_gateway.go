@@ -2082,7 +2082,7 @@ func (a adapterMonitoringV1) Cancel(oldctx oldcontext.Context, t *monitoring.Can
 	return ret.(*monitoring.ArchiveRequest), err
 }
 
-func (a adapterMonitoringV1) AutoWatchSvcMonitoringV1(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (monitoring.MonitoringV1_AutoWatchSvcMonitoringV1Client, error) {
+func (a adapterMonitoringV1) AutoWatchSvcMonitoringV1(oldctx oldcontext.Context, in *api.AggWatchOptions, options ...grpc.CallOption) (monitoring.MonitoringV1_AutoWatchSvcMonitoringV1Client, error) {
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoWatchSvcMonitoringV1")
 	if err != nil {
@@ -2092,7 +2092,7 @@ func (a adapterMonitoringV1) AutoWatchSvcMonitoringV1(oldctx oldcontext.Context,
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
-		in := i.(*api.ListWatchOptions)
+		in := i.(*api.AggWatchOptions)
 		iws, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwWebSocketWatch)
 		if ok && iws.(bool) {
 			nctx, cancel := context.WithCancel(ctx)

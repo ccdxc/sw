@@ -845,7 +845,7 @@ func processActions(f *descriptor.FileDescriptorProto, s *descriptor.ServiceDesc
 func addServiceWatcherMsg(f *descriptor.FileDescriptorProto, s *descriptor.ServiceDescriptorProto, msgMap map[string]*descriptor.DescriptorProto) {
 	insertMethod(s,
 		fmt.Sprintf("AutoWatchSvc%s", *s.Name),
-		".api.ListWatchOptions",
+		".api.AggWatchOptions",
 		".api.WatchEventList",
 		"watch", true, false, "", nil)
 }

@@ -920,6 +920,8 @@ type ServiceParams struct {
 	// StagingPath is the URI path prefix for this service if it supports config
 	//  staging. If the service does not support staging then it is empty.
 	StagingPath string
+	// GRPCOnly marks if the service does not have any REST endpoints.
+	GRPCOnly bool
 }
 
 // GetSvcParams returns the ServiceParams for the service.
@@ -954,6 +956,13 @@ func GetSvcParams(s *descriptor.Service) (ServiceParams, error) {
 		params.URIPath = "/" + category + "/" + params.Prefix + "/" + params.Version
 		if category == globals.ConfigURIPrefix {
 			params.StagingPath = "/staging/{TOCTX.BufferId}/" + params.Prefix + "/" + params.Version
+		}
+	}
+	params.GRPCOnly = true
+	for _, m := range s.Methods {
+		if len(m.Bindings) != 0 {
+			params.GRPCOnly = false
+			break
 		}
 	}
 	return params, nil

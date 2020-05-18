@@ -13,3 +13,8 @@ import (
 var _ context.Context
 var _ api.ObjectMeta
 var _ kvstore.Interface
+
+// BrowserV1Interface exposes objects with CRUD operations allowed by the service
+type BrowserV1Interface interface {
+	Watch(ctx context.Context, options *api.AggWatchOptions) (kvstore.Watcher, error)
+}

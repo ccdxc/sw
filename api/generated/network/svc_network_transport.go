@@ -77,346 +77,342 @@ type grpcServerNetworkV1 struct {
 
 // MakeGRPCServerNetworkV1 creates a GRPC server for NetworkV1 service
 func MakeGRPCServerNetworkV1(ctx context.Context, endpoints EndpointsNetworkV1Server, logger log.Logger) NetworkV1Server {
-	options := []grpctransport.ServerOption{
-		grpctransport.ServerErrorLogger(logger),
-		grpctransport.ServerBefore(recoverVersion),
-	}
 	return &grpcServerNetworkV1{
 		Endpoints: endpoints,
 		AutoAddIPAMPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoAddIPAMPolicyEndpoint,
 			DecodeGrpcReqIPAMPolicy,
 			EncodeGrpcRespIPAMPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddIPAMPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddIPAMPolicy", logger)))...,
 		),
 
 		AutoAddLbPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoAddLbPolicyEndpoint,
 			DecodeGrpcReqLbPolicy,
 			EncodeGrpcRespLbPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddLbPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddLbPolicy", logger)))...,
 		),
 
 		AutoAddNetworkHdlr: grpctransport.NewServer(
 			endpoints.AutoAddNetworkEndpoint,
 			DecodeGrpcReqNetwork,
 			EncodeGrpcRespNetwork,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddNetwork", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddNetwork", logger)))...,
 		),
 
 		AutoAddNetworkInterfaceHdlr: grpctransport.NewServer(
 			endpoints.AutoAddNetworkInterfaceEndpoint,
 			DecodeGrpcReqNetworkInterface,
 			EncodeGrpcRespNetworkInterface,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddNetworkInterface", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddNetworkInterface", logger)))...,
 		),
 
 		AutoAddRouteTableHdlr: grpctransport.NewServer(
 			endpoints.AutoAddRouteTableEndpoint,
 			DecodeGrpcReqRouteTable,
 			EncodeGrpcRespRouteTable,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddRouteTable", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddRouteTable", logger)))...,
 		),
 
 		AutoAddRoutingConfigHdlr: grpctransport.NewServer(
 			endpoints.AutoAddRoutingConfigEndpoint,
 			DecodeGrpcReqRoutingConfig,
 			EncodeGrpcRespRoutingConfig,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddRoutingConfig", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddRoutingConfig", logger)))...,
 		),
 
 		AutoAddServiceHdlr: grpctransport.NewServer(
 			endpoints.AutoAddServiceEndpoint,
 			DecodeGrpcReqService,
 			EncodeGrpcRespService,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddService", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddService", logger)))...,
 		),
 
 		AutoAddVirtualRouterHdlr: grpctransport.NewServer(
 			endpoints.AutoAddVirtualRouterEndpoint,
 			DecodeGrpcReqVirtualRouter,
 			EncodeGrpcRespVirtualRouter,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddVirtualRouter", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddVirtualRouter", logger)))...,
 		),
 
 		AutoDeleteIPAMPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteIPAMPolicyEndpoint,
 			DecodeGrpcReqIPAMPolicy,
 			EncodeGrpcRespIPAMPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteIPAMPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteIPAMPolicy", logger)))...,
 		),
 
 		AutoDeleteLbPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteLbPolicyEndpoint,
 			DecodeGrpcReqLbPolicy,
 			EncodeGrpcRespLbPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteLbPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteLbPolicy", logger)))...,
 		),
 
 		AutoDeleteNetworkHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteNetworkEndpoint,
 			DecodeGrpcReqNetwork,
 			EncodeGrpcRespNetwork,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteNetwork", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteNetwork", logger)))...,
 		),
 
 		AutoDeleteNetworkInterfaceHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteNetworkInterfaceEndpoint,
 			DecodeGrpcReqNetworkInterface,
 			EncodeGrpcRespNetworkInterface,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteNetworkInterface", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteNetworkInterface", logger)))...,
 		),
 
 		AutoDeleteRouteTableHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteRouteTableEndpoint,
 			DecodeGrpcReqRouteTable,
 			EncodeGrpcRespRouteTable,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteRouteTable", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteRouteTable", logger)))...,
 		),
 
 		AutoDeleteRoutingConfigHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteRoutingConfigEndpoint,
 			DecodeGrpcReqRoutingConfig,
 			EncodeGrpcRespRoutingConfig,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteRoutingConfig", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteRoutingConfig", logger)))...,
 		),
 
 		AutoDeleteServiceHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteServiceEndpoint,
 			DecodeGrpcReqService,
 			EncodeGrpcRespService,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteService", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteService", logger)))...,
 		),
 
 		AutoDeleteVirtualRouterHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteVirtualRouterEndpoint,
 			DecodeGrpcReqVirtualRouter,
 			EncodeGrpcRespVirtualRouter,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteVirtualRouter", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteVirtualRouter", logger)))...,
 		),
 
 		AutoGetIPAMPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoGetIPAMPolicyEndpoint,
 			DecodeGrpcReqIPAMPolicy,
 			EncodeGrpcRespIPAMPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetIPAMPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetIPAMPolicy", logger)))...,
 		),
 
 		AutoGetLbPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoGetLbPolicyEndpoint,
 			DecodeGrpcReqLbPolicy,
 			EncodeGrpcRespLbPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetLbPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetLbPolicy", logger)))...,
 		),
 
 		AutoGetNetworkHdlr: grpctransport.NewServer(
 			endpoints.AutoGetNetworkEndpoint,
 			DecodeGrpcReqNetwork,
 			EncodeGrpcRespNetwork,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetNetwork", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetNetwork", logger)))...,
 		),
 
 		AutoGetNetworkInterfaceHdlr: grpctransport.NewServer(
 			endpoints.AutoGetNetworkInterfaceEndpoint,
 			DecodeGrpcReqNetworkInterface,
 			EncodeGrpcRespNetworkInterface,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetNetworkInterface", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetNetworkInterface", logger)))...,
 		),
 
 		AutoGetRouteTableHdlr: grpctransport.NewServer(
 			endpoints.AutoGetRouteTableEndpoint,
 			DecodeGrpcReqRouteTable,
 			EncodeGrpcRespRouteTable,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetRouteTable", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetRouteTable", logger)))...,
 		),
 
 		AutoGetRoutingConfigHdlr: grpctransport.NewServer(
 			endpoints.AutoGetRoutingConfigEndpoint,
 			DecodeGrpcReqRoutingConfig,
 			EncodeGrpcRespRoutingConfig,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetRoutingConfig", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetRoutingConfig", logger)))...,
 		),
 
 		AutoGetServiceHdlr: grpctransport.NewServer(
 			endpoints.AutoGetServiceEndpoint,
 			DecodeGrpcReqService,
 			EncodeGrpcRespService,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetService", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetService", logger)))...,
 		),
 
 		AutoGetVirtualRouterHdlr: grpctransport.NewServer(
 			endpoints.AutoGetVirtualRouterEndpoint,
 			DecodeGrpcReqVirtualRouter,
 			EncodeGrpcRespVirtualRouter,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetVirtualRouter", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetVirtualRouter", logger)))...,
 		),
 
 		AutoLabelIPAMPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoLabelIPAMPolicyEndpoint,
 			DecodeGrpcReqLabel,
 			EncodeGrpcRespIPAMPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelIPAMPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelIPAMPolicy", logger)))...,
 		),
 
 		AutoLabelLbPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoLabelLbPolicyEndpoint,
 			DecodeGrpcReqLabel,
 			EncodeGrpcRespLbPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelLbPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelLbPolicy", logger)))...,
 		),
 
 		AutoLabelNetworkHdlr: grpctransport.NewServer(
 			endpoints.AutoLabelNetworkEndpoint,
 			DecodeGrpcReqLabel,
 			EncodeGrpcRespNetwork,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelNetwork", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelNetwork", logger)))...,
 		),
 
 		AutoLabelNetworkInterfaceHdlr: grpctransport.NewServer(
 			endpoints.AutoLabelNetworkInterfaceEndpoint,
 			DecodeGrpcReqLabel,
 			EncodeGrpcRespNetworkInterface,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelNetworkInterface", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelNetworkInterface", logger)))...,
 		),
 
 		AutoLabelRouteTableHdlr: grpctransport.NewServer(
 			endpoints.AutoLabelRouteTableEndpoint,
 			DecodeGrpcReqLabel,
 			EncodeGrpcRespRouteTable,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelRouteTable", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelRouteTable", logger)))...,
 		),
 
 		AutoLabelRoutingConfigHdlr: grpctransport.NewServer(
 			endpoints.AutoLabelRoutingConfigEndpoint,
 			DecodeGrpcReqLabel,
 			EncodeGrpcRespRoutingConfig,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelRoutingConfig", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelRoutingConfig", logger)))...,
 		),
 
 		AutoLabelServiceHdlr: grpctransport.NewServer(
 			endpoints.AutoLabelServiceEndpoint,
 			DecodeGrpcReqLabel,
 			EncodeGrpcRespService,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelService", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelService", logger)))...,
 		),
 
 		AutoLabelVirtualRouterHdlr: grpctransport.NewServer(
 			endpoints.AutoLabelVirtualRouterEndpoint,
 			DecodeGrpcReqLabel,
 			EncodeGrpcRespVirtualRouter,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelVirtualRouter", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelVirtualRouter", logger)))...,
 		),
 
 		AutoListIPAMPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoListIPAMPolicyEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespIPAMPolicyList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListIPAMPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListIPAMPolicy", logger)))...,
 		),
 
 		AutoListLbPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoListLbPolicyEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespLbPolicyList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListLbPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListLbPolicy", logger)))...,
 		),
 
 		AutoListNetworkHdlr: grpctransport.NewServer(
 			endpoints.AutoListNetworkEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespNetworkList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListNetwork", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListNetwork", logger)))...,
 		),
 
 		AutoListNetworkInterfaceHdlr: grpctransport.NewServer(
 			endpoints.AutoListNetworkInterfaceEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespNetworkInterfaceList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListNetworkInterface", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListNetworkInterface", logger)))...,
 		),
 
 		AutoListRouteTableHdlr: grpctransport.NewServer(
 			endpoints.AutoListRouteTableEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespRouteTableList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListRouteTable", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListRouteTable", logger)))...,
 		),
 
 		AutoListRoutingConfigHdlr: grpctransport.NewServer(
 			endpoints.AutoListRoutingConfigEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespRoutingConfigList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListRoutingConfig", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListRoutingConfig", logger)))...,
 		),
 
 		AutoListServiceHdlr: grpctransport.NewServer(
 			endpoints.AutoListServiceEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespServiceList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListService", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListService", logger)))...,
 		),
 
 		AutoListVirtualRouterHdlr: grpctransport.NewServer(
 			endpoints.AutoListVirtualRouterEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespVirtualRouterList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListVirtualRouter", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListVirtualRouter", logger)))...,
 		),
 
 		AutoUpdateIPAMPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateIPAMPolicyEndpoint,
 			DecodeGrpcReqIPAMPolicy,
 			EncodeGrpcRespIPAMPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateIPAMPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateIPAMPolicy", logger)))...,
 		),
 
 		AutoUpdateLbPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateLbPolicyEndpoint,
 			DecodeGrpcReqLbPolicy,
 			EncodeGrpcRespLbPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateLbPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateLbPolicy", logger)))...,
 		),
 
 		AutoUpdateNetworkHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateNetworkEndpoint,
 			DecodeGrpcReqNetwork,
 			EncodeGrpcRespNetwork,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateNetwork", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateNetwork", logger)))...,
 		),
 
 		AutoUpdateNetworkInterfaceHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateNetworkInterfaceEndpoint,
 			DecodeGrpcReqNetworkInterface,
 			EncodeGrpcRespNetworkInterface,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateNetworkInterface", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateNetworkInterface", logger)))...,
 		),
 
 		AutoUpdateRouteTableHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateRouteTableEndpoint,
 			DecodeGrpcReqRouteTable,
 			EncodeGrpcRespRouteTable,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateRouteTable", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateRouteTable", logger)))...,
 		),
 
 		AutoUpdateRoutingConfigHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateRoutingConfigEndpoint,
 			DecodeGrpcReqRoutingConfig,
 			EncodeGrpcRespRoutingConfig,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateRoutingConfig", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateRoutingConfig", logger)))...,
 		),
 
 		AutoUpdateServiceHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateServiceEndpoint,
 			DecodeGrpcReqService,
 			EncodeGrpcRespService,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateService", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateService", logger)))...,
 		),
 
 		AutoUpdateVirtualRouterHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateVirtualRouterEndpoint,
 			DecodeGrpcReqVirtualRouter,
 			EncodeGrpcRespVirtualRouter,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateVirtualRouter", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateVirtualRouter", logger)))...,
 		),
 	}
 }
@@ -1285,7 +1281,7 @@ func decodeHTTPrespNetworkV1AutoUpdateVirtualRouter(_ context.Context, r *http.R
 	return &resp, err
 }
 
-func (s *grpcServerNetworkV1) AutoWatchSvcNetworkV1(in *api.ListWatchOptions, stream NetworkV1_AutoWatchSvcNetworkV1Server) error {
+func (s *grpcServerNetworkV1) AutoWatchSvcNetworkV1(in *api.AggWatchOptions, stream NetworkV1_AutoWatchSvcNetworkV1Server) error {
 	return s.Endpoints.AutoWatchSvcNetworkV1(in, stream)
 }
 

@@ -17,7 +17,7 @@ var _ api.ObjectMeta
 
 // ServiceClusterV1Client  is the client interface for the service.
 type ServiceClusterV1Client interface {
-	AutoWatchSvcClusterV1(ctx context.Context, in *api.ListWatchOptions) (ClusterV1_AutoWatchSvcClusterV1Client, error)
+	AutoWatchSvcClusterV1(ctx context.Context, in *api.AggWatchOptions) (ClusterV1_AutoWatchSvcClusterV1Client, error)
 
 	AuthBootstrapComplete(ctx context.Context, t *ClusterAuthBootstrapRequest) (*Cluster, error)
 	AutoAddCluster(ctx context.Context, t *Cluster) (*Cluster, error)
@@ -98,7 +98,7 @@ type ServiceClusterV1Client interface {
 
 // ServiceClusterV1Server is the server interface for the service.
 type ServiceClusterV1Server interface {
-	AutoWatchSvcClusterV1(in *api.ListWatchOptions, stream ClusterV1_AutoWatchSvcClusterV1Server) error
+	AutoWatchSvcClusterV1(in *api.AggWatchOptions, stream ClusterV1_AutoWatchSvcClusterV1Server) error
 
 	AuthBootstrapComplete(ctx context.Context, t ClusterAuthBootstrapRequest) (Cluster, error)
 	AutoAddCluster(ctx context.Context, t Cluster) (Cluster, error)

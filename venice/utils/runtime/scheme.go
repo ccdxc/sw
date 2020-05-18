@@ -360,3 +360,10 @@ func IsScalar(in string) bool {
 	_, ok := descriptor.FieldDescriptorProto_Type_value[in]
 	return ok
 }
+
+// ResetDefaultSchema clears the default schema. Used for tests only.
+func ResetDefaultSchema() {
+	defaultScheme = NewScheme()
+	// Add the default Schema from api
+	defaultScheme.AddSchema(api.GetLocalSchema())
+}

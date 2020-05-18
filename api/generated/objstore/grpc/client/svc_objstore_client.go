@@ -664,48 +664,6 @@ func (a *crudClientObjstoreV1) Object() objstore.ObjstoreV1ObjectInterface {
 	return a.grpcObject
 }
 
-func (a *crudClientObjstoreV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	a.logger.DebugLog("msg", "received call", "object", "ObjstoreV1", "oper", "WatchOper")
-	nctx := addVersion(ctx, "v1")
-	if options == nil {
-		return nil, errors.New("invalid input")
-	}
-	stream, err := a.client.AutoWatchSvcObjstoreV1(nctx, options)
-	if err != nil {
-		return nil, err
-	}
-	wstream := stream.(objstore.ObjstoreV1_AutoWatchSvcObjstoreV1Client)
-	bridgefn := func(lw *listerwatcher.WatcherClient) {
-		for {
-			r, err := wstream.Recv()
-			if err != nil {
-				a.logger.ErrorLog("msg", "error on receive", "err", err)
-				close(lw.OutCh)
-				return
-			}
-			for _, e := range r.Events {
-				ev := kvstore.WatchEvent{Type: kvstore.WatchEventType(e.Type)}
-				robj, err := listerwatcher.GetObject(e)
-				if err != nil {
-					a.logger.ErrorLog("msg", "error on receive unmarshall", "err", err)
-					close(lw.OutCh)
-					return
-				}
-				ev.Object = robj
-				select {
-				case lw.OutCh <- &ev:
-				case <-wstream.Context().Done():
-					close(lw.OutCh)
-					return
-				}
-			}
-		}
-	}
-	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)
-	lw.Run()
-	return lw, nil
-}
-
 type crudRestClientObjstoreV1 struct {
 	restBucket objstore.ObjstoreV1BucketInterface
 	restObject objstore.ObjstoreV1ObjectInterface
@@ -745,6 +703,6 @@ func (a *crudRestClientObjstoreV1) Object() objstore.ObjstoreV1ObjectInterface {
 	return a.restObject
 }
 
-func (a *crudRestClientObjstoreV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+func (a *crudRestClientObjstoreV1) Watch(ctx context.Context, options *api.AggWatchOptions) (kvstore.Watcher, error) {
 	return nil, errors.New("method unimplemented")
 }

@@ -1,4 +1,15 @@
 {
+  "aggwatch": {
+    "Svcs": {
+      "AggWatchV1": {
+        "Version": "v1",
+        "Messages": null
+      }
+    },
+    "Files": [
+      "svc_aggwatch.proto"
+    ]
+  },
   "auth": {
     "Svcs": {
       "AuthV1": {
@@ -190,6 +201,17 @@
     },
     "Files": [
       "example.proto"
+    ]
+  },
+  "browser": {
+    "Svcs": {
+      "BrowserV1": {
+        "Version": "v1",
+        "Messages": null
+      }
+    },
+    "Files": [
+      "svc_browser.proto"
     ]
   },
   "cluster": {

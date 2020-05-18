@@ -41,94 +41,90 @@ type grpcServerObjstoreV1 struct {
 
 // MakeGRPCServerObjstoreV1 creates a GRPC server for ObjstoreV1 service
 func MakeGRPCServerObjstoreV1(ctx context.Context, endpoints EndpointsObjstoreV1Server, logger log.Logger) ObjstoreV1Server {
-	options := []grpctransport.ServerOption{
-		grpctransport.ServerErrorLogger(logger),
-		grpctransport.ServerBefore(recoverVersion),
-	}
 	return &grpcServerObjstoreV1{
 		Endpoints: endpoints,
 		AutoAddBucketHdlr: grpctransport.NewServer(
 			endpoints.AutoAddBucketEndpoint,
 			DecodeGrpcReqBucket,
 			EncodeGrpcRespBucket,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddBucket", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddBucket", logger)))...,
 		),
 
 		AutoAddObjectHdlr: grpctransport.NewServer(
 			endpoints.AutoAddObjectEndpoint,
 			DecodeGrpcReqObject,
 			EncodeGrpcRespObject,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddObject", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddObject", logger)))...,
 		),
 
 		AutoDeleteBucketHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteBucketEndpoint,
 			DecodeGrpcReqBucket,
 			EncodeGrpcRespBucket,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteBucket", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteBucket", logger)))...,
 		),
 
 		AutoDeleteObjectHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteObjectEndpoint,
 			DecodeGrpcReqObject,
 			EncodeGrpcRespObject,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteObject", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteObject", logger)))...,
 		),
 
 		AutoGetBucketHdlr: grpctransport.NewServer(
 			endpoints.AutoGetBucketEndpoint,
 			DecodeGrpcReqBucket,
 			EncodeGrpcRespBucket,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetBucket", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetBucket", logger)))...,
 		),
 
 		AutoGetObjectHdlr: grpctransport.NewServer(
 			endpoints.AutoGetObjectEndpoint,
 			DecodeGrpcReqObject,
 			EncodeGrpcRespObject,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetObject", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetObject", logger)))...,
 		),
 
 		AutoLabelBucketHdlr: grpctransport.NewServer(
 			endpoints.AutoLabelBucketEndpoint,
 			DecodeGrpcReqLabel,
 			EncodeGrpcRespBucket,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelBucket", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelBucket", logger)))...,
 		),
 
 		AutoLabelObjectHdlr: grpctransport.NewServer(
 			endpoints.AutoLabelObjectEndpoint,
 			DecodeGrpcReqLabel,
 			EncodeGrpcRespObject,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelObject", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelObject", logger)))...,
 		),
 
 		AutoListBucketHdlr: grpctransport.NewServer(
 			endpoints.AutoListBucketEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespBucketList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListBucket", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListBucket", logger)))...,
 		),
 
 		AutoListObjectHdlr: grpctransport.NewServer(
 			endpoints.AutoListObjectEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespObjectList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListObject", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListObject", logger)))...,
 		),
 
 		AutoUpdateBucketHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateBucketEndpoint,
 			DecodeGrpcReqBucket,
 			EncodeGrpcRespBucket,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateBucket", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateBucket", logger)))...,
 		),
 
 		AutoUpdateObjectHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateObjectEndpoint,
 			DecodeGrpcReqObject,
 			EncodeGrpcRespObject,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateObject", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateObject", logger)))...,
 		),
 	}
 }
@@ -349,7 +345,7 @@ func decodeHTTPrespObjstoreV1AutoUpdateObject(_ context.Context, r *http.Respons
 	return &resp, err
 }
 
-func (s *grpcServerObjstoreV1) AutoWatchSvcObjstoreV1(in *api.ListWatchOptions, stream ObjstoreV1_AutoWatchSvcObjstoreV1Server) error {
+func (s *grpcServerObjstoreV1) AutoWatchSvcObjstoreV1(in *api.AggWatchOptions, stream ObjstoreV1_AutoWatchSvcObjstoreV1Server) error {
 	return s.Endpoints.AutoWatchSvcObjstoreV1(in, stream)
 }
 

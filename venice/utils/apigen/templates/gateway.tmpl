@@ -96,8 +96,8 @@ func (a adapter{{$svcname}}) {{.Name}} (oldctx oldcontext.Context, t *{{getInput
 	return ret.(*{{getOutputType $pkgname . true}}), err
 }
 {{end}}{{end}}
-{{if (hasExtension "venice.apiGrpcCrudService" .)}}
-func (a adapter{{$svcname}}) AutoWatchSvc{{$svcname}}(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) ({{$pkgname}}.{{$svcname}}_AutoWatchSvc{{$svcname}}Client, error) {
+
+func (a adapter{{$svcname}}) AutoWatchSvc{{$svcname}}(oldctx oldcontext.Context, in *api.AggWatchOptions, options ...grpc.CallOption) ({{$pkgname}}.{{$svcname}}_AutoWatchSvc{{$svcname}}Client, error) {
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoWatchSvc{{$svcname}}")
 	if err != nil {
@@ -107,7 +107,7 @@ func (a adapter{{$svcname}}) AutoWatchSvc{{$svcname}}(oldctx oldcontext.Context,
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
-		in := i.(*api.ListWatchOptions)
+		in := i.(*api.AggWatchOptions)
         iws, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwWebSocketWatch)
         if ok && iws.(bool) {
 			nctx, cancel := context.WithCancel(ctx)
@@ -150,7 +150,7 @@ func (a adapter{{$svcname}}) AutoWatchSvc{{$svcname}}(oldctx oldcontext.Context,
 	}
 	return ret.({{$pkgname}}.{{$svcname}}_AutoWatchSvc{{$svcname}}Client), err
 }
-{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{$svc := .}}{{range $cruds}}
+{{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{$svc := .}}{{range $cruds}}
 func (a adapter{{$svcname}}) AutoWatch{{.}}(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) ({{$pkgname}}.{{$svcname}}_AutoWatch{{.}}Client, error) {
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoWatch{{.}}")
@@ -210,11 +210,7 @@ func (a adapter{{$svcname}}) AutoWatch{{.}}(oldctx oldcontext.Context, in *api.L
 	}
 	return ret.({{$pkgname}}.{{$svcname}}_AutoWatch{{.}}Client), err
 }
-{{end}}{{else}}
-func (a adapter{{$svcname}}) AutoWatchSvc{{$svcname}}(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) ({{$pkgname}}.{{$svcname}}_AutoWatchSvc{{$svcname}}Client, error) {
-	return nil, errors.New("not implemented")
-}
-{{end}}
+{{end}}{{else}}{{end}}
 {{range .Methods}}{{$params := (getMethodParams .)}}{{if isStreaming .}}{{if (strEq $params.Oper "WatchOper")}} {{else}}{{if isClientStreaming .}}
 func (a adapter{{$svcname}}) {{.Name}}(oldctx oldcontext.Context, options ...grpc.CallOption) ({{$pkgname}}.{{$svcname}}_{{.Name}}Client, error) {
 	ctx := context.Context(oldctx)
@@ -326,7 +322,7 @@ func (e *s{{.Name}}GwService) CompleteRegistration(ctx context.Context,
 			logger.Fatalf("failed to get proxy handler for [%s](%s)", name, err)
 		}
 		m.Handle("{{.FullPath}}", rproxy)
-	}{{end}}
+	}{{end}}{{ if not $svcparams.GRPCOnly}}
 	wg.Add(1)
 	go func() {
 		defer func() {
@@ -360,7 +356,7 @@ func (e *s{{.Name}}GwService) CompleteRegistration(ctx context.Context,
 				case <-time.After(5 * time.Second):
 			}
 		}
-	}()
+	}(){{end}}
 	return nil
 }
 

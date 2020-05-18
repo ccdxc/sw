@@ -166,6 +166,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error instantiating certsrv: %v", err)
 	}
+	fmt.Printf("\nCertserver Running on [%v]\n", certSrv.GetListenURL())
 
 	// instantiate a CKM-based TLS provider and make it default for all rpckit clients and servers
 	tlsProvider := func(svcName string) (rpckit.TLSProvider, error) {
@@ -218,6 +219,8 @@ func main() {
 	if err != nil {
 		os.Exit(-1)
 	}
+	fmt.Printf("\nAPIServer running on port [%v]\n", addr)
+
 	tinfo.cache = apiserverpkg.GetAPIServerCache()
 	tinfo.apiserverport = port
 	// Start the API Gateway

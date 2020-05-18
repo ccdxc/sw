@@ -77,6 +77,9 @@ type Interface interface {
 	// by opts applied.
 	WatchFiltered(ctx context.Context, key string, opts api.ListWatchOptions) (Watcher, error)
 
+	// // WatchAggregate watches a set of paths
+	WatchAggregate(ctx context.Context, opts api.AggWatchOptions) (Watcher, error)
+
 	// Contest creates a new contender in an election. name is the name of
 	// the election. id is the identifier of the contender. When a leader is
 	// elected, the leader's lease is automatically refreshed. ttl is the

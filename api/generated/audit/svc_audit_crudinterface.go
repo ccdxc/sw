@@ -13,3 +13,7 @@ import (
 var _ context.Context
 var _ api.ObjectMeta
 var _ kvstore.Interface
+
+// AuditV1Interface exposes objects with CRUD operations allowed by the service
+type AuditV1Interface interface {
+}

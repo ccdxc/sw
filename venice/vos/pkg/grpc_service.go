@@ -411,7 +411,7 @@ func (g *grpcBackend) AutoWatchObject(opts *api.ListWatchOptions, stream objstor
 		}
 		return apierrors.ToGrpcError("failed to complete PreOp checks", strs, int32(codes.FailedPrecondition), "", nil)
 	}
-	handleFn := func(inctx context.Context, evType kvstore.WatchEventType, item, prev runtime.Object) {
+	handleFn := func(inctx context.Context, evType kvstore.WatchEventType, item, prev runtime.Object, control *kvstore.WatchControl) {
 		evs := objstore.AutoMsgObjectWatchHelper{}
 		evs.Events = []*objstore.AutoMsgObjectWatchHelper_WatchEvent{
 			{
@@ -425,7 +425,7 @@ func (g *grpcBackend) AutoWatchObject(opts *api.ListWatchOptions, stream objstor
 	return err
 }
 
-func (g *grpcBackend) AutoWatchSvcObjstoreV1(*api.ListWatchOptions, objstore.ObjstoreV1_AutoWatchSvcObjstoreV1Server) error {
+func (g *grpcBackend) AutoWatchSvcObjstoreV1(*api.AggWatchOptions, objstore.ObjstoreV1_AutoWatchSvcObjstoreV1Server) error {
 	log.Infof("got call to AutoWatchSvcObjstoreV1")
 	return errNotImplemented
 }
@@ -637,10 +637,10 @@ func (g *grpcBackend) WatchDiskThresholdUpdates(opts *api.ListWatchOptions,
 		return errors.New("filtering is not supported")
 	}
 
-	handleFn := func(inctx context.Context, evType kvstore.WatchEventType, item, prev runtime.Object) {
+	handleFn := func(inctx context.Context, evType kvstore.WatchEventType, item, prev runtime.Object, control *kvstore.WatchControl) {
 		stream.Send(item.(*vosinternalprotos.DiskUpdate))
 	}
 
-	err := g.instance.Watch(stream.Context(), diskUpdateWatchPath, peer, handleFn, nil)
+	err := g.instance.Watch(stream.Context(), diskUpdateWatchPath, peer, handleFn, &api.ListWatchOptions{})
 	return err
 }

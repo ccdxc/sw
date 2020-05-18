@@ -134,6 +134,20 @@
     }
   },
   "definitions": {
+    "apiAggWatchOptions": {
+      "type": "object",
+      "properties": {
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "watch-options": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiKindWatchOptions"
+          }
+        }
+      }
+    },
     "apiInterface": {
       "type": "object",
       "properties": {
@@ -165,6 +179,20 @@
           "items": {
             "$ref": "#/definitions/apiInterface"
           }
+        }
+      }
+    },
+    "apiKindWatchOptions": {
+      "type": "object",
+      "properties": {
+        "group": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "options": {
+          "$ref": "#/definitions/apiListWatchOptions"
         }
       }
     },
@@ -440,6 +468,18 @@
       },
       "description": "TypeMeta contains the metadata about kind and version for all API objects."
     },
+    "apiWatchControl": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
     "apiWatchEvent": {
       "type": "object",
       "properties": {
@@ -448,6 +488,9 @@
         },
         "object": {
           "$ref": "#/definitions/googleprotobufAny"
+        },
+        "control": {
+          "$ref": "#/definitions/apiWatchControl"
         }
       }
     },

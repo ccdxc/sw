@@ -34,5 +34,5 @@ type StagingV1BufferInterface interface {
 // StagingV1Interface exposes objects with CRUD operations allowed by the service
 type StagingV1Interface interface {
 	Buffer() StagingV1BufferInterface
-	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
+	Watch(ctx context.Context, options *api.AggWatchOptions) (kvstore.Watcher, error)
 }

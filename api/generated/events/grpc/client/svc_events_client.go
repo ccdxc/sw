@@ -3,6 +3,10 @@
 package grpcclient
 
 import (
+	"context"
+	"errors"
+	"net/http"
+
 	"github.com/go-kit/kit/endpoint"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
 	"google.golang.org/grpc"
@@ -64,4 +68,35 @@ func NewEventsV1Backend(conn *grpc.ClientConn, logger log.Logger) events.Service
 	cl := NewEventsV1(conn, logger)
 	cl = events.LoggingEventsV1MiddlewareClient(logger)(cl)
 	return cl
+}
+
+type crudClientEventsV1 struct {
+	logger log.Logger
+	client events.ServiceEventsV1Client
+}
+
+// NewGrpcCrudClientEventsV1 creates a GRPC client for the service
+func NewGrpcCrudClientEventsV1(conn *grpc.ClientConn, logger log.Logger) events.EventsV1Interface {
+	client := NewEventsV1Backend(conn, logger)
+	return &crudClientEventsV1{
+		logger: logger,
+		client: client,
+	}
+}
+
+type crudRestClientEventsV1 struct {
+}
+
+// NewRestCrudClientEventsV1 creates a REST client for the service.
+func NewRestCrudClientEventsV1(url string, httpClient *http.Client) events.EventsV1Interface {
+	return &crudRestClientEventsV1{}
+}
+
+// NewStagedRestCrudClientEventsV1 creates a REST client for the service.
+func NewStagedRestCrudClientEventsV1(url string, id string, httpClient *http.Client) events.EventsV1Interface {
+	return &crudRestClientEventsV1{}
+}
+
+func (a *crudRestClientEventsV1) Watch(ctx context.Context, options *api.AggWatchOptions) (kvstore.Watcher, error) {
+	return nil, errors.New("method unimplemented")
 }

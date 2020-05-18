@@ -13,3 +13,7 @@ import (
 var _ context.Context
 var _ api.ObjectMeta
 var _ kvstore.Interface
+
+// TelemetryV1Interface exposes objects with CRUD operations allowed by the service
+type TelemetryV1Interface interface {
+}

@@ -17,7 +17,7 @@ var _ api.ObjectMeta
 
 // ServiceObjstoreV1Client  is the client interface for the service.
 type ServiceObjstoreV1Client interface {
-	AutoWatchSvcObjstoreV1(ctx context.Context, in *api.ListWatchOptions) (ObjstoreV1_AutoWatchSvcObjstoreV1Client, error)
+	AutoWatchSvcObjstoreV1(ctx context.Context, in *api.AggWatchOptions) (ObjstoreV1_AutoWatchSvcObjstoreV1Client, error)
 
 	AutoAddBucket(ctx context.Context, t *Bucket) (*Bucket, error)
 	AutoAddObject(ctx context.Context, t *Object) (*Object, error)
@@ -41,7 +41,7 @@ type ServiceObjstoreV1Client interface {
 
 // ServiceObjstoreV1Server is the server interface for the service.
 type ServiceObjstoreV1Server interface {
-	AutoWatchSvcObjstoreV1(in *api.ListWatchOptions, stream ObjstoreV1_AutoWatchSvcObjstoreV1Server) error
+	AutoWatchSvcObjstoreV1(in *api.AggWatchOptions, stream ObjstoreV1_AutoWatchSvcObjstoreV1Server) error
 
 	AutoAddBucket(ctx context.Context, t Bucket) (Bucket, error)
 	AutoAddObject(ctx context.Context, t Object) (Object, error)

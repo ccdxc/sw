@@ -184,12 +184,12 @@ func (fdr *Finder) QueryBuilder(req *search.SearchRequest) (es.Query, error) {
 }
 
 // AutoWatchSvcSearchV1 is not implemented
-func (fdr *Finder) AutoWatchSvcSearchV1(*api.ListWatchOptions, search.SearchV1_AutoWatchSvcSearchV1Server) error {
+func (fdr *Finder) AutoWatchSvcSearchV1(*api.AggWatchOptions, search.SearchV1_AutoWatchSvcSearchV1Server) error {
 	return errors.New("not implemented")
 }
 
 // AutoWatchSvcEventsV1 is not implemented
-func (fdr *Finder) AutoWatchSvcEventsV1(*api.ListWatchOptions, evtsapi.EventsV1_AutoWatchSvcEventsV1Server) error {
+func (fdr *Finder) AutoWatchSvcEventsV1(*api.AggWatchOptions, evtsapi.EventsV1_AutoWatchSvcEventsV1Server) error {
 	return errors.New("not implemented")
 }
 

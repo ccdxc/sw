@@ -1363,8 +1363,8 @@ func (c *cache) WatchFiltered(ctx context.Context, key string, opts api.ListWatc
 	nctx, cancel := context.WithCancel(ctx)
 	ret := newWatchServer(cancel)
 	peer := ctxutils.GetContextID(nctx)
-	watchHandler := func(inctx context.Context, evType kvstore.WatchEventType, item, prev runtime.Object) {
-		if evType != kvstore.WatcherError {
+	watchHandler := func(inctx context.Context, evType kvstore.WatchEventType, item, prev runtime.Object, control *kvstore.WatchControl) {
+		if evType != kvstore.WatcherError && evType != kvstore.WatcherControl {
 			for _, fn := range filters {
 				if !fn(item, prev) {
 					return
@@ -1373,8 +1373,9 @@ func (c *cache) WatchFiltered(ctx context.Context, key string, opts api.ListWatc
 		}
 		select {
 		case ret.ch <- &kvstore.WatchEvent{
-			Type:   evType,
-			Object: item,
+			Type:    evType,
+			Object:  item,
+			Control: control,
 		}:
 		case <-nctx.Done():
 		case <-inctx.Done():
@@ -1421,7 +1422,7 @@ func (c *cache) Watch(ctx context.Context, key string, fromVersion string) (kvst
 	return c.WatchFiltered(ctx, key, opts)
 }
 
-// PrefixWatch returns a watcher waching on the prefix passed in.
+// PrefixWatch returns a watcher watching on the prefix passed in.
 func (c *cache) PrefixWatch(ctx context.Context, prefix string, fromVersion string) (kvstore.Watcher, error) {
 	defer c.RUnlock()
 	c.RLock()
@@ -1432,6 +1433,130 @@ func (c *cache) PrefixWatch(ctx context.Context, prefix string, fromVersion stri
 	opts := api.ListWatchOptions{}
 	opts.ResourceVersion = fromVersion
 	return c.WatchFiltered(ctx, prefix, opts)
+}
+
+func (c *cache) getKindKey(group, kind string) (string, error) {
+	if kind == "" {
+		// This is a service watch
+		return globals.ConfigRootPrefix + "/" + group, nil
+	}
+	sch := runtime.GetDefaultScheme()
+	kndName := group + "." + kind
+	lknd := sch.GetSchema(kndName)
+	if lknd == nil {
+		return "", fmt.Errorf("unknown kind [%s]", kndName)
+	}
+	tpe := lknd.GetType()
+	lobj := reflect.New(tpe).Interface()
+	mval := reflect.ValueOf(lobj).MethodByName("MakeKey")
+	if !mval.IsValid() {
+		log.Errorf("Object [%v] does not have MakeKey, skipping", lknd.Kind)
+		return "", fmt.Errorf("[%s] does not have MakeKey", kndName)
+	}
+	pval := mval.Call([]reflect.Value{reflect.ValueOf(group)})
+	prefix := pval[0].Interface().(string)
+	for strings.HasSuffix(prefix, "//") {
+		prefix = strings.TrimSuffix(prefix, "/")
+	}
+	return prefix, nil
+}
+
+func (c *cache) getReflectKind(group, kind string) (string, error) {
+	sch := runtime.GetDefaultScheme()
+	kndName := group + "." + kind
+	lknd := sch.GetSchema(kndName)
+	if lknd == nil {
+		return "", fmt.Errorf("unknown kind [%s]", kndName)
+	}
+	tpe := lknd.GetType()
+	return tpe.Name(), nil
+}
+
+func (c *cache) getReflectKindOfObj(obj runtime.Object) string {
+	return strings.TrimPrefix(reflect.TypeOf(obj).Name(), "*")
+}
+
+func (c *cache) WatchAggregate(ctx context.Context, opts api.AggWatchOptions) (kvstore.Watcher, error) {
+	defer c.RUnlock()
+	c.RLock()
+	if !c.active {
+		return nil, errorCacheInactive
+	}
+
+	if len(opts.WatchOptions) < 1 {
+		return nil, fmt.Errorf("invalid watch options")
+	}
+
+	if len(opts.WatchOptions) == 1 {
+		wopts := opts.WatchOptions[0]
+		key, err := c.getKindKey(wopts.Group, wopts.Kind)
+		if err != nil {
+			return nil, err
+		}
+		lknd := wopts.Group + "." + wopts.Kind
+		return c.WatchFiltered(apiutils.SetVar(ctx, apiutils.CtxKeyObjKind, lknd), key, wopts.Options)
+	}
+	filters := make(map[string][]filterFn)
+
+	keys := []string{}
+	kinds := []string{}
+	for _, k := range opts.WatchOptions {
+		key, err := c.getKindKey(k.Group, k.Kind)
+		if err != nil {
+			return nil, err
+		}
+		keys = append(keys, key)
+		kind := k.Group + "." + k.Kind
+		kinds = append(kinds, kind)
+		if k.Options.ResourceVersion != "" {
+			return nil, fmt.Errorf("From resource version not allowed on multi-kind watches")
+		}
+		f, err := getFilters(k.Options, kind)
+		if err != nil {
+			return nil, fmt.Errorf("Establishing watch failed: %s", err.Error())
+		}
+		filters[kind] = f
+
+	}
+
+	nctx, cancel := context.WithCancel(ctx)
+	ret := newWatchServer(cancel)
+	peer := ctxutils.GetContextID(nctx)
+	watchHandler := func(inctx context.Context, evType kvstore.WatchEventType, item, prev runtime.Object, control *kvstore.WatchControl) {
+		if evType != kvstore.WatcherError && evType != kvstore.WatcherControl {
+			filt, ok := filters[c.getReflectKindOfObj(item)]
+			if ok {
+				for _, fn := range filt {
+					if !fn(item, prev) {
+						return
+					}
+				}
+			}
+		}
+		select {
+		case ret.ch <- &kvstore.WatchEvent{
+			Type:    evType,
+			Object:  item,
+			Control: control,
+		}:
+		case <-nctx.Done():
+		case <-inctx.Done():
+		}
+	}
+	wq := c.queues.AddAggregate(keys, peer)
+	cleanupFn := func() {
+		c.queues.DelAggregate(keys, peer)
+	}
+
+	c.logger.DebugLog("oper", "watchfiltered", "msg", "starting watcher for kinds %v", kinds)
+	watchers.Add(1)
+	go func() {
+		wq.Dequeue(nctx, 0, false, watchHandler, cleanupFn, nil)
+		watchers.Add(-1)
+		ret.Stop()
+		close(ret.ch)
+	}()
+	return ret, nil
 }
 
 // Contest is a wrapper around kvstore Context API.
@@ -1539,24 +1664,10 @@ func (c *cache) DebugAction(action string, params []string) string {
 }
 
 func (c *cache) StatKind(group string, kind string) ([]apiintf.ObjectStat, error) {
-	sch := runtime.GetDefaultScheme()
-	lknd := sch.GetSchema(group + "." + kind)
-	if lknd == nil {
-		return nil, errors.New("unknown kind")
+	prefix, err := c.getKindKey(group, kind)
+	if err != nil {
+		return nil, err
 	}
-	tpe := lknd.GetType()
-	lobj := reflect.New(tpe).Interface()
-	mval := reflect.ValueOf(lobj).MethodByName("MakeKey")
-	if !mval.IsValid() {
-		log.Errorf("Object [%v] does not have MakeKey, skipping", lknd.Kind)
-		return nil, nil
-	}
-	pval := mval.Call([]reflect.Value{reflect.ValueOf(group)})
-	prefix := pval[0].Interface().(string)
-	for strings.HasSuffix(prefix, "//") {
-		prefix = strings.TrimSuffix(prefix, "/")
-	}
-
 	l := c.store.StatAll(prefix)
 	return l, nil
 }

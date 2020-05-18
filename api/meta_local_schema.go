@@ -259,12 +259,22 @@ var typesMapMeta = map[string]*Struct{
 			"APIVersion": Field{Name: "APIVersion", CLITag: CLIInfo{ID: "api-version", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "api-version", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
+	"api.WatchControl": &Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(WatchControl{}) },
+		Fields: map[string]Field{
+			"Code": Field{Name: "Code", CLITag: CLIInfo{ID: "code", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "code", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
+
+			"Message": Field{Name: "Message", CLITag: CLIInfo{ID: "message", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "message", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+		},
+	},
 	"api.WatchEvent": &Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(WatchEvent{}) },
 		Fields: map[string]Field{
 			"Type": Field{Name: "Type", CLITag: CLIInfo{ID: "type", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Object": Field{Name: "Object", CLITag: CLIInfo{ID: "object", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "object", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "google.protobuf.Any"},
+
+			"Control": Field{Name: "Control", CLITag: CLIInfo{ID: "control", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "control", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.WatchControl"},
 		},
 	},
 	"api.WatchEventList": &Struct{

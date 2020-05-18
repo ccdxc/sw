@@ -48,7 +48,7 @@ type sstagingSvc_stagingBackend struct {
 
 type eStagingV1Endpoints struct {
 	Svc                     sstagingSvc_stagingBackend
-	fnAutoWatchSvcStagingV1 func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
+	fnAutoWatchSvcStagingV1 func(in *api.AggWatchOptions, stream grpc.ServerStream, svcprefix string) error
 
 	fnAutoAddBuffer    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteBuffer func(ctx context.Context, t interface{}) (interface{}, error)
@@ -243,16 +243,24 @@ func (s *sstagingSvc_stagingBackend) regWatchersFunc(ctx context.Context, logger
 
 	// Add Watchers
 	{
-
 		// Service watcher
 		svc := s.Services["staging.StagingV1"]
 		if svc != nil {
-			svc.WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfnMap map[string]func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
-				key := globals.ConfigRootPrefix + "/staging"
+			svc.WithKvWatchFunc(func(l log.Logger, options *api.AggWatchOptions, kvs kvstore.Interface, stream interface{}, txfnMap map[string]func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
+				for _, o := range options.WatchOptions {
+					if o.Group != "staging" {
+						return fmt.Errorf("invalid group [%s] in watch options", o.Group)
+					}
+				}
+				if len(options.WatchOptions) == 0 {
+					options.WatchOptions = append(options.WatchOptions, api.KindWatchOptions{Group: "staging"})
+				}
 				wstream := stream.(grpc.ServerStream)
 				nctx, cancel := context.WithCancel(wstream.Context())
+				id := fmt.Sprintf("%s-%x", ctxutils.GetPeerID(nctx), &options)
+				nctx = ctxutils.SetContextID(nctx, id)
 				defer cancel()
-				watcher, err := kvs.WatchFiltered(nctx, key, *options)
+				watcher, err := kvs.WatchAggregate(nctx, *options)
 				if err != nil {
 					l.ErrorLog("msg", "error starting Watch for service", "err", err, "service", "StagingV1")
 					return err
@@ -459,7 +467,7 @@ func (e *eStagingV1Endpoints) Commit(ctx context.Context, t staging.CommitAction
 func (e *eStagingV1Endpoints) AutoWatchBuffer(in *api.ListWatchOptions, stream staging.StagingV1_AutoWatchBufferServer) error {
 	return e.fnAutoWatchBuffer(in, stream, "staging")
 }
-func (e *eStagingV1Endpoints) AutoWatchSvcStagingV1(in *api.ListWatchOptions, stream staging.StagingV1_AutoWatchSvcStagingV1Server) error {
+func (e *eStagingV1Endpoints) AutoWatchSvcStagingV1(in *api.AggWatchOptions, stream staging.StagingV1_AutoWatchSvcStagingV1Server) error {
 	return e.fnAutoWatchSvcStagingV1(in, stream, "")
 }
 

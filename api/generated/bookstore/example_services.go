@@ -17,7 +17,7 @@ var _ api.ObjectMeta
 
 // ServiceBookstoreV1Client  is the client interface for the service.
 type ServiceBookstoreV1Client interface {
-	AutoWatchSvcBookstoreV1(ctx context.Context, in *api.ListWatchOptions) (BookstoreV1_AutoWatchSvcBookstoreV1Client, error)
+	AutoWatchSvcBookstoreV1(ctx context.Context, in *api.AggWatchOptions) (BookstoreV1_AutoWatchSvcBookstoreV1Client, error)
 
 	AddOutage(ctx context.Context, t *OutageRequest) (*Store, error)
 	Applydiscount(ctx context.Context, t *ApplyDiscountReq) (*Order, error)
@@ -70,7 +70,7 @@ type ServiceBookstoreV1Client interface {
 
 // ServiceBookstoreV1Server is the server interface for the service.
 type ServiceBookstoreV1Server interface {
-	AutoWatchSvcBookstoreV1(in *api.ListWatchOptions, stream BookstoreV1_AutoWatchSvcBookstoreV1Server) error
+	AutoWatchSvcBookstoreV1(in *api.AggWatchOptions, stream BookstoreV1_AutoWatchSvcBookstoreV1Server) error
 
 	AddOutage(ctx context.Context, t OutageRequest) (Store, error)
 	Applydiscount(ctx context.Context, t ApplyDiscountReq) (Order, error)

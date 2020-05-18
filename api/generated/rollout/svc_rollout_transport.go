@@ -45,122 +45,118 @@ type grpcServerRolloutV1 struct {
 
 // MakeGRPCServerRolloutV1 creates a GRPC server for RolloutV1 service
 func MakeGRPCServerRolloutV1(ctx context.Context, endpoints EndpointsRolloutV1Server, logger log.Logger) RolloutV1Server {
-	options := []grpctransport.ServerOption{
-		grpctransport.ServerErrorLogger(logger),
-		grpctransport.ServerBefore(recoverVersion),
-	}
 	return &grpcServerRolloutV1{
 		Endpoints: endpoints,
 		AutoAddRolloutHdlr: grpctransport.NewServer(
 			endpoints.AutoAddRolloutEndpoint,
 			DecodeGrpcReqRollout,
 			EncodeGrpcRespRollout,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddRollout", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddRollout", logger)))...,
 		),
 
 		AutoAddRolloutActionHdlr: grpctransport.NewServer(
 			endpoints.AutoAddRolloutActionEndpoint,
 			DecodeGrpcReqRolloutAction,
 			EncodeGrpcRespRolloutAction,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddRolloutAction", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddRolloutAction", logger)))...,
 		),
 
 		AutoDeleteRolloutHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteRolloutEndpoint,
 			DecodeGrpcReqRollout,
 			EncodeGrpcRespRollout,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteRollout", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteRollout", logger)))...,
 		),
 
 		AutoDeleteRolloutActionHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteRolloutActionEndpoint,
 			DecodeGrpcReqRolloutAction,
 			EncodeGrpcRespRolloutAction,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteRolloutAction", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteRolloutAction", logger)))...,
 		),
 
 		AutoGetRolloutHdlr: grpctransport.NewServer(
 			endpoints.AutoGetRolloutEndpoint,
 			DecodeGrpcReqRollout,
 			EncodeGrpcRespRollout,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetRollout", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetRollout", logger)))...,
 		),
 
 		AutoGetRolloutActionHdlr: grpctransport.NewServer(
 			endpoints.AutoGetRolloutActionEndpoint,
 			DecodeGrpcReqRolloutAction,
 			EncodeGrpcRespRolloutAction,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetRolloutAction", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetRolloutAction", logger)))...,
 		),
 
 		AutoLabelRolloutHdlr: grpctransport.NewServer(
 			endpoints.AutoLabelRolloutEndpoint,
 			DecodeGrpcReqLabel,
 			EncodeGrpcRespRollout,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelRollout", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelRollout", logger)))...,
 		),
 
 		AutoLabelRolloutActionHdlr: grpctransport.NewServer(
 			endpoints.AutoLabelRolloutActionEndpoint,
 			DecodeGrpcReqLabel,
 			EncodeGrpcRespRolloutAction,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelRolloutAction", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelRolloutAction", logger)))...,
 		),
 
 		AutoListRolloutHdlr: grpctransport.NewServer(
 			endpoints.AutoListRolloutEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespRolloutList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListRollout", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListRollout", logger)))...,
 		),
 
 		AutoListRolloutActionHdlr: grpctransport.NewServer(
 			endpoints.AutoListRolloutActionEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespRolloutActionList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListRolloutAction", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListRolloutAction", logger)))...,
 		),
 
 		AutoUpdateRolloutHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateRolloutEndpoint,
 			DecodeGrpcReqRollout,
 			EncodeGrpcRespRollout,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateRollout", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateRollout", logger)))...,
 		),
 
 		AutoUpdateRolloutActionHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateRolloutActionEndpoint,
 			DecodeGrpcReqRolloutAction,
 			EncodeGrpcRespRolloutAction,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateRolloutAction", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateRolloutAction", logger)))...,
 		),
 
 		CreateRolloutHdlr: grpctransport.NewServer(
 			endpoints.CreateRolloutEndpoint,
 			DecodeGrpcReqRollout,
 			EncodeGrpcRespRollout,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("CreateRollout", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("CreateRollout", logger)))...,
 		),
 
 		RemoveRolloutHdlr: grpctransport.NewServer(
 			endpoints.RemoveRolloutEndpoint,
 			DecodeGrpcReqRollout,
 			EncodeGrpcRespRollout,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("RemoveRollout", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("RemoveRollout", logger)))...,
 		),
 
 		StopRolloutHdlr: grpctransport.NewServer(
 			endpoints.StopRolloutEndpoint,
 			DecodeGrpcReqRollout,
 			EncodeGrpcRespRollout,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("StopRollout", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("StopRollout", logger)))...,
 		),
 
 		UpdateRolloutHdlr: grpctransport.NewServer(
 			endpoints.UpdateRolloutEndpoint,
 			DecodeGrpcReqRollout,
 			EncodeGrpcRespRollout,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("UpdateRollout", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("UpdateRollout", logger)))...,
 		),
 	}
 }
@@ -453,7 +449,7 @@ func decodeHTTPrespRolloutV1UpdateRollout(_ context.Context, r *http.Response) (
 	return &resp, err
 }
 
-func (s *grpcServerRolloutV1) AutoWatchSvcRolloutV1(in *api.ListWatchOptions, stream RolloutV1_AutoWatchSvcRolloutV1Server) error {
+func (s *grpcServerRolloutV1) AutoWatchSvcRolloutV1(in *api.AggWatchOptions, stream RolloutV1_AutoWatchSvcRolloutV1Server) error {
 	return s.Endpoints.AutoWatchSvcRolloutV1(in, stream)
 }
 

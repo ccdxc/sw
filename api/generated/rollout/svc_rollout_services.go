@@ -17,7 +17,7 @@ var _ api.ObjectMeta
 
 // ServiceRolloutV1Client  is the client interface for the service.
 type ServiceRolloutV1Client interface {
-	AutoWatchSvcRolloutV1(ctx context.Context, in *api.ListWatchOptions) (RolloutV1_AutoWatchSvcRolloutV1Client, error)
+	AutoWatchSvcRolloutV1(ctx context.Context, in *api.AggWatchOptions) (RolloutV1_AutoWatchSvcRolloutV1Client, error)
 
 	AutoAddRollout(ctx context.Context, t *Rollout) (*Rollout, error)
 	AutoAddRolloutAction(ctx context.Context, t *RolloutAction) (*RolloutAction, error)
@@ -42,7 +42,7 @@ type ServiceRolloutV1Client interface {
 
 // ServiceRolloutV1Server is the server interface for the service.
 type ServiceRolloutV1Server interface {
-	AutoWatchSvcRolloutV1(in *api.ListWatchOptions, stream RolloutV1_AutoWatchSvcRolloutV1Server) error
+	AutoWatchSvcRolloutV1(in *api.AggWatchOptions, stream RolloutV1_AutoWatchSvcRolloutV1Server) error
 
 	AutoAddRollout(ctx context.Context, t Rollout) (Rollout, error)
 	AutoAddRolloutAction(ctx context.Context, t RolloutAction) (RolloutAction, error)

@@ -48,7 +48,7 @@ type sorchestrationSvc_orchestrationBackend struct {
 
 type eOrchestratorV1Endpoints struct {
 	Svc                          sorchestrationSvc_orchestrationBackend
-	fnAutoWatchSvcOrchestratorV1 func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
+	fnAutoWatchSvcOrchestratorV1 func(in *api.AggWatchOptions, stream grpc.ServerStream, svcprefix string) error
 
 	fnAutoAddOrchestrator    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteOrchestrator func(ctx context.Context, t interface{}) (interface{}, error)
@@ -219,16 +219,24 @@ func (s *sorchestrationSvc_orchestrationBackend) regWatchersFunc(ctx context.Con
 
 	// Add Watchers
 	{
-
 		// Service watcher
 		svc := s.Services["orchestration.OrchestratorV1"]
 		if svc != nil {
-			svc.WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfnMap map[string]func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
-				key := globals.ConfigRootPrefix + "/orchestration"
+			svc.WithKvWatchFunc(func(l log.Logger, options *api.AggWatchOptions, kvs kvstore.Interface, stream interface{}, txfnMap map[string]func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
+				for _, o := range options.WatchOptions {
+					if o.Group != "orchestration" {
+						return fmt.Errorf("invalid group [%s] in watch options", o.Group)
+					}
+				}
+				if len(options.WatchOptions) == 0 {
+					options.WatchOptions = append(options.WatchOptions, api.KindWatchOptions{Group: "orchestration"})
+				}
 				wstream := stream.(grpc.ServerStream)
 				nctx, cancel := context.WithCancel(wstream.Context())
+				id := fmt.Sprintf("%s-%x", ctxutils.GetPeerID(nctx), &options)
+				nctx = ctxutils.SetContextID(nctx, id)
 				defer cancel()
-				watcher, err := kvs.WatchFiltered(nctx, key, *options)
+				watcher, err := kvs.WatchAggregate(nctx, *options)
 				if err != nil {
 					l.ErrorLog("msg", "error starting Watch for service", "err", err, "service", "OrchestratorV1")
 					return err
@@ -418,7 +426,7 @@ func (e *eOrchestratorV1Endpoints) AutoUpdateOrchestrator(ctx context.Context, t
 func (e *eOrchestratorV1Endpoints) AutoWatchOrchestrator(in *api.ListWatchOptions, stream orchestration.OrchestratorV1_AutoWatchOrchestratorServer) error {
 	return e.fnAutoWatchOrchestrator(in, stream, "orchestration")
 }
-func (e *eOrchestratorV1Endpoints) AutoWatchSvcOrchestratorV1(in *api.ListWatchOptions, stream orchestration.OrchestratorV1_AutoWatchSvcOrchestratorV1Server) error {
+func (e *eOrchestratorV1Endpoints) AutoWatchSvcOrchestratorV1(in *api.AggWatchOptions, stream orchestration.OrchestratorV1_AutoWatchSvcOrchestratorV1Server) error {
 	return e.fnAutoWatchSvcOrchestratorV1(in, stream, "")
 }
 

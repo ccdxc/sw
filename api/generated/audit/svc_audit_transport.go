@@ -9,7 +9,6 @@ package audit
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"net/http"
 
 	grpctransport "github.com/go-kit/kit/transport/grpc"
@@ -31,17 +30,13 @@ type grpcServerAuditV1 struct {
 
 // MakeGRPCServerAuditV1 creates a GRPC server for AuditV1 service
 func MakeGRPCServerAuditV1(ctx context.Context, endpoints EndpointsAuditV1Server, logger log.Logger) AuditV1Server {
-	options := []grpctransport.ServerOption{
-		grpctransport.ServerErrorLogger(logger),
-		grpctransport.ServerBefore(recoverVersion),
-	}
 	return &grpcServerAuditV1{
 		Endpoints: endpoints,
 		GetEventHdlr: grpctransport.NewServer(
 			endpoints.GetEventEndpoint,
 			DecodeGrpcReqAuditEventRequest,
 			EncodeGrpcRespAuditEvent,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("GetEvent", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("GetEvent", logger)))...,
 		),
 	}
 }
@@ -64,6 +59,6 @@ func decodeHTTPrespAuditV1GetEvent(_ context.Context, r *http.Response) (interfa
 	return &resp, err
 }
 
-func (s *grpcServerAuditV1) AutoWatchSvcAuditV1(in *api.ListWatchOptions, stream AuditV1_AutoWatchSvcAuditV1Server) error {
-	return errors.New("not implemented")
+func (s *grpcServerAuditV1) AutoWatchSvcAuditV1(in *api.AggWatchOptions, stream AuditV1_AutoWatchSvcAuditV1Server) error {
+	return s.Endpoints.AutoWatchSvcAuditV1(in, stream)
 }

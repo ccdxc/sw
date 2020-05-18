@@ -94,7 +94,7 @@ type MiddlewareWorkloadV1Server func(ServiceWorkloadV1Server) ServiceWorkloadV1S
 
 // EndpointsWorkloadV1Server is the server endpoints
 type EndpointsWorkloadV1Server struct {
-	svcWatchHandlerWorkloadV1 func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	svcWatchHandlerWorkloadV1 func(options *api.AggWatchOptions, stream grpc.ServerStream) error
 
 	AbortMigrationEndpoint     endpoint.Endpoint
 	AutoAddEndpointEndpoint    endpoint.Endpoint
@@ -341,7 +341,7 @@ type respWorkloadV1StartMigration struct {
 	Err error
 }
 
-func (e EndpointsWorkloadV1Client) AutoWatchSvcWorkloadV1(ctx context.Context, in *api.ListWatchOptions) (WorkloadV1_AutoWatchSvcWorkloadV1Client, error) {
+func (e EndpointsWorkloadV1Client) AutoWatchSvcWorkloadV1(ctx context.Context, in *api.AggWatchOptions) (WorkloadV1_AutoWatchSvcWorkloadV1Client, error) {
 	return e.Client.AutoWatchSvcWorkloadV1(ctx, in)
 }
 
@@ -707,13 +707,13 @@ func MakeWorkloadV1StartMigrationEndpoint(s ServiceWorkloadV1Server, logger log.
 	return trace.ServerEndpoint("WorkloadV1:StartMigration")(f)
 }
 
-func (e EndpointsWorkloadV1Server) AutoWatchSvcWorkloadV1(in *api.ListWatchOptions, stream WorkloadV1_AutoWatchSvcWorkloadV1Server) error {
+func (e EndpointsWorkloadV1Server) AutoWatchSvcWorkloadV1(in *api.AggWatchOptions, stream WorkloadV1_AutoWatchSvcWorkloadV1Server) error {
 	return e.svcWatchHandlerWorkloadV1(in, stream)
 }
 
 // MakeAutoWatchSvcWorkloadV1Endpoint creates the Watch endpoint for the service
-func MakeAutoWatchSvcWorkloadV1Endpoint(s ServiceWorkloadV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
-	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+func MakeAutoWatchSvcWorkloadV1Endpoint(s ServiceWorkloadV1Server, logger log.Logger) func(options *api.AggWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.AggWatchOptions, stream grpc.ServerStream) error {
 		wstream := stream.(WorkloadV1_AutoWatchSvcWorkloadV1Server)
 		return s.AutoWatchSvcWorkloadV1(options, wstream)
 	}
@@ -1011,7 +1011,7 @@ func (m loggingWorkloadV1MiddlewareClient) StartMigration(ctx context.Context, i
 	return
 }
 
-func (m loggingWorkloadV1MiddlewareClient) AutoWatchSvcWorkloadV1(ctx context.Context, in *api.ListWatchOptions) (resp WorkloadV1_AutoWatchSvcWorkloadV1Client, err error) {
+func (m loggingWorkloadV1MiddlewareClient) AutoWatchSvcWorkloadV1(ctx context.Context, in *api.AggWatchOptions) (resp WorkloadV1_AutoWatchSvcWorkloadV1Client, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -1261,7 +1261,7 @@ func (m loggingWorkloadV1MiddlewareServer) StartMigration(ctx context.Context, i
 	return
 }
 
-func (m loggingWorkloadV1MiddlewareServer) AutoWatchSvcWorkloadV1(in *api.ListWatchOptions, stream WorkloadV1_AutoWatchSvcWorkloadV1Server) (err error) {
+func (m loggingWorkloadV1MiddlewareServer) AutoWatchSvcWorkloadV1(in *api.AggWatchOptions, stream WorkloadV1_AutoWatchSvcWorkloadV1Server) (err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -1404,7 +1404,7 @@ func makeURIWorkloadV1AutoWatchEndpointWatchOper(in *api.ListWatchOptions) strin
 }
 
 //
-func makeURIWorkloadV1AutoWatchSvcWorkloadV1WatchOper(in *api.ListWatchOptions) string {
+func makeURIWorkloadV1AutoWatchSvcWorkloadV1WatchOper(in *api.AggWatchOptions) string {
 	return ""
 
 }

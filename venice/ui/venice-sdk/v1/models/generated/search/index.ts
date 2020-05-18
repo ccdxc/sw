@@ -5,13 +5,16 @@
 /* tslint:disable */
 
 export * from './enums';
+export * from './api-agg-watch-options.model';
 export * from './api-any.model';
+export * from './api-kind-watch-options.model';
 export * from './api-list-watch-options.model';
 export * from './api-object-meta.model';
 export * from './api-object-ref.model';
 export * from './api-status.model';
 export * from './api-status-result.model';
 export * from './api-timestamp.model';
+export * from './api-watch-control.model';
 export * from './api-watch-event.model';
 export * from './api-watch-event-list.model';
 export * from './fields-requirement.model';

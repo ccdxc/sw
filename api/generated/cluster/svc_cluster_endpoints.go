@@ -198,7 +198,7 @@ type MiddlewareClusterV1Server func(ServiceClusterV1Server) ServiceClusterV1Serv
 
 // EndpointsClusterV1Server is the server endpoints
 type EndpointsClusterV1Server struct {
-	svcWatchHandlerClusterV1 func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	svcWatchHandlerClusterV1 func(options *api.AggWatchOptions, stream grpc.ServerStream) error
 
 	AuthBootstrapCompleteEndpoint            endpoint.Endpoint
 	AutoAddClusterEndpoint                   endpoint.Endpoint
@@ -1173,7 +1173,7 @@ type respClusterV1UpdateTLSConfig struct {
 	Err error
 }
 
-func (e EndpointsClusterV1Client) AutoWatchSvcClusterV1(ctx context.Context, in *api.ListWatchOptions) (ClusterV1_AutoWatchSvcClusterV1Client, error) {
+func (e EndpointsClusterV1Client) AutoWatchSvcClusterV1(ctx context.Context, in *api.AggWatchOptions) (ClusterV1_AutoWatchSvcClusterV1Client, error) {
 	return e.Client.AutoWatchSvcClusterV1(ctx, in)
 }
 
@@ -2635,13 +2635,13 @@ func MakeClusterV1UpdateTLSConfigEndpoint(s ServiceClusterV1Server, logger log.L
 	return trace.ServerEndpoint("ClusterV1:UpdateTLSConfig")(f)
 }
 
-func (e EndpointsClusterV1Server) AutoWatchSvcClusterV1(in *api.ListWatchOptions, stream ClusterV1_AutoWatchSvcClusterV1Server) error {
+func (e EndpointsClusterV1Server) AutoWatchSvcClusterV1(in *api.AggWatchOptions, stream ClusterV1_AutoWatchSvcClusterV1Server) error {
 	return e.svcWatchHandlerClusterV1(in, stream)
 }
 
 // MakeAutoWatchSvcClusterV1Endpoint creates the Watch endpoint for the service
-func MakeAutoWatchSvcClusterV1Endpoint(s ServiceClusterV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
-	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+func MakeAutoWatchSvcClusterV1Endpoint(s ServiceClusterV1Server, logger log.Logger) func(options *api.AggWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.AggWatchOptions, stream grpc.ServerStream) error {
 		wstream := stream.(ClusterV1_AutoWatchSvcClusterV1Server)
 		return s.AutoWatchSvcClusterV1(options, wstream)
 	}
@@ -3723,7 +3723,7 @@ func (m loggingClusterV1MiddlewareClient) UpdateTLSConfig(ctx context.Context, i
 	return
 }
 
-func (m loggingClusterV1MiddlewareClient) AutoWatchSvcClusterV1(ctx context.Context, in *api.ListWatchOptions) (resp ClusterV1_AutoWatchSvcClusterV1Client, err error) {
+func (m loggingClusterV1MiddlewareClient) AutoWatchSvcClusterV1(ctx context.Context, in *api.AggWatchOptions) (resp ClusterV1_AutoWatchSvcClusterV1Client, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -4701,7 +4701,7 @@ func (m loggingClusterV1MiddlewareServer) UpdateTLSConfig(ctx context.Context, i
 	return
 }
 
-func (m loggingClusterV1MiddlewareServer) AutoWatchSvcClusterV1(in *api.ListWatchOptions, stream ClusterV1_AutoWatchSvcClusterV1Server) (err error) {
+func (m loggingClusterV1MiddlewareServer) AutoWatchSvcClusterV1(in *api.AggWatchOptions, stream ClusterV1_AutoWatchSvcClusterV1Server) (err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -5238,7 +5238,7 @@ func makeURIClusterV1AutoWatchSnapshotRestoreWatchOper(in *api.ListWatchOptions)
 }
 
 //
-func makeURIClusterV1AutoWatchSvcClusterV1WatchOper(in *api.ListWatchOptions) string {
+func makeURIClusterV1AutoWatchSvcClusterV1WatchOper(in *api.AggWatchOptions) string {
 	return ""
 
 }

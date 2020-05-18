@@ -60,7 +60,7 @@ type MiddlewareSearchV1Server func(ServiceSearchV1Server) ServiceSearchV1Server
 
 // EndpointsSearchV1Server is the server endpoints
 type EndpointsSearchV1Server struct {
-	svcWatchHandlerSearchV1 func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	svcWatchHandlerSearchV1 func(options *api.AggWatchOptions, stream grpc.ServerStream) error
 
 	PolicyQueryEndpoint endpoint.Endpoint
 	QueryEndpoint       endpoint.Endpoint
@@ -94,8 +94,8 @@ type respSearchV1Query struct {
 	Err error
 }
 
-func (e EndpointsSearchV1Client) AutoWatchSvcSearchV1(ctx context.Context, in *api.ListWatchOptions) (SearchV1_AutoWatchSvcSearchV1Client, error) {
-	return nil, errors.New("not implemented")
+func (e EndpointsSearchV1Client) AutoWatchSvcSearchV1(ctx context.Context, in *api.AggWatchOptions) (SearchV1_AutoWatchSvcSearchV1Client, error) {
+	return e.Client.AutoWatchSvcSearchV1(ctx, in)
 }
 
 // PolicyQuery implementation on server Endpoint
@@ -142,10 +142,15 @@ func MakeSearchV1QueryEndpoint(s ServiceSearchV1Server, logger log.Logger) endpo
 	return trace.ServerEndpoint("SearchV1:Query")(f)
 }
 
+func (e EndpointsSearchV1Server) AutoWatchSvcSearchV1(in *api.AggWatchOptions, stream SearchV1_AutoWatchSvcSearchV1Server) error {
+	return e.svcWatchHandlerSearchV1(in, stream)
+}
+
 // MakeAutoWatchSvcSearchV1Endpoint creates the Watch endpoint for the service
-func MakeAutoWatchSvcSearchV1Endpoint(s ServiceSearchV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
-	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
-		return errors.New("not implemented")
+func MakeAutoWatchSvcSearchV1Endpoint(s ServiceSearchV1Server, logger log.Logger) func(options *api.AggWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.AggWatchOptions, stream grpc.ServerStream) error {
+		wstream := stream.(SearchV1_AutoWatchSvcSearchV1Server)
+		return s.AutoWatchSvcSearchV1(options, wstream)
 	}
 }
 
@@ -216,8 +221,18 @@ func (m loggingSearchV1MiddlewareClient) Query(ctx context.Context, in *SearchRe
 	return
 }
 
-func (m loggingSearchV1MiddlewareClient) AutoWatchSvcSearchV1(ctx context.Context, in *api.ListWatchOptions) (SearchV1_AutoWatchSvcSearchV1Client, error) {
-	return nil, errors.New("not implemented")
+func (m loggingSearchV1MiddlewareClient) AutoWatchSvcSearchV1(ctx context.Context, in *api.AggWatchOptions) (resp SearchV1_AutoWatchSvcSearchV1Client, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "SearchV1", "method", "AutoWatchSvcSearchV1", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoWatchSvcSearchV1(ctx, in)
+	return
 }
 
 func (m loggingSearchV1MiddlewareServer) PolicyQuery(ctx context.Context, in PolicySearchRequest) (resp PolicySearchResponse, err error) {
@@ -247,8 +262,18 @@ func (m loggingSearchV1MiddlewareServer) Query(ctx context.Context, in SearchReq
 	return
 }
 
-func (m loggingSearchV1MiddlewareServer) AutoWatchSvcSearchV1(in *api.ListWatchOptions, stream SearchV1_AutoWatchSvcSearchV1Server) error {
-	return errors.New("Not implemented")
+func (m loggingSearchV1MiddlewareServer) AutoWatchSvcSearchV1(in *api.AggWatchOptions, stream SearchV1_AutoWatchSvcSearchV1Server) (err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(stream.Context(), "service", "SearchV1", "method", "AutoWatchSvcSearchV1", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	err = m.next.AutoWatchSvcSearchV1(in, stream)
+	return
 }
 
 func (r *EndpointsSearchV1RestClient) updateHTTPHeader(ctx context.Context, header *http.Header) {
@@ -279,7 +304,7 @@ func (r *EndpointsSearchV1RestClient) getHTTPRequest(ctx context.Context, in int
 }
 
 //
-func makeURISearchV1AutoWatchSvcSearchV1WatchOper(in *api.ListWatchOptions) string {
+func makeURISearchV1AutoWatchSvcSearchV1WatchOper(in *api.AggWatchOptions) string {
 	return ""
 
 }

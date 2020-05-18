@@ -9,7 +9,6 @@ package search
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"net/http"
 
 	grpctransport "github.com/go-kit/kit/transport/grpc"
@@ -32,24 +31,20 @@ type grpcServerSearchV1 struct {
 
 // MakeGRPCServerSearchV1 creates a GRPC server for SearchV1 service
 func MakeGRPCServerSearchV1(ctx context.Context, endpoints EndpointsSearchV1Server, logger log.Logger) SearchV1Server {
-	options := []grpctransport.ServerOption{
-		grpctransport.ServerErrorLogger(logger),
-		grpctransport.ServerBefore(recoverVersion),
-	}
 	return &grpcServerSearchV1{
 		Endpoints: endpoints,
 		PolicyQueryHdlr: grpctransport.NewServer(
 			endpoints.PolicyQueryEndpoint,
 			DecodeGrpcReqPolicySearchRequest,
 			EncodeGrpcRespPolicySearchResponse,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("PolicyQuery", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("PolicyQuery", logger)))...,
 		),
 
 		QueryHdlr: grpctransport.NewServer(
 			endpoints.QueryEndpoint,
 			DecodeGrpcReqSearchRequest,
 			EncodeGrpcRespSearchResponse,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("Query", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("Query", logger)))...,
 		),
 	}
 }
@@ -90,6 +85,6 @@ func decodeHTTPrespSearchV1Query(_ context.Context, r *http.Response) (interface
 	return &resp, err
 }
 
-func (s *grpcServerSearchV1) AutoWatchSvcSearchV1(in *api.ListWatchOptions, stream SearchV1_AutoWatchSvcSearchV1Server) error {
-	return errors.New("not implemented")
+func (s *grpcServerSearchV1) AutoWatchSvcSearchV1(in *api.AggWatchOptions, stream SearchV1_AutoWatchSvcSearchV1Server) error {
+	return s.Endpoints.AutoWatchSvcSearchV1(in, stream)
 }

@@ -45,6 +45,11 @@ func (f *FakeServer) GetService(name string) apisrv.Service {
 	return f.SvcMap[name]
 }
 
+// GetServiceForGroup returns a registered service for a given api group.
+func (f *FakeServer) GetServiceForGroup(name string) []apisrv.Service {
+	return nil
+}
+
 // GetMessage returns a registered mesage given the kind and service name.
 func (f *FakeServer) GetMessage(svc, kind string) apisrv.Message {
 	return nil
@@ -136,13 +141,17 @@ func (s *FakeService) WithKvWatchFunc(fn apisrv.WatchSvcKvFunc) apisrv.Service {
 }
 
 // WatchFromKv implements the watch function from KV store and bridges it to the grpc stream
-func (s *FakeService) WatchFromKv(options *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error {
+func (s *FakeService) WatchFromKv(options *api.AggWatchOptions, stream grpc.ServerStream, svcprefix string) error {
 	return nil
 }
 
 // WithCrudServices registers crud objects served by the service
 func (s *FakeService) WithCrudServices(msgs []apisrv.Message) apisrv.Service {
 	return s
+}
+
+// PopulateTxfmMap is a mock implementation
+func (s *FakeService) PopulateTxfmMap(in map[string]func(from, to string, i interface{}) (interface{}, error)) {
 }
 
 // NewFakeService creates a new FakeService
@@ -213,6 +222,11 @@ func (m *FakeMethod) WithMethDbKey(fn apisrv.MakeMethDbKeyFunc) apisrv.Method {
 
 // WithResourceAllocHook registers a resource allocation callback.
 func (m *FakeMethod) WithResourceAllocHook(fn apisrv.ResourceAllocFunc) apisrv.Method {
+	return m
+}
+
+// WithServerStreamHandler is a mock method for testing
+func (m *FakeMethod) WithServerStreamHandler(fn apisrv.ServerStreamHandler) apisrv.Method {
 	return m
 }
 

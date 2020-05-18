@@ -21,6 +21,11 @@ const (
 	MaxTenantNameLen = 48
 )
 
+// Watch control codes
+const (
+	WatchControlCodeListDone = 1
+)
+
 // GetObjectKind returns the kind of an object.
 func (t *TypeMeta) GetObjectKind() string {
 	return t.Kind

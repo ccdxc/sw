@@ -128,8 +128,9 @@ message ListWatchOptions {
 }
 
 message WatchEvent {
-  string Type = 1 [(gogoproto.jsontag) = "type,omitempty"];
-  google.protobuf.Any Object = 2 [(gogoproto.jsontag) = "object,omitempty"];
+  string Type                 = 1 [(gogoproto.jsontag) = "type,omitempty"];
+  google.protobuf.Any Object  = 2 [(gogoproto.jsontag) = "object,omitempty"];
+  WatchControl Control      = 3 [(gogoproto.jsontag) = "control,omitempty"];
 }
 
 message WatchEventList {
@@ -186,6 +187,11 @@ enum EventType {
     CreateEvent   = 0 [(venice.enumValueStr) = "create-event"];
     UpdateEvent   = 1 [(venice.enumValueStr) = "update-event"];
     DeleteEvent   = 2 [(venice.enumValueStr) = "delete-event"];
+}
+
+message WatchControl {
+  uint32 Code     = 1 [(gogoproto.jsontag) = "code"];
+  string Message  = 2 [(gogoproto.jsontag) = "message"];
 }
 
 message BgpAsn {

@@ -73,7 +73,7 @@ type MiddlewareRoutingV1Server func(ServiceRoutingV1Server) ServiceRoutingV1Serv
 
 // EndpointsRoutingV1Server is the server endpoints
 type EndpointsRoutingV1Server struct {
-	svcWatchHandlerRoutingV1 func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	svcWatchHandlerRoutingV1 func(options *api.AggWatchOptions, stream grpc.ServerStream) error
 
 	AutoAddNeighborEndpoint    endpoint.Endpoint
 	AutoDeleteNeighborEndpoint endpoint.Endpoint
@@ -169,7 +169,7 @@ type respRoutingV1AutoUpdateNeighbor struct {
 	Err error
 }
 
-func (e EndpointsRoutingV1Client) AutoWatchSvcRoutingV1(ctx context.Context, in *api.ListWatchOptions) (RoutingV1_AutoWatchSvcRoutingV1Client, error) {
+func (e EndpointsRoutingV1Client) AutoWatchSvcRoutingV1(ctx context.Context, in *api.AggWatchOptions) (RoutingV1_AutoWatchSvcRoutingV1Client, error) {
 	return e.Client.AutoWatchSvcRoutingV1(ctx, in)
 }
 
@@ -310,13 +310,13 @@ func MakeRoutingV1AutoUpdateNeighborEndpoint(s ServiceRoutingV1Server, logger lo
 	return trace.ServerEndpoint("RoutingV1:AutoUpdateNeighbor")(f)
 }
 
-func (e EndpointsRoutingV1Server) AutoWatchSvcRoutingV1(in *api.ListWatchOptions, stream RoutingV1_AutoWatchSvcRoutingV1Server) error {
+func (e EndpointsRoutingV1Server) AutoWatchSvcRoutingV1(in *api.AggWatchOptions, stream RoutingV1_AutoWatchSvcRoutingV1Server) error {
 	return e.svcWatchHandlerRoutingV1(in, stream)
 }
 
 // MakeAutoWatchSvcRoutingV1Endpoint creates the Watch endpoint for the service
-func MakeAutoWatchSvcRoutingV1Endpoint(s ServiceRoutingV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
-	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+func MakeAutoWatchSvcRoutingV1Endpoint(s ServiceRoutingV1Server, logger log.Logger) func(options *api.AggWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.AggWatchOptions, stream grpc.ServerStream) error {
 		wstream := stream.(RoutingV1_AutoWatchSvcRoutingV1Server)
 		return s.AutoWatchSvcRoutingV1(options, wstream)
 	}
@@ -460,7 +460,7 @@ func (m loggingRoutingV1MiddlewareClient) AutoUpdateNeighbor(ctx context.Context
 	return
 }
 
-func (m loggingRoutingV1MiddlewareClient) AutoWatchSvcRoutingV1(ctx context.Context, in *api.ListWatchOptions) (resp RoutingV1_AutoWatchSvcRoutingV1Client, err error) {
+func (m loggingRoutingV1MiddlewareClient) AutoWatchSvcRoutingV1(ctx context.Context, in *api.AggWatchOptions) (resp RoutingV1_AutoWatchSvcRoutingV1Client, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -567,7 +567,7 @@ func (m loggingRoutingV1MiddlewareServer) AutoUpdateNeighbor(ctx context.Context
 	return
 }
 
-func (m loggingRoutingV1MiddlewareServer) AutoWatchSvcRoutingV1(in *api.ListWatchOptions, stream RoutingV1_AutoWatchSvcRoutingV1Server) (err error) {
+func (m loggingRoutingV1MiddlewareServer) AutoWatchSvcRoutingV1(in *api.AggWatchOptions, stream RoutingV1_AutoWatchSvcRoutingV1Server) (err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -664,7 +664,7 @@ func makeURIRoutingV1AutoWatchNeighborWatchOper(in *api.ListWatchOptions) string
 }
 
 //
-func makeURIRoutingV1AutoWatchSvcRoutingV1WatchOper(in *api.ListWatchOptions) string {
+func makeURIRoutingV1AutoWatchSvcRoutingV1WatchOper(in *api.AggWatchOptions) string {
 	return ""
 
 }

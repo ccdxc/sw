@@ -17,7 +17,7 @@ var _ api.ObjectMeta
 
 // ServiceEventsV1Client  is the client interface for the service.
 type ServiceEventsV1Client interface {
-	AutoWatchSvcEventsV1(ctx context.Context, in *api.ListWatchOptions) (EventsV1_AutoWatchSvcEventsV1Client, error)
+	AutoWatchSvcEventsV1(ctx context.Context, in *api.AggWatchOptions) (EventsV1_AutoWatchSvcEventsV1Client, error)
 
 	GetEvent(ctx context.Context, t *GetEventRequest) (*Event, error)
 	GetEvents(ctx context.Context, t *api.ListWatchOptions) (*EventList, error)
@@ -25,7 +25,7 @@ type ServiceEventsV1Client interface {
 
 // ServiceEventsV1Server is the server interface for the service.
 type ServiceEventsV1Server interface {
-	AutoWatchSvcEventsV1(in *api.ListWatchOptions, stream EventsV1_AutoWatchSvcEventsV1Server) error
+	AutoWatchSvcEventsV1(in *api.AggWatchOptions, stream EventsV1_AutoWatchSvcEventsV1Server) error
 
 	GetEvent(ctx context.Context, t GetEventRequest) (Event, error)
 	GetEvents(ctx context.Context, t api.ListWatchOptions) (EventList, error)

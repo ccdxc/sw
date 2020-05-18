@@ -557,6 +557,13 @@ func (f *MemKv) WatchFiltered(ctx context.Context, key string, opts api.ListWatc
 	return f.PrefixWatch(ctx, key, opts.ResourceVersion)
 }
 
+// WatchAggregate watches changes on all objects with filters specified
+// by opts applied.
+func (f *MemKv) WatchAggregate(ctx context.Context, opts api.AggWatchOptions) (kvstore.Watcher, error) {
+	// Filtering is no supported. Fallback to PrefixWatch
+	return nil, errors.New("not implemented")
+}
+
 // Contest creates a new contender in an election. name is the name of the
 // election. id is the identifier of the contender. When a leader is elected,
 // the leader's lease is automatically refreshed. ttl is the timeout for lease

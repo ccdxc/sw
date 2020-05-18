@@ -3,6 +3,10 @@
 package grpcclient
 
 import (
+	"context"
+	"errors"
+	"net/http"
+
 	"github.com/go-kit/kit/endpoint"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
 	"google.golang.org/grpc"
@@ -49,4 +53,35 @@ func NewTokenAuthV1Backend(conn *grpc.ClientConn, logger log.Logger) tokenauth.S
 	cl := NewTokenAuthV1(conn, logger)
 	cl = tokenauth.LoggingTokenAuthV1MiddlewareClient(logger)(cl)
 	return cl
+}
+
+type crudClientTokenAuthV1 struct {
+	logger log.Logger
+	client tokenauth.ServiceTokenAuthV1Client
+}
+
+// NewGrpcCrudClientTokenAuthV1 creates a GRPC client for the service
+func NewGrpcCrudClientTokenAuthV1(conn *grpc.ClientConn, logger log.Logger) tokenauth.TokenAuthV1Interface {
+	client := NewTokenAuthV1Backend(conn, logger)
+	return &crudClientTokenAuthV1{
+		logger: logger,
+		client: client,
+	}
+}
+
+type crudRestClientTokenAuthV1 struct {
+}
+
+// NewRestCrudClientTokenAuthV1 creates a REST client for the service.
+func NewRestCrudClientTokenAuthV1(url string, httpClient *http.Client) tokenauth.TokenAuthV1Interface {
+	return &crudRestClientTokenAuthV1{}
+}
+
+// NewStagedRestCrudClientTokenAuthV1 creates a REST client for the service.
+func NewStagedRestCrudClientTokenAuthV1(url string, id string, httpClient *http.Client) tokenauth.TokenAuthV1Interface {
+	return &crudRestClientTokenAuthV1{}
+}
+
+func (a *crudRestClientTokenAuthV1) Watch(ctx context.Context, options *api.AggWatchOptions) (kvstore.Watcher, error) {
+	return nil, errors.New("method unimplemented")
 }

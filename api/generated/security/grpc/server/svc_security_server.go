@@ -48,7 +48,7 @@ type ssecuritySvc_securityBackend struct {
 
 type eSecurityV1Endpoints struct {
 	Svc                      ssecuritySvc_securityBackend
-	fnAutoWatchSvcSecurityV1 func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
+	fnAutoWatchSvcSecurityV1 func(in *api.AggWatchOptions, stream grpc.ServerStream, svcprefix string) error
 
 	fnAutoAddApp                        func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddCertificate                func(ctx context.Context, t interface{}) (interface{}, error)
@@ -760,16 +760,24 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 
 	// Add Watchers
 	{
-
 		// Service watcher
 		svc := s.Services["security.SecurityV1"]
 		if svc != nil {
-			svc.WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfnMap map[string]func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
-				key := globals.ConfigRootPrefix + "/security"
+			svc.WithKvWatchFunc(func(l log.Logger, options *api.AggWatchOptions, kvs kvstore.Interface, stream interface{}, txfnMap map[string]func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
+				for _, o := range options.WatchOptions {
+					if o.Group != "security" {
+						return fmt.Errorf("invalid group [%s] in watch options", o.Group)
+					}
+				}
+				if len(options.WatchOptions) == 0 {
+					options.WatchOptions = append(options.WatchOptions, api.KindWatchOptions{Group: "security"})
+				}
 				wstream := stream.(grpc.ServerStream)
 				nctx, cancel := context.WithCancel(wstream.Context())
+				id := fmt.Sprintf("%s-%x", ctxutils.GetPeerID(nctx), &options)
+				nctx = ctxutils.SetContextID(nctx, id)
 				defer cancel()
-				watcher, err := kvs.WatchFiltered(nctx, key, *options)
+				watcher, err := kvs.WatchAggregate(nctx, *options)
 				if err != nil {
 					l.ErrorLog("msg", "error starting Watch for service", "err", err, "service", "SecurityV1")
 					return err
@@ -1722,7 +1730,7 @@ func (e *eSecurityV1Endpoints) AutoWatchCertificate(in *api.ListWatchOptions, st
 func (e *eSecurityV1Endpoints) AutoWatchTrafficEncryptionPolicy(in *api.ListWatchOptions, stream security.SecurityV1_AutoWatchTrafficEncryptionPolicyServer) error {
 	return e.fnAutoWatchTrafficEncryptionPolicy(in, stream, "security")
 }
-func (e *eSecurityV1Endpoints) AutoWatchSvcSecurityV1(in *api.ListWatchOptions, stream security.SecurityV1_AutoWatchSvcSecurityV1Server) error {
+func (e *eSecurityV1Endpoints) AutoWatchSvcSecurityV1(in *api.AggWatchOptions, stream security.SecurityV1_AutoWatchSvcSecurityV1Server) error {
 	return e.fnAutoWatchSvcSecurityV1(in, stream, "")
 }
 

@@ -257,7 +257,15 @@ func (s *store) Set(key string, rev uint64, obj runtime.Object, cb apiintf.Succe
 			}
 			if s.lastSnapshot != 0 {
 				if cobj.addVersion(cobj.revision, s.lastSnapshot, cobj.deleted, cobj.obj) {
-					s.snapshots[s.lastSnapshot].keys[key] = cobj.revision
+					if _, ok := s.snapshots[s.lastSnapshot]; ok {
+						if s.snapshots[s.lastSnapshot].keys != nil {
+							s.snapshots[s.lastSnapshot].keys[key] = cobj.revision
+						} else {
+							log.Errorf("snapshot [%v] keys not initialized could not set key [%v]", s.lastSnapshot, key)
+						}
+					} else {
+						log.Errorf("snapshot [%v] not found, could not set key [%v]", s.lastSnapshot, key)
+					}
 				}
 			}
 			cobj.obj = obj
@@ -391,7 +399,15 @@ func (s *store) Delete(key string, rev uint64, cb apiintf.SuccessCbFunc) (obj ru
 			panic(fmt.Sprintf("could not clone object (%s)", err))
 		}
 		if cobj.addVersion(cobj.revision, s.lastSnapshot, cobj.deleted, ccobj.(runtime.Object)) {
-			s.snapshots[s.lastSnapshot].keys[key] = cobj.revision
+			if _, ok := s.snapshots[s.lastSnapshot]; ok {
+				if s.snapshots[s.lastSnapshot].keys != nil {
+					s.snapshots[s.lastSnapshot].keys[key] = cobj.revision
+				} else {
+					log.Errorf("snapshot [%v] keys not initialized could not delete key [%v]", s.lastSnapshot, key)
+				}
+			} else {
+				log.Errorf("snapshot [%v] not found, could not delete key [%v]", s.lastSnapshot, key)
+			}
 		}
 	}
 
@@ -576,6 +592,9 @@ purgeSnapshot:
 			}
 			if len(sshot.keys) == 0 {
 				delete(s.snapshots, snap)
+			}
+			if len(s.snapshots) == 0 {
+				s.lastSnapshot = 0
 			}
 		}
 	}

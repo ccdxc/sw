@@ -79,7 +79,7 @@ type MiddlewareStagingV1Server func(ServiceStagingV1Server) ServiceStagingV1Serv
 
 // EndpointsStagingV1Server is the server endpoints
 type EndpointsStagingV1Server struct {
-	svcWatchHandlerStagingV1 func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	svcWatchHandlerStagingV1 func(options *api.AggWatchOptions, stream grpc.ServerStream) error
 
 	AutoAddBufferEndpoint    endpoint.Endpoint
 	AutoDeleteBufferEndpoint endpoint.Endpoint
@@ -220,7 +220,7 @@ type respStagingV1Commit struct {
 	Err error
 }
 
-func (e EndpointsStagingV1Client) AutoWatchSvcStagingV1(ctx context.Context, in *api.ListWatchOptions) (StagingV1_AutoWatchSvcStagingV1Client, error) {
+func (e EndpointsStagingV1Client) AutoWatchSvcStagingV1(ctx context.Context, in *api.AggWatchOptions) (StagingV1_AutoWatchSvcStagingV1Client, error) {
 	return e.Client.AutoWatchSvcStagingV1(ctx, in)
 }
 
@@ -427,13 +427,13 @@ func MakeStagingV1CommitEndpoint(s ServiceStagingV1Server, logger log.Logger) en
 	return trace.ServerEndpoint("StagingV1:Commit")(f)
 }
 
-func (e EndpointsStagingV1Server) AutoWatchSvcStagingV1(in *api.ListWatchOptions, stream StagingV1_AutoWatchSvcStagingV1Server) error {
+func (e EndpointsStagingV1Server) AutoWatchSvcStagingV1(in *api.AggWatchOptions, stream StagingV1_AutoWatchSvcStagingV1Server) error {
 	return e.svcWatchHandlerStagingV1(in, stream)
 }
 
 // MakeAutoWatchSvcStagingV1Endpoint creates the Watch endpoint for the service
-func MakeAutoWatchSvcStagingV1Endpoint(s ServiceStagingV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
-	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+func MakeAutoWatchSvcStagingV1Endpoint(s ServiceStagingV1Server, logger log.Logger) func(options *api.AggWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.AggWatchOptions, stream grpc.ServerStream) error {
 		wstream := stream.(StagingV1_AutoWatchSvcStagingV1Server)
 		return s.AutoWatchSvcStagingV1(options, wstream)
 	}
@@ -619,7 +619,7 @@ func (m loggingStagingV1MiddlewareClient) Commit(ctx context.Context, in *Commit
 	return
 }
 
-func (m loggingStagingV1MiddlewareClient) AutoWatchSvcStagingV1(ctx context.Context, in *api.ListWatchOptions) (resp StagingV1_AutoWatchSvcStagingV1Client, err error) {
+func (m loggingStagingV1MiddlewareClient) AutoWatchSvcStagingV1(ctx context.Context, in *api.AggWatchOptions) (resp StagingV1_AutoWatchSvcStagingV1Client, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -765,7 +765,7 @@ func (m loggingStagingV1MiddlewareServer) Commit(ctx context.Context, in CommitA
 	return
 }
 
-func (m loggingStagingV1MiddlewareServer) AutoWatchSvcStagingV1(in *api.ListWatchOptions, stream StagingV1_AutoWatchSvcStagingV1Server) (err error) {
+func (m loggingStagingV1MiddlewareServer) AutoWatchSvcStagingV1(in *api.AggWatchOptions, stream StagingV1_AutoWatchSvcStagingV1Server) (err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -859,7 +859,7 @@ func makeURIStagingV1AutoWatchBufferWatchOper(in *api.ListWatchOptions) string {
 }
 
 //
-func makeURIStagingV1AutoWatchSvcStagingV1WatchOper(in *api.ListWatchOptions) string {
+func makeURIStagingV1AutoWatchSvcStagingV1WatchOper(in *api.AggWatchOptions) string {
 	return ""
 
 }

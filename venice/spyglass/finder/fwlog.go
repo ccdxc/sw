@@ -89,7 +89,7 @@ func (a *fwlogHandler) GetLogs(ctx context.Context, r *fwlog.FwLogQuery) (*fwlog
 }
 
 // AutoWatchSvcAuditV1 is not implemented
-func (a *fwlogHandler) AutoWatchSvcFwLogV1(*api.ListWatchOptions, fwlog.FwLogV1_AutoWatchSvcFwLogV1Server) error {
+func (a *fwlogHandler) AutoWatchSvcFwLogV1(*api.AggWatchOptions, fwlog.FwLogV1_AutoWatchSvcFwLogV1Server) error {
 	return errors.New("not implemented")
 }
 

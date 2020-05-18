@@ -38,73 +38,69 @@ type grpcServerStagingV1 struct {
 
 // MakeGRPCServerStagingV1 creates a GRPC server for StagingV1 service
 func MakeGRPCServerStagingV1(ctx context.Context, endpoints EndpointsStagingV1Server, logger log.Logger) StagingV1Server {
-	options := []grpctransport.ServerOption{
-		grpctransport.ServerErrorLogger(logger),
-		grpctransport.ServerBefore(recoverVersion),
-	}
 	return &grpcServerStagingV1{
 		Endpoints: endpoints,
 		AutoAddBufferHdlr: grpctransport.NewServer(
 			endpoints.AutoAddBufferEndpoint,
 			DecodeGrpcReqBuffer,
 			EncodeGrpcRespBuffer,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddBuffer", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddBuffer", logger)))...,
 		),
 
 		AutoDeleteBufferHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteBufferEndpoint,
 			DecodeGrpcReqBuffer,
 			EncodeGrpcRespBuffer,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteBuffer", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteBuffer", logger)))...,
 		),
 
 		AutoGetBufferHdlr: grpctransport.NewServer(
 			endpoints.AutoGetBufferEndpoint,
 			DecodeGrpcReqBuffer,
 			EncodeGrpcRespBuffer,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetBuffer", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetBuffer", logger)))...,
 		),
 
 		AutoLabelBufferHdlr: grpctransport.NewServer(
 			endpoints.AutoLabelBufferEndpoint,
 			DecodeGrpcReqLabel,
 			EncodeGrpcRespBuffer,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelBuffer", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelBuffer", logger)))...,
 		),
 
 		AutoListBufferHdlr: grpctransport.NewServer(
 			endpoints.AutoListBufferEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespBufferList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListBuffer", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListBuffer", logger)))...,
 		),
 
 		AutoUpdateBufferHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateBufferEndpoint,
 			DecodeGrpcReqBuffer,
 			EncodeGrpcRespBuffer,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateBuffer", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateBuffer", logger)))...,
 		),
 
 		BulkeditHdlr: grpctransport.NewServer(
 			endpoints.BulkeditEndpoint,
 			DecodeGrpcReqBulkEditAction,
 			EncodeGrpcRespBulkEditAction,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("Bulkedit", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("Bulkedit", logger)))...,
 		),
 
 		ClearHdlr: grpctransport.NewServer(
 			endpoints.ClearEndpoint,
 			DecodeGrpcReqClearAction,
 			EncodeGrpcRespClearAction,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("Clear", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("Clear", logger)))...,
 		),
 
 		CommitHdlr: grpctransport.NewServer(
 			endpoints.CommitEndpoint,
 			DecodeGrpcReqCommitAction,
 			EncodeGrpcRespCommitAction,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("Commit", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("Commit", logger)))...,
 		),
 	}
 }
@@ -271,7 +267,7 @@ func decodeHTTPrespStagingV1Commit(_ context.Context, r *http.Response) (interfa
 	return &resp, err
 }
 
-func (s *grpcServerStagingV1) AutoWatchSvcStagingV1(in *api.ListWatchOptions, stream StagingV1_AutoWatchSvcStagingV1Server) error {
+func (s *grpcServerStagingV1) AutoWatchSvcStagingV1(in *api.AggWatchOptions, stream StagingV1_AutoWatchSvcStagingV1Server) error {
 	return s.Endpoints.AutoWatchSvcStagingV1(in, stream)
 }
 

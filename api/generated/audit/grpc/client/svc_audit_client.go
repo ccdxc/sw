@@ -3,6 +3,10 @@
 package grpcclient
 
 import (
+	"context"
+	"errors"
+	"net/http"
+
 	"github.com/go-kit/kit/endpoint"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
 	"google.golang.org/grpc"
@@ -49,4 +53,35 @@ func NewAuditV1Backend(conn *grpc.ClientConn, logger log.Logger) audit.ServiceAu
 	cl := NewAuditV1(conn, logger)
 	cl = audit.LoggingAuditV1MiddlewareClient(logger)(cl)
 	return cl
+}
+
+type crudClientAuditV1 struct {
+	logger log.Logger
+	client audit.ServiceAuditV1Client
+}
+
+// NewGrpcCrudClientAuditV1 creates a GRPC client for the service
+func NewGrpcCrudClientAuditV1(conn *grpc.ClientConn, logger log.Logger) audit.AuditV1Interface {
+	client := NewAuditV1Backend(conn, logger)
+	return &crudClientAuditV1{
+		logger: logger,
+		client: client,
+	}
+}
+
+type crudRestClientAuditV1 struct {
+}
+
+// NewRestCrudClientAuditV1 creates a REST client for the service.
+func NewRestCrudClientAuditV1(url string, httpClient *http.Client) audit.AuditV1Interface {
+	return &crudRestClientAuditV1{}
+}
+
+// NewStagedRestCrudClientAuditV1 creates a REST client for the service.
+func NewStagedRestCrudClientAuditV1(url string, id string, httpClient *http.Client) audit.AuditV1Interface {
+	return &crudRestClientAuditV1{}
+}
+
+func (a *crudRestClientAuditV1) Watch(ctx context.Context, options *api.AggWatchOptions) (kvstore.Watcher, error) {
+	return nil, errors.New("method unimplemented")
 }

@@ -218,7 +218,7 @@ type MiddlewareMonitoringV1Server func(ServiceMonitoringV1Server) ServiceMonitor
 
 // EndpointsMonitoringV1Server is the server endpoints
 type EndpointsMonitoringV1Server struct {
-	svcWatchHandlerMonitoringV1 func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	svcWatchHandlerMonitoringV1 func(options *api.AggWatchOptions, stream grpc.ServerStream) error
 
 	AutoAddAlertEndpoint                     endpoint.Endpoint
 	AutoAddAlertDestinationEndpoint          endpoint.Endpoint
@@ -1330,7 +1330,7 @@ type respMonitoringV1Cancel struct {
 	Err error
 }
 
-func (e EndpointsMonitoringV1Client) AutoWatchSvcMonitoringV1(ctx context.Context, in *api.ListWatchOptions) (MonitoringV1_AutoWatchSvcMonitoringV1Client, error) {
+func (e EndpointsMonitoringV1Client) AutoWatchSvcMonitoringV1(ctx context.Context, in *api.AggWatchOptions) (MonitoringV1_AutoWatchSvcMonitoringV1Client, error) {
 	return e.Client.AutoWatchSvcMonitoringV1(ctx, in)
 }
 
@@ -3000,13 +3000,13 @@ func MakeMonitoringV1CancelEndpoint(s ServiceMonitoringV1Server, logger log.Logg
 	return trace.ServerEndpoint("MonitoringV1:Cancel")(f)
 }
 
-func (e EndpointsMonitoringV1Server) AutoWatchSvcMonitoringV1(in *api.ListWatchOptions, stream MonitoringV1_AutoWatchSvcMonitoringV1Server) error {
+func (e EndpointsMonitoringV1Server) AutoWatchSvcMonitoringV1(in *api.AggWatchOptions, stream MonitoringV1_AutoWatchSvcMonitoringV1Server) error {
 	return e.svcWatchHandlerMonitoringV1(in, stream)
 }
 
 // MakeAutoWatchSvcMonitoringV1Endpoint creates the Watch endpoint for the service
-func MakeAutoWatchSvcMonitoringV1Endpoint(s ServiceMonitoringV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
-	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+func MakeAutoWatchSvcMonitoringV1Endpoint(s ServiceMonitoringV1Server, logger log.Logger) func(options *api.AggWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.AggWatchOptions, stream grpc.ServerStream) error {
 		wstream := stream.(MonitoringV1_AutoWatchSvcMonitoringV1Server)
 		return s.AutoWatchSvcMonitoringV1(options, wstream)
 	}
@@ -4242,7 +4242,7 @@ func (m loggingMonitoringV1MiddlewareClient) Cancel(ctx context.Context, in *Can
 	return
 }
 
-func (m loggingMonitoringV1MiddlewareClient) AutoWatchSvcMonitoringV1(ctx context.Context, in *api.ListWatchOptions) (resp MonitoringV1_AutoWatchSvcMonitoringV1Client, err error) {
+func (m loggingMonitoringV1MiddlewareClient) AutoWatchSvcMonitoringV1(ctx context.Context, in *api.AggWatchOptions) (resp MonitoringV1_AutoWatchSvcMonitoringV1Client, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -5363,7 +5363,7 @@ func (m loggingMonitoringV1MiddlewareServer) Cancel(ctx context.Context, in Canc
 	return
 }
 
-func (m loggingMonitoringV1MiddlewareServer) AutoWatchSvcMonitoringV1(in *api.ListWatchOptions, stream MonitoringV1_AutoWatchSvcMonitoringV1Server) (err error) {
+func (m loggingMonitoringV1MiddlewareServer) AutoWatchSvcMonitoringV1(in *api.AggWatchOptions, stream MonitoringV1_AutoWatchSvcMonitoringV1Server) (err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -5982,7 +5982,7 @@ func makeURIMonitoringV1AutoWatchStatsAlertPolicyWatchOper(in *api.ListWatchOpti
 }
 
 //
-func makeURIMonitoringV1AutoWatchSvcMonitoringV1WatchOper(in *api.ListWatchOptions) string {
+func makeURIMonitoringV1AutoWatchSvcMonitoringV1WatchOper(in *api.AggWatchOptions) string {
 	return ""
 
 }

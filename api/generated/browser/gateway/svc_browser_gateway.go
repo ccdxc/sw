@@ -9,6 +9,7 @@ package browserGwService
 import (
 	"context"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -22,6 +23,7 @@ import (
 	browser "github.com/pensando/sw/api/generated/browser"
 	grpcclient "github.com/pensando/sw/api/generated/browser/grpc/client"
 	"github.com/pensando/sw/api/interfaces"
+	"github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apiserver"
@@ -120,8 +122,58 @@ func (a adapterBrowserV1) Referrers(oldctx oldcontext.Context, t *browser.Browse
 	return ret.(*browser.BrowseResponse), err
 }
 
-func (a adapterBrowserV1) AutoWatchSvcBrowserV1(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (browser.BrowserV1_AutoWatchSvcBrowserV1Client, error) {
-	return nil, errors.New("not implemented")
+func (a adapterBrowserV1) AutoWatchSvcBrowserV1(oldctx oldcontext.Context, in *api.AggWatchOptions, options ...grpc.CallOption) (browser.BrowserV1_AutoWatchSvcBrowserV1Client, error) {
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoWatchSvcBrowserV1")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group := apiintf.WatchOper, "", in.Tenant, in.Namespace, "browser"
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.AggWatchOptions)
+		iws, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwWebSocketWatch)
+		if ok && iws.(bool) {
+			nctx, cancel := context.WithCancel(ctx)
+			ir, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwHTTPReq)
+			if !ok {
+				return nil, errors.New("unable to retrieve request")
+			}
+			iw, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwHTTPWriter)
+			if !ok {
+				return nil, errors.New("unable to retrieve writer")
+			}
+			conn, err := wsUpgrader.Upgrade(iw.(http.ResponseWriter), ir.(*http.Request), nil)
+			if err != nil {
+				log.Errorf("WebSocket Upgrade failed (%s)", err)
+				return nil, err
+			}
+			ctx = apiutils.SetVar(nctx, apiutils.CtxKeyAPIGwWebSocketConn, conn)
+			conn.SetCloseHandler(func(code int, text string) error {
+				cancel()
+				log.Infof("received close notification on websocket [AutoWatchBrowserV1] (%v/%v)", code, text)
+				return nil
+			})
+			// start a dummy reciever
+			go func() {
+				for {
+					_, _, err := conn.ReadMessage()
+					if err != nil {
+						log.Errorf("received error on websocket receive (%s)", err)
+						cancel()
+						return
+					}
+				}
+			}()
+		}
+		return a.service.AutoWatchSvcBrowserV1(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, in, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(browser.BrowserV1_AutoWatchSvcBrowserV1Client), err
 }
 
 func (e *sBrowserV1GwService) setupSvcProfile() {

@@ -75,7 +75,7 @@ type MiddlewareDiagnosticsV1Server func(ServiceDiagnosticsV1Server) ServiceDiagn
 
 // EndpointsDiagnosticsV1Server is the server endpoints
 type EndpointsDiagnosticsV1Server struct {
-	svcWatchHandlerDiagnosticsV1 func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	svcWatchHandlerDiagnosticsV1 func(options *api.AggWatchOptions, stream grpc.ServerStream) error
 
 	AutoAddModuleEndpoint    endpoint.Endpoint
 	AutoDeleteModuleEndpoint endpoint.Endpoint
@@ -186,7 +186,7 @@ type respDiagnosticsV1Debug struct {
 	Err error
 }
 
-func (e EndpointsDiagnosticsV1Client) AutoWatchSvcDiagnosticsV1(ctx context.Context, in *api.ListWatchOptions) (DiagnosticsV1_AutoWatchSvcDiagnosticsV1Client, error) {
+func (e EndpointsDiagnosticsV1Client) AutoWatchSvcDiagnosticsV1(ctx context.Context, in *api.AggWatchOptions) (DiagnosticsV1_AutoWatchSvcDiagnosticsV1Client, error) {
 	return e.Client.AutoWatchSvcDiagnosticsV1(ctx, in)
 }
 
@@ -349,13 +349,13 @@ func MakeDiagnosticsV1DebugEndpoint(s ServiceDiagnosticsV1Server, logger log.Log
 	return trace.ServerEndpoint("DiagnosticsV1:Debug")(f)
 }
 
-func (e EndpointsDiagnosticsV1Server) AutoWatchSvcDiagnosticsV1(in *api.ListWatchOptions, stream DiagnosticsV1_AutoWatchSvcDiagnosticsV1Server) error {
+func (e EndpointsDiagnosticsV1Server) AutoWatchSvcDiagnosticsV1(in *api.AggWatchOptions, stream DiagnosticsV1_AutoWatchSvcDiagnosticsV1Server) error {
 	return e.svcWatchHandlerDiagnosticsV1(in, stream)
 }
 
 // MakeAutoWatchSvcDiagnosticsV1Endpoint creates the Watch endpoint for the service
-func MakeAutoWatchSvcDiagnosticsV1Endpoint(s ServiceDiagnosticsV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
-	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+func MakeAutoWatchSvcDiagnosticsV1Endpoint(s ServiceDiagnosticsV1Server, logger log.Logger) func(options *api.AggWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.AggWatchOptions, stream grpc.ServerStream) error {
 		wstream := stream.(DiagnosticsV1_AutoWatchSvcDiagnosticsV1Server)
 		return s.AutoWatchSvcDiagnosticsV1(options, wstream)
 	}
@@ -513,7 +513,7 @@ func (m loggingDiagnosticsV1MiddlewareClient) Debug(ctx context.Context, in *Dia
 	return
 }
 
-func (m loggingDiagnosticsV1MiddlewareClient) AutoWatchSvcDiagnosticsV1(ctx context.Context, in *api.ListWatchOptions) (resp DiagnosticsV1_AutoWatchSvcDiagnosticsV1Client, err error) {
+func (m loggingDiagnosticsV1MiddlewareClient) AutoWatchSvcDiagnosticsV1(ctx context.Context, in *api.AggWatchOptions) (resp DiagnosticsV1_AutoWatchSvcDiagnosticsV1Client, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -633,7 +633,7 @@ func (m loggingDiagnosticsV1MiddlewareServer) Debug(ctx context.Context, in Diag
 	return
 }
 
-func (m loggingDiagnosticsV1MiddlewareServer) AutoWatchSvcDiagnosticsV1(in *api.ListWatchOptions, stream DiagnosticsV1_AutoWatchSvcDiagnosticsV1Server) (err error) {
+func (m loggingDiagnosticsV1MiddlewareServer) AutoWatchSvcDiagnosticsV1(in *api.AggWatchOptions, stream DiagnosticsV1_AutoWatchSvcDiagnosticsV1Server) (err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -726,7 +726,7 @@ func makeURIDiagnosticsV1AutoWatchModuleWatchOper(in *api.ListWatchOptions) stri
 }
 
 //
-func makeURIDiagnosticsV1AutoWatchSvcDiagnosticsV1WatchOper(in *api.ListWatchOptions) string {
+func makeURIDiagnosticsV1AutoWatchSvcDiagnosticsV1WatchOper(in *api.AggWatchOptions) string {
 	return ""
 
 }

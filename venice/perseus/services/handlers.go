@@ -436,6 +436,6 @@ func (m *ServiceHandlers) AutoWatchNeighbor(*api.ListWatchOptions, routing.Routi
 }
 
 // AutoWatchSvcRoutingV1 is a service watcher
-func (m *ServiceHandlers) AutoWatchSvcRoutingV1(*api.ListWatchOptions, routing.RoutingV1_AutoWatchSvcRoutingV1Server) error {
+func (m *ServiceHandlers) AutoWatchSvcRoutingV1(*api.AggWatchOptions, routing.RoutingV1_AutoWatchSvcRoutingV1Server) error {
 	return fmt.Errorf("not implemented")
 }

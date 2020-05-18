@@ -55,7 +55,7 @@ type s{{$pkgname}}{{$flname}}Backend struct {
 {{range .Services}}{{$svcname := .Name}}
 type e{{.Name}}Endpoints struct {
 	Svc           s{{$pkgname}}{{$flname}}Backend
-	fnAutoWatchSvc{{$svcname}} func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
+	fnAutoWatchSvc{{$svcname}} func(in *api.AggWatchOptions, stream grpc.ServerStream, svcprefix string) error
 	{{range .Methods}}{{$params := (getMethodParams .)}}{{if (strEq $params.Oper "WatchOper")}} {{else}}
 	fn{{.Name}} func(ctx context.Context, t interface{}) (interface{}, error){{end}}{{end}}
 	{{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{range $cruds}}
@@ -472,16 +472,24 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regWatchersFunc(ctx context.Context, l
 	{{range .Services}}{{$svcname := .Name}}{{$svcparams := (getSvcParams .)}}{{$svcver := $svcparams.Version}}{{$svcprefix := $svcparams.Prefix}}
 	// Add Watchers
 	{
-		{{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}
 		// Service watcher
 		svc := s.Services["{{$pkgname}}.{{.Name}}"]
 		if svc != nil {
-			svc.WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfnMap map[string]func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
-				key := globals.ConfigRootPrefix + "/{{$svcprefix}}"
+			svc.WithKvWatchFunc(func(l log.Logger, options *api.AggWatchOptions, kvs kvstore.Interface, stream interface{}, txfnMap map[string]func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
+				for _, o := range options.WatchOptions {
+					if o.Group != "{{$pkgname}}" {
+						return fmt.Errorf("invalid group [%s] in watch options", o.Group)
+					}
+				}
+				if len(options.WatchOptions) == 0 {
+					options.WatchOptions = append(options.WatchOptions, api.KindWatchOptions{Group: "{{$pkgname}}"})
+				}
 				wstream := stream.(grpc.ServerStream)
 				nctx, cancel := context.WithCancel(wstream.Context())
+    			id := fmt.Sprintf("%s-%x", ctxutils.GetPeerID(nctx), &options)
+				nctx = ctxutils.SetContextID(nctx, id)
 				defer cancel()
-				watcher, err := kvs.WatchFiltered(nctx, key, *options)
+				watcher, err := kvs.WatchAggregate(nctx, *options)
 				if err != nil {
 					l.ErrorLog("msg", "error starting Watch for service", "err", err, "service", "{{.Name}}")
 					return err
@@ -490,7 +498,7 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regWatchersFunc(ctx context.Context, l
 			})
 		}
 
-		{{range $cruds}}
+	{{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{range $cruds}}
 		pkgMessages["{{$pkgname}}.{{.}}"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
 			o := {{$pkgname}}.{{.}}{}
 			key := o.MakeKey(svcprefix)
@@ -633,7 +641,7 @@ func (e *e{{$svcname}}Endpoints) {{.Name}}(ctx context.Context, t {{getInputType
 func (e *e{{$svcname}}Endpoints)AutoWatch{{.}}(in *api.ListWatchOptions, stream {{$pkgname}}.{{$svcname}}_AutoWatch{{.}}Server) error {
 	return e.fnAutoWatch{{.}}(in, stream, "{{$svcprefix}}")
 }{{end}}{{end}}
-func (e *e{{$svcname}}Endpoints) AutoWatchSvc{{.Name}} (in *api.ListWatchOptions, stream {{$pkgname}}.{{$svcname}}_AutoWatchSvc{{title $svcname}}Server) error {
+func (e *e{{$svcname}}Endpoints) AutoWatchSvc{{.Name}} (in *api.AggWatchOptions, stream {{$pkgname}}.{{$svcname}}_AutoWatchSvc{{title $svcname}}Server) error {
 	return e.fnAutoWatchSvc{{$svcname}}(in, stream, "")
 }
 {{end}}

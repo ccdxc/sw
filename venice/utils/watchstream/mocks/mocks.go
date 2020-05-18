@@ -16,10 +16,13 @@ type FakeWatchPrefixes struct {
 	sync.Mutex
 	Qmap                     map[string]*FakeWatchEventQ
 	Adds, Dels, Gets, Getexs uint64
+	AddAgg, DelAgg           uint64
 	Addfn                    func(path string) watchstream.WatchEventQ
-	Delfn                    func(path string) watchstream.WatchEventQ
+	Delfn                    func(path string) error
 	Getfn                    func(path string) []watchstream.WatchEventQ
 	Getexfn                  func(path string) watchstream.WatchEventQ
+	AddAggFn                 func(paths []string, peer string) watchstream.WatchEventQ
+	DelAggFn                 func(paths []string, peer string) error
 }
 
 // Add implements a mock interface
@@ -33,8 +36,26 @@ func (f *FakeWatchPrefixes) Add(path, peer string) watchstream.WatchEventQ {
 	return nil
 }
 
+// AddAggregate is a mock implementation
+func (f *FakeWatchPrefixes) AddAggregate(paths []string, peer string) watchstream.WatchEventQ {
+	f.AddAgg++
+	if f.AddAggFn != nil {
+		return f.AddAggFn(paths, peer)
+	}
+	return nil
+}
+
+// DelAggregate is a mock implementation
+func (f *FakeWatchPrefixes) DelAggregate(paths []string, peer string) error {
+	f.DelAgg++
+	if f.DelAggFn != nil {
+		return f.DelAggFn(paths, peer)
+	}
+	return nil
+}
+
 // Del implements a mock interface
-func (f *FakeWatchPrefixes) Del(path, peer string) watchstream.WatchEventQ {
+func (f *FakeWatchPrefixes) Del(path, peer string) error {
 	defer f.Unlock()
 	f.Lock()
 	f.Dels++
@@ -76,6 +97,7 @@ type FakeWatchEventQ struct {
 	sync.Mutex
 	Enqueues, Dequeues, Stops uint64
 	DqCh                      chan error
+	DQFn                      func(ctx context.Context, fromver uint64, cb apiintf.EventHandlerFn, cleanupfn func())
 }
 
 // Enqueue implements a mock interface
@@ -93,6 +115,9 @@ func (f *FakeWatchEventQ) Dequeue(ctx context.Context,
 	f.Lock()
 	close(f.DqCh)
 	f.Dequeues++
+	if f.DQFn != nil {
+		f.DQFn(ctx, fromver, cb, cleanupfn)
+	}
 }
 
 // Stop implements a mock interface

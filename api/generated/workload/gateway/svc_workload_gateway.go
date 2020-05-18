@@ -495,7 +495,7 @@ func (a adapterWorkloadV1) StartMigration(oldctx oldcontext.Context, t *workload
 	return ret.(*workload.Workload), err
 }
 
-func (a adapterWorkloadV1) AutoWatchSvcWorkloadV1(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (workload.WorkloadV1_AutoWatchSvcWorkloadV1Client, error) {
+func (a adapterWorkloadV1) AutoWatchSvcWorkloadV1(oldctx oldcontext.Context, in *api.AggWatchOptions, options ...grpc.CallOption) (workload.WorkloadV1_AutoWatchSvcWorkloadV1Client, error) {
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoWatchSvcWorkloadV1")
 	if err != nil {
@@ -505,7 +505,7 @@ func (a adapterWorkloadV1) AutoWatchSvcWorkloadV1(oldctx oldcontext.Context, in 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
-		in := i.(*api.ListWatchOptions)
+		in := i.(*api.AggWatchOptions)
 		iws, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwWebSocketWatch)
 		if ok && iws.(bool) {
 			nctx, cancel := context.WithCancel(ctx)

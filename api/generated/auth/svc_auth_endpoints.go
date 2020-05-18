@@ -137,7 +137,7 @@ type MiddlewareAuthV1Server func(ServiceAuthV1Server) ServiceAuthV1Server
 
 // EndpointsAuthV1Server is the server endpoints
 type EndpointsAuthV1Server struct {
-	svcWatchHandlerAuthV1 func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	svcWatchHandlerAuthV1 func(options *api.AggWatchOptions, stream grpc.ServerStream) error
 
 	AutoAddAuthenticationPolicyEndpoint    endpoint.Endpoint
 	AutoAddRoleEndpoint                    endpoint.Endpoint
@@ -687,7 +687,7 @@ type respAuthV1TokenSecretGenerate struct {
 	Err error
 }
 
-func (e EndpointsAuthV1Client) AutoWatchSvcAuthV1(ctx context.Context, in *api.ListWatchOptions) (AuthV1_AutoWatchSvcAuthV1Client, error) {
+func (e EndpointsAuthV1Client) AutoWatchSvcAuthV1(ctx context.Context, in *api.AggWatchOptions) (AuthV1_AutoWatchSvcAuthV1Client, error) {
 	return e.Client.AutoWatchSvcAuthV1(ctx, in)
 }
 
@@ -1508,13 +1508,13 @@ func MakeAuthV1TokenSecretGenerateEndpoint(s ServiceAuthV1Server, logger log.Log
 	return trace.ServerEndpoint("AuthV1:TokenSecretGenerate")(f)
 }
 
-func (e EndpointsAuthV1Server) AutoWatchSvcAuthV1(in *api.ListWatchOptions, stream AuthV1_AutoWatchSvcAuthV1Server) error {
+func (e EndpointsAuthV1Server) AutoWatchSvcAuthV1(in *api.AggWatchOptions, stream AuthV1_AutoWatchSvcAuthV1Server) error {
 	return e.svcWatchHandlerAuthV1(in, stream)
 }
 
 // MakeAutoWatchSvcAuthV1Endpoint creates the Watch endpoint for the service
-func MakeAutoWatchSvcAuthV1Endpoint(s ServiceAuthV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
-	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+func MakeAutoWatchSvcAuthV1Endpoint(s ServiceAuthV1Server, logger log.Logger) func(options *api.AggWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.AggWatchOptions, stream grpc.ServerStream) error {
 		wstream := stream.(AuthV1_AutoWatchSvcAuthV1Server)
 		return s.AutoWatchSvcAuthV1(options, wstream)
 	}
@@ -2134,7 +2134,7 @@ func (m loggingAuthV1MiddlewareClient) TokenSecretGenerate(ctx context.Context, 
 	return
 }
 
-func (m loggingAuthV1MiddlewareClient) AutoWatchSvcAuthV1(ctx context.Context, in *api.ListWatchOptions) (resp AuthV1_AutoWatchSvcAuthV1Client, err error) {
+func (m loggingAuthV1MiddlewareClient) AutoWatchSvcAuthV1(ctx context.Context, in *api.AggWatchOptions) (resp AuthV1_AutoWatchSvcAuthV1Client, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -2683,7 +2683,7 @@ func (m loggingAuthV1MiddlewareServer) TokenSecretGenerate(ctx context.Context, 
 	return
 }
 
-func (m loggingAuthV1MiddlewareServer) AutoWatchSvcAuthV1(in *api.ListWatchOptions, stream AuthV1_AutoWatchSvcAuthV1Server) (err error) {
+func (m loggingAuthV1MiddlewareServer) AutoWatchSvcAuthV1(in *api.AggWatchOptions, stream AuthV1_AutoWatchSvcAuthV1Server) (err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -2961,7 +2961,7 @@ func makeURIAuthV1AutoWatchRoleBindingWatchOper(in *api.ListWatchOptions) string
 }
 
 //
-func makeURIAuthV1AutoWatchSvcAuthV1WatchOper(in *api.ListWatchOptions) string {
+func makeURIAuthV1AutoWatchSvcAuthV1WatchOper(in *api.AggWatchOptions) string {
 	return ""
 
 }

@@ -17,7 +17,7 @@ var _ api.ObjectMeta
 
 // ServiceFwLogV1Client  is the client interface for the service.
 type ServiceFwLogV1Client interface {
-	AutoWatchSvcFwLogV1(ctx context.Context, in *api.ListWatchOptions) (FwLogV1_AutoWatchSvcFwLogV1Client, error)
+	AutoWatchSvcFwLogV1(ctx context.Context, in *api.AggWatchOptions) (FwLogV1_AutoWatchSvcFwLogV1Client, error)
 
 	DownloadFwLogFileContent(ctx context.Context, t *api.ListWatchOptions) (*FwLogList, error)
 	GetLogs(ctx context.Context, t *FwLogQuery) (*FwLogList, error)
@@ -25,7 +25,7 @@ type ServiceFwLogV1Client interface {
 
 // ServiceFwLogV1Server is the server interface for the service.
 type ServiceFwLogV1Server interface {
-	AutoWatchSvcFwLogV1(in *api.ListWatchOptions, stream FwLogV1_AutoWatchSvcFwLogV1Server) error
+	AutoWatchSvcFwLogV1(in *api.AggWatchOptions, stream FwLogV1_AutoWatchSvcFwLogV1Server) error
 
 	DownloadFwLogFileContent(ctx context.Context, t api.ListWatchOptions) (FwLogList, error)
 	GetLogs(ctx context.Context, t FwLogQuery) (FwLogList, error)

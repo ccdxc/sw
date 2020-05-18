@@ -9,7 +9,6 @@ package events
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"net/http"
 
 	grpctransport "github.com/go-kit/kit/transport/grpc"
@@ -32,24 +31,20 @@ type grpcServerEventsV1 struct {
 
 // MakeGRPCServerEventsV1 creates a GRPC server for EventsV1 service
 func MakeGRPCServerEventsV1(ctx context.Context, endpoints EndpointsEventsV1Server, logger log.Logger) EventsV1Server {
-	options := []grpctransport.ServerOption{
-		grpctransport.ServerErrorLogger(logger),
-		grpctransport.ServerBefore(recoverVersion),
-	}
 	return &grpcServerEventsV1{
 		Endpoints: endpoints,
 		GetEventHdlr: grpctransport.NewServer(
 			endpoints.GetEventEndpoint,
 			DecodeGrpcReqGetEventRequest,
 			EncodeGrpcRespEvent,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("GetEvent", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("GetEvent", logger)))...,
 		),
 
 		GetEventsHdlr: grpctransport.NewServer(
 			endpoints.GetEventsEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespEventList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("GetEvents", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("GetEvents", logger)))...,
 		),
 	}
 }
@@ -90,8 +85,8 @@ func decodeHTTPrespEventsV1GetEvents(_ context.Context, r *http.Response) (inter
 	return &resp, err
 }
 
-func (s *grpcServerEventsV1) AutoWatchSvcEventsV1(in *api.ListWatchOptions, stream EventsV1_AutoWatchSvcEventsV1Server) error {
-	return errors.New("not implemented")
+func (s *grpcServerEventsV1) AutoWatchSvcEventsV1(in *api.AggWatchOptions, stream EventsV1_AutoWatchSvcEventsV1Server) error {
+	return s.Endpoints.AutoWatchSvcEventsV1(in, stream)
 }
 
 func encodeHTTPGetEventRequest(ctx context.Context, req *http.Request, request interface{}) error {

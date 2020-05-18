@@ -788,7 +788,7 @@ func (a *crudClientWorkloadV1) Workload() workload.WorkloadV1WorkloadInterface {
 	return a.grpcWorkload
 }
 
-func (a *crudClientWorkloadV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+func (a *crudClientWorkloadV1) Watch(ctx context.Context, options *api.AggWatchOptions) (kvstore.Watcher, error) {
 	a.logger.DebugLog("msg", "received call", "object", "WorkloadV1", "oper", "WatchOper")
 	nctx := addVersion(ctx, "v1")
 	if options == nil {
@@ -809,13 +809,21 @@ func (a *crudClientWorkloadV1) Watch(ctx context.Context, options *api.ListWatch
 			}
 			for _, e := range r.Events {
 				ev := kvstore.WatchEvent{Type: kvstore.WatchEventType(e.Type)}
-				robj, err := listerwatcher.GetObject(e)
-				if err != nil {
-					a.logger.ErrorLog("msg", "error on receive unmarshall", "err", err)
-					close(lw.OutCh)
-					return
+				switch e.Type {
+				case string(kvstore.Created), string(kvstore.Updated), string(kvstore.Deleted):
+					robj, err := listerwatcher.GetObject(e)
+					if err != nil {
+						a.logger.ErrorLog("msg", "error on receive unmarshall", "err", err)
+						close(lw.OutCh)
+						return
+					}
+					ev.Object = robj
+				case string(kvstore.WatcherControl):
+					ev.Control = &kvstore.WatchControl{
+						Code:    e.Control.Code,
+						Message: e.Control.Message,
+					}
 				}
-				ev.Object = robj
 				select {
 				case lw.OutCh <- &ev:
 				case <-wstream.Context().Done():
@@ -869,6 +877,6 @@ func (a *crudRestClientWorkloadV1) Workload() workload.WorkloadV1WorkloadInterfa
 	return a.restWorkload
 }
 
-func (a *crudRestClientWorkloadV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+func (a *crudRestClientWorkloadV1) Watch(ctx context.Context, options *api.AggWatchOptions) (kvstore.Watcher, error) {
 	return nil, errors.New("method unimplemented")
 }

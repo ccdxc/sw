@@ -48,7 +48,7 @@ type snetworkSvc_networkBackend struct {
 
 type eNetworkV1Endpoints struct {
 	Svc                     snetworkSvc_networkBackend
-	fnAutoWatchSvcNetworkV1 func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
+	fnAutoWatchSvcNetworkV1 func(in *api.AggWatchOptions, stream grpc.ServerStream, svcprefix string) error
 
 	fnAutoAddIPAMPolicy          func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddLbPolicy            func(ctx context.Context, t interface{}) (interface{}, error)
@@ -974,16 +974,24 @@ func (s *snetworkSvc_networkBackend) regWatchersFunc(ctx context.Context, logger
 
 	// Add Watchers
 	{
-
 		// Service watcher
 		svc := s.Services["network.NetworkV1"]
 		if svc != nil {
-			svc.WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfnMap map[string]func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
-				key := globals.ConfigRootPrefix + "/network"
+			svc.WithKvWatchFunc(func(l log.Logger, options *api.AggWatchOptions, kvs kvstore.Interface, stream interface{}, txfnMap map[string]func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
+				for _, o := range options.WatchOptions {
+					if o.Group != "network" {
+						return fmt.Errorf("invalid group [%s] in watch options", o.Group)
+					}
+				}
+				if len(options.WatchOptions) == 0 {
+					options.WatchOptions = append(options.WatchOptions, api.KindWatchOptions{Group: "network"})
+				}
 				wstream := stream.(grpc.ServerStream)
 				nctx, cancel := context.WithCancel(wstream.Context())
+				id := fmt.Sprintf("%s-%x", ctxutils.GetPeerID(nctx), &options)
+				nctx = ctxutils.SetContextID(nctx, id)
 				defer cancel()
-				watcher, err := kvs.WatchFiltered(nctx, key, *options)
+				watcher, err := kvs.WatchAggregate(nctx, *options)
 				if err != nil {
 					l.ErrorLog("msg", "error starting Watch for service", "err", err, "service", "NetworkV1")
 					return err
@@ -2251,7 +2259,7 @@ func (e *eNetworkV1Endpoints) AutoWatchRoutingConfig(in *api.ListWatchOptions, s
 func (e *eNetworkV1Endpoints) AutoWatchRouteTable(in *api.ListWatchOptions, stream network.NetworkV1_AutoWatchRouteTableServer) error {
 	return e.fnAutoWatchRouteTable(in, stream, "network")
 }
-func (e *eNetworkV1Endpoints) AutoWatchSvcNetworkV1(in *api.ListWatchOptions, stream network.NetworkV1_AutoWatchSvcNetworkV1Server) error {
+func (e *eNetworkV1Endpoints) AutoWatchSvcNetworkV1(in *api.AggWatchOptions, stream network.NetworkV1_AutoWatchSvcNetworkV1Server) error {
 	return e.fnAutoWatchSvcNetworkV1(in, stream, "")
 }
 

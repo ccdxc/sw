@@ -8,10 +8,12 @@ import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthVali
 import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 import { GoogleprotobufAny, IGoogleprotobufAny } from './googleprotobuf-any.model';
+import { ApiWatchControl, IApiWatchControl } from './api-watch-control.model';
 
 export interface IApiWatchEvent {
     'type'?: string;
     'object'?: IGoogleprotobufAny;
+    'control'?: IApiWatchControl;
     '_ui'?: any;
 }
 
@@ -21,12 +23,17 @@ export class ApiWatchEvent extends BaseModel implements IApiWatchEvent {
     '_ui': any = {};
     'type': string = null;
     'object': GoogleprotobufAny = null;
+    'control': ApiWatchControl = null;
     public static propInfo: { [prop in keyof IApiWatchEvent]: PropInfoItem } = {
         'type': {
             required: false,
             type: 'string'
         },
         'object': {
+            required: false,
+            type: 'object'
+        },
+        'control': {
             required: false,
             type: 'object'
         },
@@ -55,6 +62,7 @@ export class ApiWatchEvent extends BaseModel implements IApiWatchEvent {
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['object'] = new GoogleprotobufAny();
+        this['control'] = new ApiWatchControl();
         this._inputValue = values;
         this.setValues(values, setDefaults);
     }
@@ -79,6 +87,11 @@ export class ApiWatchEvent extends BaseModel implements IApiWatchEvent {
         } else {
             this['object'].setValues(null, fillDefaults);
         }
+        if (values) {
+            this['control'].setValues(values['control'], fillDefaults);
+        } else {
+            this['control'].setValues(null, fillDefaults);
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -88,10 +101,16 @@ export class ApiWatchEvent extends BaseModel implements IApiWatchEvent {
             this._formGroup = new FormGroup({
                 'type': CustomFormControl(new FormControl(this['type']), ApiWatchEvent.propInfo['type']),
                 'object': CustomFormGroup(this['object'].$formGroup, ApiWatchEvent.propInfo['object'].required),
+                'control': CustomFormGroup(this['control'].$formGroup, ApiWatchEvent.propInfo['control'].required),
             });
             // We force recalculation of controls under a form group
             Object.keys((this._formGroup.get('object') as FormGroup).controls).forEach(field => {
                 const control = this._formGroup.get('object').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('control') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('control').get(field);
                 control.updateValueAndValidity();
             });
         }
@@ -106,6 +125,7 @@ export class ApiWatchEvent extends BaseModel implements IApiWatchEvent {
         if (this._formGroup) {
             this._formGroup.controls['type'].setValue(this['type']);
             this['object'].setFormGroupValuesToBeModelValues();
+            this['control'].setFormGroupValuesToBeModelValues();
         }
     }
 }

@@ -491,7 +491,7 @@ func (a adapterRolloutV1) UpdateRollout(oldctx oldcontext.Context, t *rollout.Ro
 	return ret.(*rollout.Rollout), err
 }
 
-func (a adapterRolloutV1) AutoWatchSvcRolloutV1(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (rollout.RolloutV1_AutoWatchSvcRolloutV1Client, error) {
+func (a adapterRolloutV1) AutoWatchSvcRolloutV1(oldctx oldcontext.Context, in *api.AggWatchOptions, options ...grpc.CallOption) (rollout.RolloutV1_AutoWatchSvcRolloutV1Client, error) {
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoWatchSvcRolloutV1")
 	if err != nil {
@@ -501,7 +501,7 @@ func (a adapterRolloutV1) AutoWatchSvcRolloutV1(oldctx oldcontext.Context, in *a
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
-		in := i.(*api.ListWatchOptions)
+		in := i.(*api.AggWatchOptions)
 		iws, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwWebSocketWatch)
 		if ok && iws.(bool) {
 			nctx, cancel := context.WithCancel(ctx)

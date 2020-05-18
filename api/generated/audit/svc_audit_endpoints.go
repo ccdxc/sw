@@ -58,7 +58,7 @@ type MiddlewareAuditV1Server func(ServiceAuditV1Server) ServiceAuditV1Server
 
 // EndpointsAuditV1Server is the server endpoints
 type EndpointsAuditV1Server struct {
-	svcWatchHandlerAuditV1 func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	svcWatchHandlerAuditV1 func(options *api.AggWatchOptions, stream grpc.ServerStream) error
 
 	GetEventEndpoint endpoint.Endpoint
 }
@@ -77,8 +77,8 @@ type respAuditV1GetEvent struct {
 	Err error
 }
 
-func (e EndpointsAuditV1Client) AutoWatchSvcAuditV1(ctx context.Context, in *api.ListWatchOptions) (AuditV1_AutoWatchSvcAuditV1Client, error) {
-	return nil, errors.New("not implemented")
+func (e EndpointsAuditV1Client) AutoWatchSvcAuditV1(ctx context.Context, in *api.AggWatchOptions) (AuditV1_AutoWatchSvcAuditV1Client, error) {
+	return e.Client.AutoWatchSvcAuditV1(ctx, in)
 }
 
 // GetEvent implementation on server Endpoint
@@ -103,10 +103,15 @@ func MakeAuditV1GetEventEndpoint(s ServiceAuditV1Server, logger log.Logger) endp
 	return trace.ServerEndpoint("AuditV1:GetEvent")(f)
 }
 
+func (e EndpointsAuditV1Server) AutoWatchSvcAuditV1(in *api.AggWatchOptions, stream AuditV1_AutoWatchSvcAuditV1Server) error {
+	return e.svcWatchHandlerAuditV1(in, stream)
+}
+
 // MakeAutoWatchSvcAuditV1Endpoint creates the Watch endpoint for the service
-func MakeAutoWatchSvcAuditV1Endpoint(s ServiceAuditV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
-	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
-		return errors.New("not implemented")
+func MakeAutoWatchSvcAuditV1Endpoint(s ServiceAuditV1Server, logger log.Logger) func(options *api.AggWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.AggWatchOptions, stream grpc.ServerStream) error {
+		wstream := stream.(AuditV1_AutoWatchSvcAuditV1Server)
+		return s.AutoWatchSvcAuditV1(options, wstream)
 	}
 }
 
@@ -163,8 +168,18 @@ func (m loggingAuditV1MiddlewareClient) GetEvent(ctx context.Context, in *AuditE
 	return
 }
 
-func (m loggingAuditV1MiddlewareClient) AutoWatchSvcAuditV1(ctx context.Context, in *api.ListWatchOptions) (AuditV1_AutoWatchSvcAuditV1Client, error) {
-	return nil, errors.New("not implemented")
+func (m loggingAuditV1MiddlewareClient) AutoWatchSvcAuditV1(ctx context.Context, in *api.AggWatchOptions) (resp AuditV1_AutoWatchSvcAuditV1Client, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuditV1", "method", "AutoWatchSvcAuditV1", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoWatchSvcAuditV1(ctx, in)
+	return
 }
 
 func (m loggingAuditV1MiddlewareServer) GetEvent(ctx context.Context, in AuditEventRequest) (resp AuditEvent, err error) {
@@ -181,8 +196,18 @@ func (m loggingAuditV1MiddlewareServer) GetEvent(ctx context.Context, in AuditEv
 	return
 }
 
-func (m loggingAuditV1MiddlewareServer) AutoWatchSvcAuditV1(in *api.ListWatchOptions, stream AuditV1_AutoWatchSvcAuditV1Server) error {
-	return errors.New("Not implemented")
+func (m loggingAuditV1MiddlewareServer) AutoWatchSvcAuditV1(in *api.AggWatchOptions, stream AuditV1_AutoWatchSvcAuditV1Server) (err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(stream.Context(), "service", "AuditV1", "method", "AutoWatchSvcAuditV1", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	err = m.next.AutoWatchSvcAuditV1(in, stream)
+	return
 }
 
 func (r *EndpointsAuditV1RestClient) updateHTTPHeader(ctx context.Context, header *http.Header) {
@@ -213,7 +238,7 @@ func (r *EndpointsAuditV1RestClient) getHTTPRequest(ctx context.Context, in inte
 }
 
 //
-func makeURIAuditV1AutoWatchSvcAuditV1WatchOper(in *api.ListWatchOptions) string {
+func makeURIAuditV1AutoWatchSvcAuditV1WatchOper(in *api.AggWatchOptions) string {
 	return ""
 
 }

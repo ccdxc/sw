@@ -17,7 +17,7 @@ var _ api.ObjectMeta
 
 // ServiceWorkloadV1Client  is the client interface for the service.
 type ServiceWorkloadV1Client interface {
-	AutoWatchSvcWorkloadV1(ctx context.Context, in *api.ListWatchOptions) (WorkloadV1_AutoWatchSvcWorkloadV1Client, error)
+	AutoWatchSvcWorkloadV1(ctx context.Context, in *api.AggWatchOptions) (WorkloadV1_AutoWatchSvcWorkloadV1Client, error)
 
 	AbortMigration(ctx context.Context, t *Workload) (*Workload, error)
 	AutoAddEndpoint(ctx context.Context, t *Endpoint) (*Endpoint, error)
@@ -42,7 +42,7 @@ type ServiceWorkloadV1Client interface {
 
 // ServiceWorkloadV1Server is the server interface for the service.
 type ServiceWorkloadV1Server interface {
-	AutoWatchSvcWorkloadV1(in *api.ListWatchOptions, stream WorkloadV1_AutoWatchSvcWorkloadV1Server) error
+	AutoWatchSvcWorkloadV1(in *api.AggWatchOptions, stream WorkloadV1_AutoWatchSvcWorkloadV1Server) error
 
 	AbortMigration(ctx context.Context, t Workload) (Workload, error)
 	AutoAddEndpoint(ctx context.Context, t Endpoint) (Endpoint, error)

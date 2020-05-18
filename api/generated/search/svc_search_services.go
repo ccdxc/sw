@@ -17,7 +17,7 @@ var _ api.ObjectMeta
 
 // ServiceSearchV1Client  is the client interface for the service.
 type ServiceSearchV1Client interface {
-	AutoWatchSvcSearchV1(ctx context.Context, in *api.ListWatchOptions) (SearchV1_AutoWatchSvcSearchV1Client, error)
+	AutoWatchSvcSearchV1(ctx context.Context, in *api.AggWatchOptions) (SearchV1_AutoWatchSvcSearchV1Client, error)
 
 	PolicyQuery(ctx context.Context, t *PolicySearchRequest) (*PolicySearchResponse, error)
 	Query(ctx context.Context, t *SearchRequest) (*SearchResponse, error)
@@ -25,7 +25,7 @@ type ServiceSearchV1Client interface {
 
 // ServiceSearchV1Server is the server interface for the service.
 type ServiceSearchV1Server interface {
-	AutoWatchSvcSearchV1(in *api.ListWatchOptions, stream SearchV1_AutoWatchSvcSearchV1Server) error
+	AutoWatchSvcSearchV1(in *api.AggWatchOptions, stream SearchV1_AutoWatchSvcSearchV1Server) error
 
 	PolicyQuery(ctx context.Context, t PolicySearchRequest) (PolicySearchResponse, error)
 	Query(ctx context.Context, t SearchRequest) (SearchResponse, error)

@@ -69,290 +69,286 @@ type grpcServerBookstoreV1 struct {
 
 // MakeGRPCServerBookstoreV1 creates a GRPC server for BookstoreV1 service
 func MakeGRPCServerBookstoreV1(ctx context.Context, endpoints EndpointsBookstoreV1Server, logger log.Logger) BookstoreV1Server {
-	options := []grpctransport.ServerOption{
-		grpctransport.ServerErrorLogger(logger),
-		grpctransport.ServerBefore(recoverVersion),
-	}
 	return &grpcServerBookstoreV1{
 		Endpoints: endpoints,
 		AddOutageHdlr: grpctransport.NewServer(
 			endpoints.AddOutageEndpoint,
 			DecodeGrpcReqOutageRequest,
 			EncodeGrpcRespStore,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AddOutage", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AddOutage", logger)))...,
 		),
 
 		ApplydiscountHdlr: grpctransport.NewServer(
 			endpoints.ApplydiscountEndpoint,
 			DecodeGrpcReqApplyDiscountReq,
 			EncodeGrpcRespOrder,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("Applydiscount", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("Applydiscount", logger)))...,
 		),
 
 		AutoAddBookHdlr: grpctransport.NewServer(
 			endpoints.AutoAddBookEndpoint,
 			DecodeGrpcReqBook,
 			EncodeGrpcRespBook,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddBook", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddBook", logger)))...,
 		),
 
 		AutoAddCouponHdlr: grpctransport.NewServer(
 			endpoints.AutoAddCouponEndpoint,
 			DecodeGrpcReqCoupon,
 			EncodeGrpcRespCoupon,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddCoupon", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddCoupon", logger)))...,
 		),
 
 		AutoAddCustomerHdlr: grpctransport.NewServer(
 			endpoints.AutoAddCustomerEndpoint,
 			DecodeGrpcReqCustomer,
 			EncodeGrpcRespCustomer,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddCustomer", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddCustomer", logger)))...,
 		),
 
 		AutoAddOrderHdlr: grpctransport.NewServer(
 			endpoints.AutoAddOrderEndpoint,
 			DecodeGrpcReqOrder,
 			EncodeGrpcRespOrder,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddOrder", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddOrder", logger)))...,
 		),
 
 		AutoAddPublisherHdlr: grpctransport.NewServer(
 			endpoints.AutoAddPublisherEndpoint,
 			DecodeGrpcReqPublisher,
 			EncodeGrpcRespPublisher,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddPublisher", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddPublisher", logger)))...,
 		),
 
 		AutoAddStoreHdlr: grpctransport.NewServer(
 			endpoints.AutoAddStoreEndpoint,
 			DecodeGrpcReqStore,
 			EncodeGrpcRespStore,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddStore", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddStore", logger)))...,
 		),
 
 		AutoDeleteBookHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteBookEndpoint,
 			DecodeGrpcReqBook,
 			EncodeGrpcRespBook,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteBook", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteBook", logger)))...,
 		),
 
 		AutoDeleteCouponHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteCouponEndpoint,
 			DecodeGrpcReqCoupon,
 			EncodeGrpcRespCoupon,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteCoupon", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteCoupon", logger)))...,
 		),
 
 		AutoDeleteCustomerHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteCustomerEndpoint,
 			DecodeGrpcReqCustomer,
 			EncodeGrpcRespCustomer,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteCustomer", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteCustomer", logger)))...,
 		),
 
 		AutoDeleteOrderHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteOrderEndpoint,
 			DecodeGrpcReqOrder,
 			EncodeGrpcRespOrder,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteOrder", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteOrder", logger)))...,
 		),
 
 		AutoDeletePublisherHdlr: grpctransport.NewServer(
 			endpoints.AutoDeletePublisherEndpoint,
 			DecodeGrpcReqPublisher,
 			EncodeGrpcRespPublisher,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeletePublisher", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeletePublisher", logger)))...,
 		),
 
 		AutoDeleteStoreHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteStoreEndpoint,
 			DecodeGrpcReqStore,
 			EncodeGrpcRespStore,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteStore", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteStore", logger)))...,
 		),
 
 		AutoGetBookHdlr: grpctransport.NewServer(
 			endpoints.AutoGetBookEndpoint,
 			DecodeGrpcReqBook,
 			EncodeGrpcRespBook,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetBook", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetBook", logger)))...,
 		),
 
 		AutoGetCouponHdlr: grpctransport.NewServer(
 			endpoints.AutoGetCouponEndpoint,
 			DecodeGrpcReqCoupon,
 			EncodeGrpcRespCoupon,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetCoupon", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetCoupon", logger)))...,
 		),
 
 		AutoGetCustomerHdlr: grpctransport.NewServer(
 			endpoints.AutoGetCustomerEndpoint,
 			DecodeGrpcReqCustomer,
 			EncodeGrpcRespCustomer,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetCustomer", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetCustomer", logger)))...,
 		),
 
 		AutoGetOrderHdlr: grpctransport.NewServer(
 			endpoints.AutoGetOrderEndpoint,
 			DecodeGrpcReqOrder,
 			EncodeGrpcRespOrder,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetOrder", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetOrder", logger)))...,
 		),
 
 		AutoGetPublisherHdlr: grpctransport.NewServer(
 			endpoints.AutoGetPublisherEndpoint,
 			DecodeGrpcReqPublisher,
 			EncodeGrpcRespPublisher,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetPublisher", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetPublisher", logger)))...,
 		),
 
 		AutoGetStoreHdlr: grpctransport.NewServer(
 			endpoints.AutoGetStoreEndpoint,
 			DecodeGrpcReqStore,
 			EncodeGrpcRespStore,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetStore", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetStore", logger)))...,
 		),
 
 		AutoLabelBookHdlr: grpctransport.NewServer(
 			endpoints.AutoLabelBookEndpoint,
 			DecodeGrpcReqLabel,
 			EncodeGrpcRespBook,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelBook", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelBook", logger)))...,
 		),
 
 		AutoLabelCouponHdlr: grpctransport.NewServer(
 			endpoints.AutoLabelCouponEndpoint,
 			DecodeGrpcReqLabel,
 			EncodeGrpcRespCoupon,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelCoupon", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelCoupon", logger)))...,
 		),
 
 		AutoLabelCustomerHdlr: grpctransport.NewServer(
 			endpoints.AutoLabelCustomerEndpoint,
 			DecodeGrpcReqLabel,
 			EncodeGrpcRespCustomer,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelCustomer", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelCustomer", logger)))...,
 		),
 
 		AutoLabelOrderHdlr: grpctransport.NewServer(
 			endpoints.AutoLabelOrderEndpoint,
 			DecodeGrpcReqLabel,
 			EncodeGrpcRespOrder,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelOrder", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelOrder", logger)))...,
 		),
 
 		AutoLabelPublisherHdlr: grpctransport.NewServer(
 			endpoints.AutoLabelPublisherEndpoint,
 			DecodeGrpcReqLabel,
 			EncodeGrpcRespPublisher,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelPublisher", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelPublisher", logger)))...,
 		),
 
 		AutoLabelStoreHdlr: grpctransport.NewServer(
 			endpoints.AutoLabelStoreEndpoint,
 			DecodeGrpcReqLabel,
 			EncodeGrpcRespStore,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelStore", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelStore", logger)))...,
 		),
 
 		AutoListBookHdlr: grpctransport.NewServer(
 			endpoints.AutoListBookEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespBookList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListBook", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListBook", logger)))...,
 		),
 
 		AutoListCouponHdlr: grpctransport.NewServer(
 			endpoints.AutoListCouponEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespCouponList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListCoupon", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListCoupon", logger)))...,
 		),
 
 		AutoListCustomerHdlr: grpctransport.NewServer(
 			endpoints.AutoListCustomerEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespCustomerList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListCustomer", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListCustomer", logger)))...,
 		),
 
 		AutoListOrderHdlr: grpctransport.NewServer(
 			endpoints.AutoListOrderEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespOrderList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListOrder", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListOrder", logger)))...,
 		),
 
 		AutoListPublisherHdlr: grpctransport.NewServer(
 			endpoints.AutoListPublisherEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespPublisherList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListPublisher", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListPublisher", logger)))...,
 		),
 
 		AutoListStoreHdlr: grpctransport.NewServer(
 			endpoints.AutoListStoreEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespStoreList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListStore", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListStore", logger)))...,
 		),
 
 		AutoUpdateBookHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateBookEndpoint,
 			DecodeGrpcReqBook,
 			EncodeGrpcRespBook,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateBook", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateBook", logger)))...,
 		),
 
 		AutoUpdateCouponHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateCouponEndpoint,
 			DecodeGrpcReqCoupon,
 			EncodeGrpcRespCoupon,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateCoupon", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateCoupon", logger)))...,
 		),
 
 		AutoUpdateCustomerHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateCustomerEndpoint,
 			DecodeGrpcReqCustomer,
 			EncodeGrpcRespCustomer,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateCustomer", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateCustomer", logger)))...,
 		),
 
 		AutoUpdateOrderHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateOrderEndpoint,
 			DecodeGrpcReqOrder,
 			EncodeGrpcRespOrder,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateOrder", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateOrder", logger)))...,
 		),
 
 		AutoUpdatePublisherHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdatePublisherEndpoint,
 			DecodeGrpcReqPublisher,
 			EncodeGrpcRespPublisher,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdatePublisher", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdatePublisher", logger)))...,
 		),
 
 		AutoUpdateStoreHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateStoreEndpoint,
 			DecodeGrpcReqStore,
 			EncodeGrpcRespStore,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateStore", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateStore", logger)))...,
 		),
 
 		CleardiscountHdlr: grpctransport.NewServer(
 			endpoints.CleardiscountEndpoint,
 			DecodeGrpcReqApplyDiscountReq,
 			EncodeGrpcRespOrder,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("Cleardiscount", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("Cleardiscount", logger)))...,
 		),
 
 		RestockHdlr: grpctransport.NewServer(
 			endpoints.RestockEndpoint,
 			DecodeGrpcReqRestockRequest,
 			EncodeGrpcRespRestockResponse,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("Restock", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("Restock", logger)))...,
 		),
 	}
 }
@@ -1077,7 +1073,7 @@ func decodeHTTPrespBookstoreV1Restock(_ context.Context, r *http.Response) (inte
 	return &resp, err
 }
 
-func (s *grpcServerBookstoreV1) AutoWatchSvcBookstoreV1(in *api.ListWatchOptions, stream BookstoreV1_AutoWatchSvcBookstoreV1Server) error {
+func (s *grpcServerBookstoreV1) AutoWatchSvcBookstoreV1(in *api.AggWatchOptions, stream BookstoreV1_AutoWatchSvcBookstoreV1Server) error {
 	return s.Endpoints.AutoWatchSvcBookstoreV1(in, stream)
 }
 

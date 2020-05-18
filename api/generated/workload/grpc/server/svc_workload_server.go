@@ -48,7 +48,7 @@ type sworkloadSvc_workloadBackend struct {
 
 type eWorkloadV1Endpoints struct {
 	Svc                      sworkloadSvc_workloadBackend
-	fnAutoWatchSvcWorkloadV1 func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
+	fnAutoWatchSvcWorkloadV1 func(in *api.AggWatchOptions, stream grpc.ServerStream, svcprefix string) error
 
 	fnAbortMigration     func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddEndpoint    func(ctx context.Context, t interface{}) (interface{}, error)
@@ -364,16 +364,24 @@ func (s *sworkloadSvc_workloadBackend) regWatchersFunc(ctx context.Context, logg
 
 	// Add Watchers
 	{
-
 		// Service watcher
 		svc := s.Services["workload.WorkloadV1"]
 		if svc != nil {
-			svc.WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfnMap map[string]func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
-				key := globals.ConfigRootPrefix + "/workload"
+			svc.WithKvWatchFunc(func(l log.Logger, options *api.AggWatchOptions, kvs kvstore.Interface, stream interface{}, txfnMap map[string]func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
+				for _, o := range options.WatchOptions {
+					if o.Group != "workload" {
+						return fmt.Errorf("invalid group [%s] in watch options", o.Group)
+					}
+				}
+				if len(options.WatchOptions) == 0 {
+					options.WatchOptions = append(options.WatchOptions, api.KindWatchOptions{Group: "workload"})
+				}
 				wstream := stream.(grpc.ServerStream)
 				nctx, cancel := context.WithCancel(wstream.Context())
+				id := fmt.Sprintf("%s-%x", ctxutils.GetPeerID(nctx), &options)
+				nctx = ctxutils.SetContextID(nctx, id)
 				defer cancel()
-				watcher, err := kvs.WatchFiltered(nctx, key, *options)
+				watcher, err := kvs.WatchAggregate(nctx, *options)
 				if err != nil {
 					l.ErrorLog("msg", "error starting Watch for service", "err", err, "service", "WorkloadV1")
 					return err
@@ -742,7 +750,7 @@ func (e *eWorkloadV1Endpoints) AutoWatchEndpoint(in *api.ListWatchOptions, strea
 func (e *eWorkloadV1Endpoints) AutoWatchWorkload(in *api.ListWatchOptions, stream workload.WorkloadV1_AutoWatchWorkloadServer) error {
 	return e.fnAutoWatchWorkload(in, stream, "workload")
 }
-func (e *eWorkloadV1Endpoints) AutoWatchSvcWorkloadV1(in *api.ListWatchOptions, stream workload.WorkloadV1_AutoWatchSvcWorkloadV1Server) error {
+func (e *eWorkloadV1Endpoints) AutoWatchSvcWorkloadV1(in *api.AggWatchOptions, stream workload.WorkloadV1_AutoWatchSvcWorkloadV1Server) error {
 	return e.fnAutoWatchSvcWorkloadV1(in, stream, "")
 }
 

@@ -93,5 +93,5 @@ type AuthV1Interface interface {
 	Role() AuthV1RoleInterface
 	RoleBinding() AuthV1RoleBindingInterface
 	UserPreference() AuthV1UserPreferenceInterface
-	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
+	Watch(ctx context.Context, options *api.AggWatchOptions) (kvstore.Watcher, error)
 }

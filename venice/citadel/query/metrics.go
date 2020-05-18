@@ -377,6 +377,6 @@ func buildCitadelMetricsQuery(qs *telemetry_query.MetricsQuerySpec) (string, err
 }
 
 // AutoWatchSvcTelemetryV1 is not implemented
-func (q *Server) AutoWatchSvcTelemetryV1(lwo *api.ListWatchOptions, s telemetry_query.TelemetryV1_AutoWatchSvcTelemetryV1Server) error {
+func (q *Server) AutoWatchSvcTelemetryV1(lwo *api.AggWatchOptions, s telemetry_query.TelemetryV1_AutoWatchSvcTelemetryV1Server) error {
 	return status.Errorf(codes.Unimplemented, "not supported")
 }

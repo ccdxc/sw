@@ -9,7 +9,6 @@ package fwlog
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"net/http"
 
 	grpctransport "github.com/go-kit/kit/transport/grpc"
@@ -32,24 +31,20 @@ type grpcServerFwLogV1 struct {
 
 // MakeGRPCServerFwLogV1 creates a GRPC server for FwLogV1 service
 func MakeGRPCServerFwLogV1(ctx context.Context, endpoints EndpointsFwLogV1Server, logger log.Logger) FwLogV1Server {
-	options := []grpctransport.ServerOption{
-		grpctransport.ServerErrorLogger(logger),
-		grpctransport.ServerBefore(recoverVersion),
-	}
 	return &grpcServerFwLogV1{
 		Endpoints: endpoints,
 		DownloadFwLogFileContentHdlr: grpctransport.NewServer(
 			endpoints.DownloadFwLogFileContentEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespFwLogList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("DownloadFwLogFileContent", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("DownloadFwLogFileContent", logger)))...,
 		),
 
 		GetLogsHdlr: grpctransport.NewServer(
 			endpoints.GetLogsEndpoint,
 			DecodeGrpcReqFwLogQuery,
 			EncodeGrpcRespFwLogList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("GetLogs", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("GetLogs", logger)))...,
 		),
 	}
 }
@@ -90,6 +85,6 @@ func decodeHTTPrespFwLogV1GetLogs(_ context.Context, r *http.Response) (interfac
 	return &resp, err
 }
 
-func (s *grpcServerFwLogV1) AutoWatchSvcFwLogV1(in *api.ListWatchOptions, stream FwLogV1_AutoWatchSvcFwLogV1Server) error {
-	return errors.New("not implemented")
+func (s *grpcServerFwLogV1) AutoWatchSvcFwLogV1(in *api.AggWatchOptions, stream FwLogV1_AutoWatchSvcFwLogV1Server) error {
+	return s.Endpoints.AutoWatchSvcFwLogV1(in, stream)
 }

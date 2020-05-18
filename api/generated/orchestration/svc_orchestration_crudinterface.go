@@ -31,5 +31,5 @@ type OrchestratorV1OrchestratorInterface interface {
 // OrchestratorV1Interface exposes objects with CRUD operations allowed by the service
 type OrchestratorV1Interface interface {
 	Orchestrator() OrchestratorV1OrchestratorInterface
-	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
+	Watch(ctx context.Context, options *api.AggWatchOptions) (kvstore.Watcher, error)
 }

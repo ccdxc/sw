@@ -9,6 +9,7 @@ package fwlogGwService
 import (
 	"context"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -22,6 +23,7 @@ import (
 	fwlog "github.com/pensando/sw/api/generated/fwlog"
 	grpcclient "github.com/pensando/sw/api/generated/fwlog/grpc/client"
 	"github.com/pensando/sw/api/interfaces"
+	"github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apiserver"
@@ -97,8 +99,58 @@ func (a adapterFwLogV1) GetLogs(oldctx oldcontext.Context, t *fwlog.FwLogQuery, 
 	return ret.(*fwlog.FwLogList), err
 }
 
-func (a adapterFwLogV1) AutoWatchSvcFwLogV1(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (fwlog.FwLogV1_AutoWatchSvcFwLogV1Client, error) {
-	return nil, errors.New("not implemented")
+func (a adapterFwLogV1) AutoWatchSvcFwLogV1(oldctx oldcontext.Context, in *api.AggWatchOptions, options ...grpc.CallOption) (fwlog.FwLogV1_AutoWatchSvcFwLogV1Client, error) {
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoWatchSvcFwLogV1")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group := apiintf.WatchOper, "", in.Tenant, in.Namespace, "fwlog"
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.AggWatchOptions)
+		iws, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwWebSocketWatch)
+		if ok && iws.(bool) {
+			nctx, cancel := context.WithCancel(ctx)
+			ir, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwHTTPReq)
+			if !ok {
+				return nil, errors.New("unable to retrieve request")
+			}
+			iw, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwHTTPWriter)
+			if !ok {
+				return nil, errors.New("unable to retrieve writer")
+			}
+			conn, err := wsUpgrader.Upgrade(iw.(http.ResponseWriter), ir.(*http.Request), nil)
+			if err != nil {
+				log.Errorf("WebSocket Upgrade failed (%s)", err)
+				return nil, err
+			}
+			ctx = apiutils.SetVar(nctx, apiutils.CtxKeyAPIGwWebSocketConn, conn)
+			conn.SetCloseHandler(func(code int, text string) error {
+				cancel()
+				log.Infof("received close notification on websocket [AutoWatchFwLogV1] (%v/%v)", code, text)
+				return nil
+			})
+			// start a dummy reciever
+			go func() {
+				for {
+					_, _, err := conn.ReadMessage()
+					if err != nil {
+						log.Errorf("received error on websocket receive (%s)", err)
+						cancel()
+						return
+					}
+				}
+			}()
+		}
+		return a.service.AutoWatchSvcFwLogV1(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, in, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(fwlog.FwLogV1_AutoWatchSvcFwLogV1Client), err
 }
 
 func (e *sFwLogV1GwService) setupSvcProfile() {

@@ -28,7 +28,7 @@ function generateCatKind() {
     var data = {};
     var manifest = utils.getManifest();
     Object.keys(manifest).forEach(function (category) {
-        if (category === "bookstore") {
+        if ((category === "bookstore") || (category === "aggwatch") || (category === "browser")) {
             // Skipping the bookstore exampe
             return;
         }

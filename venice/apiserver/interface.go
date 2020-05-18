@@ -76,6 +76,8 @@ type Server interface {
 	RegisterRestoreCallback(cb RestoreCb)
 	// GetService returns a registered service given the name.
 	GetService(name string) Service
+	// GetServiceForGroup returns a registered services for the given api group.
+	GetServiceForGroup(grp string) []Service
 	// GetMessage returns a registered mesage given the kind and service name.
 	GetMessage(svc, kind string) Message
 	// CreateOverlay creates a new overlay on top of API server cache
@@ -222,7 +224,7 @@ type WatchKvFunc func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.I
 // WatchSvcKvFunc is the function registered to watch for KV store changes from KV store. where
 //  - stream is the GRPC stream
 //  - txfnMap is the version transformation function map to be used during the watch.
-type WatchSvcKvFunc func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfnMap map[string]func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error
+type WatchSvcKvFunc func(l log.Logger, options *api.AggWatchOptions, kvs kvstore.Interface, stream interface{}, txfnMap map[string]func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error
 
 // CreateUUIDFunc is a function that creates and sets UUID during object creation
 type CreateUUIDFunc func(i interface{}) (interface{}, error)
@@ -244,6 +246,9 @@ type ResourceRollbackFn func(ctx context.Context, i interface{}, kvstore kvstore
 
 // ResourceAllocFunc is the resource allocation callback
 type ResourceAllocFunc func(ctx context.Context, i interface{}, kvstore kvstore.Interface, key string, dryrun bool) (ResourceRollbackFn, error)
+
+// ServerStreamHandler is a handler for custom server side streaming functions
+type ServerStreamHandler func(opts interface{}, stream grpc.ServerStream) error
 
 // ObjStorageTransformer is a pair of functions to be invoked before/after an object
 // is written/read to/from KvStore
@@ -389,9 +394,10 @@ type MethodRegistration interface {
 	WithMakeURI(fn MakeURIFunc) Method
 	// WithMethDbKey sets the fn to generate the db key for the method
 	WithMethDbKey(fn MakeMethDbKeyFunc) Method
-
 	// WithResourceAllocHook registers a resource allocation callback.
 	WithResourceAllocHook(fn ResourceAllocFunc) Method
+	// WithServerStreamHandler is a handler for custom server streaming operations
+	WithServerStreamHandler(fn ServerStreamHandler) Method
 }
 
 // MethodAction is the set of actions on a Method.
@@ -433,7 +439,9 @@ type Service interface {
 	// WithCrudServices registers all the crud services for this service
 	WithCrudServices(msgs []Message) Service
 	// WatchFromKv watches changes in KV store constrained by options passed in
-	WatchFromKv(options *api.ListWatchOptions, stream grpc.ServerStream, prefix string) error
+	WatchFromKv(options *api.AggWatchOptions, stream grpc.ServerStream, prefix string) error
+	// PopulateTxfmMap populates the message transformation map for all kinds known to the service.
+	PopulateTxfmMap(in map[string]func(from, to string, i interface{}) (interface{}, error))
 }
 
 // Utility functions

@@ -129,5 +129,5 @@ type NetworkV1Interface interface {
 	IPAMPolicy() NetworkV1IPAMPolicyInterface
 	RoutingConfig() NetworkV1RoutingConfigInterface
 	RouteTable() NetworkV1RouteTableInterface
-	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
+	Watch(ctx context.Context, options *api.AggWatchOptions) (kvstore.Watcher, error)
 }

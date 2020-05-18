@@ -17,7 +17,13 @@ const (
 	// WatcherError is an event to indicate an error with watch. Watch must
 	// be re-established when this happens.
 	WatcherError WatchEventType = "Error"
+	// WatcherControl is an event for control messages in the watch channel. Handling is optional.
+	WatcherControl WatchEventType = "Control"
 )
+
+func (w WatchEventType) String() string {
+	return string(w)
+}
 
 // WatchEvent contains information about a single event on watched object(s)
 type WatchEvent struct {
@@ -31,6 +37,15 @@ type WatchEvent struct {
 	// Error event, it is undefined. For all other events, it is the latest
 	// version of the object.
 	Object runtime.Object
+
+	// Control is only set when Type is WatcherControl
+	Control *WatchControl
+}
+
+// WatchControl holds control messages on the watch channel
+type WatchControl struct {
+	Code    uint32
+	Message string
 }
 
 // Watcher is an interface that can be implemented to keep track of changes to

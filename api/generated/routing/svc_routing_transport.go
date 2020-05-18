@@ -35,52 +35,48 @@ type grpcServerRoutingV1 struct {
 
 // MakeGRPCServerRoutingV1 creates a GRPC server for RoutingV1 service
 func MakeGRPCServerRoutingV1(ctx context.Context, endpoints EndpointsRoutingV1Server, logger log.Logger) RoutingV1Server {
-	options := []grpctransport.ServerOption{
-		grpctransport.ServerErrorLogger(logger),
-		grpctransport.ServerBefore(recoverVersion),
-	}
 	return &grpcServerRoutingV1{
 		Endpoints: endpoints,
 		AutoAddNeighborHdlr: grpctransport.NewServer(
 			endpoints.AutoAddNeighborEndpoint,
 			DecodeGrpcReqNeighbor,
 			EncodeGrpcRespNeighbor,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddNeighbor", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddNeighbor", logger)))...,
 		),
 
 		AutoDeleteNeighborHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteNeighborEndpoint,
 			DecodeGrpcReqNeighbor,
 			EncodeGrpcRespNeighbor,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteNeighbor", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteNeighbor", logger)))...,
 		),
 
 		AutoGetNeighborHdlr: grpctransport.NewServer(
 			endpoints.AutoGetNeighborEndpoint,
 			DecodeGrpcReqNeighbor,
 			EncodeGrpcRespNeighbor,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetNeighbor", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetNeighbor", logger)))...,
 		),
 
 		AutoLabelNeighborHdlr: grpctransport.NewServer(
 			endpoints.AutoLabelNeighborEndpoint,
 			DecodeGrpcReqLabel,
 			EncodeGrpcRespNeighbor,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelNeighbor", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelNeighbor", logger)))...,
 		),
 
 		AutoListNeighborHdlr: grpctransport.NewServer(
 			endpoints.AutoListNeighborEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespNeighborList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListNeighbor", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListNeighbor", logger)))...,
 		),
 
 		AutoUpdateNeighborHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateNeighborEndpoint,
 			DecodeGrpcReqNeighbor,
 			EncodeGrpcRespNeighbor,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateNeighbor", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateNeighbor", logger)))...,
 		),
 	}
 }
@@ -193,7 +189,7 @@ func decodeHTTPrespRoutingV1AutoUpdateNeighbor(_ context.Context, r *http.Respon
 	return &resp, err
 }
 
-func (s *grpcServerRoutingV1) AutoWatchSvcRoutingV1(in *api.ListWatchOptions, stream RoutingV1_AutoWatchSvcRoutingV1Server) error {
+func (s *grpcServerRoutingV1) AutoWatchSvcRoutingV1(in *api.AggWatchOptions, stream RoutingV1_AutoWatchSvcRoutingV1Server) error {
 	return s.Endpoints.AutoWatchSvcRoutingV1(in, stream)
 }
 

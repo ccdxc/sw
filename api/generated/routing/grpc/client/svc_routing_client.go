@@ -359,48 +359,6 @@ func (a *crudClientRoutingV1) Neighbor() routing.RoutingV1NeighborInterface {
 	return a.grpcNeighbor
 }
 
-func (a *crudClientRoutingV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	a.logger.DebugLog("msg", "received call", "object", "RoutingV1", "oper", "WatchOper")
-	nctx := addVersion(ctx, "v1")
-	if options == nil {
-		return nil, errors.New("invalid input")
-	}
-	stream, err := a.client.AutoWatchSvcRoutingV1(nctx, options)
-	if err != nil {
-		return nil, err
-	}
-	wstream := stream.(routing.RoutingV1_AutoWatchSvcRoutingV1Client)
-	bridgefn := func(lw *listerwatcher.WatcherClient) {
-		for {
-			r, err := wstream.Recv()
-			if err != nil {
-				a.logger.ErrorLog("msg", "error on receive", "err", err)
-				close(lw.OutCh)
-				return
-			}
-			for _, e := range r.Events {
-				ev := kvstore.WatchEvent{Type: kvstore.WatchEventType(e.Type)}
-				robj, err := listerwatcher.GetObject(e)
-				if err != nil {
-					a.logger.ErrorLog("msg", "error on receive unmarshall", "err", err)
-					close(lw.OutCh)
-					return
-				}
-				ev.Object = robj
-				select {
-				case lw.OutCh <- &ev:
-				case <-wstream.Context().Done():
-					close(lw.OutCh)
-					return
-				}
-			}
-		}
-	}
-	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)
-	lw.Run()
-	return lw, nil
-}
-
 type crudRestClientRoutingV1 struct {
 	restNeighbor routing.RoutingV1NeighborInterface
 }
@@ -433,6 +391,6 @@ func (a *crudRestClientRoutingV1) Neighbor() routing.RoutingV1NeighborInterface 
 	return a.restNeighbor
 }
 
-func (a *crudRestClientRoutingV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+func (a *crudRestClientRoutingV1) Watch(ctx context.Context, options *api.AggWatchOptions) (kvstore.Watcher, error) {
 	return nil, errors.New("method unimplemented")
 }

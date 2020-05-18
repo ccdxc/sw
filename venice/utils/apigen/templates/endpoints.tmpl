@@ -60,7 +60,7 @@ type Endpoints{{$svcname}}RestClient struct {
 type Middleware{{$svcname}}Server func(Service{{$svcname}}Server) Service{{$svcname}}Server
 // Endpoints{{$svcname}}Server is the server endpoints{{/*<ServerEndpoints>*/}}
 type Endpoints{{$svcname}}Server struct {
-	svcWatchHandler{{$svcname}} func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	svcWatchHandler{{$svcname}} func(options *api.AggWatchOptions, stream grpc.ServerStream) error
 	{{range .Methods}}{{$params := (getMethodParams .)}}{{if isStreaming .}}{{else}}{{/*<NonStreamingEndpoints>*/}}
 	{{.Name}}Endpoint endpoint.Endpoint{{end}}{{end}}
 	{{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{range $cruds}}
@@ -81,19 +81,15 @@ type resp{{$svcname}}{{.Name}} struct {
 	V   {{getOutputType $pkgname . false}}
 	Err error
 }{{end}}{{end}}{{/*<end><NonStreamingEndpoints>*/}}
-{{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}
-func (e Endpoints{{$svcname}}Client) AutoWatchSvc{{$svcname}}(ctx context.Context, in *api.ListWatchOptions) ({{$svcname}}_AutoWatchSvc{{$svcname}}Client, error) {
+
+func (e Endpoints{{$svcname}}Client) AutoWatchSvc{{$svcname}}(ctx context.Context, in *api.AggWatchOptions) ({{$svcname}}_AutoWatchSvc{{$svcname}}Client, error) {
 	return e.Client.AutoWatchSvc{{$svcname}}(ctx, in)
 }
-{{range $cruds}}
+{{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{range $cruds}}
 // AutoWatch{{.}} performs Watch for {{.}}
 func (e Endpoints{{$svcname}}Client) AutoWatch{{.}}(ctx context.Context, in *api.ListWatchOptions) ({{$svcname}}_AutoWatch{{.}}Client, error) {
 	return e.Client.AutoWatch{{.}}(ctx, in)
-}{{end}}{{else}}
-func (e Endpoints{{$svcname}}Client) AutoWatchSvc{{$svcname}}(ctx context.Context, in *api.ListWatchOptions) ({{$svcname}}_AutoWatchSvc{{$svcname}}Client, error) {
-	return nil, errors.New("not implemented")
-}
-{{end}}
+}{{end}}{{end}}
 
 {{range .Methods}}{{$params := (getMethodParams .)}}{{if isStreaming .}}{{if (strEq $params.Oper "WatchOper")}} {{else}}{{if isClientStreaming .}}
 func (e Endpoints{{$svcname}}Client) {{.Name}}(ctx context.Context) ({{$svcname}}_{{.Name}}Client, error) {
@@ -125,18 +121,18 @@ func Make{{$svcname}}{{.Name}}Endpoint(s Service{{$svcname}}Server, logger log.L
 	}
     return trace.ServerEndpoint("{{$svcname}}:{{.Name}}")(f)
 }{{end}}{{end}}
-{{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{$prefix := (getExtension "venice.apiPrefix" .)}}
-func (e Endpoints{{$svcname}}Server) AutoWatchSvc{{$svcname}}(in *api.ListWatchOptions, stream {{$svcname}}_AutoWatchSvc{{$svcname}}Server) error {
+
+func (e Endpoints{{$svcname}}Server) AutoWatchSvc{{$svcname}}(in *api.AggWatchOptions, stream {{$svcname}}_AutoWatchSvc{{$svcname}}Server) error {
 	return e.svcWatchHandler{{$svcname}}(in, stream)
 }
 // MakeAutoWatchSvc{{$svcname}}Endpoint creates the Watch endpoint for the service
-func MakeAutoWatchSvc{{$svcname}}Endpoint(s Service{{$svcname}}Server, logger log.Logger) (func(options *api.ListWatchOptions, stream grpc.ServerStream) error) {
-	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+func MakeAutoWatchSvc{{$svcname}}Endpoint(s Service{{$svcname}}Server, logger log.Logger) (func(options *api.AggWatchOptions, stream grpc.ServerStream) error) {
+	return func(options *api.AggWatchOptions, stream grpc.ServerStream) error {
 		wstream := stream.({{$svcname}}_AutoWatchSvc{{$svcname}}Server)
 		return s.AutoWatchSvc{{$svcname}}(options, wstream)
 	}
 }
-{{range $cruds}}
+{{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{range $cruds}}
 // AutoWatch{{.}} is the watch handler for {{.}} on the server side.
 func (e Endpoints{{$svcname}}Server) AutoWatch{{.}}(in *api.ListWatchOptions, stream {{$svcname}}_AutoWatch{{.}}Server) error {
 	return e.watchHandler{{.}}(in, stream)
@@ -149,14 +145,7 @@ func MakeAutoWatch{{.}}Endpoint(s Service{{$svcname}}Server, logger log.Logger) 
 		return s.AutoWatch{{.}}(options, wstream)
 	}
 }
-{{end}}{{else}}
-// MakeAutoWatchSvc{{$svcname}}Endpoint creates the Watch endpoint for the service
-func MakeAutoWatchSvc{{$svcname}}Endpoint(s Service{{$svcname}}Server, logger log.Logger) (func(options *api.ListWatchOptions, stream grpc.ServerStream) error) {
-	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
-		return errors.New("not implemented")
-	}
-}
-{{end}}
+{{end}}{{end}}
 
 {{range .Methods}}{{$params := (getMethodParams .)}}{{if isStreaming .}}{{if (strEq $params.Oper "WatchOper")}} {{else}}{{if isClientStreaming .}}
 func (e Endpoints{{$svcname}}Server) {{.Name}}(in {{$svcname}}_{{.Name}}Server) error {
@@ -221,8 +210,8 @@ func (m logging{{$svcname}}MiddlewareClient) {{.Name}}(ctx context.Context, in *
 	resp, err = m.next.{{.Name}}(ctx, in)
 	return
 }{{end}}{{end}}
-{{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{$prefix := (getExtension "venice.apiPrefix" .)}}
-func (m logging{{$svcname}}MiddlewareClient) AutoWatchSvc{{$svcname}}(ctx context.Context, in *api.ListWatchOptions) (resp {{$svcname}}_AutoWatchSvc{{$svcname}}Client, err error) {
+
+func (m logging{{$svcname}}MiddlewareClient) AutoWatchSvc{{$svcname}}(ctx context.Context, in *api.AggWatchOptions) (resp {{$svcname}}_AutoWatchSvc{{$svcname}}Client, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -235,7 +224,7 @@ func (m logging{{$svcname}}MiddlewareClient) AutoWatchSvc{{$svcname}}(ctx contex
 	resp, err = m.next.AutoWatchSvc{{$svcname}}(ctx, in)
 	return
 }
-{{range $cruds}}
+{{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{range $cruds}}
 func (m logging{{$svcname}}MiddlewareClient) AutoWatch{{.}}(ctx context.Context, in *api.ListWatchOptions) (resp {{$svcname}}_AutoWatch{{.}}Client, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -248,11 +237,7 @@ func (m logging{{$svcname}}MiddlewareClient) AutoWatch{{.}}(ctx context.Context,
 	}(time.Now())
 	resp, err = m.next.AutoWatch{{.}}(ctx, in)
 	return
-}{{end}}
-{{else}}
-func (m logging{{$svcname}}MiddlewareClient) AutoWatchSvc{{$svcname}}(ctx context.Context, in *api.ListWatchOptions) ({{$svcname}}_AutoWatchSvc{{$svcname}}Client, error) {
-	return nil, errors.New("not implemented")
-}{{end}}
+}{{end}}{{end}}
 {{range .Methods}}{{$params := (getMethodParams .)}}{{if isStreaming .}}{{if (strEq $params.Oper "WatchOper")}} {{else}}{{if isClientStreaming .}}
 func (m logging{{$svcname}}MiddlewareClient) {{.Name}}(ctx context.Context) (resp {{$svcname}}_{{.Name}}Client, err error) {
 	defer func(begin time.Time) {
@@ -295,8 +280,8 @@ func (m logging{{$svcname}}MiddlewareServer) {{.Name}}(ctx context.Context, in {
 	resp, err = m.next.{{.Name}}(ctx, in)
 	return
 }{{end}}{{end}}
-{{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{$prefix := (getExtension "venice.apiPrefix" .)}}
-func (m logging{{$svcname}}MiddlewareServer) AutoWatchSvc{{$svcname}}(in *api.ListWatchOptions, stream {{$svcname}}_AutoWatchSvc{{$svcname}}Server) (err error) {
+
+func (m logging{{$svcname}}MiddlewareServer) AutoWatchSvc{{$svcname}}(in *api.AggWatchOptions, stream {{$svcname}}_AutoWatchSvc{{$svcname}}Server) (err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -309,7 +294,7 @@ func (m logging{{$svcname}}MiddlewareServer) AutoWatchSvc{{$svcname}}(in *api.Li
 	err = m.next.AutoWatchSvc{{$svcname}}(in, stream)
 	return
 }
-{{range $cruds}}
+{{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{range $cruds}}
 func (m logging{{$svcname}}MiddlewareServer) AutoWatch{{.}}(in *api.ListWatchOptions, stream {{$svcname}}_AutoWatch{{.}}Server) (err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -322,11 +307,7 @@ func (m logging{{$svcname}}MiddlewareServer) AutoWatch{{.}}(in *api.ListWatchOpt
 	}(time.Now())
 	err = m.next.AutoWatch{{.}}(in, stream)
 	return
-}{{end}}{{else}}
-func (m logging{{$svcname}}MiddlewareServer) AutoWatchSvc{{$svcname}}(in *api.ListWatchOptions, stream {{$svcname}}_AutoWatchSvc{{$svcname}}Server) (error) {
-	return errors.New("Not implemented")
-}
-{{end}}
+}{{end}}{{end}}
 
 {{range .Methods}}{{$params := (getMethodParams .)}}{{if isStreaming .}}{{if (strEq $params.Oper "WatchOper")}} {{else}}{{if isClientStreaming .}}
 func (m logging{{$svcname}}MiddlewareServer) {{.Name}}(in {{$svcname}}_{{.Name}}Server) error {

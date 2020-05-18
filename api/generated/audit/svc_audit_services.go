@@ -17,14 +17,14 @@ var _ api.ObjectMeta
 
 // ServiceAuditV1Client  is the client interface for the service.
 type ServiceAuditV1Client interface {
-	AutoWatchSvcAuditV1(ctx context.Context, in *api.ListWatchOptions) (AuditV1_AutoWatchSvcAuditV1Client, error)
+	AutoWatchSvcAuditV1(ctx context.Context, in *api.AggWatchOptions) (AuditV1_AutoWatchSvcAuditV1Client, error)
 
 	GetEvent(ctx context.Context, t *AuditEventRequest) (*AuditEvent, error)
 }
 
 // ServiceAuditV1Server is the server interface for the service.
 type ServiceAuditV1Server interface {
-	AutoWatchSvcAuditV1(in *api.ListWatchOptions, stream AuditV1_AutoWatchSvcAuditV1Server) error
+	AutoWatchSvcAuditV1(in *api.AggWatchOptions, stream AuditV1_AutoWatchSvcAuditV1Server) error
 
 	GetEvent(ctx context.Context, t AuditEventRequest) (AuditEvent, error)
 }

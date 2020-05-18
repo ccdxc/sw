@@ -9,7 +9,6 @@ package telemetry_query
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"net/http"
 
 	grpctransport "github.com/go-kit/kit/transport/grpc"
@@ -32,24 +31,20 @@ type grpcServerTelemetryV1 struct {
 
 // MakeGRPCServerTelemetryV1 creates a GRPC server for TelemetryV1 service
 func MakeGRPCServerTelemetryV1(ctx context.Context, endpoints EndpointsTelemetryV1Server, logger log.Logger) TelemetryV1Server {
-	options := []grpctransport.ServerOption{
-		grpctransport.ServerErrorLogger(logger),
-		grpctransport.ServerBefore(recoverVersion),
-	}
 	return &grpcServerTelemetryV1{
 		Endpoints: endpoints,
 		FwlogsHdlr: grpctransport.NewServer(
 			endpoints.FwlogsEndpoint,
 			DecodeGrpcReqFwlogsQueryList,
 			EncodeGrpcRespFwlogsQueryResponse,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("Fwlogs", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("Fwlogs", logger)))...,
 		),
 
 		MetricsHdlr: grpctransport.NewServer(
 			endpoints.MetricsEndpoint,
 			DecodeGrpcReqMetricsQueryList,
 			EncodeGrpcRespMetricsQueryResponse,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("Metrics", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("Metrics", logger)))...,
 		),
 	}
 }
@@ -90,6 +85,6 @@ func decodeHTTPrespTelemetryV1Metrics(_ context.Context, r *http.Response) (inte
 	return &resp, err
 }
 
-func (s *grpcServerTelemetryV1) AutoWatchSvcTelemetryV1(in *api.ListWatchOptions, stream TelemetryV1_AutoWatchSvcTelemetryV1Server) error {
-	return errors.New("not implemented")
+func (s *grpcServerTelemetryV1) AutoWatchSvcTelemetryV1(in *api.AggWatchOptions, stream TelemetryV1_AutoWatchSvcTelemetryV1Server) error {
+	return s.Endpoints.AutoWatchSvcTelemetryV1(in, stream)
 }

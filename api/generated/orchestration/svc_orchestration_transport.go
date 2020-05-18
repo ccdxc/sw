@@ -35,52 +35,48 @@ type grpcServerOrchestratorV1 struct {
 
 // MakeGRPCServerOrchestratorV1 creates a GRPC server for OrchestratorV1 service
 func MakeGRPCServerOrchestratorV1(ctx context.Context, endpoints EndpointsOrchestratorV1Server, logger log.Logger) OrchestratorV1Server {
-	options := []grpctransport.ServerOption{
-		grpctransport.ServerErrorLogger(logger),
-		grpctransport.ServerBefore(recoverVersion),
-	}
 	return &grpcServerOrchestratorV1{
 		Endpoints: endpoints,
 		AutoAddOrchestratorHdlr: grpctransport.NewServer(
 			endpoints.AutoAddOrchestratorEndpoint,
 			DecodeGrpcReqOrchestrator,
 			EncodeGrpcRespOrchestrator,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddOrchestrator", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddOrchestrator", logger)))...,
 		),
 
 		AutoDeleteOrchestratorHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteOrchestratorEndpoint,
 			DecodeGrpcReqOrchestrator,
 			EncodeGrpcRespOrchestrator,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteOrchestrator", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteOrchestrator", logger)))...,
 		),
 
 		AutoGetOrchestratorHdlr: grpctransport.NewServer(
 			endpoints.AutoGetOrchestratorEndpoint,
 			DecodeGrpcReqOrchestrator,
 			EncodeGrpcRespOrchestrator,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetOrchestrator", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetOrchestrator", logger)))...,
 		),
 
 		AutoLabelOrchestratorHdlr: grpctransport.NewServer(
 			endpoints.AutoLabelOrchestratorEndpoint,
 			DecodeGrpcReqLabel,
 			EncodeGrpcRespOrchestrator,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelOrchestrator", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelOrchestrator", logger)))...,
 		),
 
 		AutoListOrchestratorHdlr: grpctransport.NewServer(
 			endpoints.AutoListOrchestratorEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespOrchestratorList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListOrchestrator", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListOrchestrator", logger)))...,
 		),
 
 		AutoUpdateOrchestratorHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateOrchestratorEndpoint,
 			DecodeGrpcReqOrchestrator,
 			EncodeGrpcRespOrchestrator,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateOrchestrator", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateOrchestrator", logger)))...,
 		),
 	}
 }
@@ -193,7 +189,7 @@ func decodeHTTPrespOrchestratorV1AutoUpdateOrchestrator(_ context.Context, r *ht
 	return &resp, err
 }
 
-func (s *grpcServerOrchestratorV1) AutoWatchSvcOrchestratorV1(in *api.ListWatchOptions, stream OrchestratorV1_AutoWatchSvcOrchestratorV1Server) error {
+func (s *grpcServerOrchestratorV1) AutoWatchSvcOrchestratorV1(in *api.AggWatchOptions, stream OrchestratorV1_AutoWatchSvcOrchestratorV1Server) error {
 	return s.Endpoints.AutoWatchSvcOrchestratorV1(in, stream)
 }
 

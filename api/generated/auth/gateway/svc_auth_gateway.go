@@ -1048,7 +1048,7 @@ func (a adapterAuthV1) TokenSecretGenerate(oldctx oldcontext.Context, t *auth.To
 	return ret.(*auth.AuthenticationPolicy), err
 }
 
-func (a adapterAuthV1) AutoWatchSvcAuthV1(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (auth.AuthV1_AutoWatchSvcAuthV1Client, error) {
+func (a adapterAuthV1) AutoWatchSvcAuthV1(oldctx oldcontext.Context, in *api.AggWatchOptions, options ...grpc.CallOption) (auth.AuthV1_AutoWatchSvcAuthV1Client, error) {
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoWatchSvcAuthV1")
 	if err != nil {
@@ -1058,7 +1058,7 @@ func (a adapterAuthV1) AutoWatchSvcAuthV1(oldctx oldcontext.Context, in *api.Lis
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
-		in := i.(*api.ListWatchOptions)
+		in := i.(*api.AggWatchOptions)
 		iws, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwWebSocketWatch)
 		if ok && iws.(bool) {
 			nctx, cancel := context.WithCancel(ctx)

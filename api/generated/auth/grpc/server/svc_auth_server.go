@@ -48,7 +48,7 @@ type sauthSvc_authBackend struct {
 
 type eAuthV1Endpoints struct {
 	Svc                  sauthSvc_authBackend
-	fnAutoWatchSvcAuthV1 func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
+	fnAutoWatchSvcAuthV1 func(in *api.AggWatchOptions, stream grpc.ServerStream, svcprefix string) error
 
 	fnAutoAddAuthenticationPolicy    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddRole                    func(ctx context.Context, t interface{}) (interface{}, error)
@@ -711,16 +711,24 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 
 	// Add Watchers
 	{
-
 		// Service watcher
 		svc := s.Services["auth.AuthV1"]
 		if svc != nil {
-			svc.WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfnMap map[string]func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
-				key := globals.ConfigRootPrefix + "/auth"
+			svc.WithKvWatchFunc(func(l log.Logger, options *api.AggWatchOptions, kvs kvstore.Interface, stream interface{}, txfnMap map[string]func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
+				for _, o := range options.WatchOptions {
+					if o.Group != "auth" {
+						return fmt.Errorf("invalid group [%s] in watch options", o.Group)
+					}
+				}
+				if len(options.WatchOptions) == 0 {
+					options.WatchOptions = append(options.WatchOptions, api.KindWatchOptions{Group: "auth"})
+				}
 				wstream := stream.(grpc.ServerStream)
 				nctx, cancel := context.WithCancel(wstream.Context())
+				id := fmt.Sprintf("%s-%x", ctxutils.GetPeerID(nctx), &options)
+				nctx = ctxutils.SetContextID(nctx, id)
 				defer cancel()
-				watcher, err := kvs.WatchFiltered(nctx, key, *options)
+				watcher, err := kvs.WatchAggregate(nctx, *options)
 				if err != nil {
 					l.ErrorLog("msg", "error starting Watch for service", "err", err, "service", "AuthV1")
 					return err
@@ -1581,7 +1589,7 @@ func (e *eAuthV1Endpoints) AutoWatchRoleBinding(in *api.ListWatchOptions, stream
 func (e *eAuthV1Endpoints) AutoWatchUserPreference(in *api.ListWatchOptions, stream auth.AuthV1_AutoWatchUserPreferenceServer) error {
 	return e.fnAutoWatchUserPreference(in, stream, "auth")
 }
-func (e *eAuthV1Endpoints) AutoWatchSvcAuthV1(in *api.ListWatchOptions, stream auth.AuthV1_AutoWatchSvcAuthV1Server) error {
+func (e *eAuthV1Endpoints) AutoWatchSvcAuthV1(in *api.AggWatchOptions, stream auth.AuthV1_AutoWatchSvcAuthV1Server) error {
 	return e.fnAutoWatchSvcAuthV1(in, stream, "")
 }
 

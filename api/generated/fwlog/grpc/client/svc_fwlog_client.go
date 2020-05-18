@@ -3,6 +3,10 @@
 package grpcclient
 
 import (
+	"context"
+	"errors"
+	"net/http"
+
 	"github.com/go-kit/kit/endpoint"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
 	"google.golang.org/grpc"
@@ -64,4 +68,35 @@ func NewFwLogV1Backend(conn *grpc.ClientConn, logger log.Logger) fwlog.ServiceFw
 	cl := NewFwLogV1(conn, logger)
 	cl = fwlog.LoggingFwLogV1MiddlewareClient(logger)(cl)
 	return cl
+}
+
+type crudClientFwLogV1 struct {
+	logger log.Logger
+	client fwlog.ServiceFwLogV1Client
+}
+
+// NewGrpcCrudClientFwLogV1 creates a GRPC client for the service
+func NewGrpcCrudClientFwLogV1(conn *grpc.ClientConn, logger log.Logger) fwlog.FwLogV1Interface {
+	client := NewFwLogV1Backend(conn, logger)
+	return &crudClientFwLogV1{
+		logger: logger,
+		client: client,
+	}
+}
+
+type crudRestClientFwLogV1 struct {
+}
+
+// NewRestCrudClientFwLogV1 creates a REST client for the service.
+func NewRestCrudClientFwLogV1(url string, httpClient *http.Client) fwlog.FwLogV1Interface {
+	return &crudRestClientFwLogV1{}
+}
+
+// NewStagedRestCrudClientFwLogV1 creates a REST client for the service.
+func NewStagedRestCrudClientFwLogV1(url string, id string, httpClient *http.Client) fwlog.FwLogV1Interface {
+	return &crudRestClientFwLogV1{}
+}
+
+func (a *crudRestClientFwLogV1) Watch(ctx context.Context, options *api.AggWatchOptions) (kvstore.Watcher, error) {
+	return nil, errors.New("method unimplemented")
 }

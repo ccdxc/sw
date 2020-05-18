@@ -9,8 +9,10 @@ import (
 
 	gomock "github.com/golang/mock/gomock"
 
+	aggwatch "github.com/pensando/sw/api/generated/aggwatch"
 	auth "github.com/pensando/sw/api/generated/auth"
 	bookstore "github.com/pensando/sw/api/generated/bookstore"
+	browser "github.com/pensando/sw/api/generated/browser"
 	cluster "github.com/pensando/sw/api/generated/cluster"
 	diagnostics "github.com/pensando/sw/api/generated/diagnostics"
 	monitoring "github.com/pensando/sw/api/generated/monitoring"
@@ -59,6 +61,18 @@ func (mr *MockServicesMockRecorder) Close() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockServices)(nil).Close))
 }
 
+// AggWatchV1 mocks base method
+func (m *MockServices) AggWatchV1() aggwatch.AggWatchV1Interface {
+	ret := m.ctrl.Call(m, "AggWatchV1")
+	ret0, _ := ret[0].(aggwatch.AggWatchV1Interface)
+	return ret0
+}
+
+// AggWatchV1 indicates an expected call of AggWatchV1
+func (mr *MockServicesMockRecorder) AggWatchV1() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AggWatchV1", reflect.TypeOf((*MockServices)(nil).AggWatchV1))
+}
+
 // AuthV1 mocks base method
 func (m *MockServices) AuthV1() auth.AuthV1Interface {
 	ret := m.ctrl.Call(m, "AuthV1")
@@ -81,6 +95,18 @@ func (m *MockServices) BookstoreV1() bookstore.BookstoreV1Interface {
 // BookstoreV1 indicates an expected call of BookstoreV1
 func (mr *MockServicesMockRecorder) BookstoreV1() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BookstoreV1", reflect.TypeOf((*MockServices)(nil).BookstoreV1))
+}
+
+// BrowserV1 mocks base method
+func (m *MockServices) BrowserV1() browser.BrowserV1Interface {
+	ret := m.ctrl.Call(m, "BrowserV1")
+	ret0, _ := ret[0].(browser.BrowserV1Interface)
+	return ret0
+}
+
+// BrowserV1 indicates an expected call of BrowserV1
+func (mr *MockServicesMockRecorder) BrowserV1() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BrowserV1", reflect.TypeOf((*MockServices)(nil).BrowserV1))
 }
 
 // ClusterV1 mocks base method

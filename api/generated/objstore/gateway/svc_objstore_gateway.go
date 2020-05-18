@@ -384,7 +384,7 @@ func (a adapterObjstoreV1) AutoUpdateObject(oldctx oldcontext.Context, t *objsto
 	return ret.(*objstore.Object), err
 }
 
-func (a adapterObjstoreV1) AutoWatchSvcObjstoreV1(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (objstore.ObjstoreV1_AutoWatchSvcObjstoreV1Client, error) {
+func (a adapterObjstoreV1) AutoWatchSvcObjstoreV1(oldctx oldcontext.Context, in *api.AggWatchOptions, options ...grpc.CallOption) (objstore.ObjstoreV1_AutoWatchSvcObjstoreV1Client, error) {
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoWatchSvcObjstoreV1")
 	if err != nil {
@@ -394,7 +394,7 @@ func (a adapterObjstoreV1) AutoWatchSvcObjstoreV1(oldctx oldcontext.Context, in 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
-		in := i.(*api.ListWatchOptions)
+		in := i.(*api.AggWatchOptions)
 		iws, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwWebSocketWatch)
 		if ok && iws.(bool) {
 			nctx, cancel := context.WithCancel(ctx)

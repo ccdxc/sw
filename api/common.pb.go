@@ -29,6 +29,7 @@
 		StatusResult
 		Timestamp
 		TypeMeta
+		WatchControl
 		WatchEvent
 		WatchEventList
 */

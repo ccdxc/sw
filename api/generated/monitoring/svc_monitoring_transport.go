@@ -102,521 +102,517 @@ type grpcServerMonitoringV1 struct {
 
 // MakeGRPCServerMonitoringV1 creates a GRPC server for MonitoringV1 service
 func MakeGRPCServerMonitoringV1(ctx context.Context, endpoints EndpointsMonitoringV1Server, logger log.Logger) MonitoringV1Server {
-	options := []grpctransport.ServerOption{
-		grpctransport.ServerErrorLogger(logger),
-		grpctransport.ServerBefore(recoverVersion),
-	}
 	return &grpcServerMonitoringV1{
 		Endpoints: endpoints,
 		AutoAddAlertHdlr: grpctransport.NewServer(
 			endpoints.AutoAddAlertEndpoint,
 			DecodeGrpcReqAlert,
 			EncodeGrpcRespAlert,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddAlert", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddAlert", logger)))...,
 		),
 
 		AutoAddAlertDestinationHdlr: grpctransport.NewServer(
 			endpoints.AutoAddAlertDestinationEndpoint,
 			DecodeGrpcReqAlertDestination,
 			EncodeGrpcRespAlertDestination,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddAlertDestination", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddAlertDestination", logger)))...,
 		),
 
 		AutoAddAlertPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoAddAlertPolicyEndpoint,
 			DecodeGrpcReqAlertPolicy,
 			EncodeGrpcRespAlertPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddAlertPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddAlertPolicy", logger)))...,
 		),
 
 		AutoAddArchiveRequestHdlr: grpctransport.NewServer(
 			endpoints.AutoAddArchiveRequestEndpoint,
 			DecodeGrpcReqArchiveRequest,
 			EncodeGrpcRespArchiveRequest,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddArchiveRequest", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddArchiveRequest", logger)))...,
 		),
 
 		AutoAddAuditPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoAddAuditPolicyEndpoint,
 			DecodeGrpcReqAuditPolicy,
 			EncodeGrpcRespAuditPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddAuditPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddAuditPolicy", logger)))...,
 		),
 
 		AutoAddEventPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoAddEventPolicyEndpoint,
 			DecodeGrpcReqEventPolicy,
 			EncodeGrpcRespEventPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddEventPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddEventPolicy", logger)))...,
 		),
 
 		AutoAddFlowExportPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoAddFlowExportPolicyEndpoint,
 			DecodeGrpcReqFlowExportPolicy,
 			EncodeGrpcRespFlowExportPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddFlowExportPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddFlowExportPolicy", logger)))...,
 		),
 
 		AutoAddFwlogPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoAddFwlogPolicyEndpoint,
 			DecodeGrpcReqFwlogPolicy,
 			EncodeGrpcRespFwlogPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddFwlogPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddFwlogPolicy", logger)))...,
 		),
 
 		AutoAddMirrorSessionHdlr: grpctransport.NewServer(
 			endpoints.AutoAddMirrorSessionEndpoint,
 			DecodeGrpcReqMirrorSession,
 			EncodeGrpcRespMirrorSession,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddMirrorSession", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddMirrorSession", logger)))...,
 		),
 
 		AutoAddStatsAlertPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoAddStatsAlertPolicyEndpoint,
 			DecodeGrpcReqStatsAlertPolicy,
 			EncodeGrpcRespStatsAlertPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddStatsAlertPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddStatsAlertPolicy", logger)))...,
 		),
 
 		AutoAddTechSupportRequestHdlr: grpctransport.NewServer(
 			endpoints.AutoAddTechSupportRequestEndpoint,
 			DecodeGrpcReqTechSupportRequest,
 			EncodeGrpcRespTechSupportRequest,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddTechSupportRequest", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddTechSupportRequest", logger)))...,
 		),
 
 		AutoAddTroubleshootingSessionHdlr: grpctransport.NewServer(
 			endpoints.AutoAddTroubleshootingSessionEndpoint,
 			DecodeGrpcReqTroubleshootingSession,
 			EncodeGrpcRespTroubleshootingSession,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddTroubleshootingSession", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddTroubleshootingSession", logger)))...,
 		),
 
 		AutoDeleteAlertHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteAlertEndpoint,
 			DecodeGrpcReqAlert,
 			EncodeGrpcRespAlert,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteAlert", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteAlert", logger)))...,
 		),
 
 		AutoDeleteAlertDestinationHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteAlertDestinationEndpoint,
 			DecodeGrpcReqAlertDestination,
 			EncodeGrpcRespAlertDestination,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteAlertDestination", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteAlertDestination", logger)))...,
 		),
 
 		AutoDeleteAlertPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteAlertPolicyEndpoint,
 			DecodeGrpcReqAlertPolicy,
 			EncodeGrpcRespAlertPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteAlertPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteAlertPolicy", logger)))...,
 		),
 
 		AutoDeleteArchiveRequestHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteArchiveRequestEndpoint,
 			DecodeGrpcReqArchiveRequest,
 			EncodeGrpcRespArchiveRequest,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteArchiveRequest", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteArchiveRequest", logger)))...,
 		),
 
 		AutoDeleteAuditPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteAuditPolicyEndpoint,
 			DecodeGrpcReqAuditPolicy,
 			EncodeGrpcRespAuditPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteAuditPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteAuditPolicy", logger)))...,
 		),
 
 		AutoDeleteEventPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteEventPolicyEndpoint,
 			DecodeGrpcReqEventPolicy,
 			EncodeGrpcRespEventPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteEventPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteEventPolicy", logger)))...,
 		),
 
 		AutoDeleteFlowExportPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteFlowExportPolicyEndpoint,
 			DecodeGrpcReqFlowExportPolicy,
 			EncodeGrpcRespFlowExportPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteFlowExportPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteFlowExportPolicy", logger)))...,
 		),
 
 		AutoDeleteFwlogPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteFwlogPolicyEndpoint,
 			DecodeGrpcReqFwlogPolicy,
 			EncodeGrpcRespFwlogPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteFwlogPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteFwlogPolicy", logger)))...,
 		),
 
 		AutoDeleteMirrorSessionHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteMirrorSessionEndpoint,
 			DecodeGrpcReqMirrorSession,
 			EncodeGrpcRespMirrorSession,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteMirrorSession", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteMirrorSession", logger)))...,
 		),
 
 		AutoDeleteStatsAlertPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteStatsAlertPolicyEndpoint,
 			DecodeGrpcReqStatsAlertPolicy,
 			EncodeGrpcRespStatsAlertPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteStatsAlertPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteStatsAlertPolicy", logger)))...,
 		),
 
 		AutoDeleteTechSupportRequestHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteTechSupportRequestEndpoint,
 			DecodeGrpcReqTechSupportRequest,
 			EncodeGrpcRespTechSupportRequest,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteTechSupportRequest", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteTechSupportRequest", logger)))...,
 		),
 
 		AutoDeleteTroubleshootingSessionHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteTroubleshootingSessionEndpoint,
 			DecodeGrpcReqTroubleshootingSession,
 			EncodeGrpcRespTroubleshootingSession,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteTroubleshootingSession", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteTroubleshootingSession", logger)))...,
 		),
 
 		AutoGetAlertHdlr: grpctransport.NewServer(
 			endpoints.AutoGetAlertEndpoint,
 			DecodeGrpcReqAlert,
 			EncodeGrpcRespAlert,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetAlert", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetAlert", logger)))...,
 		),
 
 		AutoGetAlertDestinationHdlr: grpctransport.NewServer(
 			endpoints.AutoGetAlertDestinationEndpoint,
 			DecodeGrpcReqAlertDestination,
 			EncodeGrpcRespAlertDestination,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetAlertDestination", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetAlertDestination", logger)))...,
 		),
 
 		AutoGetAlertPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoGetAlertPolicyEndpoint,
 			DecodeGrpcReqAlertPolicy,
 			EncodeGrpcRespAlertPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetAlertPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetAlertPolicy", logger)))...,
 		),
 
 		AutoGetArchiveRequestHdlr: grpctransport.NewServer(
 			endpoints.AutoGetArchiveRequestEndpoint,
 			DecodeGrpcReqArchiveRequest,
 			EncodeGrpcRespArchiveRequest,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetArchiveRequest", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetArchiveRequest", logger)))...,
 		),
 
 		AutoGetAuditPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoGetAuditPolicyEndpoint,
 			DecodeGrpcReqAuditPolicy,
 			EncodeGrpcRespAuditPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetAuditPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetAuditPolicy", logger)))...,
 		),
 
 		AutoGetEventPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoGetEventPolicyEndpoint,
 			DecodeGrpcReqEventPolicy,
 			EncodeGrpcRespEventPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetEventPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetEventPolicy", logger)))...,
 		),
 
 		AutoGetFlowExportPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoGetFlowExportPolicyEndpoint,
 			DecodeGrpcReqFlowExportPolicy,
 			EncodeGrpcRespFlowExportPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetFlowExportPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetFlowExportPolicy", logger)))...,
 		),
 
 		AutoGetFwlogPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoGetFwlogPolicyEndpoint,
 			DecodeGrpcReqFwlogPolicy,
 			EncodeGrpcRespFwlogPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetFwlogPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetFwlogPolicy", logger)))...,
 		),
 
 		AutoGetMirrorSessionHdlr: grpctransport.NewServer(
 			endpoints.AutoGetMirrorSessionEndpoint,
 			DecodeGrpcReqMirrorSession,
 			EncodeGrpcRespMirrorSession,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetMirrorSession", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetMirrorSession", logger)))...,
 		),
 
 		AutoGetStatsAlertPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoGetStatsAlertPolicyEndpoint,
 			DecodeGrpcReqStatsAlertPolicy,
 			EncodeGrpcRespStatsAlertPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetStatsAlertPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetStatsAlertPolicy", logger)))...,
 		),
 
 		AutoGetTechSupportRequestHdlr: grpctransport.NewServer(
 			endpoints.AutoGetTechSupportRequestEndpoint,
 			DecodeGrpcReqTechSupportRequest,
 			EncodeGrpcRespTechSupportRequest,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetTechSupportRequest", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetTechSupportRequest", logger)))...,
 		),
 
 		AutoGetTroubleshootingSessionHdlr: grpctransport.NewServer(
 			endpoints.AutoGetTroubleshootingSessionEndpoint,
 			DecodeGrpcReqTroubleshootingSession,
 			EncodeGrpcRespTroubleshootingSession,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetTroubleshootingSession", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetTroubleshootingSession", logger)))...,
 		),
 
 		AutoLabelAlertHdlr: grpctransport.NewServer(
 			endpoints.AutoLabelAlertEndpoint,
 			DecodeGrpcReqLabel,
 			EncodeGrpcRespAlert,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelAlert", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelAlert", logger)))...,
 		),
 
 		AutoLabelAlertDestinationHdlr: grpctransport.NewServer(
 			endpoints.AutoLabelAlertDestinationEndpoint,
 			DecodeGrpcReqLabel,
 			EncodeGrpcRespAlertDestination,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelAlertDestination", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelAlertDestination", logger)))...,
 		),
 
 		AutoLabelAlertPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoLabelAlertPolicyEndpoint,
 			DecodeGrpcReqLabel,
 			EncodeGrpcRespAlertPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelAlertPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelAlertPolicy", logger)))...,
 		),
 
 		AutoLabelArchiveRequestHdlr: grpctransport.NewServer(
 			endpoints.AutoLabelArchiveRequestEndpoint,
 			DecodeGrpcReqLabel,
 			EncodeGrpcRespArchiveRequest,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelArchiveRequest", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelArchiveRequest", logger)))...,
 		),
 
 		AutoLabelAuditPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoLabelAuditPolicyEndpoint,
 			DecodeGrpcReqLabel,
 			EncodeGrpcRespAuditPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelAuditPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelAuditPolicy", logger)))...,
 		),
 
 		AutoLabelEventPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoLabelEventPolicyEndpoint,
 			DecodeGrpcReqLabel,
 			EncodeGrpcRespEventPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelEventPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelEventPolicy", logger)))...,
 		),
 
 		AutoLabelFlowExportPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoLabelFlowExportPolicyEndpoint,
 			DecodeGrpcReqLabel,
 			EncodeGrpcRespFlowExportPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelFlowExportPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelFlowExportPolicy", logger)))...,
 		),
 
 		AutoLabelFwlogPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoLabelFwlogPolicyEndpoint,
 			DecodeGrpcReqLabel,
 			EncodeGrpcRespFwlogPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelFwlogPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelFwlogPolicy", logger)))...,
 		),
 
 		AutoLabelMirrorSessionHdlr: grpctransport.NewServer(
 			endpoints.AutoLabelMirrorSessionEndpoint,
 			DecodeGrpcReqLabel,
 			EncodeGrpcRespMirrorSession,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelMirrorSession", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelMirrorSession", logger)))...,
 		),
 
 		AutoLabelStatsAlertPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoLabelStatsAlertPolicyEndpoint,
 			DecodeGrpcReqLabel,
 			EncodeGrpcRespStatsAlertPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelStatsAlertPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelStatsAlertPolicy", logger)))...,
 		),
 
 		AutoLabelTechSupportRequestHdlr: grpctransport.NewServer(
 			endpoints.AutoLabelTechSupportRequestEndpoint,
 			DecodeGrpcReqLabel,
 			EncodeGrpcRespTechSupportRequest,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelTechSupportRequest", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelTechSupportRequest", logger)))...,
 		),
 
 		AutoLabelTroubleshootingSessionHdlr: grpctransport.NewServer(
 			endpoints.AutoLabelTroubleshootingSessionEndpoint,
 			DecodeGrpcReqLabel,
 			EncodeGrpcRespTroubleshootingSession,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelTroubleshootingSession", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelTroubleshootingSession", logger)))...,
 		),
 
 		AutoListAlertHdlr: grpctransport.NewServer(
 			endpoints.AutoListAlertEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespAlertList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListAlert", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListAlert", logger)))...,
 		),
 
 		AutoListAlertDestinationHdlr: grpctransport.NewServer(
 			endpoints.AutoListAlertDestinationEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespAlertDestinationList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListAlertDestination", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListAlertDestination", logger)))...,
 		),
 
 		AutoListAlertPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoListAlertPolicyEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespAlertPolicyList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListAlertPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListAlertPolicy", logger)))...,
 		),
 
 		AutoListArchiveRequestHdlr: grpctransport.NewServer(
 			endpoints.AutoListArchiveRequestEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespArchiveRequestList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListArchiveRequest", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListArchiveRequest", logger)))...,
 		),
 
 		AutoListAuditPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoListAuditPolicyEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespAuditPolicyList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListAuditPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListAuditPolicy", logger)))...,
 		),
 
 		AutoListEventPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoListEventPolicyEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespEventPolicyList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListEventPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListEventPolicy", logger)))...,
 		),
 
 		AutoListFlowExportPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoListFlowExportPolicyEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespFlowExportPolicyList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListFlowExportPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListFlowExportPolicy", logger)))...,
 		),
 
 		AutoListFwlogPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoListFwlogPolicyEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespFwlogPolicyList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListFwlogPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListFwlogPolicy", logger)))...,
 		),
 
 		AutoListMirrorSessionHdlr: grpctransport.NewServer(
 			endpoints.AutoListMirrorSessionEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespMirrorSessionList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListMirrorSession", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListMirrorSession", logger)))...,
 		),
 
 		AutoListStatsAlertPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoListStatsAlertPolicyEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespStatsAlertPolicyList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListStatsAlertPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListStatsAlertPolicy", logger)))...,
 		),
 
 		AutoListTechSupportRequestHdlr: grpctransport.NewServer(
 			endpoints.AutoListTechSupportRequestEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespTechSupportRequestList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListTechSupportRequest", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListTechSupportRequest", logger)))...,
 		),
 
 		AutoListTroubleshootingSessionHdlr: grpctransport.NewServer(
 			endpoints.AutoListTroubleshootingSessionEndpoint,
 			DecodeGrpcReqListWatchOptions,
 			EncodeGrpcRespTroubleshootingSessionList,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListTroubleshootingSession", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListTroubleshootingSession", logger)))...,
 		),
 
 		AutoUpdateAlertHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateAlertEndpoint,
 			DecodeGrpcReqAlert,
 			EncodeGrpcRespAlert,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateAlert", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateAlert", logger)))...,
 		),
 
 		AutoUpdateAlertDestinationHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateAlertDestinationEndpoint,
 			DecodeGrpcReqAlertDestination,
 			EncodeGrpcRespAlertDestination,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateAlertDestination", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateAlertDestination", logger)))...,
 		),
 
 		AutoUpdateAlertPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateAlertPolicyEndpoint,
 			DecodeGrpcReqAlertPolicy,
 			EncodeGrpcRespAlertPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateAlertPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateAlertPolicy", logger)))...,
 		),
 
 		AutoUpdateArchiveRequestHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateArchiveRequestEndpoint,
 			DecodeGrpcReqArchiveRequest,
 			EncodeGrpcRespArchiveRequest,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateArchiveRequest", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateArchiveRequest", logger)))...,
 		),
 
 		AutoUpdateAuditPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateAuditPolicyEndpoint,
 			DecodeGrpcReqAuditPolicy,
 			EncodeGrpcRespAuditPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateAuditPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateAuditPolicy", logger)))...,
 		),
 
 		AutoUpdateEventPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateEventPolicyEndpoint,
 			DecodeGrpcReqEventPolicy,
 			EncodeGrpcRespEventPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateEventPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateEventPolicy", logger)))...,
 		),
 
 		AutoUpdateFlowExportPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateFlowExportPolicyEndpoint,
 			DecodeGrpcReqFlowExportPolicy,
 			EncodeGrpcRespFlowExportPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateFlowExportPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateFlowExportPolicy", logger)))...,
 		),
 
 		AutoUpdateFwlogPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateFwlogPolicyEndpoint,
 			DecodeGrpcReqFwlogPolicy,
 			EncodeGrpcRespFwlogPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateFwlogPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateFwlogPolicy", logger)))...,
 		),
 
 		AutoUpdateMirrorSessionHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateMirrorSessionEndpoint,
 			DecodeGrpcReqMirrorSession,
 			EncodeGrpcRespMirrorSession,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateMirrorSession", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateMirrorSession", logger)))...,
 		),
 
 		AutoUpdateStatsAlertPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateStatsAlertPolicyEndpoint,
 			DecodeGrpcReqStatsAlertPolicy,
 			EncodeGrpcRespStatsAlertPolicy,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateStatsAlertPolicy", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateStatsAlertPolicy", logger)))...,
 		),
 
 		AutoUpdateTechSupportRequestHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateTechSupportRequestEndpoint,
 			DecodeGrpcReqTechSupportRequest,
 			EncodeGrpcRespTechSupportRequest,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateTechSupportRequest", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateTechSupportRequest", logger)))...,
 		),
 
 		AutoUpdateTroubleshootingSessionHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateTroubleshootingSessionEndpoint,
 			DecodeGrpcReqTroubleshootingSession,
 			EncodeGrpcRespTroubleshootingSession,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateTroubleshootingSession", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateTroubleshootingSession", logger)))...,
 		),
 
 		CancelHdlr: grpctransport.NewServer(
 			endpoints.CancelEndpoint,
 			DecodeGrpcReqCancelArchiveRequest,
 			EncodeGrpcRespArchiveRequest,
-			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("Cancel", logger)))...,
+			append([]grpctransport.ServerOption{grpctransport.ServerErrorLogger(logger), grpctransport.ServerBefore(recoverVersion)}, grpctransport.ServerBefore(trace.FromGRPCRequest("Cancel", logger)))...,
 		),
 	}
 }
@@ -1935,7 +1931,7 @@ func decodeHTTPrespMonitoringV1Cancel(_ context.Context, r *http.Response) (inte
 	return &resp, err
 }
 
-func (s *grpcServerMonitoringV1) AutoWatchSvcMonitoringV1(in *api.ListWatchOptions, stream MonitoringV1_AutoWatchSvcMonitoringV1Server) error {
+func (s *grpcServerMonitoringV1) AutoWatchSvcMonitoringV1(in *api.AggWatchOptions, stream MonitoringV1_AutoWatchSvcMonitoringV1Server) error {
 	return s.Endpoints.AutoWatchSvcMonitoringV1(in, stream)
 }
 
