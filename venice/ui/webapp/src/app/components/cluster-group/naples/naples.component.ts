@@ -119,7 +119,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
   ];
   exportMap: CustomExportMap = {
     'workloads': (opts): string => {
-      return (opts.data._ui.processedWorkloads) ? opts.data._ui.processedWorkloads.map(wkld => wkld.meta.name).join(', ') : '';
+      return (opts.data._ui.associatedWorkloads) ? opts.data._ui.associatedWorkloads.map(wkld => wkld.meta.name).join(', ') : '';
     },
     'status.conditions': (opts): string => {
       return Utility.getNaplesConditionObject(opts.data).condition.toLowerCase();
@@ -442,7 +442,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
     };
     newQuery.query.fields.requirements.push(fieldCriteria);
     const searchDSCTotalSubscription = this.searchService.PostQuery(newQuery).subscribe(
-      resp => {
+      (resp) => {
         if (resp) {
           const body = resp.body as ISearchSearchResponse;
           let dscTotal = 0;
@@ -459,7 +459,13 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
           this.invokeWatch();
         }
       },
-      this._controllerService.webSocketErrorHandler('Failed to search DSCs'),
+      (error) => {
+        // In case search failed, we still want to invoke watch DSCs.
+        this.controllerService.invokeRESTErrorToaster('Failed to search DSCs', error);
+        this.tableLoading = false;
+        this.invokeWatch();
+      }
+      // this._controllerService.webSocketErrorHandler('Failed to search DSCs'),
     );
     this.subscriptions.push(searchDSCTotalSubscription);
   }

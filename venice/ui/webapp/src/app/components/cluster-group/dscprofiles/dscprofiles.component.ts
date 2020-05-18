@@ -12,6 +12,7 @@ import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { ClusterDistributedServiceCard, ClusterDSCProfile, IApiStatus, IClusterDSCProfile } from '@sdk/v1/models/generated/cluster';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 import { Observable } from 'rxjs';
+import { PercentPipe } from '@angular/common';
 
 
 interface DSCMacName {
@@ -55,7 +56,38 @@ export class DscprofilesComponent extends TablevieweditAbstract<IClusterDSCProfi
   isTabComponent: boolean = false;
   disableTableWhenRowExpanded: boolean = true; // this make toolbar button disabled when record is in edit-mode.
   exportFilename: string = 'PSM-DSC-Profiles';
-  exportMap: CustomExportMap = {};
+  exportMap: CustomExportMap = {
+    'DSCs': (opts): string => {
+      return (opts.data._ui.associatedDSCS) ? opts.data._ui.associatedDSCS.map(dsc => (dsc.spec.id) ? dsc.spec.id : dsc.meta.name).join(', ') : '';
+    },
+    'utilization': (opts): string => {
+      const percentpipe = new PercentPipe('en-US');
+      return percentpipe.transform(opts.data._ui.associatedDSCSPercentile, '1.2-3' );
+      // use percent-pipe to format string
+    },
+    'deploymentTarget': (opts): string => {
+      return opts.data._ui.deploymentTarget;
+    },
+    'featureSet': (opts): string => {
+      return opts.data._ui.featureSet;
+    },
+    'Propagation': (opts): string => {
+      const rowData = opts.data;
+      if (opts.data.status['propagation-status']['generation-id'] !== opts.data.meta['generation-id']) {
+        return ' DSC profile not propagated';
+      } else if (rowData.status['propagation-status']['generation-id'] === rowData.meta['generation-id'] && rowData.status['propagation-status'].pending > 0 ) {
+        return rowData.status['propagation-status'].pending + 'Out Of ' +  rowData.status['propagation-status'].pending + rowData.status['propagation-status'].updated + ' Pending';
+      } else if ( !(rowData.status['propagation-status'].updated === 0 && rowData.status['propagation-status'].pending === 0 ) && rowData.status['propagation-status']['generation-id'] === rowData.meta['generation-id'] && rowData.status['propagation-status'].pending === 0) {
+        return 'Complete';
+      } else {
+        return 'N/A';
+      }
+    },
+    'status.propagation-status.pending-dscs': (opts): string => {
+      return (opts.data._ui.pendingDSCNames) ? opts.data._ui.pendingDSCNames.map(dsc => (dsc.spec.id) ? dsc.spec.id : dsc.meta.name).join(', ') : '';
+
+    }
+  };
   tableLoading: boolean = false;
 
   dscprofilesEventUtility: HttpEventUtility<ClusterDSCProfile>;
