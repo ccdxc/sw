@@ -1358,7 +1358,7 @@ sessions_init (void)
          (TX_REWRITE_ENCAP_VXLAN << TX_REWRITE_ENCAP_START));
     session_info->rx_rewrite_flags =
         ((RX_REWRITE_DMAC_FROM_MAPPING << RX_REWRITE_DMAC_START) |
-         (RX_REWRITE_ENCAP_VLAN << RX_REWRITE_ENCAP_START));
+         (RX_REWRITE_VLAN_ENCAP << RX_REWRITE_VLAN_START));
     entry_write(tbl_id, g_session_id1, 0, 0, &data, false, 0);
 
     memset(&data, 0, sizeof(data));

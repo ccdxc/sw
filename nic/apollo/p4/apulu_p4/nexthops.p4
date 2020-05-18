@@ -96,6 +96,15 @@ action encap_vlan(vlan) {
     modify_field(ctag_1.vid, vlan);
 }
 
+action decap_vlan() {
+    if (ctag_1.valid == TRUE) {
+        remove_header(ctag_1);
+        modify_field(ethernet_1.etherType, ctag_1.etherType);
+        subtract(capri_p4_intrinsic.packet_len,
+                 capri_p4_intrinsic.packet_len, 4);
+    }
+}
+
 action ipv4_vxlan_encap(dmac, smac) {
     // remove headers
     remove_header(ctag_1);
@@ -248,8 +257,11 @@ action nexthop_info(lif, qtype, qid, vlan_strip_en, port, vlan, dmaco, smaco,
         if (RX_REWRITE(rewrite_metadata.flags, SMAC, FROM_VRMAC)) {
             modify_field(ethernet_1.srcAddr, rewrite_metadata.vrmac);
         }
-        if (RX_REWRITE(rewrite_metadata.flags, ENCAP, VLAN)) {
+        if (RX_REWRITE(rewrite_metadata.flags, VLAN, ENCAP)) {
             encap_vlan(vlan);
+        }
+        if (RX_REWRITE(rewrite_metadata.flags, VLAN, DECAP)) {
+            decap_vlan();
         }
     }
     modify_field(capri_intrinsic.tm_oport, port);

@@ -132,7 +132,7 @@ action p4i_inter_pipe() {
     if ((control_metadata.local_mapping_done == FALSE) or
         ((control_metadata.flow_done == FALSE) and
          ((ingress_recirc.defunct_flow == FALSE) or
-          ((control_metadata.is_local_to_local == TRUE) or
+          ((p4i_i2e.is_local_to_local == TRUE) or
            (p4i_i2e.flow_role == TCP_FLOW_INITIATOR))))) {
         ingress_recirc();
         // return

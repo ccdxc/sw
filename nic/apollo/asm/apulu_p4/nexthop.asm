@@ -162,15 +162,21 @@ nexthop_rx_rewrite:
     seq             c1, r2[RX_REWRITE_SMAC_BITS], \
                         RX_REWRITE_SMAC_FROM_VRMAC
     phvwr.c1        p.ethernet_1_srcAddr, k.rewrite_metadata_vrmac
-    seq             c1, r2[RX_REWRITE_ENCAP_BITS], \
-                        RX_REWRITE_ENCAP_VLAN
+    seq             c1, r2[RX_REWRITE_VLAN_BITS], \
+                        RX_REWRITE_VLAN_ENCAP
     bcf             [c1], vlan_encap
+    seq             c1, k.ctag_1_valid, TRUE
+    seq.c1          c1, r2[RX_REWRITE_VLAN_BITS], \
+                        RX_REWRITE_VLAN_DECAP
     nop.!c1.e
-    nop
+vlan_decap:
+    sub             r1, r1, 4
+    phvwr           p.capri_p4_intrinsic_packet_len, r1
+    phvwr.e         p.ctag_1_valid, FALSE
+    phvwr.f         p.ethernet_1_etherType, k.ctag_1_etherType
 
 vlan_encap:
-    seq             c1, k.ctag_1_valid, FALSE
-    nop.!c1.e
+    nop.c1.e
     phvwr           p.{ctag_1_pcp,ctag_1_dei,ctag_1_vid}, d.nexthop_info_d.vlan
     phvwr           p.ctag_1_valid, TRUE
     phvwr           p.ctag_1_etherType, k.ethernet_1_etherType

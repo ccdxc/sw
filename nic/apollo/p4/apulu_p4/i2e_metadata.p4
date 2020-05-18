@@ -20,7 +20,8 @@ header_type apulu_i2e_metadata_t {
         priority            : 5;
         src_lif             : 11;
         mirror_session      : 8;
-        pad0                : 4;
+        pad0                : 3;
+        is_local_to_local   : 1;
         binding_check_drop  : 1;
         skip_stats_update   : 1;
         tx_policer_id       : 10;

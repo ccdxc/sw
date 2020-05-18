@@ -83,7 +83,6 @@ header_type control_metadata_t {
         tcp_option_ws_valid     : 1;
         tcp_option_mss_valid    : 1;
         is_local                : 1;
-        is_local_to_local       : 1;
         lif_tx_stats_id         : 16;
     }
 }

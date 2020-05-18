@@ -569,7 +569,7 @@ public:
 
         actiondata.action_u.session_session_info.rx_rewrite_flags =
                ((RX_REWRITE_DMAC_FROM_MAPPING << RX_REWRITE_DMAC_START) |
-                (RX_REWRITE_ENCAP_VLAN << RX_REWRITE_ENCAP_START));
+                (RX_REWRITE_VLAN_ENCAP << RX_REWRITE_VLAN_START));
 
         dump_session_info(vpc, &actiondata);
 

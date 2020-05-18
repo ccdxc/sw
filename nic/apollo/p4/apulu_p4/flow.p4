@@ -25,7 +25,7 @@ action flow_hash(epoch, session_index,
             modify_field(p4i_to_arm.session_id, scratch_metadata.session_id);
             modify_field(p4i_to_arm.defunct_flow, ingress_recirc.defunct_flow);
         } else {
-            modify_field(control_metadata.is_local_to_local, is_local_to_local);
+            modify_field(p4i_i2e.is_local_to_local, is_local_to_local);
             modify_field(p4i_i2e.flow_role, flow_role);
             modify_field(control_metadata.flow_done, TRUE);
             modify_field(scratch_metadata.flag, nexthop_valid);
@@ -168,7 +168,7 @@ action ipv4_flow_hash(epoch, session_index, nexthop_type,
             modify_field(p4i_to_arm.session_id, scratch_metadata.session_id);
             modify_field(p4i_to_arm.defunct_flow, ingress_recirc.defunct_flow);
         } else {
-            modify_field(control_metadata.is_local_to_local, is_local_to_local);
+            modify_field(p4i_i2e.is_local_to_local, is_local_to_local);
             modify_field(p4i_i2e.flow_role, flow_role);
             modify_field(control_metadata.flow_done, TRUE);
             modify_field(scratch_metadata.flag, nexthop_valid);

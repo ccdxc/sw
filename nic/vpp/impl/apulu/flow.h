@@ -148,7 +148,7 @@ pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
     session_tx_rewrite_flags = rewrite_flags->tx_rewrite;
     session_rx_rewrite_flags = rewrite_flags->rx_rewrite |
         (pds_is_flow_rx_vlan(b) ?
-            (RX_REWRITE_ENCAP_VLAN << RX_REWRITE_ENCAP_START) : 0);
+            (RX_REWRITE_VLAN_ENCAP << RX_REWRITE_VLAN_START) : 0);
     ses_track_en = fm->con_track_en && (ctx->proto == PDS_FLOW_PROTO_TCP);
     actiondata.session_tracking_en = ses_track_en;
     actiondata.drop = ctx->drop;

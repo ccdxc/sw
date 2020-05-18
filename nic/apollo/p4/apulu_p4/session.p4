@@ -61,7 +61,12 @@ action session_info(tx_rewrite_flags, tx_xlate_id, tx_xlate_id2,
     }
 
     if (p4e_i2e.rx_packet == FALSE) {
-        modify_field(rewrite_metadata.flags, tx_rewrite_flags);
+        if ((p4e_i2e.is_local_to_local == TRUE) and
+            (p4e_i2e.flow_role == TCP_FLOW_RESPONDER)) {
+            modify_field(rewrite_metadata.flags, rx_rewrite_flags);
+        } else {
+            modify_field(rewrite_metadata.flags, tx_rewrite_flags);
+        }
         if (tx_xlate_id != 0) {
             modify_field(rewrite_metadata.xlate_id, tx_xlate_id);
             modify_field(control_metadata.apply_nat, TRUE);

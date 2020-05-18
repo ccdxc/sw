@@ -45,7 +45,7 @@ session_info:
 
 session_info_common:
     bbeq            k.p4e_i2e_rx_packet, FALSE, session_tx
-    nop
+    seq             c1, k.p4e_i2e_is_local_to_local, TRUE
 session_rx:
     phvwr           p.rewrite_metadata_flags, d.session_info_d.rx_rewrite_flags
     seq             c1, d.session_info_d.rx_xlate_id, r0
@@ -59,7 +59,9 @@ session_rx:
     phvwr.c1        p.rewrite_metadata_xlate_id2, d.session_info_d.rx_xlate_id2
 
 session_tx:
-    phvwr           p.rewrite_metadata_flags, d.session_info_d.tx_rewrite_flags
+    seq.c1          c1, k.p4e_i2e_flow_role, TCP_FLOW_RESPONDER
+    phvwr.c1        p.rewrite_metadata_flags, d.session_info_d.rx_rewrite_flags
+    phvwr.!c1       p.rewrite_metadata_flags, d.session_info_d.tx_rewrite_flags
     seq             c1, d.session_info_d.tx_xlate_id, r0
     cmov            r1, c1, k.p4e_i2e_xlate_id, d.session_info_d.tx_xlate_id
     sne             c1, r1, r0
