@@ -88,6 +88,8 @@ parser.add_argument('--driver-version', dest='driver_version', default='latest',
                     help='Target Driver Version')
 parser.add_argument('--fw-version', dest='fw_version', default='latest',
                     help='Target Fw Version')
+parser.add_argument('--enable-multi-naples', dest='enable_multi_naples', help='Enable multi naples',
+                    action='store_true', default=False)
 
 GlobalOptions = parser.parse_args()
 

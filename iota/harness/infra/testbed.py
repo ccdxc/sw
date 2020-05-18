@@ -239,6 +239,8 @@ class _Testbed:
                                 setUpSwitchQos(switch_ctx)
 
                         switch_ctx.ports.append("e1/" + str(port.SwitchPort))
+                if not GlobalOptions.enable_multi_naples:
+                    break
         return
 
     def __prepare_TestBedMsg(self, ts):
@@ -422,24 +424,6 @@ class _Testbed:
                 cmd.extend([ "%s/iota/scripts/boot_naples_v2.py" % GlobalOptions.topdir ])
 
                 if self.curr_ts.GetNicMode() == "bitw":
-                    #if hasattr(instance, 'Nics'):
-                    #    for nic in instance.Nics:
-                    #        if not hasattr(nic, "MgmtIP"):
-                    #            Logger.error("Nic Management IP not specified for : %s, mandatory for bump in wire mode" % instance.NodeMgmtIP)
-                    #            sys.exit(1)
-                    #        else:
-                    #            cmd.extend(["--naples-only-setup"])
-                    #else:
-                    #    # Legacy inventory/testbed.json
-                    #    instance.NicIntMgmtIP = getattr(instance, "NicIntMgmtIP", "")
-                    #    if not hasattr(instance, "NicMgmtIP") or instance.NicMgmtIP is None or instance.NicMgmtIP.replace(" ", "") == '':
-                    #        instance.NicMgmtIP = instance.NicIntMgmtIP
-                    #    if (instance.NicMgmtIP == "" or instance.NicMgmtIP == None):
-                    #        Logger.error("Nic Management IP not specified for : %s, mandatory for bump in wire mode" % instance.NodeMgmtIP)
-                    #        sys.exit(1)
-                    #    else:
-                    #        cmd.extend(["--naples-only-setup"])
-
                     mem_size = None
                     if GlobalOptions.pipeline in [ "iris", "apollo", "artemis", "apulu" ]:
                         mem_size = "8g"
@@ -469,6 +453,7 @@ class _Testbed:
                         for port in getattr(nic, "Ports", []):
                             cmd.extend(["--mac-hint", port.MAC])
                             break
+                        break
                 cmd.extend(["--mode", "%s" % api.GetNicMode()])
                 if GlobalOptions.skip_driver_install:
                     cmd.extend(["--skip-driver-install"])

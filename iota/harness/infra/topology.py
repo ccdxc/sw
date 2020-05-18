@@ -344,6 +344,8 @@ class Node(object):
                     device.SetNaplesPipeline(defaultPipeline)
 
                     device.SetPorts(getattr(nic, 'Ports', []))
+                    if not GlobalOptions.enable_multi_naples:
+                        break
             else:
                 for index in range(1):
                     name = self.GetNicType() + str(self.__dev_index)
