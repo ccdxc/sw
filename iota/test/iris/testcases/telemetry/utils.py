@@ -396,6 +396,17 @@ def GetNpingCmd(protocol, destination_ip, destination_port, source_ip = "", coun
 def GetVerifJsonFromPolicyJson(policy_json):
     return policy_json.replace("_policy", "_verif")
 
+def VerifySpanId(pkt, span_id=1):
+    if pkt.haslayer(ERSPAN_II) and (pkt[ERSPAN_II].session_id != span_id):
+        api.Logger.error("ERSPANII span id verfication Failed: span_id: {} Pkt session id: {}".format(span_id, pkt[ERSPAN_II].session_id))
+        pkt.show()
+        return api.types.status.FAILURE
+    elif pkt.haslayer(ERSPAN_III) and (pkt[ERSPAN_III].session_id != span_id):
+        api.Logger.error("ERSPANIII span id verfication Failed: span_id: {} Pkt session id: {}".format(span_id, pkt[ERSPAN_III].session_id))
+        pkt.show()
+        return api.types.status.FAILURE
+    return api.types.status.SUCCESS
+
 def VerifyVlan(pkt):
     if (uplink_vlan == 0 and pkt.haslayer(Dot1Q)):
         api.Logger.error("Vlan verification Failed: uplink_vlan: {} Pkt Vlan: {} ".format(uplink_vlan, pkt[Dot1Q].vlan))
@@ -429,7 +440,7 @@ def VerifyTimeStamp(pkt):
         return api.types.status.FAILURE
     return api.types.status.SUCCESS
 
-def VerifyErspanPackets(pcap_file_name, erspan_type):
+def VerifyErspanPackets(pcap_file_name, erspan_type, span_id):
     result = api.types.status.SUCCESS
     dir_path = os.path.dirname(os.path.realpath(__file__))
     mirrorscapy = dir_path + '/' + pcap_file_name
@@ -462,6 +473,9 @@ def VerifyErspanPackets(pcap_file_name, erspan_type):
             result = api.types.status.FAILURE
             continue
 
+        if VerifySpanId(pkt, span_id) == api.types.status.FAILURE:
+            result = api.types.status.FAILURE
+
         if VerifyVlan(pkt) == api.types.status.FAILURE:
             result = api.types.status.FAILURE
 
@@ -475,11 +489,11 @@ def VerifyErspanPackets(pcap_file_name, erspan_type):
         api.Logger.error(f"Failed to find any ERSPAN packet in {mirrorscapy} ")
         return api.types.status.FAILURE
 
-def VerifyCmd(cmd, feature, pcap_file_name, export_cfg_port=2055, erspan_type=ERSPAN_TYPE_3):
+def VerifyCmd(cmd, feature, pcap_file_name, export_cfg_port=2055, erspan_type=ERSPAN_TYPE_3, span_id=1):
     api.PrintCommandResults(cmd)
     result = api.types.status.SUCCESS
     if feature == 'mirror':
-        result =  VerifyErspanPackets(pcap_file_name, erspan_type)
+        result =  VerifyErspanPackets(pcap_file_name, erspan_type, span_id)
     elif feature == 'flowmon':
         search_str = r'(.*)%s: UDP, length(.*)'%export_cfg_port
         matchObj = re.search(search_str, cmd.stdout, 0)
@@ -496,7 +510,7 @@ def GetDestPort(port):
         return '3000'
     return port
 
-def RunCmd(src_wl, protocol, dest_wl, destination_ip, destination_port, collector_info, feature, is_wl_type_bm=False):
+def RunCmd(src_wl, protocol, dest_wl, destination_ip, destination_port, collector_info, feature, is_wl_type_bm=False,span_id=1):
     result = api.types.status.SUCCESS
     backgroun_req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
     req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
@@ -573,7 +587,7 @@ def RunCmd(src_wl, protocol, dest_wl, destination_ip, destination_port, collecto
             proto_port = coll_ip.proto_port.port
 
         cmd = background_resp.commands[cmd_resp_idx]
-        result = VerifyCmd(cmd, feature, pcap_file_name, proto_port, erspan_type=coll_type)
+        result = VerifyCmd(cmd, feature, pcap_file_name, proto_port, erspan_type=coll_type, span_id=span_id)
         if (result == api.types.status.FAILURE):
             api.Logger.info("Testcase FAILED!! cmd: {}".format(cmd))
             break
@@ -671,6 +685,9 @@ def RunAll(tc, verif_json, feature, collector_info, is_wl_type_bm=False):
         time.sleep(4)
     for i in range(0, len(verif)):
         protocol = verif[i]['protocol']
+        span_id = 1
+        if 'span-id' in verif[i]:
+            span_id = verif[i]['span-id']
         src_w = GetSourceWorkload(verif[i], tc)
         if src_w == None:
             continue
@@ -687,7 +704,7 @@ def RunAll(tc, verif_json, feature, collector_info, is_wl_type_bm=False):
                 continue
         dest_port = GetDestPort(verif[i]['port'])
         res = RunCmd(src_w, protocol, dest_w, dest_w.ip_address, dest_port,
-                     collector_info, feature, is_wl_type_bm)
+                     collector_info, feature, is_wl_type_bm, span_id=span_id)
         if (res == api.types.status.FAILURE):
             api.Logger.info("Testcase FAILED!!")
             break;

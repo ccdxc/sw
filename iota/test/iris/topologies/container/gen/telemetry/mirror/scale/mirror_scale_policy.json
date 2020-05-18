@@ -12,6 +12,7 @@
             }, 
             "spec": {
                 "packet-size": 128, 
+                "span-id": 1000,
                 "match-rules": [
                     {
                         "source": {
@@ -540,6 +541,7 @@
             }, 
             "spec": {
                 "packet-size": 128, 
+                "span-id": 1001,
                 "match-rules": [
                     {
                         "source": {
@@ -1074,6 +1076,7 @@
             }, 
             "spec": {
                 "packet-size": 128, 
+                "span-id": 1002,
                 "match-rules": [
                     {
                         "source": {
@@ -1614,6 +1617,7 @@
             }, 
             "spec": {
                 "packet-size": 128, 
+                "span-id": 1003,
                 "match-rules": [
                     {
                         "source": {
@@ -2088,6 +2092,7 @@
             }, 
             "spec": {
                 "packet-size": 128, 
+                "span-id": 1004,
                 "match-rules": [
                     {
                         "source": {
@@ -2568,6 +2573,7 @@
             }, 
             "spec": {
                 "packet-size": 128, 
+                "span-id": 1005,
                 "match-rules": [
                     {
                         "source": {
@@ -3054,6 +3060,7 @@
             }, 
             "spec": {
                 "packet-size": 128, 
+                "span-id": 1006,
                 "match-rules": [
                     {
                         "source": {
@@ -3474,6 +3481,7 @@
             }, 
             "spec": {
                 "packet-size": 128, 
+                "span-id": 1007,
                 "match-rules": [
                     {
                         "source": {

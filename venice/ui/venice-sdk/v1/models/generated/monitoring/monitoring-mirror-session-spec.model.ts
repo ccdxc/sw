@@ -20,6 +20,7 @@ export interface IMonitoringMirrorSessionSpec {
     'match-rules'?: Array<IMonitoringMatchRule>;
     'packet-filters': Array<MonitoringMirrorSessionSpec_packet_filters>;
     'interfaces'?: IMonitoringInterfaceMirror;
+    'span-id': number;
     '_ui'?: any;
 }
 
@@ -38,6 +39,8 @@ export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitorin
     'packet-filters': Array<MonitoringMirrorSessionSpec_packet_filters> = null;
     /** If specified, will pick up interface matching the selector. */
     'interfaces': MonitoringInterfaceMirror = null;
+    /** Value should be between 1 and 1023. */
+    'span-id': number = null;
     public static propInfo: { [prop in keyof IMonitoringMirrorSessionSpec]: PropInfoItem } = {
         'packet-size': {
             description:  `PacketSize: Max size of a mirrored packet, packet size is not checked by default. Value should be between 64 and 2048.`,
@@ -69,6 +72,12 @@ export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitorin
             description:  `If specified, will pick up interface matching the selector.`,
             required: false,
             type: 'object'
+        },
+        'span-id': {
+            default: parseInt('1'),
+            description:  `Value should be between 1 and 1023.`,
+            required: true,
+            type: 'number'
         },
     }
 
@@ -145,6 +154,13 @@ export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitorin
         } else {
             this['interfaces'].setValues(null, fillDefaults);
         }
+        if (values && values['span-id'] != null) {
+            this['span-id'] = values['span-id'];
+        } else if (fillDefaults && MonitoringMirrorSessionSpec.hasDefaultValue('span-id')) {
+            this['span-id'] = MonitoringMirrorSessionSpec.propInfo['span-id'].default;
+        } else {
+            this['span-id'] = null
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -158,6 +174,7 @@ export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitorin
                 'match-rules': new FormArray([]),
                 'packet-filters': CustomFormControl(new FormControl(this['packet-filters']), MonitoringMirrorSessionSpec.propInfo['packet-filters']),
                 'interfaces': CustomFormGroup(this['interfaces'].$formGroup, MonitoringMirrorSessionSpec.propInfo['interfaces'].required),
+                'span-id': CustomFormControl(new FormControl(this['span-id'], [required, minValueValidator(1), maxValueValidator(1023), ]), MonitoringMirrorSessionSpec.propInfo['span-id']),
             });
             // generate FormArray control elements
             this.fillFormArray<MonitoringMirrorCollector>('collectors', this['collectors'], MonitoringMirrorCollector);
@@ -199,6 +216,7 @@ export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitorin
             this.fillModelArray<MonitoringMatchRule>(this, 'match-rules', this['match-rules'], MonitoringMatchRule);
             this._formGroup.controls['packet-filters'].setValue(this['packet-filters']);
             this['interfaces'].setFormGroupValuesToBeModelValues();
+            this._formGroup.controls['span-id'].setValue(this['span-id']);
         }
     }
 }

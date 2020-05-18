@@ -4,12 +4,14 @@
         "dst_ip": "192.168.101.103",
         "protocol": "udp", 
         "port": "120", 
+		"span-id" : 6,
         "result": "mirror"
     }, 
     {
         "src_ip": "192.168.101.103",
         "dst_ip": "192.168.101.101",
         "protocol": "udp", 
+		"span-id" : 6,
         "port": "120", 
         "result": "mirror"
     }, 
@@ -18,6 +20,7 @@
         "dst_ip": "192.168.101.104",
         "protocol": "tcp", 
         "port": "120", 
+		"span-id" : 6,
         "result": "mirror"
     }, 
     {
@@ -25,6 +28,7 @@
         "dst_ip": "192.168.101.102",
         "protocol": "tcp", 
         "port": "120", 
+		"span-id" : 6,
         "result": "mirror"
     }, 
     {
@@ -32,6 +36,7 @@
         "dst_ip": "192.168.101.101",
         "protocol": "icmp", 
         "port": "0", 
+		"span-id" : 6,
         "result": "mirror"
     }, 
     {
@@ -39,6 +44,7 @@
         "dst_ip": "192.168.101.103",
         "protocol": "icmp", 
         "port": "0", 
+		"span-id" : 6,
         "result": "mirror"
     }
 ]

@@ -4,6 +4,7 @@
         "dst_ip": "any", 
         "protocol": "udp", 
         "port": "120", 
+		"span-id" : 12,
         "result": "mirror"
     }, 
     {
@@ -11,6 +12,7 @@
         "dst_ip": "192.168.100.103", 
         "protocol": "udp", 
         "port": "120", 
+		"span-id" : 12,
         "result": "mirror"
     }
 ]

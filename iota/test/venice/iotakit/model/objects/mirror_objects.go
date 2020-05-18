@@ -23,6 +23,36 @@ type MirrorSessionCollection struct {
 	Sessions []*MirrorSession
 }
 
+var sessionIDTable map[uint32]bool
+
+func allocateSpanID() uint32 {
+	if sessionIDTable == nil {
+		sessionIDTable = make(map[uint32]bool)
+		var i uint32
+		for i = 1; i < 1024; i++ {
+			sessionIDTable[i] = true
+		}
+	}
+	var key uint32
+	for key, _ = range sessionIDTable {
+		break
+	}
+	if key == 0 {
+		panic("All SpanIDs used, deleteMirrorSessions to get unused SpanIDs")
+	}
+	delete(sessionIDTable, key)
+	return key
+}
+
+func deallocateSpanID(key uint32) {
+	if sessionIDTable == nil {
+		return
+	}
+	if _, ok := sessionIDTable[key]; !ok {
+		sessionIDTable[key] = true
+	}
+}
+
 func NewMirrorSession(name string, client objClient.ObjClient, testbed *testbed.TestBed) *MirrorSessionCollection {
 	return &MirrorSessionCollection{
 		Sessions: []*MirrorSession{
@@ -36,6 +66,7 @@ func NewMirrorSession(name string, client objClient.ObjClient, testbed *testbed.
 					},
 					Spec: monitoring.MirrorSessionSpec{
 						PacketSize: 128,
+						SpanID:     allocateSpanID(),
 					},
 				},
 			},
@@ -195,6 +226,7 @@ func (msc *MirrorSessionCollection) Delete() error {
 
 	// walk all sessions and delete them
 	for _, sess := range msc.Sessions {
+		deallocateSpanID(sess.VeniceMirrorSess.Spec.SpanID)
 		err := msc.Client.DeleteMirrorSession(sess.VeniceMirrorSess)
 		if err != nil {
 			return err

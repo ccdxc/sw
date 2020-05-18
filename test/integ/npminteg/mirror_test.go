@@ -37,6 +37,7 @@ func (it *integTestSuite) TestNpmMirrorPolicy(c *C) {
 		},
 		Spec: monitoring.MirrorSessionSpec{
 			PacketSize:    128,
+			SpanID:        1,
 			PacketFilters: []string{monitoring.MirrorSessionSpec_ALL_PKTS.String()},
 			Collectors: []monitoring.MirrorCollector{
 				{
@@ -69,10 +70,14 @@ func (it *integTestSuite) TestNpmMirrorPolicy(c *C) {
 			ScheduleState: "none",
 		},
 	}
-
-	// create sg policy
+	// create mirror policy
 	_, err = it.apisrvClient.MonitoringV1().MirrorSession().Create(context.Background(), &mr)
 	AssertOk(c, err, "error creating mirror policy")
+
+	mdup := mr
+	mdup.Name = "dupMirrorSpanID"
+	_, err = it.apisrvClient.MonitoringV1().MirrorSession().Create(context.Background(), &mdup)
+	Assert(c, err != nil, "Sucessfully created mirrorSession but duplicate SpanID must fail")
 
 	// verify agent state has the policy and has the rules
 	for _, ag := range it.agents {

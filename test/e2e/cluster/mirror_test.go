@@ -34,6 +34,7 @@ var _ = Describe("mirror session tests", func() {
 				},
 				Spec: monitoring.MirrorSessionSpec{
 					PacketSize:    128,
+					SpanID:        1023,
 					PacketFilters: []string{monitoring.MirrorSessionSpec_ALL_PKTS.String()},
 					Collectors: []monitoring.MirrorCollector{
 						{
@@ -159,6 +160,7 @@ var _ = Describe("mirror session tests", func() {
 
 			for i := 0; i < statemgr.MaxMirrorSessions+1; i++ {
 				ms.Name = fmt.Sprintf("max-mirror-%d", i+1)
+				ms.Spec.SpanID = uint32(i + 1)
 				ms.Spec.Collectors = []monitoring.MirrorCollector{
 					{
 						Type: monitoring.PacketCollectorType_ERSPAN_TYPE_2.String(),
@@ -196,6 +198,7 @@ var _ = Describe("mirror session tests", func() {
 
 			for i := 0; i < statemgr.MaxUniqueCollectors+1; i++ {
 				ms.Name = fmt.Sprintf("unique-mirror-%d", i+1)
+				ms.Spec.SpanID = uint32(i + 1)
 				ms.Spec.Collectors = []monitoring.MirrorCollector{
 					{
 						Type: monitoring.PacketCollectorType_ERSPAN_TYPE_2.String(),

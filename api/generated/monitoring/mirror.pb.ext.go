@@ -361,6 +361,7 @@ func (m *MirrorSessionSpec) Defaults(ver string) bool {
 		for k := range m.PacketFilters {
 			m.PacketFilters[k] = "all-packets"
 		}
+		m.SpanID = 1
 	}
 	return ret
 }
@@ -959,6 +960,18 @@ func init() {
 
 		if err := validators.IntRangeOrZero(m.PacketSize, args); err != nil {
 			return fmt.Errorf("%v failed validation: %s", path+"."+"PacketSize", err.Error())
+		}
+		return nil
+	})
+
+	validatorMapMirror["MirrorSessionSpec"]["all"] = append(validatorMapMirror["MirrorSessionSpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*MirrorSessionSpec)
+		args := make([]string, 0)
+		args = append(args, "1")
+		args = append(args, "1023")
+
+		if err := validators.IntRange(m.SpanID, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"SpanID", err.Error())
 		}
 		return nil
 	})

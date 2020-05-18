@@ -35,6 +35,7 @@ var testMirrorSessions = []monitoring.MirrorSession{
 		},
 		Spec: monitoring.MirrorSessionSpec{
 			PacketSize:    128,
+			SpanID:        1,
 			PacketFilters: []string{monitoring.MirrorSessionSpec_ALL_PKTS.String()},
 			Collectors: []monitoring.MirrorCollector{
 				{
@@ -76,6 +77,7 @@ var testMirrorSessions = []monitoring.MirrorSession{
 		},
 		Spec: monitoring.MirrorSessionSpec{
 			PacketSize:    128,
+			SpanID:        2,
 			PacketFilters: []string{monitoring.MirrorSessionSpec_ALL_DROPS.String()},
 			StartConditions: monitoring.MirrorStartConditions{
 				// schedule *after* 10 sec - Fix it based on current time when creating a session
@@ -224,6 +226,7 @@ func (it *veniceIntegSuite) TestMirrorSessions(c *C) {
 	for i := 0; i < maxMirrorSessions; i++ {
 		ms := testMirrorSessions[0]
 		ms.Name = fmt.Sprintf("MirrorSession_%v", i)
+		ms.Spec.SpanID = uint32(i + 10)
 		log.Infof("----- Create (Max) Mirror Sessions %v", ms.Name)
 		err = it.createMirrorSession(ctx, activeMs, &ms)
 		Assert(c, err == nil, "Unable to create a mirror session - %v", ms.Name)
@@ -426,6 +429,7 @@ func (it *veniceIntegSuite) TestMirrorSessionUpdate(c *C) {
 	for i := 0; i < maxMirrorSessions; i++ {
 		ms := testMirrorSessions[0]
 		ms.Name = fmt.Sprintf("Max_MirrorSession_%v", i)
+		ms.Spec.SpanID = uint32(i + 20)
 		log.Infof("----- Create (Max) Mirror Sessions %v", ms.Name)
 		err = it.createMirrorSession(ctx, activeMs, &ms)
 		Assert(c, err == nil, "Unable to create a mirror session - %v", ms.Name)

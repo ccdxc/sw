@@ -218,6 +218,11 @@ type gCollector struct {
 
 func globalMirrorSessionValidator(ms *monitoring.MirrorSession, mirrors *monitoring.MirrorSessionList) error {
 	expConfig := make(map[string]gCollector)
+	var spanID uint32 = 1
+
+	if ms.Spec.SpanID > 0 {
+		spanID = ms.Spec.SpanID
+	}
 
 	for _, mir := range mirrors.Items {
 		if mir.Name == ms.Name {
@@ -225,6 +230,10 @@ func globalMirrorSessionValidator(ms *monitoring.MirrorSession, mirrors *monitor
 		}
 		for j, col := range mir.Spec.Collectors {
 			expConfig[col.ExportCfg.Destination] = gCollector{pktSize: mir.Spec.PacketSize, c: &mir.Spec.Collectors[j]}
+		}
+		if mir.Spec.SpanID == spanID {
+			return fmt.Errorf("SpanID %v already used on mirror session %v",
+				spanID, mir.Name)
 		}
 	}
 	for j, col := range ms.Spec.Collectors {

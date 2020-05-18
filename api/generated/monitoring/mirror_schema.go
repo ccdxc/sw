@@ -122,6 +122,7 @@ var typesMapMirror = map[string]*api.Struct{
 			"resource-version": api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
 			"schedule-state":   api.CLIInfo{Path: "Status.ScheduleState", Skip: false, Insert: "", Help: ""},
 			"self-link":        api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
+			"span-id":          api.CLIInfo{Path: "Spec.SpanID", Skip: false, Insert: "", Help: ""},
 			"strip-vlan-hdr":   api.CLIInfo{Path: "Spec.Collectors[].StripVlanHdr", Skip: false, Insert: "", Help: ""},
 			"tenant":           api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
 			"type":             api.CLIInfo{Path: "Spec.Collectors[].Type", Skip: false, Insert: "", Help: ""},
@@ -142,6 +143,8 @@ var typesMapMirror = map[string]*api.Struct{
 			"PacketFilters": api.Field{Name: "PacketFilters", CLITag: api.CLIInfo{ID: "packet-filters", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "packet-filters", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Interfaces": api.Field{Name: "Interfaces", CLITag: api.CLIInfo{ID: "interfaces", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "interfaces", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.InterfaceMirror"},
+
+			"SpanID": api.Field{Name: "SpanID", CLITag: api.CLIInfo{ID: "span-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "span-id", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
 		},
 	},
 	"monitoring.MirrorSessionStatus": &api.Struct{

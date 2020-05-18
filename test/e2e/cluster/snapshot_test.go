@@ -115,6 +115,7 @@ var _ = Describe("Config SnapShot and restore", func() {
 					},
 					Spec: monitoring.MirrorSessionSpec{
 						PacketSize:    128,
+						SpanID:        103,
 						PacketFilters: []string{monitoring.MirrorSessionSpec_ALL_PKTS.String()},
 						Collectors: []monitoring.MirrorCollector{
 							{
@@ -147,6 +148,7 @@ var _ = Describe("Config SnapShot and restore", func() {
 
 				for i := 0; i < statemgr.MaxMirrorSessions; i++ {
 					ms.Name = fmt.Sprintf("max-mirror-%d", i+1)
+					ms.Spec.SpanID = uint32(i + 1)
 					ms.Spec.Collectors = []monitoring.MirrorCollector{
 						{
 							Type: monitoring.PacketCollectorType_ERSPAN_TYPE_3.String(),
@@ -324,6 +326,7 @@ var _ = Describe("Config SnapShot and restore", func() {
 
 				for i := 0; i < statemgr.MaxMirrorSessions; i++ {
 					ms.Name = fmt.Sprintf("new-mirror-%d", i+1)
+					ms.Spec.SpanID = uint32(i + 1)
 					ms.Spec.Collectors = []monitoring.MirrorCollector{
 						{
 							Type: monitoring.PacketCollectorType_ERSPAN_TYPE_3.String(),

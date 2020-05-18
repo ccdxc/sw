@@ -43,6 +43,7 @@ message MirrorSessionSpec {
 
     // If specified, will pick up interface matching the selector
     InterfaceMirror Interfaces             = 6 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "interfaces,omitempty"];
+    uint32          SpanID                 = 7 [(gogoproto.jsontag) = "span-id,omitempty", (venice.default) = "1", (venice.check) = "IntRange(1,1023)"];
 }
 
 enum Direction {

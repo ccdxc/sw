@@ -402,6 +402,14 @@
             "type": "string"
           },
           {
+            "name": "spec.span-id",
+            "description": "Value should be between 1 and 1023.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
             "name": "status.schedule-state",
             "in": "query",
             "required": false,
@@ -7041,6 +7049,14 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "spec.span-id",
+            "description": "Value should be between 1 and 1023.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
           },
           {
             "name": "status.schedule-state",
@@ -18959,7 +18975,8 @@
     "monitoringMirrorSessionSpec": {
       "type": "object",
       "required": [
-        "packet-filters"
+        "packet-filters",
+        "span-id"
       ],
       "properties": {
         "packet-size": {
@@ -19009,6 +19026,14 @@
         "interfaces": {
           "$ref": "#/definitions/monitoringInterfaceMirror",
           "description": "If specified, will pick up interface matching the selector."
+        },
+        "span-id": {
+          "type": "integer",
+          "format": "int64",
+          "default": "1",
+          "minimum": 1,
+          "maximum": 1023,
+          "description": "Value should be between 1 and 1023."
         }
       },
       "description": "MirrorSessionSpec."

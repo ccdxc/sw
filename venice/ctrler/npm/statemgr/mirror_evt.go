@@ -159,6 +159,7 @@ func buildDSCMirrorSession(mss *MirrorSessionState) *netproto.MirrorSession {
 	//tSpec.Enable = (mss.State == monitoring.MirrorSessionState_ACTIVE)
 	tSpec.PacketSize = ms.Spec.PacketSize
 	//tSpec.PacketFilters = ms.Spec.PacketFilters
+	tSpec.SpanID = ms.Spec.SpanID
 
 	for _, c := range ms.Spec.Collectors {
 		var export monitoring.MirrorExportConfig
@@ -603,7 +604,7 @@ func (smm *SmMirrorSessionInterface) initInterfaceMirrorSession(ms *MirrorSessio
 			Spec: netproto.InterfaceMirrorSessionSpec{
 				PacketSize: ms.MirrorSession.Spec.PacketSize,
 				VrfName:    ms.MirrorSession.Namespace,
-				SpanID:     0, //update once proto changed
+				SpanID:     ms.MirrorSession.Spec.SpanID,
 			},
 		},
 	}
@@ -808,6 +809,11 @@ func (smm *SmMirrorSessionInterface) updateInterfaceMirror(ms *MirrorSessionStat
 		if ms.MirrorSession.MirrorSession.Spec.PacketSize != nmirror.Spec.PacketSize {
 			updateReqd = true
 			ms.intfMirrorSession.obj.Spec.PacketSize = nmirror.Spec.PacketSize
+		}
+
+		if ms.MirrorSession.MirrorSession.Spec.SpanID != nmirror.Spec.SpanID {
+			updateReqd = true
+			ms.intfMirrorSession.obj.Spec.SpanID = nmirror.Spec.SpanID
 		}
 
 		if updateReqd {
