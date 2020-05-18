@@ -39,7 +39,13 @@ VnicSvcImpl::VnicGet(ServerContext *context,
 
 Status VnicSvcImpl::VnicStatsReset(ServerContext *context, const types::Id *req,
                                    Empty *rsp) {
-    // TODO:
-    PDS_TRACE_DEBUG("Rcvd vnic statistics clear request");
+    pds_obj_key_t key;
+
+    if (req->id().empty()) {
+        pds_vnic_stats_reset(NULL);
+    } else {
+        pds_obj_key_proto_to_api_spec(&key, req->id());
+        pds_vnic_stats_reset(&key);
+    }
     return Status::OK;
 }

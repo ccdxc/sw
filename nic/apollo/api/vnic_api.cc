@@ -75,7 +75,7 @@ typedef struct pds_vnic_read_args_s {
     void *ctxt;
 } pds_vnic_read_args_t;
 
-bool
+static bool
 pds_vnic_info_from_entry (void *entry, void *ctxt)
 {
     vnic_entry *vnic = (vnic_entry *)entry;
@@ -114,4 +114,31 @@ sdk_ret_t
 pds_vnic_delete (_In_ pds_obj_key_t *key, _In_ pds_batch_ctxt_t bctxt)
 {
     return pds_vnic_api_handle(bctxt, API_OP_DELETE, key, NULL);
+}
+
+static bool
+vnic_stats_reset_cb (void *entry, void *ctxt)
+{
+    vnic_entry *vnic = (vnic_entry *)entry;
+
+    vnic->reset_stats();
+    // continue the walk
+    return false;
+}
+
+sdk_ret_t
+pds_vnic_stats_reset (_In_ pds_obj_key_t *key)
+{
+    vnic_entry *vnic;
+
+    if (key) {
+        vnic = vnic_db()->find(key);
+        if (vnic) {
+            return vnic->reset_stats();
+        }
+        PDS_TRACE_ERR("Failed to reset vnic %s stats, vnic out found",
+                      key->str());
+        return SDK_RET_ENTRY_NOT_FOUND;
+    }
+    return vnic_db()->walk(vnic_stats_reset_cb, NULL);
 }

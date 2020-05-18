@@ -169,6 +169,10 @@ public:
     ///\return     SDK_RET_OK on success, failure status code on error
     sdk_ret_t read(pds_vnic_info_t *info);
 
+    ///\brief      reset all vnic statistics
+    ///\return     SDK_RET_OK on success, failure status code on error
+    sdk_ret_t reset_stats(void);
+
     /// \brief    add given vnic to the database
     /// \return   SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t add_to_db(void) override;

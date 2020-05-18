@@ -238,8 +238,15 @@ public:
     /// \param[in]  api_obj API object
     /// \param[in]  key Pointer to the key object
     /// \param[out] info Pointer to the info object
+    /// #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t read_hw(api_base *api_obj, obj_key_t *key,
                               obj_info_t *info) {
+        return sdk::SDK_RET_INVALID_OP;
+    }
+
+    /// \brief reset all the stats associated with this object
+    /// #SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t reset_stats(void) {
         return sdk::SDK_RET_INVALID_OP;
     }
 

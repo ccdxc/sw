@@ -15,13 +15,13 @@
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/apollo/api/include/pds_subnet.hpp"
 
-/// \defgroup PDS_VNIC VNIC API
+/// \defgroup PDS_VNIC vnic API
 /// @{
 
 #define PDS_MAX_VNIC           128     ///< maximum vnics
 #define PDS_MAX_VNIC_POLICY    5       ///< max. #of security policies per vnic
 
-/// \brief VNIC specification
+/// \brief vnic specification
 typedef struct pds_vnic_spec_s {
     pds_obj_key_t key;                         ///< vnic's key
     char hostname[PDS_MAX_HOST_NAME_LEN + 1];  ///< hostname of this workload,
@@ -80,14 +80,14 @@ typedef struct pds_vnic_spec_s {
     bool     meter_en;
 } __PACK__ pds_vnic_spec_t;
 
-/// \brief VNIC status
+/// \brief vnic status
 typedef struct pds_vnic_status_s {
     uint16_t hw_id;             ///< hardware id
     uint16_t nh_hw_id;          ///< nexthop id
     uint16_t host_if_hw_id;     ///< host if id
 } pds_vnic_status_t;
 
-/// \brief VNIC statistics
+/// \brief vnic statistics
 typedef struct pds_vnic_stats_s {
     uint64_t rx_pkts;         ///< received packet count
     uint64_t rx_bytes;        ///< received bytes
@@ -100,21 +100,21 @@ typedef struct pds_vnic_stats_s {
     uint64_t meter_tx_bytes;  ///< meter transmit bytes
 } pds_vnic_stats_t;
 
-/// \brief VNIC information
+/// \brief vnic information
 typedef struct pds_vnic_info_s {
     pds_vnic_spec_t spec;        ///< vnic specification
     pds_vnic_status_t status;    ///< vnic status
     pds_vnic_stats_t stats;      ///< vnic stats
 } pds_vnic_info_t;
 
-/// \brief Create VNIC
+/// \brief create vnic
 /// \param[in] spec Specification
 /// \param[in] bctxt batch context if API is invoked in a batch
 /// \return #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_vnic_create(pds_vnic_spec_t *spec,
                           pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
-/// \brief Read VNIC information
+/// \brief read vnic information
 /// \param[in] key Key
 /// \param[out] info Information
 /// \return #SDK_RET_OK on success, failure status code on error
@@ -122,25 +122,30 @@ sdk_ret_t pds_vnic_read(pds_obj_key_t *key, pds_vnic_info_t *info);
 
 typedef void (*vnic_read_cb_t)(pds_vnic_info_t *info, void *ctxt);
 
-/// \brief Read all VNIC information
+/// \brief read all vnic information
 /// \param[in]  cb      callback function
 /// \param[in]  ctxt    opaque context passed to cb
 /// \return #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_vnic_read_all(vnic_read_cb_t vnic_read_cb, void *ctxt);
 
-/// \brief Update VNIC specification
+/// \brief Update vnic specification
 /// \param[in] spec Specififcation
 /// \param[in] bctxt batch context if API is invoked in a batch
 /// \return #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_vnic_update(pds_vnic_spec_t *spec,
                           pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
-/// \brief Delete VNIC
+/// \brief delete vnic
 /// \param[in] key Key
 /// \param[in] bctxt batch context if API is invoked in a batch
 /// \return #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_vnic_delete(pds_obj_key_t *key,
                           pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
+
+/// \brief reset the statistics of a vnic
+/// \param[in] key vnic's key or NULL if this needs to be applied to all vnics
+/// \return #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_vnic_stats_reset(pds_obj_key_t *key);
 
 /// @}
 

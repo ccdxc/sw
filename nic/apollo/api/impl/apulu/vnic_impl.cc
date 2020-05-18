@@ -1394,6 +1394,28 @@ vnic_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
     return SDK_RET_OK;
 }
 
+sdk_ret_t
+vnic_impl::reset_stats(void) {
+    p4pd_error_t p4pd_ret;
+    vnic_rx_stats_actiondata_t vnic_rx_stats_data = { 0 };
+    vnic_tx_stats_actiondata_t vnic_tx_stats_data = { 0 };
+
+    // reset tx stats table for this vnic
+    vnic_tx_stats_data.action_id = VNIC_TX_STATS_VNIC_TX_STATS_ID;
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_VNIC_TX_STATS,
+                                       hw_id_, NULL, NULL,
+                                       &vnic_tx_stats_data);
+    SDK_ASSERT(p4pd_ret == P4PD_SUCCESS);
+
+    // initialize rx stats tables for this vnic
+    vnic_rx_stats_data.action_id = VNIC_RX_STATS_VNIC_RX_STATS_ID;
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_VNIC_RX_STATS,
+                                       hw_id_, NULL, NULL,
+                                       &vnic_rx_stats_data);
+    SDK_ASSERT(p4pd_ret == P4PD_SUCCESS);
+    return SDK_RET_OK;
+}
+
 /// \@}
 
 }    // namespace impl

@@ -170,6 +170,10 @@ public:
     virtual sdk_ret_t read_hw(api_base *api_obj, obj_key_t *key,
                               obj_info_t *info) override;
 
+    /// \brief      reset all the statistics associated with the vnic
+    /// \return     SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t reset_stats(void) override;
+
     /// \brief     return vnic's current epoch
     /// \return    epoch of the vnic
     uint8_t epoch(void) const { return epoch_; }

@@ -357,6 +357,11 @@ vnic_entry::read(pds_vnic_info_t *info) {
 }
 
 sdk_ret_t
+vnic_entry::reset_stats(void) {
+    return impl_->reset_stats();
+}
+
+sdk_ret_t
 vnic_entry::add_to_db(void) {
     PDS_TRACE_VERBOSE("Adding vnic %s to db", key_.str());
     return vnic_db()->insert(this);
