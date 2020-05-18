@@ -9,7 +9,6 @@ OS_TYPE_WINDOWS = "windows"
 
 LinuxDriverPath   = api.HOST_NAPLES_DIR + "/drivers-linux-eth/drivers/eth/ionic/ionic.ko"
 FreeBSDDriverPath = api.HOST_NAPLES_DIR + "/drivers-freebsd-eth/sys/modules/ionic/ionic.ko"
-EsxiDriverPath = api.HOST_NAPLES_DIR + "/drivers-freebsd-eth/sys/modules/ionic/ionic.ko"
 MemStatsCheckToolHostPath = api.HOST_NAPLES_DIR + "/ps_mem.py"
 MemStatsCheckToolNaplesPath = "/tmp/ps_mem.py"
 

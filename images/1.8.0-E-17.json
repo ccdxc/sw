@@ -1,46 +1,53 @@
 {
   "DocTemplateVersion": "1.0",
-  "Version": "1.5.0-E-14",
+  "Version": "latest",
   "Drivers": [
     {
-      "drivers_pkg": "images/1.5.0-E-14/drivers-linux-eth.tar.xz",
+      "drivers_pkg": "images/1.8.0-E-17/drivers-linux-eth.tar.xz",
       "gold_drv_latest_pkg": "platform/hosttools/x86_64/linux/goldfw/latest/drivers-linux-eth.tar.xz",
       "gold_drv_old_pkg": "platform/hosttools/x86_64/linux/goldfw/old/drivers-linux-eth.tar.xz",
       "OS": "linux",
       "pkg_file_type": "SrcBundle"
     },
     {
-      "drivers_pkg": "images/1.5.0-E-14/drivers-freebsd-eth.tar.xz",
+      "drivers_pkg": "images/1.8.0-E-17/drivers-freebsd-eth.tar.xz",
       "gold_drv_latest_pkg": "platform/hosttools/x86_64/freebsd/goldfw/latest/drivers-freebsd-eth.tar.xz",
       "gold_drv_old_pkg": "platform/hosttools/x86_64/freebsd/goldfw/old/drivers-freebsd-eth.tar.xz",
       "OS": "freebsd",
       "pkg_file_type": "SrcBundle"
     },
     {
-      "drivers_pkg": "images/1.5.0-E-14/ionic-en-1.4-1OEM.670.0.0.8169922.x86_64.vib",
+      "drivers_pkg": "images/1.8.0-E-17/ionic-en-1.8-1OEM.670.0.0.8169922.x86_64.vib",
       "gold_drv_latest_pkg": "platform/hosttools/x86_64/esx/goldfw/latest/drivers-esx-eth.tar.xz",
       "gold_drv_old_pkg": "platform/hosttools/x86_64/esx/goldfw/old/drivers-esx-eth.tar.xz",
       "OS": "esx",
-      "pkg_file_type" : "VIB"
+      "pkg_file_type": "VIB"
+    },
+    {
+      "drivers_pkg": "images/1.8.0-E-17/drivers-windows.zip",
+      "gold_drv_latest_pkg": "platform/hosttools/x86_64/windows/goldfw/latest/drivers-windows.zip",
+      "gold_drv_old_pkg": "platform/hosttools/x86_64/windows/goldfw/old/drivers-windows.zip",
+      "OS": "windows",
+      "pkg_file_type": "SrcBundle"
     }
   ],
   "Firmwares": [
-      {
+    {
         "naples_type" : "capri",
         "Images" : [
-            {
-                "tag" : "iris",
-                "image": "images/1.5.0-E-14/naples_fw.tar",
-                "gold_fw_img": "platform/goldfw/naples/naples_fw.tar",
-                "gold_fw_latest_ver": "1.3.1-E-19",
-                "gold_fw_old_ver": "1.3.1-E-17"
-            }
+          {
+            "tag" : "iris",
+            "image": "images/1.8.0-E-17/naples_fw.tar",
+            "gold_fw_img": "platform/goldfw/naples/naples_fw.tar",
+            "gold_fw_latest_ver": "1.3.1-E-19",
+            "gold_fw_old_ver": "1.3.1-E-17"
+          }
         ]
-      }
+    }
   ],
   "Venice" : [
     {
-        "Image" : "images/1.5.0-E-14/venice.tgz"
+        "Image" : "bin/venice.tgz"
     }
   ]
 }

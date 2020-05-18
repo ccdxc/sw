@@ -4,7 +4,7 @@
   "Drivers": [
     {
       "OS": "linux",
-      "drivers_pkg": "images/1.1.1-E-15/drivers-linux.tar.xz",
+      "drivers_pkg": "images/1.1.1-E-15/drivers-linux-eth.tar.xz",
       "gold_drv_latest_pkg": "platform/hosttools/x86_64/linux/goldfw/latest/drivers-linux-eth.tar.xz",
       "gold_drv_old_pkg": "platform/hosttools/x86_64/linux/goldfw/old/drivers-linux-eth.tar.xz",
       "OS_Distro" : "Oracle Linux Server",

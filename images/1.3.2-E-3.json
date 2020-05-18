@@ -3,14 +3,14 @@
   "Version": "1.3.2-E-3",
   "Drivers": [
     {
-      "drivers_pkg": "images/1.3.2-E-3/drivers-linux.tar.xz",
+      "drivers_pkg": "images/1.3.2-E-3/drivers-linux-eth.tar.xz",
       "gold_drv_latest_pkg": "platform/hosttools/x86_64/linux/goldfw/latest/drivers-linux-eth.tar.xz",
       "gold_drv_old_pkg": "platform/hosttools/x86_64/linux/goldfw/old/drivers-linux-eth.tar.xz",
       "OS": "linux",
       "pkg_file_type": "SrcBundle"
     },
     {
-      "drivers_pkg": "images/1.3.2-E-3/drivers-freebsd.tar.xz",
+      "drivers_pkg": "images/1.3.2-E-3/drivers-freebsd-eth.tar.xz",
       "gold_drv_latest_pkg": "platform/hosttools/x86_64/freebsd/goldfw/latest/drivers-freebsd-eth.tar.xz",
       "gold_drv_old_pkg": "platform/hosttools/x86_64/freebsd/goldfw/old/drivers-freebsd-eth.tar.xz",
       "OS": "freebsd",
