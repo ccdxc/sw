@@ -812,7 +812,7 @@ void ionic_tx_empty(struct ionic_queue *q)
 	while (q->head_idx != q->tail_idx) {
 		desc_info = &q->info[q->tail_idx];
 		desc_info->bytes = 0;
-		q->tail_idx = (q->tail_idx + 1) + (q->num_descs - 1);
+		q->tail_idx = (q->tail_idx + 1) & (q->num_descs - 1);
 		ionic_tx_clean(q, desc_info, NULL, desc_info->cb_arg);
 		if (desc_info->cb_arg) {
 			pkts++;
