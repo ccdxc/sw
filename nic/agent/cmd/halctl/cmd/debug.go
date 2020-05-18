@@ -51,6 +51,7 @@ var (
 	dstEpHdl                uint64
 	sourceIP                uint32
 	destIP                  uint32
+	ageDebugEn              string
 )
 
 var debugCmd = &cobra.Command{
@@ -233,6 +234,13 @@ var testFteInjectPacketCmd = &cobra.Command{
 	Run:    testFteInjectPacketCmdHandler,
 }
 
+var ageLogsDebugCmd = &cobra.Command{
+	Use:   "age",
+	Short: "enable/disable aging logs",
+	Long:  "enable/disable aging logs",
+	Run:   ageLogsDebugCmdHandler,
+}
+
 func init() {
 	rootCmd.AddCommand(debugCmd)
 	debugCmd.AddCommand(traceDebugCmd)
@@ -250,6 +258,7 @@ func init() {
 	debugCmd.AddCommand(microSegCmd)
 	debugCmd.AddCommand(sysDebugCmd)
 	traceDebugCmd.AddCommand(flushLogsDebugCmd)
+	traceDebugCmd.AddCommand(ageLogsDebugCmd)
 	fwDebugCmd.AddCommand(secProfDebugCmd)
 	showCmd.AddCommand(traceShowCmd)
 	showCmd.AddCommand(regShowCmd)
@@ -267,6 +276,7 @@ func init() {
 	platDebugCmd.AddCommand(platDatapathCacheDebugCmd)
 
 	traceDebugCmd.Flags().StringVar(&traceLevel, "level", "none", "Specify trace level")
+	ageLogsDebugCmd.Flags().StringVar(&ageDebugEn, "logs", "off", "Turn aging logs on/off")
 	sessionCtrlDebugCmd.Flags().Uint64Var(&maxSession, "max-session", 0, "Max sessions to handle per fte 1 - 131072")
 	secProfDebugCmd.Flags().Uint32Var(&secProfID, "id", 0, "Specify firewall security profile ID")
 	secProfDebugCmd.Flags().StringVar(&connTrack, "conntrack", "off", "Turn connection tracking on/off")
@@ -1020,6 +1030,51 @@ func flushLogsDebugCmdHandler(cmd *cobra.Command, args []string) {
 		if cmd != nil {
 			fmt.Println("Flushing logs succeeded")
 		}
+	}
+}
+
+func ageLogsDebugCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+	defer c.Close()
+
+	client := halproto.NewDebugClient(c)
+
+	var agingLogsReq *halproto.AgingLogsRequestMsg
+	if cmd.Flags().Changed("logs") {
+		var req *halproto.AgingLogsRequest
+		// Set Trace
+		req = &halproto.AgingLogsRequest{
+			AgingLogsEnable: convAgeDebugToBool(ageDebugEn),
+		}
+		agingLogsReq = &halproto.AgingLogsRequestMsg{
+			Request: []*halproto.AgingLogsRequest{req},
+		}
+	} else {
+		fmt.Printf("Argument required. Enable/Disable using --logs flag\n")
+		return
+	}
+
+	// HAL call
+	_, err = client.AgingLogs(context.Background(), agingLogsReq)
+	if err != nil {
+		fmt.Printf("Set age trace failed. %v\n", err)
+		return
+	}
+}
+
+func convAgeDebugToBool(str string) bool {
+	switch str {
+	case "on":
+		return true
+	case "off":
+		return false
+	default:
+		return false
 	}
 }
 

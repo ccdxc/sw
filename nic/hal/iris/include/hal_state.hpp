@@ -436,6 +436,9 @@ public:
     bond_mode_t inband_bond_mode(void) const { return inband_bond_mode_; }
     void set_inband_bond_mode(bond_mode_t mode) { inband_bond_mode_ = mode; }
 
+    bool is_age_debug_enabled(void) { return age_debug_en_; }
+    void set_age_debug_enable(bool en) { age_debug_en_ = en; } 
+
 private:
     // following can come from shared memory or non-linux HBM memory
     // NOTE: strictly shmnot required as we can rebuild this from slab elements,
@@ -550,6 +553,7 @@ private:
     uint32_t      swm_qos_port_num_;
     bond_mode_t   inband_bond_mode_;
     hal_handle_t  customer_default_securityprof_hdl_;
+    bool          age_debug_en_;
 
 private:
     bool init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr);
@@ -946,6 +950,10 @@ public:
 
     void set_inband_bond_mode(bond_mode_t mode) { oper_db_->set_inband_bond_mode(mode); }
     bond_mode_t inband_bond_mode(void) const { return oper_db_->inband_bond_mode(); }
+
+    bool is_age_debug_enabled(void) { return oper_db_->is_age_debug_enabled(); }
+    void set_age_debug_enable(bool en) { return oper_db_->set_age_debug_enable(en); }
+   
 private:
     // following come from shared memory or non-linux HBM memory
     hal_cfg_db           *cfg_db_;

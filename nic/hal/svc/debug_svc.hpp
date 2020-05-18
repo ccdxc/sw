@@ -84,6 +84,7 @@ using debug::SessionCtrlRequestMsg;
 using debug::SessionCtrlSpec;
 using debug::OifListGetResponseMsg;
 using debug::OifListGetRequestMsg;
+using debug::AgingLogsRequestMsg;
 
 class DebugServiceImpl final : public Debug::Service {
 public:
@@ -187,6 +188,10 @@ public:
     Status OifListGet(ServerContext *context,
                       const OifListGetRequestMsg *req,
                       grpc::ServerWriter<debug::OifListGetResponseMsg> *writer) override;
+ 
+    Status AgingLogs(ServerContext* context, 
+                     const AgingLogsRequestMsg* request, 
+                     Empty* response) override;
 };
 
 #endif  // __DEBUG_SVC_HPP__

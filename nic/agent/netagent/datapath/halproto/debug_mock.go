@@ -898,6 +898,24 @@ func (mr *MockDebugClientMockRecorder) OifListGet(ctx, in interface{}, opts ...i
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OifListGet", reflect.TypeOf((*MockDebugClient)(nil).OifListGet), varargs...)
 }
 
+// AgingLogs mocks base method
+func (m *MockDebugClient) AgingLogs(ctx context.Context, in *AgingLogsRequestMsg, opts ...grpc.CallOption) (*Empty, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "AgingLogs", varargs...)
+	ret0, _ := ret[0].(*Empty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AgingLogs indicates an expected call of AgingLogs
+func (mr *MockDebugClientMockRecorder) AgingLogs(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AgingLogs", reflect.TypeOf((*MockDebugClient)(nil).AgingLogs), varargs...)
+}
+
 // MockDebug_OifListGetClient is a mock of Debug_OifListGetClient interface
 type MockDebug_OifListGetClient struct {
 	ctrl     *gomock.Controller
@@ -1482,6 +1500,19 @@ func (m *MockDebugServer) OifListGet(arg0 *OifListGetRequestMsg, arg1 Debug_OifL
 // OifListGet indicates an expected call of OifListGet
 func (mr *MockDebugServerMockRecorder) OifListGet(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OifListGet", reflect.TypeOf((*MockDebugServer)(nil).OifListGet), arg0, arg1)
+}
+
+// AgingLogs mocks base method
+func (m *MockDebugServer) AgingLogs(arg0 context.Context, arg1 *AgingLogsRequestMsg) (*Empty, error) {
+	ret := m.ctrl.Call(m, "AgingLogs", arg0, arg1)
+	ret0, _ := ret[0].(*Empty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AgingLogs indicates an expected call of AgingLogs
+func (mr *MockDebugServerMockRecorder) AgingLogs(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AgingLogs", reflect.TypeOf((*MockDebugServer)(nil).AgingLogs), arg0, arg1)
 }
 
 // MockDebug_OifListGetServer is a mock of Debug_OifListGetServer interface

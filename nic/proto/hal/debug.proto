@@ -67,6 +67,7 @@ service Debug {
   rpc SessionCtrlUpdate (SessionCtrlRequestMsg) returns (types.Empty) {}    
 
   rpc OifListGet (OifListGetRequestMsg) returns (stream OifListGetResponseMsg) {}
+  rpc AgingLogs(AgingLogsRequestMsg) returns (types.Empty) {}
 }
 
 
@@ -510,6 +511,14 @@ message FlushLogsResponse {
 // Flush logs response message
 message FlushLogsResponseMsg {
   repeated FlushLogsResponse    response = 1;
+}
+
+message AgingLogsRequest {
+  bool    aging_logs_enable = 1;
+}
+
+message AgingLogsRequestMsg {
+  repeated AgingLogsRequest      request = 1;
 }
 
 // Clock Delta Op
