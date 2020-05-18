@@ -26,12 +26,12 @@ elba_barco_asym_poll_pend_req (uint32_t batch_size, uint32_t* id_count,
 
     dllist_for_each(entry, &g_pend_req_list) {
         req = dllist_entry(entry, crypto_pend_req_t, list_ctxt);
-        SDK_TRACE_DEBUG("Checking status for req: {}", req->hw_id);
+        SDK_TRACE_DEBUG("Checking status for req: %d", req->hw_id);
         if(elba_barco_ring_poll(BARCO_RING_ASYM, req->hw_id) != TRUE) {
             return SDK_RET_OK;
         }
         ids[*id_count] = req->sw_id;
-        SDK_TRACE_DEBUG("Request completed for count: {} hw-id: {} sw-id: {} id: {}",
+        SDK_TRACE_DEBUG("Request completed for count: %d hw-id: %d sw-id: %d id: %d",
                         *id_count, req->hw_id, req->sw_id, ids[*id_count]);
         elba_barco_del_pend_req_from_db(req);
         if(++(*id_count) >= batch_size)
@@ -113,7 +113,7 @@ elba_barco_asym_ecc_point_mul_p256 (uint8_t *p, uint8_t *n,
         SDK_TRACE_ERR("ECC Point Mul P256: Failed to allocate key descriptor");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG("ECC Point Mul P256: Allocated Key Descr @ {:x}",
+    SDK_TRACE_DEBUG("ECC Point Mul P256: Allocated Key Descr @ %d",
                     ecc_pm_p256_key_idx);
 
     asym_key.key_param_list = 0; /* Barco does not use key space for ECC Point MUL for now */
@@ -123,11 +123,11 @@ elba_barco_asym_ecc_point_mul_p256 (uint8_t *p, uint8_t *n,
 
     ret = elba_barco_asym_write_key(ecc_pm_p256_key_idx, &asym_key);
     if (ret != SDK_RET_OK) {
-        SDK_TRACE_ERR("ECC Point Mul P256: Failed to write key: {}",
+        SDK_TRACE_ERR("ECC Point Mul P256: Failed to write key: %d",
                       ecc_pm_p256_key_idx);
         goto cleanup;
     }
-    SDK_TRACE_DEBUG("ECC Point Mul P256: Setup key @ {:x}",
+    SDK_TRACE_DEBUG("ECC Point Mul P256: Setup key @ %d",
                     ecc_pm_p256_key_idx);
 
     ret = elba_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
@@ -136,7 +136,8 @@ elba_barco_asym_ecc_point_mul_p256 (uint8_t *p, uint8_t *n,
         SDK_TRACE_ERR("ECC Point Mul P256: Failed to allocate memory for ilist DMA Descr");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG("ECC Point Mul P256: Allocated memory for ilist DMA Descr @ {:x}", ilist_dma_descr_addr);
+    SDK_TRACE_DEBUG("ECC Point Mul P256: Allocated memory for ilist DMA Descr @ 0x%lx",
+                    ilist_dma_descr_addr);
 
     ret = elba_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                NULL, &olist_dma_descr_addr);
@@ -144,7 +145,7 @@ elba_barco_asym_ecc_point_mul_p256 (uint8_t *p, uint8_t *n,
         SDK_TRACE_ERR("ECC Point Mul P256: Failed to allocate memory for olist DMA Descr");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG("ECC Point Mul P256: Allocated memory for olist DMA Descr @ {:x}",
+    SDK_TRACE_DEBUG("ECC Point Mul P256: Allocated memory for olist DMA Descr @ 0x%lx",
                     olist_dma_descr_addr);
 
     ret = elba_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
@@ -153,7 +154,7 @@ elba_barco_asym_ecc_point_mul_p256 (uint8_t *p, uint8_t *n,
         SDK_TRACE_ERR("ECC Point Mul P256: Failed to allocate memory for ilist content");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG("ECC Point Mul P256: Allocated memory for input mem @ {:x}",
+    SDK_TRACE_DEBUG("ECC Point Mul P256: Allocated memory for input mem @ 0x%lx",
                     ilist_mem_addr);
 
     ret = elba_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
@@ -162,55 +163,63 @@ elba_barco_asym_ecc_point_mul_p256 (uint8_t *p, uint8_t *n,
         SDK_TRACE_ERR("ECC Point Mul P256: Failed to allocate memory for olist content");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG("ECC Point Mul P256: Allocated memory for output mem @ {:x}", olist_mem_addr);
+    SDK_TRACE_DEBUG("ECC Point Mul P256: Allocated memory for output mem @ 0x%lx",
+                    olist_mem_addr);
 
     /* Copy the input to the ilist memory */
     curr_ptr = ilist_mem_addr;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)p, 32)) {
-        SDK_TRACE_ERR("ECC Point Mul P256: Failed to write ECC param p into ilist memory @ {:x}", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR("ECC Point Mul P256: Failed to write ECC param p into ilist memory @ 0x%lx",
+                      (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)n, 32)) {
-        SDK_TRACE_ERR("ECC Point Mul P256: Failed to write ECC param n into ilist memory @ {:x}", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR("ECC Point Mul P256: Failed to write ECC param n into ilist memory @ 0x%lx",
+                      (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)a, 32)) {
-        SDK_TRACE_ERR("ECC Point Mul P256: Failed to write ECC param a into ilist memory @ {:x}", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR("ECC Point Mul P256: Failed to write ECC param a into ilist memory @ 0x%lx",
+                      (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)b, 32)) {
-        SDK_TRACE_ERR("ECC Point Mul P256: Failed to write ECC param b into ilist memory @ {:x}", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR("ECC Point Mul P256: Failed to write ECC param b into ilist memory @ 0x%lx",
+                      (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)x1, 32)) {
-        SDK_TRACE_ERR("ECC Point Mul P256: Failed to write ECC param x1 into ilist memory @ {:x}", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR("ECC Point Mul P256: Failed to write ECC param x1 into ilist memory @ 0x%lx",
+                      (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)y1, 32)) {
-        SDK_TRACE_ERR("ECC Point Mul P256: Failed to write ECC param y1 into ilist memory @ {:x}", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR("ECC Point Mul P256: Failed to write ECC param y1 into ilist memory @ 0x%lx",
+                      (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)k, 32)) {
-        SDK_TRACE_ERR("ECC Point Mul P256: Failed to write ECC param k into ilist memory @ {:x}", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR("ECC Point Mul P256: Failed to write ECC param k into ilist memory @ 0x%lx",
+                      (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -229,7 +238,7 @@ elba_barco_asym_ecc_point_mul_p256 (uint8_t *p, uint8_t *n,
     if (sdk::asic::asic_mem_write(ilist_dma_descr_addr,
                                   (uint8_t*) &ilist_dma_descr,
                                   sizeof(ilist_dma_descr))) {
-        SDK_TRACE_ERR("ECC Point Mul P256: Failed to write ilist DMA Descr @ {:x}",
+        SDK_TRACE_ERR("ECC Point Mul P256: Failed to write ilist DMA Descr @ 0x%lx",
                       (uint64_t) ilist_dma_descr_addr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -248,7 +257,7 @@ elba_barco_asym_ecc_point_mul_p256 (uint8_t *p, uint8_t *n,
     if (sdk::asic::asic_mem_write(olist_dma_descr_addr,
                                   (uint8_t*) &olist_dma_descr,
                                   sizeof(olist_dma_descr))) {
-        SDK_TRACE_ERR("ECC Point Mul P256: Failed to write olist DMA Descr @ {:x}",
+        SDK_TRACE_ERR("ECC Point Mul P256: Failed to write olist DMA Descr @ 0x%lx",
                       (uint64_t) olist_dma_descr_addr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -279,13 +288,13 @@ elba_barco_asym_ecc_point_mul_p256 (uint8_t *p, uint8_t *n,
 
     /* Copy out the results */
     if (sdk::asic::asic_mem_read(olist_mem_addr, (uint8_t*)x3, 32)) {
-        SDK_TRACE_ERR("ECC Point Mul P256: Failed to read x3 output from memory @ {:x}",
+        SDK_TRACE_ERR("ECC Point Mul P256: Failed to read x3 output from memory @ 0x%lx",
                       (uint64_t) olist_mem_addr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
     if (sdk::asic::asic_mem_read(olist_mem_addr + 32, (uint8_t*)y3, 32)) {
-        SDK_TRACE_ERR("ECC Point Mul P256: Failed to read y3 output from memory @ {:x}",
+        SDK_TRACE_ERR("ECC Point Mul P256: Failed to read y3 output from memory @ 0x%lx",
                       (uint64_t) (olist_mem_addr + 32));
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -298,7 +307,7 @@ cleanup:
     if (olist_mem_addr) {
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B, olist_mem_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("ECC Point Mul P256: Failed to free memory for olist content:{:x}",
+            SDK_TRACE_ERR("ECC Point Mul P256: Failed to free memory for olist content:0x%lx",
                           olist_mem_addr);
         }
     }
@@ -306,7 +315,7 @@ cleanup:
     if (ilist_mem_addr) {
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B, ilist_mem_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("ECC Point Mul P256: Failed to free memory for ilist content:{:x}",
+            SDK_TRACE_ERR("ECC Point Mul P256: Failed to free memory for ilist content:0x%lx",
                           ilist_mem_addr);
         }
     }
@@ -314,7 +323,7 @@ cleanup:
     if (olist_dma_descr_addr) {
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR, olist_dma_descr_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("ECC Point Mul P256: Failed to free memory for olist DMA Descr: {:x}",
+            SDK_TRACE_ERR("ECC Point Mul P256: Failed to free memory for olist DMA Descr: 0x%lx",
                           olist_dma_descr_addr);
         }
     }
@@ -322,7 +331,7 @@ cleanup:
     if (ilist_dma_descr_addr) {
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR, ilist_dma_descr_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("ECC Point Mul P256: Failed to free memory for ilist DMA Descr: {:x}",
+            SDK_TRACE_ERR("ECC Point Mul P256: Failed to free memory for ilist DMA Descr: 0x%lx",
                           ilist_dma_descr_addr);
         }
     }
@@ -370,13 +379,13 @@ elba_barco_asym_ecdsa_p256_setup_priv_key (uint8_t *p, uint8_t *n,
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate memory for key param");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for key param @ {:x}",
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for key param @ 0x%lx",
                     key_param_addr);
 
     curr_ptr = key_param_addr;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)p, 32)) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ECC param p into key memory @ {:x}",
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ECC param p into key memory @ 0x%lx",
                       (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -384,42 +393,48 @@ elba_barco_asym_ecdsa_p256_setup_priv_key (uint8_t *p, uint8_t *n,
     curr_ptr += 32;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)n, 32)) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ECC param n into key memory @ {:x}", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ECC param n into key memory @ 0x%lx",
+                      (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)xg, 32)) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ECC param xg into key memory @ {:x}", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ECC param xg into key memory @ 0x%lx",
+                      (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)yg, 32)) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ECC param yg into key memory @ {:x}", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ECC param yg into key memory @ 0x%lx",
+                      (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)a, 32)) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ECC param a into key memory @ {:x}", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ECC param a into key memory @ 0x%lx",
+                      (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)b, 32)) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ECC param b into key memory @ {:x}", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ECC param b into key memory @ 0x%lx",
+                      (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)da, 32)) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ECC param da into key memory @ {:x}", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ECC param da into key memory @ 0x%lx",
+                      (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -431,7 +446,7 @@ elba_barco_asym_ecdsa_p256_setup_priv_key (uint8_t *p, uint8_t *n,
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate memory for key DMA Descr");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ {:x}", key_dma_descr_addr);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ 0x%lx", key_dma_descr_addr);
 
     /* Setup key DMA descriptor */
     key_dma_descr.address = key_param_addr;
@@ -445,7 +460,7 @@ elba_barco_asym_ecdsa_p256_setup_priv_key (uint8_t *p, uint8_t *n,
     key_dma_descr.length = (curr_ptr - key_param_addr);
     if (sdk::asic::asic_mem_write(key_dma_descr_addr, (uint8_t*) &key_dma_descr,
                                   sizeof(key_dma_descr))) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write key DMA Descr @ {:x}",
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write key DMA Descr @ 0x%lx",
                 (uint64_t) key_dma_descr_addr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -456,7 +471,7 @@ elba_barco_asym_ecdsa_p256_setup_priv_key (uint8_t *p, uint8_t *n,
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate key descriptor");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated Key Descr @ {:x}", *key_idx);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated Key Descr @ %d", *key_idx);
 
     asym_key.key_param_list = key_dma_descr_addr;
     asym_key.command_reg = (ELBA_BARCO_ASYM_CMD_SWAP_BYTES |
@@ -465,10 +480,10 @@ elba_barco_asym_ecdsa_p256_setup_priv_key (uint8_t *p, uint8_t *n,
 
     ret = elba_barco_asym_write_key(*key_idx, &asym_key);
     if (ret != SDK_RET_OK) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write key: {}", *key_idx);
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write key: %d", *key_idx);
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Setup key @ {:x}", *key_idx);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Setup key @ %d", *key_idx);
 
     return ret;
 
@@ -484,7 +499,7 @@ cleanup:
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                   key_dma_descr_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for key DMA Descr: {:x}",
+            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for key DMA Descr: 0x%lx",
                           key_dma_descr_addr);
         }
     }
@@ -492,7 +507,7 @@ cleanup:
     if (key_param_addr) {
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B, key_param_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for key param :{:x}",
+            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for key param :0x%lx",
                           key_param_addr);
         }
     }
@@ -521,7 +536,7 @@ elba_barco_asym_ecdsa_p256_sig_gen (int32_t key_idx, uint8_t *p, uint8_t *n,
 #undef ELBA_BARCO_API_NAME
 #define ELBA_BARCO_API_NAME "ECDSA Sig Gen: "
 
-    SDK_TRACE_DEBUG("Key_idx: {:x}", key_idx);
+    SDK_TRACE_DEBUG("Key_idx: %d", key_idx);
     ELBA_BARCO_API_PARAM_HEXDUMP((char *)"k", (char *)k, 32);
     ELBA_BARCO_API_PARAM_HEXDUMP((char *)"h", (char *)h, 32);
 
@@ -537,7 +552,7 @@ elba_barco_asym_ecdsa_p256_sig_gen (int32_t key_idx, uint8_t *p, uint8_t *n,
         ecc_p256_key_idx = key_idx;
     }
 
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Key @ {:x}", ecc_p256_key_idx);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Key @ %d", ecc_p256_key_idx);
 
     ret = elba_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                NULL, &ilist_dma_descr_addr);
@@ -545,7 +560,7 @@ elba_barco_asym_ecdsa_p256_sig_gen (int32_t key_idx, uint8_t *p, uint8_t *n,
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate memory for ilist DMA Descr");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ {:x}", ilist_dma_descr_addr);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ 0x%lx", ilist_dma_descr_addr);
 
     ret = elba_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                NULL, &olist_dma_descr_addr);
@@ -553,7 +568,8 @@ elba_barco_asym_ecdsa_p256_sig_gen (int32_t key_idx, uint8_t *p, uint8_t *n,
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate memory for olist DMA Descr");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for olist DMA Descr @ {:x}", olist_dma_descr_addr);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for olist DMA Descr @ 0x%lx",
+                    olist_dma_descr_addr);
 
     ret = elba_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                NULL, &ilist_mem_addr);
@@ -561,7 +577,7 @@ elba_barco_asym_ecdsa_p256_sig_gen (int32_t key_idx, uint8_t *p, uint8_t *n,
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate memory for ilist content");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for input mem @ {:x}", ilist_mem_addr);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for input mem @ 0x%lx", ilist_mem_addr);
 
     ret = elba_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                NULL, &olist_mem_addr);
@@ -569,20 +585,20 @@ elba_barco_asym_ecdsa_p256_sig_gen (int32_t key_idx, uint8_t *p, uint8_t *n,
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate memory for olist content");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for output mem @ {:x}", olist_mem_addr);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for output mem @ 0x%lx", olist_mem_addr);
 
     /* Copy the input to the ilist memory */
     curr_ptr = ilist_mem_addr;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)k, 32)) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ECC param k into ilist memory @ {:x}", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ECC param k into ilist memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)h, 32)) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ECC param h into ilist memory @ {:x}", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ECC param h into ilist memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -601,7 +617,7 @@ elba_barco_asym_ecdsa_p256_sig_gen (int32_t key_idx, uint8_t *p, uint8_t *n,
     if (sdk::asic::asic_mem_write(ilist_dma_descr_addr,
                                   (uint8_t*) &ilist_dma_descr,
                                   sizeof(ilist_dma_descr))) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ilist DMA Descr @ {:x}",
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ilist DMA Descr @ 0x%lx",
                       (uint64_t) ilist_dma_descr_addr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -620,7 +636,7 @@ elba_barco_asym_ecdsa_p256_sig_gen (int32_t key_idx, uint8_t *p, uint8_t *n,
     if (sdk::asic::asic_mem_write(olist_dma_descr_addr,
                                   (uint8_t*) &olist_dma_descr,
                                   sizeof(olist_dma_descr))) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write olist DMA Descr @ {:x}",
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write olist DMA Descr @ 0x%lx",
                 (uint64_t) olist_dma_descr_addr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -650,13 +666,13 @@ elba_barco_asym_ecdsa_p256_sig_gen (int32_t key_idx, uint8_t *p, uint8_t *n,
 
     if (sdk::asic::asic_mem_read(asym_req_descr.status_addr,
                                  (uint8_t*) &status, sizeof(status))) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to retrieve operation status @ {:x}",
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to retrieve operation status @ 0x%lx",
                 (uint64_t) asym_req_descr.status_addr);
         ret = SDK_RET_ERR;
         goto cleanup;
     }
     if (status != 0) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Operation failed with status {:x}",
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Operation failed with status %u",
                 status);
         ret = SDK_RET_ERR;
         goto cleanup;
@@ -664,13 +680,13 @@ elba_barco_asym_ecdsa_p256_sig_gen (int32_t key_idx, uint8_t *p, uint8_t *n,
 
     /* Copy out the results */
     if (sdk::asic::asic_mem_read(olist_mem_addr, (uint8_t*)r, 32)) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to read r output from memory @ {:x}",
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to read r output from memory @ 0x%lx",
                       (uint64_t) olist_mem_addr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
     if (sdk::asic::asic_mem_read(olist_mem_addr + 32, (uint8_t*)s, 32)) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to read s output from memory @ {:x}",
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to read s output from memory @ 0x%lx",
                       (uint64_t) (olist_mem_addr + 32));
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -685,7 +701,7 @@ cleanup:
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                   olist_mem_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for olist content:{:x}",
+            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for olist content:0x%lx",
                     olist_mem_addr);
         }
     }
@@ -694,7 +710,7 @@ cleanup:
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                   ilist_mem_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("ECC Point Mul P256: Failed to free memory for ilist content:{:x}",
+            SDK_TRACE_ERR("ECC Point Mul P256: Failed to free memory for ilist content:0x%lx",
                     ilist_mem_addr);
         }
     }
@@ -703,7 +719,7 @@ cleanup:
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                   olist_dma_descr_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for olist DMA Descr: {:x}",
+            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for olist DMA Descr: 0x%lx",
                     olist_dma_descr_addr);
         }
     }
@@ -712,7 +728,7 @@ cleanup:
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                   ilist_dma_descr_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for ilist DMA Descr: {:x}",
+            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for ilist DMA Descr: 0x%lx",
                     ilist_dma_descr_addr);
         }
     }
@@ -765,47 +781,47 @@ elba_barco_asym_ecdsa_p256_sig_verify (uint8_t *p, uint8_t *n,
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate memory for key param");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for key param @ {:x}", key_param_addr);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for key param @ 0x%lx", key_param_addr);
 
     curr_ptr = key_param_addr;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)p, 32)) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ECC param p into key memory @ {:x}", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ECC param p into key memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)n, 32)) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ECC param n into key memory @ {:x}", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ECC param n into key memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)xg, 32)) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ECC param xg into key memory @ {:x}", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ECC param xg into key memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)yg, 32)) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ECC param yg into key memory @ {:x}", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ECC param yg into key memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)a, 32)) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ECC param a into key memory @ {:x}", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ECC param a into key memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)b, 32)) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ECC param b into key memory @ {:x}", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ECC param b into key memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -817,7 +833,7 @@ elba_barco_asym_ecdsa_p256_sig_verify (uint8_t *p, uint8_t *n,
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate memory for key DMA Descr");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for key DMA Descr @ {:x}", key_dma_descr_addr);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for key DMA Descr @ 0x%lx", key_dma_descr_addr);
 
     /* Setup key DMA descriptor */
     key_dma_descr.address = key_param_addr;
@@ -831,7 +847,7 @@ elba_barco_asym_ecdsa_p256_sig_verify (uint8_t *p, uint8_t *n,
     key_dma_descr.length = (curr_ptr - key_param_addr);
     if (sdk::asic::asic_mem_write(key_dma_descr_addr, (uint8_t*)&key_dma_descr,
                 sizeof(key_dma_descr))) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write key DMA Descr @ {:x}",
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write key DMA Descr @ 0x%lx",
                 (uint64_t) key_dma_descr_addr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -843,7 +859,7 @@ elba_barco_asym_ecdsa_p256_sig_verify (uint8_t *p, uint8_t *n,
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate key descriptor");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated Key Descr @ {:x}",
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated Key Descr @ %d",
                     ecc_p256_key_idx);
 
     asym_key.key_param_list = key_dma_descr_addr;
@@ -853,11 +869,11 @@ elba_barco_asym_ecdsa_p256_sig_verify (uint8_t *p, uint8_t *n,
 
     ret = elba_barco_asym_write_key(ecc_p256_key_idx, &asym_key);
     if (ret != SDK_RET_OK) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write key: {}",
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write key: %d",
                       ecc_p256_key_idx);
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Setup key @ {:x}", ecc_p256_key_idx);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Setup key @ %d", ecc_p256_key_idx);
 
     ret = elba_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                NULL, &ilist_dma_descr_addr);
@@ -865,7 +881,7 @@ elba_barco_asym_ecdsa_p256_sig_verify (uint8_t *p, uint8_t *n,
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate memory for ilist DMA Descr");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ {:x}", ilist_dma_descr_addr);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ 0x%lx", ilist_dma_descr_addr);
 
     ret = elba_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                NULL, &ilist_mem_addr);
@@ -873,7 +889,7 @@ elba_barco_asym_ecdsa_p256_sig_verify (uint8_t *p, uint8_t *n,
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate memory for ilist content");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for input mem @ {:x}", ilist_mem_addr);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for input mem @ 0x%lx", ilist_mem_addr);
 
     ret = elba_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                NULL, &olist_mem_addr);
@@ -881,41 +897,41 @@ elba_barco_asym_ecdsa_p256_sig_verify (uint8_t *p, uint8_t *n,
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate memory for olist content");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for output mem @ {:x}", olist_mem_addr);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for output mem @ 0x%lx", olist_mem_addr);
 
     /* Copy the input to the ilist memory */
     curr_ptr = ilist_mem_addr;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)xq, 32)) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ECC param xq into key memory @ {:x}", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ECC param xq into key memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)yq, 32)) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ECC param yq into key memory @ {:x}", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ECC param yq into key memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)r, 32)) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ECC param r into ilist memory @ {:x}", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ECC param r into ilist memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)s, 32)) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ECC param s into ilist memory @ {:x}", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ECC param s into ilist memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 32;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)h, 32)) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ECC param h into ilist memory @ {:x}", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ECC param h into ilist memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -934,7 +950,7 @@ elba_barco_asym_ecdsa_p256_sig_verify (uint8_t *p, uint8_t *n,
     if (sdk::asic::asic_mem_write(ilist_dma_descr_addr,
                                   (uint8_t*)&ilist_dma_descr,
                                   sizeof(ilist_dma_descr))) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ilist DMA Descr @ {:x}",
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ilist DMA Descr @ 0x%lx",
                 (uint64_t) ilist_dma_descr_addr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -964,13 +980,13 @@ elba_barco_asym_ecdsa_p256_sig_verify (uint8_t *p, uint8_t *n,
 
     if (sdk::asic::asic_mem_read(asym_req_descr.status_addr,
                                  (uint8_t*)&status, sizeof(status))) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to retrieve operation status @ {:x}",
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to retrieve operation status @ 0x%lx",
                 (uint64_t) asym_req_descr.status_addr);
         ret = SDK_RET_ERR;
         goto cleanup;
     }
     if (status != 0) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Operation failed with status {:x}",
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Operation failed with status %u",
                 status);
         ret = SDK_RET_ERR;
         goto cleanup;
@@ -986,7 +1002,7 @@ cleanup:
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                   olist_mem_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for olist content:{:x}",
+            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for olist content:0x%lx",
                     olist_mem_addr);
         }
     }
@@ -995,7 +1011,7 @@ cleanup:
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                   ilist_mem_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("ECC Point Mul P256: Failed to free memory for ilist content:{:x}",
+            SDK_TRACE_ERR("ECC Point Mul P256: Failed to free memory for ilist content:0x%lx",
                     ilist_mem_addr);
         }
     }
@@ -1004,7 +1020,7 @@ cleanup:
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                   ilist_dma_descr_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for ilist DMA Descr: {:x}",
+            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for ilist DMA Descr: 0x%lx",
                           ilist_dma_descr_addr);
         }
     }
@@ -1020,7 +1036,7 @@ cleanup:
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                   key_dma_descr_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for key DMA Descr: {:x}",
+            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for key DMA Descr: 0x%lx",
                           key_dma_descr_addr);
         }
     }
@@ -1029,7 +1045,7 @@ cleanup:
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                   key_param_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for key param :{:x}",
+            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for key param :0x%lx",
                           key_param_addr);
         }
     }
@@ -1066,19 +1082,19 @@ elba_barco_asym_rsa2k_setup_sig_gen_priv_key (uint8_t *n, uint8_t *d,
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate memory for key param");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for key param @ {:x}", key_param_addr);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for key param @ 0x%lx", key_param_addr);
 
     curr_ptr = key_param_addr;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)n, 256)) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write RSA param n into key memory @ {:x}", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write RSA param n into key memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 256;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)d, 256)) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write RSA param d into key memory @ {:x}", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write RSA param d into key memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -1090,7 +1106,7 @@ elba_barco_asym_rsa2k_setup_sig_gen_priv_key (uint8_t *n, uint8_t *d,
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate memory for key DMA Descr");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for key DMA Descr @ {:x}", key_dma_descr_addr);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for key DMA Descr @ 0x%lx", key_dma_descr_addr);
 
     /* Setup key DMA descriptor */
     key_dma_descr.address = key_param_addr;
@@ -1104,7 +1120,7 @@ elba_barco_asym_rsa2k_setup_sig_gen_priv_key (uint8_t *n, uint8_t *d,
     key_dma_descr.length = (curr_ptr - key_param_addr);
     if (sdk::asic::asic_mem_write(key_dma_descr_addr, (uint8_t*)&key_dma_descr,
                 sizeof(key_dma_descr))) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write key DMA Descr @ {:x}",
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write key DMA Descr @ 0x%lx",
                 (uint64_t) key_dma_descr_addr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -1115,7 +1131,7 @@ elba_barco_asym_rsa2k_setup_sig_gen_priv_key (uint8_t *n, uint8_t *d,
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate key descriptor");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated Key Descr @ {:x}", *key_idx);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated Key Descr @ %d", *key_idx);
 
     asym_key.key_param_list = key_dma_descr_addr;
     asym_key.command_reg = (ELBA_BARCO_ASYM_CMD_SWAP_BYTES |
@@ -1124,10 +1140,10 @@ elba_barco_asym_rsa2k_setup_sig_gen_priv_key (uint8_t *n, uint8_t *d,
 
     ret = elba_barco_asym_write_key(*key_idx, &asym_key);
     if (ret != SDK_RET_OK) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write key: {}", *key_idx);
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write key: %d", *key_idx);
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Setup key @ {:x}", *key_idx);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Setup key @ %d", *key_idx);
 
     return ret;
 
@@ -1142,7 +1158,7 @@ cleanup:
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                   key_dma_descr_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for key DMA Descr: {:x}",
+            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for key DMA Descr: 0x%lx",
                     key_dma_descr_addr);
         }
     }
@@ -1150,7 +1166,7 @@ cleanup:
     if (key_param_addr) {
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B, key_param_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for key param :{:x}",
+            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for key param :0x%lx",
                     key_param_addr);
         }
     }
@@ -1183,7 +1199,7 @@ elba_barco_asym_rsa2k_encrypt (uint8_t *n, uint8_t *e,
     ELBA_BARCO_API_PARAM_HEXDUMP((char *)"n", (char *)n, 256);
     ELBA_BARCO_API_PARAM_HEXDUMP((char *)"e", (char *)e, 256);
     ELBA_BARCO_API_PARAM_HEXDUMP((char *)"m", (char *)m, 256);
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "async: {}", async_en);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "async: %d", async_en);
 
     /* Setup params in the key memory */
     ret = elba_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
@@ -1192,12 +1208,12 @@ elba_barco_asym_rsa2k_encrypt (uint8_t *n, uint8_t *e,
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate memory for key param");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for key param @ {:x}", key_param_addr);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for key param @ 0x%lx", key_param_addr);
 
     curr_ptr = key_param_addr;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)n, 256)) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write RSA param n into key memory @ {:x}", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write RSA param n into key memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -1209,7 +1225,7 @@ elba_barco_asym_rsa2k_encrypt (uint8_t *n, uint8_t *e,
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate memory for key DMA Descr");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for key DMA Descr @ {:x}", key_dma_descr_addr);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for key DMA Descr @ 0x%lx", key_dma_descr_addr);
 
     /* Setup key DMA descriptor */
     key_dma_descr.address = key_param_addr;
@@ -1223,7 +1239,7 @@ elba_barco_asym_rsa2k_encrypt (uint8_t *n, uint8_t *e,
     key_dma_descr.length = (curr_ptr - key_param_addr);
     if (sdk::asic::asic_mem_write(key_dma_descr_addr, (uint8_t*)&key_dma_descr,
                 sizeof(key_dma_descr))) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write key DMA Descr @ {:x}",
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write key DMA Descr @ 0x%lx",
                 (uint64_t) key_dma_descr_addr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -1234,7 +1250,7 @@ elba_barco_asym_rsa2k_encrypt (uint8_t *n, uint8_t *e,
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate key descriptor");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated Key Descr @ {:x}",
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated Key Descr @ %d",
                     ecc_p256_key_idx);
 
     asym_key.key_param_list = key_dma_descr_addr;
@@ -1244,11 +1260,11 @@ elba_barco_asym_rsa2k_encrypt (uint8_t *n, uint8_t *e,
 
     ret = elba_barco_asym_write_key(ecc_p256_key_idx, &asym_key);
     if (ret != SDK_RET_OK) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write key: {}",
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write key: %d",
                       ecc_p256_key_idx);
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Setup key @ {:x}", ecc_p256_key_idx);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Setup key @ %d", ecc_p256_key_idx);
 
 
     ret = elba_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
@@ -1257,7 +1273,7 @@ elba_barco_asym_rsa2k_encrypt (uint8_t *n, uint8_t *e,
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate memory for ilist DMA Descr");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ {:x}", ilist_dma_descr_addr);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ 0x%lx", ilist_dma_descr_addr);
 
     ret = elba_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                NULL, &olist_dma_descr_addr);
@@ -1265,7 +1281,7 @@ elba_barco_asym_rsa2k_encrypt (uint8_t *n, uint8_t *e,
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate memory for olist DMA Descr");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for olist DMA Descr @ {:x}", olist_dma_descr_addr);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for olist DMA Descr @ 0x%lx", olist_dma_descr_addr);
 
     ret = elba_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                NULL, &ilist_mem_addr);
@@ -1273,7 +1289,7 @@ elba_barco_asym_rsa2k_encrypt (uint8_t *n, uint8_t *e,
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate memory for ilist content");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for input mem @ {:x}", ilist_mem_addr);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for input mem @ 0x%lx", ilist_mem_addr);
 
     ret = elba_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                NULL, &olist_mem_addr);
@@ -1281,20 +1297,20 @@ elba_barco_asym_rsa2k_encrypt (uint8_t *n, uint8_t *e,
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate memory for olist content");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for output mem @ {:x}", olist_mem_addr);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for output mem @ 0x%lx", olist_mem_addr);
 
     /* Copy the input to the ilist memory */
     curr_ptr = ilist_mem_addr;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)m, 256)) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write RSA param m into ilist memory @ {:x}", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write RSA param m into ilist memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 256;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)e, 256)) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write RSA param e into key memory @ {:x}", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write RSA param e into key memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -1314,7 +1330,7 @@ elba_barco_asym_rsa2k_encrypt (uint8_t *n, uint8_t *e,
     if (sdk::asic::asic_mem_write(ilist_dma_descr_addr,
                                   (uint8_t*)&ilist_dma_descr,
                                   sizeof(ilist_dma_descr))) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ilist DMA Descr @ {:x}",
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ilist DMA Descr @ 0x%lx",
                 (uint64_t) ilist_dma_descr_addr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -1333,7 +1349,7 @@ elba_barco_asym_rsa2k_encrypt (uint8_t *n, uint8_t *e,
     if (sdk::asic::asic_mem_write(olist_dma_descr_addr,
                                   (uint8_t*)&olist_dma_descr,
                                   sizeof(olist_dma_descr))) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write olist DMA Descr @ {:x}",
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write olist DMA Descr @ 0x%lx",
                 (uint64_t) olist_dma_descr_addr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -1363,13 +1379,13 @@ elba_barco_asym_rsa2k_encrypt (uint8_t *n, uint8_t *e,
 
     if (sdk::asic::asic_mem_read(asym_req_descr.status_addr,
                                  (uint8_t*)&status, sizeof(status))) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to retrieve operation status @ {:x}",
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to retrieve operation status @ 0x%lx",
                 (uint64_t) asym_req_descr.status_addr);
         ret = SDK_RET_ERR;
         goto cleanup;
     }
     if (status != 0) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Operation failed with status {:x}",
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Operation failed with status %u",
                 status);
         ret = SDK_RET_ERR;
         goto cleanup;
@@ -1377,7 +1393,7 @@ elba_barco_asym_rsa2k_encrypt (uint8_t *n, uint8_t *e,
     else {
         /* Copy out the results */
         if (sdk::asic::asic_mem_read(olist_mem_addr, (uint8_t*)c, 256)) {
-            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to read output c from memory @ {:x}",
+            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to read output c from memory @ 0x%lx",
                           (uint64_t) olist_mem_addr);
             ret = SDK_RET_INVALID_ARG;
             goto cleanup;
@@ -1391,7 +1407,7 @@ cleanup:
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                   olist_mem_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for olist content:{:x}",
+            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for olist content:0x%lx",
                           olist_mem_addr);
         }
     }
@@ -1400,7 +1416,7 @@ cleanup:
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                   ilist_mem_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("ECC Point Mul P256: Failed to free memory for ilist content:{:x}",
+            SDK_TRACE_ERR("ECC Point Mul P256: Failed to free memory for ilist content:0x%lx",
                     ilist_mem_addr);
         }
     }
@@ -1409,7 +1425,7 @@ cleanup:
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                   olist_dma_descr_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for olist DMA Descr: {:x}",
+            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for olist DMA Descr: 0x%lx",
                     olist_dma_descr_addr);
         }
     }
@@ -1418,7 +1434,7 @@ cleanup:
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                   ilist_dma_descr_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for ilist DMA Descr: {:x}",
+            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for ilist DMA Descr: 0x%lx",
                           ilist_dma_descr_addr);
         }
     }
@@ -1434,7 +1450,7 @@ cleanup:
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                   key_dma_descr_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for key DMA Descr: {:x}",
+            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for key DMA Descr: 0x%lx",
                           key_dma_descr_addr);
         }
     }
@@ -1443,7 +1459,7 @@ cleanup:
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                   key_param_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for key param :{:x}",
+            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for key param :0x%lx",
                           key_param_addr);
         }
     }
@@ -1486,19 +1502,19 @@ elba_barco_asym_rsa2k_decrypt (uint8_t *n, uint8_t *d, uint8_t *c,  uint8_t *m)
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate memory for key param");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for key param @ {:x}", key_param_addr);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for key param @ 0x%lx", key_param_addr);
 
     curr_ptr = key_param_addr;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)n, 256)) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write RSA param n into key memory @ {:x}", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write RSA param n into key memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 256;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)d, 256)) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write RSA param d into key memory @ {:x}", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write RSA param d into key memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -1510,7 +1526,7 @@ elba_barco_asym_rsa2k_decrypt (uint8_t *n, uint8_t *d, uint8_t *c,  uint8_t *m)
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate memory for key DMA Descr");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for key DMA Descr @ {:x}", key_dma_descr_addr);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for key DMA Descr @ 0x%lx", key_dma_descr_addr);
 
     /* Setup key DMA descriptor */
     key_dma_descr.address = key_param_addr;
@@ -1524,7 +1540,7 @@ elba_barco_asym_rsa2k_decrypt (uint8_t *n, uint8_t *d, uint8_t *c,  uint8_t *m)
     key_dma_descr.length = (curr_ptr - key_param_addr);
     if (sdk::asic::asic_mem_write(key_dma_descr_addr, (uint8_t*)&key_dma_descr,
                 sizeof(key_dma_descr))) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write key DMA Descr @ {:x}",
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write key DMA Descr @ 0x%lx",
                 (uint64_t) key_dma_descr_addr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -1535,7 +1551,7 @@ elba_barco_asym_rsa2k_decrypt (uint8_t *n, uint8_t *d, uint8_t *c,  uint8_t *m)
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate key descriptor");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated Key Descr @ {:x}",
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated Key Descr @ %d",
                     ecc_p256_key_idx);
 
     asym_key.key_param_list = key_dma_descr_addr;
@@ -1545,11 +1561,11 @@ elba_barco_asym_rsa2k_decrypt (uint8_t *n, uint8_t *d, uint8_t *c,  uint8_t *m)
 
     ret = elba_barco_asym_write_key(ecc_p256_key_idx, &asym_key);
     if (ret != SDK_RET_OK) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write key: {}",
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write key: %d",
                       ecc_p256_key_idx);
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Setup key @ {:x}", ecc_p256_key_idx);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Setup key @ %d", ecc_p256_key_idx);
 
     ret = elba_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                NULL, &ilist_dma_descr_addr);
@@ -1557,7 +1573,7 @@ elba_barco_asym_rsa2k_decrypt (uint8_t *n, uint8_t *d, uint8_t *c,  uint8_t *m)
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate memory for ilist DMA Descr");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ {:x}", ilist_dma_descr_addr);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ 0x%lx", ilist_dma_descr_addr);
 
     ret = elba_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                NULL, &olist_dma_descr_addr);
@@ -1565,7 +1581,7 @@ elba_barco_asym_rsa2k_decrypt (uint8_t *n, uint8_t *d, uint8_t *c,  uint8_t *m)
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate memory for olist DMA Descr");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for olist DMA Descr @ {:x}", olist_dma_descr_addr);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for olist DMA Descr @ 0x%lx", olist_dma_descr_addr);
 
     ret = elba_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                NULL, &ilist_mem_addr);
@@ -1573,7 +1589,7 @@ elba_barco_asym_rsa2k_decrypt (uint8_t *n, uint8_t *d, uint8_t *c,  uint8_t *m)
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate memory for ilist content");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for input mem @ {:x}", ilist_mem_addr);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for input mem @ 0x%lx", ilist_mem_addr);
 
     ret = elba_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                NULL, &olist_mem_addr);
@@ -1581,13 +1597,13 @@ elba_barco_asym_rsa2k_decrypt (uint8_t *n, uint8_t *d, uint8_t *c,  uint8_t *m)
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate memory for olist content");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for output mem @ {:x}", olist_mem_addr);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for output mem @ 0x%lx", olist_mem_addr);
 
     /* Copy the input to the ilist memory */
     curr_ptr = ilist_mem_addr;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)c, 256)) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write RSA param c into ilist memory @ {:x}", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write RSA param c into ilist memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -1606,7 +1622,7 @@ elba_barco_asym_rsa2k_decrypt (uint8_t *n, uint8_t *d, uint8_t *c,  uint8_t *m)
     if (sdk::asic::asic_mem_write(ilist_dma_descr_addr,
                                   (uint8_t*)&ilist_dma_descr,
                                   sizeof(ilist_dma_descr))) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ilist DMA Descr @ {:x}",
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ilist DMA Descr @ 0x%lx",
                 (uint64_t) ilist_dma_descr_addr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -1625,7 +1641,7 @@ elba_barco_asym_rsa2k_decrypt (uint8_t *n, uint8_t *d, uint8_t *c,  uint8_t *m)
     if (sdk::asic::asic_mem_write(olist_dma_descr_addr,
                                   (uint8_t*)&olist_dma_descr,
                                   sizeof(olist_dma_descr))) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write olist DMA Descr @ {:x}",
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write olist DMA Descr @ 0x%lx",
                 (uint64_t) olist_dma_descr_addr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -1655,13 +1671,13 @@ elba_barco_asym_rsa2k_decrypt (uint8_t *n, uint8_t *d, uint8_t *c,  uint8_t *m)
     }
     if (sdk::asic::asic_mem_read(asym_req_descr.status_addr,
                                  (uint8_t*)&status, sizeof(status))) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to retrieve operation status @ {:x}",
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to retrieve operation status @ 0x%lx",
                       (uint64_t) asym_req_descr.status_addr);
         ret = SDK_RET_ERR;
         goto cleanup;
     }
     if (status != 0) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Operation failed with status {:x}",
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Operation failed with status %u",
                       status);
         ret = SDK_RET_ERR;
         goto cleanup;
@@ -1669,7 +1685,7 @@ elba_barco_asym_rsa2k_decrypt (uint8_t *n, uint8_t *d, uint8_t *c,  uint8_t *m)
     else {
         /* Copy out the results */
         if (sdk::asic::asic_mem_read(olist_mem_addr, (uint8_t*)m, 256)) {
-            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to read output m from memory @ {:x}",
+            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to read output m from memory @ 0x%lx",
                           (uint64_t) olist_mem_addr);
             ret = SDK_RET_INVALID_ARG;
             goto cleanup;
@@ -1683,7 +1699,7 @@ cleanup:
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                   olist_mem_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for olist content:{:x}",
+            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for olist content:0x%lx",
                           olist_mem_addr);
         }
     }
@@ -1692,7 +1708,7 @@ cleanup:
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                   ilist_mem_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("ECC Point Mul P256: Failed to free memory for ilist content:{:x}",
+            SDK_TRACE_ERR("ECC Point Mul P256: Failed to free memory for ilist content:0x%lx",
                     ilist_mem_addr);
         }
     }
@@ -1701,7 +1717,7 @@ cleanup:
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                   olist_dma_descr_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for olist DMA Descr: {:x}",
+            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for olist DMA Descr: 0x%lx",
                     olist_dma_descr_addr);
         }
     }
@@ -1710,7 +1726,7 @@ cleanup:
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                   ilist_dma_descr_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for ilist DMA Descr: {:x}",
+            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for ilist DMA Descr: 0x%lx",
                           ilist_dma_descr_addr);
         }
     }
@@ -1726,7 +1742,7 @@ cleanup:
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                   key_dma_descr_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for key DMA Descr: {:x}",
+            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for key DMA Descr: 0x%lx",
                     key_dma_descr_addr);
         }
     }
@@ -1735,7 +1751,7 @@ cleanup:
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                   key_param_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for key param :{:x}",
+            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for key param :0x%lx",
                           key_param_addr);
         }
     }
@@ -1780,7 +1796,7 @@ elba_barco_asym_rsa2k_crt_setup_decrypt_priv_key (uint8_t *p, uint8_t *q,
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate memory for key param 1");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for key param 1 @ {:x}", key_param_addr1);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for key param 1 @ 0x%lx", key_param_addr1);
     /* Key Param fragment 2 */
     ret = elba_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                NULL, &key_param_addr2);
@@ -1788,7 +1804,7 @@ elba_barco_asym_rsa2k_crt_setup_decrypt_priv_key (uint8_t *p, uint8_t *q,
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate memory for key param 2");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for key param 2 @ {:x}", key_param_addr2);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for key param 2 @ 0x%lx", key_param_addr2);
     /* Key Param fragment 3 */
     ret = elba_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                NULL, &key_param_addr3);
@@ -1796,7 +1812,7 @@ elba_barco_asym_rsa2k_crt_setup_decrypt_priv_key (uint8_t *p, uint8_t *q,
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate memory for key param 3");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for key param 3 @ {:x}", key_param_addr3);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for key param 3 @ 0x%lx", key_param_addr3);
 
     /* Allocate key DMA descriptor 1 */
     ret = elba_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
@@ -1805,7 +1821,7 @@ elba_barco_asym_rsa2k_crt_setup_decrypt_priv_key (uint8_t *p, uint8_t *q,
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate memory for key DMA Descr1");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for key DMA Descr1 @ {:x}", key_dma_descr_addr1);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for key DMA Descr1 @ 0x%lx", key_dma_descr_addr1);
 
     /* Allocate key DMA descriptor 2 */
     ret = elba_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
@@ -1814,7 +1830,7 @@ elba_barco_asym_rsa2k_crt_setup_decrypt_priv_key (uint8_t *p, uint8_t *q,
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate memory for key DMA Descr2");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for key DMA Descr2 @ {:x}", key_dma_descr_addr2);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for key DMA Descr2 @ 0x%lx", key_dma_descr_addr2);
 
     /* Allocate key DMA descriptor 3 */
     ret = elba_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
@@ -1823,20 +1839,20 @@ elba_barco_asym_rsa2k_crt_setup_decrypt_priv_key (uint8_t *p, uint8_t *q,
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate memory for key DMA Descr3");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for key DMA Descr3 @ {:x}", key_dma_descr_addr3);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for key DMA Descr3 @ 0x%lx", key_dma_descr_addr3);
 
     /* Setup params in the key memory 1 */
     curr_ptr = key_param_addr1;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)p, 256)) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write RSA param p into key memory @ {:x}", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write RSA param p into key memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
     curr_ptr += 256;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)q, 256)) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write RSA param q into key memory @ {:x}", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write RSA param q into key memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -1853,7 +1869,7 @@ elba_barco_asym_rsa2k_crt_setup_decrypt_priv_key (uint8_t *p, uint8_t *q,
     key_dma_descr.length = (curr_ptr - key_param_addr1);
     if (sdk::asic::asic_mem_write(key_dma_descr_addr1, (uint8_t*)&key_dma_descr,
                                   sizeof(key_dma_descr))) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write key DMA Descr @ {:x}",
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write key DMA Descr @ 0x%lx",
                       (uint64_t) key_dma_descr_addr1);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -1863,7 +1879,7 @@ elba_barco_asym_rsa2k_crt_setup_decrypt_priv_key (uint8_t *p, uint8_t *q,
     curr_ptr = key_param_addr2;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)dp, 256)) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write RSA param dp into key memory @ {:x}",
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write RSA param dp into key memory @ 0x%lx",
                       (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -1871,7 +1887,7 @@ elba_barco_asym_rsa2k_crt_setup_decrypt_priv_key (uint8_t *p, uint8_t *q,
     curr_ptr += 256;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)dq, 256)) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write RSA param dq into key memory @ {:x}",
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write RSA param dq into key memory @ 0x%lx",
                       (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -1890,7 +1906,7 @@ elba_barco_asym_rsa2k_crt_setup_decrypt_priv_key (uint8_t *p, uint8_t *q,
     key_dma_descr.length = (curr_ptr - key_param_addr2);
     if (sdk::asic::asic_mem_write(key_dma_descr_addr2, (uint8_t*)&key_dma_descr,
                 sizeof(key_dma_descr))) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write key DMA Descr @ {:x}",
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write key DMA Descr @ 0x%lx",
                 (uint64_t) key_dma_descr_addr2);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -1900,7 +1916,7 @@ elba_barco_asym_rsa2k_crt_setup_decrypt_priv_key (uint8_t *p, uint8_t *q,
     curr_ptr = key_param_addr3;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)qinv, 256)) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write RSA param qinv into key memory @ {:x}", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write RSA param qinv into key memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -1918,7 +1934,7 @@ elba_barco_asym_rsa2k_crt_setup_decrypt_priv_key (uint8_t *p, uint8_t *q,
     key_dma_descr.length = (curr_ptr - key_param_addr3);
     if (sdk::asic::asic_mem_write(key_dma_descr_addr3, (uint8_t*)&key_dma_descr,
                 sizeof(key_dma_descr))) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write key DMA Descr @ {:x}",
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write key DMA Descr @ 0x%lx",
                 (uint64_t) key_dma_descr_addr3);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -1929,7 +1945,7 @@ elba_barco_asym_rsa2k_crt_setup_decrypt_priv_key (uint8_t *p, uint8_t *q,
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate key descriptor");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated Key Descr @ {:x}", *key_idx);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated Key Descr @ %d", *key_idx);
 
     asym_key.key_param_list = key_dma_descr_addr1;
     asym_key.command_reg = (ELBA_BARCO_ASYM_CMD_SWAP_BYTES |
@@ -1938,11 +1954,11 @@ elba_barco_asym_rsa2k_crt_setup_decrypt_priv_key (uint8_t *p, uint8_t *q,
 
     ret = elba_barco_asym_write_key(*key_idx, &asym_key);
     if (ret != SDK_RET_OK) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write key: {}", *key_idx);
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write key: %d", *key_idx);
         goto cleanup;
     }
 
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Setup key @ {:x}", *key_idx);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Setup key @ %d", *key_idx);
     return ret;
 
 cleanup:
@@ -1957,7 +1973,7 @@ cleanup:
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                   key_dma_descr_addr3);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for key DMA Descr: {:x}",
+            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for key DMA Descr: 0x%lx",
                     key_dma_descr_addr3);
         }
     }
@@ -1966,7 +1982,7 @@ cleanup:
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                   key_dma_descr_addr2);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for key DMA Descr: {:x}",
+            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for key DMA Descr: 0x%lx",
                     key_dma_descr_addr2);
         }
     }
@@ -1975,7 +1991,7 @@ cleanup:
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                   key_dma_descr_addr1);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for key DMA Descr: {:x}",
+            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for key DMA Descr: 0x%lx",
                     key_dma_descr_addr1);
         }
     }
@@ -1984,7 +2000,7 @@ cleanup:
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                   key_param_addr3);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for key param :{:x}",
+            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for key param :0x%lx",
                     key_param_addr3);
         }
     }
@@ -1993,7 +2009,7 @@ cleanup:
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                   key_param_addr2);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for key param :{:x}",
+            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for key param :0x%lx",
                     key_param_addr2);
         }
     }
@@ -2002,7 +2018,7 @@ cleanup:
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                   key_param_addr1);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for key param :{:x}",
+            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for key param :0x%lx",
                     key_param_addr1);
         }
     }
@@ -2030,7 +2046,7 @@ elba_barco_asym_rsa2k_crt_decrypt (int32_t key_idx, uint8_t *p, uint8_t *q,
 #undef ELBA_BARCO_API_NAME
 #define ELBA_BARCO_API_NAME "RSA 2K CRT Decrypt: "
 
-    SDK_TRACE_DEBUG("key_idx: {}", key_idx);
+    SDK_TRACE_DEBUG("key_idx: %d", key_idx);
     ELBA_BARCO_API_PARAM_HEXDUMP((char *)"c", (char *)c, 256);
 
     if(key_idx < 0) {
@@ -2051,7 +2067,7 @@ elba_barco_asym_rsa2k_crt_decrypt (int32_t key_idx, uint8_t *p, uint8_t *q,
         ecc_p256_key_idx = key_idx;
     }
 
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "key @ {:x}", ecc_p256_key_idx);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "key @ %d", ecc_p256_key_idx);
 
     ret = elba_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                NULL, &ilist_dma_descr_addr);
@@ -2059,7 +2075,7 @@ elba_barco_asym_rsa2k_crt_decrypt (int32_t key_idx, uint8_t *p, uint8_t *q,
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate memory for ilist DMA Descr");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ {:x}", ilist_dma_descr_addr);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ 0x%lx", ilist_dma_descr_addr);
 
     ret = elba_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                NULL, &olist_dma_descr_addr);
@@ -2067,7 +2083,7 @@ elba_barco_asym_rsa2k_crt_decrypt (int32_t key_idx, uint8_t *p, uint8_t *q,
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate memory for olist DMA Descr");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for olist DMA Descr @ {:x}", olist_dma_descr_addr);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for olist DMA Descr @ 0x%lx", olist_dma_descr_addr);
 
     ret = elba_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                NULL, &ilist_mem_addr);
@@ -2075,7 +2091,7 @@ elba_barco_asym_rsa2k_crt_decrypt (int32_t key_idx, uint8_t *p, uint8_t *q,
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate memory for ilist content");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for input mem @ {:x}", ilist_mem_addr);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for input mem @ 0x%lx", ilist_mem_addr);
 
     ret = elba_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                NULL, &olist_mem_addr);
@@ -2083,13 +2099,13 @@ elba_barco_asym_rsa2k_crt_decrypt (int32_t key_idx, uint8_t *p, uint8_t *q,
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate memory for olist content");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for output mem @ {:x}", olist_mem_addr);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for output mem @ 0x%lx", olist_mem_addr);
 
     /* Copy the input to the ilist memory */
     curr_ptr = ilist_mem_addr;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)c, 256)) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write RSA param c into ilist memory @ {:x}", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write RSA param c into ilist memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -2108,7 +2124,7 @@ elba_barco_asym_rsa2k_crt_decrypt (int32_t key_idx, uint8_t *p, uint8_t *q,
     if (sdk::asic::asic_mem_write(ilist_dma_descr_addr,
                                   (uint8_t*)&ilist_dma_descr,
                                   sizeof(ilist_dma_descr))) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ilist DMA Descr @ {:x}",
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ilist DMA Descr @ 0x%lx",
                 (uint64_t) ilist_dma_descr_addr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -2127,7 +2143,7 @@ elba_barco_asym_rsa2k_crt_decrypt (int32_t key_idx, uint8_t *p, uint8_t *q,
     if (sdk::asic::asic_mem_write(olist_dma_descr_addr,
                                   (uint8_t*)&olist_dma_descr,
                                   sizeof(olist_dma_descr))) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write olist DMA Descr @ {:x}",
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write olist DMA Descr @ 0x%lx",
                 (uint64_t) olist_dma_descr_addr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -2156,13 +2172,13 @@ elba_barco_asym_rsa2k_crt_decrypt (int32_t key_idx, uint8_t *p, uint8_t *q,
 
     if (sdk::asic::asic_mem_read(asym_req_descr.status_addr,
                                  (uint8_t*)&status, sizeof(status))) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to retrieve operation status @ {:x}",
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to retrieve operation status @ 0x%lx",
                 (uint64_t) asym_req_descr.status_addr);
         ret = SDK_RET_ERR;
         goto cleanup;
     }
     if (status != 0) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Operation failed with status {:x}",
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Operation failed with status %u",
                 status);
         ret = SDK_RET_ERR;
         goto cleanup;
@@ -2170,7 +2186,7 @@ elba_barco_asym_rsa2k_crt_decrypt (int32_t key_idx, uint8_t *p, uint8_t *q,
     else {
         /* Copy out the results */
         if (sdk::asic::asic_mem_read(olist_mem_addr, (uint8_t*)m, 256)) {
-            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to read output m from memory @ {:x}",
+            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to read output m from memory @ 0x%lx",
                     (uint64_t) olist_mem_addr);
             ret = SDK_RET_INVALID_ARG;
             goto cleanup;
@@ -2184,7 +2200,7 @@ cleanup:
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                   olist_mem_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for olist content:{:x}",
+            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for olist content:0x%lx",
                     olist_mem_addr);
         }
     }
@@ -2193,7 +2209,7 @@ cleanup:
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                   ilist_mem_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("ECC Point Mul P256: Failed to free memory for ilist content:{:x}",
+            SDK_TRACE_ERR("ECC Point Mul P256: Failed to free memory for ilist content:0x%lx",
                     ilist_mem_addr);
         }
     }
@@ -2202,7 +2218,7 @@ cleanup:
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                   olist_dma_descr_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for olist DMA Descr: {:x}",
+            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for olist DMA Descr: 0x%lx",
                     olist_dma_descr_addr);
         }
     }
@@ -2211,7 +2227,7 @@ cleanup:
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                   ilist_dma_descr_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for ilist DMA Descr: {:x}",
+            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for ilist DMA Descr: 0x%lx",
                     ilist_dma_descr_addr);
         }
     }
@@ -2240,7 +2256,7 @@ elba_barco_asym_rsa2k_sig_gen (int32_t key_idx, uint8_t *n, uint8_t *d,
 
 #undef ELBA_BARCO_API_NAME
 #define ELBA_BARCO_API_NAME "RSA 2K Sig Gen: "
-    SDK_TRACE_DEBUG("key_idx: {}", key_idx);
+    SDK_TRACE_DEBUG("key_idx: %d", key_idx);
     ELBA_BARCO_API_PARAM_HEXDUMP((char *)"n", (char *)n, 256);
     ELBA_BARCO_API_PARAM_HEXDUMP((char *)"h", (char *)h, 256);
 
@@ -2256,7 +2272,7 @@ elba_barco_asym_rsa2k_sig_gen (int32_t key_idx, uint8_t *n, uint8_t *d,
         ecc_p256_key_idx = key_idx;
     }
 
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "key @ {:x}", ecc_p256_key_idx);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "key @ %d", ecc_p256_key_idx);
 
     ret = elba_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                NULL, &ilist_dma_descr_addr);
@@ -2264,7 +2280,7 @@ elba_barco_asym_rsa2k_sig_gen (int32_t key_idx, uint8_t *n, uint8_t *d,
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate memory for ilist DMA Descr");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ {:x}", ilist_dma_descr_addr);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ 0x%lx", ilist_dma_descr_addr);
 
     ret = elba_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                NULL, &olist_dma_descr_addr);
@@ -2272,7 +2288,7 @@ elba_barco_asym_rsa2k_sig_gen (int32_t key_idx, uint8_t *n, uint8_t *d,
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate memory for olist DMA Descr");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for olist DMA Descr @ {:x}", olist_dma_descr_addr);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for olist DMA Descr @ 0x%lx", olist_dma_descr_addr);
 
     ret = elba_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                NULL, &ilist_mem_addr);
@@ -2280,7 +2296,7 @@ elba_barco_asym_rsa2k_sig_gen (int32_t key_idx, uint8_t *n, uint8_t *d,
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate memory for ilist content");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for input mem @ {:x}", ilist_mem_addr);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for input mem @ 0x%lx", ilist_mem_addr);
 
     ret = elba_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                NULL, &olist_mem_addr);
@@ -2288,13 +2304,13 @@ elba_barco_asym_rsa2k_sig_gen (int32_t key_idx, uint8_t *n, uint8_t *d,
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate memory for olist content");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for output mem @ {:x}", olist_mem_addr);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for output mem @ 0x%lx", olist_mem_addr);
 
     /* Copy the input to the ilist memory */
     curr_ptr = ilist_mem_addr;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)h, 256)) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write RSA param h into ilist memory @ {:x}", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write RSA param h into ilist memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -2313,7 +2329,7 @@ elba_barco_asym_rsa2k_sig_gen (int32_t key_idx, uint8_t *n, uint8_t *d,
     if (sdk::asic::asic_mem_write(ilist_dma_descr_addr,
                                   (uint8_t*)&ilist_dma_descr,
                                   sizeof(ilist_dma_descr))) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ilist DMA Descr @ {:x}",
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ilist DMA Descr @ 0x%lx",
                 (uint64_t) ilist_dma_descr_addr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -2332,7 +2348,7 @@ elba_barco_asym_rsa2k_sig_gen (int32_t key_idx, uint8_t *n, uint8_t *d,
     if (sdk::asic::asic_mem_write(olist_dma_descr_addr,
                                   (uint8_t*)&olist_dma_descr,
                                   sizeof(olist_dma_descr))) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write olist DMA Descr @ {:x}",
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write olist DMA Descr @ 0x%lx",
                 (uint64_t) olist_dma_descr_addr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -2362,21 +2378,21 @@ elba_barco_asym_rsa2k_sig_gen (int32_t key_idx, uint8_t *n, uint8_t *d,
 
     if (sdk::asic::asic_mem_read(asym_req_descr.status_addr,
                                  (uint8_t*)&status, sizeof(status))) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to retrieve operation status @ {:x}",
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to retrieve operation status @ 0x%lx",
                 (uint64_t) asym_req_descr.status_addr);
         ret = SDK_RET_ERR;
         goto cleanup;
     }
     if (status != 0) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Operation failed with status {:x}",
-                status);
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Operation failed with status %u",
+                      status);
         ret = SDK_RET_ERR;
         goto cleanup;
     }
     else {
         /* Copy out the results */
         if (sdk::asic::asic_mem_read(olist_mem_addr, (uint8_t*)s, 256)) {
-            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to read output s from memory @ {:x}",
+            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to read output s from memory @ 0x%lx",
                     (uint64_t) olist_mem_addr);
             ret = SDK_RET_INVALID_ARG;
             goto cleanup;
@@ -2390,7 +2406,7 @@ cleanup:
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                   olist_mem_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for olist content:{:x}",
+            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for olist content:0x%lx",
                     olist_mem_addr);
         }
     }
@@ -2399,7 +2415,7 @@ cleanup:
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                   ilist_mem_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("ECC Point Mul P256: Failed to free memory for ilist content:{:x}",
+            SDK_TRACE_ERR("ECC Point Mul P256: Failed to free memory for ilist content:0x%lx",
                     ilist_mem_addr);
         }
     }
@@ -2408,7 +2424,7 @@ cleanup:
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                   olist_dma_descr_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for olist DMA Descr: {:x}",
+            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for olist DMA Descr: 0x%lx",
                     olist_dma_descr_addr);
         }
     }
@@ -2417,7 +2433,7 @@ cleanup:
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                   ilist_dma_descr_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for ilist DMA Descr: {:x}",
+            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for ilist DMA Descr: 0x%lx",
                     ilist_dma_descr_addr);
         }
     }
@@ -2463,12 +2479,12 @@ elba_barco_asym_rsa2k_sig_verify (uint8_t *n, uint8_t *e,
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate memory for key param");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for key param @ {:x}", key_param_addr);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for key param @ 0x%lx", key_param_addr);
 
     curr_ptr = key_param_addr;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)n, 256)) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write RSA param n into key memory @ {:x}", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write RSA param n into key memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -2480,7 +2496,7 @@ elba_barco_asym_rsa2k_sig_verify (uint8_t *n, uint8_t *e,
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate memory for key DMA Descr");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for key DMA Descr @ {:x}", key_dma_descr_addr);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for key DMA Descr @ 0x%lx", key_dma_descr_addr);
 
     /* Setup key DMA descriptor */
     key_dma_descr.address = key_param_addr;
@@ -2494,7 +2510,7 @@ elba_barco_asym_rsa2k_sig_verify (uint8_t *n, uint8_t *e,
     key_dma_descr.length = (curr_ptr - key_param_addr);
     if (sdk::asic::asic_mem_write(key_dma_descr_addr, (uint8_t*)&key_dma_descr,
                                   sizeof(key_dma_descr))) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write key DMA Descr @ {:x}",
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write key DMA Descr @ 0x%lx",
                 (uint64_t) key_dma_descr_addr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -2505,7 +2521,7 @@ elba_barco_asym_rsa2k_sig_verify (uint8_t *n, uint8_t *e,
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate key descriptor");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated Key Descr @ {:x}",
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated Key Descr @ %d",
                     ecc_p256_key_idx);
 
     asym_key.key_param_list = key_dma_descr_addr;
@@ -2515,12 +2531,11 @@ elba_barco_asym_rsa2k_sig_verify (uint8_t *n, uint8_t *e,
 
     ret = elba_barco_asym_write_key(ecc_p256_key_idx, &asym_key);
     if (ret != SDK_RET_OK) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write key: {}",
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write key: %d",
                       ecc_p256_key_idx);
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Setup key @ {:x}",
-                    ecc_p256_key_idx);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Setup key @ %d", ecc_p256_key_idx);
 
     ret = elba_barco_res_alloc(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                NULL, &ilist_dma_descr_addr1);
@@ -2534,7 +2549,7 @@ elba_barco_asym_rsa2k_sig_verify (uint8_t *n, uint8_t *e,
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate memory for ilist DMA Descr2");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ {:x} & {:x}",
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for ilist DMA Descr @ 0x%lx & 0x%lx",
             ilist_dma_descr_addr1, ilist_dma_descr_addr2);
 
     ret = elba_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
@@ -2549,7 +2564,7 @@ elba_barco_asym_rsa2k_sig_verify (uint8_t *n, uint8_t *e,
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate memory for ilist content 2");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for input mem @ {:x} & {:x}",
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for input mem @ 0x%lx & 0x%lx",
             ilist_mem_addr1, ilist_mem_addr2);
 
     ret = elba_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
@@ -2558,13 +2573,13 @@ elba_barco_asym_rsa2k_sig_verify (uint8_t *n, uint8_t *e,
         SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to allocate memory for olist content");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for output mem @ {:x}", olist_mem_addr);
+    SDK_TRACE_DEBUG(ELBA_BARCO_API_NAME "Allocated memory for output mem @ 0x%lx", olist_mem_addr);
 
     /* Copy the input to the ilist memory */
     curr_ptr = ilist_mem_addr1;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)e, 256)) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write RSA param e into key memory @ {:x}", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write RSA param e into key memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -2572,7 +2587,7 @@ elba_barco_asym_rsa2k_sig_verify (uint8_t *n, uint8_t *e,
 
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)s, 256)) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write RSA param s into ilist memory @ {:x}", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write RSA param s into ilist memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -2591,7 +2606,7 @@ elba_barco_asym_rsa2k_sig_verify (uint8_t *n, uint8_t *e,
     if (sdk::asic::asic_mem_write(ilist_dma_descr_addr1,
                                   (uint8_t*)&ilist_dma_descr,
                                   sizeof(ilist_dma_descr))) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ilist DMA Descr @ {:x}",
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ilist DMA Descr @ 0x%lx",
                 (uint64_t) ilist_dma_descr_addr1);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -2600,7 +2615,7 @@ elba_barco_asym_rsa2k_sig_verify (uint8_t *n, uint8_t *e,
 
     curr_ptr = ilist_mem_addr2;
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)h, 256)) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write RSA param h into ilist memory @ {:x}", (uint64_t) curr_ptr);
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write RSA param h into ilist memory @ 0x%lx", (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
@@ -2618,7 +2633,7 @@ elba_barco_asym_rsa2k_sig_verify (uint8_t *n, uint8_t *e,
     if (sdk::asic::asic_mem_write(ilist_dma_descr_addr2,
                                   (uint8_t*)&ilist_dma_descr,
                                   sizeof(ilist_dma_descr))) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ilist DMA Descr @ {:x}",
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to write ilist DMA Descr @ 0x%lx",
                 (uint64_t) ilist_dma_descr_addr2);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -2648,14 +2663,14 @@ elba_barco_asym_rsa2k_sig_verify (uint8_t *n, uint8_t *e,
     }
     if (sdk::asic::asic_mem_read(asym_req_descr.status_addr,
                                  (uint8_t*)&status, sizeof(status))) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to retrieve operation status @ {:x}",
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to retrieve operation status @ 0x%lx",
                 (uint64_t) asym_req_descr.status_addr);
         ret = SDK_RET_ERR;
         goto cleanup;
     }
     if (status != 0) {
-        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Operation failed with status {:x}",
-                status);
+        SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Operation failed with status %u",
+                      status);
         ret = SDK_RET_ERR;
         goto cleanup;
     }
@@ -2668,7 +2683,7 @@ cleanup:
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                   olist_mem_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for olist content:{:x}",
+            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for olist content:0x%lx",
                     olist_mem_addr);
         }
     }
@@ -2677,7 +2692,7 @@ cleanup:
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                   ilist_mem_addr2);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("ECC Point Mul P256: Failed to free memory for ilist content:{:x}",
+            SDK_TRACE_ERR("ECC Point Mul P256: Failed to free memory for ilist content: 0x%lx",
                     ilist_mem_addr2);
         }
     }
@@ -2686,7 +2701,7 @@ cleanup:
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                   ilist_mem_addr1);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("ECC Point Mul P256: Failed to free memory for ilist content:{:x}",
+            SDK_TRACE_ERR("ECC Point Mul P256: Failed to free memory for ilist content:0x%lx",
                           ilist_mem_addr1);
         }
     }
@@ -2695,7 +2710,7 @@ cleanup:
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                   ilist_dma_descr_addr2);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for ilist DMA Descr: {:x}",
+            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for ilist DMA Descr: 0x%lx",
                           ilist_dma_descr_addr2);
         }
     }
@@ -2704,7 +2719,7 @@ cleanup:
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                   ilist_dma_descr_addr1);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for ilist DMA Descr: {:x}",
+            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for ilist DMA Descr: 0x%lx",
                           ilist_dma_descr_addr1);
         }
     }
@@ -2720,7 +2735,7 @@ cleanup:
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_ASYM_DMA_DESCR,
                                   key_dma_descr_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for key DMA Descr: {:x}",
+            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for key DMA Descr: 0x%lx",
                           key_dma_descr_addr);
         }
     }
@@ -2729,7 +2744,7 @@ cleanup:
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                   key_param_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for key param :{:x}",
+            SDK_TRACE_ERR(ELBA_BARCO_API_NAME "Failed to free memory for key param :0x%lx",
                           key_param_addr);
         }
     }

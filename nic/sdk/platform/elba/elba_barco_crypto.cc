@@ -44,8 +44,8 @@ barco_hex_dump (const uint8_t *buf, size_t sz)
 }
 
 static uint64_t    key_mem_base = 0;
-static uint64_t    key_mem_size = 0;
-static char        key_mem[] = ELBA_BARCO_KEY_MEM;
+// static uint64_t    key_mem_size = 0;
+// static char        key_mem[] = ELBA_BARCO_KEY_MEM;
 static indexer    *elba_barco_sym_keys_idxr_ = NULL;
 
 sdk_ret_t
@@ -130,7 +130,7 @@ elba_barco_init_key (uint32_t key_idx, uint64_t key_addr)
     key_desc.key_address = key_addr;
     if (sdk::asic::asic_mem_write(key_desc_addr, (uint8_t*)&key_desc,
                                   sizeof(key_desc))) {
-        SDK_TRACE_ERR("Failed to write Barco descriptor @ {:x}",
+        SDK_TRACE_ERR("Failed to write Barco descriptor @ 0x%lx",
                       (uint64_t) key_desc_addr);
         return SDK_RET_INVALID_ARG;
     }
@@ -147,11 +147,11 @@ elba_barco_setup_key (uint32_t key_idx, crypto_key_type_t key_type,
     uint32_t                cbkey_type;
 
     key_desc_addr = key_desc_array_base + (key_idx * BARCO_CRYPTO_KEY_DESC_SZ);
-    SDK_TRACE_DEBUG("elba_barco_setup_key: key_desc_addr={} key_idx={}",
+    SDK_TRACE_DEBUG("elba_barco_setup_key: key_desc_addr=0x%lx key_idx=%d",
                     key_desc_addr, key_idx);
     if (sdk::asic::asic_mem_read(key_desc_addr, (uint8_t*)&key_desc,
                                  sizeof(key_desc))) {
-        SDK_TRACE_ERR("Failed to read Barco descriptor @ {:x}",
+        SDK_TRACE_ERR("Failed to read Barco descriptor @ 0x%lx",
                       (uint64_t) key_desc_addr);
         return SDK_RET_INVALID_ARG;
     }
@@ -184,19 +184,19 @@ elba_barco_setup_key (uint32_t key_idx, crypto_key_type_t key_type,
 
     key_desc.key_type = cbkey_type;
     key_addr = key_desc.key_address;
-    SDK_TRACE_DEBUG("elba_barco_setup_key key_addr={:x}", (uint64_t)key_addr);
+    SDK_TRACE_DEBUG("elba_barco_setup_key key_addr=0x%lx", (uint64_t)key_addr);
     /* Write back key descriptor */
     if (sdk::asic::asic_mem_write(key_desc_addr, (uint8_t*)&key_desc,
                                   sizeof(key_desc))) {
-        SDK_TRACE_ERR("Failed to write Barco descriptor @ {:x}",
+        SDK_TRACE_ERR("Failed to write Barco descriptor @ 0x%lx",
                       (uint64_t) key_desc_addr);
         return SDK_RET_INVALID_ARG;
     }
-    SDK_TRACE_DEBUG("elba_barco_setup_key key={}",
-                    barco_hex_dump(key,key_size));
+    SDK_TRACE_DEBUG("elba_barco_setup_key key=%s",
+                    barco_hex_dump(key,key_size).c_str());
     /* Write key memory */
     if (sdk::asic::asic_mem_write(key_addr, key, key_size)) {
-        SDK_TRACE_ERR("Failed to write key @ {:x}", (uint64_t) key_addr);
+        SDK_TRACE_ERR("Failed to write key @ 0x%lx", (uint64_t) key_addr);
         return SDK_RET_INVALID_ARG;
     }
     return SDK_RET_OK;
@@ -214,13 +214,13 @@ elba_barco_read_key (uint32_t key_idx, crypto_key_type_t *key_type,
     key_desc_addr = key_desc_array_base + (key_idx * BARCO_CRYPTO_KEY_DESC_SZ);
     if (sdk::asic::asic_mem_read(key_desc_addr, (uint8_t*)&key_desc,
                                  sizeof(key_desc))) {
-        SDK_TRACE_ERR("Failed to read Barco descriptor @ {:x}",
+        SDK_TRACE_ERR("Failed to read Barco descriptor @ 0x%lx",
                       (uint64_t) key_desc_addr);
         return SDK_RET_INVALID_ARG;
     }
 
     cbkey_type = key_desc.key_type;
-    SDK_TRACE_DEBUG("cbkey_type: {}", cbkey_type);
+    SDK_TRACE_DEBUG("cbkey_type: %u", cbkey_type);
     switch (cbkey_type) {
         case ELBA_BARCO_KEYTYPE_AES128:
             *key_type = CRYPTO_KEY_TYPE_AES128;
@@ -259,7 +259,7 @@ elba_barco_read_key (uint32_t key_idx, crypto_key_type_t *key_type,
 
     key_addr = key_desc.key_address;
     if (sdk::asic::asic_mem_read(key_addr, key, *key_size)) {
-        SDK_TRACE_ERR("Failed to read key @ {:x}", (uint64_t) key_addr);
+        SDK_TRACE_ERR("Failed to read key @ 0x%lx", (uint64_t) key_addr);
         return SDK_RET_INVALID_ARG;
     }
 
@@ -295,7 +295,7 @@ elba_barco_crypto_init_tls_pad_table (void)
         i, j;
     uint64_t tls_pad_base_addr = 0;
 
-    SDK_TRACE_DEBUG("Initializing TLS-proxy Pad Bytes table of size {:x}",
+    SDK_TRACE_DEBUG("Initializing TLS-proxy Pad Bytes table of size 0x%lx",
                     sizeof(tls_pad_bytes));
     bzero(tls_pad_bytes, sizeof(tls_pad_bytes));
 
@@ -389,7 +389,7 @@ elba_barco_asym_read_key (int32_t key_idx, elba_barco_asym_key_desc_t *key)
     }
 
     if (asic_mem_read(key_desc_addr, (uint8_t*)&key, sizeof(*key))) {
-        SDK_TRACE_ERR("Failed to read Barco Asym key descriptor from 0x%llx",
+        SDK_TRACE_ERR("Failed to read Barco Asym key descriptor from 0x%lx",
                       (uint64_t) key_desc_addr);
         return SDK_RET_INVALID_ARG;
     }
@@ -412,11 +412,11 @@ elba_barco_asym_write_key(int32_t key_idx, elba_barco_asym_key_desc_t *key)
     }
 
     if (asic_mem_write(key_desc_addr, (uint8_t*)key, sizeof(*key))) {
-        SDK_TRACE_ERR("Failed to write Barco Asym key descriptor @ 0x%llx",
+        SDK_TRACE_ERR("Failed to write Barco Asym key descriptor @ 0x%lx",
                       (uint64_t) key_desc_addr);
         return SDK_RET_INVALID_ARG;
     }
-    SDK_TRACE_DEBUG("AsymKey Write: Setup key @ 0x%llx", key_desc_addr);
+    SDK_TRACE_DEBUG("AsymKey Write: Setup key @ 0x%lx", key_desc_addr);
 
     return ret;
 }

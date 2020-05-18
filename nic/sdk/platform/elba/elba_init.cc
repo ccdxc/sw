@@ -451,9 +451,11 @@ elba_init (asic_cfg_t *cfg)
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
                             "Elba replication init failure, err : %d", ret);
 
-    ret = elba_barco_crypto_init(cfg->platform);
-    SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
+    if(cfg->platform != platform_type_t::PLATFORM_TYPE_HAPS) {
+      ret = elba_barco_crypto_init(cfg->platform);
+      SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
                             "Elba barco crypto init failure, err : %d", ret);
+    }
 
 #if 0
     if (!cfg->loader_info_file.empty()) {

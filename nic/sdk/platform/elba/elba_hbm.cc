@@ -38,7 +38,7 @@ elb_nx_block_read (uint32_t chip, uint64_t addr, int size,
     uint32_t data = 0x0;
     if (sdk::asic::asic_reg_read(addr, &data, 1, false /*read_thru*/) !=
                                  SDK_RET_OK) {
-        SDK_TRACE_ERR("NX read failed. addr: %llx", addr);
+        SDK_TRACE_ERR("NX read failed. addr: %lx", addr);
     }
 
     return data;
@@ -243,7 +243,7 @@ elba_hbm_cache_regions_init (void)
 
         if (is_region_cache_pipe_p4_ig(reg)) {
             SDK_TRACE_DEBUG("Programming %s to P4IG cache(region 1), "
-                            "start=%lx size=%u index=%u", reg->mem_reg_name,
+                            "start=%lx size=%lu index=%u", reg->mem_reg_name,
                             g_elba_state_pd->mempartition()->addr(reg->start_offset),
                             reg->size, p4ig_filter_idx);
             elba_hbm_cache_program_region(reg, 1, p4ig_filter_idx, 1, 0);
@@ -252,7 +252,7 @@ elba_hbm_cache_regions_init (void)
 
         if (is_region_cache_pipe_p4_eg(reg)) {
             SDK_TRACE_DEBUG("Programming %s to P4EG cache(region 2), "
-                            "start=%lx size=%u index=%u", reg->mem_reg_name,
+                            "start=%lx size=%lu index=%u", reg->mem_reg_name,
                             g_elba_state_pd->mempartition()->addr(reg->start_offset),
                             reg->size, p4eg_filter_idx);
             elba_hbm_cache_program_region(reg, 2, p4eg_filter_idx, 1, 0);
@@ -261,7 +261,7 @@ elba_hbm_cache_regions_init (void)
 
         if (is_region_cache_pipe_p4plus_txdma(reg)) {
             SDK_TRACE_DEBUG("Programming %s to P4PLUS TXDMA cache(region 3), "
-                            "start=%lx size=%u index=%u", reg->mem_reg_name,
+                            "start=%lx size=%lu index=%u", reg->mem_reg_name,
                             g_elba_state_pd->mempartition()->addr(reg->start_offset),
                             reg->size, p4plus_txdma_filter_idx);
             elba_hbm_cache_program_region(reg, 3, p4plus_txdma_filter_idx, 1, 1);
@@ -270,7 +270,7 @@ elba_hbm_cache_regions_init (void)
 
         if (is_region_cache_pipe_p4plus_rxdma(reg)) {
             SDK_TRACE_DEBUG("Programming %s to P4PLUS RXDMA cache(region 0), "
-                            "start=%lx size=%u index=%u", reg->mem_reg_name,
+                            "start=%lx size=%lu index=%u", reg->mem_reg_name,
                             g_elba_state_pd->mempartition()->addr(reg->start_offset),
                             reg->size, p4plus_rxdma_filter_idx);
             elba_hbm_cache_program_region(reg, 0, p4plus_rxdma_filter_idx, 1, 1);
@@ -279,14 +279,14 @@ elba_hbm_cache_regions_init (void)
 
         if (is_region_cache_pipe_p4plus_pciedb(reg)) {
             SDK_TRACE_DEBUG("Programming %s to PCIE, "
-                            "start=%lx size=%u index=%u", reg->mem_reg_name,
+                            "start=%lx size=%lu index=%u", reg->mem_reg_name,
                             g_elba_state_pd->mempartition()->addr(reg->start_offset),
                             reg->size, p4plus_pcie_filter_idx);
             elba_hbm_cache_program_pcie(reg, p4plus_pcie_filter_idx);
             p4plus_pcie_filter_idx++;
 
             SDK_TRACE_DEBUG("Programming %s to Doorbell, "
-                            "start=%lx size=%u index=%u", reg->mem_reg_name,
+                            "start=%lx size=%lu index=%u", reg->mem_reg_name,
                             g_elba_state_pd->mempartition()->addr(reg->start_offset),
                             reg->size, p4plus_db_filter_idx);
             elba_hbm_cache_program_db(reg, p4plus_db_filter_idx);

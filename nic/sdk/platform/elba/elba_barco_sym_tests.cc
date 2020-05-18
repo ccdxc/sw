@@ -212,7 +212,8 @@ static struct st2 {
 
 #define _API_PARAM_DEBUG_
 
-  sdk_ret_t elba_barco_sym_hash_sha_test (CryptoApiHashType hash_type, bool generate)
+sdk_ret_t
+elba_barco_sym_hash_sha_test (CryptoApiHashType hash_type, bool generate)
 {
     sdk_ret_t           ret = SDK_RET_OK;
     const uint8_t       *exp_digest;
@@ -291,38 +292,50 @@ static struct st2 {
        return ret;
     }
 
-    SDK_TRACE_DEBUG("Running {}-{} test on data: {}, data-len: {:d}:, key: {}, key-len: {:d}\n",
-                    CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
-                    input_data, input_datalen, key ? key : (unsigned char *)"", key_len);
+    SDK_TRACE_DEBUG("Running %s-%s test on data: %s, data-len: %d:, key: %s, key-len: %d\n",
+                    CryptoApiHashType_Name(hash_type),
+                    generate ? "generate" : "verify",
+                    input_data, input_datalen,
+                    key ? key : (unsigned char *)"", key_len);
 
-    ELBA_BARCO_API_PARAM_HEXDUMP((char *)"Input Data bytes:", (char *)input_data, input_datalen);
+    ELBA_BARCO_API_PARAM_HEXDUMP((char *)"Input Data bytes:",
+                                 (char *)input_data, input_datalen);
 
     ret = elba_barco_sym_hash_process_request(hash_type, generate,
                                                key, key_len,
                                                input_data, input_datalen,
-                                               generate ? digest_output : (uint8_t *) exp_digest,
-                           generate ? sizeof(digest_output) : exp_digestlen);
+                                               generate ?
+                                               digest_output :
+                                               (uint8_t *) exp_digest,
+                                               generate ?
+                                               sizeof(digest_output) :
+                                               exp_digestlen);
 
     if (key_len) {
-    ELBA_BARCO_API_PARAM_HEXDUMP((char *)"Input HMAC Key:", (char *)key, key_len);
+        ELBA_BARCO_API_PARAM_HEXDUMP((char *)"Input HMAC Key:",
+                                     (char *)key, key_len);
     }
 
     if (generate) {
-        ELBA_BARCO_API_PARAM_HEXDUMP((char *)"Output Digest:", (char *)digest_output,
-                                      exp_digestlen);
+        ELBA_BARCO_API_PARAM_HEXDUMP((char *)"Output Digest:",
+                                     (char *)digest_output, exp_digestlen);
 
     ELBA_BARCO_API_PARAM_HEXDUMP((char *)"Expected Digest:", (char *)exp_digest,
-                      exp_digestlen);
+                                 exp_digestlen);
+
     if (memcmp(digest_output, exp_digest, exp_digestlen)) {
-        SDK_TRACE_DEBUG("{} Hash generate test FAILED", CryptoApiHashType_Name(hash_type));
+        SDK_TRACE_DEBUG("%s Hash generate test FAILED",
+                        CryptoApiHashType_Name(hash_type));
     } else {
-        SDK_TRACE_DEBUG("{} Hash generate test PASSED", CryptoApiHashType_Name(hash_type));
+        SDK_TRACE_DEBUG("%s Hash generate test PASSED",
+                        CryptoApiHashType_Name(hash_type));
     }
     } else {
-    ELBA_BARCO_API_PARAM_HEXDUMP((char *)"Verified Digest:", (char *)exp_digest,
-                      exp_digestlen);
-        SDK_TRACE_DEBUG("{} Hash verify test {}", CryptoApiHashType_Name(hash_type),
-            ret == 0 ? "PASSED" : "FAILED");
+    ELBA_BARCO_API_PARAM_HEXDUMP((char *)"Verified Digest:",
+                                 (char *)exp_digest, exp_digestlen);
+        SDK_TRACE_DEBUG("%s Hash verify test %s",
+                        CryptoApiHashType_Name(hash_type),
+                        ret == 0 ? "PASSED" : "FAILED");
     }
 
     return ret;
@@ -415,19 +428,18 @@ sdk_ret_t elba_barco_sym_hash_run_tests (void)
                               aes_enc[1].auth_tag, aes_enc[1].auth_tag_len, true);
 
     if (ret != SDK_RET_OK) {
-        SDK_TRACE_DEBUG("AES-CCM Decrypt test FAILED: api failure {:d}", ret);
+        SDK_TRACE_DEBUG("AES-CCM Decrypt test FAILED: api failure %d", ret);
     } else {
         ELBA_BARCO_API_PARAM_HEXDUMP((char *)"Received plain-text:",
                       (char *)plaintext, aes_enc[1].plaintext_len);
         ELBA_BARCO_API_PARAM_HEXDUMP((char *)"Expected plain-text:",
                       (char *)aes_enc[1].plaintext, aes_enc[1].plaintext_len);
 
-
         if (memcmp(plaintext, aes_enc[1].plaintext, aes_enc[1].plaintext_len)) {
             SDK_TRACE_DEBUG("AES-CCM Decrypt test FAILED: plaintext do not match!!");
-    } else {
-       SDK_TRACE_DEBUG("AES-CCM Decrypt test PASSED: plaintexts match");
-    }
+        } else {
+            SDK_TRACE_DEBUG("AES-CCM Decrypt test PASSED: plaintexts match");
+        }
     }
 
     return ret;
@@ -468,7 +480,8 @@ sdk_ret_t elba_barco_sym_run_aes_gcm_1K_test (void)
                       (char *)aes_enc[1].ciphertext, aes_enc[1].ciphertext_len);
 
 
-        if (memcmp(ciphertext, aes_enc[1].ciphertext, aes_enc[1].ciphertext_len)) {
+        if (memcmp(ciphertext, aes_enc[1].ciphertext,
+                   aes_enc[1].ciphertext_len)) {
             SDK_TRACE_DEBUG("AES-CCM Encrypt test FAILED: ciphertext do not match!!");
     } else {
        SDK_TRACE_DEBUG("AES-CCM Encrypt test PASSED: ciphertexts match");
@@ -481,9 +494,9 @@ sdk_ret_t elba_barco_sym_run_aes_gcm_1K_test (void)
 
         if (memcmp(auth_tag, aes_enc[1].auth_tag, aes_enc[1].auth_tag_len)) {
             SDK_TRACE_DEBUG("AES-CCM Encrypt test FAILED: auth-tag do not match!!");
-    } else {
-        SDK_TRACE_DEBUG("AES-CCM Encrypt test PASSED: auth-tag match");
-    }
+        } else {
+            SDK_TRACE_DEBUG("AES-CCM Encrypt test PASSED: auth-tag match");
+        }
     }
 
 #if 0
@@ -500,7 +513,7 @@ sdk_ret_t elba_barco_sym_run_aes_gcm_1K_test (void)
                               aes_enc[1].auth_tag, aes_enc[1].auth_tag_len, true);
 
     if (ret != SDK_RET_OK) {
-        SDK_TRACE_DEBUG("AES-CCM Decrypt test FAILED: api failure {:d}", ret);
+        SDK_TRACE_DEBUG("AES-CCM Decrypt test FAILED: api failure %d", ret);
     } else {
         ELBA_BARCO_API_PARAM_HEXDUMP((char *)"Received plain-text:",
                       (char *)plaintext, aes_enc[1].plaintext_len);

@@ -348,18 +348,21 @@ elba_barco_ring_common_init (elba_barco_ring_t *barco_ring)
 
     ring_base = get_mem_addr(barco_ring->hbm_region);
     if (ring_base == INVALID_MEM_ADDRESS) {
-        SDK_TRACE_ERR("Failed to retrieve Barco Ring memory region for {}", barco_ring->ring_name);
+        SDK_TRACE_ERR("Failed to retrieve Barco Ring memory region for %s",
+                      barco_ring->ring_name);
         return SDK_RET_ERR;
     }
 
     if (ring_base & (barco_ring->ring_alignment - 1)) {
-        SDK_TRACE_ERR("Failed to retrieve aligned Barco Ring memory region for {}", barco_ring->ring_name);
+        SDK_TRACE_ERR("Failed to retrieve aligned Barco Ring memory region for %s",
+                      barco_ring->ring_name);
         return SDK_RET_ERR;
     }
 
     ring_size = get_mem_size_kb(barco_ring->hbm_region) * 1024;
     if (ring_size < (uint32_t)(barco_ring->ring_size * barco_ring->descriptor_size)) {
-        SDK_TRACE_ERR("Not enough memory for Barco Ring memory region {}", barco_ring->ring_name);
+        SDK_TRACE_ERR("Not enough memory for Barco Ring memory region %s",
+                      barco_ring->ring_name);
         return SDK_RET_ERR;
     }
 
@@ -413,7 +416,7 @@ elba_barco_asym_key_array_init (void)
     hese.dhs_crypto_ctl.pk0_axi_status.fld(0x3c0);
     hese.dhs_crypto_ctl.pk0_axi_status.write();
 
-    SDK_TRACE_DEBUG("Barco Asym Key Descriptor Array of count {} setup @ {:x}",
+    SDK_TRACE_DEBUG("Barco Asym Key Descriptor Array of count %u setup @ 0x%lx",
             asym_key_array_key_count, asym_key_array_base);
 
     return ret;
@@ -459,7 +462,7 @@ elba_barco_asym_init (elba_barco_ring_t *barco_ring)
     //hens.dhs_crypto_ctl.pk0_consumer_idx.fld(barco_ring->consumer_idx);
     //hens.dhs_crypto_ctl.pk0_consumer_idx.write();
 
-    SDK_TRACE_DEBUG("Barco ring \"{}\" base setup @ {:x}, descriptor count {}",
+    SDK_TRACE_DEBUG("Barco ring \"%s\" base setup @ 0x%lx, descriptor count %u",
                     barco_ring->ring_name, barco_ring->ring_base,
                     barco_ring->ring_size);
 
@@ -476,13 +479,14 @@ elba_barco_asym_poller (elba_barco_ring_t *barco_ring, uint32_t req_tag)
     if (sdk::asic::asic_mem_read(barco_ring->opaque_tag_addr,
                                  (uint8_t*)&curr_opaque_tag,
                                  sizeof(curr_opaque_tag))) {
-        SDK_TRACE_ERR("Poll:{}: Failed to retrieve current opaque tag value @ {:x}",
-                barco_ring->ring_name, (uint64_t) barco_ring->opaque_tag_addr);
+        SDK_TRACE_ERR("Poll:%s: Failed to retrieve current opaque tag value @ 0x%lx",
+                      barco_ring->ring_name,
+                      (uint64_t) barco_ring->opaque_tag_addr);
         return FALSE;
     }
     else {
         if ((int32_t(curr_opaque_tag - req_tag)) > 0) {
-            SDK_TRACE_DEBUG("Poll:{}: Check for req: {:#x}: Retrieved opaque tag addr: {:#x}value: {:#x}",
+            SDK_TRACE_DEBUG("Poll:%s: Check for req: 0x%lx: Retrieved opaque tag addr: {:#x}value: 0x%lx",
                             barco_ring->ring_name, req_tag,
                             barco_ring->opaque_tag_addr, curr_opaque_tag);
 
@@ -502,22 +506,19 @@ elba_barco_asym_queue_request (struct elba_barco_ring_s *barco_ring,
     elb_hens_csr_t &hens = cap0.md.hens;
     uint64_t slot_addr = 0;
     sdk_ret_t ret = SDK_RET_OK;
-    barco_asym_descriptor_t *asym_req_descr = NULL;
-
-    asym_req_descr = (barco_asym_descriptor_t*) req;
 
     slot_addr = barco_ring->ring_base + (barco_ring->producer_idx *
                                          barco_ring->descriptor_size);
 
     if (sdk::asic::asic_mem_write(slot_addr, (uint8_t*)req,
                                   barco_ring->descriptor_size)) {
-        SDK_TRACE_ERR("Failed to write descriptor entry for {}  @ {:x}",
-                barco_ring->ring_name,
-                (uint64_t) slot_addr);
+        SDK_TRACE_ERR("Failed to write descriptor entry for %s  @ 0x%lx",
+                      barco_ring->ring_name,
+                      (uint64_t) slot_addr);
         ret = SDK_RET_INVALID_ARG;
     }
     else {
-        *req_tag = barco_ring->producer_idx;;
+        *req_tag = barco_ring->producer_idx;
         barco_ring->producer_idx = (barco_ring->producer_idx + 1) &
             (barco_ring->ring_size - 1);
 
@@ -577,8 +578,8 @@ elba_barco_xts0_key_array_init (void)
     hese.dhs_crypto_ctl.sym2_axi_status.fld(0x3c0);
     hese.dhs_crypto_ctl.sym2_axi_status.write();
 
-    SDK_TRACE_DEBUG("Barco xts0/sym2 Key Descriptor Array of count {} setup @ 0x{:x}",
-            key_array_key_count, key_array_base);
+    SDK_TRACE_DEBUG("Barco xts0/sym2 Key Descriptor Array of count %u setup @ 0x0x%lx",
+                    key_array_key_count, key_array_base);
 
     return ret;
 }
@@ -616,8 +617,9 @@ elba_barco_sym2_ring0_init (elba_barco_ring_t *barco_ring)
 
     assert((sym2_ring0_pi== 0) && (sym2_ring0_ci == 0));
 
-    SDK_TRACE_DEBUG("Barco ring \"{}\" base setup @ {:x}, descriptor count {}",
-            barco_ring->ring_name, barco_ring->ring_base, barco_ring->ring_size);
+    SDK_TRACE_DEBUG("Barco ring \"%s\" base setup @ 0x%lx, descriptor count %u",
+                    barco_ring->ring_name, barco_ring->ring_base,
+                    barco_ring->ring_size);
 
     return elba_barco_xts0_key_array_init();
 }
@@ -682,7 +684,7 @@ elba_barco_xts1_key_array_init (void)
     hese.dhs_crypto_ctl.sym3_axi_status.fld(0x3c0);
     hese.dhs_crypto_ctl.sym3_axi_status.write();
 
-    SDK_TRACE_DEBUG("Barco xts1/sym3 Key Descriptor Array of count {} setup @ 0x{:x}",
+    SDK_TRACE_DEBUG("Barco xts1/sym3 Key Descriptor Array of count %u setup @ 0x0x%lx",
             key_array_key_count, key_array_base);
 
     return ret;
@@ -721,8 +723,9 @@ elba_barco_sym3_ring0_init (elba_barco_ring_t *barco_ring)
 
     assert((sym3_ring0_pi== 0) && (sym3_ring0_ci == 0));
 
-    SDK_TRACE_DEBUG("Barco ring \"{}\" base setup @ {:x}, descriptor count {}",
-            barco_ring->ring_name, barco_ring->ring_base, barco_ring->ring_size);
+    SDK_TRACE_DEBUG("Barco ring \"%s\" base setup @ 0x%lx, descriptor count %u",
+                    barco_ring->ring_name, barco_ring->ring_base,
+                    barco_ring->ring_size);
 
     return elba_barco_xts1_key_array_init();
 }
@@ -785,8 +788,8 @@ elba_barco_mpp0_key_array_init (void)
     mpse.dhs_crypto_ctl.mpp0_axi_status.fld(0x3c0);
     mpse.dhs_crypto_ctl.mpp0_axi_status.write();
 
-    SDK_TRACE_DEBUG("Barco MPP0 Key Descriptor Array of count {} setup @ {:x}",
-            key_array_key_count, key_array_base);
+    SDK_TRACE_DEBUG("Barco MPP0 Key Descriptor Array of count %u setup @ 0x%lx",
+                    key_array_key_count, key_array_base);
 
     return ret;
 }
@@ -826,8 +829,9 @@ elba_barco_mpp0_init (elba_barco_ring_t *barco_ring)
     //mpns.dhs_crypto_ctl.mpp0_consumer_idx.fld(barco_ring->consumer_idx);
     //mpns.dhs_crypto_ctl.mpp0_consumer_idx.write();
 
-    SDK_TRACE_DEBUG("Barco ring \"{}\" base setup @ {:x}, descriptor count {}",
-            barco_ring->ring_name, barco_ring->ring_base, barco_ring->ring_size);
+    SDK_TRACE_DEBUG("Barco ring \"%s\" base setup @ 0x%lx, descriptor count %u",
+                    barco_ring->ring_name, barco_ring->ring_base,
+                    barco_ring->ring_size);
 
     mpp0_pi = mpns.dhs_crypto_ctl.mpp0_producer_idx.fld().convert_to<uint32_t>();
     mpp0_ci = mpns.dhs_crypto_ctl.mpp0_consumer_idx.fld().convert_to<uint32_t>();
@@ -846,12 +850,14 @@ elba_barco_mpp0_poller(elba_barco_ring_t *barco_ring, uint32_t req_tag)
     if (sdk::asic::asic_mem_read(barco_ring->opaque_tag_addr,
                                  (uint8_t*)&curr_opaque_tag,
                                  sizeof(curr_opaque_tag))) {
-        SDK_TRACE_ERR("Poll:{}: Failed to retrieve current opaque tag value @ {:x}",
-                barco_ring->ring_name, (uint64_t) barco_ring->opaque_tag_addr);
+        SDK_TRACE_ERR("Poll:%s: Failed to retrieve current opaque tag value @ 0x%lx",
+                      barco_ring->ring_name,
+                      (uint64_t) barco_ring->opaque_tag_addr);
         return FALSE;
     }
     else {
-        SDK_TRACE_DEBUG("Poll:{}: Retrievd opaque tag value: {}", barco_ring->ring_name,
+        SDK_TRACE_DEBUG("Poll:%s: Retrievd opaque tag value: %u",
+                        barco_ring->ring_name,
                         curr_opaque_tag);
         /* TODO: Handle wraparounds */
         if (curr_opaque_tag >= req_tag)
@@ -908,9 +914,9 @@ elba_barco_mpp0_queue_request (struct elba_barco_ring_s *barco_ring, void *req,
 
     if (sdk::asic::asic_mem_write(slot_addr, (uint8_t*)req,
                                   barco_ring->descriptor_size)) {
-        SDK_TRACE_ERR("Failed to write MPP Req descriptor entry for {}  @ {:x}",
-                barco_ring->ring_name,
-                (uint64_t) slot_addr);
+        SDK_TRACE_ERR("Failed to write MPP Req descriptor entry for %s  @ 0x%lx",
+                      barco_ring->ring_name,
+                      (uint64_t) slot_addr);
         ret = SDK_RET_INVALID_ARG;
     }
     else {
@@ -970,8 +976,8 @@ elba_barco_mpp1_key_array_init (void)
     mpse.dhs_crypto_ctl.mpp1_axi_status.fld(0x3c0);
     mpse.dhs_crypto_ctl.mpp1_axi_status.write();
 
-    SDK_TRACE_DEBUG("Barco MPP1 Key Descriptor Array of count {} setup @ {:x}",
-            key_array_key_count, key_array_base);
+    SDK_TRACE_DEBUG("Barco MPP1 Key Descriptor Array of count %u setup @ 0x%lx",
+                    key_array_key_count, key_array_base);
 
     return ret;
 }
@@ -1011,8 +1017,9 @@ elba_barco_mpp1_init(elba_barco_ring_t *barco_ring)
     //mpns.dhs_crypto_ctl.mpp1_consumer_idx.fld(barco_ring->consumer_idx);
     //mpns.dhs_crypto_ctl.mpp1_consumer_idx.write();
 
-    SDK_TRACE_DEBUG("Barco ring \"{}\" base setup @ {:x}, descriptor count {}",
-            barco_ring->ring_name, barco_ring->ring_base, barco_ring->ring_size);
+    SDK_TRACE_DEBUG("Barco ring \"%s\" base setup @ 0x%lx, descriptor count %u",
+                    barco_ring->ring_name, barco_ring->ring_base,
+                    barco_ring->ring_size);
 
     mpp1_pi = mpns.dhs_crypto_ctl.mpp1_producer_idx.fld().convert_to<uint32_t>();
     mpp1_ci = mpns.dhs_crypto_ctl.mpp1_consumer_idx.fld().convert_to<uint32_t>();
@@ -1065,8 +1072,8 @@ elba_barco_mpp2_key_array_init (void)
     mpse.dhs_crypto_ctl.mpp2_axi_status.fld(0x3c0);
     mpse.dhs_crypto_ctl.mpp2_axi_status.write();
 
-    SDK_TRACE_DEBUG("Barco MPP2 Key Descriptor Array of count {} setup @ {:x}",
-            key_array_key_count, key_array_base);
+    SDK_TRACE_DEBUG("Barco MPP2 Key Descriptor Array of count %u setup @ 0x%lx",
+                    key_array_key_count, key_array_base);
 
     return ret;
 }
@@ -1106,8 +1113,9 @@ elba_barco_mpp2_init (elba_barco_ring_t *barco_ring)
     //mpns.dhs_crypto_ctl.mpp2_consumer_idx.fld(barco_ring->consumer_idx);
     //mpns.dhs_crypto_ctl.mpp2_consumer_idx.write();
 
-    SDK_TRACE_DEBUG("Barco ring \"{}\" base setup @ {:x}, descriptor count {}",
-            barco_ring->ring_name, barco_ring->ring_base, barco_ring->ring_size);
+    SDK_TRACE_DEBUG("Barco ring \"%s\" base setup @ 0x%lx, descriptor count %u",
+                    barco_ring->ring_name, barco_ring->ring_base,
+                    barco_ring->ring_size);
 
     mpp2_pi = mpns.dhs_crypto_ctl.mpp2_producer_idx.fld().convert_to<uint32_t>();
     mpp2_ci = mpns.dhs_crypto_ctl.mpp2_consumer_idx.fld().convert_to<uint32_t>();
@@ -1160,8 +1168,8 @@ elba_barco_mpp3_key_array_init (void)
     mpse.dhs_crypto_ctl.mpp3_axi_status.fld(0x3c0);
     mpse.dhs_crypto_ctl.mpp3_axi_status.write();
 
-    SDK_TRACE_DEBUG("Barco MPP3 Key Descriptor Array of count {} setup @ {:x}",
-            key_array_key_count, key_array_base);
+    SDK_TRACE_DEBUG("Barco MPP3 Key Descriptor Array of count %u setup @ 0x%lx",
+                    key_array_key_count, key_array_base);
 
     return ret;
 }
@@ -1201,7 +1209,7 @@ elba_barco_mpp3_init (elba_barco_ring_t *barco_ring)
     //mpns.dhs_crypto_ctl.mpp3_consumer_idx.fld(barco_ring->consumer_idx);
     //mpns.dhs_crypto_ctl.mpp3_consumer_idx.write();
 
-    SDK_TRACE_DEBUG("Barco ring \"{}\" base setup @ {:x}, descriptor count {}",
+    SDK_TRACE_DEBUG("Barco ring \"%s\" base setup @ 0x%lx, descriptor count %u",
                     barco_ring->ring_name, barco_ring->ring_base,
                     barco_ring->ring_size);
 
@@ -1258,7 +1266,7 @@ elba_barco_sym0_key_array_init (void)
     hese.dhs_crypto_ctl.sym0_axi_status.fld(0x3c0);
     hese.dhs_crypto_ctl.sym0_axi_status.write();
 
-    SDK_TRACE_DEBUG("Barco sym0 Key Descriptor Array of count {} setup @ 0x{:x}",
+    SDK_TRACE_DEBUG("Barco sym0 Key Descriptor Array of count %u setup @ 0x0x%lx",
                     key_array_key_count, key_array_base);
 
     return ret;
@@ -1313,12 +1321,13 @@ elba_barco_sym0_ring0_poller (elba_barco_ring_t *barco_ring, uint32_t req_tag)
     if (sdk::asic::asic_mem_read(barco_ring->opaque_tag_addr,
                                  (uint8_t*)&curr_opaque_tag,
                                  sizeof(curr_opaque_tag))) {
-        SDK_TRACE_ERR("Poll:{}: Failed to retrieve current opaque tag value @ {:x}",
-                barco_ring->ring_name, (uint64_t) barco_ring->opaque_tag_addr);
+        SDK_TRACE_ERR("Poll:%s: Failed to retrieve current opaque tag value @ 0x%lx",
+                      barco_ring->ring_name,
+                      (uint64_t) barco_ring->opaque_tag_addr);
         return FALSE;
     }
     else {
-        SDK_TRACE_DEBUG("Poll:{}: Retrievd opaque tag value: {}",
+        SDK_TRACE_DEBUG("Poll:%s Retrievd opaque tag value: %u",
                         barco_ring->ring_name, curr_opaque_tag);
         /* TODO: Handle wraparounds */
         if (curr_opaque_tag >= req_tag)
@@ -1375,9 +1384,8 @@ elba_barco_sym0_ring0_queue_request (struct elba_barco_ring_s *barco_ring,
 
     if (sdk::asic::asic_mem_write(slot_addr, (uint8_t*)req,
                                   barco_ring->descriptor_size)) {
-        SDK_TRACE_ERR("Failed to write SYM0-RING0 Req descriptor entry for {}  @ {:x}",
-                barco_ring->ring_name,
-                (uint64_t) slot_addr);
+        SDK_TRACE_ERR("Failed to write SYM0-RING0 Req descriptor entry for %s  @ 0x%lx",
+                      barco_ring->ring_name, (uint64_t) slot_addr);
         ret = SDK_RET_INVALID_ARG;
     }
 
@@ -1463,8 +1471,8 @@ elba_barco_sym1_key_array_init (void)
     hese.dhs_crypto_ctl.sym1_axi_status.write();
 #endif
 
-    SDK_TRACE_DEBUG("Barco gcm1 Key Descriptor Array of count {} setup @ {:x}",
-            key_array_key_count, key_array_base);
+    SDK_TRACE_DEBUG("Barco gcm1 Key Descriptor Array of count %u setup @ 0x%lx",
+                    key_array_key_count, key_array_base);
 
     return ret;
 }
@@ -1607,8 +1615,9 @@ elba_barco_cp_init (elba_barco_ring_t *barco_ring)
     hens.dhs_crypto_ctl.cp_cfg_q1_pd_idx.fld(barco_ring->producer_idx);
     hens.dhs_crypto_ctl.cp_cfg_q1_pd_idx.write();
 
-    SDK_TRACE_DEBUG("Barco compression ring \"{}\" base setup @ {:x}, descriptor count {}",
-            barco_ring->ring_name, barco_ring->ring_base, barco_ring->ring_size);
+    SDK_TRACE_DEBUG("Barco compression ring \"%s\" base setup @ 0x%lx, descriptor count %u",
+                    barco_ring->ring_name, barco_ring->ring_base,
+                    barco_ring->ring_size);
 
     return SDK_RET_OK;
 }
@@ -1652,7 +1661,7 @@ elba_barco_cp_hot_init (elba_barco_ring_t *barco_ring)
     hens.dhs_crypto_ctl.cp_cfg_q0_pd_idx.fld(barco_ring->producer_idx);
     hens.dhs_crypto_ctl.cp_cfg_q0_pd_idx.write();
 
-    SDK_TRACE_DEBUG("Barco compression hot ring \"{}\" base setup @ {:x}, descriptor count {}",
+    SDK_TRACE_DEBUG("Barco compression hot ring \"%s\" base setup @ 0x%lx, descriptor count %u",
                     barco_ring->ring_name, barco_ring->ring_base,
                     barco_ring->ring_size);
 
@@ -1742,8 +1751,9 @@ elba_barco_dc_init (elba_barco_ring_t *barco_ring)
     hens.dhs_crypto_ctl.dc_cfg_q1_pd_idx.fld(barco_ring->producer_idx);
     hens.dhs_crypto_ctl.dc_cfg_q1_pd_idx.write();
 
-    SDK_TRACE_DEBUG("Barco decompression ring \"{}\" base setup @ {:x}, descriptor count {}",
-            barco_ring->ring_name, barco_ring->ring_base, barco_ring->ring_size);
+    SDK_TRACE_DEBUG("Barco decompression ring \"%s\" base setup @ 0x%lx, descriptor count %u",
+                    barco_ring->ring_name, barco_ring->ring_base,
+                    barco_ring->ring_size);
 
     return SDK_RET_OK;
 }
@@ -1787,7 +1797,7 @@ elba_barco_dc_hot_init (elba_barco_ring_t *barco_ring)
     hens.dhs_crypto_ctl.dc_cfg_q0_pd_idx.fld(barco_ring->producer_idx);
     hens.dhs_crypto_ctl.dc_cfg_q0_pd_idx.write();
 
-    SDK_TRACE_DEBUG("Barco decompression hot ring \"{}\" base setup @ {:x}, descriptor count {}",
+    SDK_TRACE_DEBUG("Barco decompression hot ring \"%s\" base setup @ 0x%lx, descriptor count %u",
                     barco_ring->ring_name, barco_ring->ring_base,
                     barco_ring->ring_size);
 
@@ -1810,12 +1820,13 @@ elba_barco_sym1_ring0_poller (elba_barco_ring_t *barco_ring, uint32_t req_tag)
     if (sdk::asic::asic_mem_read(barco_ring->opaque_tag_addr,
                                  (uint8_t*)&curr_opaque_tag,
                                  sizeof(curr_opaque_tag))) {
-        SDK_TRACE_ERR("Poll:{}: Failed to retrieve current opaque tag value @ {:x}",
-                barco_ring->ring_name, (uint64_t) barco_ring->opaque_tag_addr);
+        SDK_TRACE_ERR("Poll:%s: Failed to retrieve current opaque tag value @ 0x%lx",
+                      barco_ring->ring_name,
+                      (uint64_t) barco_ring->opaque_tag_addr);
         return FALSE;
     }
     else {
-        SDK_TRACE_DEBUG("Poll:{}: Retrievd opaque tag value: {}",
+        SDK_TRACE_DEBUG("Poll:%s: Retrievd opaque tag value: %u",
                         barco_ring->ring_name, curr_opaque_tag);
         /* TODO: Handle wraparounds */
         if (curr_opaque_tag >= req_tag)
@@ -1872,7 +1883,7 @@ elba_barco_sym1_ring0_queue_request (struct elba_barco_ring_s *barco_ring,
 
     if (sdk::asic::asic_mem_write(slot_addr, (uint8_t*)req,
                                   barco_ring->descriptor_size)) {
-        SDK_TRACE_ERR("Failed to write SYM1-RING0 Req descriptor entry for {}  @ {:x}",
+        SDK_TRACE_ERR("Failed to write SYM1-RING0 Req descriptor entry for %s @ 0x%lx",
                       barco_ring->ring_name, (uint64_t) slot_addr);
         ret = SDK_RET_INVALID_ARG;
     }
@@ -1961,20 +1972,20 @@ elba_barco_rings_init (platform_type_t platform)
             ret = elba_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
                                        NULL, &opa_tag_addr);
             if (ret != SDK_RET_OK) {
-                SDK_TRACE_ERR("Failed to allocate opaque tag storage for ring {}",
-                  barco_rings[idx].ring_name);
+                SDK_TRACE_ERR("Failed to allocate opaque tag storage for ring %s",
+                              barco_rings[idx].ring_name);
                 return ret;
             }
-            SDK_TRACE_DEBUG("Ring: {}: Allocated opaque tag @ {:x}",
-                barco_rings[idx].ring_name, opa_tag_addr);
+            SDK_TRACE_DEBUG("Ring: %s: Allocated opaque tag @ 0x%lx",
+                            barco_rings[idx].ring_name, opa_tag_addr);
             if(sdk::asic::asic_mem_write(opa_tag_addr,
                                          (uint8_t *)&opa_tag_def_val,
                                          sizeof(opa_tag_def_val))) {
-                SDK_TRACE_ERR("Ring: {}: Failed to initialized opaque tag @ {:x}",
-                    barco_rings[idx].ring_name, opa_tag_addr);
+                SDK_TRACE_ERR("Ring: %s: Failed to initialized opaque tag @ 0x%lx",
+                              barco_rings[idx].ring_name, opa_tag_addr);
                 return SDK_RET_HW_PROGRAM_ERR;
             }
-            SDK_TRACE_DEBUG("Ring: {}: initialized opaque tag to 0 @ {:x}",
+            SDK_TRACE_DEBUG("Ring: %s: initialized opaque tag to 0 @ 0x%lx",
                 barco_rings[idx].ring_name, opa_tag_addr);
 
             barco_rings[idx].opaque_tag_addr = opa_tag_addr;
@@ -1983,7 +1994,7 @@ elba_barco_rings_init (platform_type_t platform)
         if (shadow_pndx_size) {
             assert(shadow_pndx_size <= sizeof(shadow_pndx_def_val));
             if (shadow_pndx_total < shadow_pndx_size) {
-                SDK_TRACE_ERR("Out of shadow pndx storage for ring {}",
+                SDK_TRACE_ERR("Out of shadow pndx storage for ring %s",
                               barco_rings[idx].ring_name);
                 return SDK_RET_HW_PROGRAM_ERR;
             }
@@ -1991,11 +2002,11 @@ elba_barco_rings_init (platform_type_t platform)
             if(sdk::asic::asic_mem_write(shadow_pndx_addr,
                                          (uint8_t *)&shadow_pndx_def_val,
                                          shadow_pndx_size)) {
-                SDK_TRACE_ERR("Ring: {}: Failed to initialize shadow pndx @ {:x}",
+                SDK_TRACE_ERR("Ring: %s: Failed to initialize shadow pndx @ 0x%lx",
                               barco_rings[idx].ring_name, shadow_pndx_addr);
                 return SDK_RET_HW_PROGRAM_ERR;
             }
-            SDK_TRACE_DEBUG("Ring: {}: initialized shadow pndx to 0 @ {:x}",
+            SDK_TRACE_DEBUG("Ring: %s: initialized shadow pndx to 0 @ 0x%lx",
                             barco_rings[idx].ring_name, shadow_pndx_addr);
             shadow_pndx_addr += shadow_pndx_size;
             shadow_pndx_total -= shadow_pndx_size;
@@ -2011,7 +2022,7 @@ elba_barco_rings_init (platform_type_t platform)
         if (barco_rings[idx].init) {
             ret = barco_rings[idx].init(&barco_rings[idx]);
             if (ret != SDK_RET_OK) {
-                SDK_TRACE_ERR("Failed to initialize Barco Ring {}",
+                SDK_TRACE_ERR("Failed to initialize Barco Ring %s",
                               barco_rings[idx].ring_name);
                 return ret;
             }
@@ -2075,15 +2086,14 @@ elba_barco_symm_req_descr_get (barco_rings_t ring_type,
     uint8_t  value[barco_ring->descriptor_size];
     uint32_t index = (slot_index % barco_ring->ring_size);
     slot_addr = barco_ring->ring_base + (index * barco_ring->descriptor_size);
-    SDK_TRACE_DEBUG("{}@{:x}: Ring base {:x}, slot_addr {:x}, read size {:x}",
-            barco_ring->ring_name, barco_ring->ring_size,
-            barco_ring->ring_base, (uint64_t) slot_addr,
-            barco_ring->descriptor_size);
+    SDK_TRACE_DEBUG("%s@0x%lx: Ring base 0x%lx, slot_addr 0x%lx, read size 0x%lx",
+                    barco_ring->ring_name, barco_ring->ring_size,
+                    barco_ring->ring_base, (uint64_t) slot_addr,
+                    barco_ring->descriptor_size);
 
     if (sdk::asic::asic_mem_read(slot_addr, value, sizeof(value))) {
-        SDK_TRACE_ERR("{}@{:x}: Failed to read Symmetric request descriptor entry",
-                barco_ring->ring_name,
-                (uint64_t) slot_addr);
+        SDK_TRACE_ERR("%s@0x%lx: Failed to read Symmetric request descriptor entry",
+                      barco_ring->ring_name, (uint64_t) slot_addr);
         return SDK_RET_INVALID_ARG;
     }
 
@@ -2107,13 +2117,14 @@ elba_barco_symm_req_descr_get (barco_rings_t ring_type,
         if(sdk::asic::asic_mem_read(req_descr->iv_address,
                    (uint8_t*)&symm_req_descr->salt,
                    sizeof(symm_req_descr->salt))) {
-           SDK_TRACE_ERR("{}@{:x}: Failed to read the Salt information from HBM",
-                 barco_ring->ring_name, (uint64_t) req_descr->iv_address);
+           SDK_TRACE_ERR("%s@0x%lx: Failed to read the Salt information from HBM",
+                         barco_ring->ring_name,
+                         (uint64_t) req_descr->iv_address);
         }
         if(sdk::asic::asic_mem_read(req_descr->iv_address + 4,
                    (uint8_t*)&symm_req_descr->explicit_iv,
                    sizeof(symm_req_descr->explicit_iv))) {
-            SDK_TRACE_ERR("{}@{:x}: Failed to read the explicit IV information from HBM",
+            SDK_TRACE_ERR("%s@0x%lx: Failed to read the explicit IV information from HBM",
                           barco_ring->ring_name,
                           (uint64_t) (req_descr->iv_address + 4));
         }
@@ -2122,7 +2133,7 @@ elba_barco_symm_req_descr_get (barco_rings_t ring_type,
         if(sdk::asic::asic_mem_read(req_descr->status_addr,
                    (uint8_t*)&symm_req_descr->barco_status,
                sizeof(symm_req_descr->barco_status))) {
-           SDK_TRACE_ERR("{}@{:x}: Failed to read the Barco Status information from HBM",
+           SDK_TRACE_ERR("%s@0x%lx: Failed to read the Barco Status information from HBM",
                          barco_ring->ring_name,
                          (uint64_t) req_descr->status_addr);
         }
@@ -2180,13 +2191,13 @@ elba_barco_ring_meta_get (barco_rings_t ring_type,
       *ci = mpns.dhs_crypto_ctl.mpp2_consumer_idx.fld().convert_to<uint32_t>();
       break;
     default:
-      SDK_TRACE_ERR("{}: Ring type not supported yet",
-            barco_rings[ring_type].ring_name);
+      SDK_TRACE_ERR("%s: Ring type not supported yet",
+                    barco_rings[ring_type].ring_name);
       return SDK_RET_INVALID_ARG;
       break;
     }
-    SDK_TRACE_DEBUG("{}: PI {:x}, CI {:x}",
-            barco_rings[ring_type].ring_name, *pi, *ci);
+    SDK_TRACE_DEBUG("%s: PI 0x%lx, CI 0x%lx",
+                    barco_rings[ring_type].ring_name, *pi, *ci);
     return SDK_RET_OK;
 }
 

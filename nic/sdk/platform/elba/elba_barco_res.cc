@@ -79,7 +79,7 @@ elba_barco_indexer_get (elba_barco_res_type_t res)
             idxer = g_hal_state_pd->crypto_sym_msg_descr_idxr();
             break;
         default:
-            SDK_TRACE_ERR("Invalid resource: {}", res);
+            SDK_TRACE_ERR("Invalid resource: %d", res);
             break;
     }
     assert(idxer != NULL);
@@ -108,7 +108,8 @@ elba_barco_obj_alloc (elba_barco_resources_t *elba_barco_res,
 
     is = elba_barco_res->idxer->alloc(&idx);
     if (is != indexer::SUCCESS) {
-        SDK_TRACE_ERR("{}: Failed to allocate", elba_barco_res->allocator_name);
+        SDK_TRACE_ERR("%s: Failed to allocate",
+                      elba_barco_res->allocator_name);
         return SDK_RET_NO_RESOURCE;
     }
 
@@ -119,8 +120,8 @@ elba_barco_obj_alloc (elba_barco_resources_t *elba_barco_res,
     if (res)
         *res = lres;
 
-    SDK_TRACE_DEBUG("{}: Allocated {:x} @ index:{}",
-            elba_barco_res->allocator_name, lres, idx);
+    SDK_TRACE_DEBUG("%s: Allocated 0x%lx @ index: %u",
+                    elba_barco_res->allocator_name, lres, idx);
 
     return SDK_RET_OK;
 
@@ -133,25 +134,25 @@ elba_barco_obj_free_by_id (elba_barco_resources_t *elba_barco_res,
     indexer::status     is = indexer::SUCCESS;
 
     if ((res_id < 0) || ((uint32_t)res_id >= elba_barco_res->obj_count)) {
-        SDK_TRACE_ERR("{}: Invalid resource index: {}",
-                elba_barco_res->allocator_name, res_id);
+        SDK_TRACE_ERR("%s: Invalid resource index: %d",
+                      elba_barco_res->allocator_name, res_id);
         return SDK_RET_INVALID_ARG;
     }
 
     if (!elba_barco_res->idxer->is_index_allocated(res_id)) {
-        SDK_TRACE_ERR("{}: Freeing unallocated descriptor: {}",
+        SDK_TRACE_ERR("%s: Freeing unallocated descriptor: %d",
                       elba_barco_res->allocator_name, res_id);
         return SDK_RET_INVALID_ARG;
     }
 
     is = elba_barco_res->idxer->free(res_id);
     if (is != indexer::SUCCESS) {
-        SDK_TRACE_ERR("{}: Failed to free memory @ {}",
-                elba_barco_res->allocator_name, res_id);
+        SDK_TRACE_ERR("%s: Failed to free memory @ %d",
+                      elba_barco_res->allocator_name, res_id);
         return SDK_RET_INVALID_ARG;
     }
 
-    SDK_TRACE_DEBUG("{}: Freed resource @ {}",
+    SDK_TRACE_DEBUG("%s: Freed resource @ %d",
                     elba_barco_res->allocator_name, res_id);
 
     return SDK_RET_OK;
@@ -165,9 +166,9 @@ elba_barco_obj_free (elba_barco_resources_t *elba_barco_res, uint64_t res)
     if ((res < elba_barco_res->hbm_region) ||
         (res > (elba_barco_res->hbm_region + elba_barco_res->hbm_region_size -
                         elba_barco_res->obj_size))) {
-        SDK_TRACE_ERR("{}: Invalid descriptor address: {:x}",
+        SDK_TRACE_ERR("%s: Invalid descriptor address: 0x%lx",
                       elba_barco_res->allocator_name, res);
-        SDK_TRACE_ERR("HBM Region: {:x}, Region Size: {}, Obj Size: {}",
+        SDK_TRACE_ERR("HBM Region: 0x%lx, Region Size: %u, Obj Size: %u",
                       elba_barco_res->hbm_region,
                       elba_barco_res->hbm_region_size,
                       elba_barco_res->obj_size);
@@ -263,13 +264,13 @@ elba_barco_res_allocator_init (void)
       //region = sdk::platform::elba::get_mem_addr(elba_barco_resources[idx].hbm_region_name);
       //  region = get_mem_addr(elba_barco_resources[idx].hbm_region_name);
         if (region == INVALID_MEM_ADDRESS) {
-            SDK_TRACE_ERR("Failed to retrieve {} memory region",
+            SDK_TRACE_ERR("Failed to retrieve %s memory region",
                           elba_barco_resources[idx].allocator_name);
             return SDK_RET_ERR;
         }
 
         if (region & (elba_barco_resources[idx].obj_alignment - 1)) {
-            SDK_TRACE_ERR("Failed to retrieve aligned memory region for {}",
+            SDK_TRACE_ERR("Failed to retrieve aligned memory region for %s",
                           elba_barco_resources[idx].allocator_name);
             return SDK_RET_ERR;
         }
@@ -278,7 +279,7 @@ elba_barco_res_allocator_init (void)
             sdk::asic::asic_get_mem_size_kb(elba_barco_resources[idx].hbm_region_name) * 1024;
         if ((region_size/elba_barco_resources[idx].obj_size)
                 < elba_barco_resources[idx].obj_count) {
-            SDK_TRACE_ERR("Memory region not large enough for {}, got {}, required {}",
+            SDK_TRACE_ERR("Memory region not large enough for %s, got %d, required %d",
                           elba_barco_resources[idx].allocator_name, region_size,
                           elba_barco_resources[idx].obj_count *
                           elba_barco_resources[idx].obj_size);
@@ -288,7 +289,7 @@ elba_barco_res_allocator_init (void)
         elba_barco_resources[idx].hbm_region_size = region_size;
         elba_barco_resources[idx].idxer =
             barco_indexers[(elba_barco_res_type_t)idx];
-        SDK_TRACE_DEBUG("Setting up {} {} @ {:x}",
+        SDK_TRACE_DEBUG("Setting up %u %s @ 0x%lx",
                         elba_barco_resources[idx].obj_count,
                         elba_barco_resources[idx].allocator_name, region);
     }
