@@ -71,14 +71,10 @@ message DeviceSpec {
   // addresses if LearningEn is set to true. If this is not set and learning is
   // enabled, default value is assumed for aging
   uint32              LearnAgeTimeout     = 9 [(gogoproto.moretags) = "meta:range:30-86400,meta:default=300"];
-  // enable the control plane stack for overlay routing
-  // NOTE: when operational mode is modified, it will take affect only after
-  //       next reboot of NAPLES/DSC
-  bool                OverlayRoutingEn    = 10 [(gogoproto.moretags) = "meta:mandatory"];
   // priority of IP mapping entries (this priority, if configured, will be
   // used to break the tie in case both LPM/prefix and a mapping entry are
   // hit in the datapath (i.e., /32 IP mapping entry is also in some LPM
-  //prefix)
+  // prefix)
   // NOTE:
   // 1. by default IP mapping always takes precedence over LPM hit and
   //    default value of this attribute is 0 (lower the numerical value,
@@ -86,11 +82,28 @@ message DeviceSpec {
   // 2. valid priority value range is 0 to 1023
   // 3. if mapping and route are both hit and both have same priority,
   //    mapping result will take precedence over route (even if it is /32 route)
-  uint32              IPMappingPriority   = 11 [(gogoproto.moretags) = "meta:range:0-1023"];
+  // 4. if the value of this attribute is updated on the fly, it will not
+  //    affect the flows/sessions that are already created, but it will take
+  //    affect only on the new sessions/flows created after such an update
+  uint32              IPMappingPriority   = 10 [(gogoproto.moretags) = "meta:range:0-1023"];
   // firewal (if enabled) action trasnposition logic dictates how the policy
   // lookup results are processed when multiple security policies are applied
   // on a packet
-  types.FwPolicyXposn FwPolicyXposnScheme = 12 [(gogoproto.moretags) = "meta:default=FW_POLICY_XPOSN_GLOBAL_PRIORITY"];
+  types.FwPolicyXposn FwPolicyXposnScheme = 11 [(gogoproto.moretags) = "meta:default=FW_POLICY_XPOSN_GLOBAL_PRIORITY"];
+  // enable the control plane stack for overlay routing
+  // NOTE: when OverlayRoutingEn is modified, it will take affect only after
+  //       next reboot of NAPLES/DSC
+  bool                OverlayRoutingEn    = 12 [(gogoproto.moretags) = "meta:mandatory"];
+  // when SymmetricRoutingEn is enabled, outgoing inter-subnet (encapped)
+  // traffic carries VPC's VxLAN vnid and incoming inter-subnet (encapped)
+  // traffic is expected to come with VPC's VxLAN vnid. If SymmetricRoutingEn is
+  // disabled (default behavior), outgoing inter-subnet (encapped) traffic
+  // carries egress subnet's VxLAN vnid and incoming inter-subnet (encapped)
+  // traffic is expected to come with destination subnet's VxLAN vnid
+  // NOTE: if the value of this attribute is updated on the fly, it will not
+  //       affect the flows/sessions that are already created, but it will take
+  //       affect only on the new sessions/flows created after such an update
+  bool                SymmetricRoutingEn  = 13 [(gogoproto.moretags) = "meta:default=false"];
 }
 
 // device operational status

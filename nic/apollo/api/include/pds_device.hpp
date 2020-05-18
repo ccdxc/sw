@@ -64,7 +64,21 @@ typedef struct pds_device_s {
     /// MAC, IP aging timeout (in seconds) for learnt entries
     uint32_t               learn_age_timeout;
     /// enable or disable evpn for overlay routing/bridging
+    /// NOTE: when overlay_routing_en is modified, it will take affect only
+    ///        after reboot of NAPLES/DSC
     bool                   overlay_routing_en;
+    /// when symmetric_routing_en is enabled, outgoing inter-subnet (encapped)
+    /// traffic carries VPC's VxLAN vnid and incoming inter-subnet (encapped)
+    /// traffic is expected to come with VPC's VxLAN vnid; if
+    /// symmetric_routing_en is disabled (default behavior), outgoing
+    /// inter-subnet (encapped) traffic carries egress subnet's VxLAN vnid and
+    /// incoming inter-subnet (encapped) traffic is expected to come with
+    /// destination subnet's VxLAN vnid
+    /// NOTE: if the value of this attribute is updated on the fly, it will not
+    ///       affect the flows/sessions that are already created, but it will
+    ///       take affect only on the new sessions/flows created after such
+    ///       an update
+    bool                   symmetric_routing_en;
     /// device profile
     pds_device_profile_t   device_profile;
     /// memory profile
@@ -80,6 +94,12 @@ typedef struct pds_device_s {
     ///    default value of this attribute is 0 (lower the numerical value,
     ///    the higher the priority, hence 0 is the highest priority)
     /// 2. valid priority value range is 0 (highest) to 1023 (lowest)
+    /// 3. if mapping and route are both hit and both have same priority,
+    ///    mapping result will take precedence over route (even if it is /32
+    ///    route)
+    /// 4. if the value of this attribute is updated on the fly, it will not
+    ///    affect the flows/sessions that are already created, but it will take
+    ///    affect only on the new sessions/flows created after such an update
     uint16_t               ip_mapping_priority;
     /// firewall action transposition scheme
     fw_policy_xposn_t      fw_action_xposn_scheme;
