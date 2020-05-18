@@ -303,7 +303,6 @@ func (tn *topoNode) evalWatchOptions(dsc, kind, key, tenant, ns string, mod uint
 	switch kind {
 	case "Interface":
 		// update the watchoptions for ipampolicy, Vrf, network
-
 		if mod&updateTenant == updateTenant {
 			opts, clear := tn.tm.refCounts.getWatchOptions(dsc, "Tenant")
 			if clear == false {
@@ -1265,8 +1264,13 @@ func (tm *topoMgr) handleInterfaceDelete(old, new Object, key string) {
 }
 
 func (tm *topoMgr) handleInterfaceUpdate(old, new Object, key string) {
-	if old == nil || new == nil {
-		log.Error("Invalid obect received ", old, new)
+	if new == nil {
+		log.Errorf("Invalid update received for key: %s | old: %v | new: %v", key, old, new)
+		return
+	}
+	if old == nil {
+		log.Info("Update recieved with old object as nil, treat it as an add")
+		tm.handleInterfaceCreate(old, new, key)
 		return
 	}
 	oldObj := old.(*netproto.Interface)

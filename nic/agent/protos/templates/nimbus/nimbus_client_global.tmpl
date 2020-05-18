@@ -187,9 +187,11 @@ func (client *NimbusClient) diff{{$value.Object}}sDynamic(objList *netproto.{{$v
 	ostream *AggWatchOStream,  op diffOpType) {
 	// build a map of objects
 	objmap := make(map[string]*netproto.{{$value.Object}})
-	for _, obj := range objList.{{$value.Object}}s {
-		key := obj.ObjectMeta.GetKey()
-		objmap[key] = obj
+	if objList != nil {
+		for _, obj := range objList.{{$value.Object}}s {
+			key := obj.ObjectMeta.GetKey()
+			objmap[key] = obj
+		}
 	}
 
 	// see if we need to delete any locally found object
@@ -266,7 +268,6 @@ func (client *NimbusClient) diff{{$value.Object}}sDynamic(objList *netproto.{{$v
 
 
 // diffApp diffs local state with controller state
-// FIXME: this is not handling deletes today
 func (client *NimbusClient) diffAggWatchObjects(kinds []string, objList *netproto.AggObjectList, reactor AggReactor, ostream *AggWatchOStream) {
 
 	type listObject struct {
@@ -333,9 +334,26 @@ func (client *NimbusClient) diffAggWatchObjects(kinds []string, objList *netprot
 		}
 	}
 
-	//Now do add/update
+	//First do delete objects which are removed
 	for index := range kindOrderObjects {
+		// delete order is reverse of add/update order
 		obj := kindOrderObjects[len(kindOrderObjects)-1-index]
+		lobj := obj.lobj
+
+		switch obj.kind {
+		{{range $key, $value := $manifest}}
+		case "{{$value.Object}}":
+			if lobj != nil {
+				client.diff{{$value.Object}}sDynamic(lobj.objects.(*netproto.{{$value.Object}}List), reactor.({{$value.Object}}Reactor), ostream, delteDiffOp)
+			} else {
+				client.diff{{$value.Object}}sDynamic(nil, reactor.({{$value.Object}}Reactor), ostream, delteDiffOp)
+			}
+		{{end}}
+		}
+	}
+
+	//Now do add/update
+	for _, obj := range kindOrderObjects {
 		lobj := obj.lobj
 		if lobj == nil {
 			continue
@@ -344,21 +362,6 @@ func (client *NimbusClient) diffAggWatchObjects(kinds []string, objList *netprot
 		{{range $key, $value := $manifest}}
 		case "{{$value.Object}}":
 			client.diff{{$value.Object}}sDynamic(lobj.objects.(*netproto.{{$value.Object}}List), reactor.({{$value.Object}}Reactor), ostream, addUpdateOp)
-		{{end}}
-		}
-	}
-
-	//First do delete objects which are removed
-	for index := range kindOrderObjects {
-		obj := kindOrderObjects[len(kindOrderObjects)-1-index]
-		lobj := obj.lobj
-		if lobj == nil {
-			continue
-		}
-		switch lobj.kind {
-		{{range $key, $value := $manifest}}
-		case "{{$value.Object}}":
-			client.diff{{$value.Object}}sDynamic(lobj.objects.(*netproto.{{$value.Object}}List), reactor.({{$value.Object}}Reactor), ostream, delteDiffOp)
 		{{end}}
 		}
 	}

@@ -228,9 +228,11 @@ func (client *NimbusClient) diffAppsDynamic(objList *netproto.AppList, reactor A
 	ostream *AggWatchOStream, op diffOpType) {
 	// build a map of objects
 	objmap := make(map[string]*netproto.App)
-	for _, obj := range objList.Apps {
-		key := obj.ObjectMeta.GetKey()
-		objmap[key] = obj
+	if objList != nil {
+		for _, obj := range objList.Apps {
+			key := obj.ObjectMeta.GetKey()
+			objmap[key] = obj
+		}
 	}
 
 	// see if we need to delete any locally found object
@@ -303,9 +305,11 @@ func (client *NimbusClient) diffCollectorsDynamic(objList *netproto.CollectorLis
 	ostream *AggWatchOStream, op diffOpType) {
 	// build a map of objects
 	objmap := make(map[string]*netproto.Collector)
-	for _, obj := range objList.Collectors {
-		key := obj.ObjectMeta.GetKey()
-		objmap[key] = obj
+	if objList != nil {
+		for _, obj := range objList.Collectors {
+			key := obj.ObjectMeta.GetKey()
+			objmap[key] = obj
+		}
 	}
 
 	// see if we need to delete any locally found object
@@ -378,9 +382,11 @@ func (client *NimbusClient) diffEndpointsDynamic(objList *netproto.EndpointList,
 	ostream *AggWatchOStream, op diffOpType) {
 	// build a map of objects
 	objmap := make(map[string]*netproto.Endpoint)
-	for _, obj := range objList.Endpoints {
-		key := obj.ObjectMeta.GetKey()
-		objmap[key] = obj
+	if objList != nil {
+		for _, obj := range objList.Endpoints {
+			key := obj.ObjectMeta.GetKey()
+			objmap[key] = obj
+		}
 	}
 
 	// see if we need to delete any locally found object
@@ -453,9 +459,11 @@ func (client *NimbusClient) diffFlowExportPolicysDynamic(objList *netproto.FlowE
 	ostream *AggWatchOStream, op diffOpType) {
 	// build a map of objects
 	objmap := make(map[string]*netproto.FlowExportPolicy)
-	for _, obj := range objList.FlowExportPolicys {
-		key := obj.ObjectMeta.GetKey()
-		objmap[key] = obj
+	if objList != nil {
+		for _, obj := range objList.FlowExportPolicys {
+			key := obj.ObjectMeta.GetKey()
+			objmap[key] = obj
+		}
 	}
 
 	// see if we need to delete any locally found object
@@ -528,9 +536,11 @@ func (client *NimbusClient) diffIPAMPolicysDynamic(objList *netproto.IPAMPolicyL
 	ostream *AggWatchOStream, op diffOpType) {
 	// build a map of objects
 	objmap := make(map[string]*netproto.IPAMPolicy)
-	for _, obj := range objList.IPAMPolicys {
-		key := obj.ObjectMeta.GetKey()
-		objmap[key] = obj
+	if objList != nil {
+		for _, obj := range objList.IPAMPolicys {
+			key := obj.ObjectMeta.GetKey()
+			objmap[key] = obj
+		}
 	}
 
 	// see if we need to delete any locally found object
@@ -603,9 +613,11 @@ func (client *NimbusClient) diffInterfacesDynamic(objList *netproto.InterfaceLis
 	ostream *AggWatchOStream, op diffOpType) {
 	// build a map of objects
 	objmap := make(map[string]*netproto.Interface)
-	for _, obj := range objList.Interfaces {
-		key := obj.ObjectMeta.GetKey()
-		objmap[key] = obj
+	if objList != nil {
+		for _, obj := range objList.Interfaces {
+			key := obj.ObjectMeta.GetKey()
+			objmap[key] = obj
+		}
 	}
 
 	// see if we need to delete any locally found object
@@ -678,9 +690,11 @@ func (client *NimbusClient) diffInterfaceMirrorSessionsDynamic(objList *netproto
 	ostream *AggWatchOStream, op diffOpType) {
 	// build a map of objects
 	objmap := make(map[string]*netproto.InterfaceMirrorSession)
-	for _, obj := range objList.InterfaceMirrorSessions {
-		key := obj.ObjectMeta.GetKey()
-		objmap[key] = obj
+	if objList != nil {
+		for _, obj := range objList.InterfaceMirrorSessions {
+			key := obj.ObjectMeta.GetKey()
+			objmap[key] = obj
+		}
 	}
 
 	// see if we need to delete any locally found object
@@ -753,9 +767,11 @@ func (client *NimbusClient) diffMirrorSessionsDynamic(objList *netproto.MirrorSe
 	ostream *AggWatchOStream, op diffOpType) {
 	// build a map of objects
 	objmap := make(map[string]*netproto.MirrorSession)
-	for _, obj := range objList.MirrorSessions {
-		key := obj.ObjectMeta.GetKey()
-		objmap[key] = obj
+	if objList != nil {
+		for _, obj := range objList.MirrorSessions {
+			key := obj.ObjectMeta.GetKey()
+			objmap[key] = obj
+		}
 	}
 
 	// see if we need to delete any locally found object
@@ -828,9 +844,11 @@ func (client *NimbusClient) diffNetworksDynamic(objList *netproto.NetworkList, r
 	ostream *AggWatchOStream, op diffOpType) {
 	// build a map of objects
 	objmap := make(map[string]*netproto.Network)
-	for _, obj := range objList.Networks {
-		key := obj.ObjectMeta.GetKey()
-		objmap[key] = obj
+	if objList != nil {
+		for _, obj := range objList.Networks {
+			key := obj.ObjectMeta.GetKey()
+			objmap[key] = obj
+		}
 	}
 
 	// see if we need to delete any locally found object
@@ -903,9 +921,11 @@ func (client *NimbusClient) diffNetworkSecurityPolicysDynamic(objList *netproto.
 	ostream *AggWatchOStream, op diffOpType) {
 	// build a map of objects
 	objmap := make(map[string]*netproto.NetworkSecurityPolicy)
-	for _, obj := range objList.NetworkSecurityPolicys {
-		key := obj.ObjectMeta.GetKey()
-		objmap[key] = obj
+	if objList != nil {
+		for _, obj := range objList.NetworkSecurityPolicys {
+			key := obj.ObjectMeta.GetKey()
+			objmap[key] = obj
+		}
 	}
 
 	// see if we need to delete any locally found object
@@ -978,9 +998,11 @@ func (client *NimbusClient) diffProfilesDynamic(objList *netproto.ProfileList, r
 	ostream *AggWatchOStream, op diffOpType) {
 	// build a map of objects
 	objmap := make(map[string]*netproto.Profile)
-	for _, obj := range objList.Profiles {
-		key := obj.ObjectMeta.GetKey()
-		objmap[key] = obj
+	if objList != nil {
+		for _, obj := range objList.Profiles {
+			key := obj.ObjectMeta.GetKey()
+			objmap[key] = obj
+		}
 	}
 
 	// see if we need to delete any locally found object
@@ -1053,9 +1075,11 @@ func (client *NimbusClient) diffRouteTablesDynamic(objList *netproto.RouteTableL
 	ostream *AggWatchOStream, op diffOpType) {
 	// build a map of objects
 	objmap := make(map[string]*netproto.RouteTable)
-	for _, obj := range objList.RouteTables {
-		key := obj.ObjectMeta.GetKey()
-		objmap[key] = obj
+	if objList != nil {
+		for _, obj := range objList.RouteTables {
+			key := obj.ObjectMeta.GetKey()
+			objmap[key] = obj
+		}
 	}
 
 	// see if we need to delete any locally found object
@@ -1128,9 +1152,11 @@ func (client *NimbusClient) diffRoutingConfigsDynamic(objList *netproto.RoutingC
 	ostream *AggWatchOStream, op diffOpType) {
 	// build a map of objects
 	objmap := make(map[string]*netproto.RoutingConfig)
-	for _, obj := range objList.RoutingConfigs {
-		key := obj.ObjectMeta.GetKey()
-		objmap[key] = obj
+	if objList != nil {
+		for _, obj := range objList.RoutingConfigs {
+			key := obj.ObjectMeta.GetKey()
+			objmap[key] = obj
+		}
 	}
 
 	// see if we need to delete any locally found object
@@ -1203,9 +1229,11 @@ func (client *NimbusClient) diffSecurityProfilesDynamic(objList *netproto.Securi
 	ostream *AggWatchOStream, op diffOpType) {
 	// build a map of objects
 	objmap := make(map[string]*netproto.SecurityProfile)
-	for _, obj := range objList.SecurityProfiles {
-		key := obj.ObjectMeta.GetKey()
-		objmap[key] = obj
+	if objList != nil {
+		for _, obj := range objList.SecurityProfiles {
+			key := obj.ObjectMeta.GetKey()
+			objmap[key] = obj
+		}
 	}
 
 	// see if we need to delete any locally found object
@@ -1278,9 +1306,11 @@ func (client *NimbusClient) diffVrfsDynamic(objList *netproto.VrfList, reactor V
 	ostream *AggWatchOStream, op diffOpType) {
 	// build a map of objects
 	objmap := make(map[string]*netproto.Vrf)
-	for _, obj := range objList.Vrfs {
-		key := obj.ObjectMeta.GetKey()
-		objmap[key] = obj
+	if objList != nil {
+		for _, obj := range objList.Vrfs {
+			key := obj.ObjectMeta.GetKey()
+			objmap[key] = obj
+		}
 	}
 
 	// see if we need to delete any locally found object
@@ -1349,7 +1379,6 @@ func (client *NimbusClient) diffVrfsDynamic(objList *netproto.VrfList, reactor V
 }
 
 // diffApp diffs local state with controller state
-// FIXME: this is not handling deletes today
 func (client *NimbusClient) diffAggWatchObjects(kinds []string, objList *netproto.AggObjectList, reactor AggReactor, ostream *AggWatchOStream) {
 
 	type listObject struct {
@@ -1553,9 +1582,124 @@ func (client *NimbusClient) diffAggWatchObjects(kinds []string, objList *netprot
 		}
 	}
 
-	//Now do add/update
+	//First do delete objects which are removed
 	for index := range kindOrderObjects {
+		// delete order is reverse of add/update order
 		obj := kindOrderObjects[len(kindOrderObjects)-1-index]
+		lobj := obj.lobj
+
+		switch obj.kind {
+
+		case "App":
+			if lobj != nil {
+				client.diffAppsDynamic(lobj.objects.(*netproto.AppList), reactor.(AppReactor), ostream, delteDiffOp)
+			} else {
+				client.diffAppsDynamic(nil, reactor.(AppReactor), ostream, delteDiffOp)
+			}
+
+		case "Collector":
+			if lobj != nil {
+				client.diffCollectorsDynamic(lobj.objects.(*netproto.CollectorList), reactor.(CollectorReactor), ostream, delteDiffOp)
+			} else {
+				client.diffCollectorsDynamic(nil, reactor.(CollectorReactor), ostream, delteDiffOp)
+			}
+
+		case "Endpoint":
+			if lobj != nil {
+				client.diffEndpointsDynamic(lobj.objects.(*netproto.EndpointList), reactor.(EndpointReactor), ostream, delteDiffOp)
+			} else {
+				client.diffEndpointsDynamic(nil, reactor.(EndpointReactor), ostream, delteDiffOp)
+			}
+
+		case "FlowExportPolicy":
+			if lobj != nil {
+				client.diffFlowExportPolicysDynamic(lobj.objects.(*netproto.FlowExportPolicyList), reactor.(FlowExportPolicyReactor), ostream, delteDiffOp)
+			} else {
+				client.diffFlowExportPolicysDynamic(nil, reactor.(FlowExportPolicyReactor), ostream, delteDiffOp)
+			}
+
+		case "IPAMPolicy":
+			if lobj != nil {
+				client.diffIPAMPolicysDynamic(lobj.objects.(*netproto.IPAMPolicyList), reactor.(IPAMPolicyReactor), ostream, delteDiffOp)
+			} else {
+				client.diffIPAMPolicysDynamic(nil, reactor.(IPAMPolicyReactor), ostream, delteDiffOp)
+			}
+
+		case "Interface":
+			if lobj != nil {
+				client.diffInterfacesDynamic(lobj.objects.(*netproto.InterfaceList), reactor.(InterfaceReactor), ostream, delteDiffOp)
+			} else {
+				client.diffInterfacesDynamic(nil, reactor.(InterfaceReactor), ostream, delteDiffOp)
+			}
+
+		case "InterfaceMirrorSession":
+			if lobj != nil {
+				client.diffInterfaceMirrorSessionsDynamic(lobj.objects.(*netproto.InterfaceMirrorSessionList), reactor.(InterfaceMirrorSessionReactor), ostream, delteDiffOp)
+			} else {
+				client.diffInterfaceMirrorSessionsDynamic(nil, reactor.(InterfaceMirrorSessionReactor), ostream, delteDiffOp)
+			}
+
+		case "MirrorSession":
+			if lobj != nil {
+				client.diffMirrorSessionsDynamic(lobj.objects.(*netproto.MirrorSessionList), reactor.(MirrorSessionReactor), ostream, delteDiffOp)
+			} else {
+				client.diffMirrorSessionsDynamic(nil, reactor.(MirrorSessionReactor), ostream, delteDiffOp)
+			}
+
+		case "Network":
+			if lobj != nil {
+				client.diffNetworksDynamic(lobj.objects.(*netproto.NetworkList), reactor.(NetworkReactor), ostream, delteDiffOp)
+			} else {
+				client.diffNetworksDynamic(nil, reactor.(NetworkReactor), ostream, delteDiffOp)
+			}
+
+		case "NetworkSecurityPolicy":
+			if lobj != nil {
+				client.diffNetworkSecurityPolicysDynamic(lobj.objects.(*netproto.NetworkSecurityPolicyList), reactor.(NetworkSecurityPolicyReactor), ostream, delteDiffOp)
+			} else {
+				client.diffNetworkSecurityPolicysDynamic(nil, reactor.(NetworkSecurityPolicyReactor), ostream, delteDiffOp)
+			}
+
+		case "Profile":
+			if lobj != nil {
+				client.diffProfilesDynamic(lobj.objects.(*netproto.ProfileList), reactor.(ProfileReactor), ostream, delteDiffOp)
+			} else {
+				client.diffProfilesDynamic(nil, reactor.(ProfileReactor), ostream, delteDiffOp)
+			}
+
+		case "RouteTable":
+			if lobj != nil {
+				client.diffRouteTablesDynamic(lobj.objects.(*netproto.RouteTableList), reactor.(RouteTableReactor), ostream, delteDiffOp)
+			} else {
+				client.diffRouteTablesDynamic(nil, reactor.(RouteTableReactor), ostream, delteDiffOp)
+			}
+
+		case "RoutingConfig":
+			if lobj != nil {
+				client.diffRoutingConfigsDynamic(lobj.objects.(*netproto.RoutingConfigList), reactor.(RoutingConfigReactor), ostream, delteDiffOp)
+			} else {
+				client.diffRoutingConfigsDynamic(nil, reactor.(RoutingConfigReactor), ostream, delteDiffOp)
+			}
+
+		case "SecurityProfile":
+			if lobj != nil {
+				client.diffSecurityProfilesDynamic(lobj.objects.(*netproto.SecurityProfileList), reactor.(SecurityProfileReactor), ostream, delteDiffOp)
+			} else {
+				client.diffSecurityProfilesDynamic(nil, reactor.(SecurityProfileReactor), ostream, delteDiffOp)
+			}
+
+		case "Vrf":
+			if lobj != nil {
+				client.diffVrfsDynamic(lobj.objects.(*netproto.VrfList), reactor.(VrfReactor), ostream, delteDiffOp)
+			} else {
+				client.diffVrfsDynamic(nil, reactor.(VrfReactor), ostream, delteDiffOp)
+			}
+
+		}
+	}
+
+	//Now do add/update
+	for _, obj := range kindOrderObjects {
 		lobj := obj.lobj
 		if lobj == nil {
 			continue
@@ -1606,63 +1750,6 @@ func (client *NimbusClient) diffAggWatchObjects(kinds []string, objList *netprot
 
 		case "Vrf":
 			client.diffVrfsDynamic(lobj.objects.(*netproto.VrfList), reactor.(VrfReactor), ostream, addUpdateOp)
-
-		}
-	}
-
-	//First do delete objects which are removed
-	for index := range kindOrderObjects {
-		obj := kindOrderObjects[len(kindOrderObjects)-1-index]
-		lobj := obj.lobj
-		if lobj == nil {
-			continue
-		}
-		switch lobj.kind {
-
-		case "App":
-			client.diffAppsDynamic(lobj.objects.(*netproto.AppList), reactor.(AppReactor), ostream, delteDiffOp)
-
-		case "Collector":
-			client.diffCollectorsDynamic(lobj.objects.(*netproto.CollectorList), reactor.(CollectorReactor), ostream, delteDiffOp)
-
-		case "Endpoint":
-			client.diffEndpointsDynamic(lobj.objects.(*netproto.EndpointList), reactor.(EndpointReactor), ostream, delteDiffOp)
-
-		case "FlowExportPolicy":
-			client.diffFlowExportPolicysDynamic(lobj.objects.(*netproto.FlowExportPolicyList), reactor.(FlowExportPolicyReactor), ostream, delteDiffOp)
-
-		case "IPAMPolicy":
-			client.diffIPAMPolicysDynamic(lobj.objects.(*netproto.IPAMPolicyList), reactor.(IPAMPolicyReactor), ostream, delteDiffOp)
-
-		case "Interface":
-			client.diffInterfacesDynamic(lobj.objects.(*netproto.InterfaceList), reactor.(InterfaceReactor), ostream, delteDiffOp)
-
-		case "InterfaceMirrorSession":
-			client.diffInterfaceMirrorSessionsDynamic(lobj.objects.(*netproto.InterfaceMirrorSessionList), reactor.(InterfaceMirrorSessionReactor), ostream, delteDiffOp)
-
-		case "MirrorSession":
-			client.diffMirrorSessionsDynamic(lobj.objects.(*netproto.MirrorSessionList), reactor.(MirrorSessionReactor), ostream, delteDiffOp)
-
-		case "Network":
-			client.diffNetworksDynamic(lobj.objects.(*netproto.NetworkList), reactor.(NetworkReactor), ostream, delteDiffOp)
-
-		case "NetworkSecurityPolicy":
-			client.diffNetworkSecurityPolicysDynamic(lobj.objects.(*netproto.NetworkSecurityPolicyList), reactor.(NetworkSecurityPolicyReactor), ostream, delteDiffOp)
-
-		case "Profile":
-			client.diffProfilesDynamic(lobj.objects.(*netproto.ProfileList), reactor.(ProfileReactor), ostream, delteDiffOp)
-
-		case "RouteTable":
-			client.diffRouteTablesDynamic(lobj.objects.(*netproto.RouteTableList), reactor.(RouteTableReactor), ostream, delteDiffOp)
-
-		case "RoutingConfig":
-			client.diffRoutingConfigsDynamic(lobj.objects.(*netproto.RoutingConfigList), reactor.(RoutingConfigReactor), ostream, delteDiffOp)
-
-		case "SecurityProfile":
-			client.diffSecurityProfilesDynamic(lobj.objects.(*netproto.SecurityProfileList), reactor.(SecurityProfileReactor), ostream, delteDiffOp)
-
-		case "Vrf":
-			client.diffVrfsDynamic(lobj.objects.(*netproto.VrfList), reactor.(VrfReactor), ostream, delteDiffOp)
 
 		}
 	}
