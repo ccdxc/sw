@@ -132,6 +132,7 @@ class Node(object):
             self.__nicNumber = 0
             self.__ports = []
             self.__data_networks = []
+            self.__nodeName = None
 
         def HostIntfs(self):
             return self.__host_intfs
@@ -171,6 +172,12 @@ class Node(object):
 
         def GetNicNumber(self):
             return self.__nicNumber
+
+        def SetNodeName(self, nodeName):
+            self.__nodeName = nodeName
+
+        def GetNodeName(self):
+            return self.__nodeName
 
         def SetHostIntfs(self, host_intfs):
             self.__host_intfs = host_intfs
@@ -326,6 +333,7 @@ class Node(object):
                     nic_type = getattr(nic, "Type", "pensando-sim")
                     name = nic_type + str(self.__dev_index)
                     device = Node.NicDevice(name, nic_type)
+                    device.SetNodeName(self.__name)
                     device.SetNicNumber(self.__dev_index)
                     self.__dev_index = self.__dev_index + 1
                     self.__devices[name] = device
@@ -350,6 +358,7 @@ class Node(object):
                 for index in range(1):
                     name = self.GetNicType() + str(self.__dev_index)
                     device = Node.NicDevice(name, self.GetNicType())
+                    device.SetNodeName(self.__name)
                     device.SetNicNumber(self.__dev_index)
                     self.__dev_index = self.__dev_index + 1
                     self.__devices[name] = device

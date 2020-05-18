@@ -329,6 +329,8 @@ dependencies:
     - reference: iota/test/standalone/precheckin/apulu-sdn-pds
   iota/test/apulu:
     - reference: iota/test/standalone/precheckin/apulu-sdn-pds
+  iota/test/athena:
+    - reference: iota/test/standalone/precheckin/athena
   iota/test/iris:
     - reference: iota/test/standalone/precheckin/esx
       exclude_dirs: ["testcases/server","testcases/rdma","testbundles/rdma"]

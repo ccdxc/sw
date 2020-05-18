@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 import iota.harness.api as api
+import iota.harness.infra.store as store
 import iota.test.athena.utils.pdsctl as pdsctl
 from iota.harness.infra.glopts import GlobalOptions
 
@@ -14,13 +15,17 @@ from iota.harness.infra.glopts import GlobalOptions
 # pdsctl show interrupts
 
 def Setup(tc):
-    api.Logger.info("Testing pdsctl show commands")
+    tc.nics =  store.GetTopology().GetNicsByPipeline("athena")
+    tc.nodes= []
+    for nic in tc.nics:
+        tc.nodes.append(nic.GetNodeName())
+    api.Logger.info("Testing pdsctl show commands on nodes {}".format(tc.nodes))
     return api.types.status.SUCCESS
 
-def runPdsctlCmd(naples_nodes, cmd):
+def runPdsctlCmd(tc, cmd):
     if GlobalOptions.dryrun:
         return api.types.status.SUCCESS
-    for node in naples_nodes:
+    for node in tc.nodes:
         ret, resp = pdsctl.ExecutePdsctlShowCommand(node, cmd, yaml=False)
         if ret != True:
             api.Logger.error("show %s cmd cmd failed at node %s : %s" %(cmd, node, resp))
@@ -28,10 +33,9 @@ def runPdsctlCmd(naples_nodes, cmd):
     return api.types.status.SUCCESS
 
 def Trigger(tc):
-    naples_nodes = api.GetNaplesHostnames()
     cmd_list = ['port transceiver', 'system statistics drop', 'system --power', 'system --temperature', 'system statistics packet-buffer', 'interrupts']
     for cmd in cmd_list:
-        ret = runPdsctlCmd(naples_nodes, cmd)
+        ret = runPdsctlCmd(tc, cmd)
         if ret != api.types.status.SUCCESS:
             return api.types.status.FAILURE
 

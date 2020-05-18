@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 import iota.harness.api as api
+import iota.harness.infra.store as store
 import iota.test.athena.utils.pdsctl as pdsctl
 from iota.harness.infra.glopts import GlobalOptions
 # from apollo.config.store import client as EzAccessStoreClient
@@ -12,13 +13,17 @@ from iota.harness.infra.glopts import GlobalOptions
 
 
 def Setup(tc):
-    api.Logger.info("Test PDSCTL for Athena pipeline")
+    tc.nics =  store.GetTopology().GetNicsByPipeline("athena")
+    tc.nodes= []
+    for nic in tc.nics:
+        tc.nodes.append(nic.GetNodeName())
+    api.Logger.info("Test PDSCTL for Athena pipeline on node {}".format(tc.nodes))
     return api.types.status.SUCCESS
 
-def showPortStatusCmd(naples_nodes):
+def showPortStatusCmd(tc):
     if GlobalOptions.dryrun:
         return api.types.status.SUCCESS
-    for node in naples_nodes:
+    for node in tc.nodes:
         # TODO: add EzAccessStoreClient support and un-comment following code
         # node_uuid = EzAccessStoreClient[node].GetNodeUuid(node)
         # for uplink in [UPLINK_PREFIX1, UPLINK_PREFIX2]:
@@ -35,10 +40,10 @@ def showPortStatusCmd(naples_nodes):
             return api.types.status.FAILURE    
     return api.types.status.SUCCESS
 
-def showPortStatisticsCmd(naples_nodes):
+def showPortStatisticsCmd(tc):
     if GlobalOptions.dryrun:
         return api.types.status.SUCCESS
-    for node in naples_nodes:
+    for node in tc.nodes:
         # node_uuid = EzAccessStoreClient[node].GetNodeUuid(node)
         # for uplink in [UPLINK_PREFIX1, UPLINK_PREFIX2]:
         #     intf_uuid = uplink % node_uuid  
@@ -55,15 +60,13 @@ def showPortStatisticsCmd(naples_nodes):
     return api.types.status.SUCCESS
 
 def Trigger(tc):
-    naples_nodes = api.GetNaplesHostnames()
-
-    api.Logger.info("show port status on %s ..."%naples_nodes)
-    ret = showPortStatusCmd(naples_nodes)
+    api.Logger.info("show port status on %s ..."%tc.nodes)
+    ret = showPortStatusCmd(tc)
     if ret != api.types.status.SUCCESS:
         return api.types.status.FAILURE
 
-    api.Logger.info("show port statistics on %s ..."%naples_nodes)
-    ret = showPortStatisticsCmd(naples_nodes)
+    api.Logger.info("show port statistics on %s ..."%tc.nodes)
+    ret = showPortStatisticsCmd(tc)
     if ret != api.types.status.SUCCESS:
         return api.types.status.FAILURE
 
