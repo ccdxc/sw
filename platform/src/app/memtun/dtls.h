@@ -7,7 +7,7 @@
 #define __DTLS_H__
 
 #define ACTIVITY_TIMEO_US   1000000     // After 1s of inactivity, sleep
-#define INACTIVITY_SLEEP_US 1000000     // Sleep for 1s while inactive
+#define INACTIVITY_SLEEP_US 20000       // Sleep for 20ms while inactive
 
 /*
  * shared memory page
