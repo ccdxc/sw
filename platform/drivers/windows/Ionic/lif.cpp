@@ -1042,6 +1042,27 @@ ionic_lif_init(struct lif *lif)
     RtlSetBit(&lif->state, LIF_INITED);
     RtlSetBit(&lif->state, LIF_F_FW_READY);
 
+    // add VLAN filters for master lif
+    if (lif == lif->ionic->master_lif) {
+        PVLAN_RANGE pVlanRange;
+        USHORT      VlanIdx;
+        ListForEachEntry(pVlanRange, &lif->ionic->vlanRangesList, VLAN_RANGE, list_entry) {
+            for (VlanIdx = pVlanRange->LowerVLANId; VlanIdx <= pVlanRange->UpperVLANId; VlanIdx++) {
+                if (VlanIdx != lif->vlan_id) {
+                    status = ionic_lif_vlan(lif, VlanIdx, true);
+                    if (status != NDIS_STATUS_SUCCESS) {
+                        EvLogWarning("%wZ - Could not add VLAN filter for VLAN:%u.", lif->ionic->name, VlanIdx);
+                        DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR, "%s ionic_lif_vlan(%u) returned: %08lX\n", __FUNCTION__, VlanIdx, status));
+                    }
+                    else {
+                        DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE, "%s ionic_lif_vlan(%u) successfully added vlan filter.\n", __FUNCTION__, VlanIdx));
+                    }
+                }
+            }
+        }
+    }
+
+
     EvLogInformational("%wZ - Initialized Lif %d", lif->ionic->name, lif->index);
 
     return NDIS_STATUS_SUCCESS;
