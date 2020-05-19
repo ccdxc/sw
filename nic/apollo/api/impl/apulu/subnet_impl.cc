@@ -812,6 +812,10 @@ local_mapping_dhcp_binding_upd_cb_ (sdk_table_api_params_t *params)
         // this mapping doesn't belong to this affected subnet
         return;
     }
+    if (data->ip_type != MAPPING_TYPE_OVERLAY) {
+        // not interested in public IPs
+        return;
+    }
     data = (local_mapping_appdata_t *)(params->appdata);
     vnic = vnic_impl_db()->find(data->vnic_id);
     SDK_ASSERT(vnic != NULL);
