@@ -5,10 +5,12 @@ PLATFORM_DIR=$PWD/../
 ESX_DIR=$PLATFORM_DIR/hosttools/x86_64/esx/goldfw
 LINUX_DIR=$PLATFORM_DIR/hosttools/x86_64/linux/goldfw
 FREEBSD_DIR=$PLATFORM_DIR/hosttools/x86_64/freebsd/goldfw
+WINDOWS_DIR=$PLATFORM_DIR/hosttools/x86_64/windows/goldfw
 
 ESX_DRIVER=$PLATFORM_DIR/gen/drivers-esx-eth.tar.xz
 LINUX_DRIVER=$PLATFORM_DIR/gen/drivers-linux-eth.tar.xz
 FREEBSD_DRIVER=$PLATFORM_DIR/gen/drivers-freebsd-eth.tar.xz
+WINDOWS_DRIVER=$PLATFORM_DIR/gen/drivers-windows.zip
 
 remove_old()
 {
@@ -28,7 +30,7 @@ update_latest()
 
     if [ $prev_latest = $3 ]; then
         echo "symlinks are already updated! No change is needed."
-        exit 0
+        return 0
     fi
 
     echo "Removing current old symlink"
@@ -61,17 +63,26 @@ if [ -z $1 ]; then
 fi
 
 echo "Checking Current Versions:"
+
+mkdir -p $ESX_DIR
+mkdir -p $LINUX_DIR
+mkdir -p $FREEBSD_DIR
+mkdir -p $WINDOWS_DIR
+
 print_versions $ESX_DIR
 print_versions $LINUX_DIR
 print_versions $FREEBSD_DIR
+print_versions $WINDOWS_DIR
 
 echo "Updating the symlink for old and latest"
 update_latest $ESX_DIR $ESX_DRIVER $1
 update_latest $LINUX_DIR $LINUX_DRIVER $1
 update_latest $FREEBSD_DIR $FREEBSD_DRIVER $1
+update_latest $WINDOWS_DIR $WINDOWS_DRIVER $1
 
 echo "Newer Versions installed are:"
 print_versions $ESX_DIR
 print_versions $LINUX_DIR
 print_versions $FREEBSD_DIR
+print_versions $WINDOWS_DIR
 
