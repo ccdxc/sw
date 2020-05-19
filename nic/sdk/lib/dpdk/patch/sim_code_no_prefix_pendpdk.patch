@@ -230,7 +230,7 @@ index 1494319..a319635 100644
  
  	if ((link_up  && adapter->link_up) ||
 diff --git dpdk-19.02-rc3/drivers/net/ionic/ionic_main.c dpdk-19.02-rc3/drivers/net/ionic/ionic_main.c
-index 02a06d3..a34c36d 100644
+index b77fbf8..4d5d676 100644
 --- dpdk-19.02-rc3/drivers/net/ionic/ionic_main.c
 +++ dpdk-19.02-rc3/drivers/net/ionic/ionic_main.c
 @@ -5,7 +5,7 @@
@@ -245,19 +245,19 @@ index 02a06d3..a34c36d 100644
 @@ -215,7 +215,7 @@ ionic_dev_cmd_wait(struct ionic_dev *idev, unsigned long max_wait)
  		if (done) {
  			ionic_drv_print(DEBUG, "DEVCMD %d done "
- 					"took %ld msecs\n",
+ 					"took %ld usecs\n",
 -					idev->dev_cmd->cmd.cmd.opcode,
 +					ioread8(&idev->dev_cmd->cmd.cmd.opcode),
- 					elapsed_msec);
+ 					elapsed_usec);
  			return 0;
  		}
 @@ -226,7 +226,7 @@ ionic_dev_cmd_wait(struct ionic_dev *idev, unsigned long max_wait)
- 	} while (elapsed_msec < max_wait_msec);
+ 	} while (elapsed_usec < max_wait_usec);
  
- 	ionic_drv_print(DEBUG, "DEVCMD %d timeout after %ld msecs\n",
+ 	ionic_drv_print(DEBUG, "DEVCMD %d timeout after %ld usecs\n",
 -			idev->dev_cmd->cmd.cmd.opcode,
 +			ioread8(&idev->dev_cmd->cmd.cmd.opcode),
- 			elapsed_msec);
+ 			elapsed_usec);
  
  	return -ETIMEDOUT;
 @@ -370,7 +370,7 @@ ionic_memzone_reserve(const char *name, uint32_t len, int socket_id)
@@ -310,7 +310,7 @@ index e163498..49acf59 100644
  
  #endif
 diff --git dpdk-19.02-rc3/drivers/net/ionic/ionic_rxtx.c dpdk-19.02-rc3/drivers/net/ionic/ionic_rxtx.c
-index 5b471a8..8fe30d2 100644
+index 59b4b80..d723e61 100644
 --- dpdk-19.02-rc3/drivers/net/ionic/ionic_rxtx.c
 +++ dpdk-19.02-rc3/drivers/net/ionic/ionic_rxtx.c
 @@ -106,6 +106,8 @@ ionic_tx_flush(struct ionic_qcq *txq)
@@ -366,23 +366,22 @@ index 5b471a8..8fe30d2 100644
  	return 0;
  }
  
-@@ -838,12 +847,15 @@ ionic_rx_clean(struct ionic_queue *q,
- 	rxm->pkt_len = cq_desc->len;
- 	rxm->data_len = RTE_MIN(buf_size, cq_desc->len);
- 	rxm->nb_segs = cq_desc->num_sg_elems + 1;
-+	
-+	DPDK_SIM_RX(rxm)
+@@ -845,11 +854,14 @@ ionic_rx_clean(struct ionic_queue *q,
+     last_seg = rxm;
+     rxm_seg = rxm->next;
  
++    DPDK_SIM_RX(rxm)
++
  	if (unlikely(cq_desc->num_sg_elems > 0)) {
  		left = cq_desc->len - rxm->data_len;
  		rxm_seg = rxm->next;
  		while (rxm_seg && left) {
  			rxm_seg->data_len = RTE_MIN(buf_size, left);
-+			DPDK_SIM_RX(rxm_seg)
++            DPDK_SIM_RX(rxm_seg)
  			left -= rxm_seg->data_len;
+             last_seg = rxm_seg;
  			rxm_seg = rxm_seg->next;
- 		}
-@@ -984,6 +996,9 @@ ionic_rx_fill(struct ionic_qcq *rxq, uint32_t len)
+@@ -1001,6 +1013,9 @@ ionic_rx_fill(struct ionic_qcq *rxq, uint32_t len)
  			prev_rxm_seg = rxm;
  			sg_desc = &sg_desc_base[q->head_idx];
  			elem = sg_desc->elems;
@@ -392,7 +391,7 @@ index 5b471a8..8fe30d2 100644
  			for (j = 0; j < nsegs - 1 && j < IONIC_RX_MAX_SG_ELEMS; j++) {
  				struct rte_mbuf *rxm_seg;
  				rte_iova_t data_iova;
-@@ -999,7 +1014,9 @@ ionic_rx_fill(struct ionic_qcq *rxq, uint32_t len)
+@@ -1016,7 +1031,9 @@ ionic_rx_fill(struct ionic_qcq *rxq, uint32_t len)
  				elem->addr = dma_addr;
  				elem->len = buf_size;
  				size += buf_size;
@@ -403,7 +402,7 @@ index 5b471a8..8fe30d2 100644
  				rxm_seg->next = NULL;
  				prev_rxm_seg->next = rxm_seg;
  				prev_rxm_seg = rxm_seg;
-@@ -1081,6 +1098,8 @@ ionic_rxq_service(struct ionic_cq *cq, uint32_t work_to_do,
+@@ -1099,6 +1116,8 @@ ionic_rxq_service(struct ionic_cq *cq, uint32_t work_to_do,
  	uint32_t work_done = 0;
  
  	cq_desc = &cq_desc_base[cq->tail_idx];
