@@ -6131,6 +6131,11 @@ hal_if_pick_inb_bond_active (if_t *hal_if, IfStatus new_status, bool *changed)
                 // NULL -> IF
                 *changed = true;
                 new_if = hal_if;
+            } else if ((old_if->if_id != hal_if->if_id) && 
+                (uplink_if_get_idx(hal_if) == 0)) {
+                // Uplink 0 came up
+                *changed = true;
+                new_if = hal_if;
             }
         } else {
             if (old_if->if_id == hal_if->if_id) {
