@@ -23,7 +23,7 @@ service MetricsSvc {
 message MetricsGetRequest {
   // Name identifies the name of the statistics table
   // NOTE: supported names are "Port", "MgmtPort", "HostIf"
-  string Name = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  string Name = 1 [(gogoproto.moretags) = "meta:\"mandatory\""];
   // Key identifies particular instance of the statistics table (e.g. uuid)
   // NOTE: if key is not passed, counters associated with all instances of
   //       given table name are are returned

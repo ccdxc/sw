@@ -1,7 +1,7 @@
 TOP_DIR = ../../..
 GEN_DIR = ${TOP_DIR}/nic/operd/daemon/gen/operd
 LD_LIBRARY_PATH=$(TOP_DIR)/nic/hal/third-party/google/x86_64/lib/
-OPERD_PROTO_FILES = $(shell ls ${CURDIR} | grep .proto | grep -v meta.proto | grep -v types.proto | grep -v module | tr " " "\n" | LC_ALL=C sort | tr "\n" " ")
+OPERD_PROTO_FILES = $(shell ls ${CURDIR} | grep .proto | grep -v module | tr " " "\n" | LC_ALL=C sort | tr "\n" " ")
 OPERD_PB_GO_FILES = $(patsubst %.proto,%.pb.go,$(OPERD_PROTO_FILES))
 $(info ${OPERD_PROTO_FILES})
 $(info ${OPERD_PB_GO_FILES})

@@ -33,13 +33,13 @@ Below is the list of all "moretags" used in HAL protos:
 
 1. key fields - all key fields of an object are annotated with [(gogoproto.moretags) = "venice:\"key\""]
 
-2. reference to another object - [(gogoproto.moretags)] = "venice:ref"
+2. reference to another object - [(gogoproto.moretags)] = "venice:ref"]
 
-3. immutable fields - [(gogoproto.moretags)] = "venice:immutable"
+3. immutable fields - [(gogoproto.moretags)] = "venice:immutable"]
    This is used to indicate that a field can't be changed once object is created. Once the object
    is created, for any of the subsequent CRUD operations for the object, the same value will be used.
 
-4. mandatory fields - [(gogoproto.moretags)] = "venice:mandatory"
+4. mandatory fields - [(gogoproto.moretags)] = "venice:mandatory"]
    This is used to indicate that an object can't be created without this field
    being set to some valid value
 
@@ -47,13 +47,13 @@ Below is the list of all "moretags" used in HAL protos:
    This is needed for test tool to validate the responses from HAL. Otherwise,
    functionally this is not required
 
-6. field constraints - [(gogoproto.moretags) = "venice:constraints={C1,C2,..}"
+6. field constraints - [(gogoproto.moretags) = "venice:constraints={C1,C2,..}"]
    where C1, C2 etc. are the constraints. The supported constraints are listed
    below:
 
-   a. range checks - [(gogoproto.moretags) = "venice:constraints={range:0-255}"
+   a. range checks - [(gogoproto.moretags) = "venice:constraints={range:0-255}"]
       This is to express that a field can take only values from a given range
 
-   b. depdendency on other fields - [(gogoproto.moretags) = "venice:constraints={<pkg>.<object>.<field> OP <value>"
+   b. depdendency on other fields - [(gogoproto.moretags) = "venice:constraints={<pkg>.<object>.<field> OP <value>}"]
       where OP is the operation, supported operations are == (equal) and != (not equal) and
       value can be a constant or enum

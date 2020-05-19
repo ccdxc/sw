@@ -270,7 +270,7 @@ func (*Timestamp) Descriptor() ([]byte, []int) { return fileDescriptorMeta, []in
 // ObjectMeta contains metadata that all objects stored in kvstore must have
 type ObjMeta struct {
 	// Name of the object, unique within a Namespace for scoped objects.
-	// Should start and end in an alphanumeric character and can contain alphanumner or ._-: characters
+	// Should start and end in an alphanumeric character and can contain alphanumeric or ._-: characters
 	// minimum length is 2 and maximum length is 64 characters
 	Name string `protobuf:"bytes,1,opt,name=Name,proto3" json:"name"`
 	// UUID is the unique identifier for the object. This is generated on creation of the object.
