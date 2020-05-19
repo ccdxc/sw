@@ -490,7 +490,7 @@ func (tn *topoNode) addNode(obj Object, objKey string) {
 		tn.topo[key] = topoRefs
 	case "Interface":
 		nwIf := obj.(*netproto.Interface)
-		log.Infof("Interface add for: %v | dsc : %v", nwIf.Spec, nwIf.Status.DSC)
+		log.Infof("Interface add for key: %s |  Spec: %v | dsc : %v", objKey, nwIf.Spec, nwIf.Status.DSC)
 		tenant := ""
 		if nwIf.Spec.VrfName != "" {
 			tenant = nwIf.Spec.VrfName
@@ -500,6 +500,16 @@ func (tn *topoNode) addNode(obj Object, objKey string) {
 
 		var topoRefs *topoRefs
 		if refs, ok := tn.topo[objKey]; ok {
+			//make sure it's not an existing topo
+			if refs != nil && refs.refs != nil {
+				nwRef := refs.refs["Network"]
+				if len(nwRef) != 0 {
+					if nwRef[0] == nwIf.Spec.Network {
+						log.Infof("Duplicate add received for interface: %s | spec: %v, current ref: %v", objKey, nwIf.Spec, refs)
+						return
+					}
+				}
+			}
 			topoRefs = refs
 		} else {
 			topoRefs = newTopoRefs()
@@ -556,6 +566,7 @@ func (tn *topoNode) deleteNode(obj Object, evalOpts bool, objKey string) {
 	switch kind {
 	case "Interface":
 		nwIf := obj.(*netproto.Interface)
+		log.Infof("Interface del for key: %s |  Spec: %v | dsc : %v", objKey, nwIf.Spec, nwIf.Status.DSC)
 		tenant := ""
 		if nwIf.Spec.VrfName != "" {
 			tenant = nwIf.Spec.VrfName

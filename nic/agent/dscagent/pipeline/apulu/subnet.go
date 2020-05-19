@@ -538,10 +538,10 @@ func deleteSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 	return nil
 }
 
-func getPolicyUuid(names []string, attached bool, nw netproto.Network, infraAPI types.InfraAPI) []string {
+func getPolicyUuid(names []string, attached bool, nw netproto.Network, infraAPI types.InfraAPI) ([]string, error) {
 	ids := []string{}
 	if attached == false {
-		return ids
+		return ids, nil
 	}
 	for _, n := range names {
 		p := netproto.NetworkSecurityPolicy{
@@ -557,18 +557,62 @@ func getPolicyUuid(names []string, attached bool, nw netproto.Network, infraAPI 
 		dat, err := infraAPI.Read(p.Kind, p.GetKey())
 		if err != nil {
 			log.Errorf("Look up failed for %s | err: %s", p.GetKey(), err)
-			continue
+			return ids, err
 		}
 		obj := netproto.NetworkSecurityPolicy{}
 		err = obj.Unmarshal(dat)
 		if err != nil {
 			log.Errorf("Unmarshal failed for %s | err: %s", p.GetKey(), err)
-			continue
+			return ids, err
 		}
 		ids = append(ids, obj.UUID)
 	}
 	log.Infof("Returning network security policy ids: %v", ids)
-	return ids
+	return ids, nil
+}
+
+func getIPAMUuid(infraAPI types.InfraAPI, nw netproto.Network, attached bool) ([][]byte, error) {
+	if attached == false {
+		return [][]byte{[]byte{}}, nil
+	}
+
+	ipamName := ""
+	vrf, err := validator.ValidateVrf(infraAPI, nw.Tenant, nw.Namespace, nw.Spec.VrfName)
+	if err != nil {
+		log.Errorf("Get VRF failed for %s | %s", nw.GetKind(), nw.GetKey())
+		return nil, err
+	}
+
+	if nw.Spec.IPAMPolicy != "" {
+		ipamName = nw.Spec.IPAMPolicy
+	} else {
+		// pick the ipam policy from the vpc
+		ipamName = vrf.Spec.IPAMPolicy
+	}
+
+	var ipamuuids [][]byte
+	if ipamName != "" {
+		policy, err := validator.ValidateIPAMPolicyExists(infraAPI, nw.Tenant, nw.Namespace, ipamName)
+		if err != nil {
+			log.Errorf("Get IPAMPolicy failed for %s | %s", nw.GetKind(), nw.GetKey())
+			return nil, err
+		}
+		for _, srv := range IPAMPolicyIDToServerIDs[policy.UUID] {
+			ipu, err := uuid.FromString(srv)
+			if err != nil {
+				log.Errorf("Parse IPAMPolicy UUID failed for %s", srv)
+				return nil, err
+			}
+			ipamuuids = append(ipamuuids, ipu.Bytes())
+		}
+		if len(IPAMPolicyIDToServerIDs[policy.UUID]) == 0 {
+			ipamuuids = [][]byte{[]byte{}}
+		}
+	} else {
+		ipamuuids = [][]byte{[]byte{}}
+	}
+	return ipamuuids, nil
+
 }
 
 func convertNetworkToSubnet(infraAPI types.InfraAPI, nw netproto.Network, uplinkIDs []uint64) (*halapi.SubnetRequest, error) {
@@ -576,7 +620,6 @@ func convertNetworkToSubnet(infraAPI types.InfraAPI, nw netproto.Network, uplink
 	var v4Prefix *halapi.IPv4Prefix
 	var v4VrIP uint32
 	var v6VrIP []byte
-	ipamName := ""
 
 	v6Prefix = nil
 	v4Prefix = nil
@@ -625,33 +668,25 @@ func convertNetworkToSubnet(infraAPI types.InfraAPI, nw netproto.Network, uplink
 		log.Infof("subnet %s attached to interface uids: %v", nw.GetKey(), intfUUIDs)
 	}
 
-	var ipamuuids [][]byte
-	if nw.Spec.IPAMPolicy != "" {
-		ipamName = nw.Spec.IPAMPolicy
-	} else {
-		// pick the ipam policy from the vpc
-		ipamName = vrf.Spec.IPAMPolicy
+	ipamuuids, err := getIPAMUuid(infraAPI, nw, attached)
+
+	if err != nil {
+		log.Errorf("get ipam uuid failed for nw: %s | err: %v", nw.GetKey(), err)
+		return nil, err
 	}
 
-	if ipamName != "" {
-		policy, err := validator.ValidateIPAMPolicyExists(infraAPI, nw.Tenant, nw.Namespace, ipamName)
-		if err != nil {
-			log.Errorf("Get IPAMPolicy failed for %s | %s", nw.GetKind(), nw.GetKey())
-			return nil, err
-		}
-		for _, srv := range IPAMPolicyIDToServerIDs[policy.UUID] {
-			ipu, err := uuid.FromString(srv)
-			if err != nil {
-				log.Errorf("Parse IPAMPolicy UUID failed for %s", srv)
-				return nil, err
-			}
-			ipamuuids = append(ipamuuids, ipu.Bytes())
-		}
-		if len(IPAMPolicyIDToServerIDs[policy.UUID]) == 0 {
-			ipamuuids = [][]byte{[]byte{}}
-		}
-	} else {
-		ipamuuids = [][]byte{[]byte{}}
+	ingPoliciesIDs, err := getPolicyUuid(nw.Spec.IngV4SecurityPolicies, attached, nw, infraAPI)
+
+	if err != nil {
+		log.Errorf("get ingress security policy uuid failed for nw: %s | err: %s", nw.GetKey(), err)
+		return nil, err
+	}
+
+	egPoliciesIDs, err := getPolicyUuid(nw.Spec.EgV4SecurityPolicies, attached, nw, infraAPI)
+
+	if err != nil {
+		log.Errorf("get egress security policy uuid failed for nw: %s | err: %s", nw.GetKey(), err)
+		return nil, err
 	}
 
 	return &halapi.SubnetRequest{
@@ -675,8 +710,8 @@ func convertNetworkToSubnet(infraAPI types.InfraAPI, nw netproto.Network, uplink
 				V6Prefix:              v6Prefix,
 				HostIf:                intfUUIDs,
 				DHCPPolicyId:          ipamuuids,
-				IngV4SecurityPolicyId: utils.ConvertIDs(getPolicyUuid(nw.Spec.IngV4SecurityPolicies, attached, nw, infraAPI)...),
-				EgV4SecurityPolicyId:  utils.ConvertIDs(getPolicyUuid(nw.Spec.EgV4SecurityPolicies, attached, nw, infraAPI)...),
+				IngV4SecurityPolicyId: utils.ConvertIDs(ingPoliciesIDs...),
+				EgV4SecurityPolicyId:  utils.ConvertIDs(egPoliciesIDs...),
 			},
 		},
 	}, nil

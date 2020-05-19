@@ -11,7 +11,7 @@ import (
 	"net"
 
 	"github.com/pkg/errors"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/dscagent/pipeline/apulu/utils"
@@ -158,8 +158,25 @@ func updateInterfaceHandler(infraAPI types.InfraAPI, client halapi.IfSvcClient, 
 					updsubnet.Request[0].HostIf = append(updsubnet.Request[0].HostIf, uid)
 				}
 				// since boltDB is not updated for the interface yet, convertNetworkToSubnet doesn't populate the polciy IDs
-				updsubnet.Request[0].IngV4SecurityPolicyId = utils.ConvertIDs(getPolicyUuid(nw.Spec.IngV4SecurityPolicies, true, nw, infraAPI)...)
-				updsubnet.Request[0].EgV4SecurityPolicyId = utils.ConvertIDs(getPolicyUuid(nw.Spec.EgV4SecurityPolicies, true, nw, infraAPI)...)
+				ingPolicyId, err := getPolicyUuid(nw.Spec.IngV4SecurityPolicies, true, nw, infraAPI)
+				if err != nil {
+					log.Errorf("Network: %s could not get ingress security policy uuid | Err: %s", nw.GetKey(), err)
+					return errors.Wrapf(types.ErrDatapathHandling, "Network: %s could not get ingress security policy uuid | Err: %s", nw.GetKey(), err)
+				}
+				egPolicyId, err := getPolicyUuid(nw.Spec.EgV4SecurityPolicies, true, nw, infraAPI)
+				if err != nil {
+					log.Errorf("Network: %s could not get egress security policy uuid | Err: %s", nw.GetKey(), err)
+					return errors.Wrapf(types.ErrDatapathHandling, "Network: %s could not get egress security policy uuid | Err: %s", nw.GetKey(), err)
+				}
+
+				updsubnet.Request[0].IngV4SecurityPolicyId = utils.ConvertIDs(ingPolicyId...)
+				updsubnet.Request[0].EgV4SecurityPolicyId = utils.ConvertIDs(egPolicyId...)
+
+				updsubnet.Request[0].DHCPPolicyId, err = getIPAMUuid(infraAPI, nw, true)
+				if err != nil {
+					log.Errorf("Network: %s could not get ipam uuid | Err: %s", nw.GetKey(), err)
+					return errors.Wrapf(types.ErrDatapathHandling, "Network: %s could not get ipam uuid | Err: %s", nw.GetKey(), err)
+				}
 			} else {
 				// Remove the uid from subnet's hostIf
 				length := len(updsubnet.Request[0].HostIf)

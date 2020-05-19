@@ -14,7 +14,7 @@ import (
 type Operation int
 
 // CloudPipelineKinds captures all the objects that agent will watch from Venice
-var CloudPipelineKinds = []string{"IPAMPolicy", "App", "NetworkSecurityPolicy", "Vrf", "Network", "Interface", "InterfaceMirrorSession", "Endpoint", "SecurityProfile", "RouteTable", "RoutingConfig"}
+var CloudPipelineKinds = []string{"IPAMPolicy", "App", "NetworkSecurityPolicy", "RouteTable", "Vrf", "Network", "Interface", "InterfaceMirrorSession", "Endpoint", "SecurityProfile", "RoutingConfig"}
 
 // BaseNetKinds captures all the objects needed for Transparent Basenet Profile
 var BaseNetKinds = []string{"Profile", "IPAMPolicy", "Interface", "InterfaceMirrorSession"}
