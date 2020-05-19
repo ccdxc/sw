@@ -5,25 +5,26 @@ meta:
     targetcount : 1
 
 testcases:
-    -   name: DISRUPTIVE_UPGRADE
+    -   name        : DISRUPTIVE_UPGRADE
         testcase    : testcases.naples_upgrade.disruptive_upgrade
-        #disable    : True
+        disable     : False
         ignore      : True
         iterators   :
             type    : simple
             option  : [""]
         args        :
-            sleep   : 100
+            sleep   : 150
 
-    -   name: DISRUPTIVE_UPGRADE_GRACEFUL
+    -   name        : DISRUPTIVE_UPGRADE_GRACEFUL
         testcase    : testcases.naples_upgrade.disruptive_upgrade
-        #disable    : True
+        disable     : True
         ignore      : True
         iterators   :
-            type    : nested
+            type    : simple
             option  : [""]
-            workload_type : [ local, remote ]
-            workload_scope : [ intra-subnet, inter-subnet ]
+            workload_type : [ remote ]
+            workload_scope : [ inter-subnet ]
         args        :
-            sleep   : 100
+            sleep   : 200
             mode    : "graceful"
+            type    : remote_only

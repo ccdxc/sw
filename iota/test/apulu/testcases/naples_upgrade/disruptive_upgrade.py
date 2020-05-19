@@ -2,11 +2,13 @@
 import time
 import json
 import iota.harness.api as api
-import iota.test.utils.ping as ping
 import iota.test.common.utils.naples_upgrade.utils as utils
 import iota.test.common.utils.copy_tech_support as techsupp
 import iota.test.apulu.config.api as config_api
 import iota.test.apulu.utils.connectivity as conn_utils
+import iota.test.apulu.utils.pdsctl as pdsctl
+import iota.test.apulu.utils.misc as misc_utils
+import iota.test.utils.ping as ping
 
 def_upg_tech_support_files = ["/data/techsupport/DSC_TechSupport.tar.gz"]
 UPGRADE_NAPLES_PKG = "naples_fw_venice.tar"
@@ -19,10 +21,11 @@ def PacketTestSetup(tc):
     tc.bg_cmd_cookies = None
     tc.bg_cmd_resp = None
     tc.pktsize = 128
-    tc.interval = 0.2
-    tc.duration = 100
+    tc.duration = tc.sleep + 200
     tc.background = True
     tc.pktlossverif = False
+    tc.interval = 0.001 #1msec
+    tc.count = int(tc.duration / tc.interval)
 
     if tc.upgrade_mode != "graceful":
         tc.pktlossverif = True
@@ -39,6 +42,8 @@ def PacketTestSetup(tc):
             return api.types.status.SUCCESS
         return api.types.status.FAILURE
 
+    if api.GlobalOptions.dryrun:
+        return api.types.status.SUCCESS
     # ensure connectivity with foreground ping before test
     if ping.TestPing(tc, 'user_input', "ipv4", tc.pktsize, interval=tc.interval, \
             count=5, pktlossverif=tc.pktlossverif, \
@@ -49,12 +54,22 @@ def PacketTestSetup(tc):
 
     # start background ping before start of test
     if ping.TestPing(tc, 'user_input', "ipv4", tc.pktsize, interval=tc.interval, \
-            count=0, deadline=tc.duration, pktlossverif=tc.pktlossverif, \
-            background=tc.background) != api.types.status.SUCCESS:
+            count=tc.count, pktlossverif=tc.pktlossverif, \
+            background=tc.background, hping3=True) != api.types.status.SUCCESS:
         api.Logger.error("Failed in triggering background Ping.")
         return api.types.status.FAILURE
 
     return api.types.status.SUCCESS
+
+
+# Push interface config after upgrade
+# Venice is supposed to update interface config after upgrade
+def UpdateConfigAfterUpgrade(tc):
+    api.Logger.info("Updating Host Interfaces after Upgrade")
+    SubnetClient = config_api.GetObjClient('subnet')
+    for n in tc.Nodes:
+        SubnetClient.UpdateHostInterfaces(n)
+
 
 def Setup(tc):
     tc.Nodes = api.GetNaplesHostnames()
@@ -72,12 +87,6 @@ def Setup(tc):
     for node in tc.Nodes:
         api.Trigger_AddNaplesCommand(req, node, "touch /data/upgrade_to_same_firmware_allowed")
         api.Trigger_AddNaplesCommand(req, node, "rm -rf /data/techsupport/DSC_TechSupport_*")
-        #Removing Netagent DB config, till Netagent replay issue is fixed
-        # Try following command instead of removing pen-netagent.db
-        # /nic/tools/clear_nic_config.sh remove-config 
-        # echo "{\"console\": \"enable\"}" > /sysconfig/config0/system-config.json
-        api.Trigger_AddNaplesCommand(req, node, "rm -rf /sysconfig/config0/pen-netagent.db")
-        api.Trigger_AddNaplesCommand(req, node, "rm -rf /sysconfig/config1/pen-netagent.db")
         api.Trigger_AddNaplesCommand(req, node, "cp /update/{} /update/{}".format(UPGRADE_NAPLES_PKG, NAPLES_PKG))
     resp = api.Trigger(req)
 
@@ -91,43 +100,49 @@ def Setup(tc):
 def Trigger(tc):
     if tc.skip:
         return api.types.status.SUCCESS
-
-    req = api.Trigger_CreateExecuteCommandsRequest()
+    req = api.Trigger_CreateExecuteCommandsRequest(serial=False)
     for n in tc.Nodes:
-        ''' TODO - actual rollout trigger is commented for now, as rollout request is rebooting the naples.
-                   enable rollout config once the functionality is in place.
-        '''
-        cmd = 'curl -k https://' + api.GetNicIntMgmtIP(n) + ':'+utils.GetNaplesMgmtPort()+'/api/v1/naples/rollout/'
-        #cmd = 'curl -k -d \'{"kind": "SmartNICRollout","meta": {"name": "test disruptive upgrade","tenant": "tenant-foo"},"spec": {"ops": [{"op": 4,"version": "0.1"}]}}\' -X POST -H "Content-Type:application/json" ' + 'https://' + api.GetNicIntMgmtIP(n) + ':'+utils.GetNaplesMgmtPort()+'/api/v1/naples/rollout/'
-        api.Trigger_AddHostCommand(req, n, cmd, timeout=100)
+        cmd = 'curl -k -d \'{"kind": "SmartNICRollout","meta": {"name": "test disruptive upgrade","tenant": "tenant-foo"},"spec": {"ops": [{"op": 4,"version": "0.1"}]}}\' -X POST -H "Content-Type:application/json" ' + 'https://' + api.GetNicIntMgmtIP(n) + ':'+utils.GetNaplesMgmtPort()+'/api/v1/naples/rollout/'
+        api.Logger.info("Sending rollout request cmd : %s"%cmd)
+        api.Trigger_AddHostCommand(req, n, cmd, timeout=130)
     tc.resp = api.Trigger(req)
 
-    api.Logger.info("Sent rollout request")
+    api.Logger.info("Rollout request processing complete")
     return api.types.status.SUCCESS
 
 def Verify(tc):
     if tc.skip:
         return api.types.status.SUCCESS
-
     if tc.upgrade_mode:
         if tc.background and tc.bg_cmd_resp is None:
             api.Logger.error("Failed in background Ping cmd trigger")
             return api.types.status.FAILURE
 
-    api.Logger.info("Waiting %s secs for upgrade to complete"%(tc.sleep))
-    time.sleep(tc.sleep)
-
     if tc.resp is None:
         api.Logger.error("Received empty response for config request")
-        return api.types.status.FAILURE
+        #return api.types.status.FAILURE
+    else:
+        for cmd in tc.resp.commands:
+            api.PrintCommandResults(cmd)
+            if cmd.exit_code != 0:
+                api.Logger.error("Rollout request failed")
+                #return api.types.status.FAILURE
+    api.Logger.info("Sleep for 30 secs before pushing Interface updates after upgrade")
+    misc_utils.Sleep(30)
 
-    for cmd in tc.resp.commands:
-        api.PrintCommandResults(cmd)
-        if cmd.exit_code != 0:
-            api.Logger.error("Rollout request failed")
-            return api.types.status.FAILURE
+    UpdateConfigAfterUpgrade(tc)
 
-    req = api.Trigger_CreateExecuteCommandsRequest()
+    api.Logger.info("Sleep for %s secs for the UPGRADE processing to complete"%tc.sleep)
+    misc_utils.Sleep(tc.sleep)
+
+    tmp_req = api.Trigger_CreateExecuteCommandsRequest(serial=False)
+    for n in tc.Nodes:
+        cmd = 'curl -k -d \'{"kind": "SmartNICRollout","meta": {"name": "test disruptive upgrade","tenant": "tenant-foo"},"spec": {"ops": [{"op": 4,"version": "0.1"}]}}\' -X POST -H "Content-Type:application/json" ' + 'https://' + api.GetNicIntMgmtIP(n) + ':'+utils.GetNaplesMgmtPort()+'/api/v1/naples/rollout/'
+        api.Trigger_AddHostCommand(tmp_req, n, cmd)
+        api.Logger.info("Sending Temporary Second rollout status POST request: %s"%(cmd))
+    tc.resp = api.Trigger(tmp_req)
+
+    req = api.Trigger_CreateExecuteCommandsRequest(serial=False)
     for n in tc.Nodes:
         cmd = 'curl -k https://' + api.GetNicIntMgmtIP(n) + ':'+utils.GetNaplesMgmtPort()+'/api/v1/naples/rollout/'
         api.Trigger_AddHostCommand(req, n, cmd)
@@ -137,15 +152,14 @@ def Verify(tc):
     try:
         for cmd in tc.resp.commands:
             api.PrintCommandResults(cmd)
-    except:
-        api.Logger.error("EXCEPTION occured in sending rollout status get.")
+    except Exception as e:
+        api.Logger.error(f"Exception occured in sending rollout status get.{e}")
         return api.types.status.FAILURE
 
     for cmd in tc.resp.commands:
         if cmd.exit_code != 0:
             api.Logger.info("Rollout status get request returned failure")
             return api.types.status.FAILURE
-
         resp = json.loads(cmd.stdout)
         try:
             for item in resp['Status']['status']:
@@ -163,26 +177,40 @@ def Verify(tc):
                     if not item['opstatus'] == 'success':
                         api.Logger.info("opstatus is bad")
                         return api.types.status.FAILURE
-        except:
-            api.Logger.info("resp: ", json.dumps(resp, indent=1))
+                    else:
+                        api.Logger.info("Rollout status is SUCCESS")
+        except Exception as e:
+            api.Logger.error("resp: ", json.dumps(resp, indent=1))
+            api.Logger.error(f"Exception occured in parsing response: {e}")
 
     result = api.types.status.SUCCESS
 
+    if tc.upgrade_mode:
+        # ensure connectivity after upgrade
+        if ping.TestPing(tc, 'user_input', "ipv4", tc.pktsize, interval=tc.interval, \
+                count=5, background=False) != api.types.status.SUCCESS:
+            api.Logger.info("Connectivit check failed after upgrade")
+            ret = api.types.status.FAILURE
+
+    api.Logger.info("Sleeping additional 60 secs for checking background ping stats")
+    misc_utils.Sleep(60)
+
+    pkt_loss_duration = 0
     if tc.upgrade_mode and tc.background:
-        time.sleep (5)
+        misc_utils.Sleep (5)
         if ping.TestTerminateBackgroundPing(tc, tc.pktsize,\
               pktlossverif=tc.pktlossverif) != api.types.status.SUCCESS:
             api.Logger.error("Failed in Ping background command termination.")
             result = api.types.status.FAILURE
-
+        # calculate max packet loss duration for background ping
         pkt_loss_duration = ping.GetMaxPktLossDuration(tc, interval=tc.interval)
         if pkt_loss_duration != 0:
-            api.Logger.error("Max Pkt loss duration is {} secs".format(\
-                        pkt_loss_duration))
+            api.Logger.error("Max Packet Loss Duration during UPGRADE is {} Secs".format(\
+                        int(pkt_loss_duration)))
             if tc.pktlossverif:
                 result = api.types.status.FAILURE
         else:
-            api.Logger.info("No Packet Loss found during upgrade test")
+            api.Logger.info("No Packet Loss Found during UPGRADE Test")
 
     return result
 
@@ -194,12 +222,11 @@ def Teardown(tc):
     for node in tc.Nodes:
         api.Trigger_AddNaplesCommand(req, node, "rm -rf /data/upgrade_to_same_firmware_allowed")
     resp = api.Trigger(req)
-
     try:
         for cmd_resp in resp.commands:
-            api.PrintCommandResults(cmd_resp)
             if cmd_resp.exit_code != 0:
-                api.Logger.error("Setup failed %s", cmd_resp.command)
+                api.PrintCommandResults(cmd_resp)
+                api.Logger.error("Teardown failed %s", cmd_resp.command)
     except:
         api.Logger.error("EXCEPTION occured in Naples command")
         return api.types.status.FAILURE
@@ -214,11 +241,11 @@ def Teardown(tc):
         if cmd.exit_code != 0:
             return api.types.status.FAILURE
 
-    if techsupp.CopyTechSupportFiles(tc.Nodes,
-          def_upg_tech_support_files, tc.GetLogsDir()) != api.types.status.SUCCESS:
-        api.Logger.error("Copying tech support from Naples failed")
-        # TODO - tech support is not generated by naples after upgrade completion.
-        #        So for now skipping failure if not able to copy tech support file.
-        #return api.types.status.FAILURE
+    # TODO - tech support is not generated by naples after upgrade completion.
+    #        So for now skipping failure if not able to copy tech support file.
+    #if techsupp.CopyTechSupportFiles(tc.Nodes,
+    #      def_upg_tech_support_files, tc.GetLogsDir()) != api.types.status.SUCCESS:
+    #    api.Logger.error("Copying tech support from Naples failed")
+    #    return api.types.status.FAILURE
 
     return api.types.status.SUCCESS
