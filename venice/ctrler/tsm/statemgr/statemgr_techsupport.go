@@ -172,6 +172,7 @@ func (sm *Statemgr) startTechsupportTimer(obj TechSupportObject) {
 		// Recheck in memdb to ensure the object is still there
 		state, err = sm.GetTechSupportObjectState(obj)
 		if err != nil {
+			log.Errorf("Failed to get techsupport state. Err : %v", err)
 			return
 		}
 
@@ -189,7 +190,8 @@ func (sm *Statemgr) startTechsupportTimer(obj TechSupportObject) {
 		}
 
 		state.Lock()
-		if tsr.Status.Status != monitoring.TechSupportJobStatus_Completed.String() && (isTimeout(tsr.Status.ControllerNodeResults) || isTimeout(tsr.Status.DSCResults)) {
+		if tsr.Status.Status != monitoring.TechSupportJobStatus_Completed.String() && (isTimeout(tsr.Status.ControllerNodeResults) || isTimeout(tsr.Status.DSCResults) ||
+			(len(tsr.Status.ControllerNodeResults)+len(tsr.Status.DSCResults) != len(tsr.Spec.NodeSelector.Names))) {
 			tsr.Status.Status = monitoring.TechSupportJobStatus_TimeOut.String()
 			log.Infof("Techsupport timed out Reason is being set")
 			tsr.Status.Reason = GetTechsupportErrorMessage(tsr)
