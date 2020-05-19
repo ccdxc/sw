@@ -91,12 +91,9 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&version, "version", "v", false, "display version of penctl")
 	rootCmd.PersistentFlags().BoolVarP(&yamlFormat, "yaml", "y", false, "display in yaml format")
 	rootCmd.PersistentFlags().BoolVarP(&jsonFormat, "json", "j", true, "display in json format")
-	rootCmd.PersistentFlags().BoolVarP(&mockMode, "localhost", "l", false, "run penctl in mock managedBy to localhost")
 	rootCmd.PersistentFlags().StringVarP(&authTokenFile, "authtoken", "a", "", "path to file containing authorization token")
 	rootCmd.PersistentFlags().BoolVarP(&compat11, "compat-1.1", "", false, "run in 1.1 firmware compatibility mode")
 	rootCmd.PersistentFlags().StringVarP(&dscURL, "dsc-url", "", "", "set url for Distributed Service Card")
-
-	rootCmd.PersistentFlags().MarkHidden("localhost")
 
 	// TODO generate this file only for linux/etc
 	// rootCmd.GenBashCompletionFile("penctl.sh")

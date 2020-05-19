@@ -17,7 +17,7 @@ intr_total : total port intrs.
 intr_polled : total port intrs polled.
 intr_perstn : pcie out of reset.
 intr_ltssmst_early : link train before linkup.
-intr_ltssmst : link train after  linkup.
+intr_ltssmst : link train after linkup.
 intr_linkup2dn : link down.
 intr_linkdn2up : link up.
 intr_rstup2dn : mac up.
@@ -36,7 +36,7 @@ markerpollmax : marker poll count (max).
 axipendpolllast : axipend poll count (last).
 axipendpollmax : axipend poll count (max).
 faults : link faults.
-powerdown: powerdown count .
+powerdown: powerdown count.
 link_dn2up_int : link_dn2up_int.
 link_up2dn_int : link_up2dn_int.
 sec_bus_rst_int : sec_bus_rst_int.
@@ -56,6 +56,10 @@ txbfr_overflow_int : txbfr_overflow_int.
 rxtlp_err_int : rxtlp_err_int.
 tl_flr_req_int : tl_flr_req_int.
 rc_legacy_intpin_changed_int : rc_legacy_intpin_changed_int.
+ppsd_sbe_interrupt : ppsd_sbe_interrupt.
+ppsd_dbe_interrupt : ppsd_dbe_interrupt.
+sbus_err_interrupt : sbus_err_interrupt.
+poweron_retries : poweron_retries.
 
 IntrTotal	: total port intrs
 IntrPolled	: total port intrs polled
@@ -100,6 +104,10 @@ TxbfrOverflowInt	: txbfr_overflow_int
 RxtlpErrInt	: rxtlp_err_int
 TlFlrReqInt	: tl_flr_req_int
 RcLegacyIntpinChangedInt	: rc_legacy_intpin_changed_int
+PpsdSbeInterrupt	: ppsd_sbe_interrupt
+PpsdDbeInterrupt	: ppsd_dbe_interrupt
+SbusErrInterrupt	: sbus_err_interrupt
+PoweronRetries	: poweron_retries
 
 ---------------------------------
 

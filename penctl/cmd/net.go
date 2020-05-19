@@ -31,7 +31,6 @@ func isNaplesReachable() error {
 	_, err := net.DialTimeout("tcp", naplesIP+":"+revProxyPort, timeOut)
 
 	if err != nil {
-		fmt.Printf("Could not reach Distributed Service Card on %s\n", naplesIP+":"+revProxyPort)
 		return err
 	}
 	return nil

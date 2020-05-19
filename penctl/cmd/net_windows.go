@@ -62,8 +62,6 @@ func pickNetwork(cmd *cobra.Command, args []string) error {
 			val = val[:len(val)-1]
 		}
 		naplesURL = val
-	} else if cmd.Flags().Changed("localhost") {
-		naplesURL = "http://127.0.0.1"
 	} else {
 		// figuring out the right IP now
 		bus, err := getBusNumber()
@@ -83,5 +81,15 @@ func pickNetwork(cmd *cobra.Command, args []string) error {
 	naplesIP = stripURLScheme(naplesURL)
 	naplesURL += ":" + revProxyPort + "/"
 
-	return isNaplesReachable()
+	if isNaplesReachable() == nil {
+		return nil
+	}
+	naplesURL = "http://127.0.0.1"
+	naplesIP = stripURLScheme(naplesURL)
+	naplesURL += ":" + revProxyPort + "/"
+	err := isNaplesReachable()
+	if err != nil {
+		fmt.Printf("Could not reach Distributed Service Card\n")
+	}
+	return nil
 }
