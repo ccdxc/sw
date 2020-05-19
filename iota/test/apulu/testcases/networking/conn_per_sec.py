@@ -265,7 +265,7 @@ def getTunables(tc):
     tunables['cps'] = int(tc.iterators.cps)
 
     if tc.iterators.proto == 'tcp':
-        tunables['pcap_file'] = "http_gzip.cap"
+        tunables['pcap_file'] = "http_gzip.pcap" #mtu is less than 1K
     elif tc.iterators.proto == 'udp':
         tunables['pcap_file'] = "chargen-udp.pcap" #"sip_0.pcap"
     else:
