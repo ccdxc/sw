@@ -145,58 +145,76 @@ func convertFlowExportPolicy(fePolicy *monitoring.FlowExportPolicy) *netproto.Fl
 		ObjectMeta: fePolicy.ObjectMeta,
 	}
 
-	for _, r := range fePolicy.Spec.MatchRules {
-		var protoPorts []*netproto.ProtoPort
-		if r.AppProtoSel != nil {
-			for _, pp := range r.AppProtoSel.ProtoPorts {
-				var protoPort netproto.ProtoPort
-				components := strings.Split(pp, "/")
-				switch len(components) {
-				case 1:
-					protoPort.Protocol = components[0]
-				case 2:
-					protoPort.Protocol = components[0]
-					protoPort.Port = components[1]
-				case 3:
-					protoPort.Protocol = components[0]
-					protoPort.Port = fmt.Sprintf("%s/%s", components[1], components[2])
-				default:
-					continue
-				}
-				protoPorts = append(protoPorts, &protoPort)
-			}
-		}
+	anyAnyProtoPorts := []*netproto.ProtoPort{
+		&netproto.ProtoPort{
+			Port:     "any",
+			Protocol: "any",
+		},
+	}
+	anyIP := []string{"any"}
 
-		if r.Src != nil && r.Src.IPAddresses != nil {
-			srcAddresses = r.Src.IPAddresses
-		} else {
-			srcAddresses = []string{"any"}
-		}
-
-		if r.Dst != nil && r.Dst.IPAddresses != nil {
-			dstAddresses = r.Dst.IPAddresses
-		} else {
-			dstAddresses = []string{"any"}
-		}
-
-		if len(protoPorts) == 0 {
-			protoPorts = []*netproto.ProtoPort{
-				&netproto.ProtoPort{
-					Port:     "any",
-					Protocol: "any",
-				},
-			}
-		}
+	if len(fePolicy.Spec.MatchRules) == 0 {
 		m := netproto.MatchRule{
 			Src: &netproto.MatchSelector{
-				Addresses: srcAddresses,
+				Addresses: anyIP,
 			},
 			Dst: &netproto.MatchSelector{
-				Addresses:  dstAddresses,
-				ProtoPorts: protoPorts,
+				Addresses:  anyIP,
+				ProtoPorts: anyAnyProtoPorts,
 			},
 		}
 		matchRules = append(matchRules, m)
+
+	} else {
+		for _, r := range fePolicy.Spec.MatchRules {
+			var protoPorts []*netproto.ProtoPort
+			if r.AppProtoSel != nil {
+				for _, pp := range r.AppProtoSel.ProtoPorts {
+					var protoPort netproto.ProtoPort
+					components := strings.Split(pp, "/")
+					switch len(components) {
+					case 1:
+						protoPort.Protocol = components[0]
+					case 2:
+						protoPort.Protocol = components[0]
+						protoPort.Port = components[1]
+					case 3:
+						protoPort.Protocol = components[0]
+						protoPort.Port = fmt.Sprintf("%s/%s", components[1], components[2])
+					default:
+						continue
+					}
+					protoPorts = append(protoPorts, &protoPort)
+				}
+			}
+
+			if r.Src != nil && r.Src.IPAddresses != nil {
+				srcAddresses = r.Src.IPAddresses
+			} else {
+				srcAddresses = anyIP
+			}
+
+			if r.Dst != nil && r.Dst.IPAddresses != nil {
+				dstAddresses = r.Dst.IPAddresses
+			} else {
+				dstAddresses = anyIP
+			}
+
+			if len(protoPorts) == 0 {
+				protoPorts = anyAnyProtoPorts
+			}
+			m := netproto.MatchRule{
+				Src: &netproto.MatchSelector{
+					Addresses: srcAddresses,
+				},
+				Dst: &netproto.MatchSelector{
+					Addresses:  dstAddresses,
+					ProtoPorts: protoPorts,
+				},
+			}
+			matchRules = append(matchRules, m)
+		}
+
 	}
 
 	for _, exp := range fePolicy.Spec.Exports {
