@@ -16,7 +16,8 @@ MODULE_SRCS     = $(wildcard ${MODULE_DIR}/port.cc) \
                   $(wildcard ${MODULE_DIR}/svc_thread.cc) \
                   $(wildcard ${MODULE_DIR}/pds_ms_svc_stub_athena.cc) \
                   $(wildcard ${MODULE_DIR}/svc_stub_athena.cc) \
-                  $(wildcard ${MODULE_DIR}/debug.cc)
+                  $(wildcard ${MODULE_DIR}/debug.cc) \
+                  $(wildcard ${MODULE_DIR}/interface.cc)
 MODULE_LDLIBS   = ${NIC_CAPSIM_LDLIBS} \
                   ${SDK_THIRDPARTY_CAPRI_LDLIBS} \
                   AAPL

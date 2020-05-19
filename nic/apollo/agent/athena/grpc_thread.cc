@@ -7,6 +7,7 @@
 #include "nic/apollo/agent/svc/port.hpp"
 #include "nic/apollo/agent/svc/debug.hpp"
 #include "nic/apollo/agent/svc/device.hpp"
+#include "nic/apollo/agent/svc/interface.hpp"
 #include "nic/apollo/agent/svc/specs.hpp"
 #include "nic/apollo/agent/core/core.hpp"
 #include "nic/apollo/agent/trace.hpp"
@@ -33,6 +34,7 @@ svc_reg() {
     PortSvcImpl           port_svc;
     DeviceSvcImpl         device_svc;
     DebugSvcImpl          debug_svc;
+    IfSvcImpl             if_svc;
 
     // do gRPC initialization
     grpc_init();
@@ -48,6 +50,7 @@ svc_reg() {
     server_builder->RegisterService(&port_svc);
     server_builder->RegisterService(&debug_svc);
     server_builder->RegisterService(&device_svc);
+    server_builder->RegisterService(&if_svc);
     PDS_TRACE_INFO("gRPC server listening on ... {}",
                    g_grpc_server_addr.c_str());
     core::trace_logger()->flush();
