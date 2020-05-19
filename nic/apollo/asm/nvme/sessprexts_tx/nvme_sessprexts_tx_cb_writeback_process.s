@@ -198,7 +198,7 @@ skip_page_ptr_len_update:
     //get the next lba absolute value
     add     ABS_LBA, K_SLBA, CURR_LBA_OFFSET
 
-    //store it in iv according to oracle req (check)
+    //store it in iv according to customer  req (check)
     phvwr       p.iv_iv_0, ABS_LBA
     phvwr       p.iv_iv_1, r0
 

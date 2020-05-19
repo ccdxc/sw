@@ -355,7 +355,7 @@ parser parse_encap_error {
 
 /*
  *  FIXME: Peeking into IP version to determine the next layer in MPLS.
- *  This should be replaced with Oracle's encoding of the layer type in the
+ *  This should be replaced with customers encoding of the layer type in the
  *  MPLS label
  */
 parser parse_mpls_payload {
