@@ -53,6 +53,7 @@
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/impl/athena/ftl_pollers_client.hpp"
 #include "nic/apollo/api/include/athena/pds_flow_cache.h"
+#include "nic/apollo/api/include/athena/pds_l2_flow_cache.h"
 #include "nic/apollo/api/impl/athena/pds_flow_session_ctx.hpp"
 #include "app_test_utils.hpp"
 #include "fte_athena.hpp"
@@ -96,9 +97,11 @@ char const * g_eal_args[] = {"fte",
 #endif
 #define FTE_PREFETCH_NLINES 7
 
+#ifndef SIM
 #define JUMBO_FRAME_LEN 9194
 // Size = MTU + Ethernet header + VLAN + QinQ
 #define MAX_ETH_RX_LEN  JUMBO_FRAME_LEN + 14 + 4 + 4
+#endif
 
 #define RTE_MBUF_ATHENA_DATAROOM 10240
 #define RTE_MBUF_ATHENA_BUF_SIZE   \
@@ -107,7 +110,9 @@ char const * g_eal_args[] = {"fte",
 const static enum rte_rmt_call_master_t fte_call_master_type = SKIP_MASTER;
 static uint16_t nb_rxd = FTE_MAX_RXDSCR;
 static uint16_t nb_txd = FTE_MAX_TXDSCR;
-static uint16_t nsegs = ( MAX_ETH_RX_LEN + RTE_MBUF_ATHENA_DATAROOM - 1) / RTE_MBUF_ATHENA_DATAROOM;
+#ifndef SIM
+static uint16_t nsegs = ( MAX_ETH_RX_LEN + RTE_MBUF_DEFAULT_DATAROOM - 1) / RTE_MBUF_DEFAULT_DATAROOM;
+#endif
 
 
 typedef std::vector<uint32_t> pollers_qid_vec_t;
@@ -469,6 +474,20 @@ dump_single_flow(pds_flow_iter_cb_arg_t *iter_cb_arg)
     return;
 }
 
+void
+dump_single_l2_flow (pds_l2_flow_iter_cb_arg_t *iter_cb_arg)
+{
+    pds_l2_flow_key_t *key = &iter_cb_arg->l2_flow_key;
+    pds_l2_flow_data_t *data = &iter_cb_arg->l2_flow_appdata;
+
+    CACHE_DUMP_LOG("VNICID:%u DMAC:%02x:%02x:%02x:%02x:%02x:%02x "
+                   "index:%u\n",
+                   key->vnic_id, key->dmac[5], key->dmac[4],
+                   key->dmac[3], key->dmac[2], key->dmac[1],
+                   key->dmac[0], data->index);
+    return;
+}
+
 static void
 flows_fp_init(FILE **fp,
               bool append = false)
@@ -536,15 +555,20 @@ fte_dump_flows(const char *fname,
                bool append)
 {
     pds_flow_iter_cb_arg_t iter_cb_arg = { 0 };
+    pds_l2_flow_iter_cb_arg_t l2_iter_cb_arg = { 0 };
     pds_ret_t ret = PDS_RET_OK;
 
-    PDS_TRACE_DEBUG("\nPrinting Flow cache flows\n");
 #ifndef SIM
     iter_cb_arg.force_read = true;
+    l2_iter_cb_arg.force_read = true;
 #endif
     ret = switch_to_file(fname, &g_flows_fp, append);
     if (ret == PDS_RET_OK) {
+        PDS_TRACE_DEBUG("\nPrinting Flow cache flows\n");
         pds_flow_cache_entry_iterate(dump_single_flow, &iter_cb_arg);
+        PDS_TRACE_DEBUG("\nPrinting L2 Flow cache flows\n");
+        pds_l2_flow_cache_entry_iterate(dump_single_l2_flow,
+                                        &l2_iter_cb_arg);
     }
 
     revert_from_file(fname, &g_flows_fp, flows_fp_init);
@@ -950,12 +974,21 @@ check_port_config (void)
 // cache per lcore and mtable per port per lcore.
 // RTE_MAX is used to ensure that NB_MBUF never goes below a minimum
 // value of 8192
+#ifndef SIM
 #define NB_MBUF RTE_MAX(                        \
         (nb_ports*nb_rx_queue*nb_rxd* nsegs +    \
         nb_ports*nb_lcores*MAX_PKT_BURST +      \
         nb_ports*n_tx_queue*nb_txd +            \
         nb_lcores*MEMPOOL_CACHE_SIZE),          \
         (unsigned)8192)
+#else
+#define NB_MBUF RTE_MAX(                        \
+        (nb_ports*nb_rx_queue*nb_rxd +    \
+        nb_ports*nb_lcores*MAX_PKT_BURST +      \
+        nb_ports*n_tx_queue*nb_txd +            \
+        nb_lcores*MEMPOOL_CACHE_SIZE),          \
+        (unsigned)8192)
+#endif
 
 static int
 init_mem (unsigned nb_mbuf)
@@ -1142,7 +1175,11 @@ _init_port (void)
         }
 
         local_port_conf.rxmode.mq_mode = ETH_MQ_RX_RSS;
+#ifndef SIM
         local_port_conf.rxmode.max_rx_pkt_len = MAX_ETH_RX_LEN;
+#else
+        local_port_conf.rxmode.max_rx_pkt_len = ETHER_MAX_LEN;
+#endif
         local_port_conf.rxmode.split_hdr_size = 0;
         local_port_conf.rxmode.offloads = DEV_RX_OFFLOAD_CHECKSUM;
 
@@ -1158,13 +1195,14 @@ _init_port (void)
                      ret, portid);
         }
        
-
+#ifndef SIM
         ret = rte_eth_dev_set_mtu(portid, JUMBO_FRAME_LEN);
         if (ret < 0) {
             rte_exit(EXIT_FAILURE,
                      "Cannot configure device: err=%d, port=%d\n",
                      ret, portid);
         }
+#endif
  
         ret = rte_eth_dev_adjust_nb_rx_tx_desc(portid, &nb_rxd,
                                                &nb_txd);

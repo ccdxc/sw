@@ -17,6 +17,21 @@
 
 namespace fte_ath {
 
+// FIXME: opt_data size is fixed to 4 bytes
+struct geneve_options {
+    uint16_t opt_class;
+    uint8_t type;
+    uint8_t rsvd_len;     // rsvd: 3bits; len: 5bits (4 bytes multiples)
+    uint32_t opt_data;
+} __attribute__((__packed__));
+
+struct geneve_hdr {
+    uint8_t ver_optlen;     // ver: 2bits; opt_len: 6bits
+    uint8_t flags_rsvd;     // flags: 2bits; rsvd: 6bits
+    uint16_t proto_type;
+    uint32_t vni_rsvd;      // vni: 24bits; rsvd:8bits
+} __attribute__((__packed__));
+
 void fte_init(pds_cinit_params_t *init_params);
 void fte_fini(void);
 sdk_ret_t fte_session_indexer_init(void);

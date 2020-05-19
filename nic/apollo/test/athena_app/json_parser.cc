@@ -42,6 +42,7 @@ parse_flow_cache_policy_cfg (const char *cfgfile)
     flow_cache_policy_info_t *policy;
     v4_flows_info_t *v4_flows_info;
     uint16_t vnic_id;
+    boost::optional<std::string> vnic_type;
 
     cfg_file = std::string(cfgfile);
     // make sure cfg file exists
@@ -63,10 +64,28 @@ parse_flow_cache_policy_cfg (const char *cfgfile)
             policy = &g_flow_cache_policy[vnic_id];
 
             policy->vnic_id = vnic_id;
+
+            policy->vnic_type = VNIC_L3;
+            vnic_type = vnic.second.get_optional<std::string>("vnic_type");
+            if (vnic_type && (vnic_type.get() == "L2")) {
+                policy->vnic_type = VNIC_L2;
+            }
             policy->vlan_id = vnic.second.get<uint16_t>("vlan_id");
             g_vlan_to_vnic[policy->vlan_id] = policy->vnic_id;
             policy->src_slot_id = vnic.second.get<uint32_t>("slot_id");
             g_mpls_label_to_vnic[policy->src_slot_id] = policy->vnic_id;
+
+            if (policy->vnic_type == VNIC_L2) {
+                pt::ptree& l2_flows_range = vnic.second.get_child("l2_flows_range");
+                str2mac(l2_flows_range.get<std::string>("h2s_mac_lo").c_str(),
+                        policy->l2_flows_range.h2s_mac_lo);
+                str2mac(l2_flows_range.get<std::string>("h2s_mac_hi").c_str(),
+                        policy->l2_flows_range.h2s_mac_hi);
+                str2mac(l2_flows_range.get<std::string>("s2h_mac_lo").c_str(),
+                        policy->l2_flows_range.s2h_mac_lo);
+                str2mac(l2_flows_range.get<std::string>("s2h_mac_hi").c_str(),
+                        policy->l2_flows_range.s2h_mac_hi);
+            }
 
             pt::ptree& session = vnic.second.get_child("session");
             policy->epoch = session.get<uint16_t>("epoch");
@@ -100,16 +119,40 @@ parse_flow_cache_policy_cfg (const char *cfgfile)
                          &policy->rewrite_underlay.substrate_sip);
             str2ipv4addr(rewrite_underlay.get<std::string>("ipv4_dip").c_str(),
                          &policy->rewrite_underlay.substrate_dip);
-            policy->rewrite_underlay.mpls_label1 =
-                rewrite_underlay.get<uint32_t>("mpls_label1");
-            policy->rewrite_underlay.mpls_label2 =
-                rewrite_underlay.get<uint32_t>("mpls_label2");
+            if (encap_type == "mplsoudp") {
+                policy->rewrite_underlay.u.mplsoudp.mpls_label1 =
+                    rewrite_underlay.get<uint32_t>("mpls_label1");
+                policy->rewrite_underlay.u.mplsoudp.mpls_label2 =
+                    rewrite_underlay.get<uint32_t>("mpls_label2");
+            } else if (encap_type == "geneve") {
+                policy->rewrite_underlay.u.geneve.vni =
+                    rewrite_underlay.get<uint32_t>("vni");
+                policy->rewrite_underlay.u.geneve.dst_slot_id =
+                    rewrite_underlay.get<uint32_t>("dst_slot_id");
+                policy->rewrite_underlay.u.geneve.sg_id1 =
+                    rewrite_underlay.get<uint16_t>("sg_id1");
+                policy->rewrite_underlay.u.geneve.sg_id2 =
+                    rewrite_underlay.get<uint16_t>("sg_id2");
+                policy->rewrite_underlay.u.geneve.sg_id3 =
+                    rewrite_underlay.get<uint16_t>("sg_id3");
+                policy->rewrite_underlay.u.geneve.sg_id4 =
+                    rewrite_underlay.get<uint16_t>("sg_id4");
+                policy->rewrite_underlay.u.geneve.sg_id5 =
+                    rewrite_underlay.get<uint16_t>("sg_id5");
+                policy->rewrite_underlay.u.geneve.sg_id6 =
+                    rewrite_underlay.get<uint16_t>("sg_id6");
+                str2ipv4addr(rewrite_underlay.get<std::string>("orig_phy_ip").c_str(),
+                             &policy->rewrite_underlay.u.geneve.orig_phy_ip);
+            }
 
-            pt::ptree& rewrite_host = vnic.second.get_child("rewrite_host");
-            str2mac(rewrite_host.get<std::string>("smac").c_str(),
-                    policy->rewrite_host.ep_smac);
-            str2mac(rewrite_host.get<std::string>("dmac").c_str(),
-                    policy->rewrite_host.ep_dmac);
+            boost::optional<pt::ptree&> rewrite_host_opt =
+                    vnic.second.get_child_optional("rewrite_host");
+            if (rewrite_host_opt) {
+                str2mac(rewrite_host_opt.get().get<std::string>("smac").c_str(),
+                        policy->rewrite_host.ep_smac);
+                str2mac(rewrite_host_opt.get().get<std::string>("dmac").c_str(),
+                        policy->rewrite_host.ep_dmac);
+            }
 
             boost::optional<pt::ptree&> nat_opt = vnic.second.get_child_optional("nat");
             if (nat_opt) {

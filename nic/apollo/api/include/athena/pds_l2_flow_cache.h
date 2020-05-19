@@ -48,6 +48,7 @@ typedef struct pds_l2_flow_info_s {
 
 /// \brief L2 Flow iterate callback arg
 typedef struct pds_l2_flow_iter_cb_arg_s {
+    bool                  force_read;
     pds_l2_flow_key_t     l2_flow_key;
     pds_l2_flow_data_t    l2_flow_appdata;
 } pds_l2_flow_iter_cb_arg_t;

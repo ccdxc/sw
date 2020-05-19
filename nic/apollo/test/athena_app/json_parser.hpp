@@ -16,14 +16,41 @@ namespace fte_ath {
 #define MAX_V4_FLOWS 32
 #define MAX_NAT_IP 32
 
+#define VNIC_L3 0
+#define VNIC_L2 1
+
 #define ENCAP_MPLSOUDP 1
 #define ENCAP_GENEVE   2
 
+typedef struct l2_flows_range_info_s {
+    uint8_t h2s_mac_lo[ETH_ADDR_LEN];
+    uint8_t h2s_mac_hi[ETH_ADDR_LEN];
+    uint8_t s2h_mac_lo[ETH_ADDR_LEN];
+    uint8_t s2h_mac_hi[ETH_ADDR_LEN];
+} l2_flows_range_info_t;
+ 
 typedef struct session_info_s {
     uint8_t tcp_flags;
     uint64_t policer_bw1;
     uint8_t host_mac[ETH_ADDR_LEN];
 } session_info_t;
+
+typedef struct mplsoudp_encap_info_s {
+    uint32_t mpls_label1;
+    uint32_t mpls_label2;
+} mplsoudp_encap_info_t;
+
+typedef struct geneve_encap_info_s {
+    uint32_t vni;
+    uint32_t dst_slot_id;
+    uint16_t sg_id1;
+    uint16_t sg_id2;
+    uint16_t sg_id3;
+    uint16_t sg_id4;
+    uint16_t sg_id5;
+    uint16_t sg_id6;
+    uint32_t orig_phy_ip;
+} geneve_encap_info_t;
 
 typedef struct rewrite_underlay_info_s {
     uint32_t rewrite_id;
@@ -33,8 +60,10 @@ typedef struct rewrite_underlay_info_s {
     uint16_t substrate_vlan;
     uint32_t substrate_sip;
     uint32_t substrate_dip;
-    uint32_t mpls_label1;
-    uint32_t mpls_label2;
+    union {
+        mplsoudp_encap_info_t mplsoudp;
+        geneve_encap_info_t geneve;
+    } u;
 } rewrite_underlay_info_t;
 
 typedef struct rewrite_host_info_s {
@@ -72,11 +101,13 @@ typedef struct v4_flows_info_s {
 } v4_flows_info_t;
 
 typedef struct flow_cache_policy_info_s {
+    uint8_t vnic_type;
     uint16_t vlan_id;
     uint16_t vnic_id;
     uint32_t src_slot_id;
     bool skip_flow_log;
     uint32_t epoch;
+    l2_flows_range_info_t l2_flows_range;
     session_info_t to_host;
     session_info_t to_switch;
     rewrite_underlay_info_t rewrite_underlay;

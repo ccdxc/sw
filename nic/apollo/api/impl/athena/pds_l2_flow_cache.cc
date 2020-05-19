@@ -345,7 +345,7 @@ pds_l2_flow_cache_entry_iterate (pds_l2_flow_iter_cb_t iter_cb,
     cbdata.iter_cb_arg = iter_cb_arg;
     params.itercb = l2_flow_cache_entry_iterate_cb;
     params.cbdata = &cbdata;
-    params.force_hwread = false;
+    params.force_hwread = iter_cb_arg->force_read;
     l2_flow_entry_count = 0;
     return (pds_ret_t)l2_flow_table->iterate(&params);
 }
