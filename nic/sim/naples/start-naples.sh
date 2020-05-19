@@ -22,6 +22,11 @@ export NPM_RPC_PORT=9005
 export DISABLE_NICMGR_HAL_THREAD=1  # using fake nicmgr configuration, so disabling
 export OPERD_REGIONS="/naples/nic/conf/operd-regions.json"
 
+#Setup ssh
+echo "root:pen123" | chpasswd
+ssh-keygen -A
+/usr/sbin/sshd -D &
+
 # serial-number is hardcoded in go code.
 # nic/agent/nmd/state/rolloutif/smartnic_rollout.go
 fru_base='{

@@ -11,6 +11,7 @@ RUN yum clean all && rm -rf /var/cache/yum/* && yum update -y &&yum install -y \
     jq \
     openssh-server \
     tar \
+    dhclient \
     https://centos7.iuscommunity.org/ius-release.rpm && \
     yum install -y \
     python36u \
@@ -18,4 +19,5 @@ RUN yum clean all && rm -rf /var/cache/yum/* && yum update -y &&yum install -y \
     gdb && \
     ln -sf /usr/bin/python3.6 /usr/bin/python3 && \
     ln -sf /usr/bin/pip3.6 /usr/bin/pip3 && \
-    yum clean all && pip3 install click click_repl
+    yum clean all && pip3 install click click_repl && \
+    yum -y install openssh-clients openssh-server
