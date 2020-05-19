@@ -225,11 +225,11 @@ jobs:
   iota/test/standalone/regression/freebsd:
     labels: ["daily"]
   iota/test/standalone/regression/freebsd-rdma:
-    labels: ["daily"]
+    labels: ["weekly"]
   iota/test/standalone/regression/linux:
     labels: ["daily"]
   iota/test/standalone/regression/linux-rdma:
-    labels: ["daily"]
+    labels: ["weekly"]
   iota/test/standalone/compat/tot:
     labels: ["daily"]
   iota/test/standalone/regression/windows:
