@@ -254,6 +254,8 @@ func TestHostObjectPreCommitHooks(t *testing.T) {
 	BaseNameDualDSC := "IHaveTwoDSCs"
 	OtherMACDualDSC := "4D-6F-38-D6-D1-75"
 	OtherNameDualDSC := "IAlsoHaveTwoDSCs"
+	AnotherMacDualDSC := "NewDualDSCMacAddress"
+	AnotherNameDualDSC := "NewDualDSCName"
 
 	testCases := []testCase{
 		{apiintf.CreateOper, makeHostObj("testHostMAC", baseMAC, ""), nil},                                                                       // First object with MAC, no conflicts
@@ -276,9 +278,13 @@ func TestHostObjectPreCommitHooks(t *testing.T) {
 		{apiintf.UpdateOper, makeHostObjDualDSC("testHostDualDSCUpdates", BaseMACDualDSC, "", "", baseName), hooks.errHostDSCIDConflicts("testHostDualDSCUpdates", []string{"testHostName"})}, // Name conflict on update
 		{apiintf.UpdateOper, makeHostObjDualDSC("testHostDualDSCUpdates", "", BaseNameDualDSC, BaseMACDualDSC, ""), nil},                                                                      // update order doesn't matter
 		{apiintf.UpdateOper, makeHostObjDualDSC("testHostDualDSCUpdates", BaseMACDualDSC, "", "", BaseNameDualDSC), nil},                                                                      // update order doesn't matter
+		{apiintf.UpdateOper, makeHostObjDualDSC("testHostDualDSCUpdates", BaseMACDualDSC, "", BaseMACDualDSC, ""), hooks.errSameHostDSCConflicts("testHostDualDSCUpdates")},                   // cannot have duplicated DSC inside same host obj on update
 
 		{apiintf.CreateOper, makeHostObjDualDSC("testHostDualDSCUpdates2", OtherMACDualDSC, "", "", OtherNameDualDSC), nil}, // Base object for updates
 		{apiintf.UpdateOper, makeHostObj("testHostDualDSCUpdates2", "", "NewName"), hooks.errHostDSCNumDecreased()},         // eliminate dsc via update oper is not allowed
+
+		{apiintf.CreateOper, makeHostObjDualDSC("testHostDualDSCDuplicatedMacAddressCreate", AnotherMacDualDSC, "", AnotherMacDualDSC, ""), hooks.errSameHostDSCConflicts("testHostDualDSCDuplicatedMacAddressCreate")},
+		{apiintf.CreateOper, makeHostObjDualDSC("testHostDualDSCDuplicatedNameCreate", "", AnotherNameDualDSC, "", AnotherNameDualDSC), hooks.errSameHostDSCConflicts("testHostDualDSCDuplicatedNameCreate")},
 	}
 
 	ctx := context.TODO()

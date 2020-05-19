@@ -48,9 +48,15 @@ func (cl *clusterHooks) errHostDSCIDConflicts(hostName string, conflicts []strin
 		" The same MAC Address or Name cannot appear in multiple host objects", hostName, strings.Join(conflicts, ","))
 }
 
+// errSameHostDSCConflicts returns error associated with duplicated dsc inside same host obj
+func (cl *clusterHooks) errSameHostDSCConflicts(hostName string) error {
+	return fmt.Errorf("DSC specification duplication found inside Host object %s."+
+		" The same MAC Address or Name cannot appear in same host objects.", hostName)
+}
+
 // errHostFieldImmutable returns error when user is trying to modify an immutable field
 func (cl *clusterHooks) errHostFieldImmutable(hostName string, fieldName string) error {
-	return fmt.Errorf("Error: pre-existed DSC in field %s for Host object %s cannot be modified after creation", fieldName, hostName)
+	return fmt.Errorf("Error: pre-existing DSC in field %s for Host object %s cannot be modified after creation", fieldName, hostName)
 }
 
 // errHostInvalidSmartNICs returns error when user is trying to update host obj to an invalid one
@@ -106,6 +112,34 @@ func (cl *clusterHooks) getHostSmartNICConflicts(ctx context.Context, host *clus
 	return conflicts, nil
 }
 
+// check duplication of DSC inside same host
+func (cl *clusterHooks) getSameHostDSCConflicts(host *cluster.Host) []string {
+	conflicts := []string{}
+	dscIDToMacAddrMap := map[string]string{}
+	for _, dsc := range host.Spec.DSCs {
+		if dsc.ID != "" {
+			_, ok := dscIDToMacAddrMap[dsc.ID]
+			if ok {
+				conflicts = append(conflicts, "Found duplicated DSC ID %v inside host %v", dsc.ID, host.Name)
+			} else {
+				dscIDToMacAddrMap[dsc.ID] = dsc.MACAddress
+			}
+		}
+	}
+	dscMacAddrToIDMap := map[string]string{}
+	for _, dsc := range host.Spec.DSCs {
+		if dsc.MACAddress != "" {
+			_, ok := dscMacAddrToIDMap[dsc.MACAddress]
+			if ok {
+				conflicts = append(conflicts, "Found duplicated DSC MacAddress %v inside host %v", dsc.MACAddress, host.Name)
+			} else {
+				dscMacAddrToIDMap[dsc.MACAddress] = dsc.ID
+			}
+		}
+	}
+	return conflicts
+}
+
 func (cl *clusterHooks) hostPreCommitHook(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryrun bool, i interface{}) (interface{}, bool, error) {
 	host, ok := i.(cluster.Host)
 	if !ok {
@@ -125,6 +159,12 @@ func (cl *clusterHooks) hostPreCommitHook(ctx context.Context, kvs kvstore.Inter
 
 	if len(conflicts) > 0 {
 		return i, true, cl.errHostDSCIDConflicts(host.Name, conflicts)
+	}
+
+	conflicts = cl.getSameHostDSCConflicts(&host)
+	if len(conflicts) > 0 {
+		log.Errorf("Error duplicated DSC detected inside same host object %v. %v", host.Name, strings.Join(conflicts, ","))
+		return i, true, cl.errSameHostDSCConflicts(host.Name)
 	}
 
 	// Note that there is still a chance that by the time this transaction commits,
@@ -162,7 +202,7 @@ func (cl *clusterHooks) hostPreCommitHook(ctx context.Context, kvs kvstore.Inter
 		for _, dsc := range curHost.Spec.DSCs {
 			_, ok := dscMap[dsc]
 			if !ok {
-				cl.logger.Errorf("Error: attempt to modify pre-existed dsc: %+v.", dsc)
+				cl.logger.Errorf("Error: attempt to modify pre-existing dsc: %+v.", dsc)
 				return i, false, cl.errHostFieldImmutable(curHost.Name, "Spec.DSCs")
 			}
 		}
