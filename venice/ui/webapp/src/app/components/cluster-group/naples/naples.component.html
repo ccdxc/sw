@@ -133,7 +133,7 @@
   </div>
 </ng-template>
 
-<ng-template #bodyTemplate let-rowData let-col="col">
+<ng-template #bodyTemplate let-rowData let-col="col" let-hovered="hovered">
   <ng-container>
     <ng-container [ngSwitch]="col.field">
       <ng-container *ngSwitchCase="'spec.id'">
@@ -190,15 +190,11 @@
         </div>
       </ng-container>
       <ng-container *ngSwitchCase="'workloads'">
-        <div *ngFor="let w of rowData._ui['associatedWorkloads'] let i=index"
-             class="naples-workloads-div">
-          <ng-container *roleGuard="'workloadworkload_read'">
-            <a *ngIf="i < maxWorkloadsPerRow" routerLink="/workload"
-               [matTooltip]="'Jump to workloads page'">{{w?.meta.name}}</a>
-            <a *ngIf="i === maxWorkloadsPerRow" routerLink="/workload"
-               [matTooltip]="buildMoreWorkloadTooltip(rowData)"> ... more </a>
-          </ng-container>
-        </div>
+        <app-workloadscolumn *ngIf="hasWorkloads(rowData)"
+                             [workloads]="rowData._ui.associatedWorkloads" [hovered]="hovered"
+                             [filterValue]="rowData.meta.name" [numOfRows]="8"
+                             linkTooltip="Show all workloads on this DSC in the Workload page">
+        </app-workloadscolumn>
       </ng-container>
       <ng-container *ngSwitchDefault>
         <div class="ellipsisText" title="{{displayColumn(rowData, col)}}">

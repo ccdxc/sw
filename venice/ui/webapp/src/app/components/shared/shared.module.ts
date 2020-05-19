@@ -22,6 +22,7 @@ import { WhitespaceTrimDirective } from '@app/components/shared/directives/white
 import { FieldselectorComponent } from './fieldselector/fieldselector.component';
 import { HerocardComponent } from './herocard/herocard.component';
 import { WidgetsModule } from 'web-app-framework';
+import { WorkloadsColumnComponent } from './table-columns/workloadscolumn.component';
 import { FieldContainerComponent } from './form/layout/fieldcontainer.component';
 import { InlineButtonsComponent } from './form/layout/inlinebuttons.component';
 import { CpuMemoryStorageStatsComponent } from './cpu-memory-storage-chart/cpumemorystoragestats.component';
@@ -81,6 +82,7 @@ import { ExportLogsComponent } from './exportlogs/exportlogs.component';
     WhitespaceTrimDirective,
     FieldselectorComponent,
     HerocardComponent,
+    WorkloadsColumnComponent,
     FieldContainerComponent,
     InlineButtonsComponent,
     CpuMemoryStorageStatsComponent,
@@ -127,6 +129,7 @@ import { ExportLogsComponent } from './exportlogs/exportlogs.component';
     WhitespaceTrimDirective,
     FieldselectorComponent,
     HerocardComponent,
+    WorkloadsColumnComponent,
     FieldContainerComponent,
     InlineButtonsComponent,
     CpuMemoryStorageStatsComponent,

@@ -31,6 +31,7 @@ import { SearchSearchRequest, IFieldsSelector } from '@sdk/v1/models/generated/s
 import { BrowserService } from '@app/services/generated/browser.service';
 import { IBrowserBrowseRequestList, BrowserBrowseRequestList, BrowserBrowseResponseList } from '@sdk/v1/models/generated/browser';
 import { SelectItem } from 'primeng/api';
+import { WorkloadUtility, WorkloadNameInterface } from '@app/common/WorkloadUtility';
 
 interface IfStat {
   num: number;
@@ -176,6 +177,8 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
 
   dscprofiles: ReadonlyArray<ClusterDSCProfile> = [];
   dscprofileOptions: SelectItem[] = [];
+
+  maxium_number_displayedWorkloads: number = 10;
 
   constructor(protected _controllerService: ControllerService,
     private _route: ActivatedRoute,
@@ -451,6 +454,11 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
         });
       }
     });
+  }
+
+  hasWorkloads(): boolean {
+    const workloads = this.selectedObj['associatedWorkloads'];
+    return workloads && workloads.length > 0;
   }
 
   getDSCProfiles() {

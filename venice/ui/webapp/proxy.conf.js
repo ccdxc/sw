@@ -14,11 +14,10 @@
 // Since 2019-12-20, all above 192.xxx servers are not avaible. 
 // const URL =  "10.8.100.11"  // QA admin/Pensando0$
 // const URL =  "10.30.2.173"  // QA Ambish's large scale setup  admin/Systest-1$
-// const URL = "10.30.6.148"   // Ambish's new scal server address
+// const URL = "10.30.6.148"   // Ambish's new scal server address admin/Systest-1$
 // const URL =  "10.30.2.174"  
 // const URL = "10.8.102.52"; // scale setup admin/Pensando0$
 // const URL = "10.8.102.157"; // scale setup admin/Pensando0$
-// const URL = "10.30.6.148"; // scale setup admin/Systest-1$
 // const URL = "10.30.5.181";  // qixin setup admin/Systest-1$
 // const URL = "10.30.1.111" // arunkumar's esx server
 //  const URL = "10.30.5.171" // Venky's server 
@@ -29,6 +28,7 @@
 // const URL = "10.30.9.93" 
 // const URL = "10.30.8.2"  // equinix 
 // const URL = "10.30.3.33"  // one host , two cards
+const URL = "192.168.70.44"  // vm team's develop server  admin/Pensando0$
 
 const PROXY_CONFIG =
   {

@@ -5,7 +5,7 @@ import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { OrchestrationService } from '@app/services/generated/orchestration.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
-import { Utility, WorkloadNameInterface } from '@common/Utility';
+import { Utility } from '@common/Utility';
 import { TablevieweditAbstract } from '@components/shared/tableviewedit/tableviewedit.component';
 import { IApiStatus, OrchestrationOrchestrator, IOrchestrationOrchestrator } from '@sdk/v1/models/generated/orchestration';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
@@ -14,6 +14,7 @@ import { Observable, Subscription } from 'rxjs';
 import { WorkloadWorkload } from '@sdk/v1/models/generated/workload';
 import { WorkloadService } from '@app/services/generated/workload.service';
 import { VcenterWorkloadsTuple, ObjectsRelationsUtility } from '@app/common/ObjectsRelationsUtility';
+import { WorkloadUtility, WorkloadNameInterface } from '@app/common/WorkloadUtility';
 
 
 interface VcenterUIModel {
@@ -135,15 +136,9 @@ export class VcenterIntegrationsComponent extends TablevieweditAbstract<IOrchest
     }
   }
 
-  getVcenterWorkloads(rowData: OrchestrationOrchestrator): WorkloadNameInterface[] {
-    return Utility.getWorkloadNames(rowData._ui.associatedWorkloads);
-  }
-
-  getVcenterWorkloadFullnames(workloads: WorkloadNameInterface[]): string[] {
-    if (!workloads) {
-      return null;
-    }
-    return workloads.map((workload: WorkloadNameInterface) => workload.fullname);
+  hasWorkloads(rowData: OrchestrationOrchestrator): boolean {
+    const workloads = rowData._ui.associatedWorkloads;
+    return workloads && workloads.length > 0;
   }
 
   postNgInit() {

@@ -1,0 +1,18 @@
+<div *ngIf="!hovered" class="ellipsisText">{{ getWorkloadFullnames().join(', ') }}</div>
+<div *ngIf="hovered && workloadNames.length < numOfRows + 1">
+  <div *ngFor="let workload of workloadNames; index as index;">
+    <a routerLink="/workload/{{encodeURL(workload.originalName)}}">
+      <div [title]="workload.fullname" class="ellipsisText">{{ workload.fullname }}</div>
+    </a>
+  </div>
+</div>
+<div *ngIf="hovered && workloadNames.length > numOfRows">
+  <div *ngFor="let workload of workloadNames; index as index;">
+    <a routerLink="/workload/{{encodeURL(workload.originalName)}}" *ngIf="index < numOfRows - 1">
+      <div [title]="workload.fullname" class="ellipsisText">{{ workload.fullname }}</div>
+    </a>
+  </div>
+  <a [matTooltip]="linkTooltip" [queryParams]="{ filter: filterValue }" routerLink="/workload">
+    <div class="more-link-div"> {{ workloadNames.length - numOfRows + 1 }} More</div>
+  </a>
+</div>

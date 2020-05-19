@@ -64,7 +64,7 @@
 </ng-template>
 
 <!-- TABLE BODY -->
-<ng-template #bodyTemplate let-rowData let-col="col">
+<ng-template #bodyTemplate let-rowData let-col="col" let-hovered="hovered">
   <ng-container [ngSwitch]="col.field">
     <ng-container *ngSwitchCase="'meta.name'">
       <div class="ellipsisText">
@@ -96,24 +96,11 @@
       </div>
     </ng-container>
     <ng-container *ngSwitchCase="'workloads'">
-      <div *ngFor="let w of rowData._ui['processedWorkloads'] let i=index"
-           class="hosts-workloads-div">
-        <ng-container *roleGuard="'workloadworkload_read'">
-          <a *ngIf="i < maxWorkloadsPerRow"
-             [matTooltip]="'View in workloads page'"
-             [queryParams]="{ filter: w?.meta.name || rowData.meta.name }"
-             routerLink="/workload">
-            {{w?.meta.name}}
-          </a>
-          <a *ngIf="i === maxWorkloadsPerRow"
-             [matTooltip]="buildMoreWorkloadTooltip(rowData)"
-             [queryParams]="{ filter: rowData.meta.name }"
-             routerLink="/workload">
-            ...
-            {{rowData._ui['processedWorkloads'].length - maxWorkloadsPerRow}} more
-          </a>
-        </ng-container>
-      </div>
+      <app-workloadscolumn *ngIf="hasWorkloads(rowData)"
+                           [workloads]="rowData._ui.processedWorkloads" [hovered]="hovered"
+                           [filterValue]="rowData.meta.name" [numOfRows]="8"
+                           linkTooltip="Show all workloads on this host in the Workload page">
+      </app-workloadscolumn>
     </ng-container>
     <ng-container *ngSwitchDefault>
       {{displayColumn(rowData, col)}}

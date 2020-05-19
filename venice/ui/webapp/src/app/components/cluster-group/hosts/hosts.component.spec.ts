@@ -453,11 +453,11 @@ describe('HostsComponent', () => {
     // get attached link directive instances
     // using each DebugElement's injector
     const routerLinks = linkDes.map(de => de.injector.get(RouterLinkStubDirective));
-    expect(routerLinks.length).toBe(4, 'Should have 4 routerLinks');
+    expect(routerLinks.length).toBe(2, 'Should have 2 routerLinks');
     expect(routerLinks[0].linkParams).toBe('/cluster/dscs/00ae.cd00.1142');
-    expect(routerLinks[1].linkParams).toBe('/workload');
-    expect(routerLinks[2].linkParams).toBe('/cluster/dscs/0242.c0a8.1c02');
-    expect(routerLinks[3].linkParams).toBe('/workload');
+    // expect(routerLinks[1].linkParams).toBe('/workload');
+    expect(routerLinks[1].linkParams).toBe('/cluster/dscs/0242.c0a8.1c02');
+    // expect(routerLinks[3].linkParams).toBe('/workload');
   });
 
 

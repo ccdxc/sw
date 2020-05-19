@@ -31,6 +31,7 @@ import { SelectItem } from 'primeng/api';
 import { forkJoin, Observable, Subscription } from 'rxjs';
 import { RepeaterData, ValueType } from 'web-app-framework';
 import { NaplesCondition, NaplesConditionValues } from '.';
+import { WorkloadUtility, WorkloadNameInterface } from '@app/common/WorkloadUtility';
 
 interface ChartData {
   // macs or ids of the dsc
@@ -113,7 +114,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
     },
     { field: 'status.host', header: 'Host', class: '', sortable: true, width: 10 },
     { field: 'meta.labels', header: 'Labels', class: '', sortable: true, width: 7 },
-    { field: 'workloads', header: 'Workloads', class: '', sortable: false, localSearch: true, width: 10 },
+    { field: 'workloads', header: 'Workloads', class: '', sortable: false, localSearch: true, width: '180px' },
     { field: 'meta.mod-time', header: 'Modification Time', class: '', sortable: true, width: '160px' },
     { field: 'meta.creation-time', header: 'Creation Time', class: '', sortable: true, width: '180px' },
   ];
@@ -671,6 +672,11 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
       default:
         return Array.isArray(value) ? JSON.stringify(value, null, 2) : value;
     }
+  }
+
+  hasWorkloads(rowData: ClusterDistributedServiceCard): boolean {
+    const workloads = rowData._ui.associatedWorkloads;
+    return workloads && workloads.length > 0;
   }
 
   isNICHealthy(data: ClusterDistributedServiceCard): boolean {

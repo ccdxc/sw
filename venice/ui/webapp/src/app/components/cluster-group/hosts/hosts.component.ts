@@ -21,6 +21,7 @@ import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum'
 import { WorkloadWorkload } from '@sdk/v1/models/generated/workload';
 import * as _ from 'lodash';
 import { Observable, Subscription } from 'rxjs';
+import { WorkloadUtility, WorkloadNameInterface } from '@app/common/WorkloadUtility';
 
 export enum BuildHostWorkloadMapSourceType {
   init = 'init',
@@ -247,6 +248,11 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
       default:
         return Array.isArray(value) ? JSON.stringify(value, null, 2) : value;
     }
+  }
+
+  hasWorkloads(rowData: ClusterHost): boolean {
+    const workloads = rowData._ui.processedWorkloads;
+    return workloads && workloads.length > 0;
   }
 
   processSmartNics(host: ClusterHost): DSCInfo[] {

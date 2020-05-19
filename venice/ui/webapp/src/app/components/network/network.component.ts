@@ -10,7 +10,7 @@ import { OrchestrationService } from '@app/services/generated/orchestration.serv
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { ControllerService } from '@app/services/controller.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
-import { Utility, WorkloadNameInterface } from '@app/common/Utility';
+import { Utility } from '@app/common/Utility';
 import { OrchestrationOrchestrator } from '@sdk/v1/models/generated/orchestration';
 import { SelectItem } from 'primeng/api';
 import { WorkloadWorkload } from '@sdk/v1/models/generated/workload';
@@ -18,6 +18,7 @@ import { WorkloadService } from '@app/services/generated/workload.service';
 import { NetworkWorkloadsTuple, ObjectsRelationsUtility } from '@app/common/ObjectsRelationsUtility';
 import { PentableComponent } from '@app/components/shared/pentable/pentable.component';
 import { DataComponent } from '@app/components/shared/datacomponent/datacomponent.component';
+import { WorkloadUtility, WorkloadNameInterface } from '@app/common/WorkloadUtility';
 
 interface NetworkUIModel {
   associatedWorkloads: WorkloadWorkload[];
@@ -177,15 +178,9 @@ export class NetworkComponent extends DataComponent implements OnInit {
     }
   }
 
-  getNetworkWorkloads(rowData: NetworkNetwork): any {
-    return Utility.getWorkloadNames(rowData._ui.associatedWorkloads);
-  }
-
-  getNetworkWorkloadFullnames(workloads: WorkloadNameInterface[]): string[] {
-    if (!workloads) {
-      return null;
-    }
-    return workloads.map((workload: WorkloadNameInterface) => workload.fullname);
+  hasWorkloads(rowData: NetworkNetwork): boolean {
+    const workloads = rowData._ui.associatedWorkloads;
+    return workloads && workloads.length > 0;
   }
 
   displayColumn_orchestrators(values: NetworkOrchestratorInfo[]): any {

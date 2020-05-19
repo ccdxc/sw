@@ -271,13 +271,14 @@
               <div fxFlex="40px"></div>
               <!-- Values -->
               <div class="naplesdetail-workloads-container" fxFlex="200px" *ngIf="selectedObj">
-                <div *ngFor="let w of selectedObj['associatedWorkloads'] let i=index"
-                     class="naplesdetail-workloads-div">
-                  <ng-container *roleGuard="'workloadworkload_read'">
-                    <a routerLink="/workload" class="naplesdetail-panel-auto-admit-nics"
-                       [matTooltip]="'Jump to workloads page'">{{w?.meta.name}}</a>
-                  </ng-container>
-                </div>
+                <ng-container *roleGuard="'workloadworkload_read'">
+                  <app-workloadscolumn *ngIf="hasWorkloads()"
+                                       [workloads]="this.selectedObj['associatedWorkloads']"
+                                       [hovered]="true"
+                                       [filterValue]="selectedObj.meta.name" [numOfRows]="10"
+                                       linkTooltip="Show all workloads on this DSC in the Workload page">
+                  </app-workloadscolumn>
+                </ng-container>
               </div>
             </div>
           </div>
