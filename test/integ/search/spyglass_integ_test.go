@@ -2004,6 +2004,192 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			nil,
 		},
 		{
+			// Wildcard test case for in operator
+			search.SearchRequest{
+				Query: &search.SearchQuery{
+					Kinds: []string{"DistributedServiceCard"},
+					Fields: &fields.Selector{
+						Requirements: []*fields.Requirement{
+							{
+								Key:      "meta.name",
+								Operator: "in",
+								Values:   []string{"4444*"},
+							},
+						},
+					},
+				},
+				From:       from,
+				MaxResults: maxResults,
+				Aggregate:  true,
+			},
+			"",
+			"",
+			5,
+			nil,
+			map[string]map[string]map[string]map[string]interface{}{
+				"default": {
+					"Cluster": {
+						"DistributedServiceCard": {
+							"4444.4400.0000": nil,
+							"4444.4400.0001": nil,
+							"4444.4400.0002": nil,
+							"4444.4400.0003": nil,
+							"4444.4400.0004": nil,
+						},
+					},
+				},
+			},
+			nil,
+		},
+		{
+			// Wildcard test case for notIn operator
+			search.SearchRequest{
+				Query: &search.SearchQuery{
+					Kinds: []string{"DistributedServiceCard"},
+					Fields: &fields.Selector{
+						Requirements: []*fields.Requirement{
+							{
+								Key:      "meta.name",
+								Operator: "notIn",
+								Values:   []string{"*0001"},
+							},
+						},
+					},
+				},
+				From:       from,
+				MaxResults: maxResults,
+				Aggregate:  true,
+			},
+			"",
+			"",
+			4,
+			nil,
+			map[string]map[string]map[string]map[string]interface{}{
+				"default": {
+					"Cluster": {
+						"DistributedServiceCard": {
+							"4444.4400.0000": nil,
+							"4444.4400.0002": nil,
+							"4444.4400.0003": nil,
+							"4444.4400.0004": nil,
+						},
+					},
+				},
+			},
+			nil,
+		},
+		{
+			// Wildcard test case for notIn operator
+			search.SearchRequest{
+				Query: &search.SearchQuery{
+					Kinds: []string{"DistributedServiceCard"},
+					Fields: &fields.Selector{
+						Requirements: []*fields.Requirement{
+							{
+								Key:      "meta.name",
+								Operator: "notIn",
+								Values:   []string{"*0001", "4444.4400.0002"},
+							},
+						},
+					},
+				},
+				From:       from,
+				MaxResults: maxResults,
+				Aggregate:  true,
+			},
+			"",
+			"",
+			3,
+			nil,
+			map[string]map[string]map[string]map[string]interface{}{
+				"default": {
+					"Cluster": {
+						"DistributedServiceCard": {
+							"4444.4400.0000": nil,
+							"4444.4400.0003": nil,
+							"4444.4400.0004": nil,
+						},
+					},
+				},
+			},
+			nil,
+		},
+		{
+			// Wildcard test case for equals operator
+			search.SearchRequest{
+				Query: &search.SearchQuery{
+					Kinds: []string{"DistributedServiceCard"},
+					Fields: &fields.Selector{
+						Requirements: []*fields.Requirement{
+							{
+								Key:      "meta.name",
+								Operator: "equals",
+								Values:   []string{"4444*"},
+							},
+						},
+					},
+				},
+				From:       from,
+				MaxResults: maxResults,
+				Aggregate:  true,
+			},
+			"",
+			"",
+			5,
+			nil,
+			map[string]map[string]map[string]map[string]interface{}{
+				"default": {
+					"Cluster": {
+						"DistributedServiceCard": {
+							"4444.4400.0000": nil,
+							"4444.4400.0001": nil,
+							"4444.4400.0002": nil,
+							"4444.4400.0003": nil,
+							"4444.4400.0004": nil,
+						},
+					},
+				},
+			},
+			nil,
+		},
+		{
+			// Wildcard test case for notEquals operator
+			search.SearchRequest{
+				Query: &search.SearchQuery{
+					Kinds: []string{"DistributedServiceCard"},
+					Fields: &fields.Selector{
+						Requirements: []*fields.Requirement{
+							{
+								Key:      "meta.name",
+								Operator: "notEquals",
+								Values:   []string{"*0002"},
+							},
+						},
+					},
+				},
+				From:       from,
+				MaxResults: maxResults,
+				Aggregate:  true,
+			},
+			"",
+			"",
+			4,
+			nil,
+			map[string]map[string]map[string]map[string]interface{}{
+				"default": {
+					"Cluster": {
+						"DistributedServiceCard": {
+							"4444.4400.0000": nil,
+							"4444.4400.0001": nil,
+							"4444.4400.0003": nil,
+							"4444.4400.0004": nil,
+						},
+					},
+				},
+			},
+			nil,
+		},
+		{
 			// Precise match on a IP address, part of Network object
 			search.SearchRequest{
 				Query: &search.SearchQuery{

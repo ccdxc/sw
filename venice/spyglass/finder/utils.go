@@ -78,21 +78,37 @@ func QueryBuilder(req *search.SearchRequest) (es.Query, error) {
 			switch field.Operator {
 			case fields.Operator_name[int32(fields.Operator_equals)]:
 				if len(field.Values) > 0 {
-					query = query.Must(es.NewMatchPhraseQuery(field.Key, field.Values[0]))
+					if strings.Contains(field.Values[0], "*") {
+						query = query.Must(es.NewWildcardQuery(field.Key, field.Values[0]))
+					} else {
+						query = query.Must(es.NewMatchPhraseQuery(field.Key, field.Values[0]))
+					}
 				}
 			case fields.Operator_name[int32(fields.Operator_notEquals)]:
 				if len(field.Values) > 0 {
-					query = query.MustNot(es.NewMatchPhraseQuery(field.Key, field.Values[0]))
+					if strings.Contains(field.Values[0], "*") {
+						query = query.MustNot(es.NewWildcardQuery(field.Key, field.Values[0]))
+					} else {
+						query = query.MustNot(es.NewMatchPhraseQuery(field.Key, field.Values[0]))
+					}
 				}
 			case fields.Operator_name[int32(fields.Operator_in)]:
 				fieldQuery := es.NewBoolQuery().MinimumNumberShouldMatch(1)
 				for _, val := range field.GetValues() {
-					fieldQuery.Should(es.NewMatchPhraseQuery(field.Key, val))
+					if strings.Contains(val, "*") {
+						fieldQuery.Should(es.NewWildcardQuery(field.Key, val))
+					} else {
+						fieldQuery.Should(es.NewMatchPhraseQuery(field.Key, val))
+					}
 				}
 				query = query.Must(fieldQuery)
 			case fields.Operator_name[int32(fields.Operator_notIn)]:
 				for _, val := range field.GetValues() {
-					query = query.MustNot(es.NewMatchPhraseQuery(field.Key, val))
+					if strings.Contains(val, "*") {
+						query = query.MustNot(es.NewWildcardQuery(field.Key, val))
+					} else {
+						query = query.MustNot(es.NewMatchPhraseQuery(field.Key, val))
+					}
 				}
 			case fields.Operator_name[int32(fields.Operator_gt)]:
 				if len(field.Values) > 0 {
