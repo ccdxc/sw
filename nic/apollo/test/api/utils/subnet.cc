@@ -240,7 +240,8 @@ subnet_attr_update (subnet_feeder& feeder, pds_subnet_spec_t *spec,
         feeder.spec.fabric_encap = spec->fabric_encap;
     }
     if (bit_isset(chg_bmap, SUBNET_ATTR_HOST_IF)) {
-        feeder.spec.host_if = spec->host_if;
+        feeder.spec.num_host_if = 1;
+        feeder.spec.host_if[0] = spec->host_if[0];
     }
     if (bit_isset(chg_bmap, SUBNET_ATTR_DHCP_POL)) {
         feeder.spec.num_dhcp_policy = spec->num_dhcp_policy;

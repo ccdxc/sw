@@ -37,12 +37,13 @@ subnet_entry::subnet_entry() {
     num_egr_v4_policy_ = 0;
     num_egr_v6_policy_ = 0;
     num_dhcp_policy_ = 0;
-    memset(&ing_v4_policy_, 0, sizeof ing_v4_policy_);
-    memset(&ing_v6_policy_, 0, sizeof ing_v6_policy_);
-    memset(&egr_v4_policy_, 0, sizeof egr_v4_policy_);
-    memset(&egr_v6_policy_, 0, sizeof egr_v6_policy_);
-    memset(&dhcp_policy_, 0, sizeof dhcp_policy_);
-    host_if_.reset();
+    num_host_if_ = 0;
+    memset(ing_v4_policy_, 0, sizeof ing_v4_policy_);
+    memset(ing_v6_policy_, 0, sizeof ing_v6_policy_);
+    memset(egr_v4_policy_, 0, sizeof egr_v4_policy_);
+    memset(egr_v6_policy_, 0, sizeof egr_v6_policy_);
+    memset(dhcp_policy_, 0, sizeof dhcp_policy_);
+    memset(host_if_, 0, sizeof host_if_);
     ht_ctxt_.reset();
     hw_id_ = 0xFFFF;
 }
@@ -208,11 +209,12 @@ subnet_entry::init_config(api_ctxt_t *api_ctxt) {
     v4_vr_ip_ = spec->v4_vr_ip;
     v6_vr_ip_ = spec->v6_vr_ip;
     memcpy(&vr_mac_, &spec->vr_mac, sizeof(mac_addr_t));
-    host_if_ = spec->host_if;
-    if (host_if_ != k_pds_obj_key_invalid) {
-        if (unlikely(lif_db()->find(&host_if_) == NULL)) {
+    num_host_if_ = spec->num_host_if;
+    for (uint8_t i = 0; i < num_host_if_; i++) {
+        host_if_[i] = spec->host_if[i];
+        if (unlikely(lif_db()->find(&host_if_[i]) == NULL)) {
             PDS_TRACE_ERR("host if %s not found, subnet %s init failed",
-                          spec->host_if.str(), spec->key.str());
+                          spec->host_if[i].str(), spec->key.str());
             return SDK_RET_INVALID_ARG;
         }
     }
@@ -288,7 +290,9 @@ subnet_entry::compute_update(api_obj_ctxt_t *obj_ctxt) {
                    num_egr_v6_policy_ * sizeof(egr_v6_policy_[0])))) {
         obj_ctxt->upd_bmap |= PDS_SUBNET_UPD_POLICY;
     }
-    if (host_if_ != spec->host_if) {
+    if ((num_host_if_ != spec->num_host_if) ||
+        memcmp(host_if_, spec->host_if,
+               num_host_if_ * sizeof(host_if_[0]))) {
         obj_ctxt->upd_bmap |= PDS_SUBNET_UPD_HOST_IFINDEX;
     }
     if (v4_vr_ip_ != spec->v4_vr_ip) {
@@ -406,7 +410,10 @@ subnet_entry::fill_spec_(pds_subnet_spec_t *spec) {
     }
     memcpy(&spec->vr_mac, vr_mac_, sizeof(mac_addr_t));
     spec->fabric_encap = fabric_encap_;
-    spec->host_if = host_if_;
+    spec->num_host_if = num_host_if_;
+    for (i = 0; i < num_host_if_; i++) {
+        spec->host_if[i] = host_if_[i];
+    }
     spec->v4_prefix = v4_prefix_;
     spec->v4_vr_ip = v4_vr_ip_;
     spec->v6_vr_ip = v6_vr_ip_;

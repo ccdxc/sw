@@ -63,8 +63,6 @@ type SubnetSpec struct {
 	// when operating in DEVICE_OPER_MODE_HOST mode with multiple host PFs/VFs
 	// present, subnet needs to be attached to a PF/VF (aka. lif or host
 	// interface), HostIf is list of such VF/PFs
-	// NOTE: currently only one PF/VF is supported per subnet, support for subnet
-	//       spanning multiple PF/VFs is for future releases
 	HostIf [][]byte `protobuf:"bytes,15,rep,name=HostIf" json:"HostIf,omitempty"`
 	// DHCP policy to be applied in this subnet
 	// NOTE:

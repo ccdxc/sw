@@ -223,7 +223,8 @@ process_subnet_update (pds_subnet_spec_t *spec)
 
     // if subnet is being attached to a different host if, clear the
     // VNICs and mappings learnt on old host if
-    if (subnet->host_if() != spec->host_if)  {
+    // TODO: this needs to be fixed for multiple host if per subnet case
+    if (subnet->host_if(0) != spec->host_if[0])  {
         ret = clear_all_eps_in_subnet(spec->key);
         if (ret != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to clear endpoints for subnet %s, error code "

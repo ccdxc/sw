@@ -19,7 +19,7 @@
 
 extern NBB_ULONG l2f_proc_id;
 
-// ------------------------------------------------------------------- 
+// -------------------------------------------------------------------
 // Subnet Spec has a number of attributes that are meaningless to MS.
 // So the Subnet Spec generated from the Subnet Proto received from top
 // is cached as it is and sent to PDS HAL.
@@ -31,30 +31,30 @@ extern NBB_ULONG l2f_proc_id;
 // d) MS control-plane asynchronously calls L2F Stub with BD create.
 //    MS Mgmt Stub returns without waiting for BD Stub call invocation.
 //    So further updates on the same Subnet are to be expected.
-// ----------   
-// e) L2F Stub (this code) sends PDS Subnet create to HAL with latest 
-//    Subnet Spec cached in Subnet Store. 
+// ----------
+// e) L2F Stub (this code) sends PDS Subnet create to HAL with latest
+//    Subnet Spec cached in Subnet Store.
 // f) L2F stub integration component creates new BD object initialized with
 //    MS owned atributes. Unlike other stub integration components it
 //    immediately adds it to the store without waiting for HAL async response
 //    since any further fastpath updates would use this to determine whether
-//    to send PDS update to HAL. 
-// ----------   
-// g) Any gRPC Subnet updates received before step f) for non-MS owned fields 
+//    to send PDS update to HAL.
+// ----------
+// g) Any gRPC Subnet updates received before step f) for non-MS owned fields
 //    in this subnet will only update the Subnet Spec cached in the Subnet store
 //    but not call PDS API since BD Store obj is not created.
 // h) Any gRPC Subnet updates received before step f) for MS owned fields
 //    will result in MS MIB tables configuration.
-//    MS will not send BD/IRB update/delete IPS to Stub until previous 
+//    MS will not send BD/IRB update/delete IPS to Stub until previous
 //    async create/upd response is received.
 // i) Any gRPC Subnet updates received after step f) for non MS owned fields
 //    will invoke l2f_bd_update_pds_synch for direct fastpath
 //    synchronous HAL update.
-// j) L2F Stub returns async IPS reponse when async PDS response is received 
+// j) L2F Stub returns async IPS reponse when async PDS response is received
 //    from HAL. BD store object is removed if HAL indicates creation failure.
-// 
+//
 // Subnet delete - Reverse of create
-// a) PDS MS Mgmt Stub deletes BD, IRB, LIF SoftwIf and AC Bind 
+// a) PDS MS Mgmt Stub deletes BD, IRB, LIF SoftwIf and AC Bind
 //    MIB table entries.
 // b) PDS MS Mgmt Stub deletes Subnet obj holding cached Subnet Spec from Store.
 // c) MS calls L2F Stub with BD delete if no prev IPS response pending after
@@ -70,11 +70,11 @@ extern NBB_ULONG l2f_proc_id;
 //    If Fastpath PDS owned (non-MS) fields changed -
 //      - PDS MS Mgmt Stub directly calls L2F Stub BD Update bypassing MS
 //        to perform synchronous HAL update.
-// c) L2F stub (this code) copies cached subnet spec to PDS Batch. 
-// d) If Subnet store obj is null then update is ignored since MS may send 
-//    IPS update to BD Stub after PDS MS Mgmt Subnet delete if prev 
+// c) L2F stub (this code) copies cached subnet spec to PDS Batch.
+// d) If Subnet store obj is null then update is ignored since MS may send
+//    IPS update to BD Stub after PDS MS Mgmt Subnet delete if prev
 //    async IPS response was delayed.
-// ------------------------------------------------------------------- 
+// -------------------------------------------------------------------
 
 namespace pds_ms {
 
@@ -103,12 +103,12 @@ pds_subnet_spec_t l2f_bd_t::make_pds_subnet_spec_(void) {
     spec.fabric_encap = store_info_.bd_obj->properties().fabric_encap;
     auto lif_ifindex = store_info_.bd_obj->properties().host_ifindex;
     if (lif_ifindex != 0) {
-        spec.host_if = api::uuid_from_objid(lif_ifindex);
+        spec.host_if[0] = api::uuid_from_objid(lif_ifindex);
     }
     PDS_TRACE_INFO ("MS BD %d: Using VNI %d Host IfIndex 0x%x LIF UUID %s",
                     ips_info_.bd_id, spec.fabric_encap.val.vnid,
                     store_info_.bd_obj->properties().host_ifindex,
-                    spec.host_if.str());
+                    spec.host_if[0].str());
 
     return spec;
 }
@@ -121,7 +121,7 @@ subnet_batches_t l2f_bd_t::make_batch_pds_spec_(state_t::context_t& state_ctxt,
         SDK_ASSERT(cookie_uptr_); // Cookie should not be empty
     }
     pds_batch_params_t bp {PDS_BATCH_PARAMS_EPOCH,
-                           async ? PDS_BATCH_PARAMS_ASYNC : false, 
+                           async ? PDS_BATCH_PARAMS_ASYNC : false,
                            pds_ms::hal_callback,
                            async ? cookie_uptr_.get() : nullptr};
     auto bctxt = pds_batch_start(&bp);
@@ -167,11 +167,11 @@ subnet_batches_t l2f_bd_t::prepare_pds(state_t::context_t& state_ctxt,
                                              bool async) {
     auto& pds_spec = store_info_.subnet_obj->spec();
     PDS_TRACE_INFO ("MS BD %d Subnet %s VPC %s VNI %d IP %s",
-                    ips_info_.bd_id, pds_spec.key.str(), pds_spec.vpc.str(), 
+                    ips_info_.bd_id, pds_spec.key.str(), pds_spec.vpc.str(),
                     pds_spec.fabric_encap.val.vnid,
                     ipv4addr2str(pds_spec.v4_vr_ip));
 
-    auto pds_bctxt_guard = make_batch_pds_spec_(state_ctxt, async); 
+    auto pds_bctxt_guard = make_batch_pds_spec_(state_ctxt, async);
 
     // If we have batched multiple IPS earlier, flush it now
     // Cannot add Subnet Create/Update to an existing batch
@@ -193,7 +193,7 @@ NBB_BYTE l2f_bd_t::handle_add_upd_ips(ATG_BDPI_UPDATE_BD* bd_add_upd_ips) {
             PDS_TRACE_INFO ("BD %d: AddUpd IPS for unknown BD", ips_info_.bd_id);
             return rc;
         }
-        bd_obj_uptr_t bd_obj_uptr; 
+        bd_obj_uptr_t bd_obj_uptr;
         if (op_create_) {
             auto& spec = store_info_.subnet_obj->spec();
             bd_obj_uptr.reset(new bd_obj_t(ips_info_.bd_id, spec.vpc, spec.key));
@@ -213,8 +213,8 @@ NBB_BYTE l2f_bd_t::handle_add_upd_ips(ATG_BDPI_UPDATE_BD* bd_add_upd_ips) {
         // Subnet updates can happen directly from the MS Mgmt initiator thread
         // Avoid race by holding the state_ctxt lock until batch commit call returns
 
-        cookie_uptr_->send_ips_reply = 
-            [l_op_create, bd_add_upd_ips] 
+        cookie_uptr_->send_ips_reply =
+            [l_op_create, bd_add_upd_ips]
                      (bool pds_status, bool ips_mock) -> void {
             // ----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
@@ -252,13 +252,13 @@ NBB_BYTE l2f_bd_t::handle_add_upd_ips(ATG_BDPI_UPDATE_BD* bd_add_upd_ips) {
             auto key = l2f::Bd::get_key(*bd_add_upd_ips);
             auto it = bd_store.find(key);
             if (it == bd_store.end()) {
-                auto send_response = 
+                auto send_response =
                     l2f::Bd::set_ips_rc(&bd_add_upd_ips->ips_hdr,
                                         (pds_status) ? ATG_OK : ATG_UNSUCCESSFUL);
                 SDK_ASSERT(send_response);
                 PDS_TRACE_DEBUG ("+++++++ MS BD %d: Send Async IPS "
                                  "reply %s stateless mode ++++++++",
-                                bd_add_upd_ips->bd_id.bd_id, 
+                                bd_add_upd_ips->bd_id.bd_id,
                                 (pds_status) ? "Success" : "Failure");
                 bdpi_join->send_ips_reply(&bd_add_upd_ips->ips_hdr);
             } else {
@@ -277,10 +277,10 @@ NBB_BYTE l2f_bd_t::handle_add_upd_ips(ATG_BDPI_UPDATE_BD* bd_add_upd_ips) {
             } while (0);
             NBS_RELEASE_SHARED_DATA();
             NBS_EXIT_SHARED_CONTEXT();
-            NBB_DESTROY_THREAD_CONTEXT    
+            NBB_DESTROY_THREAD_CONTEXT
         };
 
-        // All processing complete, only batch commit remains - 
+        // All processing complete, only batch commit remains -
         // safe to release the cookie_uptr_ unique_ptr
         rc = ATG_ASYNC_COMPLETION;
         cookie = cookie_uptr_.release();
@@ -302,7 +302,7 @@ NBB_BYTE l2f_bd_t::handle_add_upd_ips(ATG_BDPI_UPDATE_BD* bd_add_upd_ips) {
     } // End of state thread_context
       // Do Not access/modify global state after this
 
-    PDS_TRACE_DEBUG ("MS BD %d: Add/Upd PDS Batch commit successful", 
+    PDS_TRACE_DEBUG ("MS BD %d: Add/Upd PDS Batch commit successful",
                      ips_info_.bd_id);
 
     if (PDS_MOCK_MODE()) {
@@ -319,7 +319,7 @@ void l2f_bd_t::handle_delete(NBB_ULONG bd_id) {
 
     // MS stub Integration APIs do not support Async callback for deletes.
     // However since we should not block the MS NBase main thread
-    // the HAL processing is always asynchronous even for deletes. 
+    // the HAL processing is always asynchronous even for deletes.
     // Assuming that Deletes never fail the Store is also updated
     // in a synchronous fashion for deletes so that it is in sync
     // if there is a subsequent create from MS.
@@ -344,14 +344,14 @@ void l2f_bd_t::handle_delete(NBB_ULONG bd_id) {
         // Empty cookie to force async PDS.
         cookie_uptr_.reset (new cookie_t);
 
-        pds_bctxt_guard = make_batch_pds_spec_ (state_ctxt, true /* async */); 
+        pds_bctxt_guard = make_batch_pds_spec_ (state_ctxt, true /* async */);
 
         // If we have batched multiple IPS earlier flush it now
         // Cannot add Subnet Delete to an existing batch
         state_ctxt.state()->flush_outstanding_pds_batch();
 
-        auto l_bd_id = ips_info_.bd_id; 
-        cookie_uptr_->send_ips_reply = 
+        auto l_bd_id = ips_info_.bd_id;
+        cookie_uptr_->send_ips_reply =
             [l_bd_id, subnet_uuid] (bool pds_status, bool ips_mock) -> void {
                 // ----------------------------------------------------------------
                 // This block is executed asynchronously when PDS response is rcvd
@@ -362,7 +362,7 @@ void l2f_bd_t::handle_delete(NBB_ULONG bd_id) {
                                 (pds_status) ? "Success" : "Failure");
             };
 
-        // All processing complete, only batch commit remains - 
+        // All processing complete, only batch commit remains -
         // safe to release the cookie_uptr_ unique_ptr
         cookie = cookie_uptr_.release();
         if (pds_bctxt_guard.remote_mac_batch) {
@@ -393,8 +393,8 @@ void l2f_bd_t::handle_delete(NBB_ULONG bd_id) {
             (store_info_.subnet_obj->properties().spec_invalid) ||
             // Even if subnet store obj is present check if
             // it is a different subnet that got allocated the same BD ID
-            // because of indexer wrap around 
-            (store_info_.subnet_obj->spec().key != 
+            // because of indexer wrap around
+            (store_info_.subnet_obj->spec().key !=
              store_info_.bd_obj->properties().subnet))  {
 
             PDS_TRACE_DEBUG ("MS BD %d UUID %s Release", ips_info_.bd_id,
@@ -430,7 +430,7 @@ void l2f_bd_t::handle_add_if(NBB_ULONG bd_id, ms_ifindex_t ifindex) {
 
     // BD Interface Bind API does not support Async callback.
     // However since we should not block the MS NBase main thread
-    // the HAL processing is always asynchronous. 
+    // the HAL processing is always asynchronous.
 
     { // Enter thread-safe context to access/modify global state
         auto state_ctxt = pds_ms::state_t::thread_context();
@@ -444,14 +444,14 @@ void l2f_bd_t::handle_add_if(NBB_ULONG bd_id, ms_ifindex_t ifindex) {
         }
         store_info_.bd_obj->properties().host_ifindex = ms_to_pds_ifindex(ifindex);
 
-        PDS_TRACE_INFO ("MS BD %d If 0x%x: Bind IPS PDS IfIndex 0x%x", 
+        PDS_TRACE_INFO ("MS BD %d If 0x%x: Bind IPS PDS IfIndex 0x%x",
                         bd_id, ifindex,
                         store_info_.bd_obj->properties().host_ifindex);
 
         // Empty cookie to force async PDS.
         cookie_uptr_.reset (new cookie_t);
         pds_bctxt_guard = make_batch_pds_spec_ (state_ctxt,
-                                                true /* async */); 
+                                                true /* async */);
 
         // If we have batched multiple IPS earlier flush it now
         // Cannot add Subnet If Bind to an existing batch
@@ -460,7 +460,7 @@ void l2f_bd_t::handle_add_if(NBB_ULONG bd_id, ms_ifindex_t ifindex) {
     } // End of state thread_context
       // Do Not access/modify global state after this
 
-    cookie_uptr_->send_ips_reply = 
+    cookie_uptr_->send_ips_reply =
         [bd_id, ifindex] (bool pds_status, bool ips_mock) -> void {
             // ----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
@@ -470,7 +470,7 @@ void l2f_bd_t::handle_add_if(NBB_ULONG bd_id, ms_ifindex_t ifindex) {
                             bd_id, ifindex, (pds_status) ? "Success" : "Failure");
 
         };
-    // All processing complete, only batch commit remains - 
+    // All processing complete, only batch commit remains -
     // safe to release the cookie_uptr_ unique_ptr
     auto cookie = cookie_uptr_.release();
     auto ret = learn::api_batch_commit(pds_bctxt_guard.subnet_batch.release());
@@ -497,7 +497,7 @@ void l2f_bd_t::handle_del_if(NBB_ULONG bd_id, ms_ifindex_t ifindex) {
 
     // BD Interface Unbind API does not support Async callback.
     // However since we should not block the MS NBase main thread
-    // the HAL processing is always asynchronous. 
+    // the HAL processing is always asynchronous.
 
     { // Enter thread-safe context to access/modify global state
         auto state_ctxt = pds_ms::state_t::thread_context();
@@ -515,7 +515,7 @@ void l2f_bd_t::handle_del_if(NBB_ULONG bd_id, ms_ifindex_t ifindex) {
         // Empty cookie to force async PDS.
         cookie_uptr_.reset (new cookie_t);
         pds_bctxt_guard = make_batch_pds_spec_ (state_ctxt,
-                                                true /* async */); 
+                                                true /* async */);
 
         // If we have batched multiple IPS earlier flush it now
         // Cannot add Subnet If Unbind to an existing batch
@@ -524,7 +524,7 @@ void l2f_bd_t::handle_del_if(NBB_ULONG bd_id, ms_ifindex_t ifindex) {
     } // End of state thread_context
       // Do Not access/modify global state after this
 
-    cookie_uptr_->send_ips_reply = 
+    cookie_uptr_->send_ips_reply =
         [bd_id, ifindex] (bool pds_status, bool ips_mock) -> void {
             // ----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
@@ -534,7 +534,7 @@ void l2f_bd_t::handle_del_if(NBB_ULONG bd_id, ms_ifindex_t ifindex) {
                             bd_id, ifindex, (pds_status) ? "Success" : "Failure");
 
         };
-    // All processing complete, only batch commit remains - 
+    // All processing complete, only batch commit remains -
     // safe to release the cookie_uptr_ unique_ptr
     auto cookie = cookie_uptr_.release();
     auto ret = learn::api_batch_commit(pds_bctxt_guard.subnet_batch.release());
@@ -571,7 +571,7 @@ sdk_ret_t l2f_bd_t::update_pds_synch(state_t::context_t&& in_state_ctxt,
         if (unlikely(store_info_.bd_obj == nullptr)) {
             // L2F BD has not created the subnet in PDS HAL yet.
             // L2F BD will update PDS HAL with the latest cached subnet spec
-            PDS_TRACE_DEBUG("MS BD %d: Ignore Direct Update before BD Create", 
+            PDS_TRACE_DEBUG("MS BD %d: Ignore Direct Update before BD Create",
                             ips_info_.bd_id);
             return SDK_RET_OK;
         }
@@ -590,13 +590,13 @@ sdk_ret_t l2f_bd_t::update_pds_synch(state_t::context_t&& in_state_ctxt,
         return ret;
     }
 
-    PDS_TRACE_DEBUG ("MS BD %d: Add/Upd PDS Direct Update Batch commit successful", 
+    PDS_TRACE_DEBUG ("MS BD %d: Add/Upd PDS Direct Update Batch commit successful",
                      ips_info_.bd_id);
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-l2f_bd_update_pds_synch (state_t::context_t&& state_ctxt, 
+l2f_bd_update_pds_synch (state_t::context_t&& state_ctxt,
                          uint32_t  bd_id,
                          subnet_obj_t* subnet_obj)
 {

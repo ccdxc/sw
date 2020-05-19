@@ -24,6 +24,7 @@
 #define PDS_MAX_SUBNET                64    ///< max subnets
 #define PDS_MAX_SUBNET_POLICY         5     ///< max #of security policies per subnet
 #define PDS_MAX_SUBNET_DHCP_POLICY    5     ///< max #of DHCP policies per subnet
+#define PDS_MAX_SUBNET_HOST_IF        8     ///< max #of host PFs subnet can be deployed on
 
 /// \brief Subnet specification
 typedef struct pds_subnet_spec_s {
@@ -51,7 +52,8 @@ typedef struct pds_subnet_spec_s {
     pds_encap_t fabric_encap;               ///< fabric encap for this subnet
     /// when operating in PDS_DEV_OPER_MODE_HOST mode with multiple host
     /// PFs/VFs present, subnet can be attached to PF/VF
-    pds_obj_key_t host_if;
+    uint8_t num_host_if;
+    pds_obj_key_t host_if[PDS_MAX_SUBNET_HOST_IF];
     /// DHCP policies, if any
     /// NOTE:
     /// 1. at any given time, a subnet can either have DHCP relay policy or

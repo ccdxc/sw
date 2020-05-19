@@ -72,9 +72,10 @@ subnet_cfg_entry_dump (pds_cfg_msg_t *msg, void *buf)
 
     dhcp_buf[len] = '\0';
 
+    // TODO: please fix this for multiple host if per subnet case
     snprintf((char *)buf, 421, "%-40s%-40s%-40s%-20s%-16s%-20s%-40s%-s%-3d\n\n",
              msg->subnet.spec.key.str(),
-             msg->subnet.spec.vpc.str(), msg->subnet.spec.host_if.str(),
+             msg->subnet.spec.vpc.str(), msg->subnet.spec.host_if[0].str(),
              ipv4pfx2str(&(msg->subnet.spec.v4_prefix)),
              ipv4addr2str(msg->subnet.spec.v4_vr_ip),
              macaddr2str(msg->subnet.spec.vr_mac),

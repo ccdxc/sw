@@ -281,8 +281,8 @@ public:
         return egr_v6_policy_[n];
     }
 
-    /// \brief          return the number of dhcp policies on the subnet
-    /// \return         number of dhcp relay/proxy policies on the subnet
+    /// \brief     return the number of dhcp policies on the subnet
+    /// \return    number of dhcp relay/proxy policies on the subnet
     uint8_t num_dhcp_policy(void) const {
         return num_dhcp_policy_;
     }
@@ -300,9 +300,13 @@ public:
         return dhcp_policy_[0];
     }
 
-    /// \brief      return host interface on which this subnet is deployed
-    /// \return     host interface on which this subnet is deployed
-    pds_obj_key_t host_if(void) const { return host_if_; }
+    /// \brief     return number of host interfaces this subnet is deployed
+    /// \return    number of host interfaces subnet is deployed on
+    uint8_t num_host_if(void) const { return num_host_if_; }
+
+    /// \brief     return nth host interface on which this subnet is deployed
+    /// \return    nth host interface on which this subnet is deployed
+    pds_obj_key_t host_if(uint32_t n) const { return host_if_[n]; }
 
     /// \brief     return impl instance of this subnet object
     /// \return    impl instance of the subnet object
@@ -355,7 +359,10 @@ private:
     ipv4_addr_t v4_vr_ip_;            ///< IPv4 virtual router IP
     ip_addr_t v6_vr_ip_;              ///< IPv6 virtual router IP
     mac_addr_t vr_mac_;               ///< virtual router MAC
-    pds_obj_key_t host_if_;           ///< PF/VF attached to this subnet
+    /// number of PFs/VFs attached to this subnet
+    uint8_t num_host_if_;
+    /// PFs/VFs attached to this subnet
+    pds_obj_key_t host_if_[PDS_MAX_SUBNET_HOST_IF];
 
     /// operational state
     ht_ctxt_t ht_ctxt_;               ///< hash table context

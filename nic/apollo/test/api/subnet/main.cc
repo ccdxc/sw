@@ -496,7 +496,8 @@ TEST_F(subnet, DISABLED_subnet_update_hostif) {
     subnet_read(feeder, SDK_RET_OK);
 
     // trigger
-    spec.host_if = int2pdsobjkey(pdsobjkey2int(feeder.spec.host_if) + 1);
+    spec.num_host_if = 1;
+    spec.host_if[0] = int2pdsobjkey(pdsobjkey2int(feeder.spec.host_if[0]) + 1);
     subnet_update(feeder, &spec, SUBNET_ATTR_HOST_IF);
 
     // validate

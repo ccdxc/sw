@@ -132,7 +132,7 @@ static void config_evpn_bd_if_bind (const pds_subnet_spec_t* subnet_spec,
 {
     // Get PDS LIF IfIndex of the PF
     auto lif_ifindex = api::objid_from_uuid(host_if);
-    // Derive MS IfIndex from PDS LIF IfIndex 
+    // Derive MS IfIndex from PDS LIF IfIndex
     auto ms_ifindex = pds_to_ms_ifindex(lif_ifindex, IF_TYPE_LIF);
 
     bool del_if = (row_status == AMB_ROW_DESTROY);
@@ -144,7 +144,7 @@ static void config_evpn_bd_if_bind (const pds_subnet_spec_t* subnet_spec,
 
     LimInterfaceSpec lim_swif_spec;
     populate_lim_soft_if_spec (lim_swif_spec, lif_ifindex);
-    pds_ms_set_liminterfacespec_amb_lim_software_if(lim_swif_spec, 
+    pds_ms_set_liminterfacespec_amb_lim_software_if(lim_swif_spec,
                                                     row_status,
                                                     correlator,
                                                     FALSE);
@@ -184,8 +184,8 @@ process_subnet_update (pds_subnet_spec_t *subnet_spec,
     pds_ms_set_evpnbdspec_amb_evpn_bd (evpn_bd_spec, row_status,
                                        PDS_MS_CTM_GRPC_CORRELATOR, FALSE);
     create_irb_if(subnet_spec, bd_id, row_status);
-    if (!is_pds_obj_key_invalid(subnet_spec->host_if)) {
-        config_evpn_bd_if_bind(subnet_spec, bd_id, subnet_spec->host_if,
+    if (!is_pds_obj_key_invalid(subnet_spec->host_if[0])) {
+        config_evpn_bd_if_bind(subnet_spec, bd_id, subnet_spec->host_if[0],
                                row_status, PDS_MS_CTM_GRPC_CORRELATOR);
     }
 
@@ -219,7 +219,7 @@ process_subnet_field_update (pds_subnet_spec_t   *subnet_spec,
                         subnet_spec->key.str(), bd_id);
         EvpnBdSpec evpn_bd_spec;
         populate_evpn_bd_spec (subnet_spec, bd_id, evpn_bd_spec);
-        pds_ms_set_evpnbdspec_amb_evpn_bd (evpn_bd_spec, AMB_ROW_ACTIVE, 
+        pds_ms_set_evpnbdspec_amb_evpn_bd (evpn_bd_spec, AMB_ROW_ACTIVE,
                                            PDS_MS_CTM_GRPC_CORRELATOR, FALSE);
     }
 
@@ -232,8 +232,8 @@ process_subnet_field_update (pds_subnet_spec_t   *subnet_spec,
             config_evpn_bd_if_bind(subnet_spec, bd_id, ms_upd_flags.prev_host_if,
                                    AMB_ROW_DESTROY, PDS_MS_CTM_GRPC_CORRELATOR);
         }
-        if (!is_pds_obj_key_invalid(subnet_spec->host_if)) {
-            config_evpn_bd_if_bind(subnet_spec, bd_id, subnet_spec->host_if,
+        if (!is_pds_obj_key_invalid(subnet_spec->host_if[0])) {
+            config_evpn_bd_if_bind(subnet_spec, bd_id, subnet_spec->host_if[0],
                                   AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
         }
     }
@@ -278,7 +278,7 @@ cache_subnet_spec(pds_subnet_spec_t* spec, uint32_t bd_id, pds_ms_subnet_cache_o
     auto state_ctxt = state_t::thread_context();
     switch (op) {
     case pds_ms_subnet_cache_op_t::CREATE:
-    {    
+    {
         auto subnet_obj = state_ctxt.state()->subnet_store().get(bd_id);
         if ((subnet_obj != nullptr) &&
             (spec->key != subnet_obj->spec().key)) {
@@ -440,7 +440,7 @@ subnet_delete (pds_obj_key_t &key, pds_batch_ctxt_t bctxt)
             }
             spec = &subnet_obj->spec();
         }
-    
+
         // Mark as deleted so that L2F stub can release the Subnet UUID
         cache_subnet_spec (spec, bd_id, pds_ms_subnet_cache_op_t::MARK_DEL);
         marked_for_del = true;
@@ -513,13 +513,13 @@ parse_subnet_update (pds_subnet_spec_t *old_spec, ms_bd_id_t bd_id,
                        old_spec->fabric_encap.val.vnid);
         state_pds_spec.fabric_encap = old_spec->fabric_encap;
     }
-    if (state_pds_spec.host_if != old_spec->host_if) {
+    if (state_pds_spec.host_if[0] != old_spec->host_if[0]) {
         ms_upd_flags.bd_if = true;
         PDS_TRACE_INFO("Subnet %s BD %d Host If change - New %s Old %s",
-                       old_spec->key.str(), bd_id, state_pds_spec.host_if.str(),
-                       old_spec->host_if.str());
-        ms_upd_flags.prev_host_if = old_spec->host_if;
-        state_pds_spec.host_if = old_spec->host_if;
+                       old_spec->key.str(), bd_id, state_pds_spec.host_if[0].str(),
+                       old_spec->host_if[0].str());
+        ms_upd_flags.prev_host_if = old_spec->host_if[0];
+        state_pds_spec.host_if[0] = old_spec->host_if[0];
     }
 
     // Diff in any other property needs to be driven through fastpath
@@ -563,7 +563,7 @@ revert_subnet_update_ (pds_subnet_spec_t& old_subnet_spec, ms_bd_id_t bd_id,
 {
     auto state_ctxt = state_t::thread_context();
     auto subnet_obj = state_ctxt.state()->subnet_store().get(bd_id);
-    subnet_obj->spec() = old_subnet_spec; 
+    subnet_obj->spec() = old_subnet_spec;
     if (fastpath) {
         PDS_TRACE_ERR ("Subnet %s Reverting fastpath update",
                        old_subnet_spec.key.str());

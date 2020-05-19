@@ -6,7 +6,7 @@
 
 namespace pds_ms_test {
 
-using namespace test::api; 
+using namespace test::api;
 bool
 pds_tep_mock_validate (const spec_t&  expected_pds,
                        const spec_t&  rcvd_pds)
@@ -21,7 +21,7 @@ pds_tep_mock_validate (const spec_t&  expected_pds,
         return true;;
     }
     test::api::tep_feeder feeder;
-    feeder.spec = expected_pds.tep; 
+    feeder.spec = expected_pds.tep;
     if (!feeder.spec_compare (&rcvd_pds.tep)) {
         std::cout << "TEP compare failed" << std::endl;
         std::cout << "Expected: " << &(feeder.spec) <<std::endl;
@@ -69,7 +69,7 @@ pds_if_mock_validate (const spec_t&  expected_pds,
         return true;;
     }
     test::api::if_feeder feeder;
-    feeder.spec_feeder = expected_pds.intf; 
+    feeder.spec_feeder = expected_pds.intf;
     if (!feeder.spec_compare (&rcvd_pds.intf)) {
         std::cout << "IF compare failed" << std::endl;
         std::cout << "Expected: " << &(feeder.spec_feeder) <<std::endl;
@@ -93,17 +93,17 @@ pds_subnet_mock_validate (const spec_t&  expected_pds,
         return true;;
     }
     test::api::subnet_feeder feeder;
-    feeder.spec = expected_pds.subnet; 
+    feeder.spec = expected_pds.subnet;
     if (!feeder.spec_compare (&rcvd_pds.subnet)) {
         std::cout << "Subnet compare failed" << std::endl;
         std::cout << "Expected: " << &(feeder.spec) <<std::endl;
         std::cout << "Rcvd: " << &(rcvd_pds.subnet) << std::endl;
         return false;
     }
-    if (feeder.spec.host_if != rcvd_pds.subnet.host_if) {
+    if (feeder.spec.host_if[0] != rcvd_pds.subnet.host_if[0]) {
         std::cout << "Subnet Host IfIndex failed" << std::endl;
-        std::cout << "Expected: " << feeder.spec.host_if.str() <<std::endl;
-        std::cout << "Rcvd: " << rcvd_pds.subnet.host_if.str() << std::endl;
+        std::cout << "Expected: " << feeder.spec.host_if[0].str() <<std::endl;
+        std::cout << "Rcvd: " << rcvd_pds.subnet.host_if[0].str() << std::endl;
         return false;
     }
     return true;
@@ -125,7 +125,7 @@ pds_vpc_mock_validate (const spec_t&  expected_pds,
 #if 0
     test::api::vpc_feeder feeder;
 
-    feeder.spec = expected_pds.vpc; 
+    feeder.spec = expected_pds.vpc;
     if (!feeder.spec_compare (&rcvd_pds.vpc)) {
         std::cout << "VPC compare failed" << std::endl;
         std::cout << "Expected: " << &(feeder.spec) <<std::endl;

@@ -20,7 +20,7 @@ using pds_ms::ms_ifindex_t;
 
 class bd_ips_feeder_t final : public bd_input_params_t {
 public:
-    pds_ms::l2f_integ_subcomp_t  l2f_is; 
+    pds_ms::l2f_integ_subcomp_t  l2f_is;
     ms_ifindex_t   prev_if_bind = 0;
    void init() override {
        bd_input_params_t::init();
@@ -31,7 +31,7 @@ public:
 
     ATG_BDPI_UPDATE_BD generate_add_upd_ips(void) {
         ATG_BDPI_UPDATE_BD add_upd {0};
-      // generate_ips_header (add_upd); 
+      // generate_ips_header (add_upd);
         add_upd.bd_id.bd_id = bd_id;
         add_upd.bd_properties.vni = subnet_spec.fabric_encap.val.vnid;
         return add_upd;
@@ -58,7 +58,7 @@ public:
     void trigger_update(void) override {
         if (test_if_bind) {
             pds_ms::l2f_bd_t  bd;
-            auto lifindex =  api::objid_from_uuid(subnet_spec.host_if);
+            auto lifindex =  api::objid_from_uuid(subnet_spec.host_if[0]);
             auto ms_ifindex =
                 pds_ms::pds_to_ms_ifindex(lifindex, IF_TYPE_LIF);
             bd.handle_add_if(bd_id, ms_ifindex);
@@ -92,7 +92,7 @@ public:
             pds_ms::subnet_delete(subnet_uuid.second, 0);
         }
         // TODO Fix - currently VPC delete is not calling HAL stub VRF delete
-       auto state_ctxt = pds_ms::state_t::thread_context(); 
+       auto state_ctxt = pds_ms::state_t::thread_context();
        std::cout << "Erasing VPC from store" << std::endl;
        state_ctxt.state()->vpc_store().erase(vrf_id);
        state_ctxt.state()->route_table_store()

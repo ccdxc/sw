@@ -870,7 +870,9 @@ create_subnets (uint32_t vpc_id, uint32_t num_vpcs,
             pds_subnet.fabric_encap.val.vnid =
                 num_vpcs + (vpc_id - 1) * num_subnets + i;
             if (hw() && (g_device.dev_oper_mode == PDS_DEV_OPER_MODE_HOST)) {
-                pds_subnet.host_if = test::uuid_from_objid(LIF_IFINDEX(lif_id++));
+                pds_subnet.num_host_if = 1;
+                pds_subnet.host_if[0] =
+                    test::uuid_from_objid(LIF_IFINDEX(lif_id++));
                 if (lif_id > HOST_LIF_ID_MAX) {
                     lif_id = HOST_LIF_ID_MIN;
                 }
