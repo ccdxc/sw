@@ -48,12 +48,13 @@ testcases:
     -   name    : Mirror_Crud_Policy
         testcase: testcases.telemetry.mirror_crud_policy
         enable  : True
+        ignore  : False
         args    :
             type: remote_only
         iterators :
             type    : simple
-            num_collectors : [1, 3, 7]
-            num_mirror_sessions : [1, 4, 8]
+            num_collectors : [1, 2, 4]
+            num_mirror_sessions : [1, 3, 2]
             proto   : [icmp, tcp, udp]
 
     -   name    : Flowmon_Crud_Policy
