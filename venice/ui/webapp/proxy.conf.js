@@ -28,7 +28,7 @@
 // const URL = "10.30.9.93" 
 // const URL = "10.30.8.2"  // equinix 
 // const URL = "10.30.3.33"  // one host , two cards
-const URL = "192.168.70.44"  // vm team's develop server  admin/Pensando0$
+// const URL = "192.168.70.44"  // vm team's develop server  admin/Pensando0$
 
 const PROXY_CONFIG =
   {
