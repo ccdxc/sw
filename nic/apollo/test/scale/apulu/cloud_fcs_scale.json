@@ -1,5 +1,5 @@
 {
-    "_comment_" : "this captures the scale for IBM FCS release. the order of the objects listed here should be maintained",
+    "_comment_" : "this captures the scale for cloud FCS release. the order of the objects listed here should be maintained",
     "objects" : [
         {
             "kind" : "device",

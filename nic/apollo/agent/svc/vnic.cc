@@ -37,15 +37,10 @@ VnicSvcImpl::VnicGet(ServerContext *context,
     return Status::OK;
 }
 
-Status VnicSvcImpl::VnicStatsReset(ServerContext *context, const types::Id *req,
-                                   Empty *rsp) {
-    pds_obj_key_t key;
-
-    if (req->id().empty()) {
-        pds_vnic_stats_reset(NULL);
-    } else {
-        pds_obj_key_proto_to_api_spec(&key, req->id());
-        pds_vnic_stats_reset(&key);
-    }
+Status
+VnicSvcImpl::VnicStatsReset(ServerContext *context,
+                            const types::Id *req,
+                            Empty *rsp) {
+    pds_svc_vnic_stats_reset(req);
     return Status::OK;
 }

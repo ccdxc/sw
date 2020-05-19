@@ -563,6 +563,22 @@ pds_svc_lif_get (const pds::LifGetRequest *proto_req,
 }
 
 static inline sdk_ret_t
+pds_svc_lif_stats_reset (const types::Id *req)
+{
+    sdk_ret_t ret;
+    pds_obj_key_t key;
+
+    if (req->id().empty()) {
+        ret = pds_lif_stats_reset(NULL);
+    } else {
+        pds_obj_key_proto_to_api_spec(&key, req->id());
+        ret = pds_lif_stats_reset(&key);
+    }
+
+    return ret;
+}
+
+static inline sdk_ret_t
 pds_svc_interface_handle_cfg (cfg_ctxt_t *ctxt, google::protobuf::Any *any_resp)
 {
     sdk_ret_t ret;

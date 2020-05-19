@@ -14,6 +14,7 @@
 #include "nic/sdk/include/sdk/if.hpp"
 #include "nic/sdk/include/sdk/qos.hpp"
 #include "nic/sdk/lib/ipc/ipc.hpp"
+#include "nic/sdk/lib/pal/pal.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/core/event.hpp"
 #include "nic/apollo/api/internal/lif.hpp"
@@ -26,6 +27,7 @@
 #include "gen/p4gen/apulu/include/p4pd.h"
 #include "gen/p4gen/p4plus_txdma/include/p4plus_txdma_p4pd.h"
 #include "gen/p4gen/p4/include/ftl.h"
+#include "gen/platform/mem_regions.hpp"
 
 #define COPP_FLOW_MISS_ARP_REQ_FROM_HOST_PPS    256
 #define COPP_LEARN_MISS_ARP_REQ_FROM_HOST_PPS   256
@@ -1457,6 +1459,23 @@ lif_impl::create(pds_lif_spec_t *spec) {
         init_done_ = true;
     }
     return ret;
+}
+
+sdk_ret_t
+lif_impl::reset_stats(void) {
+    mem_addr_t base_addr, lif_addr;
+
+    base_addr = g_pds_state.mempartition()->start_addr(MEM_REGION_LIF_STATS_NAME);
+    lif_addr = base_addr + (id_ << LIF_STATS_SIZE_SHIFT);
+
+    sdk::lib::pal_mem_set(lif_addr, 0, 1 << LIF_STATS_SIZE_SHIFT);
+    sdk::asic::pd::asicpd_p4plus_invalidate_cache(lif_addr, 1 << LIF_STATS_SIZE_SHIFT,
+                                                  P4PLUS_CACHE_INVALIDATE_BOTH);
+    sdk::asic::pd::asicpd_p4_invalidate_cache(lif_addr, 1 << LIF_STATS_SIZE_SHIFT,
+                                              P4_TBL_CACHE_INGRESS);
+    sdk::asic::pd::asicpd_p4_invalidate_cache(lif_addr, 1 << LIF_STATS_SIZE_SHIFT,
+                                              P4_TBL_CACHE_EGRESS);
+    return SDK_RET_OK;
 }
 
 /// \@}

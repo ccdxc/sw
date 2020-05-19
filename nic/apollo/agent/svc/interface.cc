@@ -47,7 +47,6 @@ IfSvcImpl::LifGet(ServerContext *context,
 Status
 IfSvcImpl::LifStatsReset(ServerContext *context, const types::Id *req,
                          Empty *rsp) {
-    // TODO:
-    PDS_TRACE_DEBUG("Rcvd lif statistics clear request");
+    pds_svc_lif_stats_reset(req);
     return Status::OK;
 }

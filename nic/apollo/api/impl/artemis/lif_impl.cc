@@ -263,6 +263,11 @@ lif_impl::create(pds_lif_spec_t *spec) {
     return ret;
 }
 
+sdk_ret_t
+lif_impl::reset_stats(void) {
+    return SDK_RET_ERR;
+}
+
 /// \@}
 
 }    // namespace impl

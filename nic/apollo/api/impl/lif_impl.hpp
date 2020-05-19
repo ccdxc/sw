@@ -160,6 +160,10 @@ public:
         return true;
     }
 
+    /// \brief      reset all the statistics associated with the lif
+    /// \return     SDK_RET_OK on success, failure status code on error
+    sdk_ret_t reset_stats(void);
+
 private:
     ///< constructor
     ///< \param[in] spec    lif configuration parameters

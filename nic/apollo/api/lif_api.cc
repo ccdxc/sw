@@ -63,3 +63,30 @@ pds_lif_read_all (lif_read_cb_t cb, void *ctxt)
 
     return lif_db()->walk(pds_lif_spec_from_impl, &args);
 }
+
+static bool
+lif_stats_reset_cb (void *entry, void *ctxt)
+{
+    api::impl::lif_impl *lif = (api::impl::lif_impl *)entry;
+
+    lif->reset_stats();
+    // continue the walk
+    return false;
+}
+
+sdk_ret_t
+pds_lif_stats_reset (_In_ pds_obj_key_t *key)
+{
+    api::impl::lif_impl *lif;
+
+    if (key) {
+        lif = pds_lif_find(key);
+        if (lif) {
+            return lif->reset_stats();
+        }
+        PDS_TRACE_ERR("Failed to reset lif %s stats, lif not found",
+                      key->str());
+        return SDK_RET_ENTRY_NOT_FOUND;
+    }
+    return lif_db()->walk(lif_stats_reset_cb, NULL);
+}

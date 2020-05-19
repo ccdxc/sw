@@ -28,9 +28,9 @@ typedef struct pds_lif_spec_s {
     bool vlan_strip_en;
     ///< mac address of the device
     mac_addr_t mac;
-    // Tx/egress mirror session id list, if any
+    // tx/egress mirror session id list, if any
     pds_obj_key_t tx_mirror_sessions[PDS_MAX_MIRROR_SESSION];
-    // Rx/ingress mirror session id list, if any
+    // rx/ingress mirror session id list, if any
     pds_obj_key_t rx_mirror_sessions[PDS_MAX_MIRROR_SESSION];
 } pds_lif_spec_t;
 
@@ -53,7 +53,7 @@ typedef struct pds_lif_info_s {
     pds_lif_status_t status;
 } __PACK__ pds_lif_info_t;
 
-/// \brief Read LIF information
+/// \brief read LIF information
 ///
 /// \param[in]  key     key
 /// \param[out] info    lif info
@@ -62,11 +62,17 @@ sdk_ret_t pds_lif_read(pds_obj_key_t *key, pds_lif_info_t *info);
 
 typedef void (*lif_read_cb_t)(void *spec, void *ctxt);
 
-/// \brief Read all LIF information
+/// \brief read all LIF information
 ///
 /// \param[in] cb      callback to be called on each lif_impl
 /// \param[in] ctxt    context for the callback
 /// \return #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_lif_read_all(lif_read_cb_t cb, void *ctxt);
+
+/// \brief clear LIF statistics
+///
+/// \param[in]  key     key
+/// \return #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_lif_stats_reset(pds_obj_key_t *key);
 
 #endif    // __INCLUDE_API_PDS_LIF_HPP__

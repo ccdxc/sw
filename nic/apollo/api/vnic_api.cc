@@ -136,7 +136,7 @@ pds_vnic_stats_reset (_In_ pds_obj_key_t *key)
         if (vnic) {
             return vnic->reset_stats();
         }
-        PDS_TRACE_ERR("Failed to reset vnic %s stats, vnic out found",
+        PDS_TRACE_ERR("Failed to reset vnic %s stats, vnic not found",
                       key->str());
         return SDK_RET_ENTRY_NOT_FOUND;
     }
