@@ -330,6 +330,7 @@ nic/build/$ARCH/$PIPELINE/lib/libupgrade_ev.so                    /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpdsupg_nicmgr.so                 /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpdsupgsvc.so                     /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpdsupgproto.so                   /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libipc_peer.so                      /nic/lib/
 nic/build/$ARCH/$PIPELINE/gen/upgrade_graceful.json               /nic/conf/gen/
 nic/build/$ARCH/$PIPELINE/gen/upgrade_hitless.json                /nic/conf/gen/
 nic/sdk/upgrade/core/upgmgr_core_base.sh                          /nic/tools/
