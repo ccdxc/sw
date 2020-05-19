@@ -486,12 +486,6 @@ devapi_lif::add_vlan(vlan_t vlan, bool replay_from_db)
     if (!vlan) {
         vlan = 8192;
     }
-    if (!is_classicfwd(vlan)) {
-        // Not classic: Dont even store the vlan filter.
-        NIC_LOG_DEBUG("Lif: {}, Vlan: {} is not classic. Skipping vlan add",
-                      get_id(), vlan);
-        return ret;
-    }
 
     if (replay_from_db || // replay vlan_table will already have it
         (vlan_table_.find(vlan) == vlan_table_.end())) {
@@ -537,6 +531,8 @@ devapi_lif::add_vlan(vlan_t vlan, bool replay_from_db)
         } else {
             // Wont even reach here
             // create_vlan_filter(vlan);
+            NIC_LOG_DEBUG("Lif: {}, Vlan: {} is not classic. Skipping vlan add",
+                          get_id(), vlan);
         }
 
         if (!replay_from_db) {
