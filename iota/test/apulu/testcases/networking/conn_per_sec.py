@@ -285,6 +285,7 @@ def Setup(tc):
     api.Logger.info("Using seed : %s"%(tc.seed))
     tc.serverHandle = None
     tc.clientHandle = None
+    tc.selected_sec_profile_objs = None
 
     tc.skip_stats_validation = getattr(tc.args, 'triggers', False)
 
@@ -498,8 +499,9 @@ def cleanup(tc):
         pass
 
 def Teardown(tc):
-    for obj in tc.selected_sec_profile_objs:
-        obj.RollbackUpdate()
+    if tc.selected_sec_profile_objs:
+        for obj in tc.selected_sec_profile_objs:
+            obj.RollbackUpdate()
 
     flowutils.clearFlowTable(tc.workload_pairs)
     __clearVPPEntity("flow statistics")
