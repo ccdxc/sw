@@ -61,6 +61,8 @@ core_file_names = [
     "core.sysmgr.695"
 ]
 
+retryCount = 10
+retryDelay = 30
 
 def RunLocalCommand(cmd):
     api.Logger.info("Running command {}".format(cmd))
@@ -304,7 +306,7 @@ def GetNaplesCfgSpecJson(n):
 
 
 def GetNaplesSpec(n):
-    for i in range(0, 12):
+    for i in range(0, retryCount):
         penctl_json = GetNaplesCfgSpecJson(n)
         try:
             penctl_json_parsed = json.loads(penctl_json)
@@ -312,13 +314,13 @@ def GetNaplesSpec(n):
             return result
         except BaseException:
             api.Logger.info("Failed to get Naples Spec. Retrying...")
-            time.sleep(10)
+            time.sleep(retryDelay)
 
     return "FAILED"
 
 
 def GetNaplesStatus(n):
-    for i in range(0, 12):
+    for i in range(0, retryCount):
         penctl_json = GetNaplesCfgSpecJson(n)
         try:
             penctl_json_parsed = json.loads(penctl_json)
@@ -326,7 +328,7 @@ def GetNaplesStatus(n):
             return result
         except BaseException:
             api.Logger.info("Failed to get naples status. Retrying...")
-            time.sleep(10)
+            time.sleep(retryDelay)
 
     api.Logger.info("failed to get naples status. quitting.")
     return "FAILED"
@@ -445,7 +447,7 @@ def SetNaplesModeHost(n):
 
 
 def PenctlGetMode(n):
-    for i in range(0, 12):
+    for i in range(0, retryCount):
         penctl_json = GetNaplesCfgSpecJson(n)
         try:
             penctl_json_parsed = json.loads(penctl_json)
@@ -453,13 +455,13 @@ def PenctlGetMode(n):
             return result
         except BaseException:
             api.Logger.info("Failed to get DSC mode. Retrying...")
-            time.sleep(10)
+            time.sleep(retryDelay)
 
     return "FAILED"
 
 
 def PenctlGetModeStatus(n):
-    for i in range(0, 12):
+    for i in range(0, retryCount):
         penctl_json = GetNaplesCfgSpecJson(n)
         try:
             penctl_json_parsed = json.loads(penctl_json)
@@ -467,14 +469,14 @@ def PenctlGetModeStatus(n):
             return result
         except BaseException:
             api.Logger.info("Failed to get DSC mode from status. Retrying...")
-            time.sleep(10)
+            time.sleep(retryDelay)
 
     return "FAILED"
 
 
 def PenctlGetNaplesMgtmIp(n):
     api.Logger.info("Getting Naples network management IP for {}.".format(n))
-    for i in range(0, 12):
+    for i in range(0, retryCount):
         penctl_json = GetNaplesCfgSpecJson(n)
         try:
             penctl_json_parsed = json.loads(penctl_json)
@@ -485,13 +487,13 @@ def PenctlGetNaplesMgtmIp(n):
             return naplesNetworkManagement
         except BaseException:
             api.Logger.error("Getting Naples Management IP failed.")
-            time.sleep(10)
+            time.sleep(retryDelay)
 
     return None
 
 
 def PenctlGetNetworkMode(n):
-    for i in range(0, 12):
+    for i in range(0, retryCount):
         penctl_json = GetNaplesCfgSpecJson(n)
         try:
             penctl_json_parsed = json.loads(penctl_json)
@@ -499,13 +501,13 @@ def PenctlGetNetworkMode(n):
             return result
         except BaseException:
             api.Logger.info("Failed to get network mode. Retrying...")
-            time.sleep(10)
+            time.sleep(retryDelay)
 
     return "FAILED"
 
 
 def PenctlGetControllers(n):
-    for i in range(0, 12):
+    for i in range(0, retryCount):
         penctl_json = GetNaplesCfgSpecJson(n)
         try:
             penctl_json_parsed = json.loads(penctl_json)
@@ -513,13 +515,13 @@ def PenctlGetControllers(n):
             return result
         except BaseException:
             api.Logger.info("Failed to get controllers. Retrying...")
-            time.sleep(10)
+            time.sleep(retryDelay)
 
     return "FAILED"
 
 
 def PenctlGetControllersStatus(n):
-    for i in range(0, 12):
+    for i in range(0, retryCount):
         penctl_json = GetNaplesCfgSpecJson(n)
         try:
             penctl_json_parsed = json.loads(penctl_json)
@@ -527,7 +529,7 @@ def PenctlGetControllersStatus(n):
             return result
         except BaseException:
             api.Logger.info("Failed to get controller status. Retrying...")
-            time.sleep(10)
+            time.sleep(retryDelay)
 
     return "FAILED"
 
@@ -546,7 +548,7 @@ def PenctlStaticControllersCheck(n):
 
 
 def PenctlGetTransitionPhaseStatus(n):
-    for i in range(0, 12):
+    for i in range(0, retryCount):
         penctl_json = GetNaplesCfgSpecJson(n)
         try:
             penctl_json_parsed = json.loads(penctl_json)
@@ -555,14 +557,14 @@ def PenctlGetTransitionPhaseStatus(n):
         except BaseException:
             api.Logger.info(
                 "Failed to get penctl transition phase. Retrying...")
-            time.sleep(10)
+            time.sleep(retryDelay)
 
     api.Logger.info("Failed to get transition phase")
     return "FAILED"
 
 
 def PenctlGetAdmissionPhaseStatus(n):
-    for i in range(0, 12):
+    for i in range(0, retryCount):
         penctl_json = GetNaplesCfgSpecJson(n)
         try:
             penctl_json_parsed = json.loads(penctl_json)
@@ -570,13 +572,13 @@ def PenctlGetAdmissionPhaseStatus(n):
             return result
         except BaseException:
             api.Logger.info("Penctl get admission failed. Retrying...")
-            time.sleep(10)
+            time.sleep(retryDelay)
 
     return "PENCTL GET ADMISSION FAILED"
 
 
 def AgentGetControllers(n):
-    for i in range(0, 12):
+    for i in range(0, retryCount):
         agent_json = GetNaplesSystemInfoJson(n)
         try:
             agent_json_parsed = json.loads(agent_json)
@@ -584,7 +586,7 @@ def AgentGetControllers(n):
             return result
         except BaseException:
             api.Logger.info("Failed to get agent controllers. Retrying...")
-            time.sleep(10)
+            time.sleep(retryDelay)
 
     return "FAILED"
 
@@ -753,14 +755,14 @@ def GetNaplesUUID(n):
 
 
 def GetPenctlFruJson(n):
-    for i in range(0, 12):
+    for i in range(0, retryCount):
         penctl_json = GetNaplesCfgSpecJson(n)
         try:
             penctl_json_parsed = json.loads(penctl_json)
             return penctl_json_parsed["status"]["fru"]
         except BaseException:
             api.Logger.info("failed to pass penctl output")
-            time.sleep(10)
+            time.sleep(retryDelay)
 
     return ""
 
