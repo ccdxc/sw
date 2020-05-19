@@ -141,8 +141,8 @@ vnic_entry::init_config(api_ctxt_t *api_ctxt) {
     if (switch_vnic_) {
         // switch vnics can send/receive traffic multiple SIPs/SMACs
         if (unlikely(spec->binding_checks_en)) {
-            PDS_TRACE_ERR("switch vnics can't have IP/MAC binding checks enabled, "
-                          "vnic %s api op %u failed", key_.str(),
+            PDS_TRACE_ERR("switch vnics can't have IP/MAC binding checks "
+                          "enabled, vnic %s api op %u failed", key_.str(),
                           api_ctxt->api_op);
             return SDK_RET_INVALID_ARG;
         }

@@ -698,6 +698,8 @@ vnic_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     vnic_data.ing_vnic_info.meter_enabled = spec->meter_en;
     vnic_data.ing_vnic_info.rx_mirror_session = spec->rx_mirror_session_bmap;
     vnic_data.ing_vnic_info.tx_mirror_session = spec->tx_mirror_session_bmap;
+    vnic_data.ing_vnic_info.binding_check_enabled =
+        spec->binding_checks_en ? TRUE : FALSE;
     if (tx_policer) {
          vnic_data.ing_vnic_info.tx_policer_id =
              ((policer_impl *)(tx_policer->impl()))->hw_id();
@@ -842,7 +844,8 @@ vnic_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
     // if mirror sessions or metering enable/disable config changed, update
     // ingress VNIC table entry
     if ((obj_ctxt->upd_bmap & PDS_VNIC_UPD_METER_EN) ||
-        (obj_ctxt->upd_bmap & PDS_VNIC_UPD_TX_POLICER)) {
+        (obj_ctxt->upd_bmap & PDS_VNIC_UPD_TX_POLICER) ||
+        (obj_ctxt->upd_bmap & PDS_VNIC_UPD_BINDING_CHECKS)) {
         // do read-modify-update of the VNIC table entry
         p4pd_global_entry_read(P4TBL_ID_VNIC, hw_id_, NULL, NULL, &vnic_data);
         // take care of meter update
@@ -864,6 +867,11 @@ vnic_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
                 vnic_data.ing_vnic_info.tx_policer_id =
                     PDS_IMPL_RSVD_POLICER_HW_ID;
             }
+        }
+        // handle binding check config change
+        if (obj_ctxt->upd_bmap & PDS_VNIC_UPD_BINDING_CHECKS) {
+            vnic_data.ing_vnic_info.binding_check_enabled =
+                spec->binding_checks_en ? TRUE : FALSE;
         }
         p4pd_ret = p4pd_global_entry_write(P4TBL_ID_VNIC, hw_id_,
                                            NULL, NULL, &vnic_data);
