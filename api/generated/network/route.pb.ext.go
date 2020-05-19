@@ -1096,21 +1096,20 @@ func (st *storageRoutingConfigTransformer) TransformToStorage(ctx context.Contex
 
 func (m *RoutingConfigSpec) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
 
-	if m.BGPConfig == nil {
-		return nil
+	if m.BGPConfig != nil {
+		if err := m.BGPConfig.ApplyStorageTransformer(ctx, toStorage); err != nil {
+			return err
+		}
 	}
-	if err := m.BGPConfig.ApplyStorageTransformer(ctx, toStorage); err != nil {
-		return err
-	}
+
 	return nil
 }
 
 func (m *RoutingConfigSpec) EraseSecrets() {
 
-	if m.BGPConfig == nil {
-		return
+	if m.BGPConfig != nil {
+		m.BGPConfig.EraseSecrets()
 	}
-	m.BGPConfig.EraseSecrets()
 
 	return
 }

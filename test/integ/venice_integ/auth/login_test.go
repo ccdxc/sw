@@ -1018,8 +1018,15 @@ func TestRadiusLogin(t *testing.T) {
 		npolicy, err = tinfo.apicl.AuthV1().AuthenticationPolicy().Update(context.TODO(), policy)
 		return err == nil, err
 	}, fmt.Sprintf("unable to update auth policy with empty radius secret: %#v", *policy))
-	_, err = NewLoggedInContextWithTimeout(context.TODO(), tinfo.apiGwAddr, radiusUserCred, 9*time.Second)
+	ctx, err = NewLoggedInContextWithTimeout(context.TODO(), tinfo.apiGwAddr, radiusUserCred, 9*time.Second)
 	AssertOk(t, err, "unable to get logged in context")
+	AssertEventually(t, func() (bool, interface{}) {
+		policy, err = tinfo.restcl.AuthV1().AuthenticationPolicy().Get(ctx, &api.ObjectMeta{})
+		return err == nil, err
+	}, "unable to retrieve auth policy")
+	for _, srv := range policy.Spec.Authenticators.Radius.Domains[0].Servers {
+		Assert(t, srv.Secret == "", fmt.Sprintf("radius server secret should be empty: %s", srv.Secret))
+	}
 }
 
 func TestPasswordChange(t *testing.T) {

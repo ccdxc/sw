@@ -354,21 +354,20 @@ func (st *storageOrchestratorTransformer) TransformToStorage(ctx context.Context
 
 func (m *OrchestratorSpec) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
 
-	if m.Credentials == nil {
-		return nil
+	if m.Credentials != nil {
+		if err := m.Credentials.ApplyStorageTransformer(ctx, toStorage); err != nil {
+			return err
+		}
 	}
-	if err := m.Credentials.ApplyStorageTransformer(ctx, toStorage); err != nil {
-		return err
-	}
+
 	return nil
 }
 
 func (m *OrchestratorSpec) EraseSecrets() {
 
-	if m.Credentials == nil {
-		return
+	if m.Credentials != nil {
+		m.Credentials.EraseSecrets()
 	}
-	m.Credentials.EraseSecrets()
 
 	return
 }

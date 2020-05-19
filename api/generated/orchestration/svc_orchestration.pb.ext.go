@@ -218,21 +218,20 @@ func (m *AutoMsgOrchestratorWatchHelper) EraseSecrets() {
 
 func (m *AutoMsgOrchestratorWatchHelper_WatchEvent) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
 
-	if m.Object == nil {
-		return nil
+	if m.Object != nil {
+		if err := m.Object.ApplyStorageTransformer(ctx, toStorage); err != nil {
+			return err
+		}
 	}
-	if err := m.Object.ApplyStorageTransformer(ctx, toStorage); err != nil {
-		return err
-	}
+
 	return nil
 }
 
 func (m *AutoMsgOrchestratorWatchHelper_WatchEvent) EraseSecrets() {
 
-	if m.Object == nil {
-		return
+	if m.Object != nil {
+		m.Object.EraseSecrets()
 	}
-	m.Object.EraseSecrets()
 
 	return
 }

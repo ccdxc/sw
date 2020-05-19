@@ -1746,21 +1746,20 @@ func (st *storageAlertDestinationTransformer) TransformToStorage(ctx context.Con
 
 func (m *AlertDestinationSpec) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
 
-	if m.SyslogExport == nil {
-		return nil
+	if m.SyslogExport != nil {
+		if err := m.SyslogExport.ApplyStorageTransformer(ctx, toStorage); err != nil {
+			return err
+		}
 	}
-	if err := m.SyslogExport.ApplyStorageTransformer(ctx, toStorage); err != nil {
-		return err
-	}
+
 	return nil
 }
 
 func (m *AlertDestinationSpec) EraseSecrets() {
 
-	if m.SyslogExport == nil {
-		return
+	if m.SyslogExport != nil {
+		m.SyslogExport.EraseSecrets()
 	}
-	m.SyslogExport.EraseSecrets()
 
 	return
 }

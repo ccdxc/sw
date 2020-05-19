@@ -3130,21 +3130,20 @@ func (m *AutoMsgCustomerWatchHelper) EraseSecrets() {
 
 func (m *AutoMsgCustomerWatchHelper_WatchEvent) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
 
-	if m.Object == nil {
-		return nil
+	if m.Object != nil {
+		if err := m.Object.ApplyStorageTransformer(ctx, toStorage); err != nil {
+			return err
+		}
 	}
-	if err := m.Object.ApplyStorageTransformer(ctx, toStorage); err != nil {
-		return err
-	}
+
 	return nil
 }
 
 func (m *AutoMsgCustomerWatchHelper_WatchEvent) EraseSecrets() {
 
-	if m.Object == nil {
-		return
+	if m.Object != nil {
+		m.Object.EraseSecrets()
 	}
-	m.Object.EraseSecrets()
 
 	return
 }
@@ -3225,6 +3224,7 @@ func (m *CustomerSpec) ApplyStorageTransformer(ctx context.Context, toStorage bo
 	if err := m.PasswordRecoveryInfo.ApplyStorageTransformer(ctx, toStorage); err != nil {
 		return err
 	}
+
 	for i, v := range m.SecurityQuestions {
 		c := v
 		if err := c.ApplyStorageTransformer(ctx, toStorage); err != nil {

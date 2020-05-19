@@ -2433,6 +2433,7 @@ func (m *AuthenticationPolicySpec) ApplyStorageTransformer(ctx context.Context, 
 	if err := m.Authenticators.ApplyStorageTransformer(ctx, toStorage); err != nil {
 		return err
 	}
+
 	if vs, ok := storageTransformersMapAuth["AuthenticationPolicySpec"]; ok {
 		for _, v := range vs {
 			if err := v(ctx, m, toStorage); err != nil {
@@ -2473,33 +2474,30 @@ func (m *AuthenticationPolicyStatus) EraseSecrets() {
 
 func (m *Authenticators) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
 
-	if m.Ldap == nil {
-		return nil
-	}
-	if err := m.Ldap.ApplyStorageTransformer(ctx, toStorage); err != nil {
-		return err
+	if m.Ldap != nil {
+		if err := m.Ldap.ApplyStorageTransformer(ctx, toStorage); err != nil {
+			return err
+		}
 	}
 
-	if m.Radius == nil {
-		return nil
+	if m.Radius != nil {
+		if err := m.Radius.ApplyStorageTransformer(ctx, toStorage); err != nil {
+			return err
+		}
 	}
-	if err := m.Radius.ApplyStorageTransformer(ctx, toStorage); err != nil {
-		return err
-	}
+
 	return nil
 }
 
 func (m *Authenticators) EraseSecrets() {
 
-	if m.Ldap == nil {
-		return
+	if m.Ldap != nil {
+		m.Ldap.EraseSecrets()
 	}
-	m.Ldap.EraseSecrets()
 
-	if m.Radius == nil {
-		return
+	if m.Radius != nil {
+		m.Radius.EraseSecrets()
 	}
-	m.Radius.EraseSecrets()
 
 	return
 }
@@ -2596,21 +2594,20 @@ func (m *RadiusServer) EraseSecrets() {
 
 func (m *RadiusServerStatus) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
 
-	if m.Server == nil {
-		return nil
+	if m.Server != nil {
+		if err := m.Server.ApplyStorageTransformer(ctx, toStorage); err != nil {
+			return err
+		}
 	}
-	if err := m.Server.ApplyStorageTransformer(ctx, toStorage); err != nil {
-		return err
-	}
+
 	return nil
 }
 
 func (m *RadiusServerStatus) EraseSecrets() {
 
-	if m.Server == nil {
-		return
+	if m.Server != nil {
+		m.Server.EraseSecrets()
 	}
-	m.Server.EraseSecrets()
 
 	return
 }

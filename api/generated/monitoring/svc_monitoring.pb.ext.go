@@ -2195,21 +2195,20 @@ func (m *AutoMsgAlertDestinationWatchHelper) EraseSecrets() {
 
 func (m *AutoMsgAlertDestinationWatchHelper_WatchEvent) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
 
-	if m.Object == nil {
-		return nil
+	if m.Object != nil {
+		if err := m.Object.ApplyStorageTransformer(ctx, toStorage); err != nil {
+			return err
+		}
 	}
-	if err := m.Object.ApplyStorageTransformer(ctx, toStorage); err != nil {
-		return err
-	}
+
 	return nil
 }
 
 func (m *AutoMsgAlertDestinationWatchHelper_WatchEvent) EraseSecrets() {
 
-	if m.Object == nil {
-		return
+	if m.Object != nil {
+		m.Object.EraseSecrets()
 	}
-	m.Object.EraseSecrets()
 
 	return
 }
@@ -2234,21 +2233,20 @@ func (m *AutoMsgAuditPolicyWatchHelper) EraseSecrets() {
 
 func (m *AutoMsgAuditPolicyWatchHelper_WatchEvent) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
 
-	if m.Object == nil {
-		return nil
+	if m.Object != nil {
+		if err := m.Object.ApplyStorageTransformer(ctx, toStorage); err != nil {
+			return err
+		}
 	}
-	if err := m.Object.ApplyStorageTransformer(ctx, toStorage); err != nil {
-		return err
-	}
+
 	return nil
 }
 
 func (m *AutoMsgAuditPolicyWatchHelper_WatchEvent) EraseSecrets() {
 
-	if m.Object == nil {
-		return
+	if m.Object != nil {
+		m.Object.EraseSecrets()
 	}
-	m.Object.EraseSecrets()
 
 	return
 }
@@ -2273,21 +2271,20 @@ func (m *AutoMsgEventPolicyWatchHelper) EraseSecrets() {
 
 func (m *AutoMsgEventPolicyWatchHelper_WatchEvent) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
 
-	if m.Object == nil {
-		return nil
+	if m.Object != nil {
+		if err := m.Object.ApplyStorageTransformer(ctx, toStorage); err != nil {
+			return err
+		}
 	}
-	if err := m.Object.ApplyStorageTransformer(ctx, toStorage); err != nil {
-		return err
-	}
+
 	return nil
 }
 
 func (m *AutoMsgEventPolicyWatchHelper_WatchEvent) EraseSecrets() {
 
-	if m.Object == nil {
-		return
+	if m.Object != nil {
+		m.Object.EraseSecrets()
 	}
-	m.Object.EraseSecrets()
 
 	return
 }
@@ -2312,21 +2309,20 @@ func (m *AutoMsgFlowExportPolicyWatchHelper) EraseSecrets() {
 
 func (m *AutoMsgFlowExportPolicyWatchHelper_WatchEvent) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
 
-	if m.Object == nil {
-		return nil
+	if m.Object != nil {
+		if err := m.Object.ApplyStorageTransformer(ctx, toStorage); err != nil {
+			return err
+		}
 	}
-	if err := m.Object.ApplyStorageTransformer(ctx, toStorage); err != nil {
-		return err
-	}
+
 	return nil
 }
 
 func (m *AutoMsgFlowExportPolicyWatchHelper_WatchEvent) EraseSecrets() {
 
-	if m.Object == nil {
-		return
+	if m.Object != nil {
+		m.Object.EraseSecrets()
 	}
-	m.Object.EraseSecrets()
 
 	return
 }
@@ -2351,21 +2347,20 @@ func (m *AutoMsgFwlogPolicyWatchHelper) EraseSecrets() {
 
 func (m *AutoMsgFwlogPolicyWatchHelper_WatchEvent) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
 
-	if m.Object == nil {
-		return nil
+	if m.Object != nil {
+		if err := m.Object.ApplyStorageTransformer(ctx, toStorage); err != nil {
+			return err
+		}
 	}
-	if err := m.Object.ApplyStorageTransformer(ctx, toStorage); err != nil {
-		return err
-	}
+
 	return nil
 }
 
 func (m *AutoMsgFwlogPolicyWatchHelper_WatchEvent) EraseSecrets() {
 
-	if m.Object == nil {
-		return
+	if m.Object != nil {
+		m.Object.EraseSecrets()
 	}
-	m.Object.EraseSecrets()
 
 	return
 }

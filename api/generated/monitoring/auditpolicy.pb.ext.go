@@ -369,21 +369,20 @@ func (st *storageAuditPolicyTransformer) TransformToStorage(ctx context.Context,
 
 func (m *AuditPolicySpec) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
 
-	if m.Syslog == nil {
-		return nil
+	if m.Syslog != nil {
+		if err := m.Syslog.ApplyStorageTransformer(ctx, toStorage); err != nil {
+			return err
+		}
 	}
-	if err := m.Syslog.ApplyStorageTransformer(ctx, toStorage); err != nil {
-		return err
-	}
+
 	return nil
 }
 
 func (m *AuditPolicySpec) EraseSecrets() {
 
-	if m.Syslog == nil {
-		return
+	if m.Syslog != nil {
+		m.Syslog.EraseSecrets()
 	}
-	m.Syslog.EraseSecrets()
 
 	return
 }

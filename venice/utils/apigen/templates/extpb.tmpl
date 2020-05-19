@@ -328,12 +328,15 @@ func (m *{{$msgname}}) ApplyStorageTransformer(ctx context.Context, toStorage bo
 		return err
 	}{{else}}
 	{{if $fldv.Pointer}}
-	if m.{{$fldk}} == nil {
-		return nil
-	}{{end}}
+	if m.{{$fldk}} != nil {
+		if err := m.{{$fldk}}.ApplyStorageTransformer(ctx, toStorage); err != nil {
+			return err
+		}
+	}{{else}}
 	if err := m.{{$fldk}}.ApplyStorageTransformer(ctx, toStorage); err != nil {
 		return err
-	}{{end}}{{end}}{{else}}{{$_:= (saveBool true 0)}}{{end}}{{end}}{{if getBool 0}}
+	}{{end}}
+	{{end}}{{end}}{{else}}{{$_:= (saveBool true 0)}}{{end}}{{end}}{{if getBool 0}}
 	if vs, ok := storageTransformersMap{{getFileName $file.Name}}["{{$msgname}}"]; ok {
 		for _, v := range vs {
 			if err := v(ctx, m, toStorage); err != nil {
@@ -351,10 +354,11 @@ func (m *{{$msgname}}) EraseSecrets() { {{$_ := (saveBool false 0)}}{{range $fld
 	m.{{$fldk}}.EraseSecrets()
 	{{else}}
 	{{if $fldv.Pointer}}
-	if m.{{$fldk}} == nil {
-		return
-	}{{end}}
-	m.{{$fldk}}.EraseSecrets()
+	if m.{{$fldk}} != nil {
+		m.{{$fldk}}.EraseSecrets()
+	}{{else}}
+		m.{{$fldk}}.EraseSecrets()
+	{{end}}
 	{{end}}{{end}}{{else}}{{$_:= (saveBool true 0)}}{{end}}{{end}}{{if getBool 0}}
 	if v, ok := eraseSecretsMap{{getFileName $file.Name}}["{{$msgname}}"]; ok {
 		v(m)
