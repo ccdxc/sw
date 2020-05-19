@@ -17,14 +17,14 @@ nat2_rewrite:
     seq             c3, k.tcp_valid, TRUE
     bbeq            k.control_metadata_rx_packet, TRUE, nat2_rewrite_rx
 nat2_rewrite_tx:
-    seq             c4, k.rewrite_metadata_flags[TX_REWRITE_DIP_BITS], \
-                        TX_REWRITE_DIP_FROM_NAT
+    seq             c4, k.rewrite_metadata_flags[P4_REWRITE_DIP_BITS], \
+                        P4_REWRITE_DIP_FROM_NAT
     nop.!c4.e
     phvwr.c4        p.control_metadata_update_checksum, TRUE
     phvwr.c1        p.ipv4_1_dstAddr, d.nat2_rewrite_d.ip
     phvwr.!c1       p.ipv6_1_dstAddr, d.nat2_rewrite_d.ip
-    seq             c4, k.rewrite_metadata_flags[TX_REWRITE_DPORT_BITS], \
-                        TX_REWRITE_DPORT_FROM_NAT
+    seq             c4, k.rewrite_metadata_flags[P4_REWRITE_DPORT_BITS], \
+                        P4_REWRITE_DPORT_FROM_NAT
     nop.!c4.e
     nop
     phvwr.c3.e      p.tcp_dstPort, d.nat2_rewrite_d.port
@@ -34,14 +34,14 @@ nat2_rewrite_tx:
     phvwr.c2        p.control_metadata_update_checksum, TRUE
 
 nat2_rewrite_rx:
-    seq             c4, k.rewrite_metadata_flags[RX_REWRITE_SIP_BITS], \
-                        RX_REWRITE_SIP_FROM_NAT
+    seq             c4, k.rewrite_metadata_flags[P4_REWRITE_SIP_BITS], \
+                        P4_REWRITE_SIP_FROM_NAT
     nop.!c4.e
     phvwr.c4        p.control_metadata_update_checksum, TRUE
     phvwr.c1        p.ipv4_1_srcAddr, d.nat2_rewrite_d.ip
     phvwr.!c1       p.ipv6_1_srcAddr, d.nat2_rewrite_d.ip
-    seq             c4, k.rewrite_metadata_flags[RX_REWRITE_SPORT_BITS], \
-                        RX_REWRITE_SPORT_FROM_NAT
+    seq             c4, k.rewrite_metadata_flags[P4_REWRITE_SPORT_BITS], \
+                        P4_REWRITE_SPORT_FROM_NAT
     nop.!c4.e
     nop
     phvwr.c3.e      p.tcp_srcPort, d.nat2_rewrite_d.port

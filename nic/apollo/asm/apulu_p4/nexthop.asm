@@ -42,34 +42,28 @@ nexthop_info2:
                         d.nexthop_info_d.vlan_strip_en
 
 nexthop_rewrite:
-    bbeq            k.control_metadata_rx_packet, TRUE, nexthop_rx_rewrite
     or              r2, k.rewrite_metadata_flags_s8_e15, \
                         k.rewrite_metadata_flags_s0_e7, 8
-nexthop_tx_rewrite:
-    seq             c1, r2[TX_REWRITE_DMAC_BITS], \
-                        TX_REWRITE_DMAC_FROM_MAPPING
+    seq             c1, r2[P4_REWRITE_DMAC_BITS], P4_REWRITE_DMAC_FROM_MAPPING
     phvwr.c1        p.ethernet_1_dstAddr, k.rewrite_metadata_dmaci
-    seq             c1, r2[TX_REWRITE_DMAC_BITS], \
-                        TX_REWRITE_DMAC_FROM_NEXTHOP
+    seq             c1, r2[P4_REWRITE_DMAC_BITS], P4_REWRITE_DMAC_FROM_NEXTHOP
     phvwr.c1        p.ethernet_1_dstAddr, d.nexthop_info_d.dmaci
-    seq             c1, r2[TX_REWRITE_DMAC_BITS], \
-                        TX_REWRITE_DMAC_FROM_TUNNEL
+    seq             c1, r2[P4_REWRITE_DMAC_BITS], P4_REWRITE_DMAC_FROM_TUNNEL
     phvwr.c1        p.ethernet_1_dstAddr, k.rewrite_metadata_tunnel_dmaci
-    seq             c1, r2[TX_REWRITE_SMAC_BITS], \
-                        TX_REWRITE_SMAC_FROM_VRMAC
+    seq             c1, r2[P4_REWRITE_SMAC_BITS], P4_REWRITE_SMAC_FROM_VRMAC
     phvwr.c1        p.ethernet_1_srcAddr, k.rewrite_metadata_vrmac
-    seq             c1, r2[TX_REWRITE_ENCAP_BITS], \
-                        TX_REWRITE_ENCAP_VXLAN
+    seq             c1, r2[P4_REWRITE_ENCAP_BITS], P4_REWRITE_ENCAP_VXLAN
     bcf             [c1], vxlan_encap
-    seq             c1, r2[TX_REWRITE_VLAN_BITS], \
-                        TX_REWRITE_VLAN_ENCAP
+    seq             c1, r2[P4_REWRITE_VLAN_BITS], P4_REWRITE_VLAN_ENCAP
     bcf             [c1], vlan_encap
     seq             c1, k.ctag_1_valid, TRUE
-    seq.c1          c1, r2[TX_REWRITE_VLAN_BITS], \
-                        RX_REWRITE_VLAN_DECAP
-    b.c1            vlan_decap
+    seq.c1          c1, r2[P4_REWRITE_VLAN_BITS], P4_REWRITE_VLAN_DECAP
     nop.!c1.e
-    nop
+vlan_decap:
+    sub             r1, r1, 4
+    phvwr           p.capri_p4_intrinsic_packet_len, r1
+    phvwr.e         p.ctag_1_valid, FALSE
+    phvwr.f         p.ethernet_1_etherType, k.ctag_1_etherType
 
 vxlan_encap:
     seq             c1, k.ctag_1_valid, TRUE
@@ -77,8 +71,7 @@ vxlan_encap:
     phvwr.c1        p.ethernet_1_etherType, k.ctag_1_etherType
     phvwr           p.{ethernet_0_dstAddr,ethernet_0_srcAddr}, \
                         d.{nexthop_info_d.dmaco,nexthop_info_d.smaco}
-    seq             c1, r2[TX_REWRITE_VNI_BITS], \
-                        TX_REWRITE_VNI_FROM_TUNNEL
+    seq             c1, r2[P4_REWRITE_VNI_BITS], P4_REWRITE_VNI_FROM_TUNNEL
     sne.!c1         c1, k.rewrite_metadata_tunnel_vni, r0
     cmov            r7, c1, k.rewrite_metadata_tunnel_vni, \
                         k.rewrite_metadata_vni
@@ -156,30 +149,6 @@ ipv6_vxlan_encap:
     phvwr           p.udp_0_len, r1
     add.e           r1, r1, (40+14)
     phvwr.f         p.capri_p4_intrinsic_packet_len, r1
-
-nexthop_rx_rewrite:
-    seq             c1, r2[RX_REWRITE_DMAC_BITS], \
-                        RX_REWRITE_DMAC_FROM_MAPPING
-    phvwr.c1        p.ethernet_1_dstAddr, k.rewrite_metadata_dmaci
-    seq             c1, r2[RX_REWRITE_DMAC_BITS], \
-                        RX_REWRITE_DMAC_FROM_NEXTHOP
-    phvwr.c1        p.ethernet_1_dstAddr, d.nexthop_info_d.dmaci
-    seq             c1, r2[RX_REWRITE_SMAC_BITS], \
-                        RX_REWRITE_SMAC_FROM_VRMAC
-    phvwr.c1        p.ethernet_1_srcAddr, k.rewrite_metadata_vrmac
-    seq             c1, r2[RX_REWRITE_VLAN_BITS], \
-                        RX_REWRITE_VLAN_ENCAP
-    bcf             [c1], vlan_encap
-    seq             c1, k.ctag_1_valid, TRUE
-    seq.c1          c1, r2[RX_REWRITE_VLAN_BITS], \
-                        RX_REWRITE_VLAN_DECAP
-    nop.!c1.e
-
-vlan_decap:
-    sub             r1, r1, 4
-    phvwr           p.capri_p4_intrinsic_packet_len, r1
-    phvwr.e         p.ctag_1_valid, FALSE
-    phvwr.f         p.ethernet_1_etherType, k.ctag_1_etherType
 
 vlan_encap:
     nop.c1.e

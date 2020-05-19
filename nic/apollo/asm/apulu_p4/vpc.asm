@@ -13,13 +13,9 @@ vpc_info:
     phvwr           p.rewrite_metadata_vni, d.vpc_info_d.vni
     phvwr           p.rewrite_metadata_vrmac, d.vpc_info_d.vrmac
 
-    crestore        [c2-c1], r0, 0x3
-    seq             c1, k.control_metadata_rx_packet, FALSE
-    seq.c1          c2, k.rewrite_metadata_flags[TX_REWRITE_TTL_BITS], \
-                        TX_REWRITE_TTL_DEC
-    seq.!c1         c2, k.rewrite_metadata_flags[RX_REWRITE_TTL_BITS], \
-                        RX_REWRITE_TTL_DEC
-    nop.!c2.e
+    seq             c1, k.rewrite_metadata_flags[P4_REWRITE_TTL_BITS], \
+                        P4_REWRITE_TTL_DEC
+    nop.!c1.e
     phvwr           p.rewrite_metadata_tunnel_tos, d.vpc_info_d.tos
 
     // TTL decrement

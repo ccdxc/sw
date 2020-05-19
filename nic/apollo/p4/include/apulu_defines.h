@@ -100,125 +100,72 @@
 /*****************************************************************************/
 /* rewrite flags                                                             */
 /*****************************************************************************/
-#define TX_REWRITE_DMAC_START                   0
-#define TX_REWRITE_DMAC_MASK                    3
-#define TX_REWRITE_DMAC_NONE                    0
-#define TX_REWRITE_DMAC_FROM_MAPPING            1
-#define TX_REWRITE_DMAC_FROM_NEXTHOP            2
-#define TX_REWRITE_DMAC_FROM_TUNNEL             3
-#define TX_REWRITE_DMAC_BITS                    1:0
+#define P4_REWRITE_DMAC_START           0
+#define P4_REWRITE_DMAC_MASK            3
+#define P4_REWRITE_DMAC_NONE            0
+#define P4_REWRITE_DMAC_FROM_MAPPING    1
+#define P4_REWRITE_DMAC_FROM_NEXTHOP    2
+#define P4_REWRITE_DMAC_FROM_TUNNEL     3
+#define P4_REWRITE_DMAC_BITS            1:0
 
-#define TX_REWRITE_SMAC_START                   2
-#define TX_REWRITE_SMAC_MASK                    1
-#define TX_REWRITE_SMAC_NONE                    0
-#define TX_REWRITE_SMAC_FROM_VRMAC              1
-#define TX_REWRITE_SMAC_BITS                    2:2
+#define P4_REWRITE_SMAC_START           2
+#define P4_REWRITE_SMAC_MASK            1
+#define P4_REWRITE_SMAC_NONE            0
+#define P4_REWRITE_SMAC_FROM_VRMAC      1
+#define P4_REWRITE_SMAC_BITS            2:2
 
-#define TX_REWRITE_SIP_START                    3
-#define TX_REWRITE_SIP_MASK                     1
-#define TX_REWRITE_SIP_NONE                     0
-#define TX_REWRITE_SIP_FROM_NAT                 1
-#define TX_REWRITE_SIP_BITS                     3:3
+#define P4_REWRITE_SIP_START            3
+#define P4_REWRITE_SIP_MASK             1
+#define P4_REWRITE_SIP_NONE             0
+#define P4_REWRITE_SIP_FROM_NAT         1
+#define P4_REWRITE_SIP_BITS             3:3
 
-#define TX_REWRITE_DIP_START                    4
-#define TX_REWRITE_DIP_MASK                     1
-#define TX_REWRITE_DIP_NONE                     0
-#define TX_REWRITE_DIP_FROM_NAT                 1
-#define TX_REWRITE_DIP_BITS                     4:4
+#define P4_REWRITE_DIP_START            4
+#define P4_REWRITE_DIP_MASK             1
+#define P4_REWRITE_DIP_NONE             0
+#define P4_REWRITE_DIP_FROM_NAT         1
+#define P4_REWRITE_DIP_BITS             4:4
 
-#define TX_REWRITE_SPORT_START                  5
-#define TX_REWRITE_SPORT_MASK                   1
-#define TX_REWRITE_SPORT_NONE                   0
-#define TX_REWRITE_SPORT_FROM_NAT               1
-#define TX_REWRITE_SPORT_BITS                   5:5
+#define P4_REWRITE_SPORT_START          5
+#define P4_REWRITE_SPORT_MASK           1
+#define P4_REWRITE_SPORT_NONE           0
+#define P4_REWRITE_SPORT_FROM_NAT       1
+#define P4_REWRITE_SPORT_BITS           5:5
 
-#define TX_REWRITE_DPORT_START                  6
-#define TX_REWRITE_DPORT_MASK                   1
-#define TX_REWRITE_DPORT_NONE                   0
-#define TX_REWRITE_DPORT_FROM_NAT               1
-#define TX_REWRITE_DPORT_BITS                   6:6
+#define P4_REWRITE_DPORT_START          6
+#define P4_REWRITE_DPORT_MASK           1
+#define P4_REWRITE_DPORT_NONE           0
+#define P4_REWRITE_DPORT_FROM_NAT       1
+#define P4_REWRITE_DPORT_BITS           6:6
 
-#define TX_REWRITE_ENCAP_START                  7
-#define TX_REWRITE_ENCAP_MASK                   3
-#define TX_REWRITE_ENCAP_NONE                   0
-#define TX_REWRITE_ENCAP_VXLAN                  1
-#define TX_REWRITE_ENCAP_MPLSoUDP               2
-#define TX_REWRITE_ENCAP_BITS                   8:7
+#define P4_REWRITE_ENCAP_START          7
+#define P4_REWRITE_ENCAP_MASK           3
+#define P4_REWRITE_ENCAP_NONE           0
+#define P4_REWRITE_ENCAP_VXLAN          1
+#define P4_REWRITE_ENCAP_MPLSoUDP       2
+#define P4_REWRITE_ENCAP_BITS           8:7
 
-#define TX_REWRITE_VNI_START                    9
-#define TX_REWRITE_VNI_MASK                     1
-#define TX_REWRITE_VNI_DEFAULT                  0
-#define TX_REWRITE_VNI_FROM_TUNNEL              1
-#define TX_REWRITE_VNI_BITS                     9:9
+#define P4_REWRITE_VNI_START            9
+#define P4_REWRITE_VNI_MASK             1
+#define P4_REWRITE_VNI_DEFAULT          0
+#define P4_REWRITE_VNI_FROM_TUNNEL      1
+#define P4_REWRITE_VNI_BITS             9:9
 
-#define TX_REWRITE_TTL_START                    10
-#define TX_REWRITE_TTL_MASK                     1
-#define TX_REWRITE_TTL_NONE                     0
-#define TX_REWRITE_TTL_DEC                      1
-#define TX_REWRITE_TTL_BITS                     10:10
+#define P4_REWRITE_TTL_START            10
+#define P4_REWRITE_TTL_MASK             1
+#define P4_REWRITE_TTL_NONE             0
+#define P4_REWRITE_TTL_DEC              1
+#define P4_REWRITE_TTL_BITS             10:10
 
-#define TX_REWRITE_VLAN_START                   11
-#define TX_REWRITE_VLAN_MASK                    3
-#define TX_REWRITE_VLAN_NONE                    0
-#define TX_REWRITE_VLAN_ENCAP                   1
-#define TX_REWRITE_VLAN_DECAP                   2
-#define TX_REWRITE_VLAN_BITS                    12:11
+#define P4_REWRITE_VLAN_START           11
+#define P4_REWRITE_VLAN_MASK            3
+#define P4_REWRITE_VLAN_NONE            0
+#define P4_REWRITE_VLAN_ENCAP           1
+#define P4_REWRITE_VLAN_DECAP           2
+#define P4_REWRITE_VLAN_BITS            12:11
 
-#define RX_REWRITE_DMAC_START                   0
-#define RX_REWRITE_DMAC_MASK                    3
-#define RX_REWRITE_DMAC_NONE                    0
-#define RX_REWRITE_DMAC_FROM_MAPPING            1
-#define RX_REWRITE_DMAC_FROM_NEXTHOP            2
-#define RX_REWRITE_DMAC_BITS                    1:0
-
-#define RX_REWRITE_SMAC_START                   2
-#define RX_REWRITE_SMAC_MASK                    1
-#define RX_REWRITE_SMAC_NONE                    0
-#define RX_REWRITE_SMAC_FROM_VRMAC              1
-#define RX_REWRITE_SMAC_BITS                    2:2
-
-#define RX_REWRITE_SIP_START                    3
-#define RX_REWRITE_SIP_MASK                     1
-#define RX_REWRITE_SIP_NONE                     0
-#define RX_REWRITE_SIP_FROM_NAT                 1
-#define RX_REWRITE_SIP_BITS                     3:3
-
-#define RX_REWRITE_DIP_START                    4
-#define RX_REWRITE_DIP_MASK                     1
-#define RX_REWRITE_DIP_NONE                     0
-#define RX_REWRITE_DIP_FROM_NAT                 1
-#define RX_REWRITE_DIP_BITS                     4:4
-
-#define RX_REWRITE_SPORT_START                  5
-#define RX_REWRITE_SPORT_MASK                   1
-#define RX_REWRITE_SPORT_NONE                   0
-#define RX_REWRITE_SPORT_FROM_NAT               1
-#define RX_REWRITE_SPORT_BITS                   5:5
-
-#define RX_REWRITE_DPORT_START                  6
-#define RX_REWRITE_DPORT_MASK                   1
-#define RX_REWRITE_DPORT_NONE                   0
-#define RX_REWRITE_DPORT_FROM_NAT               1
-#define RX_REWRITE_DPORT_BITS                   6:6
-
-#define RX_REWRITE_VLAN_START                   7
-#define RX_REWRITE_VLAN_MASK                    3
-#define RX_REWRITE_VLAN_NONE                    0
-#define RX_REWRITE_VLAN_ENCAP                   1
-#define RX_REWRITE_VLAN_DECAP                   2
-#define RX_REWRITE_VLAN_BITS                    8:7
-
-#define RX_REWRITE_TTL_START                    9
-#define RX_REWRITE_TTL_MASK                     1
-#define RX_REWRITE_TTL_NONE                     0
-#define RX_REWRITE_TTL_DEC                      1
-#define RX_REWRITE_TTL_BITS                     9:9
-
-#define TX_REWRITE(a, attr, val) \
-    ((((a) >> TX_REWRITE_ ## attr ## _START) & TX_REWRITE_ ## attr ## _MASK) == TX_REWRITE_ ## attr ## _ ## val)
-
-#define RX_REWRITE(a, attr, val) \
-    ((((a) >> RX_REWRITE_ ## attr ## _START) & RX_REWRITE_ ## attr ## _MASK) == RX_REWRITE_ ## attr ## _ ## val)
+#define P4_REWRITE(a, attr, val) \
+    ((((a) >> P4_REWRITE_ ## attr ## _START) & P4_REWRITE_ ## attr ## _MASK) == P4_REWRITE_ ## attr ## _ ## val)
 
 /*****************************************************************************/
 /* route result type and bit position                                        */

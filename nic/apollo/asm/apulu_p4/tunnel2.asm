@@ -59,7 +59,7 @@ struct phv_         p;
 
 tunnel2_info:
     add             r7, r0, k.capri_p4_intrinsic_packet_len
-    seq             c6, d.tunnel2_info_d.encap_type, TX_REWRITE_ENCAP_VXLAN
+    seq             c6, d.tunnel2_info_d.encap_type, P4_REWRITE_ENCAP_VXLAN
     bbeq            d.tunnel2_info_d.ip_type, IPTYPE_IPV6, tunnel2_ipv6_encap
     sne             c7, d.tunnel2_info_d.vlan, r0
 

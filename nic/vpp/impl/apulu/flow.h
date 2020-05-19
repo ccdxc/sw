@@ -148,7 +148,7 @@ pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
     session_tx_rewrite_flags = rewrite_flags->tx_rewrite;
     session_rx_rewrite_flags = rewrite_flags->rx_rewrite |
         (pds_is_flow_rx_vlan(b) ?
-            (RX_REWRITE_VLAN_ENCAP << RX_REWRITE_VLAN_START) : 0);
+            (P4_REWRITE_VLAN_ENCAP << P4_REWRITE_VLAN_START) : 0);
     ses_track_en = fm->con_track_en && (ctx->proto == PDS_FLOW_PROTO_TCP);
     actiondata.session_tracking_en = ses_track_en;
     actiondata.drop = ctx->drop;
@@ -1068,243 +1068,243 @@ pds_flow_rewrite_flags_init (void)
     vec_validate(fm->rewrite_flags, PDS_FLOW_PKT_TYPE_MAX);
     rewrite_flags = vec_elt_at_index(fm->rewrite_flags, PDS_FLOW_L2L_INTRA_SUBNET);
     rewrite_flags->tx_rewrite =
-            (TX_REWRITE_DMAC_FROM_MAPPING << TX_REWRITE_DMAC_START);
+            (P4_REWRITE_DMAC_FROM_MAPPING << P4_REWRITE_DMAC_START);
     rewrite_flags->rx_rewrite =
-            (RX_REWRITE_DMAC_FROM_MAPPING << RX_REWRITE_DMAC_START);
+            (P4_REWRITE_DMAC_FROM_MAPPING << P4_REWRITE_DMAC_START);
 
     rewrite_flags = vec_elt_at_index(fm->rewrite_flags, PDS_FLOW_L2L_INTER_SUBNET);
     rewrite_flags->tx_rewrite =
-            (TX_REWRITE_DMAC_FROM_MAPPING << TX_REWRITE_DMAC_START) |
-            (TX_REWRITE_SMAC_FROM_VRMAC << TX_REWRITE_SMAC_START) |
-            (TX_REWRITE_TTL_DEC << TX_REWRITE_TTL_START);
+            (P4_REWRITE_DMAC_FROM_MAPPING << P4_REWRITE_DMAC_START) |
+            (P4_REWRITE_SMAC_FROM_VRMAC << P4_REWRITE_SMAC_START) |
+            (P4_REWRITE_TTL_DEC << P4_REWRITE_TTL_START);
     rewrite_flags->rx_rewrite =
-            (RX_REWRITE_DMAC_FROM_MAPPING << RX_REWRITE_DMAC_START) |
-            (RX_REWRITE_SMAC_FROM_VRMAC << RX_REWRITE_SMAC_START) |
-            (RX_REWRITE_TTL_DEC << RX_REWRITE_TTL_START);
+            (P4_REWRITE_DMAC_FROM_MAPPING << P4_REWRITE_DMAC_START) |
+            (P4_REWRITE_SMAC_FROM_VRMAC << P4_REWRITE_SMAC_START) |
+            (P4_REWRITE_TTL_DEC << P4_REWRITE_TTL_START);
 
     rewrite_flags = vec_elt_at_index(fm->rewrite_flags, PDS_FLOW_L2R_INTRA_SUBNET);
     rewrite_flags->tx_rewrite =
-            (TX_REWRITE_DMAC_FROM_MAPPING << TX_REWRITE_DMAC_START) |
-            (TX_REWRITE_ENCAP_VXLAN << TX_REWRITE_ENCAP_START);
+            (P4_REWRITE_DMAC_FROM_MAPPING << P4_REWRITE_DMAC_START) |
+            (P4_REWRITE_ENCAP_VXLAN << P4_REWRITE_ENCAP_START);
     rewrite_flags->rx_rewrite =
-            (RX_REWRITE_DMAC_FROM_MAPPING << RX_REWRITE_DMAC_START);
+            (P4_REWRITE_DMAC_FROM_MAPPING << P4_REWRITE_DMAC_START);
 
     rewrite_flags = vec_elt_at_index(fm->rewrite_flags, PDS_FLOW_L2R_INTER_SUBNET);
     rewrite_flags->tx_rewrite =
-            (TX_REWRITE_DMAC_FROM_MAPPING << TX_REWRITE_DMAC_START) |
-            (TX_REWRITE_ENCAP_VXLAN << TX_REWRITE_ENCAP_START) |
-            (TX_REWRITE_SMAC_FROM_VRMAC << TX_REWRITE_SMAC_START) |
-            (TX_REWRITE_TTL_DEC << TX_REWRITE_TTL_START);
+            (P4_REWRITE_DMAC_FROM_MAPPING << P4_REWRITE_DMAC_START) |
+            (P4_REWRITE_ENCAP_VXLAN << P4_REWRITE_ENCAP_START) |
+            (P4_REWRITE_SMAC_FROM_VRMAC << P4_REWRITE_SMAC_START) |
+            (P4_REWRITE_TTL_DEC << P4_REWRITE_TTL_START);
     rewrite_flags->rx_rewrite =
-            (RX_REWRITE_DMAC_FROM_MAPPING << RX_REWRITE_DMAC_START) |
-            (RX_REWRITE_SMAC_FROM_VRMAC << RX_REWRITE_SMAC_START) |
-            (RX_REWRITE_TTL_DEC << RX_REWRITE_TTL_START);
+            (P4_REWRITE_DMAC_FROM_MAPPING << P4_REWRITE_DMAC_START) |
+            (P4_REWRITE_SMAC_FROM_VRMAC << P4_REWRITE_SMAC_START) |
+            (P4_REWRITE_TTL_DEC << P4_REWRITE_TTL_START);
 
     rewrite_flags = vec_elt_at_index(fm->rewrite_flags, PDS_FLOW_L2N_OVERLAY_ROUTE_EN);
     rewrite_flags->tx_rewrite =
-            (TX_REWRITE_ENCAP_VXLAN << TX_REWRITE_ENCAP_START) |
-            (TX_REWRITE_DMAC_FROM_TUNNEL << TX_REWRITE_DMAC_START) |
-            (TX_REWRITE_SMAC_FROM_VRMAC << TX_REWRITE_SMAC_START) |
-            (TX_REWRITE_TTL_DEC << TX_REWRITE_TTL_START);
+            (P4_REWRITE_ENCAP_VXLAN << P4_REWRITE_ENCAP_START) |
+            (P4_REWRITE_DMAC_FROM_TUNNEL << P4_REWRITE_DMAC_START) |
+            (P4_REWRITE_SMAC_FROM_VRMAC << P4_REWRITE_SMAC_START) |
+            (P4_REWRITE_TTL_DEC << P4_REWRITE_TTL_START);
     // return traffic is bridging not routing as it will come with VNI of subnet
     rewrite_flags->rx_rewrite =
-            (RX_REWRITE_DMAC_FROM_MAPPING << RX_REWRITE_DMAC_START);
+            (P4_REWRITE_DMAC_FROM_MAPPING << P4_REWRITE_DMAC_START);
 
     rewrite_flags = vec_elt_at_index(fm->rewrite_flags, PDS_FLOW_L2N_OVERLAY_ROUTE_EN_NAPT);
     rewrite_flags->tx_rewrite =
-            (TX_REWRITE_SIP_FROM_NAT << TX_REWRITE_SIP_START) |
-            (TX_REWRITE_SPORT_FROM_NAT << TX_REWRITE_SPORT_START) |
-            (TX_REWRITE_DMAC_FROM_TUNNEL << TX_REWRITE_DMAC_START) |
-            (TX_REWRITE_ENCAP_VXLAN << TX_REWRITE_ENCAP_START) |
-            (TX_REWRITE_SMAC_FROM_VRMAC << TX_REWRITE_SMAC_START) |
-            (TX_REWRITE_TTL_DEC << TX_REWRITE_TTL_START);
+            (P4_REWRITE_SIP_FROM_NAT << P4_REWRITE_SIP_START) |
+            (P4_REWRITE_SPORT_FROM_NAT << P4_REWRITE_SPORT_START) |
+            (P4_REWRITE_DMAC_FROM_TUNNEL << P4_REWRITE_DMAC_START) |
+            (P4_REWRITE_ENCAP_VXLAN << P4_REWRITE_ENCAP_START) |
+            (P4_REWRITE_SMAC_FROM_VRMAC << P4_REWRITE_SMAC_START) |
+            (P4_REWRITE_TTL_DEC << P4_REWRITE_TTL_START);
     // return traffic is bridging not routing as it will come with VNI of subnet
     // rewrite dmaci from nexthop, since there will be no mapping
     // lookup in rx direction
     rewrite_flags->rx_rewrite =
-             (RX_REWRITE_DIP_FROM_NAT << RX_REWRITE_DIP_START) |
-             (RX_REWRITE_DPORT_FROM_NAT << RX_REWRITE_DPORT_START) |
-             (RX_REWRITE_DMAC_FROM_NEXTHOP << RX_REWRITE_DMAC_START);
+             (P4_REWRITE_DIP_FROM_NAT << P4_REWRITE_DIP_START) |
+             (P4_REWRITE_DPORT_FROM_NAT << P4_REWRITE_DPORT_START) |
+             (P4_REWRITE_DMAC_FROM_NEXTHOP << P4_REWRITE_DMAC_START);
 
     rewrite_flags = vec_elt_at_index(fm->rewrite_flags, PDS_FLOW_L2N_OVERLAY_ROUTE_EN_NAT);
     rewrite_flags->tx_rewrite =
-            (TX_REWRITE_SIP_FROM_NAT << TX_REWRITE_SIP_START) |
-            (TX_REWRITE_DMAC_FROM_TUNNEL << TX_REWRITE_DMAC_START) |
-            (TX_REWRITE_ENCAP_VXLAN << TX_REWRITE_ENCAP_START) |
-            (TX_REWRITE_SMAC_FROM_VRMAC << TX_REWRITE_SMAC_START) |
-            (TX_REWRITE_TTL_DEC << TX_REWRITE_TTL_START);
+            (P4_REWRITE_SIP_FROM_NAT << P4_REWRITE_SIP_START) |
+            (P4_REWRITE_DMAC_FROM_TUNNEL << P4_REWRITE_DMAC_START) |
+            (P4_REWRITE_ENCAP_VXLAN << P4_REWRITE_ENCAP_START) |
+            (P4_REWRITE_SMAC_FROM_VRMAC << P4_REWRITE_SMAC_START) |
+            (P4_REWRITE_TTL_DEC << P4_REWRITE_TTL_START);
     // return traffic is bridging not routing as it will come with VNI of subnet
     rewrite_flags->rx_rewrite =
-            (RX_REWRITE_DIP_FROM_NAT << RX_REWRITE_DIP_START) |
-            (RX_REWRITE_DMAC_FROM_NEXTHOP << RX_REWRITE_DMAC_START);
+            (P4_REWRITE_DIP_FROM_NAT << P4_REWRITE_DIP_START) |
+            (P4_REWRITE_DMAC_FROM_NEXTHOP << P4_REWRITE_DMAC_START);
 
     rewrite_flags = vec_elt_at_index(fm->rewrite_flags, PDS_FLOW_L2N_OVERLAY_ROUTE_DIS);
     rewrite_flags->tx_rewrite =
-            (TX_REWRITE_ENCAP_VXLAN << TX_REWRITE_ENCAP_START) |
-            (TX_REWRITE_DMAC_FROM_TUNNEL << TX_REWRITE_DMAC_START) |
-            (TX_REWRITE_SMAC_FROM_VRMAC << TX_REWRITE_SMAC_START) |
-            (TX_REWRITE_TTL_DEC << TX_REWRITE_TTL_START);
+            (P4_REWRITE_ENCAP_VXLAN << P4_REWRITE_ENCAP_START) |
+            (P4_REWRITE_DMAC_FROM_TUNNEL << P4_REWRITE_DMAC_START) |
+            (P4_REWRITE_SMAC_FROM_VRMAC << P4_REWRITE_SMAC_START) |
+            (P4_REWRITE_TTL_DEC << P4_REWRITE_TTL_START);
     // return traffic is routing as it will come with VNI of VPC
     rewrite_flags->rx_rewrite =
-            (RX_REWRITE_DMAC_FROM_MAPPING << RX_REWRITE_DMAC_START) |
-            (RX_REWRITE_SMAC_FROM_VRMAC << RX_REWRITE_SMAC_START) |
-            (RX_REWRITE_TTL_DEC << RX_REWRITE_TTL_START);
+            (P4_REWRITE_DMAC_FROM_MAPPING << P4_REWRITE_DMAC_START) |
+            (P4_REWRITE_SMAC_FROM_VRMAC << P4_REWRITE_SMAC_START) |
+            (P4_REWRITE_TTL_DEC << P4_REWRITE_TTL_START);
 
     rewrite_flags = vec_elt_at_index(fm->rewrite_flags, PDS_FLOW_L2N_OVERLAY_ROUTE_DIS_NAPT);
     rewrite_flags->tx_rewrite =
-            (TX_REWRITE_SIP_FROM_NAT << TX_REWRITE_SIP_START) |
-            (TX_REWRITE_SPORT_FROM_NAT << TX_REWRITE_SPORT_START) |
-            (TX_REWRITE_DMAC_FROM_TUNNEL << TX_REWRITE_DMAC_START) |
-            (TX_REWRITE_ENCAP_VXLAN << TX_REWRITE_ENCAP_START) |
-            (TX_REWRITE_SMAC_FROM_VRMAC << TX_REWRITE_SMAC_START) |
-            (TX_REWRITE_TTL_DEC << TX_REWRITE_TTL_START);
+            (P4_REWRITE_SIP_FROM_NAT << P4_REWRITE_SIP_START) |
+            (P4_REWRITE_SPORT_FROM_NAT << P4_REWRITE_SPORT_START) |
+            (P4_REWRITE_DMAC_FROM_TUNNEL << P4_REWRITE_DMAC_START) |
+            (P4_REWRITE_ENCAP_VXLAN << P4_REWRITE_ENCAP_START) |
+            (P4_REWRITE_SMAC_FROM_VRMAC << P4_REWRITE_SMAC_START) |
+            (P4_REWRITE_TTL_DEC << P4_REWRITE_TTL_START);
     // return traffic is routing as it will come with VNI of VPC.
     // rewrite dmaci from nexthop, since there will be no mapping
     // lookup in rx direction
     rewrite_flags->rx_rewrite =
-             (RX_REWRITE_DIP_FROM_NAT << RX_REWRITE_DIP_START) |
-             (RX_REWRITE_DPORT_FROM_NAT << RX_REWRITE_DPORT_START) |
-             (RX_REWRITE_DMAC_FROM_NEXTHOP << RX_REWRITE_DMAC_START) |
-             (RX_REWRITE_SMAC_FROM_VRMAC << RX_REWRITE_SMAC_START) |
-             (RX_REWRITE_TTL_DEC << RX_REWRITE_TTL_START);
+             (P4_REWRITE_DIP_FROM_NAT << P4_REWRITE_DIP_START) |
+             (P4_REWRITE_DPORT_FROM_NAT << P4_REWRITE_DPORT_START) |
+             (P4_REWRITE_DMAC_FROM_NEXTHOP << P4_REWRITE_DMAC_START) |
+             (P4_REWRITE_SMAC_FROM_VRMAC << P4_REWRITE_SMAC_START) |
+             (P4_REWRITE_TTL_DEC << P4_REWRITE_TTL_START);
 
     rewrite_flags = vec_elt_at_index(fm->rewrite_flags, PDS_FLOW_L2N_OVERLAY_ROUTE_DIS_NAT);
     rewrite_flags->tx_rewrite =
-            (TX_REWRITE_SIP_FROM_NAT << TX_REWRITE_SIP_START) |
-            (TX_REWRITE_DMAC_FROM_TUNNEL << TX_REWRITE_DMAC_START) |
-            (TX_REWRITE_ENCAP_VXLAN << TX_REWRITE_ENCAP_START) |
-            (TX_REWRITE_SMAC_FROM_VRMAC << TX_REWRITE_SMAC_START) |
-            (TX_REWRITE_TTL_DEC << TX_REWRITE_TTL_START);
+            (P4_REWRITE_SIP_FROM_NAT << P4_REWRITE_SIP_START) |
+            (P4_REWRITE_DMAC_FROM_TUNNEL << P4_REWRITE_DMAC_START) |
+            (P4_REWRITE_ENCAP_VXLAN << P4_REWRITE_ENCAP_START) |
+            (P4_REWRITE_SMAC_FROM_VRMAC << P4_REWRITE_SMAC_START) |
+            (P4_REWRITE_TTL_DEC << P4_REWRITE_TTL_START);
     // return traffic is routing as it will come with VNI of VPC
     rewrite_flags->rx_rewrite =
-            (RX_REWRITE_DIP_FROM_NAT << RX_REWRITE_DIP_START) |
-            (RX_REWRITE_DMAC_FROM_NEXTHOP << RX_REWRITE_DMAC_START) |
-            (RX_REWRITE_SMAC_FROM_VRMAC << RX_REWRITE_SMAC_START) |
-            (RX_REWRITE_TTL_DEC << RX_REWRITE_TTL_START);
+            (P4_REWRITE_DIP_FROM_NAT << P4_REWRITE_DIP_START) |
+            (P4_REWRITE_DMAC_FROM_NEXTHOP << P4_REWRITE_DMAC_START) |
+            (P4_REWRITE_SMAC_FROM_VRMAC << P4_REWRITE_SMAC_START) |
+            (P4_REWRITE_TTL_DEC << P4_REWRITE_TTL_START);
 
     rewrite_flags = vec_elt_at_index(fm->rewrite_flags, PDS_FLOW_L2N_OVERLAY_ROUTE_DIS_TWICE_NAT);
     rewrite_flags->tx_rewrite =
-            (TX_REWRITE_SIP_FROM_NAT << TX_REWRITE_SIP_START) |
-            (TX_REWRITE_SPORT_FROM_NAT << TX_REWRITE_SPORT_START) |
-            (TX_REWRITE_DIP_FROM_NAT << TX_REWRITE_DIP_START) |
-            (TX_REWRITE_DMAC_FROM_TUNNEL << TX_REWRITE_DMAC_START) |
-            (TX_REWRITE_ENCAP_VXLAN << TX_REWRITE_ENCAP_START) |
-            (TX_REWRITE_SMAC_FROM_VRMAC << TX_REWRITE_SMAC_START) |
-            (TX_REWRITE_TTL_DEC << TX_REWRITE_TTL_START);
+            (P4_REWRITE_SIP_FROM_NAT << P4_REWRITE_SIP_START) |
+            (P4_REWRITE_SPORT_FROM_NAT << P4_REWRITE_SPORT_START) |
+            (P4_REWRITE_DIP_FROM_NAT << P4_REWRITE_DIP_START) |
+            (P4_REWRITE_DMAC_FROM_TUNNEL << P4_REWRITE_DMAC_START) |
+            (P4_REWRITE_ENCAP_VXLAN << P4_REWRITE_ENCAP_START) |
+            (P4_REWRITE_SMAC_FROM_VRMAC << P4_REWRITE_SMAC_START) |
+            (P4_REWRITE_TTL_DEC << P4_REWRITE_TTL_START);
     // return traffic is routing as it will come with VNI of VPC
     rewrite_flags->rx_rewrite =
-            (RX_REWRITE_DIP_FROM_NAT << RX_REWRITE_DIP_START) |
-            (RX_REWRITE_DPORT_FROM_NAT << RX_REWRITE_DPORT_START) |
-            (RX_REWRITE_SIP_FROM_NAT << RX_REWRITE_SIP_START) |
-            (RX_REWRITE_DMAC_FROM_NEXTHOP << RX_REWRITE_DMAC_START) |
-            (RX_REWRITE_SMAC_FROM_VRMAC << RX_REWRITE_SMAC_START) |
-            (RX_REWRITE_TTL_DEC << RX_REWRITE_TTL_START);
+            (P4_REWRITE_DIP_FROM_NAT << P4_REWRITE_DIP_START) |
+            (P4_REWRITE_DPORT_FROM_NAT << P4_REWRITE_DPORT_START) |
+            (P4_REWRITE_SIP_FROM_NAT << P4_REWRITE_SIP_START) |
+            (P4_REWRITE_DMAC_FROM_NEXTHOP << P4_REWRITE_DMAC_START) |
+            (P4_REWRITE_SMAC_FROM_VRMAC << P4_REWRITE_SMAC_START) |
+            (P4_REWRITE_TTL_DEC << P4_REWRITE_TTL_START);
 
     // For intra VCN traffic, don't do routing rewrites
     rewrite_flags = vec_elt_at_index(fm->rewrite_flags, PDS_FLOW_L2N_INTRA_VCN_ROUTE);
     rewrite_flags->tx_rewrite =
-            (TX_REWRITE_ENCAP_VXLAN << TX_REWRITE_ENCAP_START);
+            (P4_REWRITE_ENCAP_VXLAN << P4_REWRITE_ENCAP_START);
     rewrite_flags->rx_rewrite =
-            (RX_REWRITE_DMAC_FROM_MAPPING << RX_REWRITE_DMAC_START);
+            (P4_REWRITE_DMAC_FROM_MAPPING << P4_REWRITE_DMAC_START);
 
     rewrite_flags = vec_elt_at_index(fm->rewrite_flags, PDS_FLOW_R2L_INTRA_SUBNET);
     rewrite_flags->tx_rewrite =
-            (TX_REWRITE_DMAC_FROM_MAPPING << TX_REWRITE_DMAC_START) |
-            (TX_REWRITE_ENCAP_VXLAN << TX_REWRITE_ENCAP_START);
+            (P4_REWRITE_DMAC_FROM_MAPPING << P4_REWRITE_DMAC_START) |
+            (P4_REWRITE_ENCAP_VXLAN << P4_REWRITE_ENCAP_START);
     rewrite_flags->rx_rewrite =
-            (RX_REWRITE_DMAC_FROM_MAPPING << RX_REWRITE_DMAC_START);
+            (P4_REWRITE_DMAC_FROM_MAPPING << P4_REWRITE_DMAC_START);
 
     rewrite_flags = vec_elt_at_index(fm->rewrite_flags, PDS_FLOW_R2L_INTER_SUBNET);
     rewrite_flags->tx_rewrite =
-            (TX_REWRITE_DMAC_FROM_MAPPING << TX_REWRITE_DMAC_START) |
-            (TX_REWRITE_ENCAP_VXLAN << TX_REWRITE_ENCAP_START) |
-            (TX_REWRITE_SMAC_FROM_VRMAC << TX_REWRITE_SMAC_START) |
-            (TX_REWRITE_TTL_DEC << TX_REWRITE_TTL_START);
+            (P4_REWRITE_DMAC_FROM_MAPPING << P4_REWRITE_DMAC_START) |
+            (P4_REWRITE_ENCAP_VXLAN << P4_REWRITE_ENCAP_START) |
+            (P4_REWRITE_SMAC_FROM_VRMAC << P4_REWRITE_SMAC_START) |
+            (P4_REWRITE_TTL_DEC << P4_REWRITE_TTL_START);
     rewrite_flags->rx_rewrite =
-            (RX_REWRITE_DMAC_FROM_MAPPING << RX_REWRITE_DMAC_START) |
-            (RX_REWRITE_SMAC_FROM_VRMAC << RX_REWRITE_SMAC_START) |
-            (RX_REWRITE_TTL_DEC << RX_REWRITE_TTL_START);
+            (P4_REWRITE_DMAC_FROM_MAPPING << P4_REWRITE_DMAC_START) |
+            (P4_REWRITE_SMAC_FROM_VRMAC << P4_REWRITE_SMAC_START) |
+            (P4_REWRITE_TTL_DEC << P4_REWRITE_TTL_START);
 
     rewrite_flags = vec_elt_at_index(fm->rewrite_flags, PDS_FLOW_N2L_OVERLAY_ROUTE_EN);
     rewrite_flags->tx_rewrite =
-            (TX_REWRITE_ENCAP_VXLAN << TX_REWRITE_ENCAP_START) |
-            (TX_REWRITE_DMAC_FROM_TUNNEL << TX_REWRITE_DMAC_START) |
-            (TX_REWRITE_SMAC_FROM_VRMAC << TX_REWRITE_SMAC_START) |
-            (TX_REWRITE_TTL_DEC << TX_REWRITE_TTL_START);
+            (P4_REWRITE_ENCAP_VXLAN << P4_REWRITE_ENCAP_START) |
+            (P4_REWRITE_DMAC_FROM_TUNNEL << P4_REWRITE_DMAC_START) |
+            (P4_REWRITE_SMAC_FROM_VRMAC << P4_REWRITE_SMAC_START) |
+            (P4_REWRITE_TTL_DEC << P4_REWRITE_TTL_START);
     // return traffic is bridging not routing as it will come with VNI of subnet
     rewrite_flags->rx_rewrite =
-            (RX_REWRITE_DMAC_FROM_MAPPING << RX_REWRITE_DMAC_START);
+            (P4_REWRITE_DMAC_FROM_MAPPING << P4_REWRITE_DMAC_START);
 
     rewrite_flags = vec_elt_at_index(fm->rewrite_flags, PDS_FLOW_N2L_OVERLAY_ROUTE_EN_NAT);
     rewrite_flags->tx_rewrite =
-            (TX_REWRITE_SIP_FROM_NAT << TX_REWRITE_SIP_START) |
-            (TX_REWRITE_DMAC_FROM_TUNNEL << TX_REWRITE_DMAC_START) |
-            (TX_REWRITE_ENCAP_VXLAN << TX_REWRITE_ENCAP_START) |
-            (TX_REWRITE_SMAC_FROM_VRMAC << TX_REWRITE_SMAC_START) |
-            (TX_REWRITE_TTL_DEC << TX_REWRITE_TTL_START);
+            (P4_REWRITE_SIP_FROM_NAT << P4_REWRITE_SIP_START) |
+            (P4_REWRITE_DMAC_FROM_TUNNEL << P4_REWRITE_DMAC_START) |
+            (P4_REWRITE_ENCAP_VXLAN << P4_REWRITE_ENCAP_START) |
+            (P4_REWRITE_SMAC_FROM_VRMAC << P4_REWRITE_SMAC_START) |
+            (P4_REWRITE_TTL_DEC << P4_REWRITE_TTL_START);
     // return traffic is bridging not routing as it will come with VNI of subnet
     rewrite_flags->rx_rewrite =
-            (RX_REWRITE_DIP_FROM_NAT << RX_REWRITE_DIP_START) |
-            (RX_REWRITE_DMAC_FROM_NEXTHOP << RX_REWRITE_DMAC_START);
+            (P4_REWRITE_DIP_FROM_NAT << P4_REWRITE_DIP_START) |
+            (P4_REWRITE_DMAC_FROM_NEXTHOP << P4_REWRITE_DMAC_START);
 
     rewrite_flags = vec_elt_at_index(fm->rewrite_flags, PDS_FLOW_N2L_OVERLAY_ROUTE_EN_SVC_NAT);
     rewrite_flags->tx_rewrite =
-            (TX_REWRITE_DMAC_FROM_TUNNEL << TX_REWRITE_DMAC_START) |
-            (TX_REWRITE_ENCAP_VXLAN << TX_REWRITE_ENCAP_START) |
-            (TX_REWRITE_SMAC_FROM_VRMAC << TX_REWRITE_SMAC_START) |
-            (TX_REWRITE_TTL_DEC << TX_REWRITE_TTL_START);
+            (P4_REWRITE_DMAC_FROM_TUNNEL << P4_REWRITE_DMAC_START) |
+            (P4_REWRITE_ENCAP_VXLAN << P4_REWRITE_ENCAP_START) |
+            (P4_REWRITE_SMAC_FROM_VRMAC << P4_REWRITE_SMAC_START) |
+            (P4_REWRITE_TTL_DEC << P4_REWRITE_TTL_START);
     // return traffic is routing as it will come with VNI of VPC
     rewrite_flags->rx_rewrite =
-            (RX_REWRITE_DIP_FROM_NAT << RX_REWRITE_DIP_START) |
-            (RX_REWRITE_DPORT_FROM_NAT << RX_REWRITE_DPORT_START) |
-            (RX_REWRITE_DMAC_FROM_NEXTHOP << RX_REWRITE_DMAC_START);
+            (P4_REWRITE_DIP_FROM_NAT << P4_REWRITE_DIP_START) |
+            (P4_REWRITE_DPORT_FROM_NAT << P4_REWRITE_DPORT_START) |
+            (P4_REWRITE_DMAC_FROM_NEXTHOP << P4_REWRITE_DMAC_START);
 
     rewrite_flags = vec_elt_at_index(fm->rewrite_flags, PDS_FLOW_N2L_OVERLAY_ROUTE_DIS);
     rewrite_flags->tx_rewrite =
-            (TX_REWRITE_ENCAP_VXLAN << TX_REWRITE_ENCAP_START) |
-            (TX_REWRITE_DMAC_FROM_TUNNEL << TX_REWRITE_DMAC_START) |
-            (TX_REWRITE_SMAC_FROM_VRMAC << TX_REWRITE_SMAC_START) |
-            (TX_REWRITE_TTL_DEC << TX_REWRITE_TTL_START);
+            (P4_REWRITE_ENCAP_VXLAN << P4_REWRITE_ENCAP_START) |
+            (P4_REWRITE_DMAC_FROM_TUNNEL << P4_REWRITE_DMAC_START) |
+            (P4_REWRITE_SMAC_FROM_VRMAC << P4_REWRITE_SMAC_START) |
+            (P4_REWRITE_TTL_DEC << P4_REWRITE_TTL_START);
     // return traffic is routing as it will come with VNI of VPC
     rewrite_flags->rx_rewrite =
-            (RX_REWRITE_DMAC_FROM_MAPPING << RX_REWRITE_DMAC_START) |
-            (RX_REWRITE_SMAC_FROM_VRMAC << RX_REWRITE_SMAC_START) |
-            (RX_REWRITE_TTL_DEC << RX_REWRITE_TTL_START);
+            (P4_REWRITE_DMAC_FROM_MAPPING << P4_REWRITE_DMAC_START) |
+            (P4_REWRITE_SMAC_FROM_VRMAC << P4_REWRITE_SMAC_START) |
+            (P4_REWRITE_TTL_DEC << P4_REWRITE_TTL_START);
 
     rewrite_flags = vec_elt_at_index(fm->rewrite_flags, PDS_FLOW_N2L_OVERLAY_ROUTE_DIS_NAT);
     rewrite_flags->tx_rewrite =
-            (TX_REWRITE_SIP_FROM_NAT << TX_REWRITE_SIP_START) |
-            (TX_REWRITE_DMAC_FROM_TUNNEL << TX_REWRITE_DMAC_START) |
-            (TX_REWRITE_ENCAP_VXLAN << TX_REWRITE_ENCAP_START) |
-            (TX_REWRITE_SMAC_FROM_VRMAC << TX_REWRITE_SMAC_START) |
-            (TX_REWRITE_TTL_DEC << TX_REWRITE_TTL_START);
+            (P4_REWRITE_SIP_FROM_NAT << P4_REWRITE_SIP_START) |
+            (P4_REWRITE_DMAC_FROM_TUNNEL << P4_REWRITE_DMAC_START) |
+            (P4_REWRITE_ENCAP_VXLAN << P4_REWRITE_ENCAP_START) |
+            (P4_REWRITE_SMAC_FROM_VRMAC << P4_REWRITE_SMAC_START) |
+            (P4_REWRITE_TTL_DEC << P4_REWRITE_TTL_START);
     // return traffic is routing as it will come with VNI of VPC
     rewrite_flags->rx_rewrite =
-            (RX_REWRITE_DIP_FROM_NAT << RX_REWRITE_DIP_START) |
-            (RX_REWRITE_DMAC_FROM_NEXTHOP << RX_REWRITE_DMAC_START) |
-            (RX_REWRITE_SMAC_FROM_VRMAC << RX_REWRITE_SMAC_START) |
-            (RX_REWRITE_TTL_DEC << RX_REWRITE_TTL_START);
+            (P4_REWRITE_DIP_FROM_NAT << P4_REWRITE_DIP_START) |
+            (P4_REWRITE_DMAC_FROM_NEXTHOP << P4_REWRITE_DMAC_START) |
+            (P4_REWRITE_SMAC_FROM_VRMAC << P4_REWRITE_SMAC_START) |
+            (P4_REWRITE_TTL_DEC << P4_REWRITE_TTL_START);
 
     rewrite_flags = vec_elt_at_index(fm->rewrite_flags, PDS_FLOW_N2L_OVERLAY_ROUTE_DIS_SVC_NAT);
     rewrite_flags->tx_rewrite =
-            (TX_REWRITE_DMAC_FROM_TUNNEL << TX_REWRITE_DMAC_START) |
-            (TX_REWRITE_ENCAP_VXLAN << TX_REWRITE_ENCAP_START) |
-            (TX_REWRITE_SMAC_FROM_VRMAC << TX_REWRITE_SMAC_START) |
-            (TX_REWRITE_TTL_DEC << TX_REWRITE_TTL_START);
+            (P4_REWRITE_DMAC_FROM_TUNNEL << P4_REWRITE_DMAC_START) |
+            (P4_REWRITE_ENCAP_VXLAN << P4_REWRITE_ENCAP_START) |
+            (P4_REWRITE_SMAC_FROM_VRMAC << P4_REWRITE_SMAC_START) |
+            (P4_REWRITE_TTL_DEC << P4_REWRITE_TTL_START);
     // return traffic is routing as it will come with VNI of VPC
     rewrite_flags->rx_rewrite =
-            (RX_REWRITE_DIP_FROM_NAT << RX_REWRITE_DIP_START) |
-            (RX_REWRITE_DPORT_FROM_NAT << RX_REWRITE_DPORT_START) |
-            (RX_REWRITE_DMAC_FROM_NEXTHOP << RX_REWRITE_DMAC_START) |
-            (RX_REWRITE_SMAC_FROM_VRMAC << RX_REWRITE_SMAC_START) |
-            (RX_REWRITE_TTL_DEC << RX_REWRITE_TTL_START);
+            (P4_REWRITE_DIP_FROM_NAT << P4_REWRITE_DIP_START) |
+            (P4_REWRITE_DPORT_FROM_NAT << P4_REWRITE_DPORT_START) |
+            (P4_REWRITE_DMAC_FROM_NEXTHOP << P4_REWRITE_DMAC_START) |
+            (P4_REWRITE_SMAC_FROM_VRMAC << P4_REWRITE_SMAC_START) |
+            (P4_REWRITE_TTL_DEC << P4_REWRITE_TTL_START);
 
     // For intra VCN traffic, don't do routing rewrites
     rewrite_flags = vec_elt_at_index(fm->rewrite_flags, PDS_FLOW_N2L_INTRA_VCN_ROUTE);
     rewrite_flags->tx_rewrite =
-            (TX_REWRITE_ENCAP_VXLAN << TX_REWRITE_ENCAP_START);
+            (P4_REWRITE_ENCAP_VXLAN << P4_REWRITE_ENCAP_START);
     rewrite_flags->rx_rewrite =
-            (RX_REWRITE_DMAC_FROM_MAPPING << RX_REWRITE_DMAC_START);
+            (P4_REWRITE_DMAC_FROM_MAPPING << P4_REWRITE_DMAC_START);
 
     return;
 }

@@ -332,7 +332,7 @@ tep_impl::activate_create_tunnel_table_(pds_epoch_t epoch, tep_entry *tep,
 
     if (program_tep2) {
         tep2_data.action_id = TUNNEL2_TUNNEL2_INFO_ID;
-        tep2_data.tunnel2_action.encap_type = TX_REWRITE_ENCAP_VXLAN;
+        tep2_data.tunnel2_action.encap_type = P4_REWRITE_ENCAP_VXLAN;
         p4pd_ret = p4pd_global_entry_write(P4TBL_ID_TUNNEL2, hw_id2_,
                                            NULL, NULL, &tep2_data);
         if (p4pd_ret != P4PD_SUCCESS) {
@@ -369,9 +369,9 @@ tep_impl::activate_create_tunnel2_(pds_epoch_t epoch, tep_entry *tep,
                          IP6_ADDR8_LEN);
     }
     if (spec->encap.type == PDS_ENCAP_TYPE_MPLSoUDP) {
-        tep2_data.tunnel2_action.encap_type = TX_REWRITE_ENCAP_MPLSoUDP;
+        tep2_data.tunnel2_action.encap_type = P4_REWRITE_ENCAP_MPLSoUDP;
     } else if (spec->encap.type == PDS_ENCAP_TYPE_VXLAN) {
-        tep2_data.tunnel2_action.encap_type = TX_REWRITE_ENCAP_VXLAN;
+        tep2_data.tunnel2_action.encap_type = P4_REWRITE_ENCAP_VXLAN;
     }
     p4pd_ret = p4pd_global_entry_write(P4TBL_ID_TUNNEL2, hw_id1_,
                                        NULL, NULL, &tep2_data);

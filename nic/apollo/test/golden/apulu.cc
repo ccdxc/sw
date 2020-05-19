@@ -235,7 +235,7 @@ is_equal_double_encap_pkt (std::vector<uint8_t> pkt1, std::vector<uint8_t> pkt2,
        return false;
     }
 
-    uint8_t udp2_sport_offset = (encap_type == TX_REWRITE_ENCAP_VXLAN) ?
+    uint8_t udp2_sport_offset = (encap_type == P4_REWRITE_ENCAP_VXLAN) ?
         UDP22_SPORT_OFFSET : UDP21_SPORT_OFFSET;
     return (std::equal(pkt1.begin(),
                        pkt1.begin() + UDP_SPORT_OFFSET, pkt2.begin()) &&
@@ -1353,20 +1353,20 @@ sessions_init (void)
     memset(&data, 0, sizeof(data));
     data.action_id = SESSION_SESSION_INFO_ID;
     session_info->tx_rewrite_flags =
-        ((TX_REWRITE_SMAC_FROM_VRMAC << TX_REWRITE_SMAC_START) |
-         (TX_REWRITE_DMAC_FROM_MAPPING << TX_REWRITE_DMAC_START) |
-         (TX_REWRITE_ENCAP_VXLAN << TX_REWRITE_ENCAP_START));
+        ((P4_REWRITE_SMAC_FROM_VRMAC << P4_REWRITE_SMAC_START) |
+         (P4_REWRITE_DMAC_FROM_MAPPING << P4_REWRITE_DMAC_START) |
+         (P4_REWRITE_ENCAP_VXLAN << P4_REWRITE_ENCAP_START));
     session_info->rx_rewrite_flags =
-        ((RX_REWRITE_DMAC_FROM_MAPPING << RX_REWRITE_DMAC_START) |
-         (RX_REWRITE_VLAN_ENCAP << RX_REWRITE_VLAN_START));
+        ((P4_REWRITE_DMAC_FROM_MAPPING << P4_REWRITE_DMAC_START) |
+         (P4_REWRITE_VLAN_ENCAP << P4_REWRITE_VLAN_START));
     entry_write(tbl_id, g_session_id1, 0, 0, &data, false, 0);
 
     memset(&data, 0, sizeof(data));
     data.action_id = SESSION_SESSION_INFO_ID;
     session_info->tx_rewrite_flags =
-        ((TX_REWRITE_SMAC_FROM_VRMAC << TX_REWRITE_SMAC_START) |
-         (TX_REWRITE_DMAC_FROM_MAPPING << TX_REWRITE_DMAC_START) |
-         (TX_REWRITE_ENCAP_VXLAN << TX_REWRITE_ENCAP_START));
+        ((P4_REWRITE_SMAC_FROM_VRMAC << P4_REWRITE_SMAC_START) |
+         (P4_REWRITE_DMAC_FROM_MAPPING << P4_REWRITE_DMAC_START) |
+         (P4_REWRITE_ENCAP_VXLAN << P4_REWRITE_ENCAP_START));
     entry_write(tbl_id, g_session_id4, 0, 0, &data, false, 0);
 }
 
@@ -1474,19 +1474,19 @@ tunnel2_init (void)
     memset(&data, 0, sizeof(data));
     memcpy(tunnel2_info->dipo, &g_dipo4, 4);
     tunnel2_info->ip_type = IPTYPE_IPV4;
-    tunnel2_info->encap_type = TX_REWRITE_ENCAP_MPLSoUDP;
+    tunnel2_info->encap_type = P4_REWRITE_ENCAP_MPLSoUDP;
     entry_write(tbl_id, g_tunnel2_id4, 0, 0, &data, false, 0);
 
     memset(&data, 0, sizeof(data));
     memcpy(tunnel2_info->dipo, &g_dipo4, 4);
     tunnel2_info->ip_type = IPTYPE_IPV4;
-    tunnel2_info->encap_type = TX_REWRITE_ENCAP_VXLAN;
+    tunnel2_info->encap_type = P4_REWRITE_ENCAP_VXLAN;
     entry_write(tbl_id, g_tunnel2_id5, 0, 0, &data, false, 0);
 
     memset(&data, 0, sizeof(data));
     memcpy(tunnel2_info->dipo, &g_dipo1, 4);
     tunnel2_info->ip_type = IPTYPE_IPV4;
-    tunnel2_info->encap_type = TX_REWRITE_ENCAP_VXLAN;
+    tunnel2_info->encap_type = P4_REWRITE_ENCAP_VXLAN;
     entry_write(tbl_id, g_tunnel2_id11, 0, 0, &data, false, 0);
 }
 
@@ -1796,7 +1796,7 @@ TEST_F(apulu_test, test1)
             if (!getenv("SKIP_VERIFY")) {
                 get_next_pkt(opkt, port, cos);
                 EXPECT_TRUE(is_equal_double_encap_pkt(opkt, epkt,
-                            TX_REWRITE_ENCAP_MPLSoUDP));
+                            P4_REWRITE_ENCAP_MPLSoUDP));
                 EXPECT_TRUE(port == TM_PORT_UPLINK_1);
             }
             testcase_end(tcid, i + 1);
@@ -1817,7 +1817,7 @@ TEST_F(apulu_test, test1)
             if (!getenv("SKIP_VERIFY")) {
                 get_next_pkt(opkt, port, cos);
                 EXPECT_TRUE(is_equal_double_encap_pkt(opkt, epkt,
-                            TX_REWRITE_ENCAP_VXLAN));
+                            P4_REWRITE_ENCAP_VXLAN));
                 EXPECT_TRUE(port == TM_PORT_UPLINK_1);
             }
             testcase_end(tcid, i + 1);

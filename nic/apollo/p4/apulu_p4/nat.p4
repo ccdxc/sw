@@ -3,7 +3,7 @@
 /*****************************************************************************/
 action nat_rewrite(ip, port) {
     if (control_metadata.rx_packet == FALSE) {
-        if (TX_REWRITE(rewrite_metadata.flags, SIP, FROM_NAT)) {
+        if (P4_REWRITE(rewrite_metadata.flags, SIP, FROM_NAT)) {
             if (ipv4_1.valid == TRUE) {
                 modify_field(ipv4_1.srcAddr, ip);
                 modify_field(control_metadata.update_checksum, TRUE);
@@ -13,7 +13,7 @@ action nat_rewrite(ip, port) {
                 modify_field(control_metadata.update_checksum, TRUE);
             }
         }
-        if (TX_REWRITE(rewrite_metadata.flags, SPORT, FROM_NAT)) {
+        if (P4_REWRITE(rewrite_metadata.flags, SPORT, FROM_NAT)) {
             if (udp_1.valid == TRUE) {
                 modify_field(udp_1.srcPort, port);
                 modify_field(control_metadata.update_checksum, TRUE);
@@ -24,7 +24,7 @@ action nat_rewrite(ip, port) {
             }
         }
     } else {
-        if (RX_REWRITE(rewrite_metadata.flags, DIP, FROM_NAT)) {
+        if (P4_REWRITE(rewrite_metadata.flags, DIP, FROM_NAT)) {
             if (ipv4_1.valid == TRUE) {
                 modify_field(ipv4_1.dstAddr, ip);
                 modify_field(control_metadata.update_checksum, TRUE);
@@ -34,7 +34,7 @@ action nat_rewrite(ip, port) {
                 modify_field(control_metadata.update_checksum, TRUE);
             }
         }
-        if (RX_REWRITE(rewrite_metadata.flags, DPORT, FROM_NAT)) {
+        if (P4_REWRITE(rewrite_metadata.flags, DPORT, FROM_NAT)) {
             if (udp_1.valid == TRUE) {
                 modify_field(udp_1.dstPort, port);
                 modify_field(control_metadata.update_checksum, TRUE);
@@ -49,7 +49,7 @@ action nat_rewrite(ip, port) {
 
 action nat2_rewrite(ip, port) {
     if (control_metadata.rx_packet == FALSE) {
-        if (TX_REWRITE(rewrite_metadata.flags, DIP, FROM_NAT)) {
+        if (P4_REWRITE(rewrite_metadata.flags, DIP, FROM_NAT)) {
             if (ipv4_1.valid == TRUE) {
                 modify_field(ipv4_1.dstAddr, ip);
                 modify_field(control_metadata.update_checksum, TRUE);
@@ -59,7 +59,7 @@ action nat2_rewrite(ip, port) {
                 modify_field(control_metadata.update_checksum, TRUE);
             }
         }
-        if (TX_REWRITE(rewrite_metadata.flags, DPORT, FROM_NAT)) {
+        if (P4_REWRITE(rewrite_metadata.flags, DPORT, FROM_NAT)) {
             if (udp_1.valid == TRUE) {
                 modify_field(udp_1.dstPort, port);
                 modify_field(control_metadata.update_checksum, TRUE);
@@ -70,7 +70,7 @@ action nat2_rewrite(ip, port) {
             }
         }
     } else {
-        if (RX_REWRITE(rewrite_metadata.flags, SIP, FROM_NAT)) {
+        if (P4_REWRITE(rewrite_metadata.flags, SIP, FROM_NAT)) {
             if (ipv4_1.valid == TRUE) {
                 modify_field(ipv4_1.srcAddr, ip);
                 modify_field(control_metadata.update_checksum, TRUE);
@@ -80,7 +80,7 @@ action nat2_rewrite(ip, port) {
                 modify_field(control_metadata.update_checksum, TRUE);
             }
         }
-        if (RX_REWRITE(rewrite_metadata.flags, SPORT, FROM_NAT)) {
+        if (P4_REWRITE(rewrite_metadata.flags, SPORT, FROM_NAT)) {
             if (udp_1.valid == TRUE) {
                 modify_field(udp_1.srcPort, port);
                 modify_field(control_metadata.update_checksum, TRUE);

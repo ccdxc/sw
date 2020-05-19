@@ -264,10 +264,7 @@ action vpc_info(vni, vrmac, tos) {
     modify_field(rewrite_metadata.tunnel_tos, tos);
 
     // TTL decrement
-    if (((control_metadata.rx_packet == FALSE) and
-         (TX_REWRITE(rewrite_metadata.flags, TTL, DEC))) or
-        ((control_metadata.rx_packet == TRUE) and
-         (RX_REWRITE(rewrite_metadata.flags, TTL, DEC)))) {
+    if (P4_REWRITE(rewrite_metadata.flags, TTL, DEC)) {
         if (ipv4_1.valid == TRUE) {
             add(ipv4_1.ttl, ipv4_1.ttl, -1);
             modify_field(control_metadata.update_checksum, TRUE);

@@ -141,7 +141,7 @@ action ipv4_vxlan_encap(dmac, smac) {
     subtract(udp_0.len, scratch_metadata.ip_totallen, 20);
 
     modify_field(vxlan_0.flags, 0x8);
-    if (TX_REWRITE(rewrite_metadata.flags, VNI, FROM_TUNNEL) or
+    if (P4_REWRITE(rewrite_metadata.flags, VNI, FROM_TUNNEL) or
         (rewrite_metadata.tunnel_vni != 0)) {
         modify_field(vxlan_0.vni, rewrite_metadata.tunnel_vni);
     } else {
@@ -188,7 +188,7 @@ action ipv6_vxlan_encap(dmac, smac) {
     modify_field(udp_0.len, scratch_metadata.ip_totallen);
 
     modify_field(vxlan_0.flags, 0x8);
-    if (TX_REWRITE(rewrite_metadata.flags, VNI, FROM_TUNNEL) or
+    if (P4_REWRITE(rewrite_metadata.flags, VNI, FROM_TUNNEL) or
         (rewrite_metadata.tunnel_vni != 0)) {
         modify_field(vxlan_0.vni, rewrite_metadata.tunnel_vni);
     } else {
@@ -219,51 +219,32 @@ action nexthop_info(lif, qtype, qid, vlan_strip_en, port, vlan, dmaco, smaco,
         modify_field(rewrite_metadata.tunnel_tos, rewrite_metadata.tunnel_tos2);
     }
 
-    if (control_metadata.rx_packet == FALSE) {
-        if (TX_REWRITE(rewrite_metadata.flags, DMAC, FROM_MAPPING)) {
-            modify_field(ethernet_1.dstAddr, rewrite_metadata.dmaci);
+    if (P4_REWRITE(rewrite_metadata.flags, DMAC, FROM_MAPPING)) {
+        modify_field(ethernet_1.dstAddr, rewrite_metadata.dmaci);
+    } else {
+        if (P4_REWRITE(rewrite_metadata.flags, DMAC, FROM_NEXTHOP)) {
+            modify_field(ethernet_1.dstAddr, dmaci);
         } else {
-            if (TX_REWRITE(rewrite_metadata.flags, DMAC, FROM_NEXTHOP)) {
-                modify_field(ethernet_1.dstAddr, dmaci);
-            } else {
-                if (TX_REWRITE(rewrite_metadata.flags, DMAC, FROM_TUNNEL)) {
-                    modify_field(ethernet_1.dstAddr,
-                                 rewrite_metadata.tunnel_dmaci);
-                }
+            if (P4_REWRITE(rewrite_metadata.flags, DMAC, FROM_TUNNEL)) {
+                modify_field(ethernet_1.dstAddr,
+                             rewrite_metadata.tunnel_dmaci);
             }
         }
-        if (TX_REWRITE(rewrite_metadata.flags, SMAC, FROM_VRMAC)) {
-            modify_field(ethernet_1.srcAddr, rewrite_metadata.vrmac);
-        }
-        if (TX_REWRITE(rewrite_metadata.flags, ENCAP, VXLAN)) {
-            if (rewrite_metadata.ip_type == IPTYPE_IPV4) {
-                ipv4_vxlan_encap(dmaco, smaco);
-            } else {
-                ipv6_vxlan_encap(dmaco, smaco);
-            }
+    }
+    if (P4_REWRITE(rewrite_metadata.flags, SMAC, FROM_VRMAC)) {
+        modify_field(ethernet_1.srcAddr, rewrite_metadata.vrmac);
+    }
+    if (P4_REWRITE(rewrite_metadata.flags, ENCAP, VXLAN)) {
+        if (rewrite_metadata.ip_type == IPTYPE_IPV4) {
+            ipv4_vxlan_encap(dmaco, smaco);
         } else {
-            if (TX_REWRITE(rewrite_metadata.flags, VLAN, ENCAP)) {
-                encap_vlan(vlan);
-            }
-            if (TX_REWRITE(rewrite_metadata.flags, VLAN, DECAP)) {
-                decap_vlan();
-            }
+            ipv6_vxlan_encap(dmaco, smaco);
         }
     } else {
-        if (RX_REWRITE(rewrite_metadata.flags, DMAC, FROM_MAPPING)) {
-            modify_field(ethernet_1.dstAddr, rewrite_metadata.dmaci);
-        } else {
-            if (RX_REWRITE(rewrite_metadata.flags, DMAC, FROM_NEXTHOP)) {
-                modify_field(ethernet_1.dstAddr, dmaci);
-            }
-        }
-        if (RX_REWRITE(rewrite_metadata.flags, SMAC, FROM_VRMAC)) {
-            modify_field(ethernet_1.srcAddr, rewrite_metadata.vrmac);
-        }
-        if (RX_REWRITE(rewrite_metadata.flags, VLAN, ENCAP)) {
+        if (P4_REWRITE(rewrite_metadata.flags, VLAN, ENCAP)) {
             encap_vlan(vlan);
         }
-        if (RX_REWRITE(rewrite_metadata.flags, VLAN, DECAP)) {
+        if (P4_REWRITE(rewrite_metadata.flags, VLAN, DECAP)) {
             decap_vlan();
         }
     }
@@ -303,7 +284,7 @@ action tunnel2_ipv4_encap(vlan, dipo, encap_type) {
     modify_field(scratch_metadata.ip_totallen, capri_p4_intrinsic.packet_len);
 
     // account for new headers that are added
-    if (encap_type == TX_REWRITE_ENCAP_VXLAN) {
+    if (encap_type == P4_REWRITE_ENCAP_VXLAN) {
         // 8 bytes of UDP header, 8 bytes of VxLAN header, 20 bytes of IP header
         add_to_field(scratch_metadata.ip_totallen, 20 + 8 + 8);
     } else {
@@ -327,7 +308,7 @@ action tunnel2_ipv4_encap(vlan, dipo, encap_type) {
     modify_field(udp_00.srcPort, (0xC000 | p4e_i2e.entropy_hash));
     subtract(udp_00.len, scratch_metadata.ip_totallen, 20);
 
-    if (encap_type == TX_REWRITE_ENCAP_VXLAN) {
+    if (encap_type == P4_REWRITE_ENCAP_VXLAN) {
         modify_field(udp_00.dstPort, UDP_PORT_VXLAN);
         modify_field(vxlan_00.vni, rewrite_metadata.tunnel2_vni);
         modify_field(vxlan_00.flags, 0x8);
@@ -365,7 +346,7 @@ action tunnel2_ipv6_encap(vlan, dipo, encap_type) {
     modify_field(scratch_metadata.ip_totallen, capri_p4_intrinsic.packet_len);
 
     // account for new headers that are added
-    if (encap_type == TX_REWRITE_ENCAP_VXLAN) {
+    if (encap_type == P4_REWRITE_ENCAP_VXLAN) {
         // 8 bytes of UDP header, 8 bytes of VXLAN header
         add_to_field(scratch_metadata.ip_totallen, 8 + 8);
     } else {
@@ -388,7 +369,7 @@ action tunnel2_ipv6_encap(vlan, dipo, encap_type) {
     modify_field(udp_00.srcPort, (0xC000 | p4e_i2e.entropy_hash));
     modify_field(udp_00.len, scratch_metadata.ip_totallen);
 
-    if (encap_type == TX_REWRITE_ENCAP_VXLAN) {
+    if (encap_type == P4_REWRITE_ENCAP_VXLAN) {
         modify_field(udp_00.dstPort, UDP_PORT_VXLAN);
         modify_field(vxlan_00.vni, rewrite_metadata.tunnel2_vni);
         modify_field(vxlan_00.flags, 0x8);

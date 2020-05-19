@@ -564,12 +564,12 @@ public:
         actiondata.action_id = SESSION_SESSION_INFO_ID;
 
         actiondata.action_u.session_session_info.tx_rewrite_flags =
-                 ((TX_REWRITE_DMAC_FROM_MAPPING << TX_REWRITE_DMAC_START) |
-                  (TX_REWRITE_ENCAP_VXLAN << TX_REWRITE_ENCAP_START));
+                 ((P4_REWRITE_DMAC_FROM_MAPPING << P4_REWRITE_DMAC_START) |
+                  (P4_REWRITE_ENCAP_VXLAN << P4_REWRITE_ENCAP_START));
 
         actiondata.action_u.session_session_info.rx_rewrite_flags =
-               ((RX_REWRITE_DMAC_FROM_MAPPING << RX_REWRITE_DMAC_START) |
-                (RX_REWRITE_VLAN_ENCAP << RX_REWRITE_VLAN_START));
+               ((P4_REWRITE_DMAC_FROM_MAPPING << P4_REWRITE_DMAC_START) |
+                (P4_REWRITE_VLAN_ENCAP << P4_REWRITE_VLAN_START));
 
         dump_session_info(vpc, &actiondata);
 
