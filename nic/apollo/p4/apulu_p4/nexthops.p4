@@ -242,8 +242,11 @@ action nexthop_info(lif, qtype, qid, vlan_strip_en, port, vlan, dmaco, smaco,
                 ipv6_vxlan_encap(dmaco, smaco);
             }
         } else {
-            if (TX_REWRITE(rewrite_metadata.flags, ENCAP, VLAN)) {
+            if (TX_REWRITE(rewrite_metadata.flags, VLAN, ENCAP)) {
                 encap_vlan(vlan);
+            }
+            if (TX_REWRITE(rewrite_metadata.flags, VLAN, DECAP)) {
+                decap_vlan();
             }
         }
     } else {

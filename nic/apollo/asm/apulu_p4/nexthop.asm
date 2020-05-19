@@ -61,10 +61,15 @@ nexthop_tx_rewrite:
     seq             c1, r2[TX_REWRITE_ENCAP_BITS], \
                         TX_REWRITE_ENCAP_VXLAN
     bcf             [c1], vxlan_encap
-    seq             c1, r2[TX_REWRITE_ENCAP_BITS], \
-                        TX_REWRITE_ENCAP_VLAN
+    seq             c1, r2[TX_REWRITE_VLAN_BITS], \
+                        TX_REWRITE_VLAN_ENCAP
     bcf             [c1], vlan_encap
+    seq             c1, k.ctag_1_valid, TRUE
+    seq.c1          c1, r2[TX_REWRITE_VLAN_BITS], \
+                        RX_REWRITE_VLAN_DECAP
+    b.c1            vlan_decap
     nop.!c1.e
+    nop
 
 vxlan_encap:
     seq             c1, k.ctag_1_valid, TRUE
@@ -169,6 +174,7 @@ nexthop_rx_rewrite:
     seq.c1          c1, r2[RX_REWRITE_VLAN_BITS], \
                         RX_REWRITE_VLAN_DECAP
     nop.!c1.e
+
 vlan_decap:
     sub             r1, r1, 4
     phvwr           p.capri_p4_intrinsic_packet_len, r1
