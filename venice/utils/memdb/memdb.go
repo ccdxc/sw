@@ -636,6 +636,10 @@ func (r *receiver) id() string {
 	return r.ID
 }
 
+func (r *receiver) Name() string {
+	return r.id()
+}
+
 func (r *receiver) bitid() uint {
 	return r.bitID
 }

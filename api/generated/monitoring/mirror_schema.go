@@ -109,23 +109,28 @@ var typesMapMirror = map[string]*api.Struct{
 			"destination":      api.CLIInfo{Path: "Spec.Collectors[].ExportCfg.Destination", Skip: false, Insert: "", Help: ""},
 			"direction":        api.CLIInfo{Path: "Spec.Interfaces.Direction", Skip: false, Insert: "", Help: ""},
 			"gateway":          api.CLIInfo{Path: "Spec.Collectors[].ExportCfg.Gateway", Skip: false, Insert: "", Help: ""},
-			"generation-id":    api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
+			"generation-id":    api.CLIInfo{Path: "Status.PropagationStatus.GenerationID", Skip: false, Insert: "", Help: ""},
 			"ip-addresses":     api.CLIInfo{Path: "Spec.MatchRules[].Src.IPAddresses", Skip: false, Insert: "", Help: ""},
 			"kind":             api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
 			"labels":           api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
 			"mac-addresses":    api.CLIInfo{Path: "Spec.MatchRules[].Src.MACAddresses", Skip: false, Insert: "", Help: ""},
+			"min-version":      api.CLIInfo{Path: "Status.PropagationStatus.MinVersion", Skip: false, Insert: "", Help: ""},
 			"name":             api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
 			"namespace":        api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
 			"packet-filters":   api.CLIInfo{Path: "Spec.PacketFilters", Skip: false, Insert: "", Help: ""},
 			"packet-size":      api.CLIInfo{Path: "Spec.PacketSize", Skip: false, Insert: "", Help: ""},
+			"pending":          api.CLIInfo{Path: "Status.PropagationStatus.Pending", Skip: false, Insert: "", Help: ""},
+			"pending-dscs":     api.CLIInfo{Path: "Status.PropagationStatus.PendingNaples", Skip: false, Insert: "", Help: ""},
 			"proto-ports":      api.CLIInfo{Path: "Spec.MatchRules[].AppProtoSel.ProtoPorts", Skip: false, Insert: "", Help: ""},
 			"resource-version": api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
 			"schedule-state":   api.CLIInfo{Path: "Status.ScheduleState", Skip: false, Insert: "", Help: ""},
 			"self-link":        api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
 			"span-id":          api.CLIInfo{Path: "Spec.SpanID", Skip: false, Insert: "", Help: ""},
+			"status":           api.CLIInfo{Path: "Status.PropagationStatus.Status", Skip: false, Insert: "", Help: ""},
 			"strip-vlan-hdr":   api.CLIInfo{Path: "Spec.Collectors[].StripVlanHdr", Skip: false, Insert: "", Help: ""},
 			"tenant":           api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
 			"type":             api.CLIInfo{Path: "Spec.Collectors[].Type", Skip: false, Insert: "", Help: ""},
+			"updated":          api.CLIInfo{Path: "Status.PropagationStatus.Updated", Skip: false, Insert: "", Help: ""},
 			"uuid":             api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
 		},
 	},
@@ -153,12 +158,30 @@ var typesMapMirror = map[string]*api.Struct{
 			"ScheduleState": api.Field{Name: "ScheduleState", CLITag: api.CLIInfo{ID: "schedule-state", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "schedule-state", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"StartedAt": api.Field{Name: "StartedAt", CLITag: api.CLIInfo{ID: "started-at", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "started-at", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.Timestamp"},
+
+			"PropagationStatus": api.Field{Name: "PropagationStatus", CLITag: api.CLIInfo{ID: "propagation-status", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "propagation-status", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.PropagationStatus"},
 		},
 	},
 	"monitoring.MirrorStartConditions": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(MirrorStartConditions{}) },
 		Fields: map[string]api.Field{
 			"ScheduleTime": api.Field{Name: "ScheduleTime", CLITag: api.CLIInfo{ID: "schedule-time", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "schedule-time", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.Timestamp"},
+		},
+	},
+	"monitoring.PropagationStatus": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(PropagationStatus{}) },
+		Fields: map[string]api.Field{
+			"GenerationID": api.Field{Name: "GenerationID", CLITag: api.CLIInfo{ID: "generation-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "generation-id", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Updated": api.Field{Name: "Updated", CLITag: api.CLIInfo{ID: "updated", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "updated", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_INT32"},
+
+			"Pending": api.Field{Name: "Pending", CLITag: api.CLIInfo{ID: "pending", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "pending", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_INT32"},
+
+			"MinVersion": api.Field{Name: "MinVersion", CLITag: api.CLIInfo{ID: "min-version", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "min-version", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Status": api.Field{Name: "Status", CLITag: api.CLIInfo{ID: "status", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"PendingNaples": api.Field{Name: "PendingNaples", CLITag: api.CLIInfo{ID: "pending-dscs", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "pending-dscs", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 }

@@ -8,10 +8,12 @@ import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthVali
 import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 import { MonitoringMirrorSessionStatus_schedule_state,  MonitoringMirrorSessionStatus_schedule_state_uihint  } from './enums';
+import { MonitoringPropagationStatus, IMonitoringPropagationStatus } from './monitoring-propagation-status.model';
 
 export interface IMonitoringMirrorSessionStatus {
     'schedule-state': MonitoringMirrorSessionStatus_schedule_state;
     'started-at'?: Date;
+    'propagation-status'?: IMonitoringPropagationStatus;
     '_ui'?: any;
 }
 
@@ -21,6 +23,7 @@ export class MonitoringMirrorSessionStatus extends BaseModel implements IMonitor
     '_ui': any = {};
     'schedule-state': MonitoringMirrorSessionStatus_schedule_state = null;
     'started-at': Date = null;
+    'propagation-status': MonitoringPropagationStatus = null;
     public static propInfo: { [prop in keyof IMonitoringMirrorSessionStatus]: PropInfoItem } = {
         'schedule-state': {
             enum: MonitoringMirrorSessionStatus_schedule_state_uihint,
@@ -31,6 +34,10 @@ export class MonitoringMirrorSessionStatus extends BaseModel implements IMonitor
         'started-at': {
             required: false,
             type: 'Date'
+        },
+        'propagation-status': {
+            required: false,
+            type: 'object'
         },
     }
 
@@ -56,6 +63,7 @@ export class MonitoringMirrorSessionStatus extends BaseModel implements IMonitor
     */
     constructor(values?: any, setDefaults:boolean = true) {
         super();
+        this['propagation-status'] = new MonitoringPropagationStatus();
         this._inputValue = values;
         this.setValues(values, setDefaults);
     }
@@ -82,6 +90,11 @@ export class MonitoringMirrorSessionStatus extends BaseModel implements IMonitor
         } else {
             this['started-at'] = null
         }
+        if (values) {
+            this['propagation-status'].setValues(values['propagation-status'], fillDefaults);
+        } else {
+            this['propagation-status'].setValues(null, fillDefaults);
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -91,6 +104,12 @@ export class MonitoringMirrorSessionStatus extends BaseModel implements IMonitor
             this._formGroup = new FormGroup({
                 'schedule-state': CustomFormControl(new FormControl(this['schedule-state'], [required, enumValidator(MonitoringMirrorSessionStatus_schedule_state), ]), MonitoringMirrorSessionStatus.propInfo['schedule-state']),
                 'started-at': CustomFormControl(new FormControl(this['started-at']), MonitoringMirrorSessionStatus.propInfo['started-at']),
+                'propagation-status': CustomFormGroup(this['propagation-status'].$formGroup, MonitoringMirrorSessionStatus.propInfo['propagation-status'].required),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('propagation-status') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('propagation-status').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;
@@ -104,6 +123,7 @@ export class MonitoringMirrorSessionStatus extends BaseModel implements IMonitor
         if (this._formGroup) {
             this._formGroup.controls['schedule-state'].setValue(this['schedule-state']);
             this._formGroup.controls['started-at'].setValue(this['started-at']);
+            this['propagation-status'].setFormGroupValuesToBeModelValues();
         }
     }
 }

@@ -1010,6 +1010,16 @@ func (gs *EntBaseCfg) configPushComplete() (bool, error) {
 		return false, nil
 	}
 
+	eps, err := rClient.ListEndpoints("")
+	if err != nil {
+		return false, err
+	}
+
+	if len(configPushStatus.KindObjects.Endpoint) != len(eps) {
+		log.Infof("Endpoints not synced with NPM yet.")
+		return false, nil
+	}
+
 	for _, ep := range configPushStatus.KindObjects.Endpoint {
 		if len(ep.PendingDSCs) != 0 {
 			log.Infof("EP %v not push to DSCs pending :%v ", ep.Key, ep.PendingDSCs)

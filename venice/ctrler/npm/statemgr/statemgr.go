@@ -1084,6 +1084,44 @@ func (sm *Statemgr) UpdatePushObjectToMbus(key string, obj mbusPushObject,
 
 }
 
+//AddReceiverToPushObject adds receiver to push object
+func (sm *Statemgr) AddReceiverToPushObject(obj mbusPushObject,
+	receivers []objReceiver.Receiver) error {
+
+	pushObject := obj.PushObject()
+
+	err := pushObject.AddObjReceivers(receivers)
+	if err != nil {
+		log.Errorf("Error adding receiver %v", err)
+		return err
+	}
+
+	for _, recv := range receivers {
+		obj.startDSCTracking(recv.Name())
+	}
+
+	return err
+}
+
+//RemoveReceiverFromPushObject adds receiver to push object
+func (sm *Statemgr) RemoveReceiverFromPushObject(obj mbusPushObject,
+	receivers []objReceiver.Receiver) error {
+
+	pushObject := obj.PushObject()
+
+	err := pushObject.RemoveObjReceivers(receivers)
+	if err != nil {
+		log.Errorf("Error adding receiver %v", err)
+		return err
+	}
+
+	for _, recv := range receivers {
+		obj.stopDSCTracking(recv.Name())
+	}
+
+	return err
+}
+
 //DeletePushObjectToMbus add object with tracking to gen ID
 func (sm *Statemgr) DeletePushObjectToMbus(key string, obj mbusPushObject,
 	refs map[string]apiintf.ReferenceObj) error {

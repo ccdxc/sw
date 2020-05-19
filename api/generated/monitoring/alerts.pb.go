@@ -71,6 +71,7 @@
 		MirrorSessionSpec
 		MirrorSessionStatus
 		MirrorStartConditions
+		PropagationStatus
 		AlertDestinationList
 		AlertList
 		AlertPolicyList

@@ -7270,6 +7270,7 @@ func TestWatcherWithMirrorCreateFakeUpdate(t *testing.T) {
 		watcher.evtsExp.Reset()
 		watcher.evtsRcvd.Reset()
 		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
+		watcher.evtsExp.evKindMap[memdb.DeleteEvent]["InterfaceMirrorSession"] = 1
 	}
 
 	_, err = updateMirror(stateMgr, "default", "testMirror", 1, nil, nil, collectors, labels.SelectorFromSet(labels.Set(label2)), 0)
@@ -7300,7 +7301,6 @@ func TestWatcherWithMirrorCreateFakeUpdate(t *testing.T) {
 	for _, watcher := range watchers {
 		watcher.evtsExp.Reset()
 		watcher.evtsRcvd.Reset()
-		watcher.evtsExp.evKindMap[memdb.DeleteEvent]["InterfaceMirrorSession"] = 1
 		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 0
 	}
 
@@ -8499,6 +8499,8 @@ func TestWatcherWithMirrorCreateUpdateDeleteDifferentInterfaces(t *testing.T) {
 		//watcher.evtsExp.evKindMap[memdb.DeleteEvent]["Collector"] = numCollectors
 		if i >= numOfIntfs {
 			watcher.evtsExp.evKindMap[memdb.CreateEvent]["InterfaceMirrorSession"] = 1
+		} else {
+			watcher.evtsExp.evKindMap[memdb.DeleteEvent]["InterfaceMirrorSession"] = 1
 		}
 		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
 	}
@@ -8534,9 +8536,9 @@ func TestWatcherWithMirrorCreateUpdateDeleteDifferentInterfaces(t *testing.T) {
 	for i, watcher := range watchers {
 		watcher.evtsExp.Reset()
 		watcher.evtsRcvd.Reset()
-		watcher.evtsExp.evKindMap[memdb.DeleteEvent]["InterfaceMirrorSession"] = 1
 		if i >= numOfIntfs {
 			watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
+			watcher.evtsExp.evKindMap[memdb.DeleteEvent]["InterfaceMirrorSession"] = 1
 		}
 	}
 

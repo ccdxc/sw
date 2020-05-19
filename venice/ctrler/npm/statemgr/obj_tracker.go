@@ -4,7 +4,6 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -12,14 +11,14 @@ import (
 type stateObj interface {
 	GetKey() string
 	Write() error
-	TrackedDSCs() []*cluster.DistributedServiceCard
+	TrackedDSCs() []string
 	getPropStatus() objPropagationStatus
 }
 
 type objectTrackerIntf interface {
 	reinitObjTracking(genID string) error
-	startDSCTracking(dsc *cluster.DistributedServiceCard) error
-	stopDSCTracking(dsc *cluster.DistributedServiceCard) error
+	startDSCTracking(string) error
+	stopDSCTracking(string) error
 	incrementGenID() string
 }
 
@@ -57,19 +56,13 @@ func (objTracker *smObjectTracker) reinitObjTracking(genID string) error {
 	objTracker.Lock()
 	defer objTracker.Unlock()
 
-	mgr := MustGetStatemgr()
-
 	dscs := objTracker.obj.TrackedDSCs()
 
 	//objTracker.nodeVersions = make(map[string]string)
 	// walk all smart nics
 	for _, dsc := range dscs {
-		if !mgr.isDscAdmitted(dsc) {
-			continue
-		}
-
-		if _, ok := objTracker.nodeVersions[dsc.Name]; !ok {
-			objTracker.nodeVersions[dsc.Name] = ""
+		if _, ok := objTracker.nodeVersions[dsc]; !ok {
+			objTracker.nodeVersions[dsc] = ""
 		}
 	}
 
@@ -78,14 +71,14 @@ func (objTracker *smObjectTracker) reinitObjTracking(genID string) error {
 	return nil
 }
 
-func (objTracker *smObjectTracker) startDSCTracking(dsc *cluster.DistributedServiceCard) error {
+func (objTracker *smObjectTracker) startDSCTracking(dsc string) error {
 
 	objTracker.Lock()
 
 	update := false
-	if _, ok := objTracker.nodeVersions[dsc.Name]; !ok {
-		log.Infof("DSC %v is being tracked for propogation status for object %s", dsc.Name, objTracker.obj.GetKey())
-		objTracker.nodeVersions[dsc.Name] = ""
+	if _, ok := objTracker.nodeVersions[dsc]; !ok {
+		log.Infof("DSC %v is being tracked for propogation status for object %s", dsc, objTracker.obj.GetKey())
+		objTracker.nodeVersions[dsc] = ""
 		update = true
 	}
 
@@ -103,15 +96,15 @@ func (objTracker *smObjectTracker) skipUpdateNotification() {
 	objTracker.noUpdateNotif = true
 }
 
-func (objTracker *smObjectTracker) stopDSCTracking(dsc *cluster.DistributedServiceCard) error {
+func (objTracker *smObjectTracker) stopDSCTracking(dsc string) error {
 
 	objTracker.Lock()
 
 	update := false
-	_, ok := objTracker.nodeVersions[dsc.Name]
+	_, ok := objTracker.nodeVersions[dsc]
 	if ok {
-		log.Infof("DSC %v is being untracked for propogation status for object %s", dsc.Name, objTracker.obj.GetKey())
-		delete(objTracker.nodeVersions, dsc.Name)
+		log.Infof("DSC %v is being untracked for propogation status for object %s", dsc, objTracker.obj.GetKey())
+		delete(objTracker.nodeVersions, dsc)
 		update = true
 	}
 	objTracker.Unlock()

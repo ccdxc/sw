@@ -101,6 +101,9 @@ var _ = Describe("Interface mirror tests", func() {
 			msc := ts.model.NewMirrorSession("lif-mirror").SetInterfaceSelector(selector)
 			msc.AddVeniceCollector(veniceCollector, "udp/4545", 1)
 			Expect(msc.Commit()).Should(Succeed())
+			Eventually(func() error {
+				return msc.PropogationComplete()
+			})
 
 			Eventually(func() error {
 				return intfCollection.VerifyMirrors([]string{"default/default/lif-mirror"})
@@ -112,6 +115,9 @@ var _ = Describe("Interface mirror tests", func() {
 
 			msc.SetInterfaceSelector(otherSelector)
 			Expect(msc.Commit()).Should(Succeed())
+			Eventually(func() error {
+				return msc.PropogationComplete()
+			})
 
 			Eventually(func() error {
 				return intfCollection.VerifyNoMirrors([]string{"default/default/lif-mirror"})
@@ -148,6 +154,9 @@ var _ = Describe("Interface mirror tests", func() {
 			msc := ts.model.NewMirrorSession("lif-mirror").SetInterfaceSelector(selector)
 			msc.AddVeniceCollector(veniceCollector, "udp/4545", 1)
 			Expect(msc.Commit()).Should(Succeed())
+			Eventually(func() error {
+				return msc.PropogationComplete()
+			})
 
 			Eventually(func() error {
 				return intfCollection.VerifyMirrors([]string{"default/default/lif-mirror"})
@@ -160,6 +169,9 @@ var _ = Describe("Interface mirror tests", func() {
 			msc.ClearCollectors()
 			msc.AddVeniceCollector(otherVeniceCollector, "udp/4545", 1)
 			Expect(msc.Commit()).Should(Succeed())
+			Eventually(func() error {
+				return msc.PropogationComplete()
+			})
 
 			Eventually(func() error {
 				return intfCollection.VerifyMirrors([]string{"default/default/lif-mirror"})
@@ -199,6 +211,9 @@ var _ = Describe("Interface mirror tests", func() {
 			msc := ts.model.NewMirrorSession("lif-mirror").SetInterfaceSelector(selector)
 			msc.AddVeniceCollector(veniceCollector, "udp/4545", 1)
 			Expect(msc.Commit()).Should(Succeed())
+			Eventually(func() error {
+				return msc.PropogationComplete()
+			})
 
 			Eventually(func() error {
 				return intfCollection.VerifyMirrors([]string{"default/default/lif-mirror"})
@@ -221,6 +236,9 @@ var _ = Describe("Interface mirror tests", func() {
 			newMsc := ts.model.NewMirrorSession("lif-mirror-new").SetInterfaceSelector(selector)
 			newMsc.AddVeniceCollector(otherVeniceCollector, "udp/4545", 1)
 			Expect(newMsc.Commit()).Should(Succeed())
+			Eventually(func() error {
+				return msc.PropogationComplete()
+			})
 
 			Eventually(func() error {
 				return intfCollection.VerifyMirrors([]string{"default/default/lif-mirror-new"})
@@ -253,6 +271,9 @@ var _ = Describe("Interface mirror tests", func() {
 			msc := ts.model.NewMirrorSession("lif-mirror").SetInterfaceSelector(selector)
 			msc.AddVeniceCollector(veniceCollector, "udp/4545", 1)
 			Expect(msc.Commit()).Should(Succeed())
+			Eventually(func() error {
+				return msc.PropogationComplete()
+			})
 
 			Eventually(func() error {
 				return intfCollection.VerifyNoMirrors([]string{"default/default/lif-mirror"})
@@ -296,6 +317,9 @@ var _ = Describe("Interface mirror tests", func() {
 			msc := ts.model.NewMirrorSession("lif-mirror").SetInterfaceSelector(selector)
 			msc.AddVeniceCollector(veniceCollector, "udp/4545", 1)
 			Expect(msc.Commit()).Should(Succeed())
+			Eventually(func() error {
+				return msc.PropogationComplete()
+			})
 
 			Eventually(func() error {
 				return intfCollection.VerifyMirrors([]string{"default/default/lif-mirror"})
@@ -352,6 +376,9 @@ var _ = Describe("Interface mirror tests", func() {
 			msc := ts.model.NewMirrorSession("lif-mirror").SetInterfaceSelector(selector)
 			msc.AddVeniceCollector(veniceCollector, "udp/4545", 1)
 			Expect(msc.Commit()).Should(Succeed())
+			Eventually(func() error {
+				return msc.PropogationComplete()
+			})
 
 			Eventually(func() error {
 				return intfCollection.VerifyMirrors([]string{"default/default/lif-mirror"})
@@ -363,6 +390,9 @@ var _ = Describe("Interface mirror tests", func() {
 
 			msc.AddVeniceCollector(otherVeniceCollector, "udp/4545", 1)
 			Expect(msc.Commit()).Should(Succeed())
+			Eventually(func() error {
+				return msc.PropogationComplete()
+			})
 
 			Eventually(func() error {
 				return intfCollection.VerifyMirrors([]string{"default/default/lif-mirror"})
@@ -380,6 +410,9 @@ var _ = Describe("Interface mirror tests", func() {
 			msc.ClearCollectors()
 			msc.AddVeniceCollector(otherVeniceCollector, "udp/4545", 1)
 			Expect(msc.Commit()).Should(Succeed())
+			Eventually(func() error {
+				return msc.PropogationComplete()
+			})
 
 			Eventually(func() error {
 				return verifyNoDatapathCollection(workloadPairs, veniceCollector)
@@ -414,6 +447,9 @@ var _ = Describe("Interface mirror tests", func() {
 			msc := ts.model.NewMirrorSession("lif-mirror").SetInterfaceSelector(selector)
 			msc.AddVeniceCollector(veniceCollector, "udp/4545", 1)
 			Expect(msc.Commit()).Should(Succeed())
+			Eventually(func() error {
+				return msc.PropogationComplete()
+			})
 
 			Eventually(func() error {
 				return intfCollection.VerifyMirrors([]string{"default/default/lif-mirror"})
@@ -427,6 +463,9 @@ var _ = Describe("Interface mirror tests", func() {
 			newMsc := ts.model.NewMirrorSession("lif-mirror-new").SetInterfaceSelector(selector)
 			newMsc.AddVeniceCollector(otherVeniceCollector, "udp/4545", 1)
 			Expect(newMsc.Commit()).Should(Succeed())
+			Eventually(func() error {
+				return msc.PropogationComplete()
+			})
 
 			Eventually(func() error {
 				return intfCollection.VerifyMirrors([]string{"default/default/lif-mirror", "default/default/lif-mirror-new"})
@@ -492,6 +531,9 @@ var _ = Describe("Interface mirror tests", func() {
 			msc := ts.model.NewMirrorSession("lif-mirror").SetInterfaceSelector(selector)
 			msc.AddVeniceCollector(veniceCollector, "udp/4545", 1)
 			Expect(msc.Commit()).Should(Succeed())
+			Eventually(func() error {
+				return msc.PropogationComplete()
+			})
 
 			Eventually(func() error {
 				return intfCollection.VerifyMirrors([]string{"default/default/lif-mirror"})
@@ -505,6 +547,9 @@ var _ = Describe("Interface mirror tests", func() {
 			newMsc := ts.model.NewMirrorSession("lif-mirror-new").SetInterfaceSelector(selector)
 			newMsc.AddVeniceCollector(otherVeniceCollector, "udp/4545", 1)
 			Expect(newMsc.Commit()).Should(Succeed())
+			Eventually(func() error {
+				return msc.PropogationComplete()
+			})
 
 			Eventually(func() error {
 				return intfCollection.VerifyMirrors([]string{"default/default/lif-mirror", "default/default/lif-mirror-new"})

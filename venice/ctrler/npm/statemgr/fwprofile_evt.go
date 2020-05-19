@@ -131,14 +131,14 @@ func (sm *Statemgr) propgatationStatusDifferent(
 }
 
 //TrackedDSCs tracked DSCs
-func (fps *FirewallProfileState) TrackedDSCs() []*cluster.DistributedServiceCard {
+func (fps *FirewallProfileState) TrackedDSCs() []string {
 
 	dscs, _ := fps.stateMgr.ListDistributedServiceCards()
 
-	trackedDSCs := []*cluster.DistributedServiceCard{}
+	trackedDSCs := []string{}
 	for _, dsc := range dscs {
 		if fps.stateMgr.isDscEnforcednMode(&dsc.DistributedServiceCard.DistributedServiceCard) {
-			trackedDSCs = append(trackedDSCs, &dsc.DistributedServiceCard.DistributedServiceCard)
+			trackedDSCs = append(trackedDSCs, dsc.DistributedServiceCard.DistributedServiceCard.Name)
 		}
 	}
 
@@ -156,7 +156,7 @@ func (fps *FirewallProfileState) processDSCUpdate(dsc *cluster.DistributedServic
 	defer fps.FirewallProfile.Unlock()
 
 	if fps.stateMgr.isDscEnforcednMode(dsc) {
-		fps.smObjectTracker.startDSCTracking(dsc)
+		fps.smObjectTracker.startDSCTracking(dsc.Name)
 	}
 
 	return nil
@@ -168,7 +168,7 @@ func (fps *FirewallProfileState) processDSCDelete(dsc *cluster.DistributedServic
 	fps.FirewallProfile.Lock()
 	defer fps.FirewallProfile.Unlock()
 
-	fps.smObjectTracker.stopDSCTracking(dsc)
+	fps.smObjectTracker.stopDSCTracking(dsc.Name)
 
 	return nil
 }

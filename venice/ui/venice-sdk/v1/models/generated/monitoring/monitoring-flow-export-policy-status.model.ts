@@ -7,8 +7,10 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
+import { MonitoringPropagationStatus, IMonitoringPropagationStatus } from './monitoring-propagation-status.model';
 
 export interface IMonitoringFlowExportPolicyStatus {
+    'propagation-status'?: IMonitoringPropagationStatus;
     '_ui'?: any;
 }
 
@@ -16,7 +18,12 @@ export interface IMonitoringFlowExportPolicyStatus {
 export class MonitoringFlowExportPolicyStatus extends BaseModel implements IMonitoringFlowExportPolicyStatus {
     /** Field for holding arbitrary ui state */
     '_ui': any = {};
+    'propagation-status': MonitoringPropagationStatus = null;
     public static propInfo: { [prop in keyof IMonitoringFlowExportPolicyStatus]: PropInfoItem } = {
+        'propagation-status': {
+            required: false,
+            type: 'object'
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {
@@ -41,6 +48,7 @@ export class MonitoringFlowExportPolicyStatus extends BaseModel implements IMoni
     */
     constructor(values?: any, setDefaults:boolean = true) {
         super();
+        this['propagation-status'] = new MonitoringPropagationStatus();
         this._inputValue = values;
         this.setValues(values, setDefaults);
     }
@@ -53,6 +61,11 @@ export class MonitoringFlowExportPolicyStatus extends BaseModel implements IMoni
         if (values && values['_ui']) {
             this['_ui'] = values['_ui']
         }
+        if (values) {
+            this['propagation-status'].setValues(values['propagation-status'], fillDefaults);
+        } else {
+            this['propagation-status'].setValues(null, fillDefaults);
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -60,6 +73,12 @@ export class MonitoringFlowExportPolicyStatus extends BaseModel implements IMoni
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
+                'propagation-status': CustomFormGroup(this['propagation-status'].$formGroup, MonitoringFlowExportPolicyStatus.propInfo['propagation-status'].required),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('propagation-status') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('propagation-status').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;
@@ -71,6 +90,7 @@ export class MonitoringFlowExportPolicyStatus extends BaseModel implements IMoni
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
+            this['propagation-status'].setFormGroupValuesToBeModelValues();
         }
     }
 }

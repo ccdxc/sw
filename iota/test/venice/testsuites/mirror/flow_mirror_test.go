@@ -138,6 +138,9 @@ var _ = Describe("Flow mirror tests", func() {
 			msc := ts.model.NewMirrorSession("test-mirror").AddRulesForWorkloadPairs(workloadPairs, "icmp")
 			msc.AddVeniceCollector(veniceCollector, "udp/4545", 0)
 			Expect(msc.Commit()).Should(Succeed())
+			Eventually(func() error {
+				return msc.PropogationComplete()
+			})
 
 			ctx, cancel := context.WithCancel(context.Background())
 			tcpdumpDone := make(chan error)
@@ -163,6 +166,9 @@ var _ = Describe("Flow mirror tests", func() {
 			// Update the collector
 			msc.AddVeniceCollector(veniceCollector, "udp/4545", 1)
 			Expect(msc.Commit()).Should(Succeed())
+			Eventually(func() error {
+				return msc.PropogationComplete()
+			})
 
 			ctx, cancel = context.WithCancel(context.Background())
 			tcpdumpDone = make(chan error)
@@ -199,6 +205,9 @@ var _ = Describe("Flow mirror tests", func() {
 		msc.AddVeniceCollectorWithOptions(veniceCollector, "udp/4545", 0,
 			monitoring.PacketCollectorType_ERSPAN_TYPE_3, true)
 		Expect(msc.Commit()).Should(Succeed())
+		Eventually(func() error {
+			return msc.PropogationComplete()
+		})
 
 		halCommand := fmt.Sprintf("/nic/bin/halctl show mirror | grep -w %v | grep -w TYPE_3 | grep -w VS",
 			msc.Sessions[0].VeniceMirrorSess.Spec.Collectors[0].ExportCfg.Destination)
@@ -244,6 +253,9 @@ var _ = Describe("Flow mirror tests", func() {
 		msc.AddVeniceCollectorWithOptions(veniceCollector, "udp/4545", 0,
 			monitoring.PacketCollectorType_ERSPAN_TYPE_2, false)
 		Expect(msc.Commit()).Should(Succeed())
+		Eventually(func() error {
+			return msc.PropogationComplete()
+		})
 
 		halCommand := fmt.Sprintf("/nic/bin/halctl show mirror | grep -w %v | grep -w TYPE_2 | grep -vw VS",
 			msc.Sessions[0].VeniceMirrorSess.Spec.Collectors[0].ExportCfg.Destination)
@@ -299,6 +311,9 @@ var _ = Describe("Flow mirror tests", func() {
 				tMaps[i].msc = ts.model.NewMirrorSession(tMaps[i].name).AddRulesForWorkloadPairs(workloadPairs.GetSingleWorkloadPair(tMaps[i].wln), tMaps[i].pStr)
 				tMaps[i].msc.AddVeniceCollector(veniceCollector, "udp/4545", tMaps[i].wln)
 				Expect(tMaps[i].msc.Commit()).Should(Succeed())
+				Eventually(func() error {
+					return tMaps[i].msc.PropogationComplete()
+				})
 				VerifyMirrorSessionTraffic(veniceCollector, workloadPairs.GetSingleWorkloadPair(tMaps[i].wln), tMaps[i])
 			}
 
@@ -311,6 +326,9 @@ var _ = Describe("Flow mirror tests", func() {
 				log.Infof("adding collector with workflow %d", nextTMap.wln)
 				tMaps[i].msc.AddVeniceCollector(veniceCollector, "udp/4545", nextTMap.wln)
 				Expect(tMaps[i].msc.Commit()).Should(Succeed())
+				Eventually(func() error {
+					return tMaps[i].msc.PropogationComplete()
+				})
 				log.Infof("running %s traffic for new workflow %d", nextTMap.pStr, nextTMap.wln)
 				VerifyMirrorSessionTraffic(veniceCollector, workloadPairs, nextTMap)
 			}

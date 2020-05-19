@@ -298,6 +298,12 @@ type labelInterfaces struct {
 	intfs map[string]*NetworkInterfaceState
 }
 
+type dscMirrorSession struct {
+	name          string
+	mirrorSession *interfaceMirrorSession
+	refCnt        int
+}
+
 // SmNetworkInterface is statemanager struct for NetworkInterface
 type SmNetworkInterface struct {
 	featureMgrBase
@@ -605,6 +611,8 @@ func clearUnusedMirrorSessions(intfState *intfMirrorState, netprotoMirrorSession
 func updateMirrorSession(intfState *intfMirrorState,
 	op mirrorOp, intfName string, receiver objReceiver.Receiver,
 	mirrorSessions []string, opMirrorSessions []*interfaceMirrorSession) []string {
+
+	sm := MustGetStatemgr()
 	for _, newMs := range opMirrorSessions {
 		if _, ok := intfState.mirrorState[newMs.obj.GetKey()]; !ok {
 			if op == mirrorAdd {
@@ -612,7 +620,7 @@ func updateMirrorSession(intfState *intfMirrorState,
 				log.Infof("Sending Interface Mirror session %v for DSC %v Intf %v",
 					newMs.obj.GetKey(), intfState.nwIntf.NetworkInterfaceState.Status.DSC,
 					intfState.nwIntf.NetworkInterfaceState.Name)
-				err := newMs.pushObj.AddObjReceivers([]objReceiver.Receiver{receiver})
+				err := sm.AddReceiverToPushObject(newMs, []objReceiver.Receiver{receiver})
 				if err != nil {
 					log.Errorf("Error adding receiver %v", err)
 				}
@@ -653,20 +661,46 @@ func removeMirrorSession(nw *NetworkInterfaceState, session string) {
 			nw.mirrorSessions[i] = nw.mirrorSessions[len(nw.mirrorSessions)-1]
 			nw.mirrorSessions[len(nw.mirrorSessions)-1] = ""
 			nw.mirrorSessions = nw.mirrorSessions[:len(nw.mirrorSessions)-1]
+			dscMSessions, ok := smgrMirrorInterface.dscMirrorSessions[nw.NetworkInterfaceState.Status.DSC]
+			if ok {
+				for _, dscMs := range *dscMSessions {
+					if dscMs.name == session {
+						if dscMs.refCnt > 0 {
+							dscMs.refCnt--
+						}
+					}
+				}
+			}
 		}
 	}
 
 }
 
-func addMirrorSession(nw *NetworkInterfaceState, session string) {
+func addMirrorSession(nw *NetworkInterfaceState, ms *interfaceMirrorSelector) {
 
 	for _, msession := range nw.mirrorSessions {
-		if msession == session {
+		if msession == ms.mirrorSession {
 			return
 		}
 	}
+	dscMSessions, ok := smgrMirrorInterface.dscMirrorSessions[nw.NetworkInterfaceState.Status.DSC]
+	if !ok {
+		smgrMirrorInterface.dscMirrorSessions[nw.NetworkInterfaceState.Status.DSC] = &[]*dscMirrorSession{}
+		dscMSessions = smgrMirrorInterface.dscMirrorSessions[nw.NetworkInterfaceState.Status.DSC]
+	}
 
-	nw.mirrorSessions = append(nw.mirrorSessions, session)
+	added := false
+	for _, dscMs := range *dscMSessions {
+		if ms.mirrorSession == dscMs.name {
+			dscMs.refCnt++
+			added = true
+		}
+	}
+
+	if !added {
+		*dscMSessions = append(*dscMSessions, &dscMirrorSession{name: ms.mirrorSession, refCnt: 1, mirrorSession: ms.intfMirrorSession})
+	}
+	nw.mirrorSessions = append(nw.mirrorSessions, ms.mirrorSession)
 }
 
 func updateInterfaceRequired(intfColState *intfMirrorState) bool {
@@ -694,16 +728,16 @@ func selectorsMatch(selectors []*labels.Selector, l labels.Set) bool {
 }
 
 //TrackedDSCs tracked dscs
-func (nw *NetworkInterfaceState) TrackedDSCs() []*cluster.DistributedServiceCard {
+func (nw *NetworkInterfaceState) TrackedDSCs() []string {
 
 	mgr := MustGetStatemgr()
-	trackedDSCs := []*cluster.DistributedServiceCard{}
+	trackedDSCs := []string{}
 
 	dsc, err := mgr.FindDistributedServiceCard("default", nw.NetworkInterfaceState.Status.DSC)
 	if err != nil {
 		log.Errorf("Error looking up DSC %v", nw.NetworkInterfaceState.Status.DSC)
 	} else {
-		trackedDSCs = append(trackedDSCs, &dsc.DistributedServiceCard.DistributedServiceCard)
+		trackedDSCs = append(trackedDSCs, dsc.DistributedServiceCard.DistributedServiceCard.Name)
 	}
 	return trackedDSCs
 }
@@ -741,8 +775,7 @@ func (sma *SmNetworkInterface) updateMirror(nw *NetworkInterfaceState) error {
 			nw.netProtoMirrorSessions = updateMirrorSession(intfState, mirrorAdd, nw.NetworkInterfaceState.Name, receiver, nw.netProtoMirrorSessions, []*interfaceMirrorSession{ms.intfMirrorSession})
 			log.Infof("Adding mirror %v for DSC %v Intf %v",
 				ms.mirrorSession, intfState.nwIntf.NetworkInterfaceState.Status.DSC, intfState.nwIntf.NetworkInterfaceState.Name)
-			addMirrorSession(nw, ms.mirrorSession)
-
+			addMirrorSession(nw, ms)
 		}
 	}
 
@@ -823,6 +856,29 @@ func (sma *SmNetworkInterface) UpdateInterfacesMatchingSelector(oldSelCol *inter
 		sma.updateMirror(nw)
 		sma.sm.PeriodicUpdaterPush(nw)
 		nw.NetworkInterfaceState.Unlock()
+	}
+
+	//Send delete of interface mirror session if not refernced
+	sm := MustGetStatemgr()
+	for dsc, dscMirrorSessions := range smgrMirrorInterface.dscMirrorSessions {
+		index := 0
+		for _, dscMs := range *dscMirrorSessions {
+			if dscMs.refCnt == 0 {
+				receiver, err := sma.sm.mbus.FindReceiver(dsc)
+				if err == nil {
+					//No references, remove it
+					err := sm.RemoveReceiverFromPushObject(dscMs.mirrorSession, []objReceiver.Receiver{receiver})
+					if err != nil {
+						log.Errorf("Error removing receiver %v", err)
+					}
+
+				}
+			} else {
+				(*dscMirrorSessions)[index] = dscMs
+				index++
+			}
+		}
+		*dscMirrorSessions = (*dscMirrorSessions)[:index]
 	}
 
 	return nil

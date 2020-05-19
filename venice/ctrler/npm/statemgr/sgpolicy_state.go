@@ -249,14 +249,14 @@ func (sgp *SgpolicyState) isMarkedForDelete() bool {
 }
 
 //TrackedDSCs tracked DSCs
-func (sgp *SgpolicyState) TrackedDSCs() []*cluster.DistributedServiceCard {
+func (sgp *SgpolicyState) TrackedDSCs() []string {
 
 	dscs, _ := sgp.stateMgr.ListDistributedServiceCards()
 
-	trackedDSCs := []*cluster.DistributedServiceCard{}
+	trackedDSCs := []string{}
 	for _, dsc := range dscs {
 		if sgp.stateMgr.isDscEnforcednMode(&dsc.DistributedServiceCard.DistributedServiceCard) {
-			trackedDSCs = append(trackedDSCs, &dsc.DistributedServiceCard.DistributedServiceCard)
+			trackedDSCs = append(trackedDSCs, dsc.DistributedServiceCard.DistributedServiceCard.Name)
 		}
 	}
 
@@ -270,9 +270,9 @@ func (sgp *SgpolicyState) processDSCUpdate(dsc *cluster.DistributedServiceCard) 
 	defer sgp.NetworkSecurityPolicy.Unlock()
 
 	if sgp.stateMgr.isDscEnforcednMode(dsc) {
-		sgp.smObjectTracker.startDSCTracking(dsc)
+		sgp.smObjectTracker.startDSCTracking(dsc.Name)
 	} else {
-		sgp.smObjectTracker.stopDSCTracking(dsc)
+		sgp.smObjectTracker.stopDSCTracking(dsc.Name)
 	}
 
 	return nil
@@ -283,7 +283,7 @@ func (sgp *SgpolicyState) processDSCDelete(dsc *cluster.DistributedServiceCard) 
 
 	sgp.NetworkSecurityPolicy.Lock()
 	defer sgp.NetworkSecurityPolicy.Unlock()
-	sgp.smObjectTracker.stopDSCTracking(dsc)
+	sgp.smObjectTracker.stopDSCTracking(dsc.Name)
 
 	return nil
 }

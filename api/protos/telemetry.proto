@@ -91,6 +91,7 @@ message FwlogPolicy {
 
 // FlowExportPolicyStatus
 message FlowExportPolicyStatus {
+    PropagationStatus PropagationStatus         = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "propagation-status"];
 }
 
 message FlowExportPolicySpec {

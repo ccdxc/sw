@@ -6,10 +6,12 @@ import (
 	"sync"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/memdb"
 	"github.com/pensando/sw/venice/utils/ref"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
@@ -23,19 +25,67 @@ type SmFlowExportPolicyInterface struct {
 
 // FlowExportPolicyState keep state for flow export policy
 type FlowExportPolicyState struct {
+	smObjectTracker
 	FlowExportPolicy *ctkit.FlowExportPolicy `json:"-"`
-	stateMgr         *SmFlowExportPolicyInterface
+	stateMgr         *Statemgr
+	markedForDelete  bool
 }
 
 // NewFlowExportPolicyState creates new app state object
-func NewFlowExportPolicyState(fe *ctkit.FlowExportPolicy, stateMgr *SmFlowExportPolicyInterface) (*FlowExportPolicyState, error) {
+func NewFlowExportPolicyState(fe *ctkit.FlowExportPolicy, stateMgr *Statemgr) (*FlowExportPolicyState, error) {
 	fes := &FlowExportPolicyState{
 		FlowExportPolicy: fe,
 		stateMgr:         stateMgr,
 	}
 	fe.HandlerCtx = fes
+	fes.smObjectTracker.init(fes)
 
 	return fes, nil
+}
+
+// GetKey returns the key of FirewallProfile
+func (fes *FlowExportPolicyState) GetKey() string {
+	return fes.FlowExportPolicy.GetKey()
+}
+
+//TrackedDSCs tracked DSCs
+func (fes *FlowExportPolicyState) TrackedDSCs() []string {
+
+	dscs, _ := fes.stateMgr.ListDistributedServiceCards()
+
+	trackedDSCs := []string{}
+	for _, dsc := range dscs {
+		if fes.stateMgr.isDscEnforcednMode(&dsc.DistributedServiceCard.DistributedServiceCard) ||
+			fes.stateMgr.isDscFlowawareMode(&dsc.DistributedServiceCard.DistributedServiceCard) {
+			trackedDSCs = append(trackedDSCs, dsc.DistributedServiceCard.DistributedServiceCard.Name)
+		}
+	}
+
+	return trackedDSCs
+}
+
+//Write writes to apiserver
+func (fes *FlowExportPolicyState) Write() error {
+	fes.FlowExportPolicy.Lock()
+	defer fes.FlowExportPolicy.Unlock()
+
+	propStatus := fes.getPropStatus()
+	newProp := &monitoring.PropagationStatus{
+		GenerationID:  propStatus.generationID,
+		MinVersion:    propStatus.minVersion,
+		Pending:       propStatus.pending,
+		PendingNaples: propStatus.pendingDSCs,
+		Updated:       propStatus.updated,
+	}
+	prop := &fes.FlowExportPolicy.Status.PropagationStatus
+
+	//Do write only if changed
+	if propgatationStatusDifferent(prop, newProp) {
+		fes.FlowExportPolicy.Status.PropagationStatus = *newProp
+		return fes.FlowExportPolicy.Write()
+	}
+
+	return nil
 }
 
 // FlowExportPolicyStateFromObj conerts from memdb object to network state
@@ -185,19 +235,52 @@ func convertFlowExportPolicy(fePolicy *monitoring.FlowExportPolicy) *netproto.Fl
 	return flowExportPolicy
 }
 
+//GetDBObject get db object
+func (fes *FlowExportPolicyState) GetDBObject() memdb.Object {
+	return convertFlowExportPolicy(&fes.FlowExportPolicy.FlowExportPolicy)
+}
+
+func (fes *FlowExportPolicyState) isMarkedForDelete() bool {
+	return fes.markedForDelete
+}
+
+// processDSCUpdate sgpolicy update handles for DSC
+func (fes *FlowExportPolicyState) processDSCUpdate(dsc *cluster.DistributedServiceCard) error {
+
+	fes.FlowExportPolicy.Lock()
+	defer fes.FlowExportPolicy.Unlock()
+
+	if fes.stateMgr.isDscEnforcednMode(dsc) || fes.stateMgr.isDscFlowawareMode(dsc) {
+		fes.smObjectTracker.startDSCTracking(dsc.Name)
+	}
+
+	return nil
+}
+
+// processDSCUpdate sgpolicy update handles for DSC
+func (fes *FlowExportPolicyState) processDSCDelete(dsc *cluster.DistributedServiceCard) error {
+
+	fes.FlowExportPolicy.Lock()
+	defer fes.FlowExportPolicy.Unlock()
+
+	fes.smObjectTracker.stopDSCTracking(dsc.Name)
+
+	return nil
+}
+
 //OnFlowExportPolicyCreate mirror session create handle
 func (smm *SmFlowExportPolicyInterface) OnFlowExportPolicyCreate(obj *ctkit.FlowExportPolicy) error {
 
 	log.Infof("Creating flow export policy : %+v", obj)
 
-	fes, err := NewFlowExportPolicyState(obj, smm)
+	fes, err := NewFlowExportPolicyState(obj, smm.sm)
 	if err != nil {
 		log.Errorf("Error flow export policy r %+v. Err: %v", obj, err)
 		return err
 	}
 
-	return smm.sm.mbus.AddObjectWithReferences(obj.FlowExportPolicy.MakeKey("monitoring"),
-		convertFlowExportPolicy(&fes.FlowExportPolicy.FlowExportPolicy), references(&obj.FlowExportPolicy))
+	return smm.sm.AddObjectToMbus(obj.FlowExportPolicy.MakeKey("monitoring"), fes,
+		references(&obj.FlowExportPolicy))
 }
 
 //OnFlowExportPolicyUpdate mirror session create handle
@@ -212,23 +295,34 @@ func (smm *SmFlowExportPolicyInterface) OnFlowExportPolicyUpdate(obj *ctkit.Flow
 		return nil
 	}
 
-	_, err := FlowExportPolicyStateFromObj(obj)
+	fes, err := FlowExportPolicyStateFromObj(obj)
 	if err != nil {
 		log.Errorf("Error finding mirror object for delete %v", err)
 		return err
 	}
 
 	// update old state
-	obj.FlowExportPolicy.Spec = newObj.Spec
-	obj.FlowExportPolicy.ObjectMeta = newObj.ObjectMeta
-	return smm.sm.mbus.UpdateObjectWithReferences(obj.FlowExportPolicy.MakeKey("monitoring"),
-		convertFlowExportPolicy(&obj.FlowExportPolicy), references(newObj))
+	fes.FlowExportPolicy.Spec = newObj.Spec
+	fes.FlowExportPolicy.ObjectMeta = newObj.ObjectMeta
+
+	return smm.sm.UpdateObjectToMbus(obj.FlowExportPolicy.MakeKey("monitoring"), fes,
+		references(&obj.FlowExportPolicy))
+
 }
 
 //OnFlowExportPolicyDelete mirror session create handle
 func (smm *SmFlowExportPolicyInterface) OnFlowExportPolicyDelete(obj *ctkit.FlowExportPolicy) error {
-	return smm.sm.mbus.DeleteObjectWithReferences(obj.FlowExportPolicy.MakeKey("monitoring"),
-		convertFlowExportPolicy(&obj.FlowExportPolicy), references(&obj.FlowExportPolicy))
+	fes, err := FlowExportPolicyStateFromObj(obj)
+	if err != nil {
+		log.Errorf("Error finding mirror object for delete %v", err)
+		return err
+	}
+
+	fes.markedForDelete = true
+
+	return smm.sm.DeleteObjectToMbus(obj.FlowExportPolicy.MakeKey("monitoring"), fes,
+		references(&obj.FlowExportPolicy))
+
 }
 
 // OnFlowExportPolicyReconnect is called when ctkit reconnects to apiserver

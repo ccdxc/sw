@@ -232,14 +232,15 @@ func (eps *EndpointState) GetKey() string {
 }
 
 //TrackedDSCs tracked DSCs
-func (eps *EndpointState) TrackedDSCs() []*cluster.DistributedServiceCard {
+func (eps *EndpointState) TrackedDSCs() []string {
 
 	dscs, _ := eps.stateMgr.ListDistributedServiceCards()
 
-	trackedDSCs := []*cluster.DistributedServiceCard{}
+	trackedDSCs := []string{}
 	for _, dsc := range dscs {
-		if dsc.DistributedServiceCard.Status.PrimaryMAC == eps.Endpoint.Spec.NodeUUID {
-			trackedDSCs = append(trackedDSCs, &dsc.DistributedServiceCard.DistributedServiceCard)
+		if eps.stateMgr.isDscEnforcednMode(&dsc.DistributedServiceCard.DistributedServiceCard) &&
+			dsc.DistributedServiceCard.Status.PrimaryMAC == eps.Endpoint.Spec.NodeUUID {
+			trackedDSCs = append(trackedDSCs, dsc.DistributedServiceCard.DistributedServiceCard.Name)
 		}
 	}
 
@@ -253,7 +254,7 @@ func (eps *EndpointState) processDSCUpdate(dsc *cluster.DistributedServiceCard) 
 	defer eps.Endpoint.Unlock()
 
 	if dsc.Status.PrimaryMAC == eps.Endpoint.Spec.NodeUUID {
-		eps.smObjectTracker.startDSCTracking(dsc)
+		eps.smObjectTracker.startDSCTracking(dsc.Name)
 	}
 
 	return nil
@@ -265,7 +266,7 @@ func (eps *EndpointState) processDSCDelete(dsc *cluster.DistributedServiceCard) 
 	eps.Endpoint.Lock()
 	defer eps.Endpoint.Unlock()
 
-	eps.smObjectTracker.stopDSCTracking(dsc)
+	eps.smObjectTracker.stopDSCTracking(dsc.Name)
 
 	return nil
 }
@@ -656,7 +657,7 @@ func (sm *Statemgr) moveEndpoint(epinfo *ctkit.Endpoint, nep *workload.Endpoint,
 
 				oldDSC, err := sm.FindDistributedServiceCard(eps.Endpoint.Tenant, oldEP.Spec.NodeUUID)
 				if err == nil {
-					eps.stopDSCTracking(&oldDSC.DistributedServiceCard.DistributedServiceCard)
+					eps.stopDSCTracking(oldDSC.DistributedServiceCard.DistributedServiceCard.Name)
 				}
 				eps.moveEP = nil
 				return
@@ -750,7 +751,7 @@ func (sm *Statemgr) moveEndpoint(epinfo *ctkit.Endpoint, nep *workload.Endpoint,
 
 						oldDSC, err := sm.FindDistributedServiceCard(eps.Endpoint.Tenant, oldEP.Spec.NodeUUID)
 						if err == nil {
-							eps.stopDSCTracking(&oldDSC.DistributedServiceCard.DistributedServiceCard)
+							eps.stopDSCTracking(oldDSC.DistributedServiceCard.DistributedServiceCard.Name)
 						}
 
 						ws.incrMigrationSuccess()

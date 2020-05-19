@@ -81,6 +81,7 @@ type ObjClient interface {
 	UpdateFirewallProfile(fwp *security.FirewallProfile) error
 	DeleteFirewallProfile(fwprofile *security.FirewallProfile) error
 
+	GetMirrorSession(meta *api.ObjectMeta) (*monitoring.MirrorSession, error)
 	CreateMirrorSession(msp *monitoring.MirrorSession) error
 	UpdateMirrorSession(msp *monitoring.MirrorSession) error
 	DeleteMirrorSession(msp *monitoring.MirrorSession) error
@@ -1277,6 +1278,19 @@ func (r *Client) DeleteFirewallProfile(fwprofile *security.FirewallProfile) erro
 	}
 
 	return err
+}
+
+// GetMirrorSession gets Mirror policy
+func (r *Client) GetMirrorSession(meta *api.ObjectMeta) (*monitoring.MirrorSession, error) {
+	var err error
+	for _, restcl := range r.restcls {
+		mr, err := restcl.MonitoringV1().MirrorSession().Get(r.ctx, meta)
+		if err == nil {
+			return mr, nil
+		}
+	}
+
+	return nil, err
 }
 
 // CreateMirrorSession creates Mirror policy

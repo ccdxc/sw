@@ -14,6 +14,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
@@ -96,6 +97,19 @@ func (it *integTestSuite) TestNpmMirrorPolicy(c *C) {
 			return true, nil
 		}, fmt.Sprintf("Mirror Policy not found in agent. SGP: %v", mr.GetKey()), "10ms", it.pollTimeout())
 	}
+
+	// verify policy status reflects new agent
+	AssertEventually(c, func() (bool, interface{}) {
+		tsgp, gerr := it.apisrvClient.MonitoringV1().MirrorSession().Get(context.Background(), &mr.ObjectMeta)
+		if gerr != nil {
+			return false, gerr
+		}
+		log.Infof("Mirror status %#v", tsgp.Status)
+		if (tsgp.Status.PropagationStatus.Updated != int32(it.numAgents)) || (tsgp.Status.PropagationStatus.Pending != 0) {
+			return false, tsgp
+		}
+		return true, nil
+	}, "Mirror status was not updated after adding new smartnic", "100ms", it.pollTimeout())
 
 	/*
 		// wait a little so that we dont cause a race condition between NPM write ans updates

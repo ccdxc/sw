@@ -1,6 +1,7 @@
 package objects
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/pensando/sw/api"
@@ -156,6 +157,24 @@ func (msc *MirrorSessionCollection) Commit() error {
 
 		log.Debugf("Created session: %#v", sess.VeniceMirrorSess)
 
+	}
+
+	return nil
+}
+
+// PropogationComplete checks whether propogation is complate.
+func (msc *MirrorSessionCollection) PropogationComplete() error {
+	if msc.err != nil {
+		return msc.err
+	}
+	for _, sess := range msc.Sessions {
+		ms, err := msc.Client.GetMirrorSession(&sess.VeniceMirrorSess.ObjectMeta)
+		if err == nil {
+			if ms.Status.PropagationStatus.GenerationID == "" || ms.Status.PropagationStatus.Updated == 0 || ms.Status.PropagationStatus.Pending != 0 {
+				log.Infof("Propogation pending for mirror session %#v", ms.Status.PropagationStatus)
+				return fmt.Errorf("Propogation pending for mirror session %v", ms.Name)
+			}
+		}
 	}
 
 	return nil

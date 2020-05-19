@@ -151,14 +151,14 @@ func (aps *AppState) GetKey() string {
 }
 
 //TrackedDSCs get DSCs that needs to be tracked
-func (aps *AppState) TrackedDSCs() []*cluster.DistributedServiceCard {
+func (aps *AppState) TrackedDSCs() []string {
 
 	dscs, _ := aps.stateMgr.ListDistributedServiceCards()
 
-	trackedDSCs := []*cluster.DistributedServiceCard{}
+	trackedDSCs := []string{}
 	for _, dsc := range dscs {
 		if aps.stateMgr.isDscEnforcednMode(&dsc.DistributedServiceCard.DistributedServiceCard) {
-			trackedDSCs = append(trackedDSCs, &dsc.DistributedServiceCard.DistributedServiceCard)
+			trackedDSCs = append(trackedDSCs, dsc.DistributedServiceCard.DistributedServiceCard.Name)
 		}
 	}
 
@@ -284,7 +284,7 @@ func (aps *AppState) processDSCUpdate(dsc *cluster.DistributedServiceCard) error
 	defer aps.App.Unlock()
 
 	if aps.stateMgr.isDscEnforcednMode(dsc) {
-		aps.smObjectTracker.startDSCTracking(dsc)
+		aps.smObjectTracker.startDSCTracking(dsc.Name)
 	}
 
 	return nil
@@ -295,7 +295,7 @@ func (aps *AppState) processDSCDelete(dsc *cluster.DistributedServiceCard) error
 
 	aps.App.Lock()
 	defer aps.App.Unlock()
-	aps.smObjectTracker.stopDSCTracking(dsc)
+	aps.smObjectTracker.stopDSCTracking(dsc.Name)
 
 	return nil
 }
