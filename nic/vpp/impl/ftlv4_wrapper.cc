@@ -328,48 +328,52 @@ ftlv4_export_with_entry (ipv4_flow_hash_entry_t *iv4entry,
                          ipv4_flow_hash_entry_t *rv4entry,
                          uint8_t reason, bool host_origin)
 {
-    operd_flow_t flow = {0};
+    operd_flow_t *flow;
     pds_session_stats_t session_stats;
 
-    flow.v4.src = iv4entry->get_key_metadata_ipv4_src();
-    flow.v4.sport = iv4entry->get_key_metadata_sport();
-    flow.v4.dst = rv4entry->get_key_metadata_ipv4_src();
-    flow.v4.dport = rv4entry->get_key_metadata_sport();
-    flow.v4.proto = iv4entry->get_key_metadata_proto();
-    flow.v4.lookup_id = ftlv4_get_key_lookup_id(iv4entry);
+    flow = pds_operd_get_flow_ip4();
 
-    flow.session_id = iv4entry->get_session_index();
+    if (unlikely(flow == NULL)) {
+        return -1;
+    }
 
-    if (0 != ftlv4_read_snat_info(flow.session_id, host_origin, flow.v4,
-                                  flow.nat_data)) {
+    flow->v4.src = iv4entry->get_key_metadata_ipv4_src();
+    flow->v4.sport = iv4entry->get_key_metadata_sport();
+    flow->v4.dst = rv4entry->get_key_metadata_ipv4_src();
+    flow->v4.dport = rv4entry->get_key_metadata_sport();
+    flow->v4.proto = iv4entry->get_key_metadata_proto();
+    flow->v4.lookup_id = ftlv4_get_key_lookup_id(iv4entry);
+
+    flow->session_id = iv4entry->get_session_index();
+
+    if (0 != ftlv4_read_snat_info(flow->session_id, host_origin, flow->v4,
+                                  flow->nat_data)) {
         return -1;
     }
 
     if (FLOW_EXPORT_REASON_ADD != reason) {
         // don't read stats for add. they would be zero anyway
-        if (0 != pds_session_stats_read(flow.session_id, &session_stats)) {
+        if (0 != pds_session_stats_read(flow->session_id, &session_stats)) {
             return -1;
         }
-        memcpy(&flow.stats, &session_stats, sizeof(pds_session_stats_t));
+        memcpy(&flow->stats, &session_stats, sizeof(pds_session_stats_t));
     }
 
     switch(reason) {
     case FLOW_EXPORT_REASON_ADD:
-        flow.logtype = OPERD_FLOW_LOGTYPE_ADD;
+        flow->logtype = OPERD_FLOW_LOGTYPE_ADD;
         break;
     case FLOW_EXPORT_REASON_DEL:
-        flow.logtype = OPERD_FLOW_LOGTYPE_DEL;
+        flow->logtype = OPERD_FLOW_LOGTYPE_DEL;
         break;
     default:
     case FLOW_EXPORT_REASON_ACTIVE:
-        flow.logtype = OPERD_FLOW_LOGTYPE_ACTIVE;
+        flow->logtype = OPERD_FLOW_LOGTYPE_ACTIVE;
         break;
     }
 
-    flow.type = OPERD_FLOW_TYPE_IP4;
-    flow.action = OPERD_FLOW_ACTION_ALLOW;
-
-    pds_operd_export_flow_ip4(&flow);
+    flow->type = OPERD_FLOW_TYPE_IP4;
+    flow->action = OPERD_FLOW_ACTION_ALLOW;
 
     return 0;
 }

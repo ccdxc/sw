@@ -156,6 +156,28 @@ region::get_chunk_(serial_t serial) {
     return &this->region_->chunks[get_chunk_index_(serial)];
 }
 
+void *
+region::get_raw_chunk(uint8_t encoder, uint8_t severity, size_t size) {
+    serial_t serial;
+    chunk_t *chunk;
+
+    if (this->chunk_count_ == 0 || this->region_->severity < severity) {
+        return NULL;
+    }
+
+    assert(size <= CHUNK_SIZE);
+
+    serial = this->reserve_(1);
+    chunk = this->get_chunk_(serial);
+    chunk->encoder = encoder;
+    chunk->severity = severity;
+    chunk->pid = getpid();
+    gettimeofday(&chunk->timestamp, NULL);
+
+    chunk->size = size;
+    return chunk->data;
+}
+
 void
 region::write(uint8_t encoder, uint8_t severity, const void *data,
               size_t data_length) {
@@ -285,6 +307,11 @@ region::set_severity(uint8_t new_severity) {
         return;
     }
     this->region_->severity = new_severity;
+}
+
+region_ptr
+region::create(std::string name) {
+    return std::make_shared<region>(name);
 }
 
 } // namespace operd

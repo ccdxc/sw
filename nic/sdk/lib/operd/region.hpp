@@ -64,6 +64,7 @@ sizeof_region_t (int chunk_count)
 class region : public producer,
                public consumer {
 public:
+    static std::shared_ptr<region> create(std::string name);
     region(std::string name);
     void write(uint8_t encoder, uint8_t severity, const void *data,
                size_t data_length) override;
@@ -72,6 +73,7 @@ public:
     // reset reader
     void reset(void) override;
     void set_severity(uint8_t new_severity);
+    void *get_raw_chunk(uint8_t encoder, uint8_t severity, size_t size);
 private:
     void load_config_(void);
     void create_shm_(void);
