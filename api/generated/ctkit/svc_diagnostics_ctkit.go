@@ -483,7 +483,7 @@ func (ct *ctrlerCtx) diffModule(apicl apiclient.Services) {
 	}
 
 	list, err := ct.Module().List(context.Background(), &opts)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found in local cache") {
 		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
 		return
 	}

@@ -11,6 +11,7 @@ import (
 	"math/rand"
 	"os"
 	"strconv"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -795,6 +796,11 @@ func TestNetworkList(t *testing.T) {
 	// create tenant
 	err = createTenant(t, stateMgr, "default")
 	AssertOk(t, err, "Error creating the tenant")
+
+	list, err := stateMgr.ctrler.Network().List(context.Background(), &api.ListWatchOptions{})
+	Assert(t, strings.Contains(err.Error(), "not found in local cache"), "Failed to get list of networks")
+	Assert(t, len(list) == 0, fmt.Sprintf("Expected 0 networks, found %v networks", len(list)))
+
 	// create a network
 	err = createNetwork(t, stateMgr, "default", "default", "10.1.1.0/24", "10.1.1.254", 11)
 
@@ -827,6 +833,14 @@ func TestEndpointCreateDelete(t *testing.T) {
 	// create tenant
 	err = createTenant(t, stateMgr, "default")
 	AssertOk(t, err, "Error creating the tenant")
+
+	list, err := stateMgr.ctrler.Network().List(context.Background(), &api.ListWatchOptions{})
+	Assert(t, strings.Contains(err.Error(), "not found in local cache"), "Failed to get list of networks")
+	Assert(t, len(list) == 0, fmt.Sprintf("Expected 0 networks, found %v networks", len(list)))
+
+	listEP, err := stateMgr.ctrler.Endpoint().List(context.Background(), &api.ListWatchOptions{})
+	Assert(t, strings.Contains(err.Error(), "not found in local cache"), "Failed to get list of endpoints")
+	Assert(t, len(listEP) == 0, fmt.Sprintf("Expected 0 endpoints, found %v endpoints", len(listEP)))
 
 	// create a network
 	err = createNetwork(t, stateMgr, "default", "default", "10.1.1.0/24", "10.1.1.254", 11)

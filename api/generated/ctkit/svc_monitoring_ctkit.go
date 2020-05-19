@@ -491,7 +491,7 @@ func (ct *ctrlerCtx) diffEventPolicy(apicl apiclient.Services) {
 	}
 
 	list, err := ct.EventPolicy().List(context.Background(), &opts)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found in local cache") {
 		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
 		return
 	}
@@ -1373,7 +1373,7 @@ func (ct *ctrlerCtx) diffFwlogPolicy(apicl apiclient.Services) {
 	}
 
 	list, err := ct.FwlogPolicy().List(context.Background(), &opts)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found in local cache") {
 		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
 		return
 	}
@@ -2255,7 +2255,7 @@ func (ct *ctrlerCtx) diffFlowExportPolicy(apicl apiclient.Services) {
 	}
 
 	list, err := ct.FlowExportPolicy().List(context.Background(), &opts)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found in local cache") {
 		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
 		return
 	}
@@ -3129,7 +3129,7 @@ func (ct *ctrlerCtx) diffAlert(apicl apiclient.Services) {
 	}
 
 	list, err := ct.Alert().List(context.Background(), &opts)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found in local cache") {
 		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
 		return
 	}
@@ -4003,7 +4003,7 @@ func (ct *ctrlerCtx) diffAlertPolicy(apicl apiclient.Services) {
 	}
 
 	list, err := ct.AlertPolicy().List(context.Background(), &opts)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found in local cache") {
 		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
 		return
 	}
@@ -4877,7 +4877,7 @@ func (ct *ctrlerCtx) diffStatsAlertPolicy(apicl apiclient.Services) {
 	}
 
 	list, err := ct.StatsAlertPolicy().List(context.Background(), &opts)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found in local cache") {
 		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
 		return
 	}
@@ -5759,7 +5759,7 @@ func (ct *ctrlerCtx) diffAlertDestination(apicl apiclient.Services) {
 	}
 
 	list, err := ct.AlertDestination().List(context.Background(), &opts)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found in local cache") {
 		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
 		return
 	}
@@ -6633,7 +6633,7 @@ func (ct *ctrlerCtx) diffMirrorSession(apicl apiclient.Services) {
 	}
 
 	list, err := ct.MirrorSession().List(context.Background(), &opts)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found in local cache") {
 		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
 		return
 	}
@@ -7507,7 +7507,7 @@ func (ct *ctrlerCtx) diffTroubleshootingSession(apicl apiclient.Services) {
 	}
 
 	list, err := ct.TroubleshootingSession().List(context.Background(), &opts)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found in local cache") {
 		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
 		return
 	}
@@ -8381,7 +8381,7 @@ func (ct *ctrlerCtx) diffTechSupportRequest(apicl apiclient.Services) {
 	}
 
 	list, err := ct.TechSupportRequest().List(context.Background(), &opts)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found in local cache") {
 		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
 		return
 	}
@@ -9255,7 +9255,7 @@ func (ct *ctrlerCtx) diffArchiveRequest(apicl apiclient.Services) {
 	}
 
 	list, err := ct.ArchiveRequest().List(context.Background(), &opts)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found in local cache") {
 		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
 		return
 	}
@@ -10195,7 +10195,7 @@ func (ct *ctrlerCtx) diffAuditPolicy(apicl apiclient.Services) {
 	}
 
 	list, err := ct.AuditPolicy().List(context.Background(), &opts)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found in local cache") {
 		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
 		return
 	}

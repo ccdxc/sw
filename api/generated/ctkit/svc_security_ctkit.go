@@ -483,7 +483,7 @@ func (ct *ctrlerCtx) diffSecurityGroup(apicl apiclient.Services) {
 	}
 
 	list, err := ct.SecurityGroup().List(context.Background(), &opts)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found in local cache") {
 		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
 		return
 	}
@@ -1357,7 +1357,7 @@ func (ct *ctrlerCtx) diffNetworkSecurityPolicy(apicl apiclient.Services) {
 	}
 
 	list, err := ct.NetworkSecurityPolicy().List(context.Background(), &opts)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found in local cache") {
 		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
 		return
 	}
@@ -2231,7 +2231,7 @@ func (ct *ctrlerCtx) diffApp(apicl apiclient.Services) {
 	}
 
 	list, err := ct.App().List(context.Background(), &opts)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found in local cache") {
 		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
 		return
 	}
@@ -3105,7 +3105,7 @@ func (ct *ctrlerCtx) diffFirewallProfile(apicl apiclient.Services) {
 	}
 
 	list, err := ct.FirewallProfile().List(context.Background(), &opts)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found in local cache") {
 		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
 		return
 	}
@@ -3979,7 +3979,7 @@ func (ct *ctrlerCtx) diffCertificate(apicl apiclient.Services) {
 	}
 
 	list, err := ct.Certificate().List(context.Background(), &opts)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found in local cache") {
 		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
 		return
 	}
@@ -4853,7 +4853,7 @@ func (ct *ctrlerCtx) diffTrafficEncryptionPolicy(apicl apiclient.Services) {
 	}
 
 	list, err := ct.TrafficEncryptionPolicy().List(context.Background(), &opts)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found in local cache") {
 		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
 		return
 	}

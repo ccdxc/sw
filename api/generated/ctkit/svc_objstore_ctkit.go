@@ -483,7 +483,7 @@ func (ct *ctrlerCtx) diffBucket(apicl apiclient.Services) {
 	}
 
 	list, err := ct.Bucket().List(context.Background(), &opts)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found in local cache") {
 		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
 		return
 	}
@@ -1357,7 +1357,7 @@ func (ct *ctrlerCtx) diffObject(apicl apiclient.Services) {
 	}
 
 	list, err := ct.Object().List(context.Background(), &opts)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found in local cache") {
 		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
 		return
 	}

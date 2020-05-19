@@ -483,7 +483,7 @@ func (ct *ctrlerCtx) diffNetwork(apicl apiclient.Services) {
 	}
 
 	list, err := ct.Network().List(context.Background(), &opts)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found in local cache") {
 		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
 		return
 	}
@@ -1357,7 +1357,7 @@ func (ct *ctrlerCtx) diffService(apicl apiclient.Services) {
 	}
 
 	list, err := ct.Service().List(context.Background(), &opts)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found in local cache") {
 		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
 		return
 	}
@@ -2231,7 +2231,7 @@ func (ct *ctrlerCtx) diffLbPolicy(apicl apiclient.Services) {
 	}
 
 	list, err := ct.LbPolicy().List(context.Background(), &opts)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found in local cache") {
 		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
 		return
 	}
@@ -3105,7 +3105,7 @@ func (ct *ctrlerCtx) diffVirtualRouter(apicl apiclient.Services) {
 	}
 
 	list, err := ct.VirtualRouter().List(context.Background(), &opts)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found in local cache") {
 		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
 		return
 	}
@@ -3979,7 +3979,7 @@ func (ct *ctrlerCtx) diffNetworkInterface(apicl apiclient.Services) {
 	}
 
 	list, err := ct.NetworkInterface().List(context.Background(), &opts)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found in local cache") {
 		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
 		return
 	}
@@ -4853,7 +4853,7 @@ func (ct *ctrlerCtx) diffIPAMPolicy(apicl apiclient.Services) {
 	}
 
 	list, err := ct.IPAMPolicy().List(context.Background(), &opts)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found in local cache") {
 		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
 		return
 	}
@@ -5735,7 +5735,7 @@ func (ct *ctrlerCtx) diffRoutingConfig(apicl apiclient.Services) {
 	}
 
 	list, err := ct.RoutingConfig().List(context.Background(), &opts)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found in local cache") {
 		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
 		return
 	}
@@ -6609,7 +6609,7 @@ func (ct *ctrlerCtx) diffRouteTable(apicl apiclient.Services) {
 	}
 
 	list, err := ct.RouteTable().List(context.Background(), &opts)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found in local cache") {
 		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
 		return
 	}

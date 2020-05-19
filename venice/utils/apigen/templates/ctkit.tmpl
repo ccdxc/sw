@@ -506,8 +506,8 @@ func (ct *ctrlerCtx) diff{{.}}(apicl apiclient.Services) {
 	}
 
 	list, err := ct.{{.}}().List(context.Background(), &opts)
-	if err != nil {
-		 ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
+	if err != nil && !strings.Contains(err.Error(), "not found in local cache"){
+		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
 		return
 	}
 

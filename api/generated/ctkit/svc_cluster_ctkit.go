@@ -491,7 +491,7 @@ func (ct *ctrlerCtx) diffCluster(apicl apiclient.Services) {
 	}
 
 	list, err := ct.Cluster().List(context.Background(), &opts)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found in local cache") {
 		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
 		return
 	}
@@ -1480,7 +1480,7 @@ func (ct *ctrlerCtx) diffNode(apicl apiclient.Services) {
 	}
 
 	list, err := ct.Node().List(context.Background(), &opts)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found in local cache") {
 		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
 		return
 	}
@@ -2354,7 +2354,7 @@ func (ct *ctrlerCtx) diffHost(apicl apiclient.Services) {
 	}
 
 	list, err := ct.Host().List(context.Background(), &opts)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found in local cache") {
 		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
 		return
 	}
@@ -3228,7 +3228,7 @@ func (ct *ctrlerCtx) diffDistributedServiceCard(apicl apiclient.Services) {
 	}
 
 	list, err := ct.DistributedServiceCard().List(context.Background(), &opts)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found in local cache") {
 		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
 		return
 	}
@@ -4102,7 +4102,7 @@ func (ct *ctrlerCtx) diffTenant(apicl apiclient.Services) {
 	}
 
 	list, err := ct.Tenant().List(context.Background(), &opts)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found in local cache") {
 		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
 		return
 	}
@@ -4976,7 +4976,7 @@ func (ct *ctrlerCtx) diffVersion(apicl apiclient.Services) {
 	}
 
 	list, err := ct.Version().List(context.Background(), &opts)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found in local cache") {
 		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
 		return
 	}
@@ -5850,7 +5850,7 @@ func (ct *ctrlerCtx) diffConfigurationSnapshot(apicl apiclient.Services) {
 	}
 
 	list, err := ct.ConfigurationSnapshot().List(context.Background(), &opts)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found in local cache") {
 		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
 		return
 	}
@@ -6782,7 +6782,7 @@ func (ct *ctrlerCtx) diffSnapshotRestore(apicl apiclient.Services) {
 	}
 
 	list, err := ct.SnapshotRestore().List(context.Background(), &opts)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found in local cache") {
 		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
 		return
 	}
@@ -7714,7 +7714,7 @@ func (ct *ctrlerCtx) diffLicense(apicl apiclient.Services) {
 	}
 
 	list, err := ct.License().List(context.Background(), &opts)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found in local cache") {
 		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
 		return
 	}
@@ -8588,7 +8588,7 @@ func (ct *ctrlerCtx) diffDSCProfile(apicl apiclient.Services) {
 	}
 
 	list, err := ct.DSCProfile().List(context.Background(), &opts)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found in local cache") {
 		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
 		return
 	}

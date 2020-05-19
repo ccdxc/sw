@@ -491,7 +491,7 @@ func (ct *ctrlerCtx) diffUser(apicl apiclient.Services) {
 	}
 
 	list, err := ct.User().List(context.Background(), &opts)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found in local cache") {
 		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
 		return
 	}
@@ -1545,7 +1545,7 @@ func (ct *ctrlerCtx) diffAuthenticationPolicy(apicl apiclient.Services) {
 	}
 
 	list, err := ct.AuthenticationPolicy().List(context.Background(), &opts)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found in local cache") {
 		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
 		return
 	}
@@ -2591,7 +2591,7 @@ func (ct *ctrlerCtx) diffRole(apicl apiclient.Services) {
 	}
 
 	list, err := ct.Role().List(context.Background(), &opts)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found in local cache") {
 		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
 		return
 	}
@@ -3465,7 +3465,7 @@ func (ct *ctrlerCtx) diffRoleBinding(apicl apiclient.Services) {
 	}
 
 	list, err := ct.RoleBinding().List(context.Background(), &opts)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found in local cache") {
 		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
 		return
 	}
@@ -4339,7 +4339,7 @@ func (ct *ctrlerCtx) diffUserPreference(apicl apiclient.Services) {
 	}
 
 	list, err := ct.UserPreference().List(context.Background(), &opts)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "not found in local cache") {
 		ct.logger.Infof("Failed to get a list of objects. Err: %s", err)
 		return
 	}
