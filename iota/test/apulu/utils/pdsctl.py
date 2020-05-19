@@ -43,8 +43,7 @@ def ExecutePdsctlShowCommand(node, cmd, args=None, yaml=True, print_op=True):
     cmd = __CMDTYPE_SHOW + __CMDSEP + cmd
     return ExecutePdsctlCommand(node, cmd, args, yaml, print_op=print_op)
 
-def GetObjects(node, objtype):
+def GetObjects(node, objName):
     # get object name
-    objName = objtype.name.lower().replace("_", "-")
     return ExecutePdsctlShowCommand(node, objName)
 

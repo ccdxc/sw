@@ -27,6 +27,7 @@ class DhcpProxyObject(base.ConfigObjectBase):
         self.dnsserver = ipaddress.IPv4Address(dhcpspec.dnsserver)
         self.domainname = getattr(dhcpspec, 'domainname', None)
         self.filename = getattr(dhcpspec, 'filename', None)
+        self.leasetimeout = getattr(dhcpspec, 'leasetimeout', 3600)
         self.interfacemtu = dhcpspec.interfacemtu
         return
 
@@ -58,8 +59,11 @@ class DhcpProxyObject(base.ConfigObjectBase):
         utils.GetRpcIPAddr(self.ntpserver, spec.ProxySpec.NTPServerIP)
         utils.GetRpcIPAddr(self.routers, spec.ProxySpec.GatewayIP)
         utils.GetRpcIPAddr(self.dnsserver, spec.ProxySpec.DNSServerIP)
-        spec.ProxySpec.DomainName = self.domainname
-        spec.ProxySpec.BootFileName = self.filename
+        if self.domainname:
+            spec.ProxySpec.DomainName = self.domainname
+        if self.filename:
+            spec.ProxySpec.BootFileName = self.filename
+        spec.ProxySpec.LeaseTimeout = self.leasetimeout
         spec.ProxySpec.MTU = self.interfacemtu
         return
 
@@ -67,15 +71,20 @@ class DhcpProxyObject(base.ConfigObjectBase):
         if spec.Id != self.GetKey():
             return False
         ProxySpec = spec.ProxySpec
-        if ProxySpec.ServerIP != self.serverip:
+        if not utils.ValidateRpcIPAddr(self.serverip, ProxySpec.ServerIP):
             return False
-        if ProxySpec.NTPServerIP != self.ntpserver:
+        if not utils.ValidateRpcIPAddr(self.ntpserver, ProxySpec.NTPServerIP):
             return False
-        if ProxySpec.GatewayIP != self.routers:
+        if not utils.ValidateRpcIPAddr(self.routers, ProxySpec.GatewayIP):
             return False
-        if ProxySpec.DNSServerIP != self.dnsserver:
+        if not utils.ValidateRpcIPAddr(self.dnsserver, ProxySpec.DNSServerIP):
             return False
         if ProxySpec.MTU != self.interfacemtu:
+            return False
+        return True
+
+    def ValidateYamlSpec(self, spec):
+        if utils.GetYamlSpecAttr(spec) != self.GetKey():
             return False
         return True
 
@@ -84,17 +93,11 @@ class DhcpProxyObjectClient(base.ConfigClientBase):
         super().__init__(api.ObjectTypes.DHCP_PROXY, Resmgr.MAX_DHCP_PROXY)
         return
 
+    def IsGrpcSpecMatching(self, spec):
+        return spec.ProxySpec.ServerIP.Af != 0
+
     def GetDhcpProxyObject(self, node, dhcppolicyid=1):
         return self.GetObjectByKey(node, dhcppolicyid)
-
-    def IsReadSupported(self):
-        if utils.IsNetAgentMode():
-            return True
-        return False
-
-    def PdsctlRead(self, node):
-        # pdsctl show not supported for dhcp policy yet
-        return True
 
     def GenerateObjects(self, node, parent, topospec):
         def __add_dhcp_proxy_config(dhcpspec):
@@ -112,5 +115,8 @@ class DhcpProxyObjectClient(base.ConfigClientBase):
         ResmgrClient[node].CreateDHCPProxyAllocator()
 
         return
+
+    def GetPdsctlObjectName(self):
+        return "dhcp proxy"
 
 client = DhcpProxyObjectClient()

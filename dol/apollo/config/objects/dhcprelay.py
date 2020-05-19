@@ -2,6 +2,7 @@
 import ipaddress
 import json
 import copy
+import pdb
 
 from infra.common.logging import logger
 
@@ -24,9 +25,8 @@ class DhcpRelayObject(base.ConfigObjectBase):
         self.UUID = utils.PdsUuid(self.Id, self.ObjType)
         ########## PUBLIC ATTRIBUTES OF DHCPRELAY CONFIG OBJECT ##############
         self.Vpc = vpc
-        for dhcpobj in dhcprelaySpec:
-            self.ServerIps.append(ipaddress.ip_address(dhcpobj.serverip))
-            self.AgentIps.append(ipaddress.ip_address(dhcpobj.agentip))
+        self.ServerIps.append(ipaddress.ip_address(dhcprelaySpec.serverip))
+        self.AgentIps.append(ipaddress.ip_address(dhcprelaySpec.agentip))
         ########## PRIVATE ATTRIBUTES OF DHCPRELAY CONFIG OBJECT #############
         self.Show()
         return
@@ -126,8 +126,11 @@ class DhcpRelayObject(base.ConfigObjectBase):
         if relaySpec.VPCId != utils.PdsUuid.GetUUIDfromId(self.Vpc, api.ObjectTypes.VPC):
             return False
         for i in range(len(self.ServerIps)):
-            if relaySpec.ServerIP == self.ServerIp[i] and relaySpec.AgentIP == self.AgentIps[i]:
-                return True
+            if not utils.ValidateRpcIPAddr(self.ServerIps[i], relaySpec.ServerIP):
+                continue
+            if not utils.ValidateRpcIPAddr(self.AgentIps[i], relaySpec.AgentIP):
+                continue
+            return True
         return False
 
     def ValidateYamlSpec(self, spec):
@@ -144,22 +147,12 @@ class DhcpRelayObjectClient(base.ConfigClientBase):
         #TODO: Fix flow.py for sending dhcprelayid
         return self.GetObjectByKey(node, dhcprelayid)
 
-    def PdsctlRead(self, node):
-        # pdsctl show not supported for dhcp policy yet
-        return True
-
-    def GrpcRead(self, node):
-        # grpc read not supported for dhcp policy yet
-        return True
-
-    def IsReadSupported(self):
-        if utils.IsNetAgentMode():
-            return True
-        return False
+    def IsGrpcSpecMatching(self, spec):
+        return len(spec.RelaySpec.VPCId) != 0
 
     def GenerateObjects(self, node, vpcid, topospec=None):
-        def __add_dhcp_relay_config(node, dhcprelaySpec):
-            obj = DhcpRelayObject(node, vpcid, dhcprelaySpec)
+        def __add_dhcp_relay_config(node, dhcpobj):
+            obj = DhcpRelayObject(node, vpcid, dhcpobj)
             self.Objs[node].update({obj.Id: obj})
 
         dhcprelaySpec = None
@@ -177,9 +170,14 @@ class DhcpRelayObjectClient(base.ConfigClientBase):
             else:
                 return
 
-        __add_dhcp_relay_config(node, dhcprelaySpec)
+        for dhcpobj in dhcprelaySpec:
+            __add_dhcp_relay_config(node, dhcpobj)
+
         EzAccessStoreClient[node].SetDhcpRelayObjects(self.Objects(node))
         ResmgrClient[node].CreateDHCPRelayAllocator()
         return
+
+    def GetPdsctlObjectName(self):
+        return "dhcp relay"
 
 client = DhcpRelayObjectClient()

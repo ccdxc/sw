@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 
+import pdb
 import copy
 import inspect
 import random
@@ -434,6 +435,9 @@ class ConfigClientBase(base.ConfigClientBase):
     def GetObjectType(self):
         return self.ObjType
 
+    def GetPdsctlObjectName(self):
+        return self.ObjType.name.lower()
+
     def ShowObjects(self, node):
         for obj in self.Objects(node):
             obj.Show()
@@ -450,6 +454,9 @@ class ConfigClientBase(base.ConfigClientBase):
         grpcmsg = self.__get_GrpcMsg(node, api.ApiOps.GET)
         return grpcmsg
 
+    def IsGrpcSpecMatching(self, spec):
+        return True
+
     def ValidateGrpcRead(self, node, getResp):
         if utils.IsDryRun(): return True
         numObjs = 0
@@ -460,6 +467,8 @@ class ConfigClientBase(base.ConfigClientBase):
             #TODO handle singleton object
             resps = obj.Response
             for resp in resps:
+                if not self.IsGrpcSpecMatching(resp.Spec):
+                    continue
                 numObjs += 1
                 key = self.GetKeyfromSpec(resp.Spec)
                 cfgObj = self.GetObjectByKey(node, key)
@@ -510,7 +519,7 @@ class ConfigClientBase(base.ConfigClientBase):
             import apollo.test.utils.pdsctl as pdsctl
         else:
             import iota.test.apulu.utils.pdsctl as pdsctl
-        ret, op = pdsctl.GetObjects(node, self.ObjType)
+        ret, op = pdsctl.GetObjects(node, self.GetPdsctlObjectName())
         if not self.ValidatePdsctlRead(node, ret, op):
             logger.critical("Object validation failed for ", self.ObjType, ret, op)
             return False

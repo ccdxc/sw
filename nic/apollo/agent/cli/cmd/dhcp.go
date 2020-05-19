@@ -106,6 +106,9 @@ func dhcpRelayShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Print DHCP Policy
 	if cmd != nil && cmd.Flags().Changed("yaml") {
 		for _, resp := range respMsg.Response {
+			if resp.GetSpec().GetRelaySpec() == nil {
+				continue;
+			}
 			respType := reflect.ValueOf(resp)
 			b, _ := yaml.Marshal(respType.Interface())
 			fmt.Println(string(b))
@@ -115,10 +118,13 @@ func dhcpRelayShowCmdHandler(cmd *cobra.Command, args []string) {
 		printDHCPRelaySummary(len(respMsg.Response))
 	} else {
 		printDHCPRelayHeader()
+		count := 0
 		for _, resp := range respMsg.Response {
-			printDHCPRelay(resp);
+			if (printDHCPRelay(resp)) {
+				count++
+			}
 		}
-		printDHCPRelaySummary(len(respMsg.Response))
+		printDHCPRelaySummary(count)
 	}
 }
 func dhcpProxyShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -165,6 +171,9 @@ func dhcpProxyShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Print DHCP Policy
 	if cmd != nil && cmd.Flags().Changed("yaml") {
 		for _, resp := range respMsg.Response {
+			if resp.GetSpec().GetProxySpec() == nil {
+				continue;
+			}
 			respType := reflect.ValueOf(resp)
 			b, _ := yaml.Marshal(respType.Interface())
 			fmt.Println(string(b))
@@ -174,10 +183,13 @@ func dhcpProxyShowCmdHandler(cmd *cobra.Command, args []string) {
 		printDHCPProxySummary(len(respMsg.Response))
 	} else {
 		printDHCPProxyHeader()
+		count := 0
 		for _, resp := range respMsg.Response {
-			printDHCPProxy(resp)
+			if (printDHCPProxy(resp)) {
+				count++
+			}
 		}
-		printDHCPProxySummary(len(respMsg.Response))
+		printDHCPProxySummary(count)
 	}
 }
 
@@ -186,44 +198,45 @@ func printDHCPProxySummary(count int) {
 }
 
 func printDHCPProxyHeader() {
-	hdrline := strings.Repeat("-", 331)
+	hdrline := strings.Repeat("-", 250)
 	fmt.Println(hdrline)
-	fmt.Printf("%-40s%-45s%-45s%-45s%-130s%-16s%-10s\n",
+	fmt.Printf("%-40s%-20s%-20s%-20s%-10s%-10s%-130s\n",
 		"ID", "Gateway IP", "DNS Server IP", "NTP Server IP",
-		"Domain Name", "Lease", "MTU")
-	fmt.Printf("%-40s%-45s%-45s%-45s%-130s%-16s%-10s\n",
-		"", "", "", "", "", "Timeout(sec.)", "MTU")
+		"Lease", "MTU", "Domain Name")
+	fmt.Printf("%-40s%-20s%-20s%-20s%-10s%-10s%-130s\n",
+		"", "", "", "", "(secs)", "", "")
 	fmt.Println(hdrline)
 }
 
-func printDHCPProxy(dhcp *pds.DHCPPolicy) {
+func printDHCPProxy(dhcp *pds.DHCPPolicy) bool {
 
 	if dhcp == nil {
 		fmt.Printf("-\n")
-		return
+		return false
 	}
 
 	spec := dhcp.GetSpec()
 	if spec == nil {
 		fmt.Printf("-\n")
-		return
+		return false
 	}
 
-	outStr := fmt.Sprintf("%-40s", "ID", uuid.FromBytesOrNil(spec.GetId()).String())
+	outStr := fmt.Sprintf("%-40s", uuid.FromBytesOrNil(spec.GetId()).String())
 
 	switch spec.GetRelayOrProxy().(type) {
 	case *pds.DHCPPolicySpec_ProxySpec:
 		proxySpec := spec.GetProxySpec()
-		outStr += fmt.Sprintf("%-45s", utils.IPAddrToStr(proxySpec.GetGatewayIP()))
-		outStr += fmt.Sprintf("%-45s", utils.IPAddrToStr(proxySpec.GetDNSServerIP()))
-		outStr += fmt.Sprintf("%-45s", utils.IPAddrToStr(proxySpec.GetNTPServerIP()))
-		outStr += fmt.Sprintf("%-130s", proxySpec.GetDomainName())
-		outStr += fmt.Sprintf("%-20d", proxySpec.GetLeaseTimeout())
+		outStr += fmt.Sprintf("%-20s", utils.IPAddrToStr(proxySpec.GetGatewayIP()))
+		outStr += fmt.Sprintf("%-20s", utils.IPAddrToStr(proxySpec.GetDNSServerIP()))
+		outStr += fmt.Sprintf("%-20s", utils.IPAddrToStr(proxySpec.GetNTPServerIP()))
+		outStr += fmt.Sprintf("%-10d", proxySpec.GetLeaseTimeout())
 		outStr += fmt.Sprintf("%-10d", (proxySpec.GetMTU()))
+		outStr += fmt.Sprintf("%-130s", proxySpec.GetDomainName())
 	default:
-		return
+		return false
 	}
 	fmt.Println(outStr)
+	return true
 }
 
 func printDHCPRelaySummary(count int) {

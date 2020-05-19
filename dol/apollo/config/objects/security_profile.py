@@ -216,4 +216,7 @@ class SecurityProfileObjectClient(base.ConfigClientBase):
             EzAccessStoreClient[node].SetSecurityProfile(obj)
         return
 
+    def GetPdsctlObjectName(self):
+        return "security-profile"
+
 client = SecurityProfileObjectClient()
