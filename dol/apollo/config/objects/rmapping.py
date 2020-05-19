@@ -64,11 +64,11 @@ class RemoteMappingObject(base.MappingObjectBase):
                 self.HasDefaultRoute = self.SUBNET.V4RouteTable.HasDefaultRoute
 
         # Handle tags generation
-        tag_enabled = spec.get("tag", False)
-        tag_type    = spec.get("tag_type", "overlapping")
-        no_of_tags  = spec.get("no_of_tags", 5)
-        tags        = spec.get("tags", [])
-        self.GenerateTags(tag_enabled, tag_type, no_of_tags, tags)
+        if spec.get("tag", False):
+            tag_type    = spec.get("tag_type", "overlapping")
+            no_of_tags  = spec.get("no_of_tags", 5)
+            tags        = spec.get("tags", [])
+            self.GenerateTags(tag_type, no_of_tags, tags)
 
         # Provider IP can be v4 or v6
         self.ProviderIPAddr, self.TunFamily = EzAccessStoreClient[node].GetProviderIPAddr(count)
@@ -153,7 +153,7 @@ class RemoteMappingObject(base.MappingObjectBase):
         if spec.MACAddr != self.MACAddr.getnum():
             return False
         if not utils.ValidateTagsList(self.Tags, spec.Tags):
-            logger.error(f"Failed to validate the Tags for {self}")
+            return False
         return True
 
     def GetDependees(self, node):

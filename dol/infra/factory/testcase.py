@@ -152,6 +152,7 @@ class TestCase(objects.FrameworkObject):
     def _setup_config(self, root):
         self.__root = root
         if root:
+            self.config.tc = self
             root.SetupTestcaseConfig(self.config)
         return
     

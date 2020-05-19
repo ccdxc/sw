@@ -19,32 +19,62 @@ modules:
 
     - module:
         name    : SRC_TAG_ADJCENT_FIRST
+        ignore  : True
         spec    : rfc_ingress.testspec
         args    :
             - prefix : first
             - sport  : first
             - dport  : first
         iterate :
-            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent_src_tag
+            - policy    : filter://AddrFamily=IPV4,OverlapType=adjacent_src_tag
+              ruleindex : 0
+            - policy    : filter://AddrFamily=IPV4,OverlapType=adjacent_src_tag
+              ruleindex : 1
+            - policy    : filter://AddrFamily=IPV4,OverlapType=adjacent_src_tag
+              ruleindex : 2
+            - policy    : filter://AddrFamily=IPV4,OverlapType=adjacent_src_tag
+              ruleindex : 3
+            - policy    : filter://AddrFamily=IPV4,OverlapType=adjacent_src_tag
+              ruleindex : 4
 
     - module:
         name    : SRC_TAG_ADJCENT_LAST
+        ignore  : True
         spec    : rfc_ingress.testspec
         args    :
             - prefix : last
             - sport  : last
             - dport  : last
         iterate :
-            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent_src_tag
+            - policy    : filter://AddrFamily=IPV4,OverlapType=adjacent_src_tag
+              ruleindex : 0
+            - policy    : filter://AddrFamily=IPV4,OverlapType=adjacent_src_tag
+              ruleindex : 1
+            - policy    : filter://AddrFamily=IPV4,OverlapType=adjacent_src_tag
+              ruleindex : 2
+            - policy    : filter://AddrFamily=IPV4,OverlapType=adjacent_src_tag
+              ruleindex : 3
+            - policy    : filter://AddrFamily=IPV4,OverlapType=adjacent_src_tag
+              ruleindex : 4
 
     - module:
         name    : SRC_TAG_ADJCENT_LEFT
+        ignore  : True
         spec    : rfc_ingress.testspec
         args    :
             - sport  : left
             - dport  : left
         iterate :
-            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent_src_tag
+            - policy    : filter://AddrFamily=IPV4,OverlapType=adjacent_src_tag
+              ruleindex : 0
+            - policy    : filter://AddrFamily=IPV4,OverlapType=adjacent_src_tag
+              ruleindex : 1
+            - policy    : filter://AddrFamily=IPV4,OverlapType=adjacent_src_tag
+              ruleindex : 2
+            - policy    : filter://AddrFamily=IPV4,OverlapType=adjacent_src_tag
+              ruleindex : 3
+            - policy    : filter://AddrFamily=IPV4,OverlapType=adjacent_src_tag
+              ruleindex : 4
 
     - module:
         name    : SRC_TAG_ADJCENT_RIGHT
@@ -54,7 +84,16 @@ modules:
             - sport  : right
             - dport  : right
         iterate :
-            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent_src_tag
+            - policy    : filter://AddrFamily=IPV4,OverlapType=adjacent_src_tag
+              ruleindex : 0
+            - policy    : filter://AddrFamily=IPV4,OverlapType=adjacent_src_tag
+              ruleindex : 1
+            - policy    : filter://AddrFamily=IPV4,OverlapType=adjacent_src_tag
+              ruleindex : 2
+            - policy    : filter://AddrFamily=IPV4,OverlapType=adjacent_src_tag
+              ruleindex : 3
+            - policy    : filter://AddrFamily=IPV4,OverlapType=adjacent_src_tag
+              ruleindex : 4
 
     - module:
         name    : DST_TAG_SPECIFIC
@@ -65,39 +104,79 @@ modules:
 
     - module:
         name    : DST_TAG_ADJCENT_FIRST
+        ignore  : True
         spec    : rfc_ingress.testspec
         args    :
             - prefix : first
             - sport  : first
             - dport  : first
         iterate :
-            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent_dst_tag
+            - policy    : filter://AddrFamily=IPV4,OverlapType=adjacent_dst_tag
+              ruleindex : 0
+            - policy    : filter://AddrFamily=IPV4,OverlapType=adjacent_dst_tag
+              ruleindex : 1
+            - policy    : filter://AddrFamily=IPV4,OverlapType=adjacent_dst_tag
+              ruleindex : 2
+            - policy    : filter://AddrFamily=IPV4,OverlapType=adjacent_dst_tag
+              ruleindex : 3
+            - policy    : filter://AddrFamily=IPV4,OverlapType=adjacent_dst_tag
+              ruleindex : 4
 
     - module:
         name    : DST_TAG_ADJCENT_LAST
+        ignore  : True
         spec    : rfc_ingress.testspec
         args    :
             - prefix : last
             - sport  : last
             - dport  : last
         iterate :
-            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent_dst_tag
+            - policy    : filter://AddrFamily=IPV4,OverlapType=adjacent_dst_tag
+              ruleindex : 0
+            - policy    : filter://AddrFamily=IPV4,OverlapType=adjacent_dst_tag
+              ruleindex : 1
+            - policy    : filter://AddrFamily=IPV4,OverlapType=adjacent_dst_tag
+              ruleindex : 2
+            - policy    : filter://AddrFamily=IPV4,OverlapType=adjacent_dst_tag
+              ruleindex : 3
+            - policy    : filter://AddrFamily=IPV4,OverlapType=adjacent_dst_tag
+              ruleindex : 4
 
     - module:
         name    : DST_TAG_ADJCENT_LEFT
+        ignore  : True
         spec    : rfc_ingress.testspec
         args    :
             - sport  : left
             - dport  : left
         iterate :
-            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent_dst_tag
+            - policy    : filter://AddrFamily=IPV4,OverlapType=adjacent_dst_tag
+              ruleindex : 0
+            - policy    : filter://AddrFamily=IPV4,OverlapType=adjacent_dst_tag
+              ruleindex : 1
+            - policy    : filter://AddrFamily=IPV4,OverlapType=adjacent_dst_tag
+              ruleindex : 2
+            - policy    : filter://AddrFamily=IPV4,OverlapType=adjacent_dst_tag
+              ruleindex : 3
+            - policy    : filter://AddrFamily=IPV4,OverlapType=adjacent_dst_tag
+              ruleindex : 4
 
     - module:
         name    : DST_TAG_ADJCENT_RIGHT
+        ignore  : True
         spec    : rfc_ingress.testspec
         args    :
             - sport  : right
             - dport  : right
         iterate :
-            - policy : filter://AddrFamily=IPV4,OverlapType=adjacent_dst_tag
+            - policy    : filter://AddrFamily=IPV4,OverlapType=adjacent_dst_tag
+              ruleindex : 0
+            - policy    : filter://AddrFamily=IPV4,OverlapType=adjacent_dst_tag
+              ruleindex : 1
+            - policy    : filter://AddrFamily=IPV4,OverlapType=adjacent_dst_tag
+              ruleindex : 2
+            - policy    : filter://AddrFamily=IPV4,OverlapType=adjacent_dst_tag
+              ruleindex : 3
+            - policy    : filter://AddrFamily=IPV4,OverlapType=adjacent_dst_tag
+              ruleindex : 4
 

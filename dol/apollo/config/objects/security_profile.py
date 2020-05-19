@@ -160,7 +160,9 @@ class SecurityProfileObject(base.ConfigObjectBase):
             # Trigger the update on policy so that correct default FW action
             # is inherited from security profile.
             for policy in PolicyClient.Objects(self.Node):
-                assert(utils.UpdateObject(policy))
+                if not utils.UpdateObject(policy):
+                    logger.error(f"Failed to update the {policy}")
+                    return False
         return True
 
 

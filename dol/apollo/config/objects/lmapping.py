@@ -65,12 +65,14 @@ class LocalMappingObject(base.MappingObjectBase):
             if parent.SUBNET.V4RouteTable:
                 self.HasDefaultRoute = parent.SUBNET.V4RouteTable.HasDefaultRoute
             self.SvcIPAddr, self.SvcPort = EzAccessStoreClient[node].GetSvcMapping(utils.IP_VERSION_4)
+
         # Handle tags generation
-        tag_enabled = getattr(spec, "tag", False)
-        tag_type    = getattr(spec, "tag_type", "overlapping")
-        no_of_tags  = getattr(spec, "no_of_tags", 5)
-        tags        = getattr(spec, "tags", [])
-        self.GenerateTags(tag_enabled, tag_type, no_of_tags, tags)
+        if getattr(spec, "tag", False):
+            tag_type    = getattr(spec, "tag_type", "overlapping")
+            no_of_tags  = getattr(spec, "no_of_tags", 5)
+            tags        = getattr(spec, "tags", [])
+            self.GenerateTags(tag_type, no_of_tags, tags)
+
         self.Label = 'NETWORKING'
         self.FlType = "MAPPING"
         self.IP = str(self.IPAddr) # for testspec

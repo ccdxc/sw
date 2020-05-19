@@ -540,14 +540,17 @@ class PolicyObject(base.ConfigObjectBase):
                 #return False
         return True
 
-    def __get_random_rule(self):
+    def __get_random_rule(self, index=None):
         rules = self.rules
         numrules = len(rules)
         if numrules == 0:
             return None
-        # TODO: Disabling randomness for debug - remove once rfc job is stable
-        # return random.choice(rules)
-        return rules[0]
+        if index == None:
+            # TODO: Disabling randomness for debug - remove once rfc job is stable
+            # return random.choice(rules)
+            return rules[0]
+        else:
+            return rules[index] if index < numrules else None
 
     def __get_non_default_random_rule(self):
         """
@@ -594,13 +597,14 @@ class PolicyObject(base.ConfigObjectBase):
         obj.switchport = EzAccessStoreClient[self.Node].GetSwitchPort()
         obj.devicecfg = EzAccessStoreClient[self.Node].GetDevice()
         obj.securityprofile = EzAccessStoreClient[self.Node].GetSecurityProfile()
-
+        iterelem = obj.tc.module.iterator.Get()
+        rule_index = getattr(iterelem, "ruleindex", None)
         # select a random rule for this testcase
         if utils.IsPipelineApollo():
             # TODO: move apollo also to random rule
             obj.tc_rule = self.__get_non_default_random_rule()
         else:
-            obj.tc_rule = self.__get_random_rule()
+            obj.tc_rule = self.__get_random_rule(rule_index)
         #set tag dbs for apulu pipeline
         if utils.IsPipelineApulu():
             obj.v4ltags = LmappingClient.GetLmappingV4Tags(self.Node)
