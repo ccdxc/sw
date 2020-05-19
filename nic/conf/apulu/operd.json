@@ -32,5 +32,15 @@
             "location": "/nic/lib/libalerts_operd_con.so"
         },
         "input": ["alerts"]
+    },
+    {
+        "output": {
+            "type": "file",
+            "location": "/obfl/upgrademgr.log",
+            "max-size": "1",
+            "max-files": "5",
+            "level": "5"
+        },
+        "input": ["upgradelog"]
     }
 ]
