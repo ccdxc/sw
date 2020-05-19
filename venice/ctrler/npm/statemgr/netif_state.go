@@ -140,6 +140,10 @@ func (sm *Statemgr) OnInterfaceCreateReq(nodeID string, agentNetif *netproto.Int
 	netif := convertNetifObj(nodeID, agentNetif)
 
 	agentNetif.Status.DSC = nodeID
+
+	agentNetif.Spec.Network = ""
+	agentNetif.Spec.VrfName = ""
+
 	// store it in local DB
 	sm.mbus.AddObject(agentNetif)
 
