@@ -179,7 +179,11 @@ local_mapping_feeder::spec_compare(const pds_local_mapping_spec_t *spec) const {
 bool
 local_mapping_feeder::status_compare(const pds_mapping_status_t *status1,
                                      const pds_mapping_status_t *status2) const {
-    return (!memcmp(status1, status2, sizeof(pds_mapping_status_t)));
+    if (status1->public_ip_nat_idx == status2->public_ip_nat_idx &&
+        status1->overlay_ip_nat_idx == status2->overlay_ip_nat_idx) {
+        return true;
+    }
+    return false;
 }
 
 void

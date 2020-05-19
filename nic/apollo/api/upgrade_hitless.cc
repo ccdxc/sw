@@ -175,12 +175,14 @@ upg_ev_backup (upg_ev_params_t *params)
             ret = backup_nexthop_group(&info);
             // update total number of nh group objs stashed
             hdr[id].obj_count = info.backup.stashed_obj_count;
+            PDS_TRACE_INFO("Stashed %u nexthop group objs", hdr[id].obj_count);
             break;
 
         case OBJ_ID_MAPPING:
             ret = backup_mapping(&info);
             // update total number of mapping objs stashed
             hdr[id].obj_count = info.backup.stashed_obj_count;
+            PDS_TRACE_INFO("Stashed %u mapping objs", hdr[id].obj_count);
             break;
 
         default:
@@ -258,6 +260,7 @@ upg_ev_restore (upg_ev_params_t *params)
         if (!obj_count) {
             continue;
         }
+        PDS_TRACE_INFO("Started restoring %u objs for id %u", obj_count, id);
         memset(&info, 0, sizeof(upg_obj_info_t));
         // initialize the mem reference for each unique obj
         mem = (char *)hdr + hdr[id].offset;
@@ -271,6 +274,8 @@ upg_ev_restore (upg_ev_params_t *params)
             }
             mem += info.size;
         }   // end while
+        PDS_TRACE_INFO("Finished restoring %u objs for id %u",
+                       hdr[id].obj_count, id);
     }   // end for
     return ret;
 }

@@ -185,12 +185,12 @@ export VPP_PLUGINS_INCS    := ${SDK_THIRD_PARTY_VPP_INCLUDES}               \
 # ==========================================================================
 #                           Apollo GTEST common LDLIBS
 # ==========================================================================
-export apollo_GTEST_COMMON_LDLIBS := ${SDK_THIRDPARTY_CAPRI_LDLIBS} ${PDS_UPG_LDLIBS}
+export apollo_GTEST_COMMON_LDLIBS := ${SDK_THIRDPARTY_CAPRI_LDLIBS}
 
 # ==========================================================================
 #                           ARTEMIS GTEST common LDLIBS
 # ==========================================================================
-export artemis_GTEST_COMMON_LDLIBS := ${SDK_THIRDPARTY_CAPRI_LDLIBS} ${PDS_UPG_LDLIBS}
+export artemis_GTEST_COMMON_LDLIBS := ${SDK_THIRDPARTY_CAPRI_LDLIBS}
 
 # ==========================================================================
 #                           APULU GTEST common LDLIBS

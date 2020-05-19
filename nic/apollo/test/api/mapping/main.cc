@@ -392,16 +392,6 @@ TEST_F(mapping_test, local_mapping_workflow_neg_8) {
     workflow_neg_8<local_mapping_feeder>(feeders[0], feeders[1]);
 }
 
-/// \brief Local mapping WF_U_1
-/// \ref WF_U_1
-TEST_F(mapping_test, local_mapping_workflow_u1) {
-    local_mapping_feeder feeders[1];
-
-    create_local_mapping_feeders(feeders, 1, k_max_vnic, PDS_MAX_VNIC_IP,
-                                 PDS_MAX_TAGS_PER_MAPPING, true);
-    workflow_u1<local_mapping_feeder>(feeders[0]);
-}
-
 //---------------------------------------------------------------------
 // Non templatized test cases
 //---------------------------------------------------------------------
