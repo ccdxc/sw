@@ -193,11 +193,8 @@ pdsa_dhcp_subnet_cfg (const pds_cfg_msg_t *msg, bool del)
 void
 pds_dhcp_relay_cfg_init (void) {
     // initialize callbacks for cfg/oper messages received from pds-agent
-    pds_cfg_register_callbacks(OBJ_ID_DHCP_POLICY,
-                               pdsa_dhcp_policy_cfg_set,
-                               pdsa_dhcp_policy_cfg_del,
-                               NULL);
+    pds_cfg_register_set_callback(OBJ_ID_DHCP_POLICY, pdsa_dhcp_policy_cfg_set);
+    pds_cfg_register_del_callback(OBJ_ID_DHCP_POLICY, pdsa_dhcp_policy_cfg_del);
 
-    pds_cfg_register_notify_callbacks(OBJ_ID_SUBNET,
-                                      pdsa_dhcp_subnet_cfg);
+    pds_cfg_register_notify_callback(OBJ_ID_SUBNET, pdsa_dhcp_subnet_cfg);
 }

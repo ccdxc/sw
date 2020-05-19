@@ -196,11 +196,10 @@ pds_nat_cfg_get(void *info) {
 //
 void
 pds_nat_cfg_init(void) {
-    pds_cfg_register_callbacks(OBJ_ID_NAT_PORT_BLOCK,
-                               pds_nat_cfg_set,
-                               pds_nat_cfg_del,
-                               pds_nat_cfg_act,
-                               pds_nat_cfg_get);
+    pds_cfg_register_set_callback(OBJ_ID_NAT_PORT_BLOCK, pds_nat_cfg_set);
+    pds_cfg_register_del_callback(OBJ_ID_NAT_PORT_BLOCK, pds_nat_cfg_del);
+    pds_cfg_register_act_callback(OBJ_ID_NAT_PORT_BLOCK, pds_nat_cfg_act);
+    pds_cfg_register_get_callback(OBJ_ID_NAT_PORT_BLOCK, pds_nat_cfg_get);
 }
 
 } // extern "C"

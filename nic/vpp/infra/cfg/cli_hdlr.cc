@@ -13,16 +13,16 @@ extern "C" {
 int
 impl_db_dump (char *obj)
 {
-    vpp_config_batch config_batch = vpp_config_batch::get();
+    vpp_config_cb_registry cfg_registry = vpp_config_cb_registry::get();
 
     if (strcmp(obj, "vpc") == 0) {
-        config_batch.dump(OBJ_ID_VPC);
+        cfg_registry.dump(OBJ_ID_VPC);
     } else if (strcmp(obj, "subnet") == 0) {
-        config_batch.dump(OBJ_ID_SUBNET);
+        cfg_registry.dump(OBJ_ID_SUBNET);
     } else if (strcmp(obj, "device") == 0) {
-        config_batch.dump(OBJ_ID_DEVICE);
+        cfg_registry.dump(OBJ_ID_DEVICE);
     } else if (strcmp(obj, "vnic") == 0) {
-        config_batch.dump(OBJ_ID_VNIC);
+        cfg_registry.dump(OBJ_ID_VNIC);
     }
 
     return 0;

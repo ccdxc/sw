@@ -76,7 +76,7 @@ pdsa_flow_cfg_set (const pds_cfg_msg_t *msg)
 {
     uint32_t new_flow_idle_timeouts[PDS_FLOW_PROTO_END];
     uint32_t new_flow_drop_timeouts[PDS_FLOW_PROTO_END];
-    auto sp_msg = &msg->security_profile;
+    const pds_security_profile_cfg_msg_t *sp_msg = &msg->security_profile;
 
     new_flow_idle_timeouts[PDS_FLOW_PROTO_TCP] =
                                         sp_msg->spec.tcp_idle_timeout;
@@ -142,10 +142,10 @@ pdsa_flow_hdlr_init (void)
     // initialize callbacks for cfg/oper messages received from pds-agent
 
     if (pds_flow_age_supported()) {
-        pds_cfg_register_callbacks(OBJ_ID_SECURITY_PROFILE,
-                                   pdsa_flow_cfg_set, 
-                                   pdsa_flow_cfg_clear,
-                                   NULL);
+        pds_cfg_register_set_callback(OBJ_ID_SECURITY_PROFILE,
+                                   pdsa_flow_cfg_set);
+        pds_cfg_register_del_callback(OBJ_ID_SECURITY_PROFILE,
+                                   pdsa_flow_cfg_clear);
     }
     pds_ipc_register_cmd_callbacks(PDS_CMD_MSG_FLOW_CLEAR,
                                    pdsa_flow_clear_cmd);

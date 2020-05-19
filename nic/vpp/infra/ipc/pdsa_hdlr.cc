@@ -110,7 +110,7 @@ static void
 pds_ipc_msglist_cb (sdk::ipc::ipc_msg_ptr ipc_msg, const void *ctx) {
     sdk::sdk_ret_t  ret;
     pds_msg_list_t *msglist = NULL;
-    auto config_batch = vpp_config_batch::get();
+    vpp_config_batch &config_batch = vpp_config_batch::get();
 
     if (ipc_msg->length() < sizeof(pds_msg_list_t)) {
         ret = sdk::SDK_RET_INVALID_ARG;
@@ -156,8 +156,6 @@ pds_ipc_cmd_msg_cb (sdk::ipc::ipc_msg_ptr ipc_msg, const void *ctx) {
     pds_cmd_msg_t *msg;
     pds_cmd_rsp_t response;
     sdk::sdk_ret_t retcode = sdk::SDK_RET_OK;
-    auto config_data = vpp_config_data::get();
-    auto config_batch = vpp_config_batch::get();
     std::map<int, pds_cmd_cb_t>::iterator cb_fun_it;
 
     g_type_count[PDS_MSG_TYPE_CMD]++;
@@ -202,8 +200,8 @@ pds_ipc_cfg_get_cb (sdk::ipc::ipc_msg_ptr ipc_msg, const void *ctx)
     pds_cfg_get_req_t *req;
     pds_cfg_get_rsp_t reply;
     sdk::sdk_ret_t retcode = sdk::SDK_RET_OK;
-    auto config_data = vpp_config_data::get();
-    auto config_batch = vpp_config_batch::get();
+    vpp_config_data &config_data = vpp_config_data::get();
+    vpp_config_cb_registry &config_registry = vpp_config_cb_registry::get();
 
     g_type_count[PDS_MSG_TYPE_CFG_OBJ_GET]++;
 
@@ -225,7 +223,7 @@ pds_ipc_cfg_get_cb (sdk::ipc::ipc_msg_ptr ipc_msg, const void *ctx)
     config_data.get(req->key, reply);
 
     // read in status/stats from node plugin
-    config_batch.read(reply);
+    config_registry.read(reply);
 
     ipc_log_notice("Execution success of cfg get msg [count:%u]",
                    g_type_count[PDS_MSG_TYPE_CFG_OBJ_GET]);
@@ -244,15 +242,15 @@ static void
 pds_walk_cb (pds_cfg_msg_t *msg, void *cb_msg)
 {
     pds_cfg_get_all_rsp_t *response = (pds_cfg_get_all_rsp_t *)cb_msg;
-    auto config_batch = vpp_config_batch::get();
+    vpp_config_cb_registry &cb_registry = vpp_config_cb_registry::get();
 
     switch(msg->obj_id) {
 #define _(obj, data)                                                   \
     case OBJ_ID_##obj:                                                 \
         memcpy(&response->data[response->count].spec, &msg->data.spec, \
                sizeof(pds_##data##_spec_t));                           \
-        config_batch.read(msg->obj_id,                                 \
-                          (void *)&response->data[response->count]);   \
+        cb_registry.read(msg->obj_id,                                  \
+                         (void *)&response->data[response->count]);    \
         break;
 
     _(DHCP_POLICY, dhcp_policy)

@@ -9,9 +9,7 @@
 // static data
 vpp_config_data vpp_config_data::singleton;
 vpp_config_batch vpp_config_batch::singleton;
-std::list<object_cbs_t> vpp_config_batch::object_cbs;
-std::list<object_notify_cbs_t> vpp_config_batch::object_notify_cbs;
-
+vpp_config_cb_registry vpp_config_cb_registry::singleton;
 
 // vpp_config_data member functions
 
@@ -411,43 +409,6 @@ vpp_config_batch::clear (void) {
 }
 
 void
-vpp_config_batch::register_cbs (obj_id_t id,
-                               pds_cfg_set_cb set_cb_fn,
-                               pds_cfg_del_cb del_cb_fn,
-                               pds_cfg_act_cb act_cb_fn,
-                               pds_cfg_get_cb get_cb_fn,
-                               pds_cfg_dump_cb dump_cb_fn) {
-    object_cbs_t cbs;
-
-    cbs.obj_id = id;
-    cbs.set_cb = set_cb_fn;
-    cbs.del_cb = del_cb_fn;
-    cbs.act_cb = act_cb_fn;
-    cbs.get_cb = get_cb_fn;
-    cbs.dump_cb = dump_cb_fn;
-    vpp_config_batch::object_cbs.push_back(cbs);
-}
-
-void
-vpp_config_batch::register_notify_cbs (obj_id_t id,
-                     pds_cfg_notify_cb notify_cb_fn) {
-    object_notify_cbs_t cbs;
-
-    for (auto cit = vpp_config_batch::object_notify_cbs.begin();
-         cit != vpp_config_batch::object_notify_cbs.end(); cit++) {
-        if (cit->obj_id != id) {
-            continue;
-        }
-        cit->notify_cbs.push_back(notify_cb_fn);
-        return;
-    }
-    cbs.obj_id = id;
-    cbs.notify_cbs.push_back(notify_cb_fn);
-    vpp_config_batch::object_notify_cbs.push_back(cbs);
-    return;
-}
-
-void
 vpp_config_batch::publish (void) {
     vpp_config_data &vpp_config = vpp_config_data::get();
     // commit modifications to config data
@@ -547,28 +508,21 @@ vpp_config_batch::create (const pds_msg_list_t *msglist) {
 sdk::sdk_ret_t
 vpp_config_batch::commit (void) {
     auto it = batch_op.begin();
+    vpp_config_cb_registry &cb_registry = vpp_config_cb_registry::get();
     sdk::sdk_ret_t ret = sdk::SDK_RET_OK;
 
     publish();
 
     // commit changes to plugin
     for (; it != batch_op.end(); it++) {
-        for (auto cit = object_cbs.begin(); cit != object_cbs.end(); cit++) {
-            if ((*cit).obj_id != (*it).obj_id) {
-                continue;
+        if ((*it).deleted) {
+            // pass the original data in to be deleted
+            // if the original existed. no-op otherwise
+            if ((*it).original.obj_id != OBJ_ID_NONE) {
+                ret = cb_registry.del(&((*it).original));
             }
-            if ((*it).deleted) {
-                // pass the original data in to be deleted
-                // if the original existed. no-op otherwise
-                if ((*it).original.obj_id != OBJ_ID_NONE) {
-                    ret = ((*cit).del_cb)(&((*it).original));
-                }
-            } else {
-                ret = ((*cit).set_cb)(&((*it).modified));
-            }
-            if (ret != sdk::SDK_RET_OK) {
-                break;
-            }
+        } else {
+            ret = cb_registry.set(&((*it).modified));
         }
         if (ret != sdk::SDK_RET_OK) {
             break;
@@ -579,40 +533,16 @@ vpp_config_batch::commit (void) {
         assert(ret == sdk::SDK_RET_OK);
         // all good, activate the configuration
         for(it = batch_op.begin(); it != batch_op.end(); it++) {
-            for (auto cit = object_cbs.begin();
-                 cit != object_cbs.end(); cit++) {
-                if ((*cit).obj_id != (*it).obj_id) {
-                    continue;
+            // pass the original data in to be deleted
+            // if the original existed. no-op otherwise
+            if ((*it).deleted) {
+                if ((*it).original.obj_id != OBJ_ID_NONE) {
+                    cb_registry.activate(&((*it).original));
+                    cb_registry.notify(&((*it).original), true);
                 }
-                if ((*cit).act_cb == NULL) {
-                    continue;
-                }
-                // pass the original data in to be deleted
-                // if the original existed. no-op otherwise
-                if ((*it).deleted) {
-                    if ((*it).original.obj_id != OBJ_ID_NONE) {
-                        ((*cit).act_cb)(&((*it).original));
-                    }
-                } else {
-                    ((*cit).act_cb)(&((*it).modified));
-                }
-            }
-            for (auto cit = object_notify_cbs.begin();
-                 cit != object_notify_cbs.end(); cit++) {
-                if ((*cit).obj_id != (*it).obj_id) {
-                    continue;
-                }
-                std::vector<pds_cfg_notify_cb>::iterator nit;
-                for (nit = (*cit).notify_cbs.begin();
-                     nit != (*cit).notify_cbs.end(); ++nit) {
-                    if ((*it).deleted) {
-                        if ((*it).original.obj_id != OBJ_ID_NONE) {
-                            (*nit) (&((*it).original), true);
-                        }
-                    } else {
-                        (*nit)(&((*it).modified), false);
-                    }
-                }
+            } else {
+                cb_registry.activate(&((*it).modified));
+                cb_registry.notify(&((*it).modified), false);
             }
         }
         return ret;
@@ -622,38 +552,16 @@ vpp_config_batch::commit (void) {
 
     do {
         it--;
-        for (auto cit = object_cbs.begin(); cit != object_cbs.end(); cit++) {
-            if ((*cit).obj_id != (*it).obj_id) {
-                continue;
-            }
-            // not checking return code during rollback
-            if ((*it).original.obj_id == OBJ_ID_NONE) {
-                // key didn't exist originally, delete it and activate
-                ((*cit).del_cb)(&((*it).modified));
-                if ((*cit).act_cb) {
-                    ((*cit).act_cb)(&((*it).modified));
-                }
-            } else {
-                ((*cit).set_cb)(&((*it).original));
-                if ((*cit).act_cb) {
-                    ((*cit).act_cb)(&((*it).original));
-                }
-            }
-        }
-        for (auto cit = object_notify_cbs.begin();
-                cit != object_notify_cbs.end(); cit++) {
-            if ((*cit).obj_id != (*it).obj_id) {
-                continue;
-            }
-            std::vector<pds_cfg_notify_cb>::iterator nit;
-            for (nit = (*cit).notify_cbs.begin();
-                    nit != (*cit).notify_cbs.end(); ++nit) {
-                if ((*it).original.obj_id == OBJ_ID_NONE) {
-                    (*nit)(&((*it).modified), true);
-                } else {
-                    (*nit)(&((*it).original), false);
-                }
-            }
+        // not checking return code during rollback
+        if ((*it).original.obj_id == OBJ_ID_NONE) {
+            // key didn't exist originally, delete it and activate
+            cb_registry.del(&((*it).modified));
+            cb_registry.activate(&((*it).modified));
+            cb_registry.notify(&((*it).modified), true);
+        } else {
+            cb_registry.set(&((*it).original));
+            cb_registry.activate(&((*it).original));
+            cb_registry.notify(&((*it).original), false);
         }
     } while(it != batch_op.begin());
 
@@ -662,29 +570,19 @@ vpp_config_batch::commit (void) {
     return ret;
 }
 
+// call the read callback corresponding to the obj id
 sdk::sdk_ret_t
-vpp_config_batch::read (obj_id_t id, void *info) {
-    for (auto cit = object_cbs.begin(); cit != object_cbs.end(); cit++) {
-        if ((*cit).obj_id != id) {
-            continue;
-        }
+vpp_config_cb_registry::read (pds_cfg_get_rsp_t &msg) const {
+    auto cb = get_cbs.find(msg.obj_id);
 
-        if ((*cit).get_cb) {
-            (*cit).get_cb(info);
-            return sdk::SDK_RET_OK;;
-        }
+    if (cb == get_cbs.end()) {
+        return sdk::SDK_RET_OK;
     }
-    // we don't really fail even if we can't find a CB
-    return sdk::SDK_RET_OK;;
-}
 
-sdk::sdk_ret_t
-vpp_config_batch::read (pds_cfg_get_rsp_t &response)
-{
-    switch(response.obj_id) {
-#define _(obj, data)                                        \
-    case OBJ_ID_##obj:                                      \
-         return read(OBJ_ID_##obj, (void *)&response.data);
+    switch(msg.obj_id) {
+#define _(obj, data)                                \
+    case OBJ_ID_##obj:                                 \
+        return (cb->second)(&msg.data);
 
     _(DHCP_POLICY, dhcp_policy)
     _(NAT_PORT_BLOCK, nat_port_block)
@@ -698,67 +596,100 @@ vpp_config_batch::read (pds_cfg_get_rsp_t &response)
 }
 
 sdk::sdk_ret_t
-vpp_config_batch::dump (obj_id_t obj_id) {
-    for (auto cit = object_cbs.begin(); cit != object_cbs.end(); cit++) {
-        if ((*cit).obj_id != obj_id) {
-            continue;
-        }
+vpp_config_cb_registry::read (obj_id_t obj_id, void *info) const {
+    auto cb = get_cbs.find(obj_id);
 
-        if ((*cit).dump_cb) {
-            (*cit).dump_cb();
-            return sdk::SDK_RET_OK;;
-        }
+    if (cb == get_cbs.end()) {
+        return sdk::SDK_RET_OK;
     }
-    // we don't really fail even if we can't find a CB
-    return sdk::SDK_RET_OK;;
+
+    return (cb->second)(info);
 }
 
-// register callbacks from plugins for messages
-// return 0 indicates  registered successfully
-// return non-zero indicates registration fail (invalid param)
-int
-pds_cfg_register_callbacks (obj_id_t id,
-                            pds_cfg_set_cb set_cb_fn,
-                            pds_cfg_del_cb del_cb_fn,
-                            pds_cfg_act_cb act_cb_fn,
-                            pds_cfg_get_cb get_cb_fn,
-                            pds_cfg_dump_cb dump_cb_fn) {
-    if ((set_cb_fn == NULL) || (del_cb_fn == NULL)) {
-        return -1;
+// call the dump callback corresponding to the obj id
+sdk::sdk_ret_t
+vpp_config_cb_registry::dump (obj_id_t obj_id) const {
+    auto cb = dump_cbs.find(obj_id);
+
+    if (cb == dump_cbs.end()) {
+        return sdk::SDK_RET_OK;
     }
 
-    if ((id != OBJ_ID_DEVICE) &&
-        (id != OBJ_ID_VPC) &&
-        (id != OBJ_ID_VNIC) &&
-        (id != OBJ_ID_SUBNET) &&
-        (id != OBJ_ID_DHCP_POLICY) &&
-        (id != OBJ_ID_NAT_PORT_BLOCK) &&
-        (id != OBJ_ID_SECURITY_PROFILE)) {
-        return -1;
-    }
-
-    vpp_config_batch::register_cbs(id, set_cb_fn, del_cb_fn, act_cb_fn,
-                                   get_cb_fn, dump_cb_fn);
-
-    return 0;
+    return (cb->second)();
 }
 
-// register configuration notification callbacks from plugins for messages
-// return 0 indicates  registered successfully
-// return non-zero indicates registration fail (invalid param)
-int
-pds_cfg_register_notify_callbacks (obj_id_t id,
-                                   pds_cfg_notify_cb notify_cb_fn) {
-    if ((id != OBJ_ID_DEVICE) &&
-        (id != OBJ_ID_VPC) &&
-        (id != OBJ_ID_VNIC) &&
-        (id != OBJ_ID_SUBNET) &&
-        (id != OBJ_ID_DHCP_POLICY) &&
-        (id != OBJ_ID_NAT_PORT_BLOCK) &&
-        (id != OBJ_ID_SECURITY_PROFILE)) {
-        return -1;
+// call all the set callbacks corresponding to the obj id
+sdk::sdk_ret_t
+vpp_config_cb_registry::set (const pds_cfg_msg_t *msg) {
+    auto cblist = set_cbs.find(msg->obj_id);
+    sdk::sdk_ret_t ret_val;
+
+    if (cblist == set_cbs.end()) {
+        return sdk::SDK_RET_OK;
     }
 
-    vpp_config_batch::register_notify_cbs(id, notify_cb_fn);
-    return 0;
+    for (auto it = (cblist->second).begin(); it != (cblist->second).end();
+         it++) {
+        ret_val = (*it)(msg);
+        if (ret_val != sdk::SDK_RET_OK) {
+            return ret_val;
+        }
+    }
+    return sdk::SDK_RET_OK;
+}
+
+// call all the delete callbacks corresponding to the obj id
+sdk::sdk_ret_t
+vpp_config_cb_registry::del (const pds_cfg_msg_t *msg) {
+    auto cblist = del_cbs.find(msg->obj_id);
+    sdk::sdk_ret_t ret_val;
+
+    if (cblist == del_cbs.end()) {
+        return sdk::SDK_RET_OK;
+    }
+
+    for (auto it = (cblist->second).begin();
+         it != (cblist->second).end(); it++) {
+        ret_val = (*it)(msg);
+        if (ret_val != sdk::SDK_RET_OK) {
+            return ret_val;
+        }
+    }
+    return sdk::SDK_RET_OK;
+}
+
+// call all the activate callbacks corresponding to the obj id
+sdk::sdk_ret_t
+vpp_config_cb_registry::activate (const pds_cfg_msg_t *msg) {
+    auto cblist = act_cbs.find(msg->obj_id);
+    sdk::sdk_ret_t ret_val;
+
+    if (cblist == act_cbs.end()) {
+        return sdk::SDK_RET_OK;
+    }
+
+    for (auto it = (cblist->second).begin();
+         it != (cblist->second).end(); it++) {
+        ret_val = (*it)(msg);
+        if (ret_val != sdk::SDK_RET_OK) {
+            return ret_val;
+        }
+    }
+    return sdk::SDK_RET_OK;
+}
+
+// call all the notify callbacks corresponding to the obj id
+sdk::sdk_ret_t
+vpp_config_cb_registry::notify (const pds_cfg_msg_t *msg, bool del) {
+    auto cblist = notify_cbs.find(msg->obj_id);
+
+    if (cblist == notify_cbs.end()) {
+        return sdk::SDK_RET_OK;
+    }
+
+    for (auto it = (cblist->second).begin();
+         it != (cblist->second).end(); it++) {
+        (*it)(msg, del);
+    }
+    return sdk::SDK_RET_OK;
 }

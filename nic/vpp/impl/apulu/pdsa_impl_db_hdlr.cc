@@ -208,12 +208,10 @@ _(device)
 void
 pds_impl_db_cb_register (void)
 {
-#define _(_OBJ,_obj)                                        \
-    pds_cfg_register_callbacks(OBJ_ID_##_OBJ,               \
-                               pds_cfg_db_##_obj##_set_cb,  \
-                               pds_cfg_db_##_obj##_del_cb,  \
-                               NULL, NULL,                  \
-                               pds_cfg_db_##_obj##_dump_cb);
+#define _(_OBJ,_obj)                                                           \
+    pds_cfg_register_set_callback(OBJ_ID_##_OBJ, pds_cfg_db_##_obj##_set_cb);  \
+    pds_cfg_register_del_callback(OBJ_ID_##_OBJ, pds_cfg_db_##_obj##_del_cb);  \
+    pds_cfg_register_dump_callback(OBJ_ID_##_OBJ, pds_cfg_db_##_obj##_dump_cb);
 
     _(VNIC, vnic)
     _(SUBNET, subnet)
