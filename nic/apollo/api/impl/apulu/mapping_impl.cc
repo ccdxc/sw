@@ -1525,8 +1525,24 @@ mapping_impl::program_local_mapping_tag_entries_(void) {
                                          class_id_[i]);
         mapping_tag_fill_class_id_(&mapping_tag_data, i, class_id_[i]);
     }
+    PDS_TRACE_VERBOSE("Adding local mapping tag entry at index %u, "
+                      "classid[0-4] %lu %lu %lu %lu %lu",
+                      rxdma_local_mapping_tag_idx_,
+                      local_mapping_tag_data.classid0,
+                      local_mapping_tag_data.classid1,
+                      local_mapping_tag_data.classid2,
+                      local_mapping_tag_data.classid3,
+                      local_mapping_tag_data.classid4);
     ret = local_mapping_tag_data.write(rxdma_local_mapping_tag_idx_);
     SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+    PDS_TRACE_VERBOSE("Adding mapping tag entry at index %u, "
+                      "classid[0-4] %lu %lu %lu %lu %lu",
+                      rxdma_mapping_tag_idx_,
+                      mapping_tag_data.classid0,
+                      mapping_tag_data.classid1,
+                      mapping_tag_data.classid2,
+                      mapping_tag_data.classid3,
+                      mapping_tag_data.classid4);
     ret = mapping_tag_data.write(rxdma_mapping_tag_idx_);
     SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
 
@@ -1660,13 +1676,21 @@ mapping_impl::add_remote_mapping_entries_(vpc_entry *vpc, subnet_entry *subnet,
     rxdma_mapping_appdata_t rxdma_mapping_data;
     sdk_table_api_params_t rxdma_mapping_tbl_params;
 
-    // program txdma MAPPING_TAG table
+    // program rxdma MAPPING_TAG table
     if (rxdma_mapping_tag_idx_ != PDS_IMPL_RSVD_TAG_HW_ID) {
         memset(&mapping_tag_data, 0, mapping_tag_data.entry_size());
         // while programming always program all class-ids including invalid ones
         for (uint32_t i = 0; i < PDS_MAX_TAGS_PER_MAPPING; i++) {
             mapping_tag_fill_class_id_(&mapping_tag_data, i, class_id_[i]);
         }
+        PDS_TRACE_VERBOSE("Adding mapping tag entry at index %u, "
+                          "classid[0-4] %lu %lu %lu %lu %lu",
+                          rxdma_mapping_tag_idx_,
+                          mapping_tag_data.classid0,
+                          mapping_tag_data.classid1,
+                          mapping_tag_data.classid2,
+                          mapping_tag_data.classid3,
+                          mapping_tag_data.classid4);
         ret = mapping_tag_data.write(rxdma_mapping_tag_idx_);
         SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
     }
@@ -1688,6 +1712,12 @@ mapping_impl::add_remote_mapping_entries_(vpc_entry *vpc, subnet_entry *subnet,
 
     // add entry to rxdma MAPPING table for overlay IP
     if (rxdma_mapping_hdl_ != handle_t::null()) {
+        PDS_TRACE_VERBOSE("Adding rxdma mapping key iptype %u ip %s "
+                          "vpc %u, data tag idx %u",
+                          rxdma_mapping_key.p4_to_rxdma_iptype,
+                          ipaddr2str(&spec->skey.ip_addr),
+                          rxdma_mapping_key.p4_to_rxdma_vpc_id,
+                          rxdma_mapping_data.tag_idx);
         ret = mapping_impl_db()->rxdma_mapping_tbl()->insert(&rxdma_mapping_tbl_params);
         SDK_ASSERT(ret == SDK_RET_OK);
     }
@@ -2136,6 +2166,14 @@ mapping_impl::program_remote_mapping_tag_tables_(void) {
     for (uint32_t i = 0; i < PDS_MAX_TAGS_PER_MAPPING; i++) {
         mapping_tag_fill_class_id_(&mapping_tag_data, i, class_id_[i]);
     }
+    PDS_TRACE_VERBOSE("Adding mapping tag entry at index %u, "
+                      "classid[0-4] %lu %lu %lu %lu %lu",
+                      rxdma_mapping_tag_idx_,
+                      mapping_tag_data.classid0,
+                      mapping_tag_data.classid1,
+                      mapping_tag_data.classid2,
+                      mapping_tag_data.classid3,
+                      mapping_tag_data.classid4);
     ret = mapping_tag_data.write(rxdma_mapping_tag_idx_);
     SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
     return SDK_RET_OK;
@@ -2193,6 +2231,12 @@ mapping_impl::activate_remote_mapping_update_(vpc_entry *vpc,
     SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
 
     // update rxdma MAPPING table entry
+    PDS_TRACE_VERBOSE("Updating rxdma mapping key iptype %u ip %s "
+                      "vpc %u, data tag idx %u",
+                      rxdma_mapping_key.p4_to_rxdma_iptype,
+                      ipaddr2str(&spec->skey.ip_addr),
+                      rxdma_mapping_key.p4_to_rxdma_vpc_id,
+                      rxdma_mapping_data.tag_idx);
     ret = mapping_impl_db()->rxdma_mapping_tbl()->update(&rxdma_mapping_tbl_params);
     SDK_ASSERT(ret == SDK_RET_OK);
     rxdma_mapping_hdl_ = rxdma_mapping_tbl_params.handle;

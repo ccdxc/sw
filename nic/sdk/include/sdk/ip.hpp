@@ -215,12 +215,12 @@ ipv4addr2str (ipv4_addr_t v4_addr)
 static inline char *
 ipv6addr2str (ipv6_addr_t v6_addr)
 {
-    static thread_local char       ipaddr_str[4][INET6_ADDRSTRLEN];
+    static thread_local char       ipaddr_str[4][INET6_ADDRSTRLEN+1];
     static thread_local uint8_t    ipaddr_str_next = 0;
     char                           *buf;
 
     buf = ipaddr_str[ipaddr_str_next++ & 0x3];
-    inet_ntop(AF_INET6, v6_addr.addr8, buf, INET6_ADDRSTRLEN);
+    inet_ntop(AF_INET6, v6_addr.addr8, buf, INET6_ADDRSTRLEN+1);
     return buf;
 }
 
@@ -381,6 +381,27 @@ str2ipv6pfx (char *str, ip_prefix_t *ip_pfx)
         ip_pfx->len = (uint8_t) atoi(++slash);
     }
     return 0;
+}
+
+static inline char*
+ipvxrange2str (ipvx_range_t *ip_range) {
+    static thread_local char       iprange_str[4][(2*INET6_ADDRSTRLEN)+2];
+    static thread_local uint8_t    iprange_str_next = 0;
+    char                           *buf;
+
+    buf = iprange_str[iprange_str_next++ & 0x3];
+
+    if (ip_range->af == IP_AF_IPV4) {
+        snprintf(buf, (2*INET6_ADDRSTRLEN)+2, "%s-%s",
+                 ipv4addr2str(ip_range->ip_lo.v4_addr),
+                 ipv4addr2str(ip_range->ip_hi.v4_addr));
+    } else {
+        snprintf(buf, (2*INET6_ADDRSTRLEN)+2, "%s-%s",
+                 ipv6addr2str(ip_range->ip_lo.v6_addr),
+                 ipv6addr2str(ip_range->ip_hi.v6_addr));
+    }
+
+    return buf;
 }
 
 // spdlog formatter for ip_addr_t

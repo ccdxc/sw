@@ -858,14 +858,14 @@ action setup_rfc()
                     if (txdma_control.stag_count == 3) {
                         modify_field(scratch_metadata.field10, rx_to_tx_hdr.stag4_classid);
                     } else {
-                        modify_field(scratch_metadata.field10, 0x3FF);
+                        modify_field(scratch_metadata.field10, SACL_TAG_TREE_RSVD_CLASSID);
                     }
                 }
             }
         }
 
         // If the next STAG is invalid
-        if (scratch_metadata.field10 == 0x3FF) {
+        if (scratch_metadata.field10 == SACL_TAG_TREE_RSVD_CLASSID) {
             // Find the next DTAG
             if (txdma_control.dtag_count == 0) {
                 modify_field(scratch_metadata.field10, rx_to_tx_hdr.dtag1_classid);
@@ -879,14 +879,14 @@ action setup_rfc()
                         if (txdma_control.dtag_count == 3) {
                             modify_field(scratch_metadata.field10, rx_to_tx_hdr.dtag4_classid);
                         } else {
-                            modify_field(scratch_metadata.field10, 0x3FF);
+                            modify_field(scratch_metadata.field10, SACL_TAG_TREE_RSVD_CLASSID);
                         }
                     }
                 }
             }
 
             // If the next DTAG is invalid
-            if (scratch_metadata.field10 == 0x3FF) {
+            if (scratch_metadata.field10 == SACL_TAG_TREE_RSVD_CLASSID) {
                 // Done for policy root. Initialize for the next policy root.
 
                 // Reinitialized TAG classids to the first

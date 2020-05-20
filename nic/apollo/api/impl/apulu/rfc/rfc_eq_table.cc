@@ -26,13 +26,12 @@
 namespace rfc {
 
 typedef void (*rfc_compute_cl_addr_entry_cb_t)(mem_addr_t base_address,
-                                               uint32_t class_block_number,
-                                               uint32_t num_classes_per_block,
+                                               uint32_t table_idx,
                                                mem_addr_t *next_cl_addr,
                                                uint16_t *next_entry_num);
 typedef sdk_ret_t (*rfc_action_data_flush_cb_t)(mem_addr_t addr,
                                                 void *action_data);
-typedef sdk_ret_t (*rfc_table_entry_pack_cb_t)(uint32_t running_id,
+typedef sdk_ret_t (*rfc_table_entry_pack_cb_t)(uint32_t table_idx,
                                                void *action_data,
                                                uint32_t entry_num,
                                                uint16_t entry_val);
@@ -43,7 +42,7 @@ typedef uint16_t rfc_compute_entry_val_cb_t(rfc_ctxt_t *rfc_ctxt,
 /**
  * @brief    given a classid & entry id, fill the corresponding portion of the
  *           RFC phase 1 table entry action data
- * @param[in] running_id    running index of the entry (for debugging)
+ * @param[in] table_idx     index of the entry (for debugging)
  * @param[in] actiondata    pointer to the action data
  * @param[in] entry_num     entry idx (0 to 50, inclusive), we can fit 51
  *                          entries, each 10 bits wide
@@ -51,13 +50,12 @@ typedef uint16_t rfc_compute_entry_val_cb_t(rfc_ctxt_t *rfc_ctxt,
  * @return    SDK_RET_OK on success, failure status code on error
  */
 static inline sdk_ret_t
-rfc_p1_table_entry_pack (uint32_t running_id, void *actiondata,
+rfc_p1_table_entry_pack (uint32_t table_idx, void *actiondata,
                          uint32_t entry_num, uint16_t cid)
 {
     rfc_p1_actiondata_t    *action_data;
 
-    PDS_TRACE_DEBUG("running id %u, entry %u, class id %u",
-                    running_id, entry_num, cid);
+    PDS_TRACE_VERBOSE("P1 table[0x%x] <- class id %u", table_idx, cid);
     action_data = (rfc_p1_actiondata_t *)actiondata;
     switch (entry_num) {
     case 0:
@@ -264,7 +262,7 @@ rfc_p1_table_entry_pack (uint32_t running_id, void *actiondata,
 /**
  * @brief    given a classid & entry id, fill the corresponding portion of the
  *           RFC phase 2 table entry action data
- * @param[in] running_id    running index of the entry (for debugging)
+ * @param[in] table_idx     index of the entry (for debugging)
  * @param[in] actiondata    pointer to the action data
  * @param[in] entry_num     entry idx (0 to 50, inclusive), we can fit 51
  *                          entries, each 10 bits wide
@@ -272,13 +270,12 @@ rfc_p1_table_entry_pack (uint32_t running_id, void *actiondata,
  * @return    SDK_RET_OK on success, failure status code on error
  */
 static inline sdk_ret_t
-rfc_p2_table_entry_pack (uint32_t running_id, void *actiondata,
+rfc_p2_table_entry_pack (uint32_t table_idx, void *actiondata,
                          uint32_t entry_num, uint16_t cid)
 {
     rfc_p2_actiondata_t    *action_data;
 
-    PDS_TRACE_DEBUG("running id %u, entry %u, class id %u",
-                    running_id, entry_num, cid);
+    PDS_TRACE_VERBOSE("P2 table[0x%x] <- class id %u", table_idx, cid);
     action_data = (rfc_p2_actiondata_t *)actiondata;
     switch (entry_num) {
         case 0:
@@ -561,25 +558,19 @@ rfc_p2_eq_class_tables_dump (rfc_ctxt_t *rfc_ctxt)
  *           starts from and the entry index where the 1st entry should
  *           be written to
  * @param[in] base_address            RFC phase 1 table's base address
- * @param[in] class_block_number      number of the class block
- * @param[in] num_classes_per_block   number of classes per block
+ * @param[in] table_idx               index into the P1 table
  * @param[out] next_cl_addr           next cache line address computed
  * @param[out] next_entry_num         next entry number computed
  */
 static inline void
 rfc_compute_p1_next_cl_addr_entry_num (mem_addr_t base_address,
-                                       uint32_t class_block_number,
-                                       uint32_t num_classes_per_block,
+                                       uint32_t table_idx,
                                        mem_addr_t *next_cl_addr,
                                        uint16_t *next_entry_num)
 {
-    uint32_t    num_classes, num_cache_lines;
-
-    // TODO: @cruzj, do we really need ceil() here ?
-    num_classes = class_block_number * num_classes_per_block;
-    num_cache_lines = num_classes/SACL_P1_ENTRIES_PER_CACHE_LINE;
-    *next_cl_addr = base_address + (num_cache_lines << CACHE_LINE_SIZE_SHIFT);
-    *next_entry_num = num_classes%SACL_P1_ENTRIES_PER_CACHE_LINE;
+    uint32_t cache_line_idx = table_idx / SACL_P1_ENTRIES_PER_CACHE_LINE;
+    *next_cl_addr = base_address + (cache_line_idx << CACHE_LINE_SIZE_SHIFT);
+    *next_entry_num = table_idx % SACL_P1_ENTRIES_PER_CACHE_LINE;
 }
 
 /**
@@ -587,32 +578,26 @@ rfc_compute_p1_next_cl_addr_entry_num (mem_addr_t base_address,
  *           starts from and the entry index where the 1st entry should
  *           be written to
  * @param[in] base_address            RFC phase 2 table's base address
- * @param[in] class_block_number      number of the class block
- * @param[in] num_classes_per_block   number of classes per block
+ * @param[in] table_idx               index into the P2 table
  * @param[out] next_cl_addr           next cache line address computed
  * @param[out] next_entry_num         next entry number computed
  */
 static inline void
 rfc_compute_p2_next_cl_addr_entry_num (mem_addr_t base_address,
-                                       uint32_t class_block_number,
-                                       uint32_t num_classes_per_block,
+                                       uint32_t table_idx,
                                        mem_addr_t *next_cl_addr,
                                        uint16_t *next_entry_num)
 {
-    uint32_t    num_classes, num_cache_lines;
-
-    // TODO: @cruzj, do we really need ceil() here ?
-    num_classes = class_block_number * num_classes_per_block;
-    num_cache_lines = num_classes/SACL_P2_ENTRIES_PER_CACHE_LINE;
-    *next_cl_addr = base_address + (num_cache_lines << CACHE_LINE_SIZE_SHIFT);
-    *next_entry_num = num_classes%SACL_P2_ENTRIES_PER_CACHE_LINE;
+    uint32_t cache_line_idx = table_idx / SACL_P2_ENTRIES_PER_CACHE_LINE;
+    *next_cl_addr = base_address + (cache_line_idx << CACHE_LINE_SIZE_SHIFT);
+    *next_entry_num = table_idx % SACL_P2_ENTRIES_PER_CACHE_LINE;
 }
 
 /**
  * @brief    given 10 bits of priority, one bit of drop/allow, and the
  *           entry id, fill corresponding portion of the RFC phase 3
  *           table entry action data.
- * @param[in] running_id     running index of the entry (for debugging)
+ * @param[in] table_idx      index of the entry (for debugging)
  * @param[in] action_data    pointer to the action data
  * @param[in] entry_num      entry idx (0 to 46, inclusive), we can fit 46
  *                           entries, each 11 bits wide
@@ -621,15 +606,14 @@ rfc_compute_p2_next_cl_addr_entry_num (mem_addr_t base_address,
  * @return    SDK_RET_OK on success, failure status code on error
  */
 static inline sdk_ret_t
-rfc_p3_table_entry_pack (uint32_t running_id, void *actiondata,
+rfc_p3_table_entry_pack (uint32_t table_idx, void *actiondata,
                          uint32_t entry_num, uint16_t result)
 {
     rfc_p3_actiondata_t    *action_data;
 
     action_data = (rfc_p3_actiondata_t *)actiondata;
     result &= (uint16_t)0x7FF; // Only 11 bits are valid
-    PDS_TRACE_DEBUG("running id %u, entry %u, result 0x%x",
-                    running_id, entry_num, result);
+    PDS_TRACE_VERBOSE("P3 table[0x%x] <- class id %u", table_idx, result);
     switch (entry_num) {
     case 0:
         action_data->action_u.rfc_p3_rfc_action_p3.pr00 = result>>1;
@@ -849,24 +833,19 @@ rfc_p3_action_data_flush (mem_addr_t addr, void *actiondata)
  *           starts from and the entry index where the 1st entry should
  *           be written to
  * @param[in] base_address            RFC phase 3 table's base address
- * @param[in] class_block_number      number of the class block
- * @param[in] num_classes_per_block   number of classes per block
+ * @param[in] table_idx               index into the P3 table
  * @param[out] next_cl_addr           next cache line address computed
  * @param[out] next_entry_num         next entry number computed
  */
 static inline void
 rfc_compute_p3_next_cl_addr_entry_num (mem_addr_t base_address,
-                                       uint32_t class_block_number,
-                                       uint32_t num_classes_per_block,
+                                       uint32_t table_idx,
                                        mem_addr_t *next_cl_addr,
                                        uint16_t *next_entry_num)
 {
-    uint32_t    num_classes, num_cache_lines;
-
-    num_classes = class_block_number * num_classes_per_block;
-    num_cache_lines = num_classes/SACL_P3_ENTRIES_PER_CACHE_LINE;
-    *next_cl_addr = base_address + (num_cache_lines << CACHE_LINE_SIZE_SHIFT);
-    *next_entry_num = num_classes%SACL_P3_ENTRIES_PER_CACHE_LINE;
+    uint32_t cache_line_idx = table_idx / SACL_P3_ENTRIES_PER_CACHE_LINE;
+    *next_cl_addr = base_address + (cache_line_idx << CACHE_LINE_SIZE_SHIFT);
+    *next_entry_num = table_idx % SACL_P3_ENTRIES_PER_CACHE_LINE;
 }
 
 #define fw_act    action_data.fw_action.action
@@ -978,35 +957,35 @@ rfc_compute_eq_class_tables (rfc_ctxt_t *rfc_ctxt, rfc_table_t *rfc_table1,
                              rfc_action_data_flush_cb_t action_data_flush_cb)
 {
     uint16_t      entry_val, entry_num = 0, next_entry_num;
-    uint32_t      running_id = 0;
-    mem_addr_t    cl_addr, next_cl_addr;
+    uint32_t      table_idx;
+    mem_addr_t    cl_addr = 0, next_cl_addr;
 
     // do cross product of bitmaps, compute the entries (e.g., class ids or
     // final table result etc.), pack them into appropriate cache lines and
     // flush them
     for (uint32_t i = 0; i < rfc_table1->num_classes; i++) {
-        cl_addr_entry_cb(result_table_base_addr, i, rfc_table2->max_classes,
-                         &next_cl_addr, &next_entry_num);
-        if (entry_num) {
+        for (uint32_t j = 0; j < rfc_table2->num_classes; j++) {
+            table_idx = (rfc_table1->cbm_table[i].class_id *
+                         rfc_table2->max_classes) +
+                         rfc_table2->cbm_table[j].class_id;
+            cl_addr_entry_cb(result_table_base_addr, table_idx,
+                             &next_cl_addr, &next_entry_num);
+
             if (cl_addr != next_cl_addr) {
-                // flush the current partially filled cache line
-                action_data_flush_cb(cl_addr, action_data);
-                cl_addr = next_cl_addr;
+                // New cache line
+                if (cl_addr) {
+                    // flush the current partially filled cache line
+                    action_data_flush_cb(cl_addr, action_data);
+                }
+
+                cl_addr  = next_cl_addr;
                 entry_num = next_entry_num;
             } else {
                 // cache line didn't change, so no need to flush the cache line
-                // but we need to set the entry_num to right value to start the
-                // next class block with
+                // but we need to set the entry_num to right value
                 entry_num = next_entry_num;
             }
-        } else {
-            // we filled earlier cache line, need to start on new cache
-            // line and entry number computed
-            cl_addr = next_cl_addr;
-            entry_num = next_entry_num;
-        }
 
-        for (uint32_t j = 0; j < rfc_table2->num_classes; j++) {
             rte_bitmap_reset(rfc_ctxt->cbm);
             rte_bitmap_and(rfc_table1->cbm_table[i].cbm,
                            rfc_table2->cbm_table[j].cbm,
@@ -1014,18 +993,10 @@ rfc_compute_eq_class_tables (rfc_ctxt_t *rfc_ctxt, rfc_table_t *rfc_table1,
             entry_val = compute_entry_val_cb(rfc_ctxt, result_table,
                                              rfc_ctxt->cbm,
                                              rfc_ctxt->cbm_size, NULL);
-            entry_pack_cb(running_id, action_data, entry_num, entry_val);
-            running_id++;
-            entry_num++;
-            if (entry_num == entries_per_cl) {
-                // write this full entry to the table
-                action_data_flush_cb(cl_addr, action_data);
-                entry_num = 0;
-                cl_addr += CACHE_LINE_SIZE;
-            }
+            entry_pack_cb(table_idx, action_data, entry_num, entry_val);
         }
     }
-    if (entry_num) {
+    if (cl_addr) {
         // flush the partially filled last cache line as well
         action_data_flush_cb(cl_addr, action_data);
     }
@@ -1133,67 +1104,112 @@ rfc_build_eqtables (rfc_ctxt_t *rfc_ctxt)
 {
     // combination 1
     PDS_TRACE_DEBUG("Starting RFC combination 1");
+    PDS_TRACE_DEBUG("Computing P1 Table. SIP:SPORT (%ub:%ub), num classes %u:%u",
+                    SACL_SIP_CLASSID_WIDTH, SACL_SPORT_CLASSID_WIDTH,
+                    rfc_ctxt->sip_tree.rfc_table.num_classes,
+                    rfc_ctxt->port_tree.rfc_table.num_classes);
     rfc_compute_p1_tables(rfc_ctxt,
                           &rfc_ctxt->sip_tree.rfc_table,
                           &rfc_ctxt->port_tree.rfc_table,
                           SACL_P1_1_TABLE_OFFSET);
     rfc_p1_eq_class_tables_dump(rfc_ctxt);
+    PDS_TRACE_DEBUG("Computing P2 Table. DIP:DPORT (%ub:%ub), num classes %u:%u",
+                    SACL_DIP_CLASSID_WIDTH, SACL_PROTO_DPORT_CLASSID_WIDTH,
+                    rfc_ctxt->dip_tree.rfc_table.num_classes,
+                    rfc_ctxt->proto_port_tree.rfc_table.num_classes);
     rfc_compute_p2_tables(rfc_ctxt,
                           &rfc_ctxt->dip_tree.rfc_table,
                           &rfc_ctxt->proto_port_tree.rfc_table,
                           SACL_P2_1_TABLE_OFFSET);
     rfc_p2_eq_class_tables_dump(rfc_ctxt);
+    PDS_TRACE_DEBUG("Computing P3 Table. P1:P2 (%ub:%ub), num classes %u:%u",
+                    SACL_P1_CLASSID_WIDTH, SACL_P2_CLASSID_WIDTH,
+                    rfc_ctxt->p1_table.num_classes,
+                    rfc_ctxt->p2_table.num_classes);
     rfc_compute_p3_tables(rfc_ctxt, SACL_P3_1_TABLE_OFFSET);
     rfc_table_destroy(&rfc_ctxt->p1_table);
     rfc_table_destroy(&rfc_ctxt->p2_table);
 
     // combination 2
     PDS_TRACE_DEBUG("Starting RFC combination 2");
+    PDS_TRACE_DEBUG("Computing P1 Table. STAG:DIP (%ub:%ub), num classes %u:%u",
+                    SACL_TAG_CLASSID_WIDTH, SACL_DIP_CLASSID_WIDTH,
+                    rfc_ctxt->stag_tree.rfc_table.num_classes,
+                    rfc_ctxt->dip_tree.rfc_table.num_classes);
     rfc_compute_p1_tables(rfc_ctxt,
                           &rfc_ctxt->stag_tree.rfc_table,
                           &rfc_ctxt->dip_tree.rfc_table,
                           SACL_P1_2_TABLE_OFFSET);
     rfc_p1_eq_class_tables_dump(rfc_ctxt);
+    PDS_TRACE_DEBUG("Computing P2 Table. SPORT:DPORT (%ub:%ub), num classes %u:%u",
+                    SACL_SPORT_CLASSID_WIDTH, SACL_PROTO_DPORT_CLASSID_WIDTH,
+                    rfc_ctxt->port_tree.rfc_table.num_classes,
+                    rfc_ctxt->proto_port_tree.rfc_table.num_classes);
     rfc_compute_p2_tables(rfc_ctxt,
                           &rfc_ctxt->port_tree.rfc_table,
                           &rfc_ctxt->proto_port_tree.rfc_table,
                           SACL_P2_2_TABLE_OFFSET);
     rfc_p2_eq_class_tables_dump(rfc_ctxt);
+    PDS_TRACE_DEBUG("Computing P3 Table. P1:P2 (%ub:%ub), num classes %u:%u",
+                    SACL_P1_CLASSID_WIDTH, SACL_P2_CLASSID_WIDTH,
+                    rfc_ctxt->p1_table.num_classes,
+                    rfc_ctxt->p2_table.num_classes);
     rfc_compute_p3_tables(rfc_ctxt, SACL_P3_2_TABLE_OFFSET);
     rfc_table_destroy(&rfc_ctxt->p1_table);
     rfc_table_destroy(&rfc_ctxt->p2_table);
 
     // combination 3
     PDS_TRACE_DEBUG("Starting RFC combination 3");
+    PDS_TRACE_DEBUG("Computing P1 Table. SIP:DTAG (%ub:%ub), num classes %u:%u",
+                    SACL_SIP_CLASSID_WIDTH, SACL_TAG_CLASSID_WIDTH,
+                    rfc_ctxt->sip_tree.rfc_table.num_classes,
+                    rfc_ctxt->dtag_tree.rfc_table.num_classes);
     rfc_compute_p1_tables(rfc_ctxt,
                           &rfc_ctxt->sip_tree.rfc_table,
                           &rfc_ctxt->dtag_tree.rfc_table,
                           SACL_P1_3_TABLE_OFFSET);
     rfc_p1_eq_class_tables_dump(rfc_ctxt);
+    PDS_TRACE_DEBUG("Computing P2 Table. SPORT:DPORT (%ub:%ub), num classes %u:%u",
+                    SACL_SPORT_CLASSID_WIDTH, SACL_PROTO_DPORT_CLASSID_WIDTH,
+                    rfc_ctxt->port_tree.rfc_table.num_classes,
+                    rfc_ctxt->proto_port_tree.rfc_table.num_classes);
     rfc_compute_p2_tables(rfc_ctxt,
                           &rfc_ctxt->port_tree.rfc_table,
                           &rfc_ctxt->proto_port_tree.rfc_table,
                           SACL_P2_3_TABLE_OFFSET);
     rfc_p2_eq_class_tables_dump(rfc_ctxt);
+    PDS_TRACE_DEBUG("Computing P3 Table. P1:P2 (%ub:%ub), num classes %u:%u",
+                    SACL_P1_CLASSID_WIDTH, SACL_P2_CLASSID_WIDTH,
+                    rfc_ctxt->p1_table.num_classes,
+                    rfc_ctxt->p2_table.num_classes);
     rfc_compute_p3_tables(rfc_ctxt, SACL_P3_3_TABLE_OFFSET);
     rfc_table_destroy(&rfc_ctxt->p1_table);
     rfc_table_destroy(&rfc_ctxt->p2_table);
 
     // combination 4
     PDS_TRACE_DEBUG("Starting RFC combination 4");
-    PDS_TRACE_DEBUG("Computing P1 tables");
+    PDS_TRACE_DEBUG("Computing P1 Table. STAG:SPORT (%ub:%ub), num classes %u:%u",
+                    SACL_TAG_CLASSID_WIDTH, SACL_SPORT_CLASSID_WIDTH,
+                    rfc_ctxt->stag_tree.rfc_table.num_classes,
+                    rfc_ctxt->port_tree.rfc_table.num_classes);
     rfc_compute_p1_tables(rfc_ctxt,
                           &rfc_ctxt->stag_tree.rfc_table,
                           &rfc_ctxt->port_tree.rfc_table,
                           SACL_P1_4_TABLE_OFFSET);
     rfc_p1_eq_class_tables_dump(rfc_ctxt);
-    PDS_TRACE_DEBUG("Computing P2 tables");
+    PDS_TRACE_DEBUG("Computing P2 Table. DTAG:DPORT (%ub:%ub), num classes %u:%u",
+                    SACL_TAG_CLASSID_WIDTH, SACL_PROTO_DPORT_CLASSID_WIDTH,
+                    rfc_ctxt->dtag_tree.rfc_table.num_classes,
+                    rfc_ctxt->proto_port_tree.rfc_table.num_classes);
     rfc_compute_p2_tables(rfc_ctxt,
                           &rfc_ctxt->dtag_tree.rfc_table,
                           &rfc_ctxt->proto_port_tree.rfc_table,
                           SACL_P2_4_TABLE_OFFSET);
     rfc_p2_eq_class_tables_dump(rfc_ctxt);
-    PDS_TRACE_DEBUG("Computing P3 tables");
+    PDS_TRACE_DEBUG("Computing P3 Table. P1:P2 (%ub:%ub), num classes %u:%u",
+                    SACL_P1_CLASSID_WIDTH, SACL_P2_CLASSID_WIDTH,
+                    rfc_ctxt->p1_table.num_classes,
+                    rfc_ctxt->p2_table.num_classes);
     rfc_compute_p3_tables(rfc_ctxt, SACL_P3_4_TABLE_OFFSET);
     rfc_table_destroy(&rfc_ctxt->p1_table);
     rfc_table_destroy(&rfc_ctxt->p2_table);

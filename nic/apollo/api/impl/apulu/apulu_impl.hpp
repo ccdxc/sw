@@ -20,6 +20,7 @@
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/framework/pipeline_impl_base.hpp"
 #include "nic/apollo/p4/include/apulu_defines.h"
+#include "nic/apollo/p4/include/apulu_sacl_defines.h"
 #include "gen/p4gen/apulu/include/p4pd.h"
 
 // system wide blackhole nexthop
@@ -51,10 +52,10 @@
 // class id 511 (PDS_IMPL_RSVD_MAPPING_CLASS_ID) is reserved to indicate
 // that class id is not configured, so 0 to (PDS_IMPL_RSVD_MAPPING_CLASS_ID-1)
 // class id values are valid
-#define PDS_MAX_CLASS_ID_PER_VPC               512
+#define PDS_MAX_CLASS_ID_PER_VPC               SACL_TAG_TREE_MAX_CLASSES
 
 // reserved class id to indicate that tag is not configured on a mapping
-#define PDS_IMPL_RSVD_MAPPING_CLASS_ID         0x3FF
+#define PDS_IMPL_RSVD_MAPPING_CLASS_ID         SACL_TAG_TREE_RSVD_CLASSID
 
 // reserved DHCP relay NACL index
 // NOTE:

@@ -27,10 +27,10 @@ setup_rfc:
     seq              c1, k.txdma_control_stag_count, 3
     add.c1           r1, k.rx_to_tx_hdr_stag4_classid, r0
     seq              c1, k.txdma_control_stag_count, 4
-    add.c1           r1, r0, 0x3FF
+    add.c1           r1, r0, SACL_TAG_TREE_RSVD_CLASSID
 
     // Is the next STAG is valid.
-    sne              c1, r1, 0x3FF
+    sne              c1, r1, SACL_TAG_TREE_RSVD_CLASSID
     // Yes. Increment STAG count, and copy the new STAG to PHV and Stop.
     add.c1           r3, k.txdma_control_stag_count, 1
     phvwr.c1.e       p.txdma_control_stag_count, r3
@@ -48,10 +48,10 @@ setup_rfc:
     seq              c1, k.txdma_control_dtag_count, 3
     add.c1           r2, k.rx_to_tx_hdr_dtag4_classid, r0
     seq              c1, k.txdma_control_dtag_count, 4
-    add.c1           r2, r0, 0x3FF
+    add.c1           r2, r0, SACL_TAG_TREE_RSVD_CLASSID
 
     // Is the next DTAG is valid.
-    sne              c1, r2, 0x3FF
+    sne              c1, r2, SACL_TAG_TREE_RSVD_CLASSID
     // Yes. Increment DTAG count, and copy the new DTAG to PHV and Stop.
     add.c1           r3, k.txdma_control_dtag_count, 1
     phvwr.c1.e       p.txdma_control_dtag_count, r3

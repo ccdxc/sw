@@ -72,6 +72,16 @@ rfc_itree_dump (rfc_tree_t *rfc_tree, itree_type_t tree_type)
                             inode->key32 & 0xFFFFFF, inode->rfc.class_id,
                             inode->rfc.rule_no,
                             inode->rfc.start ? "true" : "false");
+        } else if (tree_type == ITREE_TYPE_STAG) {
+            PDS_TRACE_DEBUG("inode %u, stag %u, classid %u, rule# %u, start %s",
+                            i, inode->key32, inode->rfc.class_id,
+                            inode->rfc.rule_no,
+                            inode->rfc.start ? "true" : "false");
+        } else if (tree_type == ITREE_TYPE_DTAG) {
+            PDS_TRACE_DEBUG("inode %u, dtag %u, classid %u, rule# %u, start %s",
+                            i, inode->key32, inode->rfc.class_id,
+                            inode->rfc.rule_no,
+                            inode->rfc.start ? "true" : "false");
         }
     }
 }

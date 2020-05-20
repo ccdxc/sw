@@ -33,15 +33,25 @@ rfc_policy_rule_dump (policy_t *policy, uint32_t rule_num)
     }
     if (rule->attrs.match.l3_match.src_match_type == IP_MATCH_PREFIX) {
         rule_str+=
-            "src " + string(ippfx2str(&rule->attrs.match.l3_match.src_ip_pfx)) + ", ";
+                "src " + string(ippfx2str(&rule->attrs.match.l3_match.src_ip_pfx)) + ", ";
+    } else if (rule->attrs.match.l3_match.src_match_type == IP_MATCH_RANGE) {
+        rule_str+=
+            "src " + string(ipvxrange2str(&rule->attrs.match.l3_match.src_ip_range)) + ", ";
     } else if (rule->attrs.match.l3_match.src_match_type == IP_MATCH_TAG) {
         rule_str+= "stag " + std::to_string(rule->attrs.match.l3_match.src_tag) + ", ";
+    } else if (rule->attrs.match.l3_match.src_match_type == IP_MATCH_NONE) {
+        rule_str+= "src none, ";
     }
     if (rule->attrs.match.l3_match.dst_match_type == IP_MATCH_PREFIX) {
         rule_str+=
             "dst " + string(ippfx2str(&rule->attrs.match.l3_match.dst_ip_pfx)) + ", ";
+    } else if (rule->attrs.match.l3_match.dst_match_type == IP_MATCH_RANGE) {
+        rule_str+=
+            "dst " + string(ipvxrange2str(&rule->attrs.match.l3_match.dst_ip_range)) + ", ";
     } else if (rule->attrs.match.l3_match.dst_match_type == IP_MATCH_TAG) {
         rule_str+= "dtag " + std::to_string(rule->attrs.match.l3_match.dst_tag) + ", ";
+    } else if (rule->attrs.match.l3_match.dst_match_type == IP_MATCH_NONE) {
+        rule_str+= "dst none, ";
     }
     if (rule->attrs.match.l3_match.proto_match_type == MATCH_SPECIFIC) {
         if (rule->attrs.match.l3_match.ip_proto == IP_PROTO_ICMP) {
@@ -140,7 +150,7 @@ rfc_tree_add_defaults (rfc_ctxt_t *rfc_ctxt, rfc_table_t *rfc_table)
     }
 
     class_id = rfc_table->num_classes++;
-    PDS_TRACE_DEBUG("class id allocated is %u", class_id);
+    PDS_TRACE_DEBUG("default class id allocated is %u", class_id);
     rfc_table->cbm_table[class_id].class_id = class_id;
     rfc_table->cbm_table[class_id].cbm = cbm_new;
     rfc_table->cbm_map[cbm_new] = class_id;

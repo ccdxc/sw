@@ -17,6 +17,8 @@
 #define SACL_P1_MAX_CLASSES               (1<<SACL_P1_CLASSID_WIDTH)
 #define SACL_P2_MAX_CLASSES               (1<<SACL_P2_CLASSID_WIDTH)
 
+#define SACL_TAG_TREE_RSVD_CLASSID        (SACL_TAG_TREE_MAX_CLASSES-1)
+
 #define SACL_SPORT_TABLE_SIZE             2112      // 64+(32*64)
 #define SACL_PROTO_DPORT_TABLE_SIZE       17472     // 64+(16*64)+(16*16*64)
 #define SACL_IPV4_DIP_TABLE_SIZE          17472     // 64+(16*64)+(16*16*64)

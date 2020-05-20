@@ -11,6 +11,7 @@
 #include "nic/apollo/api/impl/lpm/lpm.hpp"
 #include "nic/apollo/api/impl/rfc/rfc.hpp"
 #include "nic/apollo/api/impl/rfc/rfc_tree.hpp"
+#include "nic/apollo/api/impl/apulu/apulu_impl.hpp"
 #include "nic/apollo/api/impl/apulu/rfc/rfc_utils.hpp"
 
 namespace rfc {
@@ -122,7 +123,7 @@ rfc_compute_class_id_cb (rfc_ctxt_t *rfc_ctxt, rfc_table_t *rfc_table,
         return it->second;
     }
     class_id = rfc_table->num_classes++;
-    PDS_TRACE_DEBUG("class id allocated is %u", class_id);
+    PDS_TRACE_VERBOSE("class id allocated is %u", class_id);
     SDK_ASSERT(class_id < RFC_MAX_EQ_CLASSES);
     if (rfc_table->cbm_table[class_id].cbm) {
         bits = (uint8_t *)rfc_table->cbm_table[class_id].cbm;
@@ -141,6 +142,7 @@ uint16_t
 rfc_compute_tag_class_id_cb (rfc_ctxt_t *rfc_ctxt, rfc_table_t *rfc_table,
                              rte_bitmap *cbm, uint32_t cbm_size, void *ctxt)
 {
+    int rv;
     rule_t *rule;
     uint8_t *bits;
     sdk_ret_t ret;
@@ -148,21 +150,39 @@ rfc_compute_tag_class_id_cb (rfc_ctxt_t *rfc_ctxt, rfc_table_t *rfc_table,
     uint32_t class_id, idx;
     class_id_cb_ctxt_t *cb_ctxt = (class_id_cb_ctxt_t *)ctxt;
     inode_t *inode = cb_ctxt->inode;
+    uint32_t start_posn = 0;
+    uint64_t slab = 0;
 
-    if (cb_ctxt->tree->type == RFC_TREE_TYPE_STAG) {
-        rule = &rfc_ctxt->policy->rules[inode->rfc.rule_no];
-        ret = rfc_ctxt->tag2class_cb(rule->attrs.match.l3_match.src_tag,
-                                     &class_id, rfc_ctxt->tag2class_cb_ctxt);
-        SDK_ASSERT(ret == SDK_RET_OK);
-    } else if (cb_ctxt->tree->type == RFC_TREE_TYPE_DTAG) {
-        rule = &rfc_ctxt->policy->rules[inode->rfc.rule_no];
-        ret = rfc_ctxt->tag2class_cb(rule->attrs.match.l3_match.dst_tag,
-                                     &class_id, rfc_ctxt->tag2class_cb_ctxt);
-        SDK_ASSERT(ret == SDK_RET_OK);
-    } else {
-        // unsupported tree type
-        SDK_ASSERT(0);
+    if (rfc_table->num_classes == 0) {
+        idx = rfc_table->num_classes++;
+        posix_memalign((void **)&bits, CACHE_LINE_SIZE, cbm_size);
+        cbm_new = rte_bitmap_init(rfc_ctxt->policy->max_rules, bits, cbm_size);
+        rfc_table->cbm_table[idx].class_id = (uint16_t)PDS_IMPL_RSVD_MAPPING_CLASS_ID;
+        rfc_table->cbm_table[idx].cbm = cbm_new;
+        rfc_table->cbm_map[cbm_new] = (uint16_t)PDS_IMPL_RSVD_MAPPING_CLASS_ID;
     }
+
+    rule = &rfc_ctxt->policy->rules[inode->rfc.rule_no];
+    rv = rte_bitmap_scan(cbm, &start_posn, &slab);
+    // Check bitmap == 0
+    if (rv == 0) {
+        class_id = PDS_IMPL_RSVD_MAPPING_CLASS_ID;
+        PDS_TRACE_VERBOSE("Reused classid %u for default", class_id);
+        return (uint16_t)class_id;
+    } else {
+        if (cb_ctxt->tree->type == RFC_TREE_TYPE_STAG) {
+            ret = rfc_ctxt->tag2class_cb(rule->attrs.match.l3_match.src_tag,
+                                         &class_id, rfc_ctxt->tag2class_cb_ctxt);
+            SDK_ASSERT(ret == SDK_RET_OK);
+        } else if (cb_ctxt->tree->type == RFC_TREE_TYPE_DTAG) {
+            ret = rfc_ctxt->tag2class_cb(rule->attrs.match.l3_match.dst_tag,
+                                         &class_id, rfc_ctxt->tag2class_cb_ctxt);
+            SDK_ASSERT(ret == SDK_RET_OK);
+        } else {
+            SDK_ASSERT(0);
+        }
+    }
+
     idx = rfc_table->num_classes++;
     posix_memalign((void **)&bits, CACHE_LINE_SIZE, cbm_size);
     cbm_new = rte_bitmap_init(rfc_ctxt->policy->max_rules, bits, cbm_size);

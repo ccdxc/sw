@@ -198,6 +198,7 @@ vpc_impl_state::alloc_class_id(uint32_t tag, bool local, uint32_t *class_id) {
         // tag to class id mapping exists
         tag_state_->tag2class_map_[tag].refcount++;
         *class_id = tag_state_->tag2class_map_[tag].class_id;
+        PDS_TRACE_VERBOSE("Reused classid %u for tag %u", *class_id, tag);
     } else {
         // try to allocate new class id
         ret = tag_state_->class_id_idxr_->alloc(class_id);
@@ -211,6 +212,7 @@ vpc_impl_state::alloc_class_id(uint32_t tag, bool local, uint32_t *class_id) {
         tag_state_->tag2class_map_[tag].refcount = 1;
         // add class id -> tag mapping
         tag_state_->class2tag_map_[*class_id] = tag;
+        PDS_TRACE_VERBOSE("Allocated classid %u for tag %u", *class_id, tag);
     }
     return SDK_RET_OK;
 }
