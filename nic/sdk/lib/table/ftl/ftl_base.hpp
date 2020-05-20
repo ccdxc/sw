@@ -52,7 +52,8 @@ public:
     sdk_ret_t stats_get(sdk_table_api_stats_t *api_stats,
                         sdk_table_stats_t *table_stats,
                         bool use_local_thread_id=true, uint32_t id=0);
-    sdk_ret_t iterate(sdk_table_api_params_t *params);
+    sdk_ret_t iterate(sdk_table_api_params_t *params,
+                      bool use_local_thread_id=true, uint32_t id=0);
     sdk_ret_t clear(bool clear_global_state, bool clear_thread_local_state,
                     sdk_table_api_params_t *params);
     sdk_ret_t clear_stats(bool use_local_thread_id=true, uint32_t id=0);

@@ -112,8 +112,8 @@ flow_table_pd::init() {
     table_ = flow_hash_info::factory(&params);
     SDK_ASSERT_RETURN(table_, HAL_RET_OOM);
 
-    thread_id_ = 1;
-    table_->set_thread_id(thread_id_);
+    // thread id for grpc thread
+    grpc_thread_id_ = 1;
 
     return HAL_RET_OK;
 }
@@ -129,7 +129,7 @@ flow_table_pd::stats_get(sys::TableStatsEntry *stats_entry) {
     stats_entry->set_table_size(table_size_);
     stats_entry->set_overflow_table_size(oflow_table_size_);
 
-    sret = table_->stats_get(&api_stats, &table_stats, false, thread_id_);
+    sret = table_->stats_get(&api_stats, &table_stats);
     if (sret == SDK_RET_OK) {
         stats_entry->set_entries_in_use(table_stats.entries);
         stats_entry->set_overflow_entries_in_use(table_stats.collisions);
@@ -184,7 +184,7 @@ flow_table_pd::dump(TableResponse *rsp) {
 
     params.cbdata = rsp;
     params.itercb = table_entry_fill;
-    table_->iterate(&params);
+    table_->iterate(&params, false, grpc_thread_id_);
     return HAL_RET_OK;
 }
 

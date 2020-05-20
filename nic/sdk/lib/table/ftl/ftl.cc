@@ -301,7 +301,8 @@ ftl_base::stats_get(sdk_table_api_stats_t *api_stats,
 }
 
 sdk_ret_t
-ftl_base::iterate(sdk_table_api_params_t *params) {
+ftl_base::iterate(sdk_table_api_params_t *params,
+                  bool use_local_thread_id, uint32_t id) {
 __label__ done;
     sdk_ret_t ret = SDK_RET_OK;
     uint32_t threadid;
@@ -309,7 +310,7 @@ __label__ done;
     FTL_API_BEGIN_();
     SDK_ASSERT(params->itercb);
     
-    threadid = thread_id();
+    threadid = likely(use_local_thread_id) ? thread_id() : id;
     ret = ctxinit_(threadid, sdk::table::SDK_TABLE_API_ITERATE, params);
     FTL_RET_CHECK_AND_GOTO(ret, done, "ctxinit r:%d", ret);
 
