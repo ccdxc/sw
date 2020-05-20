@@ -685,16 +685,27 @@ func (idr *Indexer) refreshIndices() {
 	go func() {
 		defer idr.wg.Done()
 		query := func() {
-			idr.logger.Debugf("Executing query to keep indices warm in cache")
-			idr.elasticClient.Search(idr.ctx,
-				fmt.Sprintf("%s.*", elastic.ExternalIndexPrefix),
-				"",
-				es.NewTermQuery("kind.keyword", "Node"),
-				nil,
-				0,
-				10,
-				"",
-				true)
+			indexNames, err := idr.elasticClient.IndexNames()
+			if err != nil {
+				idr.logger.Errorf("error in fetching index names %s", err.Error())
+				return
+			}
+
+			for _, name := range indexNames {
+				if strings.HasPrefix(name, elastic.ExternalIndexPrefix) &&
+					!strings.Contains(name, elastic.GetDocType(globals.FwLogs)) {
+					idr.logger.Debugf("Executing query to keep index %s warm in cache", name)
+					idr.elasticClient.Search(idr.ctx,
+						name,
+						"",
+						es.NewTermQuery("kind.keyword", "Node"),
+						nil,
+						0,
+						10,
+						"",
+						true)
+				}
+			}
 		}
 
 		// Query once right away
