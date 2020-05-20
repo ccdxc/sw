@@ -9,20 +9,6 @@
       "DisplayName": "Logical Interface Statistics",
       "Fields": [
         {
-          "Name": "TxTotalBytes",
-          "DisplayName": "Tx Total Bytes",
-          "Description": "Tx Total Bytes",
-          "Units": "Count",
-          "BaseType": "Counter"
-        },
-        {
-          "Name": "RxTotalBytes",
-          "DisplayName": "Rx Total Bytes",
-          "Description": "Rx Total Bytes",
-          "Units": "Count",
-          "BaseType": "Counter"
-        },
-        {
           "Name": "RxUnicastBytes",
           "DisplayName": "Rx Unicast Bytes",
           "Description": "Rx Unicast Bytes",
@@ -187,6 +173,62 @@
           "Name": "TxDropBroadcastPackets",
           "DisplayName": "Tx Drop Broadcast Packets",
           "Description": "Tx Drop Broadcast Packets",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "TxPkts",
+          "DisplayName": "Tx Pkts",
+          "Description": "Total Transmit Packets",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "TxBytes",
+          "DisplayName": "Tx Bytes",
+          "Description": "Total Transmit Bytes",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "RxPkts",
+          "DisplayName": "Rx Pkts",
+          "Description": "Total Receive Packets",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "RxBytes",
+          "DisplayName": "Rx Bytes",
+          "Description": "Total Receive Bytes",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "TxPps",
+          "DisplayName": "Tx PPS",
+          "Description": "Transmit BW Packets per second",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "TxBytesps",
+          "DisplayName": "Tx BPS",
+          "Description": "Transmit BW Bytes per second",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "RxPps",
+          "DisplayName": "Rx PPS",
+          "Description": "Receive BW Packets per second",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "RxBytesps",
+          "DisplayName": "Rx BPS",
+          "Description": "Receive BW Bytes per second",
           "Units": "Count",
           "BaseType": "Counter"
         }

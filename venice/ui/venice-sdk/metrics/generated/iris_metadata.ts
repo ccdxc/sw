@@ -4136,28 +4136,6 @@ export const MetricsMetadataIris: { [key: string]: MetricMeasurement } = {
   "displayName": "Logical Interface Statistics",
   "fields": [
     {
-      "name": "TxTotalBytes",
-      "displayName": "Tx Total Bytes",
-      "description": "Tx Total Bytes",
-      "units": "Count",
-      "baseType": "Counter",
-      "tags": [
-        "Level4"
-      ],
-      "jsType": "number"
-    },
-    {
-      "name": "RxTotalBytes",
-      "displayName": "Rx Total Bytes",
-      "description": "Rx Total Bytes",
-      "units": "Count",
-      "baseType": "Counter",
-      "tags": [
-        "Level4"
-      ],
-      "jsType": "number"
-    },
-    {
       "name": "RxUnicastBytes",
       "displayName": "Rx Unicast Bytes",
       "description": "Rx Unicast Bytes",
@@ -4414,6 +4392,94 @@ export const MetricsMetadataIris: { [key: string]: MetricMeasurement } = {
       "name": "TxDropBroadcastPackets",
       "displayName": "Tx Drop Broadcast Packets",
       "description": "Tx Drop Broadcast Packets",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "TxPkts",
+      "displayName": "Tx Pkts",
+      "description": "Total Transmit Packets",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "TxBytes",
+      "displayName": "Tx Bytes",
+      "description": "Total Transmit Bytes",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "RxPkts",
+      "displayName": "Rx Pkts",
+      "description": "Total Receive Packets",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "RxBytes",
+      "displayName": "Rx Bytes",
+      "description": "Total Receive Bytes",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "TxPps",
+      "displayName": "Tx PPS",
+      "description": "Transmit BW Packets per second",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "TxBytesps",
+      "displayName": "Tx BPS",
+      "description": "Transmit BW Bytes per second",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "RxPps",
+      "displayName": "Rx PPS",
+      "description": "Receive BW Packets per second",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "RxBytesps",
+      "displayName": "Rx BPS",
+      "description": "Receive BW Bytes per second",
       "units": "Count",
       "baseType": "Counter",
       "tags": [

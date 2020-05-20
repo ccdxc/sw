@@ -115,14 +115,14 @@ message LifMetrics {
     delphi.Counter rsvd40                         = 88 [json_name="-"];
     delphi.Counter rsvd41                         = 89 [json_name="-"];
 
-    delphi.Counter tx_pkts                        = 90 [json_name="-"];
-    delphi.Counter tx_bytes                       = 91 [json_name="-"];
-    delphi.Counter rx_pkts                        = 92 [json_name="-"];
-    delphi.Counter rx_bytes                       = 93 [json_name="-"];
-    delphi.Counter tx_pps                         = 94 [json_name="-"];
-    delphi.Counter tx_bytesps                     = 95 [json_name="-"];
-    delphi.Counter rx_pps                         = 96 [json_name="-"];
-    delphi.Counter rx_bytesps                     = 97 [json_name="-"];
+    delphi.Counter tx_pkts                        = 90 [(venice.metricsField) = {DisplayName: "Tx Pkts" Description: "Total Transmit Packets"}];
+    delphi.Counter tx_bytes                       = 91 [(venice.metricsField) = {DisplayName: "Tx Bytes" Description: "Total Transmit Bytes"}];
+    delphi.Counter rx_pkts                        = 92 [(venice.metricsField) = {DisplayName: "Rx Pkts" Description: "Total Receive Packets"}];
+    delphi.Counter rx_bytes                       = 93 [(venice.metricsField) = {DisplayName: "Rx Bytes" Description: "Total Receive Bytes"}];
+    delphi.Counter tx_pps                         = 94 [(venice.metricsField) = {DisplayName: "Tx PPS" Description: "Transmit BW Packets per second"}];
+    delphi.Counter tx_bytesps                     = 95 [(venice.metricsField) = {DisplayName: "Tx BPS" Description: "Transmit BW Bytes per second"}];
+    delphi.Counter rx_pps                         = 96 [(venice.metricsField) = {DisplayName: "Rx PPS" Description: "Receive BW Packets per second"}];
+    delphi.Counter rx_bytesps                     = 97 [(venice.metricsField) = {DisplayName: "Rx BPS" Description: "Receive BW Bytes per second"}];
 
     delphi.Counter rdma_req_rx_pkt_seq_err         = 98 [json_name="-"];
     delphi.Counter rdma_req_rx_rnr_retry_err       = 99 [json_name="-"];

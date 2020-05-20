@@ -189,21 +189,21 @@ type LifMetrics struct {
 
 	Rsvd41 metrics.Counter `structs:"-"`
 
-	TxPkts metrics.Counter `structs:"-"`
+	TxPkts metrics.Counter
 
-	TxBytes metrics.Counter `structs:"-"`
+	TxBytes metrics.Counter
 
-	RxPkts metrics.Counter `structs:"-"`
+	RxPkts metrics.Counter
 
-	RxBytes metrics.Counter `structs:"-"`
+	RxBytes metrics.Counter
 
-	TxPps metrics.Counter `structs:"-"`
+	TxPps metrics.Counter
 
-	TxBytesps metrics.Counter `structs:"-"`
+	TxBytesps metrics.Counter
 
-	RxPps metrics.Counter `structs:"-"`
+	RxPps metrics.Counter
 
-	RxBytesps metrics.Counter `structs:"-"`
+	RxBytesps metrics.Counter
 
 	RdmaReqRxPktSeqErr metrics.Counter `structs:"-"`
 
