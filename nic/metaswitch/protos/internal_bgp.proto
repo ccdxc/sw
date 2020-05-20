@@ -681,9 +681,26 @@ message BGPNLRIPrefixKeyHandle {
   BGPNLRIPrefixKey Key = 1;
 }
 
+message BGPNLRIPrefixFilter {
+  option (venice.pdsaGetGlobOpts) = {
+    FilterMib: "QB_UE_SEARCH_CRITERIA",
+    FilterTypeField: "filter_type"
+  };
+  bytes ExtComm      = 1 [(venice.pdsaFields) = {Field: "ext_comm_id", FilterType: "QB_UE_SEARCH_FILT_EXT_COMM_ID"}];
+  bytes AsPathRegexp = 2 [(venice.pdsaFields) = {Field: "as_path_regexp", FilterFieldLen: "as_path_regexp_len", FilterType: "QB_UE_SEARCH_FILT_AS_PATH_REGEX"}];
+}
+
+// BGPNLRIPrefix GET Requests
+message BGPNLRIPrefixGetRequests {
+  repeated BGPNLRIPrefixKeyHandle Request = 1;
+}
+
 // BGP NLRI prefix get request
 message BGPNLRIPrefixGetRequest {
-  repeated BGPNLRIPrefixKeyHandle Request = 1;
+  oneof requests_or_filter {
+    BGPNLRIPrefixGetRequests Requests = 1;
+    BGPNLRIPrefixFilter      Filter   = 2;
+  }
 }
 
 // BGP PrfxCntrs table

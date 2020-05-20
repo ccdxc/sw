@@ -89,6 +89,8 @@ type PdsaGlobalOpts struct {
 	ActionFn        string
 	UpdateForDelete bool
 	SpecMsg         string
+	FilterMib       string
+	FilterTypeField string
 }
 
 // PenctlCmdOpts holds raw PenctlCmd options data from .proto files
@@ -606,6 +608,8 @@ type pdsaFieldOpt struct {
 	AddrLenFieldName       string
 	IsInternalField        bool
 	PackedElemSize         string
+	FilterType             string
+	FilterFieldLen         string
 }
 
 type fieldMetricOptions struct {
@@ -830,6 +834,8 @@ func getPdsaFieldOpt(f *descriptor.Field, cam *CamInfo, table string) (pdsaField
 		ret.GetKeyOidAddrTypeIndex = o.GetKeyOidAddrTypeIndex
 		ret.IsInternalField = o.IsInternalField
 		ret.PackedElemSize = o.PackedElemSize
+		ret.FilterType = o.FilterType
+		ret.FilterFieldLen = o.FilterFieldLen
 		ret.AddrTypeFieldName = o.AddrTypeFieldName
 		ret.AddrLenFieldName = o.AddrLenFieldName
 		if o.IsZeroIPValid {
@@ -1162,6 +1168,8 @@ func getPdsaGetGlobalOpts(m *descriptor.Message, cam *CamInfo) (PdsaGlobalOpts, 
 	pdsaGlobOpts.FillFn = r.FillFn
 	pdsaGlobOpts.ActionFn = r.ActionFn
 	pdsaGlobOpts.SpecMsg = r.SpecMsg
+	pdsaGlobOpts.FilterMib = r.FilterMib
+	pdsaGlobOpts.FilterTypeField = r.FilterTypeField
 	return pdsaGlobOpts, nil
 }
 

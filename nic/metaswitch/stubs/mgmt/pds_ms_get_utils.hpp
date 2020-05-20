@@ -9,10 +9,12 @@
 #include "include/sdk/ip.hpp"
 
 AMB_GET *pds_ms_amb_get_bulk_common(NBB_LONG bulk_size,
-                                    NBB_LONG data_len,
-                                    NBB_LONG oid_len,
-                                    NBB_ULONG *oid
-                                    NBB_CCXT_T NBB_CXT);
+                                  NBB_LONG data_len,
+                                  NBB_LONG oid_len,
+                                  NBB_ULONG *oid,
+                                  NBB_ULONG filter_len,
+                                  NBB_BYTE  *filter
+                                  NBB_CCXT_T NBB_CXT);
 
 AMB_GET *pds_ms_amb_get_common(NBB_LONG data_len,
                                NBB_LONG oid_len,

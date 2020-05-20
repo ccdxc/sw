@@ -149,15 +149,39 @@ Status
       {{$fields := .RequestType.Fields}}
       {{range $fields}}
         {{$field := .}}
-        {{if or (eq "request" .GetName) (eq "Request" .GetName)}}
-          {{$keyHandleReqName := (TrimPrefix .GetTypeName $pkg)}}
-          {{if isRepeatedField .}}
+        {{if or (eq "request" .GetName) (eq "Request" .GetName) (eq "requests" .GetName) (eq "Requests" .GetName)}}
+          {{$keyHandleReqName := ""}}
+          {{$repField := false}}
+          {{$isOneOf := false}}
+          {{if or (eq "request" .GetName) (eq "Request" .GetName)}}
+            {{$keyHandleReqName = (TrimPrefix .GetTypeName $pkg)}}
+            {{$repField = (isRepeatedField .)}}
+          {{else}}
+            {{$isOneOf = true}}
+            {{$getReqsMsg := (getMsg $file $pkg (TrimPrefix .GetTypeName $pkg))}}
+            {{range $getReqsMsg.Fields}}
+              {{$repField = (isRepeatedField .)}}
+              {{$keyHandleReqName = (TrimPrefix .GetTypeName $pkg)}}
+            {{end}}
+          {{end}}
+          {{if $isOneOf}}
+            {{if $repField}}
+        if (req->has_requests() && req->requests().request_size()) {
+            for (int i = 0; i < req->requests().request_size(); i ++) {
+                auto req_proto_spec = req->requests().request(i);
+            {{else}}
+        if (req->has_request()) {
+                auto req_proto_spec = req->request();
+            {{end}}
+          {{else}}
+            {{if $repField}}
         if (req->request_size()) {
             for (int i = 0; i < req->request_size(); i ++) {
                 auto req_proto_spec = req->request(i);
-          {{else}}
+            {{else}}
         if (req->has_request()) {
                 auto req_proto_spec = req->request();
+            {{end}}
           {{end}}
 
           {{$respFields := $respMsg.Fields}}
@@ -283,8 +307,14 @@ Status
               {{end}}
             {{end}}
           {{end}}
-          {{if isRepeatedField .}}
+          {{if $isOneOf}}
+            {{if $repField}}
             }
+            {{end}}
+          {{else}}
+            {{if $repField}}
+            }
+            {{end}}
           {{end}}
         } else {
             {{$respFields := $respMsg.Fields}}
@@ -307,7 +337,23 @@ Status
                         {{end}}
                 PDS_MS_GET_SHARED_START();
                 pds_ms_pre_getall_{{$specMsgName | ToLower}}_{{$struct | ToLower}}(&proto_resp);
-                pds_ms_getall_{{$specMsgName | ToLower}}_{{$struct | ToLower}}(&proto_resp);
+                pds_ms::{{$requestTypeName}} pds_ms_req;
+                        {{$reqRootMsg := (getMsg $file $pkg $requestTypeName)}}
+                        {{$fields := $reqRootMsg.Fields}}
+                        {{range $fields}}
+                          {{if (eq .GetName "Filter")}}
+                            {{$filterMsg := (getMsg $file $pkg (TrimPrefix .GetTypeName $pkg))}}
+                if (req->has_filter()) {
+                    pds_ms::{{$filterMsg.GetName}} *pds_ms_filter = new pds_ms::{{$filterMsg.GetName}};
+                            {{$fields := $filterMsg.Fields}}
+                            {{range $fields}}
+                    pds_ms_filter->set_{{.GetName | ToLower}}(req->filter().{{.GetName | ToLower}}());
+                            {{end}}
+                    pds_ms_req.set_allocated_filter(pds_ms_filter);
+                }
+                          {{end}}
+                        {{end}}
+                pds_ms_getall_{{$specMsgName | ToLower}}_{{$struct | ToLower}}(&pds_ms_req, &proto_resp);
                 PDS_MS_GET_SHARED_END();
                 ret = pds_ms::mgmt_state_t::ms_response_wait();
                 pds_ms_post_getall_{{$specMsgName | ToLower}}_{{$struct | ToLower}}(&proto_resp);
@@ -326,7 +372,23 @@ Status
                     PDS_MS_GET_SHARED_START();
                         {{$statusMsgName := (TrimPrefix .GetTypeName $pkg)}}
                     pds_ms_pre_getall_{{$statusMsgName | ToLower}}_{{$struct | ToLower}}(&proto_resp);
-                    pds_ms_getall_{{$statusMsgName | ToLower}}_{{$struct | ToLower}}(&proto_resp);
+                    pds_ms::{{$requestTypeName}} pds_ms_req;
+                        {{$reqRootMsg := (getMsg $file $pkg $requestTypeName)}}
+                        {{$fields := $reqRootMsg.Fields}}
+                        {{range $fields}}
+                          {{if (eq .GetName "Filter")}}
+                            {{$filterMsg := (getMsg $file $pkg (TrimPrefix .GetTypeName $pkg))}}
+                    if (req->has_filter()) {
+                        pds_ms::{{$filterMsg.GetName}} *pds_ms_filter = new pds_ms::{{$filterMsg.GetName}};
+                            {{$fields := $filterMsg.Fields}}
+                            {{range $fields}}
+                        pds_ms_filter->set_{{.GetName | ToLower}}(req->filter().{{.GetName | ToLower}}());
+                            {{end}}
+                        pds_ms_req.set_allocated_filter(pds_ms_filter);
+                    }
+                          {{end}}
+                        {{end}}
+                    pds_ms_getall_{{$statusMsgName | ToLower}}_{{$struct | ToLower}}(&pds_ms_req, &proto_resp);
                     PDS_MS_GET_SHARED_END();
                     ret = pds_ms::mgmt_state_t::ms_response_wait();
                     pds_ms_post_getall_{{$statusMsgName | ToLower}}_{{$struct | ToLower}}(&proto_resp);
@@ -340,7 +402,23 @@ Status
                     {{$specMsgName := (TrimPrefix .GetTypeName $pkg)}}
                 PDS_MS_GET_SHARED_START();
                 pds_ms_pre_getall_{{$specMsgName | ToLower}}_{{$struct | ToLower}}(&proto_resp);
-                pds_ms_getall_{{$specMsgName | ToLower}}_{{$struct | ToLower}}(&proto_resp);
+                pds_ms::{{$requestTypeName}} pds_ms_req;
+                        {{$reqRootMsg := (getMsg $file $pkg $requestTypeName)}}
+                        {{$fields := $reqRootMsg.Fields}}
+                        {{range $fields}}
+                          {{if (eq .GetName "Filter")}}
+                            {{$filterMsg := (getMsg $file $pkg (TrimPrefix .GetTypeName $pkg))}}
+                if (req->has_filter()) {
+                    pds_ms::{{$filterMsg.GetName}} *pds_ms_filter = new pds_ms::{{$filterMsg.GetName}};
+                            {{$fields := $filterMsg.Fields}}
+                            {{range $fields}}
+                    pds_ms_filter->set_{{.GetName | ToLower}}(req->filter().{{.GetName | ToLower}}());
+                            {{end}}
+                    pds_ms_req.set_allocated_filter(pds_ms_filter);
+                }
+                          {{end}}
+                        {{end}}
+                pds_ms_getall_{{$specMsgName | ToLower}}_{{$struct | ToLower}}(&pds_ms_req, &proto_resp);
                 PDS_MS_GET_SHARED_END();
                 ret = pds_ms::mgmt_state_t::ms_response_wait();
                 pds_ms_post_getall_{{$specMsgName | ToLower}}_{{$struct | ToLower}}(&proto_resp);

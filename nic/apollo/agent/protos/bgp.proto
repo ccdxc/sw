@@ -599,7 +599,15 @@ message BGPNLRIPrefixKey {
   uint32   PathID           = 7;
 }
 
-//BGP NLRI prefix object
+// BGP NLRI prefix filter object
+message BGPNLRIPrefixFilter {
+  // filter based on extended communities
+  bytes ExtComm      = 1;
+  // filter based on as-path regexp
+  bytes AsPathRegexp = 2;
+}
+
+// BGP NLRI prefix object
 message BGPNLRIPrefix {
   BGPNLRIPrefixStatus Status = 1;
 }
@@ -615,9 +623,17 @@ message BGPNLRIPrefixKeyHandle {
   BGPNLRIPrefixKey Key = 1;
 }
 
+// BGPNLRIPrefix GET Requests
+message BGPNLRIPrefixGetRequests {
+  repeated BGPNLRIPrefixKeyHandle Request = 1;
+}
+
 // BGP NLRI prefix get request
 message BGPNLRIPrefixGetRequest {
-  repeated BGPNLRIPrefixKeyHandle Request = 1;
+  oneof requests_or_filter {
+    BGPNLRIPrefixGetRequests Requests = 1;
+    BGPNLRIPrefixFilter      Filter   = 2;
+  }
 }
 
 // BGP PrfxCntrs table

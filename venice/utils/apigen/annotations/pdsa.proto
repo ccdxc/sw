@@ -11,12 +11,14 @@ message GlobalOpts {
     string ActionFn        = 4;
     bool   UpdateForDelete = 5;
     string SpecMsg         = 6;
+    string FilterMib       = 7;
+    string FilterTypeField = 8;
 }
 
 // Venice Option extensions applicable to messages
 extend google.protobuf.MessageOptions {
-  GlobalOpts pdsaSetGlobOpts = 82400;
-  GlobalOpts pdsaGetGlobOpts = 82401;
+  GlobalOpts pdsaSetGlobOpts    = 82400;
+  GlobalOpts pdsaGetGlobOpts    = 82401;
 };
 
 message PdsaFields {
@@ -40,6 +42,8 @@ message PdsaFields {
   string KeysMsg                = 18;
   bool   IsInternalField        = 19;
   string PackedElemSize         = 20;
+  string FilterType             = 21;
+  string FilterFieldLen         = 22;
 }
 
 // PDSA Option extensions applicable to Fields

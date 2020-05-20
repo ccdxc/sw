@@ -251,9 +251,11 @@
 		BGPClearRouteResponse
 		BGPNLRIPrefixStatus
 		BGPNLRIPrefixKey
+		BGPNLRIPrefixFilter
 		BGPNLRIPrefix
 		BGPNLRIPrefixGetResponse
 		BGPNLRIPrefixKeyHandle
+		BGPNLRIPrefixGetRequests
 		BGPNLRIPrefixGetRequest
 		BGPPrfxCntrsStatus
 		BGPPrfxCntrsKey

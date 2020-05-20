@@ -5,7 +5,10 @@
 
 #include <iostream>
 #include "nic/metaswitch/stubs/mgmt/pds_ms_get_utils.hpp"
-#include <iostream>
+#include "nic/apollo/core/trace.hpp"
+extern "C" {
+#include "qb0user.h"
+}
 
 using namespace std;
 
@@ -80,7 +83,9 @@ NBB_VOID pds_ms_amb_gen_common(AMB_GEN_IPS *amb_gen,
 AMB_GET *pds_ms_amb_get_bulk_common(NBB_LONG bulk_size,
                                   NBB_LONG data_len,
                                   NBB_LONG oid_len,
-                                  NBB_ULONG *oid
+                                  NBB_ULONG *oid,
+                                  NBB_ULONG filter_len,
+                                  NBB_BYTE  *filter
                                   NBB_CCXT_T NBB_CXT)
 {
   /***************************************************************************/
@@ -92,11 +97,12 @@ AMB_GET *pds_ms_amb_get_bulk_common(NBB_LONG bulk_size,
   AMB_GET *v_amb_get = NULL;
 
   NBB_TRC_ENTRY("pds_ms_amb_get_bulk_common");
+  PDS_TRACE_VERBOSE("pds_ms_amb_get_bulk_common: filter_len=%d", filter_len);
 
   /***************************************************************************/
   /* Get an internal buffer.                                                 */
   /***************************************************************************/
-  get_buf_size = AMB_BULK_GET_CALC_SIZE(bulk_size, oid_len, data_len, 0);
+  get_buf_size = AMB_BULK_GET_CALC_SIZE(bulk_size, oid_len, data_len, filter_len);
   v_amb_get = (AMB_GET *)NBB_GET_BUFFER(NBB_NULL_HANDLE,
                                         get_buf_size,
                                         0,
@@ -113,7 +119,7 @@ AMB_GET *pds_ms_amb_get_bulk_common(NBB_LONG bulk_size,
   /***************************************************************************/
   v_amb_get->ips_hdr.ips_type = IPS_AMB_GET;
   pds_ms_amb_gen_common((AMB_GEN_IPS *)v_amb_get, AMB_ROW_ACTIVE NBB_CCXT);
-  AMB_BULK_GET_INIT_REQ(v_amb_get, bulk_size, oid_len, data_len, 0);
+  AMB_BULK_GET_INIT_REQ(v_amb_get, bulk_size, oid_len, data_len, filter_len);
 
   /***************************************************************************/
   /* Copy the OID into the request.                                          */
@@ -126,6 +132,14 @@ AMB_GET *pds_ms_amb_get_bulk_common(NBB_LONG bulk_size,
     /*************************************************************************/
     get_oid[ii] = oid[ii];
   }
+
+  /***************************************************************************/
+  /* Copy the filter into the request.                                       */
+  /***************************************************************************/
+  NBB_BYTE *user_search_criteria = NULL;
+  PDS_TRACE_VERBOSE("pds_ms_amb_get_bulk_common: search_criteria offset=0x%X, len=%d", v_amb_get->user_search_criteria.offset, v_amb_get->user_search_criteria.total_length);
+  user_search_criteria = NTL_OFF_GET_POINTER(v_amb_get, &v_amb_get->user_search_criteria);
+  NBB_MEMCPY(user_search_criteria, filter, filter_len);
 
   NBB_TRC_EXIT();
 
