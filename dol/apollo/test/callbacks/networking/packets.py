@@ -170,29 +170,19 @@ def __get_usable_host_from_rule(rule, policy, pfxpos, testcase):
     if not l3match.valid:
         pfx = None
     elif direction == "ingress":
-        if utils.IsPipelineApulu() and (l3match.SrcType == topo.L3MatchType.TAG):
-            if af == "IPV4":
-                obj = random.choice(testcase.config.v4rtags[l3match.SrcTag])
-                testcase.config.remotemapping = obj
-                return obj.IP
-            else:
-                obj = random.choice(testcase.config.v6rtags[l3match.SrcTag])
-                testcase.config.remotemapping = obj
-                return obj.IP
+        if utils.IsPipelineApulu() and testcase.config.remotemapping:
+            return testcase.config.remotemapping.IP
         else:
-            pfx = __get_usable_pfx_from_rule_impl(l3match.SrcType, l3match.SrcPrefix, l3match.SrcIPLow, l3match.SrcIPHigh, l3match.SrcTag, pfxpos)
+            pfx = __get_usable_pfx_from_rule_impl(l3match.SrcType, l3match.SrcPrefix,
+                                                  l3match.SrcIPLow, l3match.SrcIPHigh,
+                                                  l3match.SrcTag, pfxpos)
     else:
-        if utils.IsPipelineApulu() and (l3match.DstType == topo.L3MatchType.TAG):
-            if af == "IPV4":
-                obj = random.choice(testcase.config.v4rtags[l3match.DstTag])
-                testcase.config.remotemapping = obj
-                return obj.IP
-            else:
-                obj = random.choice(testcase.config.v6rtags[l3match.DstTag])
-                testcase.config.remotemapping = obj
-                return obj.IP
+        if utils.IsPipelineApulu() and testcase.config.remotemapping:
+            return testcase.config.remotemapping.IP
         else:
-            pfx = __get_usable_pfx_from_rule_impl(l3match.DstType, l3match.DstPrefix, l3match.DstIPLow, l3match.DstIPHigh, l3match.DstTag, pfxpos)
+            pfx = __get_usable_pfx_from_rule_impl(l3match.DstType, l3match.DstPrefix,
+                                                  l3match.DstIPLow, l3match.DstIPHigh,
+                                                  l3match.DstTag, pfxpos)
     return __get_host_from_pfx(pfx, af, pfxpos)
 
 def GetUsableHostFromPolicy(testcase, packet, args=None):
@@ -1073,9 +1063,9 @@ def GetMulticastMacFromIPv6(ip):
 
 def GetMulticastMacFromIP(testcase, packet):
     ip = GetMulticastIP(testcase, packet)
-    if ip.value.version == 4:
+    if ip.value.version == utils.IP_VERSION_4:
         return GetMulticastMacFromIPv4(ip)
-    elif ip.value.version == 6:
+    elif ip.value.version == utils.IP_VERSION_6:
         return GetMulticastMacFromIPv6(ip)
     else:
         assert(0)

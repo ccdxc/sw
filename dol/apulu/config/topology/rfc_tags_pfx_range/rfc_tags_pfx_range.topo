@@ -368,3 +368,33 @@ node:
                         sporthigh: 50
                         dportlow: 41
                         dporthigh: 50
+
+                  - type : specific
+                    policytype : stateless
+                    overlaptype : any_proto_src_tag
+                    direction  : bidir
+                    rule:
+                      - protocol: any
+                        action  : allow
+                        srctype : tag
+                        srctag  : 10
+                        dsttype : pfxrange
+                        v4dstiplow : '10.10.10.0'
+                        v4dstiphigh : '10.10.10.255'
+                        v6dstiplow : 'e1ba:aced:a11:face:b00a::0'
+                        v6dstiphigh : 'e1ba:aced:a11:face:b00a:ffff:ffff:ffff'
+
+                  - type : specific
+                    policytype : stateless
+                    overlaptype : any_proto_dst_tag
+                    direction  : bidir
+                    rule:
+                      - protocol: any
+                        action : allow
+                        srctype : pfxrange
+                        v4srciplow : '10.10.14.0'
+                        v4srciphigh : '10.10.14.255'
+                        v6srciplow : 'e1ba:aced:a11:face:b014::0'
+                        v6srciphigh : 'e1ba:aced:a11:face:b014:ffff:ffff:ffff'
+                        dsttype : tag
+                        dsttag  : 5

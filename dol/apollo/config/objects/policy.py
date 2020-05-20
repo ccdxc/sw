@@ -585,6 +585,31 @@ class PolicyObject(base.ConfigObjectBase):
     def IsEgressPolicy(self):
         return self.Direction == 'egress'
 
+    def __get_remotemapping_obj(self, rule):
+        """ Supported only for Tags """
+
+        if not rule or not rule.L3Match or not rule.L3Match.valid:
+            return None
+
+        l3match = rule.L3Match
+        if self.IsIngressPolicy() and \
+           l3match.SrcType == topo.L3MatchType.TAG:
+            tag = l3match.SrcTag
+        elif self.IsEgressPolicy() and \
+             l3match.DstType == topo.L3MatchType.TAG:
+            tag = l3match.DstTag
+        else:
+            return None
+
+        if self.AddrFamily == "IPV4":
+            rtagsdict = RmappingClient.GetRmappingV4Tags(self.Node)
+        elif self.AddrFamily == "IPV6":
+            rtagsdict = RmappingClient.GetRmappingV6Tags(self.Node)
+        else:
+            assert(0)
+
+        return random.choice(rtagsdict.get(tag, [None]))
+
     def SetupTestcaseConfig(self, obj):
         obj.localmapping = self.l_obj
         obj.remotemapping = None
@@ -611,6 +636,7 @@ class PolicyObject(base.ConfigObjectBase):
             obj.v6ltags = LmappingClient.GetLmappingV6Tags(self.Node)
             obj.v4rtags = RmappingClient.GetRmappingV4Tags(self.Node)
             obj.v6rtags = RmappingClient.GetRmappingV6Tags(self.Node)
+            obj.remotemapping = self.__get_remotemapping_obj(obj.tc_rule)
         utils.DumpTestcaseConfig(obj)
         return
 

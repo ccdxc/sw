@@ -1,0 +1,120 @@
+# Apulu RFC IPv4 Egress modules list for adjacent policy
+feature:
+    id          : rfc
+    sub         : rtag_crud
+    package     : test.rfc
+    module      : rfc
+    runorder    : 11000
+    enable      : True
+    ignore      : False
+
+modules:
+  - module          :
+      name          : REMOVE_RTAG_1
+      spec          : rfc_tag_crud.testspec
+      args          :
+        - object    : remotemapping
+          operation : RemoveTag
+      iterate       :
+        - policy    : filter://AddrFamily=IPV4,OverlapType=none,PolicyType=tags_only
+
+  - module          :
+      name          : REMOVE_RTAG_2
+      spec          : rfc_tag_crud.testspec
+      args          :
+        - object    : remotemapping
+          operation : RemoveTag
+      iterate       :
+        - policy    : filter://AddrFamily=IPV4,OverlapType=none,PolicyType=tags_only
+              
+  - module          :
+      name          : REMOVE_RTAG_3
+      spec          : rfc_tag_crud.testspec
+      args          :
+        - object    : remotemapping
+          operation : RemoveTag
+      iterate       :
+        - policy    : filter://AddrFamily=IPV4,OverlapType=none,PolicyType=tags_only
+
+  - module          :
+      name          : REMOVE_RTAG_4
+      spec          : rfc_tag_crud.testspec
+      args          :
+        - object    : remotemapping
+          operation : RemoveTag
+      iterate       :
+        - policy    : filter://AddrFamily=IPV4,OverlapType=none,PolicyType=tags_only
+
+  - module          :
+      name          : APPEND_RTAG_1
+      spec          : rfc_tag_crud.testspec
+      args          :
+        - object    : remotemapping
+          operation : AppendTag
+      iterate       :
+        - policy    : filter://AddrFamily=IPV4,OverlapType=none,PolicyType=tags_only
+
+  - module          :
+      name          : APPEND_RTAG_2
+      spec          : rfc_tag_crud.testspec
+      args          :
+        - object    : remotemapping
+          operation : AppendTag
+      iterate       :
+        - policy    : filter://AddrFamily=IPV4,OverlapType=none,PolicyType=tags_only
+              
+  - module          :
+      name          : APPEND_RTAG_3
+      spec          : rfc_tag_crud.testspec
+      args          :
+        - object    : remotemapping
+          operation : AppendTag
+      iterate       :
+        - policy    : filter://AddrFamily=IPV4,OverlapType=none,PolicyType=tags_only
+
+  - module          :
+      name          : APPEND_RTAG_4
+      spec          : rfc_tag_crud.testspec
+      args          :
+        - object    : remotemapping
+          operation : AppendTag
+      iterate       :
+        - policy    : filter://AddrFamily=IPV4,OverlapType=none,PolicyType=tags_only
+
+  - module          :
+      name          : REPLACE_RTAGS
+      spec          : rfc_tag_crud.testspec
+      args          :
+        - object    : remotemapping
+          operation : ReplaceTag
+          fields    :
+            tags    :
+              - 100000
+              - 9998
+              - 1
+              - 99999
+              - 689554
+      iterate       :
+        - policy    : filter://AddrFamily=IPV4,OverlapType=none,PolicyType=tags_only
+
+  - module          :
+      name          : DELETE_RMAP
+      spec          : rfc_tag_crud.testspec
+      args          :
+        - object    : remotemapping
+          operation : Delete
+      iterate       :
+        - policy    : filter://AddrFamily=IPV4,OverlapType=none,PolicyType=tags_only
+
+  - module          :
+      name          : CREATE_RMAP
+      spec          : rfc_tag_crud.testspec
+      args          :
+        - object    : remotemapping
+          operation : Create
+      iterate       :
+        - policy    : filter://AddrFamily=IPV4,OverlapType=none,PolicyType=tags_only
+
+  - module          :
+      name          : RFC_V4_INGRESS_DISJOINT_MLIST
+      mlist         : rfc_v4_ingress_disjoint.mlist

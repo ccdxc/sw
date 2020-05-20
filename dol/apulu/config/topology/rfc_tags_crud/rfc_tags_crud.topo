@@ -79,8 +79,8 @@ node:
                     - tag      : true
                       tag_type : unique
               rmap:                       # Remote IP mappings per subnet
-                - count : 1
-                  tag   : true
+                - count    : 1
+                  tag      : true
           routetbl:
                  - type: base
                    routetype: fulloverlap_max_with_default
@@ -305,15 +305,17 @@ node:
                         dporthigh: 30
 
                   - type : specific
-                    policytype : stateless
+                    policytype : tags_only
                     overlaptype : none
                     direction  : bidir
                     rule:
                       - protocol: udp
                         priority: 'MAXPRIO'
                         action  : allow
-                        v4pfx: '10.10.0.0\16'
-                        v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+                        srctype : tag
+                        dsttype : tag
+                        srctag  : 1
+                        dsttag  : 1
                         sportlow: 1
                         sporthigh: 65534
                         dportlow: 1

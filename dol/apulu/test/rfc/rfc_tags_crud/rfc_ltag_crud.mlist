@@ -1,7 +1,7 @@
 # Apulu RFC IPv4 Egress modules list for adjacent policy
 feature:
     id          : rfc
-    sub         : tag_crud
+    sub         : ltag_crud
     package     : test.rfc
     module      : rfc
     runorder    : 11000
@@ -10,7 +10,7 @@ feature:
 
 modules:
   - module          :
-      name          : REMOVE_TAG_1
+      name          : REMOVE_LTAG_1
       spec          : rfc_tag_crud.testspec
       args          :
         - object    : localmapping
@@ -19,7 +19,7 @@ modules:
         - policy    : filter://AddrFamily=IPV4,OverlapType=none
 
   - module          :
-      name          : REMOVE_TAG_2
+      name          : REMOVE_LTAG_2
       spec          : rfc_tag_crud.testspec
       args          :
         - object    : localmapping
@@ -28,7 +28,7 @@ modules:
         - policy    : filter://AddrFamily=IPV4,OverlapType=none
               
   - module          :
-      name          : REMOVE_TAG_3
+      name          : REMOVE_LTAG_3
       spec          : rfc_tag_crud.testspec
       args          :
         - object    : localmapping
@@ -37,7 +37,7 @@ modules:
         - policy    : filter://AddrFamily=IPV4,OverlapType=none
 
   - module          :
-      name          : REMOVE_TAG_4
+      name          : REMOVE_LTAG_4
       spec          : rfc_tag_crud.testspec
       args          :
         - object    : localmapping
@@ -46,7 +46,7 @@ modules:
         - policy    : filter://AddrFamily=IPV4,OverlapType=none
 
   - module          :
-      name          : REMOVE_TAG_5
+      name          : REMOVE_LTAG_5
       spec          : rfc_tag_crud.testspec
       args          :
         - object    : localmapping
@@ -55,7 +55,7 @@ modules:
         - policy    : filter://AddrFamily=IPV4,OverlapType=none
 
   - module          :
-      name          : APPEND_TAG_1
+      name          : APPEND_LTAG_1
       spec          : rfc_tag_crud.testspec
       args          :
         - object    : localmapping
@@ -64,7 +64,7 @@ modules:
         - policy    : filter://AddrFamily=IPV4,OverlapType=none
 
   - module          :
-      name          : APPEND_TAG_2
+      name          : APPEND_LTAG_2
       spec          : rfc_tag_crud.testspec
       args          :
         - object    : localmapping
@@ -73,7 +73,7 @@ modules:
         - policy    : filter://AddrFamily=IPV4,OverlapType=none
               
   - module          :
-      name          : APPEND_TAG_3
+      name          : APPEND_LTAG_3
       spec          : rfc_tag_crud.testspec
       args          :
         - object    : localmapping
@@ -82,7 +82,7 @@ modules:
         - policy    : filter://AddrFamily=IPV4,OverlapType=none
 
   - module          :
-      name          : APPEND_TAG_4
+      name          : APPEND_LTAG_4
       spec          : rfc_tag_crud.testspec
       args          :
         - object    : localmapping
@@ -91,7 +91,7 @@ modules:
         - policy    : filter://AddrFamily=IPV4,OverlapType=none
 
   - module          :
-      name          : APPEND_TAG_5
+      name          : APPEND_LTAG_5
       spec          : rfc_tag_crud.testspec
       args          :
         - object    : localmapping
@@ -100,7 +100,7 @@ modules:
         - policy    : filter://AddrFamily=IPV4,OverlapType=none
 
   - module          :
-      name          : REPLACE_TAGS
+      name          : REPLACE_LTAGS
       spec          : rfc_tag_crud.testspec
       args          :
         - object    : localmapping
@@ -136,6 +136,7 @@ modules:
   - module          :
       name          : RFC_V4_INGRESS_DISJOINT_MLIST
       mlist         : rfc_v4_ingress_disjoint.mlist
+
 
 
 

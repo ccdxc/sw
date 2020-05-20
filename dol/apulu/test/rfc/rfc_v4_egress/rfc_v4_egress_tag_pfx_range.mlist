@@ -96,6 +96,12 @@ modules:
               ruleindex : 4
 
     - module:
+        name    : SRC_TAG_ANY_PROTO
+        spec    : rfc_ingress.testspec
+        iterate :
+            - policy : filter://AddrFamily=IPV4,OverlapType=any_proto_src_tag
+
+    - module:
         name    : DST_SPECIFIC
         ignore  : True
         spec    : rfc_egress.testspec
@@ -180,3 +186,10 @@ modules:
               ruleindex : 3
             - policy    : filter://AddrFamily=IPV4,OverlapType=adjacent_dst_tag
               ruleindex : 4
+
+    - module:
+        name    : DST_TAG_ANY_PROTO
+        spec    : rfc_ingress.testspec
+        iterate :
+            - policy : filter://AddrFamily=IPV4,OverlapType=any_proto_dst_tag
+

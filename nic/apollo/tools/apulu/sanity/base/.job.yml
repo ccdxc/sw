@@ -55,6 +55,24 @@ targets:
     build-dependencies:
     - build-apulu-x86
 
+  apulu/dol/rfc_egress:
+    commands: ["make", "PIPELINE=apulu", "jobd/dol/apulu/rfc_egress"]
+    owners: ["email:ajeer@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    build-dependencies:
+    - build-apulu-x86
+
+  apulu/dol/rfc_tags:
+    commands: ["make", "PIPELINE=apulu", "jobd/dol/apulu/rfc_tags"]
+    owners: ["email:ajeer@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    build-dependencies:
+    - build-apulu-x86
+
   apulu/dol/learn:
     commands: ["make", "PIPELINE=apulu", "jobd/dol/apulu/learn"]
     owners: ["email:sunil@pensando.io", "email:kalyanbade@pensando.io"]
