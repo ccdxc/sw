@@ -1722,6 +1722,17 @@ func TestBatchedWatch(t *testing.T) {
 	wg.Add(1)
 	var fromver uint64
 
+	// Cleanup any stale publisher entries
+	{
+		objs, _ := apicl.BookstoreV1().Publisher().List(ctx, &api.ListWatchOptions{})
+		for _, o := range objs {
+			_, err := apicl.BookstoreV1().Publisher().Delete(ctx, &o.ObjectMeta)
+			if err != nil {
+				t.Fatalf("Failed to delete publisher %s (%s)\n", o.Name, err)
+			}
+		}
+	}
+
 	go func() {
 		opts := api.ListWatchOptions{}
 		watcher, err := apicl.BookstoreV1().Publisher().Watch(wctx, &opts)
