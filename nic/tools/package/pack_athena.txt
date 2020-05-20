@@ -8,6 +8,7 @@ nic/conf/$PIPELINE/operd-regions.json                             /nic/conf/
 nic/conf/$PIPELINE/operd.json                                     /nic/conf/
 nic/conf/$PIPELINE/policy.json                                    /nic/conf/$PIPELINE/
 nic/conf/$PIPELINE/policy_2M.json                                 /nic/conf/$PIPELINE/
+nic/conf/$PIPELINE/policy_2.json                                 /nic/conf/$PIPELINE/
 nic/conf/$PIPELINE/sshd_boot_config                               /nic/conf/
 
 # HW catalog files
@@ -236,6 +237,7 @@ nic/build/$ARCH/$PIPELINE/bin/fd_send                             /nic/conf/
 nic/apollo/tools/athena/start-agent-stub.sh                       /nic/tools/
 nic/apollo/tools/athena/start-agent.sh                            /nic/tools/
 nic/apollo/tools/athena/start-sec-agent.sh                        /nic/tools/
+nic/apollo/tools/athena/start-sec-agent-iota.sh                        /nic/tools/
 nic/apollo/tools/athena/start-agent-skip-dpdk.sh                  /nic/tools/
 nic/apollo/tools/start-nmd.sh                                     /nic/tools/
 nic/apollo/tools/store_agent_log.sh                               /nic/tools/

@@ -15,3 +15,15 @@ testcases:
     -   name    : Pdsctl_Show_Cmd
         testcase: testcases.networking.pdsctl_show
         enable  : True
+
+    -   name    : Policy_Custom
+        testcase: testcases.networking.policy
+        enable  : True
+        args    :
+            type    : policy_2
+
+    -   name    : Policy_Custom
+        testcase: testcases.networking.policy
+        enable  : True
+        args    :
+            type    : policy_2M
