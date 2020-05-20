@@ -171,10 +171,10 @@
 <ng-template #actionButtonsTemplate>
   <div *ngIf="!tableLoading" class="workloads-action-template" fxLayout="row">
     <div fxFlex="1 0 50%">
-      <div *ngIf="dataObjects.length !== searchWorkloadCount"
+      <div *ngIf="dataObjects.length !== dataObjectsBackUp.length"
            class="workloads-table-header-title-append"
            matTooltip="Total workloads">
-        | System has ({{ searchWorkloadCount }})
+        | System has ({{ dataObjectsBackUp.length }})
       </div>
     </div>
     <div *roleGuard="'workloadworkload_update'" fxFlex="1 0 50%">

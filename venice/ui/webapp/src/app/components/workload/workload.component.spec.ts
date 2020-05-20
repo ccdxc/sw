@@ -225,23 +225,12 @@ describe('WorkloadComponent', () => {
         body: searchResp
       })
     );
-    spyOn(service, 'WatchWorkload').and.returnValue(
-      new BehaviorSubject({
-        events: [
-          {
-            type: 'Created',
-            object: workload1.getFormGroupValues()
-          },
-          {
-            type: 'Created',
-            object: workload2.getFormGroupValues()
-          },
-          {
-            type: 'Created',
-            object: workload3.getFormGroupValues()
-          }
-        ]
-      })
+    spyOn(service, 'ListWorkloadCache').and.returnValue(
+      TestingUtility.createDataCacheSubject([
+        workload1,
+        workload2,
+        workload3,
+      ])
     );
 
     fixture.detectChanges();
@@ -270,7 +259,7 @@ describe('WorkloadComponent', () => {
         });
       }
     };
-    TestingUtility.verifyTable([workload3, workload2, workload1], component.cols, tableBody, caseMap, ' editdelete', true);
+    TestingUtility.verifyTable([workload1, workload2, workload3], component.cols, tableBody, caseMap, 'editdelete', true);
     fixture.destroy();
     discardPeriodicTasks();
     flush();

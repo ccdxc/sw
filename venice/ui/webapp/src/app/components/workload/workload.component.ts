@@ -99,9 +99,6 @@ export class WorkloadComponent extends DataComponent  implements OnInit {
   tableLoading: boolean = false;
   uiModelLoading: boolean = false;
 
-  // Used for processing watch events
-  workloadEventUtility: HttpEventUtility<WorkloadWorkload>;
-
   cols: TableCol[] = [
     { field: 'meta.name', header: 'Workload Name', class: 'workload-column-name', sortable: true, width: 15 },
     { field: 'spec.host-name', header: 'Host Name', class: 'workload-column-host-name', sortable: true, width: 15 },
@@ -125,7 +122,7 @@ export class WorkloadComponent extends DataComponent  implements OnInit {
   isTabComponent: boolean = false;
   disableTableWhenRowExpanded: boolean = true;
   dataObjects: ReadonlyArray<WorkloadWorkload> = [];
-  dataObjectsBackUp: ReadonlyArray<WorkloadWorkload> = null;
+  dataObjectsBackUp: ReadonlyArray<WorkloadWorkload> = [];
   exportFilename: string = 'PSM-workloads';
   exportMap: CustomExportMap = {
     'spec.interfaces': (opts): string => {
@@ -429,11 +426,12 @@ export class WorkloadComponent extends DataComponent  implements OnInit {
   }
 
   watchWorkloads() {
-    this.workloadEventUtility = new HttpEventUtility<WorkloadWorkload>(WorkloadWorkload);
-    this.dataObjects = this.workloadEventUtility.array;
-    const subscription = this.workloadService.WatchWorkload().subscribe(
+    const subscription = this.workloadService.ListWorkloadCache().subscribe(
       (response) => {
-        this.workloadEventUtility.processEvents(response);
+        if (response.connIsErrorState) {
+          return;
+        }
+        this.dataObjects = response.data as WorkloadWorkload[];
         const currenttimeWatchWorkload = (new Date()).getTime();
         const timeDiff = currenttimeWatchWorkload - this.starttimeWatchWorkload;
         const timeOut = (timeDiff > 2 * 60 * 1000);

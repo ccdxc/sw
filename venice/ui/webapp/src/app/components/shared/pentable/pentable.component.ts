@@ -1,15 +1,15 @@
 import { AfterViewInit, Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, Renderer2, SimpleChanges, TemplateRef, ViewChild, ViewEncapsulation } from '@angular/core';
 import { FormArray } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { Observable, Subscription, forkJoin } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { Table } from 'primeng/table';
 import { Animations } from '@app/animations';
 import { Utility } from '@app/common/Utility';
 import { ControllerService } from '@app/services/controller.service';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
-import { IApiStatus, FieldsRequirement, SearchTextRequirement } from '@sdk/v1/models/generated/search';
+import { IApiStatus } from '@sdk/v1/models/generated/search';
 import { BaseComponent } from '@app/components/base/base.component';
-import { AdvancedSearchComponent, LocalSearchRequest } from '../advanced-search/advanced-search.component';
+import { AdvancedSearchComponent } from '../advanced-search/advanced-search.component';
 import { CustomExportMap, TableCol } from '../tableviewedit';
 import { TableUtility } from '../tableviewedit/tableutility';
 import { TableMenuItem } from '../tableheader/tableheader.component';
@@ -98,6 +98,8 @@ export class PentableComponent extends BaseComponent implements AfterViewInit, O
       const sub = this._route.queryParams.subscribe(params => {
         if (params.hasOwnProperty('filter')) {
           this.filter = params['filter'];
+        } else {
+          this.filter = null;
         }
       });
       this.subscriptions.push(sub);
@@ -109,9 +111,12 @@ export class PentableComponent extends BaseComponent implements AfterViewInit, O
   }
 
   ngOnChanges(change: SimpleChanges) {
-    if (this.searchable && this.filter && change.loading) {
-      // wait until data finishes loading
-      if (change.loading.previousValue && !change.loading.currentValue) {
+    if (this.searchable && this.filter) {
+      // if there is a "filter" query param:
+      // - wait until data finishes loading (component init)
+      // - if data has been updated, emit search results for parent to update filtered list
+      if ((change.loading && change.loading.previousValue && !change.loading.currentValue) ||
+          (change.data && !this.loading && !Utility.getLodash().isEqual(change.data.previousValue, change.data.currentValue))) {
         // emit search based on query params after current cycle
         setTimeout(() => {
           this.advancedSearchComponent.search = this.filter;
