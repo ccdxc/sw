@@ -32,24 +32,8 @@ pds_session_get_nat_drop_next_offset (vlib_buffer_t *p0)
 }
 
 always_inline void
-pds_session_prog_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1,
-                     u32 session_id0, u32 session_id1,
-                     u16 *next0, u16 *next1, u32 *counter)
-{
-    void *ses_info0 = vlib_buffer_get_current(b0);
-    void *ses_info1 = vlib_buffer_get_current(b1);
-
-    session_insert(session_id0, ses_info0);
-    session_insert(session_id1, ses_info1);
-    *next0 = *next1 = SESSION_PROG_NEXT_FWD_FLOW;
-
-    vlib_buffer_advance(b0, pds_session_get_advance_offset());
-    vlib_buffer_advance(b1, pds_session_get_advance_offset());
-}
-
-always_inline void
 pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
-                     u16 *next, u32 *counter)
+                     u16 thread_id, u16 *next, u32 *counter)
 {
     void *ses_info = vlib_buffer_get_current(b);
 

@@ -781,6 +781,13 @@ pds_flow_session_info_show (vlib_main_t *vm, u32 ses_id, u8 detail)
                     session_info.session_tracking_en ? "Enabled" : "Disabled");
     vlib_cli_output(vm, "  %-21s: %s\n", "Session action",
                     session_info.drop ? "Drop" : "Allow");
+    if (session_info.qid_en) {
+        vlib_cli_output(vm, "  %-21s: %u\n", "Session qid",
+                        session_info.qid);
+    } else {
+        vlib_cli_output(vm, "  %-21s: %s\n", "Session qid",
+                        "Disabled");
+    }
     vlib_cli_output(vm, "  %-21s: %s\n", "Session state", 
                     pds_flow_state_str[session->flow_state]);
     vlib_cli_output(vm, "  %-21s: %d\n", "Keepalive retries",

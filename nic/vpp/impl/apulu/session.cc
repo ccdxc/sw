@@ -149,6 +149,8 @@ pds_session_get_info (uint32_t session_id, session_info_t *info)
     info->session_tracking_en =
         ses_data.action_u.session_session_info.session_tracking_en;
     info->drop = ses_data.action_u.session_session_info.drop;
+    info->qid_en = ses_data.action_u.session_session_info.qid_en;
+    info->qid = (uint8_t)ses_data.action_u.session_session_info.qid;
 }
 
 void

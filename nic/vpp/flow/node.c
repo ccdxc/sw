@@ -297,9 +297,11 @@ pds_session_prog (vlib_main_t * vm,
             session_id0 = vnet_buffer(b0)->pds_flow_data.ses_id;
             session_id1 = vnet_buffer(b1)->pds_flow_data.ses_id;
             pds_session_prog_x1(b0, session_id0,
+                                node->thread_index,
                                 PDS_PACKET_NEXT_NODE_PTR(0),
                                 counter);
             pds_session_prog_x1(b1, session_id1,
+                                node->thread_index,
                                 PDS_PACKET_NEXT_NODE_PTR(1),
                                 counter);
         } PDS_PACKET_DUAL_LOOP_END;
@@ -312,6 +314,7 @@ pds_session_prog (vlib_main_t * vm,
 
             session_id0 = vnet_buffer(b)->pds_flow_data.ses_id;
             pds_session_prog_x1(b, session_id0,
+                                node->thread_index,
                                 PDS_PACKET_NEXT_NODE_PTR(0),
                                 counter);
         } PDS_PACKET_SINGLE_LOOP_END;

@@ -23,6 +23,8 @@ typedef struct session_info_s {
     uint64_t timestamp;
     uint8_t session_tracking_en : 1;
     uint8_t drop : 1;
+    uint8_t qid_en : 1;
+    uint8_t qid;
 } session_info_t;
 
 typedef struct session_track_info_s {

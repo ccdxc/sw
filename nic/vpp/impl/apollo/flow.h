@@ -30,16 +30,8 @@ pds_session_get_nat_drop_next_offset (vlib_buffer_t *p0)
 }
 
 always_inline void
-pds_session_prog_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1,
-                     u32 session_id0, u32 session_id1,
-                     u16 *next0, u16 *next1, u32 *counter)
-{
-    return;
-}
-
-always_inline void
 pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
-                     u16 *next, u32 *counter)
+                     u16 thread_id, u16 *next, u32 *counter)
 {
     return;
 }

@@ -99,7 +99,7 @@ pds_session_get_nat_drop_next_offset (vlib_buffer_t *p0)
 
 always_inline void
 pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
-                     u16 *next, u32 *counter)
+                     u16 thread_id, u16 *next, u32 *counter)
 {
     session_track_actiondata_t track_actiondata = {0};
     static struct session_info_entry_t actiondata = {0};
@@ -152,6 +152,9 @@ pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
     ses_track_en = fm->con_track_en && (ctx->proto == PDS_FLOW_PROTO_TCP);
     actiondata.session_tracking_en = ses_track_en;
     actiondata.drop = ctx->drop;
+    actiondata.qid_en = true;
+    // qid starts from 0 and worker thread id from 1
+    actiondata.qid = (thread_id - 1);
     if (ses_track_en && !pds_is_flow_session_present(b)) {
         track_actiondata.action_u.session_track_session_track_info.iflow_tcp_state = FLOW_STATE_INIT;
         track_actiondata.action_u.session_track_session_track_info.iflow_tcp_seq_num =
