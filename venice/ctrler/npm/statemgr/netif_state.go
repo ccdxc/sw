@@ -126,9 +126,9 @@ func (sm *Statemgr) OnInterfaceCreateReq(nodeID string, agentNetif *netproto.Int
 		log.Infof("Ignore interface create for %v DSC ID not set ", agentNetif.Name)
 		return nil
 	}
-	_, err := sm.mbus.FindReceiver(agentNetif.Status.DSCID)
+	_, err := sm.mbus.FindReceiver(agentNetif.Status.DSC)
 	if err != nil {
-		log.Errorf("Ignoring interface create as DSC %v not registered yet %v", agentNetif.Status.DSCID, err)
+		log.Errorf("Ignoring interface create as DSC %v (%v) not registered yet %v", agentNetif.Status.DSC, agentNetif.Status.DSCID, err)
 		return err
 	}
 
