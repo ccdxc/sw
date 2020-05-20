@@ -66,17 +66,14 @@ dst_host_end (vmotion_ep *vmn_ep)
 static void
 vmotion_dst_host_timeout_cb (void *timer, uint32_t timer_id, void *ctxt)
 {
-    vmotion_ep *vmn_ep = (vmotion_ep *) ctxt;
-    vmotion_thread_evt_t *evt =
-        (vmotion_thread_evt_t *)HAL_CALLOC(HAL_MEM_ALLOC_VMOTION, sizeof(vmotion_thread_evt_t));
-
-    *evt = VMOTION_EVT_TIMEOUT;
+    vmotion_ep           *vmn_ep = (vmotion_ep *) ctxt;
+    vmotion_thread_evt_t  event  = VMOTION_EVT_TIMEOUT;
 
     HAL_TRACE_INFO("vMotion dst host timeout");
 
     vmn_ep->set_expiry_timer(NULL);
 
-    sdk::event_thread::message_send(vmn_ep->get_thread_id(), (void *)evt);
+    sdk::event_thread::message_send(vmn_ep->get_thread_id(), (void *)event);
 }
 
 vmotion_dst_host_fsm_def *
@@ -491,24 +488,22 @@ static void
 dst_host_thread_rcv_event (void *message, void *ctx)
 {
     vmotion_ep            *vmn_ep = (vmotion_ep *)ctx;
-    vmotion_thread_evt_t  *evt = (vmotion_thread_evt_t *) message;
+    vmotion_thread_evt_t  evt     = static_cast<vmotion_thread_evt_t>(reinterpret_cast<uintptr_t>(message));
 
     HAL_TRACE_DEBUG("vMotion dst host event thread. EP: {} Event:{} Flags: {}",
-                    vmn_ep->get_ep_handle(), *evt, *vmn_ep->get_flags());
+                    vmn_ep->get_ep_handle(), evt, *vmn_ep->get_flags());
 
-    if (*evt == VMOTION_EVT_RARP_RCVD) {
+    if (evt == VMOTION_EVT_RARP_RCVD) {
         vmn_ep->process_event(EVT_RARP_RCVD, NULL);
-    } else if (*evt == VMOTION_EVT_EP_MV_START) {
+    } else if (evt == VMOTION_EVT_EP_MV_START) {
         vmn_ep->process_event(EVT_EP_MV_START_RCVD, NULL);
-    } else if (*evt == VMOTION_EVT_EP_MV_DONE) {
+    } else if (evt == VMOTION_EVT_EP_MV_DONE) {
         vmn_ep->process_event(EVT_EP_MV_DONE_RCVD, NULL);
-    } else if (*evt == VMOTION_EVT_EP_MV_ABORT) {
+    } else if (evt == VMOTION_EVT_EP_MV_ABORT) {
         vmn_ep->process_event(EVT_EP_MV_ABORT_RCVD, NULL);
-    } else if (*evt == VMOTION_EVT_TIMEOUT) {
+    } else if (evt == VMOTION_EVT_TIMEOUT) {
         vmn_ep->process_event(EVT_VMOTION_TIMEOUT, NULL);
     }
-
-    HAL_FREE(HAL_MEM_ALLOC_VMOTION, evt);
 }
 
 static hal_ret_t

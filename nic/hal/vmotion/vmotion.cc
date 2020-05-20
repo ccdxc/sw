@@ -151,10 +151,9 @@ vmotion::deinit()
 
         for (auto thrd_id : thrd_ids) {
             // Destroy vMotion EP
-            vmotion_thread_evt_t *evt =
-                (vmotion_thread_evt_t *)HAL_CALLOC(HAL_MEM_ALLOC_VMOTION, sizeof(vmotion_thread_evt_t));
-            *evt = VMOTION_EVT_EP_MV_ABORT;
-            sdk::event_thread::message_send(thrd_id, (void *)evt);
+            vmotion_thread_evt_t event = VMOTION_EVT_EP_MV_ABORT;
+
+            sdk::event_thread::message_send(thrd_id, (void *)event);
         }
         // Till vMotion threads close, delay the vMotion pointer cleanup
         vmotion_schedule_delay_destroy();
@@ -322,11 +321,7 @@ vmotion::run_vmotion(ep_t *ep, vmotion_thread_evt_t event)
     }
 
     if (vmn_ep) {
-        vmotion_thread_evt_t *evt =
-            (vmotion_thread_evt_t *)HAL_CALLOC(HAL_MEM_ALLOC_VMOTION, sizeof(vmotion_thread_evt_t));
-        *evt = event;
-
-        sdk::event_thread::message_send(vmn_ep->get_thread_id(), (void *)evt);
+        sdk::event_thread::message_send(vmn_ep->get_thread_id(), (void *)event);
     }
 }
 
