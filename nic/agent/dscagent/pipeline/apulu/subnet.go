@@ -48,7 +48,7 @@ type rtImpExp struct {
 func createSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 	msc msTypes.EvpnSvcClient, nw netproto.Network, vpcID uint64, uplinkIDs []uint64) error {
 
-	subnetReq, err := convertNetworkToSubnet(infraAPI, nw, uplinkIDs)
+	subnetReq, err := convertNetworkToSubnet(infraAPI, nw, uplinkIDs, false)
 	if err != nil {
 		return errors.Wrapf(types.ErrBadRequest, "Subnet %s | failed to get Vrf %s | Err: %v", nw.GetKey(), nw.Spec.VrfName, err)
 	}
@@ -227,7 +227,7 @@ func createSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 
 func updateSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 	msc msTypes.EvpnSvcClient, nw netproto.Network, vpcID uint64, uplinkIDs []uint64) error {
-	subnetReq, err := convertNetworkToSubnet(infraAPI, nw, uplinkIDs)
+	subnetReq, err := convertNetworkToSubnet(infraAPI, nw, uplinkIDs, false)
 	if err != nil {
 		return errors.Wrapf(types.ErrBadRequest, "Subnet: %v Convertion failed | Err: %v", nw.GetKey(), err)
 	}
@@ -615,11 +615,13 @@ func getIPAMUuid(infraAPI types.InfraAPI, nw netproto.Network, attached bool) ([
 
 }
 
-func convertNetworkToSubnet(infraAPI types.InfraAPI, nw netproto.Network, uplinkIDs []uint64) (*halapi.SubnetRequest, error) {
+func convertNetworkToSubnet(infraAPI types.InfraAPI, nw netproto.Network, uplinkIDs []uint64, detach bool) (*halapi.SubnetRequest, error) {
 	var v6Prefix *halapi.IPv6Prefix
 	var v4Prefix *halapi.IPv4Prefix
 	var v4VrIP uint32
 	var v6VrIP []byte
+	var attached bool
+	var intfUUIDs [][]byte
 
 	v6Prefix = nil
 	v4Prefix = nil
@@ -662,10 +664,12 @@ func convertNetworkToSubnet(infraAPI types.InfraAPI, nw netproto.Network, uplink
 		return nil, err
 	}
 
-	// check if the network is attached to any host-pfs
-	attached, intfUUIDs := validator.ValidateNwAttach(infraAPI, nw.Tenant, nw.Namespace, nw.Name)
-	if attached {
-		log.Infof("subnet %s attached to interface uids: %v", nw.GetKey(), intfUUIDs)
+	if detach != true {
+		// check if the network is attached to any host-pfs
+		attached, intfUUIDs = validator.ValidateNwAttach(infraAPI, nw.Tenant, nw.Namespace, nw.Name)
+		if attached {
+			log.Infof("subnet %s attached to interface uids: %v", nw.GetKey(), intfUUIDs)
+		}
 	}
 
 	ipamuuids, err := getIPAMUuid(infraAPI, nw, attached)

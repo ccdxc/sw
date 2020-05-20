@@ -132,7 +132,7 @@ func updateDHCPRelayHandler(infraAPI types.InfraAPI, client halapi.DHCPSvcClient
 		if nw.Tenant != policy.Tenant || nw.Namespace != policy.Namespace {
 			continue
 		}
-		updsubnet, err := convertNetworkToSubnet(infraAPI, nw, nil)
+		updsubnet, err := convertNetworkToSubnet(infraAPI, nw, nil, false)
 		if err != nil {
 			log.Errorf("Network: %s could not convert | Err: %s", nw.GetKey(), err)
 			continue
