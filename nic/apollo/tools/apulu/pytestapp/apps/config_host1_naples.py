@@ -126,8 +126,8 @@ pxe_subnet_pfx='10.1.0.0/24'
 pxe_fabric_encap=1000
 pxe_v4_router_ip=ipaddress.IPv4Address('10.1.0.1')
 pxe_virt_router_mac='00:66:01:00:00:01'
-pxe_host_if_idx='0x80000047'
-pxe_remote_host_if_idx='0x80000047'
+pxe_host_if_idx='0x80000049'
+pxe_remote_host_if_idx='0x80000049'
 if use_device_macs:
     pxe_local_vnic_mac=node_obj.GetIntfMacByIfIndex(pxe_host_if_idx)
     if not pxe_local_vnic_mac:
@@ -155,8 +155,8 @@ subnet1_virt_router_mac='00:55:01:00:00:01'
 subnet1_gw_ip_addr=ipaddress.IPv4Address('2.1.0.1')
 
 # VNIC and mapping (local and remote) table objects
-subnet1_host_if_idx='0x80000048'
-subnet1_remote_host_if_idx='0x80000048'
+subnet1_host_if_idx='0x8000004a'
+subnet1_remote_host_if_idx='0x8000004a'
 if use_device_macs:
     subnet1_local_vnic_mac=node_obj.GetIntfMacByIfIndex(subnet1_host_if_idx)
     if not subnet1_local_vnic_mac:
@@ -183,8 +183,8 @@ subnet2_v4_router_ip=ipaddress.IPv4Address('3.1.0.1')
 subnet2_virt_router_mac='00:55:02:00:00:01'
 
 # VNIC and mapping (local and remote) table objects
-subnet2_host_if_idx='0x80000049'
-subnet2_remote_host_if_idx='0x80000049'
+subnet2_host_if_idx='0x8000004b'
+subnet2_remote_host_if_idx='0x8000004b'
 if use_device_macs:
     subnet2_local_vnic_mac=node_obj.GetIntfMacByIfIndex(subnet2_host_if_idx)
     if not subnet2_local_vnic_mac:
@@ -215,8 +215,8 @@ subnet3_v4_router_ip=ipaddress.IPv4Address('9.0.0.1')
 subnet3_virt_router_mac='00:55:03:00:00:01'
 
 # VNIC and mapping (local and remote) table objects
-subnet3_host_if_idx='0x8000004a'
-subnet3_remote_host_if_idx='0x8000004a'
+subnet3_host_if_idx='0x8000004c'
+subnet3_remote_host_if_idx='0x8000004c'
 if use_device_macs:
     subnet3_local_vnic_mac=node_obj.GetIntfMacByIfIndex(subnet3_host_if_idx)
     if not subnet3_local_vnic_mac:

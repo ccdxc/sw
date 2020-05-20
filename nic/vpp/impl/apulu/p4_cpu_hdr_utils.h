@@ -40,8 +40,9 @@
 #define VPP_CPU_FLAGS_FLOW_SES_EXIST  BIT(5)
 #define VPP_CPU_FLAGS_FLOW_RESPONDER  BIT(6)
 #define VPP_CPU_FLAGS_NAT_SVC_MAP     BIT(7)
-#define VPP_CPU_FLAGS_RX_VLAN_ENCAP   BIT(8)
+#define VPP_CPU_FLAGS_VLAN_ENCAP      BIT(8)
 #define VPP_CPU_FLAGS_FLOW_DEFUNCT    BIT(9)
+#define VPP_CPU_FLAGS_L2L_RX_VLAN_ENCAP  BIT(10)
 
 always_inline bool
 pds_is_flow_defunct (vlib_buffer_t *p0)
@@ -54,7 +55,21 @@ always_inline bool
 pds_is_flow_rx_vlan (vlib_buffer_t *p0)
 {
     return BIT_ISSET(vnet_buffer(p0)->pds_flow_data.flags,
-                     VPP_CPU_FLAGS_RX_VLAN_ENCAP);
+                      VPP_CPU_FLAGS_VLAN_ENCAP);
+}
+
+always_inline bool
+pds_is_flow_l2l_rx_vlan (vlib_buffer_t *p0)
+{
+    return BIT_ISSET(vnet_buffer(p0)->pds_flow_data.flags,
+                      VPP_CPU_FLAGS_L2L_RX_VLAN_ENCAP);
+}
+
+always_inline bool
+pds_is_flow_l2l_tx_vlan (vlib_buffer_t *p0)
+{
+    return BIT_ISSET(vnet_buffer(p0)->pds_flow_data.flags,
+                      VPP_CPU_FLAGS_VLAN_ENCAP);
 }
 
 always_inline bool

@@ -78,9 +78,19 @@ pds_get_cpu_flags_from_vnic (pds_impl_db_vnic_entry_t *vnic)
     u16 flags = 0;
 
     if (vnic->encap_type != PDS_ETH_ENCAP_NO_VLAN)
-        BIT_SET(flags, VPP_CPU_FLAGS_RX_VLAN_ENCAP);
+        BIT_SET(flags, VPP_CPU_FLAGS_VLAN_ENCAP);
     if (PREDICT_FALSE(vnic->flow_log_en))
         BIT_SET(flags, VPP_CPU_FLAGS_FLOW_LOG);
+    return flags;
+}
+
+always_inline u16
+pds_get_l2l_cpu_flags_from_vnic (pds_impl_db_vnic_entry_t *vnic)
+{
+    u16 flags = 0;
+
+    if (vnic->encap_type != PDS_ETH_ENCAP_NO_VLAN)
+        BIT_SET(flags, VPP_CPU_FLAGS_L2L_RX_VLAN_ENCAP);
     return flags;
 }
 
@@ -145,10 +155,21 @@ pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
     }
     rewrite_flags = vec_elt_at_index(fm->rewrite_flags,
                                      ctx->packet_type);
-    session_tx_rewrite_flags = rewrite_flags->tx_rewrite;
-    session_rx_rewrite_flags = rewrite_flags->rx_rewrite |
-        (pds_is_flow_rx_vlan(b) ?
-            (P4_REWRITE_VLAN_ENCAP << P4_REWRITE_VLAN_START) : 0);
+    if (PREDICT_FALSE(pds_flow_packet_l2l(ctx->packet_type))) {
+        session_tx_rewrite_flags = rewrite_flags->tx_rewrite |
+            (pds_is_flow_l2l_tx_vlan(b) ?
+                (P4_REWRITE_VLAN_ENCAP << P4_REWRITE_VLAN_START) :
+                (P4_REWRITE_VLAN_DECAP << P4_REWRITE_VLAN_START));
+        session_rx_rewrite_flags = rewrite_flags->rx_rewrite |
+            (pds_is_flow_l2l_rx_vlan(b) ?
+                (P4_REWRITE_VLAN_ENCAP << P4_REWRITE_VLAN_START) : 
+                (P4_REWRITE_VLAN_DECAP << P4_REWRITE_VLAN_START));
+    } else {
+        session_tx_rewrite_flags = rewrite_flags->tx_rewrite;
+        session_rx_rewrite_flags = rewrite_flags->rx_rewrite |
+            (pds_is_flow_rx_vlan(b) ?
+                (P4_REWRITE_VLAN_ENCAP << P4_REWRITE_VLAN_START) : 0);
+    }
     ses_track_en = fm->con_track_en && (ctx->proto == PDS_FLOW_PROTO_TCP);
     actiondata.session_tracking_en = ses_track_en;
     actiondata.drop = ctx->drop;
@@ -895,6 +916,8 @@ pds_flow_l2l_packet_process (vlib_buffer_t *p,
             counter[FLOW_CLASSIFY_COUNTER_VNIC_NOT_FOUND] += 1;
             return;
         }
+        BIT_SET(vnet_buffer(p)->pds_flow_data.flags,
+                pds_get_l2l_cpu_flags_from_vnic(vnic));
         vnet_buffer(p)->pds_flow_data.lif = vnic->host_lif_hw_id;
         vnet_buffer(p)->pds_flow_data.l2_inner_offset =
                 hdr->l2_inner_offset;

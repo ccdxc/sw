@@ -20,7 +20,6 @@ modules:
     - module:
         name    : L2L_VNIC_IPV4_TCP_QTAG
         spec    : local2local.testspec
-        ignore  : True
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2L,L2LType=SAME_VNIC,Label=NETWORKING
               vnic : filter://Dot1Qenabled=True
@@ -28,7 +27,6 @@ modules:
     - module:
         name    : L2L_SUBNET_IPV4_TCP_QTAG
         spec    : local2local.testspec
-        enable  : False      # remove this once multiple vnics per subnet supported
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2L,L2LType=SAME_SUBNET,Label=NETWORKING
 
@@ -42,7 +40,6 @@ modules:
     - module:
         name    : L2L_VPC_IPV4_TCP_QTAG
         spec    : local2local.testspec
-        ignore  : True 
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2L,L2LType=SAME_VPC,Label=NETWORKING
               vnic : filter://Dot1Qenabled=True
