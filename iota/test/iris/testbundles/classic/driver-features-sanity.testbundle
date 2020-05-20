@@ -38,6 +38,11 @@ testcases:
         testcase: testcases.drivers.intf_names
         enable  : True
 
+    -   name    : LifTriggers
+        testcase: testcases.drivers.lif_flap
+        enable  : True
+        ignore  : True
+
     -   name    : TxSG
         testcase: testcases.drivers.txsg
         enable  : True
