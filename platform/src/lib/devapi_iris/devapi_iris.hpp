@@ -59,6 +59,7 @@ public:
     sdk_ret_t qos_get_txtc_cos(const std::string &group, uint32_t uplink_port,
                                uint8_t *cos);
     sdk_ret_t qos_class_set_global_pause_type(uint8_t pause_type);
+    sdk_ret_t qos_reset(uint32_t group);
 
     // Uplink APIs
     sdk_ret_t uplink_create(uint32_t id, uint32_t port, bool is_oob);

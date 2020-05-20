@@ -499,6 +499,12 @@ devapi_iris::qos_class_set_global_pause_type(uint8_t pause_type)
 }
 
 sdk_ret_t
+devapi_iris::qos_reset(uint32_t group)
+{
+    return devapi_qos::qos_reset(group);
+}
+
+sdk_ret_t
 devapi_iris::set_fwd_mode(sdk::lib::dev_forwarding_mode_t fwd_mode)
 {
 #if 0

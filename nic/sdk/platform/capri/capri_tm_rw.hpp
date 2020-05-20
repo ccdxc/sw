@@ -64,6 +64,7 @@ using sdk::lib::indexer;
 #define CAPRI_TM_DEFAULT_RELATIVE_XOFF_THRESHOLD_BYTES (64*1000)
 #define CAPRI_TM_DEFAULT_XON_THRESHOLD  0x4B8800
 #define CAPRI_TM_DEFAULT_XOFF_THRESHOLD 0x4C8200
+#define CAPRI_TM_JUMBO_FRAME_SIZE   9216
 
 // There are 32 queues at both P4-ig and P4-eg. The idea is to
 // maintain the same queue when pkt goes through the pipeline in P4-ig and

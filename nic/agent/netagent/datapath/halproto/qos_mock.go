@@ -393,6 +393,24 @@ func (mr *MockQOSClientMockRecorder) QosClearStats(ctx, in interface{}, opts ...
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QosClearStats", reflect.TypeOf((*MockQOSClient)(nil).QosClearStats), varargs...)
 }
 
+// QosReset mocks base method
+func (m *MockQOSClient) QosReset(ctx context.Context, in *QosResetRequestMsg, opts ...grpc.CallOption) (*QosResetResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "QosReset", varargs...)
+	ret0, _ := ret[0].(*QosResetResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// QosReset indicates an expected call of QosReset
+func (mr *MockQOSClientMockRecorder) QosReset(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QosReset", reflect.TypeOf((*MockQOSClient)(nil).QosReset), varargs...)
+}
+
 // CoppUpdate mocks base method
 func (m *MockQOSClient) CoppUpdate(ctx context.Context, in *CoppRequestMsg, opts ...grpc.CallOption) (*CoppResponseMsg, error) {
 	varargs := []interface{}{ctx, in}
@@ -541,6 +559,19 @@ func (m *MockQOSServer) QosClearStats(arg0 context.Context, arg1 *QosClearStatsR
 // QosClearStats indicates an expected call of QosClearStats
 func (mr *MockQOSServerMockRecorder) QosClearStats(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QosClearStats", reflect.TypeOf((*MockQOSServer)(nil).QosClearStats), arg0, arg1)
+}
+
+// QosReset mocks base method
+func (m *MockQOSServer) QosReset(arg0 context.Context, arg1 *QosResetRequestMsg) (*QosResetResponseMsg, error) {
+	ret := m.ctrl.Call(m, "QosReset", arg0, arg1)
+	ret0, _ := ret[0].(*QosResetResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// QosReset indicates an expected call of QosReset
+func (mr *MockQOSServerMockRecorder) QosReset(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QosReset", reflect.TypeOf((*MockQOSServer)(nil).QosReset), arg0, arg1)
 }
 
 // CoppUpdate mocks base method

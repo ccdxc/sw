@@ -106,6 +106,7 @@ testcases:
 
     -   name    : Qos_Traffic_Pfc_TC3_Dscp
         testcase: testcases.qos.qos_traffic_test
+        ignore  : True
         args    :
             type: remote_only
             class_type: 2

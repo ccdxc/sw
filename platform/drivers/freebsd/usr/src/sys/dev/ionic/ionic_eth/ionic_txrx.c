@@ -199,6 +199,11 @@ TUNABLE_INT("hw.ionic.lldp_vlan", &ionic_lldp_vlan);
 SYSCTL_INT(_hw_ionic, OID_AUTO, lldp_vlan, CTLFLAG_RDTUN,
     &ionic_lldp_vlan, 0, "Receive LLDP tagged with this vlan");
 
+int ionic_qos_reset_on_dev_reset = 0;
+TUNABLE_INT("hw.ionic.qos_reset", &ionic_qos_reset_on_dev_reset);
+SYSCTL_INT(_hw_ionic, OID_AUTO, qos_reset, CTLFLAG_RWTUN,
+    &ionic_qos_reset_on_dev_reset, 0, "Reset QoS config upon Device reset");
+
 #ifndef IONIC_NDEBUG
 int ionic_debug = 0;
 TUNABLE_INT("hw.ionic.debug", &ionic_debug);
@@ -3015,8 +3020,9 @@ ionic_qos_tc_enable_sysctl(SYSCTL_HANDLER_ARGS)
 {
 	struct ionic_lif *lif = oidp->oid_arg1;
 	struct ionic *ionic = lif->ionic;
-	uint8_t enable[IONIC_QOS_TC_MAX];
+	uint8_t enable[IONIC_QOS_TC_MAX + 1];
 	int i, error;
+	bool update_cos = false;
 
 	KASSERT(ionic->qos.max_tcs < IONIC_QOS_TC_MAX,
 		("number of TC%d > %d", ionic->qos.max_tcs, IONIC_QOS_TC_MAX));
@@ -3026,9 +3032,20 @@ ionic_qos_tc_enable_sysctl(SYSCTL_HANDLER_ARGS)
 	if (error || !req->newptr)
 		goto err_out;
 
-	error = SYSCTL_IN(req, enable, ionic->qos.max_tcs);
-	if (error)
+	/* Make sure there aren't extra entries at the end of array */
+	error = SYSCTL_IN(req, enable, ionic->qos.max_tcs + 1);
+	if (!error) {
+		error = EINVAL;
+		if_printf(lif->netdev, "too many values listed\n");
 		goto err_out;
+	}
+
+	error = SYSCTL_IN(req, enable, ionic->qos.max_tcs);
+	if (error) {
+		if (error == EINVAL)
+			if_printf(lif->netdev, "not enough values listed?\n");
+		goto err_out;
+	}
 
 	for (i = 0; i < ionic->qos.max_tcs; i++) {
 		if (enable[i] > 1) {
@@ -3036,11 +3053,16 @@ ionic_qos_tc_enable_sysctl(SYSCTL_HANDLER_ARGS)
 			if_printf(lif->netdev, "invalid value - 0(disable)/1(enable)\n");
 			goto err_out;
 		}
-		if (!enable[i] && i == ionic->qos.tc_ethernet) {
+		if (!enable[i] && i == 0) {
 			error = EINVAL;
-			if_printf(lif->netdev,
-			    "TC%d cannot be disabled while hosting Ethernet\n", i);
+			if_printf(lif->netdev, "TC0 cannot be disabled\n");
 			goto err_out;
+		}
+		if (!enable[i] && i == ionic->qos.tc_ethernet) {
+			ionic->qos.tc_ethernet = 0;
+			update_cos = true;
+			if_printf(lif->netdev,
+			    "TC%d hosted Ethernet - resetting tc_ethernet to 0\n", i);
 		}
 	}
 
@@ -3052,8 +3074,12 @@ ionic_qos_tc_enable_sysctl(SYSCTL_HANDLER_ARGS)
 	ionic_qos_init(ionic);
 err_out:
 	IONIC_LIF_UNLOCK(lif);
-	return (error);
 
+	if (update_cos)
+		/* Check if the new Ethernet TC resulted in a new COS */
+		ionic_lif_update_cos(lif);
+
+	return (error);
 }
 
 static int
@@ -3110,7 +3136,7 @@ ionic_qos_no_drop_sysctl(SYSCTL_HANDLER_ARGS)
 {
 	struct ionic_lif *lif = oidp->oid_arg1;
 	struct ionic *ionic = lif->ionic;
-	uint8_t no_drop[IONIC_QOS_TC_MAX];
+	uint8_t no_drop[IONIC_QOS_TC_MAX + 1];
 	int i, error;
 
 	KASSERT(ionic->qos.max_tcs < IONIC_QOS_TC_MAX,
@@ -3121,9 +3147,20 @@ ionic_qos_no_drop_sysctl(SYSCTL_HANDLER_ARGS)
 	if (error || !req->newptr)
 		goto err_out;
 
-	error = SYSCTL_IN(req, no_drop, ionic->qos.max_tcs);
-	if (error)
+	/* Make sure there aren't extra entries at the end of array */
+	error = SYSCTL_IN(req, no_drop, ionic->qos.max_tcs + 1);
+	if (!error) {
+		error = EINVAL;
+		if_printf(lif->netdev, "too many values listed\n");
 		goto err_out;
+	}
+
+	error = SYSCTL_IN(req, no_drop, ionic->qos.max_tcs);
+	if (error) {
+		if (error == EINVAL)
+			if_printf(lif->netdev, "not enough values listed?\n");
+		goto err_out;
+	}
 
 	for (i = 0; i < ionic->qos.max_tcs; i++) {
 		if (no_drop[i] > 1) {
@@ -3152,7 +3189,6 @@ ionic_qos_no_drop_sysctl(SYSCTL_HANDLER_ARGS)
 err_out:
 	IONIC_LIF_UNLOCK(lif);
 	return (error);
-
 }
 
 
@@ -3161,7 +3197,7 @@ ionic_qos_tc_sched_type_sysctl(SYSCTL_HANDLER_ARGS)
 {
 	struct ionic_lif *lif = oidp->oid_arg1;
 	struct ionic *ionic = lif->ionic;
-	uint8_t sched[IONIC_QOS_TC_MAX];
+	uint8_t sched[IONIC_QOS_TC_MAX + 1];
 	int i, error;
 
 	KASSERT(ionic->qos.max_tcs < IONIC_QOS_TC_MAX,
@@ -3172,9 +3208,20 @@ ionic_qos_tc_sched_type_sysctl(SYSCTL_HANDLER_ARGS)
 	if (error || !req->newptr)
 		goto err_out;
 
-	error = SYSCTL_IN(req, sched, ionic->qos.max_tcs);
-	if (error)
+	/* Make sure there aren't extra entries at the end of array */
+	error = SYSCTL_IN(req, sched, ionic->qos.max_tcs + 1);
+	if (!error) {
+		error = EINVAL;
+		if_printf(lif->netdev, "too many values listed\n");
 		goto err_out;
+	}
+
+	error = SYSCTL_IN(req, sched, ionic->qos.max_tcs);
+	if (error) {
+		if (error == EINVAL)
+			if_printf(lif->netdev, "not enough values listed?\n");
+		goto err_out;
+	}
 
 	for (i = 0; i < ionic->qos.max_tcs; i++) {
 		if (sched[i] > 1) {
@@ -3193,8 +3240,8 @@ ionic_qos_tc_sched_type_sysctl(SYSCTL_HANDLER_ARGS)
 err_out:
 	IONIC_LIF_UNLOCK(lif);
 	return (error);
-
 }
+
 #ifdef notyet
 static int
 ionic_qos_tc_bw_perc_sysctl(SYSCTL_HANDLER_ARGS)
@@ -3202,7 +3249,7 @@ ionic_qos_tc_bw_perc_sysctl(SYSCTL_HANDLER_ARGS)
 	struct ionic_lif *lif = oidp->oid_arg1;
 	struct ionic *ionic = lif->ionic;
 	struct ifnet *ifp = lif->netdev;
-	uint8_t bw_perc[IONIC_QOS_TC_MAX];
+	uint8_t bw_perc[IONIC_QOS_TC_MAX + 1];
 	int i, error, sum;
 
 	KASSERT(ionic->qos.max_tcs < IONIC_QOS_TC_MAX,
@@ -3213,9 +3260,20 @@ ionic_qos_tc_bw_perc_sysctl(SYSCTL_HANDLER_ARGS)
 	if (error || !req->newptr)
 		goto err_out;
 
-	error = SYSCTL_IN(req, bw_perc, ionic->qos.max_tcs);
-	if (error)
+	/* Make sure there aren't extra entries at the end of array */
+	error = SYSCTL_IN(req, bw_perc, ionic->qos.max_tcs + 1);
+	if (!error) {
+		error = EINVAL;
+		if_printf(lif->netdev, "too many values listed\n");
 		goto err_out;
+	}
+
+	error = SYSCTL_IN(req, bw_perc, ionic->qos.max_tcs);
+	if (error) {
+		if (error == EINVAL)
+			if_printf(lif->netdev, "not enough values listed?\n");
+		goto err_out;
+	}
 
 	sum = 0;
 	for (i = 0; i < ionic->qos.max_tcs; i++) {
@@ -3241,16 +3299,16 @@ ionic_qos_tc_bw_perc_sysctl(SYSCTL_HANDLER_ARGS)
 err_out:
 	IONIC_LIF_UNLOCK(lif);
 	return (error);
-
 }
 #endif
+
 static int
 ionic_qos_pcp_to_tc_sysctl(SYSCTL_HANDLER_ARGS)
 {
 	struct ionic_lif *lif = oidp->oid_arg1;
 	struct ionic *ionic = lif->ionic;
 	struct ifnet *ifp = lif->netdev;
-	uint8_t pcp_to_tc[IONIC_QOS_PCP_MAX];
+	uint8_t pcp_to_tc[IONIC_QOS_PCP_MAX + 1];
 	int i, error, max_pcps = IONIC_QOS_PCP_MAX;
 	uint8_t curr_tc = 0, new_tc = 0;
 
@@ -3259,9 +3317,20 @@ ionic_qos_pcp_to_tc_sysctl(SYSCTL_HANDLER_ARGS)
 	if (error || !req->newptr)
 		goto err_out;
 
-	error = SYSCTL_IN(req, pcp_to_tc, max_pcps);
-	if (error)
+	/* Make sure there aren't extra entries at the end of array */
+	error = SYSCTL_IN(req, pcp_to_tc, max_pcps + 1);
+	if (!error) {
+		error = EINVAL;
+		if_printf(lif->netdev, "too many values listed\n");
 		goto err_out;
+	}
+
+	error = SYSCTL_IN(req, pcp_to_tc, max_pcps);
+	if (error) {
+		if (error == EINVAL)
+			if_printf(lif->netdev, "not enough values listed?\n");
+		goto err_out;
+	}
 
 	for (i = 0; i < max_pcps; i++) {
 		/* Range check all of the new values */
@@ -3312,7 +3381,7 @@ ionic_qos_pfc_cos_sysctl(SYSCTL_HANDLER_ARGS)
 	struct ionic_lif *lif = oidp->oid_arg1;
 	struct ionic *ionic = lif->ionic;
 	struct ifnet *ifp = lif->netdev;
-	uint8_t pfc_cos[IONIC_QOS_TC_MAX];
+	uint8_t pfc_cos[IONIC_QOS_TC_MAX + 1];
 	int i, error;
 
 	IONIC_LIF_LOCK(lif);
@@ -3320,9 +3389,20 @@ ionic_qos_pfc_cos_sysctl(SYSCTL_HANDLER_ARGS)
 	if (error || !req->newptr)
 		goto err_out;
 
-	error = SYSCTL_IN(req, pfc_cos, ionic->qos.max_tcs);
-	if (error)
+	/* Make sure there aren't extra entries at the end of array */
+	error = SYSCTL_IN(req, pfc_cos, ionic->qos.max_tcs + 1);
+	if (!error) {
+		error = EINVAL;
+		if_printf(lif->netdev, "too many values listed\n");
 		goto err_out;
+	}
+
+	error = SYSCTL_IN(req, pfc_cos, ionic->qos.max_tcs);
+	if (error) {
+		if (error == EINVAL)
+			if_printf(lif->netdev, "not enough values listed?\n");
+		goto err_out;
+	}
 
 	/* TC0 cannot be mapped to any pfc-cos other than 0 */
 	if (pfc_cos[0] != 0) {
@@ -3388,22 +3468,22 @@ static int ionic_qos_verify_dscp_to_tc(struct ionic_lif *lif, uint8_t *dscp_to_t
 		/*
 		 * If a DSCP is already assigned to a TC and
 		 * the new config is trying to assign it to another TC,
-		 * reject the config. 
+		 * reject the config.
 		 */
 		curr_tc = ionic->qos.dscp_to_tc[i + start];
 		new_tc = dscp_to_tc[i];
 		if (curr_tc != 0 &&
 		    new_tc != 0 && // No check needed if the dscp is already unassigned or being unassigned
-		    curr_tc != new_tc) { 
-			if_printf(ifp, "Failed to assign DSCP %d to TC %d. It is already assigned to TC %d\n", 
+		    curr_tc != new_tc) {
+			if_printf(ifp, "Failed to assign DSCP %d to TC %d. It is already assigned to TC %d\n",
 					i + start, new_tc, curr_tc);
 			error = EINVAL;
 			goto err_out;
 		}
 	}
 
-	/* 
-	 * Before updating the ionic.qos structure, 
+	/*
+	 * Before updating the ionic.qos structure,
 	 * check if all the enabled TCs have at least 1 DSCP
 	 */
 	for (dscp = 0; dscp < IONIC_QOS_DSCP_MAX; dscp++) {
@@ -3432,7 +3512,7 @@ ionic_qos_dscp_to_tc_sysctl(SYSCTL_HANDLER_ARGS)
 {
 	struct ionic_lif *lif = oidp->oid_arg1;
 	struct ionic *ionic = lif->ionic;
-	uint8_t dscp_to_tc[IONIC_DSCP_BLOCK_SIZE];
+	uint8_t dscp_to_tc[IONIC_DSCP_BLOCK_SIZE + 1];
 	uint8_t new_dscp_to_tc[IONIC_QOS_DSCP_MAX];
 	int i, error;
 	int start = oidp->oid_arg2;
@@ -3442,9 +3522,20 @@ ionic_qos_dscp_to_tc_sysctl(SYSCTL_HANDLER_ARGS)
 	if (error || !req->newptr)
 		goto err_out;
 
-	error = SYSCTL_IN(req, dscp_to_tc, IONIC_DSCP_BLOCK_SIZE);
-	if (error)
+	/* Make sure there aren't extra entries at the end of array */
+	error = SYSCTL_IN(req, dscp_to_tc, IONIC_DSCP_BLOCK_SIZE + 1);
+	if (!error) {
+		error = EINVAL;
+		if_printf(lif->netdev, "too many values listed\n");
 		goto err_out;
+	}
+
+	error = SYSCTL_IN(req, dscp_to_tc, IONIC_DSCP_BLOCK_SIZE);
+	if (error) {
+		if (error == EINVAL)
+			if_printf(lif->netdev, "not enough values listed?\n");
+		goto err_out;
+	}
 
 	error = ionic_qos_verify_dscp_to_tc(lif, dscp_to_tc, start);
 	if (error) {
@@ -3482,7 +3573,7 @@ ionic_qos_sysctl(struct ionic_lif *lif, struct sysctl_ctx_list *ctx,
 	char namebuf[QUEUE_NAME_LEN];
 	int i;
 
-	/* Do not create the qos config for mgmt inetrfaces. */
+	/* Do not create the qos config for mgmt interfaces. */
 	if (lif->ionic->is_mgmt_nic)
 		return;
 

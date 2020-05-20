@@ -55,6 +55,9 @@ using qos::CoppGetRequestMsg;
 using qos::CoppGetResponse;
 using qos::CoppGetResponseMsg;
 using qos::CoppStats;
+using qos::QosResetRequest;
+using qos::QosResetRequestMsg;
+using qos::QosResetResponseMsg;
 
 namespace hal {
 
@@ -325,6 +328,8 @@ hal_ret_t qos_class_init_tc_to_iq_map(void);
 hal_ret_t qos_class_store_cb(void *obj, uint8_t *mem,
                              uint32_t len, uint32_t *mlen);
 uint32_t qos_class_restore_cb(void *obj, uint32_t len);
+hal_ret_t qos_reset(qos::QosResetRequest& req,
+                    qos::QosResetResponseMsg *rsp);
 
 // SWM related APIs
 hal_ret_t qos_swm_queue_init(uint32_t swm_uplink_port, uint64_t dmac);

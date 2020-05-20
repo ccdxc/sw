@@ -65,6 +65,7 @@ public:
     virtual sdk_ret_t qos_get_txtc_cos(const string &group, uint32_t uplink_port,
                                        uint8_t *cos) = 0;
     virtual sdk_ret_t qos_class_set_global_pause_type(uint8_t pause_type) = 0;
+    virtual sdk_ret_t qos_reset(uint32_t group) = 0;
 
     // uplink APIs
     virtual sdk_ret_t uplink_create(uint32_t id, uint32_t port, bool is_oob) = 0;

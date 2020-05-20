@@ -397,6 +397,9 @@
 		QosClassSetGlobalPauseTypeRequest
 		QosClassSetGlobalPauseTypeRequestMsg
 		QosClassSetGlobalPauseTypeResponseMsg
+		QosResetRequest
+		QosResetRequestMsg
+		QosResetResponseMsg
 		CoppSpec
 		CoppRequestMsg
 		CoppStatusEpd

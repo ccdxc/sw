@@ -80,6 +80,7 @@ public:
                                        uint32_t uplink_port,
                                        uint8_t *cos) override;
     virtual sdk_ret_t qos_class_set_global_pause_type(uint8_t pause_type) override;
+    virtual sdk_ret_t qos_reset(uint32_t group) override;
 
     // uplink APIs
     virtual sdk_ret_t uplink_create(uint32_t uplink_ifidx,

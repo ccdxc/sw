@@ -59,6 +59,8 @@ struct ionic_lif;
 #define IONIC_QUEUE_NAME_MAX_SZ	8
 MALLOC_DECLARE(M_IONIC);
 
+extern int ionic_qos_reset_on_dev_reset;
+
 #ifndef IONIC_NDEBUG
 extern int ionic_debug;
 extern int ionic_trace;
@@ -249,6 +251,7 @@ int ionic_qos_bw_update(struct ionic_lif *lif, uint8_t *bw_perc);
 #endif
 int ionic_qos_pcp_to_tc_update(struct ionic_lif *lif, uint8_t *pcp);
 int ionic_qos_dscp_to_tc_update(struct ionic_lif *lif, uint8_t *pcp);
-bool ionic_qos_is_tc_dscp_updated(union ionic_qos_config *qos, int new_ndscp, uint8_t *new_dscp); 
+bool ionic_qos_is_tc_dscp_updated(union ionic_qos_config *qos, int new_ndscp, uint8_t *new_dscp);
+int ionic_qos_reset(struct ionic *ionic);
 
 #endif /* _IONIC_H_ */

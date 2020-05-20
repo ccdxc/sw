@@ -60,6 +60,7 @@ enum ionic_cmd_opcode {
 	IONIC_CMD_QOS_CLASS_RESET		= 242,
 	IONIC_CMD_QOS_CLASS_UPDATE		= 243,
 	IONIC_CMD_QOS_CLEAR_STATS		= 244,
+	IONIC_CMD_QOS_RESET 			= 245,
 
 	/* Firmware commands */
 	IONIC_CMD_FW_DOWNLOAD			= 254,

@@ -311,4 +311,32 @@ end:
     return ret;
 }
 
+sdk_ret_t
+devapi_qos::qos_reset(uint32_t group)
+{
+    sdk_ret_t                         ret = SDK_RET_OK;
+    grpc::Status                      status;
+    qos::QosResetRequestMsg           req_msg;
+    qos::QosResetResponseMsg          rsp_msg;
+
+    auto req = req_msg.add_request();
+
+    req->set_group(group);
+
+    VERIFY_HAL();
+
+    status = hal->qos_reset(req_msg, rsp_msg);
+
+    if (status.ok()) {
+        NIC_LOG_DEBUG("qos reset done");
+    } else { 
+        NIC_LOG_DEBUG("qos reset failed; err {}:{}", 
+                      status.error_code(), status.error_message());
+        ret = SDK_RET_ERR;
+    }
+
+end:
+    return ret;
+}
+
 }    // namespace iris

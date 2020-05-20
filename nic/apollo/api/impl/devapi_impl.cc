@@ -346,6 +346,12 @@ devapi_impl::qos_class_set_global_pause_type(uint8_t pause_type) {
 }
 
 sdk_ret_t
+devapi_impl::qos_reset(uint32_t group) {
+    PDS_TRACE_WARN("Not implemented");
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 devapi_impl::uplink_create(__UNUSED__ uint32_t uplink_ifidx,
                            if_index_t ifidx, bool is_oob) {
     return SDK_RET_OK;

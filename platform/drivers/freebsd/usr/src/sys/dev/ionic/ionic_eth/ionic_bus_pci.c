@@ -421,6 +421,9 @@ ionic_remove(struct pci_dev *pdev)
 
 	KASSERT(ionic, ("ionic is NULL"));
 
+	if (ionic_qos_reset_on_dev_reset && !ionic->is_mgmt_nic) {
+		 ionic_qos_reset(ionic);
+	}
 	ionic_wdog_deinit(ionic);
 	ionic_lifs_unregister(ionic);
 	ionic_lifs_deinit(ionic);

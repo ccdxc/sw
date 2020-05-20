@@ -110,6 +110,8 @@ using qos::QosClearStatsRequestMsg;
 using qos::QosClearStatsResponseMsg;
 using qos::QosClassSetGlobalPauseTypeRequestMsg;
 using qos::QosClassSetGlobalPauseTypeResponseMsg;
+using qos::QosResetRequestMsg;
+using qos::QosResetResponseMsg;
 using accelRGroup::AccelRGroupAddRequestMsg;
 using accelRGroup::AccelRGroupAddResponseMsg;
 using accelRGroup::AccelRGroupDelRequestMsg;
@@ -261,6 +263,8 @@ public:
     Status qos_class_set_global_pause_type(
                                 QosClassSetGlobalPauseTypeRequestMsg& req_msg,
                                 QosClassSetGlobalPauseTypeResponseMsg& rsp_msg);
+    Status qos_reset(QosResetRequestMsg& req_msg,
+                     QosResetResponseMsg& rsp_msg);
     GET_API(qos_class, QosClass);
 
     // Port APIs

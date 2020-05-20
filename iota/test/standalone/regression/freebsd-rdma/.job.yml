@@ -66,7 +66,7 @@ e2e-targets:
           EsxPassword: Pen0trl!
 
  e2e-freebsd-regression-rdma-stress:
-   commands: ["sh", "-c", "make regression-rdma-stress && ./run_iota.sh --testsuite transparent_basenet_storage --regression --testbundle mtu,rdma_stress"]
+   commands: ["sh", "-c", "make regression-rdma-stress && ./run_iota.sh --testsuite transparent_basenet_storage --regression --testbundle mtu,rdma_stress,qos_reg"]
    owners: ["email:rdma-dpath@pensando.io"]
    area:
    sub-area:

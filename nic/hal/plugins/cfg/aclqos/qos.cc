@@ -1770,9 +1770,9 @@ qosclass_delete (QosClassDeleteRequest& req, QosClassDeleteResponse *rsp)
 
 end:
     if (ret == HAL_RET_OK) {
-        HAL_API_STATS_INC(HAL_API_QOSCLASS_DELETE_SUCCESS);
+        HAL_API_STATS_INC(HAL_API_QOSCLEAR_STATS_SUCCESS);
     } else {
-        HAL_API_STATS_INC(HAL_API_QOSCLASS_DELETE_FAIL);
+        HAL_API_STATS_INC(HAL_API_QOSCLEAR_STATS_FAIL);
     }
     rsp->set_api_status(hal_prepare_rsp(ret));
     hal_api_trace(" API End: qos_class delete ");
@@ -1808,6 +1808,134 @@ qosclear_stats (QosClearStatsRequest& req, QosClearStatsResponse *rsp)
     }
     rsp->set_api_status(hal_prepare_rsp(ret));
     hal_api_trace(" API End: qos clear stats ");
+    return ret;
+}
+
+static inline kh::QosGroup
+qos_get_next_user_defined_kh_qos_group (kh::QosGroup qos_group)
+{
+    switch(qos_group) {
+    case kh::DEFAULT:
+        return kh::USER_DEFINED_1;
+    case kh::USER_DEFINED_1:
+        return kh::USER_DEFINED_2;
+    case kh::USER_DEFINED_2:
+        return kh::USER_DEFINED_3;
+    case kh::USER_DEFINED_3:
+        return kh::USER_DEFINED_4;
+    case kh::USER_DEFINED_4:
+        return kh::USER_DEFINED_5;
+    case kh::USER_DEFINED_5:
+        return kh::USER_DEFINED_6;
+    case kh::USER_DEFINED_6:
+        return kh::DEFAULT;
+    default:
+        return kh::DEFAULT;
+    }
+}
+
+hal_ret_t
+qos_reset (qos::QosResetRequest& req, qos::QosResetResponseMsg *rsp)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+    kh::QosGroup            kh_qos_group = kh::USER_DEFINED_1;
+    qos_group_t             qos_group;
+    qos_class_t             *qos_class = NULL;
+    cfg_op_ctxt_t           cfg_ctxt = { 0 };
+    dhl_entry_t             dhl_entry = { 0 };
+    pd::pd_func_args_t      pd_func_args = { 0 };
+    pd::pd_qos_class_reset_stats_args_t args = { 0 };
+
+    HAL_TRACE_DEBUG("API Begin: qos_reset");
+
+    // loop through all valid user-defined qos-groups and delete them
+    for ( ; ( (kh_qos_group >= kh::USER_DEFINED_1) && 
+              (kh_qos_group <= kh::USER_DEFINED_6) ); 
+            kh_qos_group = qos_get_next_user_defined_kh_qos_group(kh_qos_group)) {
+
+        qos_group = qos_spec_qos_group_to_qos_group(kh_qos_group);
+
+        if (!valid_qos_group(qos_group)) {
+            continue;
+        }
+
+        qos_class = find_qos_class_by_group(qos_group);
+
+        if (!qos_class) {
+            continue;
+        }
+
+        HAL_TRACE_DEBUG("deleting qos_class {} handle {}",
+                        qos_class->key, qos_class->hal_handle);
+
+        // TODO : should this validate be done? 
+        // validate if there no objects referring this qos-class
+        ret = validate_qos_class_delete(qos_class);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("qos_class delete validation failed, err : {}", ret);
+            continue;
+        }
+
+        // Call PD to clear the stats
+        args.qos_class = qos_class;
+        HAL_TRACE_DEBUG("Clearing stats for tc : {}", qos_class->key.qos_group);
+        pd_func_args.pd_qos_class_reset_stats = &args;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_QOS_CLASS_RESET_STATS, &pd_func_args);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("clear stats failed for qos_class {}, err : {}",  
+                          qos_class->key, ret);
+        }
+
+        // form ctxt and call infra delete
+        dhl_entry.handle = qos_class->hal_handle;
+        dhl_entry.obj = qos_class;
+        cfg_ctxt.app_ctxt = NULL;
+        sdk::lib::dllist_reset(&cfg_ctxt.dhl);
+        sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
+        sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
+        ret = hal_handle_del_obj(qos_class->hal_handle, &cfg_ctxt,
+                                 qos_class_delete_del_cb,
+                                 qos_class_delete_commit_cb,
+                                 qos_class_delete_abort_cb,
+                                 qos_class_delete_cleanup_cb);
+
+        HAL_TRACE_DEBUG("deleted qos_class {} handle {}",
+                        qos_class->key, qos_class->hal_handle);
+
+    }  // for qos_group
+
+#if 0
+    // set global pause type to link-level in case it is set to pfc
+    if (g_pause_type == qos::QOS_PAUSE_TYPE_PFC) {
+        pd::pd_qos_class_set_global_pause_type_args_t pd_qos_class_args;
+        pd::pd_func_args_t pd_func_args = {0};
+
+        g_pause_type = qos::QOS_PAUSE_TYPE_LINK_LEVEL;
+
+        pd::pd_qos_class_set_global_pause_type_init(&pd_qos_class_args);
+        pd_qos_class_args.pause_type = 
+                                qos_pause_type_spec_to_pause_type(g_pause_type);
+        pd_func_args.pd_qos_class_set_global_pause_type = &pd_qos_class_args;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_QOS_CLASS_SET_GLOBAL_PAUSE_TYPE,
+                              &pd_func_args);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("failed to set global pause type to {}, err {}",
+                          pd_qos_class_args.pause_type, ret);
+        }
+        HAL_TRACE_DEBUG("set pause_type to link-level");
+    }
+#endif
+
+#if 0
+    //TODO: PD calls may not be necessary, loop through all qos-classes and invoke delete
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_QOS_RESET,
+                          &pd_func_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("qos_reset failed, err {}", ret);
+    }
+#endif
+
+    HAL_TRACE_DEBUG("API End: qos_reset");
     return ret;
 }
 

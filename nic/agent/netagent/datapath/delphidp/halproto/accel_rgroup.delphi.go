@@ -1219,6 +1219,9 @@ It has these top-level messages:
 	QosClassSetGlobalPauseTypeRequest
 	QosClassSetGlobalPauseTypeRequestMsg
 	QosClassSetGlobalPauseTypeResponseMsg
+	QosResetRequest
+	QosResetRequestMsg
+	QosResetResponseMsg
 	CoppSpec
 	CoppRequestMsg
 	CoppStatusEpd

@@ -20,6 +20,7 @@ public:
     static sdk_ret_t qos_class_delete(uint8_t group, bool clear_stats);
     static sdk_ret_t qos_clear_stats(uint32_t port_num, uint8_t qos_group_bitmap);
     static sdk_ret_t qos_class_set_global_pause_type(uint8_t pause_type);
+    static sdk_ret_t qos_reset(uint32_t group);
 };
 
 }    // namespace iris

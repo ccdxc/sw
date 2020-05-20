@@ -1,10 +1,10 @@
 #! /usr/bin/python3
 import iota.harness.api as api
 import iota.test.iris.testcases.qos.qos_utils as qos
+import iota.test.utils.naples_host as host
 import re
 
 def Setup(tc):
- 
     tc.desc = '''
     Test        :   QoS PFC Config test
     Opcode      :   Config, Verify
@@ -52,8 +52,8 @@ def Setup(tc):
     tc.ib_prefix = []
 
     for i in range(4):
-        tc.devices.append(api.GetTestsuiteAttr(tc.w[i].ip_address+'_device'))
-        tc.gid.append(api.GetTestsuiteAttr(tc.w[i].ip_address+'_gid'))
+        tc.devices.append(api.GetTestsuiteAttr(tc.w[i].ip_address + '_device'))
+        tc.gid.append(api.GetTestsuiteAttr(tc.w[i].ip_address + '_gid'))
         if tc.w[i].IsNaples():
             tc.ib_prefix.append('cd ' + tc.iota_path + ' && ./run_rdma.sh  ')
         else:
@@ -70,7 +70,7 @@ def Trigger(tc):
 
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
-    if tc.os != 'freebsd':
+    if tc.os != host.OS_TYPE_BSD:
         api.Logger.info("Not FreeBSD - unsupported configuration")
         return api.types.status.DISABLED
 
@@ -104,7 +104,7 @@ def Trigger(tc):
     if w2.IsNaples():
         tc.cmd_descr += " on Client: {}({})".format(w2.workload_name, w2.ip_address)
 
-    if tc.os == 'freebsd':
+    if tc.os == host.OS_TYPE_BSD:
         cmd = 'sysctl'
 
     if hasattr(tc.iterators, 'tclass'):
@@ -179,8 +179,7 @@ def Trigger(tc):
         tc.pfc_cos_configured = True
 
     if hasattr(tc.iterators, 'traffic_test_type'):
-        if ((tc.iterators.traffic_type != 0) and\
-            (tc.iterators.traffic_type != 1) and (tc.iterators.traffic_type != 2)):
+        if tc.iterators.traffic_type not in [0, 1, 2]:
             api.Logger.error("invalid traffic_type value passed: {}"\
                              .format(tc.iterators.traffic_type))
             return api.types.status.FAILURE
@@ -191,10 +190,10 @@ def Trigger(tc):
         if (fc_config != 0) and (fc_config != 1):
             api.Logger.error("invalid fc_config value passed: {}".format(fc_config))
             return api.types.status.FAILURE
-        if(fc_config == 1):
+        if (fc_config == 1):
             if hasattr(tc.iterators, 'fc_type'):
                 fc_type = tc.iterators.fc_type
-                if((fc_type != 0) and (fc_type != 1) and (fc_type != 2)):
+                if fc_type not in [0, 1, 2]:
                     api.Logger.error("invalid fc_type value passed: {}".format(fc_type))
                     return api.types.status.FAILURE
 
@@ -206,8 +205,8 @@ def Trigger(tc):
 
     #if tc.pcp_configured == True and tc.pfc_cos_configured == True:
     #    if tc.pcp != tc.pfc_cos: #Ignore the testcase if pcp and pfc_cos are different
-    #        return api.types.status.IGNORED 
-        
+    #        return api.types.status.IGNORED
+
     # Trigger PFC Config - QOS Class creation
     if w1.IsNaples():
         qos.TriggerPfcConfigTest(req, tc, w1, tclass)

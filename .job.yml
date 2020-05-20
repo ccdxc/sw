@@ -333,21 +333,40 @@ dependencies:
     - reference: iota/test/standalone/precheckin/athena
   iota/test/iris:
     - reference: iota/test/standalone/precheckin/esx
-      exclude_dirs: ["testcases/server","testcases/rdma","testbundles/rdma"]
+      exclude_dirs: ["testcases/server","testcases/rdma","testbundles/rdma","testcases/qos"]
     - reference: iota/test/standalone/precheckin/linux
-      exclude_dirs: ["testcases/server","testcases/rdma","testbundles/rdma"]
+      exclude_dirs: ["testcases/server","testcases/rdma","testbundles/rdma","testcases/qos"]
     - reference: iota/test/standalone/precheckin/windows
-      exclude_dirs: ["testcases/server","testcases/rdma","testbundles/rdma"]
+      exclude_dirs: ["testcases/server","testcases/rdma","testbundles/rdma","testcases/qos"]
   iota/test/standalone:
     - reference: iota/test/standalone/precheckin/esx
-      exclude_dirs: ["regression"]
+      exclude_dirs: ["regression","precheckin"]
     - reference: iota/test/standalone/precheckin/linux
-      exclude_dirs: ["regression"]
+      exclude_dirs: ["regression","precheckin"]
+  iota/test/standalone/precheckin/esx:
+    - reference: iota/test/standalone/precheckin/esx
+  iota/test/standalone/precheckin/freebsd:
+    - reference: iota/test/standalone/precheckin/freebsd
+  iota/test/standalone/precheckin/freebsd-rdma:
+    - reference: iota/test/standalone/precheckin/freebsd-rdma
+  iota/test/standalone/precheckin/linux:
+    - reference: iota/test/standalone/precheckin/linux
+  iota/test/standalone/precheckin/linux-rdma:
+    - reference: iota/test/standalone/precheckin/linux-rdma
+  iota/test/standalone/precheckin/windows:
+    - reference: iota/test/standalone/precheckin/windows
+  iota/test/standalone/sanity/freebsd:
+    - reference: iota/test/standalone/sanity/freebsd
+  iota/test/standalone/sanity/linux:
+    - reference: iota/test/standalone/sanity/linux
   iota/test/utils:
     - reference: iota/test/standalone/precheckin/esx
     - reference: iota/test/standalone/precheckin/linux
   iota/test/iris/testcases/swm:
     - reference: iota/test/standalone/sanity/swm
+  iota/test/iris/testcases/qos:
+    - reference: iota/test/standalone/precheckin/freebsd-rdma
+    - reference: iota/test/standalone/precheckin/linux-rdma
   iota/test/iris/testcases/rdma:
     - reference: iota/test/standalone/precheckin/freebsd-rdma
     - reference: iota/test/standalone/precheckin/linux-rdma

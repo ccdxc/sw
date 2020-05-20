@@ -293,6 +293,7 @@ private:
     status_code_t _CmdQosUpdate(void *req, void *req_data, void *resp, void *resp_data);
     status_code_t _CmdQosReset(void *req, void *req_data, void *resp, void *resp_data);
     status_code_t _CmdQosClearStats(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t _CmdQosDevReset(void *req, void *req_data, void *resp, void *resp_data);
 
     status_code_t _CmdLifIdentify(void *req, void *req_data, void *resp, void *resp_data);
     status_code_t _CmdLifInit(void *req, void *req_data, void *resp, void *resp_data);
@@ -313,6 +314,8 @@ private:
     const char *opcode_to_str(cmd_opcode_t opcode);
     const char *qos_class_to_str(uint8_t qos_class);
     const char *vf_attr_to_str(uint8_t attr);
+
+    status_code_t QosDevReset();
 
     // stats
     void StatsInit(void);

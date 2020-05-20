@@ -61,6 +61,7 @@ testcases:
 
     -   name    : Qos_Pfc_Config_TC2_Pcp
         testcase: testcases.qos.qos_pfc_config
+        ignore  : True
         iterators :
             type      : nested
             tclass    : [2]

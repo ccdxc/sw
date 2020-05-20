@@ -15,6 +15,7 @@ namespace platform {
 using std::set;
 
 #define NUM_QUEUE_TYPES 8
+#define QOS_ALL_CLASSES 0xFF
 
 typedef uint64_t mac_t;
 typedef uint32_t vlan_t;

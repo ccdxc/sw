@@ -1153,6 +1153,7 @@ Eth::opcode_to_str(cmd_opcode_t opcode)
         CASE(IONIC_CMD_QOS_CLASS_UPDATE);
         CASE(IONIC_CMD_QOS_CLASS_RESET);
         CASE(IONIC_CMD_QOS_CLEAR_STATS);
+        CASE(IONIC_CMD_QOS_RESET);
         CASE(IONIC_CMD_FW_DOWNLOAD);
         CASE(IONIC_CMD_FW_CONTROL);
         CASE(IONIC_CMD_VF_GETATTR);
@@ -1323,6 +1324,10 @@ Eth::CmdHandler(void *req, void *req_data, void *resp, void *resp_data)
         status = _CmdQosClearStats(req, req_data, resp, resp_data);
         break;
 
+    case IONIC_CMD_QOS_RESET:
+        status = _CmdQosDevReset(req, req_data, resp, resp_data);
+        break;
+
     /* VF commands */
     case IONIC_CMD_VF_SETATTR:
         status = _CmdVFSetAttr(req, req_data, resp, resp_data);
@@ -1428,7 +1433,24 @@ Eth::_CmdReset(void *req, void *req_data, void *resp, void *resp_data)
     status_code_t status;
 
     NIC_LOG_DEBUG("{}: {}", spec->name, opcode_to_str(cmd->opcode));
+
     status = Reset();
+
+    return (status);
+}
+
+status_code_t
+Eth::_CmdQosDevReset(void *req, void *req_data, void *resp, void *resp_data)
+{
+    struct ionic_dev_reset_cmd *cmd = (struct ionic_dev_reset_cmd *)req;
+    status_code_t status;
+
+    NIC_LOG_DEBUG("{}: {}", spec->name, opcode_to_str(cmd->opcode));
+    status = QosDevReset();
+    if(status != IONIC_RC_SUCCESS) {
+        NIC_LOG_ERR("{}: QosDevReset failed status: {}", spec->name, status);
+    }
+    NIC_LOG_DEBUG("{}: QosDevReset Done", spec->name);
 
     return (status);
 }
@@ -2785,6 +2807,59 @@ Eth::ConvertDevTypeToLifType(EthDevType dev_type)
     default:
         return sdk::platform::LIF_TYPE_NONE;
     }
+}
+
+status_code_t
+Eth::QosDevReset()
+{
+    sdk_ret_t       rs = SDK_RET_OK;
+    port_config_t   cfg = {0};
+
+    NIC_LOG_DEBUG("{}: qos_reset", spec->name);
+
+    if (spec->eth_type == ETH_HOST_MGMT) {
+        NIC_LOG_DEBUG("{}: skipping qos_reset for mgmt port", spec->name);
+        return (IONIC_RC_SUCCESS);
+    }
+
+    // reset qos config
+    rs = dev_api->qos_reset((uint32_t) QOS_ALL_CLASSES);
+    if (rs != SDK_RET_OK) {
+        NIC_LOG_ERR("{}: qos_reset failed; rs: {}", spec->name, rs);
+        return (IONIC_RC_ERROR);
+    }
+
+    NIC_LOG_DEBUG("{}: qos_reset done", spec->name);
+
+    // reset pause-type-port-config to link-level if set to pfc
+    rs = dev_api->port_get_config(spec->uplink_port_num, &cfg);
+    if (rs != SDK_RET_OK) {
+        NIC_LOG_ERR("failed to get port config for port {} rs {}",
+                    spec->uplink_port_num, rs);
+        return (IONIC_RC_ERROR);
+    }
+
+    if ((cfg.pause_type & PORT_CFG_PAUSE_TYPE_MASK) != IONIC_PORT_PAUSE_TYPE_LINK) {
+        cfg.pause_type = ( (cfg.pause_type & PORT_CFG_PAUSE_FLAGS_MASK) |
+                           IONIC_PORT_PAUSE_TYPE_LINK );
+
+        rs = dev_api->port_set_config(spec->uplink_port_num, &cfg);
+        if (rs != SDK_RET_OK) {
+            NIC_LOG_ERR("failed to set port config for port {} rs {}",
+                        spec->uplink_port_num, rs);
+        }
+
+        rs = dev_api->qos_class_set_global_pause_type(IONIC_PORT_PAUSE_TYPE_LINK);
+        if (rs != SDK_RET_OK) {
+            NIC_LOG_ERR("{}: failed to set global_pause_type to LINK rs {}",
+                        spec->name, rs);
+        }
+    }
+
+    NIC_LOG_DEBUG("{}: reset qos_cfg and pause_type for uplink_port {}",
+                  spec->name, spec->uplink_port_num);
+
+    return (IONIC_RC_SUCCESS);
 }
 
 void

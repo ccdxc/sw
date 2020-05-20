@@ -732,6 +732,10 @@ ionic_qos_init(struct ionic *ionic)
 	memset(ionic->qos.pfc_cos, 0, sizeof(ionic->qos.pfc_cos));
 	memset(ionic->qos.pcp_to_tc, 0, sizeof(ionic->qos.pcp_to_tc));
 	memset(ionic->qos.dscp_to_tc, 0, sizeof(ionic->qos.dscp_to_tc));
+
+	if (ionic->qos.class_type == IONIC_QOS_CLASS_TYPE_NONE)
+		ionic->qos.class_type = IONIC_QOS_CLASS_TYPE_PCP;
+
 	for (tc = 0; tc < max_tcs; tc++) {
 		qos = &ident->qos.config[tc];
 		ionic_qos_print(ionic, qos, tc, "Get");
@@ -745,7 +749,7 @@ ionic_qos_init(struct ionic *ionic)
 		ionic->qos.dwrr_bw_perc[tc] = qos->dwrr_weight;
 		ionic->qos.pfc_cos[tc] = qos->pfc_cos;
 
-		if ( (qos->class_type == IONIC_QOS_CLASS_TYPE_NONE) || 
+		if ( (qos->class_type == IONIC_QOS_CLASS_TYPE_NONE) ||
 		     (qos->class_type == IONIC_QOS_CLASS_TYPE_PCP) ) {
 			if (qos->dot1q_pcp >= 0 && qos->dot1q_pcp < IONIC_QOS_PCP_MAX)
 				ionic->qos.pcp_to_tc[qos->dot1q_pcp] = tc;
@@ -850,7 +854,7 @@ ionic_qos_set_default_pcp(struct ionic_lif *lif, int tc, union ionic_qos_config 
 	int tc_pcp = tc;
 	bool tc_pcp_available = true;
 	uint8_t bitmap = 0;
- 
+
  	/*
  	 * By default, map the PCP to respective TC (TC <-> PCP one-to-one mapped);
  	 * if the PCP is already mapped to some other TC, pick the first available PCP
@@ -861,7 +865,7 @@ ionic_qos_set_default_pcp(struct ionic_lif *lif, int tc, union ionic_qos_config 
  			continue;
 		if (search_qos->dot1q_pcp == IONIC_QOS_ALL_PCP)
  			continue;
- 
+
 		/* if existing config is DSCP, looking for used-up PCPs may not be necessary */
 		if(search_qos->class_type == IONIC_QOS_CLASS_TYPE_DSCP)
 			continue;
@@ -872,11 +876,11 @@ ionic_qos_set_default_pcp(struct ionic_lif *lif, int tc, union ionic_qos_config 
 		    i, search_qos->pause_type, search_qos->dot1q_pcp,
 		    search_qos->sched_type, search_qos->dwrr_weight, bitmap);
  	}
- 
+
 	if ((bitmap & BIT(tc_pcp)) != 0) {
 		tc_pcp_available = false;
 		def_pcp = -1;
-	} 
+	}
 
 	if (!tc_pcp_available) {
 		/* TC PCP not available; pick the first free PCP */
@@ -904,13 +908,13 @@ ionic_qos_set_default_dscp(struct ionic_lif *lif, int tc, union ionic_qos_config
 	int tc_dscp[IONIC_DSCP_BLOCK_SIZE] = {0};
 	uint64_t bitmap = 0;
 	int used_count = 0;
- 
- 	/*
-	 * By default, map the dscp range to respective TC; 
+
+	/*
+	 * By default, map the dscp range to respective TC;
 	 * 	default DSCP range is TC*8 - TC*8+8
 	 */
-	for (i = (tc * IONIC_DSCP_BLOCK_SIZE), j = 0; 
-		i < ((tc * IONIC_DSCP_BLOCK_SIZE) + IONIC_DSCP_BLOCK_SIZE); 
+	for (i = (tc * IONIC_DSCP_BLOCK_SIZE), j = 0;
+		i < ((tc * IONIC_DSCP_BLOCK_SIZE) + IONIC_DSCP_BLOCK_SIZE);
 		i ++, j ++) {
 		tc_dscp[j] = i;
 	}
@@ -932,10 +936,10 @@ ionic_qos_set_default_dscp(struct ionic_lif *lif, int tc, union ionic_qos_config
 		if(search_qos->class_type == IONIC_QOS_CLASS_TYPE_PCP)
 			continue;
 
-		for (j = 0 ; j < search_qos->ndscp ; j++) 
+		for (j = 0; j < search_qos->ndscp; j++)
 			bitmap |= BIT(search_qos->ip_dscp[j]);
  	}
- 
+
 	/*
 	 * if any of the dscp is already mapped to some other TC, unmap it.
 	 * if all the DSCPs are already mapped to other TCs, pick the first avlbl dscp
@@ -950,13 +954,13 @@ ionic_qos_set_default_dscp(struct ionic_lif *lif, int tc, union ionic_qos_config
 	}
 
 	if (used_count == IONIC_DSCP_BLOCK_SIZE) {
-		/* 
-		 * all the DSCPs are already mapped to other TCs, 
-		 * pick the first avlbl dscp 
+		/*
+		 * all the DSCPs are already mapped to other TCs,
+		 * pick the first avlbl dscp
 		 */
 
 		/* look at the higher range, first */
-		for (i = ((tc * IONIC_DSCP_BLOCK_SIZE) + IONIC_DSCP_BLOCK_SIZE); 
+		for (i = ((tc * IONIC_DSCP_BLOCK_SIZE) + IONIC_DSCP_BLOCK_SIZE);
 			i < IONIC_QOS_DSCP_MAX; i ++) {
 			if ((bitmap & BIT(i)) == 0) {
 				qos->ip_dscp[0] = i;
@@ -993,14 +997,8 @@ static void
 ionic_qos_set_default(struct ionic_lif *lif, int tc, union ionic_qos_config *qos)
 {
 	struct ionic *ionic = lif->ionic;
-	uint8_t pause_type;
 
-	pause_type = ionic->idev.port_info->config.pause_type & IONIC_PAUSE_TYPE_MASK;
-	if (pause_type != IONIC_PORT_PAUSE_TYPE_PFC)
-		qos->pause_type = IONIC_PORT_PAUSE_TYPE_LINK;
-	else
-		qos->pause_type = pause_type;
-
+	qos->pause_type = ionic->idev.port_info->config.pause_type & IONIC_PAUSE_TYPE_MASK;
 	qos->sched_type = IONIC_QOS_SCHED_TYPE_DWRR;
 	qos->dwrr_weight = 25; /* TODO: set this to 0 when bw_perc is enabled */
 
@@ -1120,7 +1118,7 @@ ionic_qos_pfc_cos_update(struct ionic_lif *lif, uint8_t *pfc_cos)
 
 		if (qos->pfc_cos == pfc_cos[tc])
 			continue;
-		
+
 		if ((qos->flags & IONIC_QOS_CONFIG_F_ENABLE) == 0) {
 			IONIC_NETDEV_WARN(ifp, "TC%d is not enabled\n", tc);
 			return (EINVAL);
@@ -1142,7 +1140,7 @@ ionic_qos_pfc_cos_update(struct ionic_lif *lif, uint8_t *pfc_cos)
 }
 
 /* Given the current and new DSCP configs for a TC, check if an update is required */
-bool ionic_qos_is_tc_dscp_updated(union ionic_qos_config *qos, int new_ndscp, uint8_t *new_dscp) 
+bool ionic_qos_is_tc_dscp_updated(union ionic_qos_config *qos, int new_ndscp, uint8_t *new_dscp)
 {
 	int i;
 
@@ -1241,8 +1239,8 @@ ionic_qos_enable_update(struct ionic_lif *lif, uint8_t *enable)
 		qos->flags |= IONIC_QOS_CONFIG_F_ENABLE;
 		ionic_qos_set_default(lif, tc, qos);
 
-		if ((lif->ionic->qos.class_type == IONIC_QOS_CLASS_TYPE_NONE) || 
-			(lif->ionic->qos.class_type == IONIC_QOS_CLASS_TYPE_PCP)) {
+		if ((lif->ionic->qos.class_type == IONIC_QOS_CLASS_TYPE_NONE) ||
+		    (lif->ionic->qos.class_type == IONIC_QOS_CLASS_TYPE_PCP)) {
 			qos->ndscp = 0;
 			memset(qos->ip_dscp, 0, sizeof(qos->ip_dscp));
 			ionic_qos_set_default_pcp(lif, tc, qos);
@@ -1285,13 +1283,10 @@ ionic_qos_no_drop_update(struct ionic_lif *lif, uint8_t *no_drop)
 	struct ionic_identity *ident = &ionic->ident;
 	union ionic_qos_config *qos;
 	int tc, error;
-	uint8_t pause_type;
 
 	ionic_qos_class_identify(ionic);
 	for (tc = 1; tc < ionic->qos.max_tcs; tc++) {
 		qos = &ident->qos.config[tc];
-
-		IONIC_NETDEV_WARN(ifp, "TC%d , flags: 0x%x\n", tc, qos->flags);
 
 		if (no_drop[tc] == ((qos->flags & IONIC_QOS_CONFIG_F_NO_DROP) >> 1))
 			continue;
@@ -1307,11 +1302,7 @@ ionic_qos_no_drop_update(struct ionic_lif *lif, uint8_t *no_drop)
 		else
 			qos->flags &= ~IONIC_QOS_CONFIG_F_NO_DROP;
 
-		pause_type = ionic->idev.port_info->config.pause_type & IONIC_PAUSE_TYPE_MASK;
-		if (pause_type != IONIC_PORT_PAUSE_TYPE_PFC)
-			qos->pause_type = IONIC_PORT_PAUSE_TYPE_LINK;
-		else
-			qos->pause_type = pause_type;
+		qos->pause_type = ionic->idev.port_info->config.pause_type & IONIC_PAUSE_TYPE_MASK;
 
 		error = ionic_qos_tc_update(lif, tc, qos);
 		if (error) {
@@ -1389,7 +1380,7 @@ ionic_qos_class_type_update(struct ionic_lif *lif,
 		ionic_qos_set_default(lif, tc, qos);
 		qos->class_type = class;
 
-		if ( (qos->class_type == IONIC_QOS_CLASS_TYPE_NONE) || 
+		if ( (qos->class_type == IONIC_QOS_CLASS_TYPE_NONE) ||
 		     (qos->class_type == IONIC_QOS_CLASS_TYPE_PCP) ) {
 			qos->ndscp = 0;
 			memset(qos->ip_dscp, 0, sizeof(qos->ip_dscp));
@@ -1421,6 +1412,20 @@ ionic_qos_class_type_update(struct ionic_lif *lif,
 	}
 
 	return (0);
+}
+
+int
+ionic_qos_reset(struct ionic *ionic)
+{
+	struct ionic_dev *idev = &ionic->idev;
+	int err;
+
+	IONIC_DEV_LOCK(ionic);
+	ionic_dev_cmd_qos_reset(idev);
+	err = ionic_dev_cmd_wait_check(idev, ionic_devcmd_timeout * HZ);
+	IONIC_DEV_UNLOCK(ionic);
+
+	return (err);
 }
 
 /*

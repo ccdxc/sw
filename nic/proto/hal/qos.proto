@@ -20,6 +20,7 @@ service QOS {
   rpc QosClassThresholdsGet(QosClassThresholdsGetRequestMsg) returns (QosClassThresholdsGetResponseMsg) {}
   rpc QosClassSetGlobalPauseType(QosClassSetGlobalPauseTypeRequestMsg) returns (QosClassSetGlobalPauseTypeResponseMsg) {}
   rpc QosClearStats(QosClearStatsRequestMsg) returns (QosClearStatsResponseMsg) {}
+  rpc QosReset(QosResetRequestMsg) returns (QosResetResponseMsg) {}
 
   // Copp related APIs
   rpc CoppUpdate(CoppRequestMsg) returns (CoppResponseMsg) {}
@@ -324,6 +325,17 @@ message QosClassSetGlobalPauseTypeRequestMsg {
 }
 
 message QosClassSetGlobalPauseTypeResponseMsg {
+}
+
+message QosResetRequest {
+    uint32 group = 1;    // dummy group
+}
+
+message QosResetRequestMsg {
+    repeated QosResetRequest request = 1;
+}
+
+message QosResetResponseMsg {
 }
 
 // Specifications of a Copp

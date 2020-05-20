@@ -262,7 +262,8 @@ stats_timer_cb (void *timer, uint32_t timer_id, void *ctxt)
     }
 
     // system PB stats
-    if (hal::g_hal_cfg.device_cfg.forwarding_mode == sdk::lib::FORWARDING_MODE_CLASSIC) {
+    if ( (hal::g_hal_cfg.device_cfg.forwarding_mode == sdk::lib::FORWARDING_MODE_CLASSIC) ||
+         (hal::g_hal_cfg.device_cfg.forwarding_mode == sdk::lib::FORWARDING_MODE_HOSTPIN) ) {
         bzero(&pd_func_args, sizeof(pd::pd_func_args_t));
         bzero(&pd_system_args, sizeof(pd::pd_system_args_t));
         bzero(&pb_args, sizeof(pd::pd_pb_stats_get_args_t));
