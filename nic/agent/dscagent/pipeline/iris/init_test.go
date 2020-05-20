@@ -203,7 +203,12 @@ func (i *badInfraAPI) UpdateIfChannel(evt types.UpdateIfEvent) {
 }
 
 // IfUpdateChannel returns a channel for propogating interface state to the netagent
-func (i *badInfraAPI) IfUpdateChannel() chan types.UpdateIfEvent {
+func (i *badInfraAPI) IfUpdateChannel() chan error {
+	return nil
+}
+
+// GetIntfUpdList returns the list of dirty interfaces (intfs with a status update)
+func (i *badInfraAPI) GetIntfUpdList() (updList []types.UpdateIfEvent) {
 	return nil
 }
 

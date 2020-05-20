@@ -20,7 +20,8 @@ type API struct {
 	config                      types.DistributedServiceCardStatus
 	primaryDBPath, backupDBPath string
 	primaryStore, backupStore   emstore.Emstore
-	ifUpdCh                     chan types.UpdateIfEvent
+	ifUpdCh                     chan error
+	updMap                      map[string]types.UpdateIfEvent
 }
 
 // NewInfraAPI returns a new instance of InfraAPI. First db path is interpreted as primary and the second is secondary
@@ -61,6 +62,8 @@ func NewInfraAPI(primaryDBPath, backupDBPath string) (*API, error) {
 	i.primaryDBPath = primaryDBPath
 	i.backupDBPath = backupDBPath
 
+	i.ifUpdCh = make(chan error, 1)
+	i.updMap = make(map[string]types.UpdateIfEvent)
 	return &i, nil
 }
 
@@ -178,4 +181,34 @@ func (i *API) NotifyVeniceConnection() {
 	i.Lock()
 	defer i.Unlock()
 	i.config.IsConnectedToVenice = true
+}
+
+// UpdateIfChannel updates the intf update channel
+func (i *API) UpdateIfChannel(evt types.UpdateIfEvent) {
+	i.Lock()
+	defer i.Unlock()
+
+	i.updMap[evt.Intf.GetKey()] = evt
+	select {
+	case i.ifUpdCh <- nil:
+	default:
+	}
+	log.Infof("Interface update enqueued for intf: %s", evt.Intf.GetKey())
+}
+
+// GetIntfUpdList returns the list of dirty interfaces (intfs with a status update)
+func (i *API) GetIntfUpdList() (updList []types.UpdateIfEvent) {
+	i.Lock()
+	defer i.Unlock()
+
+	for key, evt := range i.updMap {
+		updList = append(updList, evt)
+		delete(i.updMap, key)
+	}
+	return
+}
+
+// IfUpdateChannel returns the interface update channel
+func (i *API) IfUpdateChannel() chan error {
+	return i.ifUpdCh
 }

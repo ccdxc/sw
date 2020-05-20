@@ -248,6 +248,11 @@ func (a *ApuluAPI) HandleVeniceCoordinates(dsc types.DistributedServiceCardStatu
 		log.Error(errors.Wrapf(types.ErrBoltDBStoreCreate, "Uplink: %s | Uplink: %v", lb.GetKey(), err))
 		return
 	}
+	ifEvnt := types.UpdateIfEvent{
+		Oper: types.Create,
+		Intf: lb,
+	}
+	a.InfraAPI.UpdateIfChannel(ifEvnt)
 }
 
 // RegisterControllerAPI ensures the handles for controller API is appropriately set up
@@ -1715,6 +1720,11 @@ func (a *ApuluAPI) handleHostInterface(spec *halapi.LifSpec, status *halapi.LifS
 		log.Error(errors.Wrapf(types.ErrBoltDBStoreCreate, "Lif: %s | Lif: %v", i.GetKey(), err))
 		return err
 	}
+	ifEvnt := types.UpdateIfEvent{
+		Oper: types.Create,
+		Intf: i,
+	}
+	a.InfraAPI.UpdateIfChannel(ifEvnt)
 	return nil
 }
 
@@ -1795,6 +1805,11 @@ func (a *ApuluAPI) handleUplinkInterface(spec *halapi.PortSpec, status *halapi.P
 		log.Error(errors.Wrapf(types.ErrBoltDBStoreCreate, "Port: %s | Port: %v", i.GetKey(), err))
 		return err
 	}
+	ifEvnt := types.UpdateIfEvent{
+		Oper: types.Create,
+		Intf: i,
+	}
+	a.InfraAPI.UpdateIfChannel(ifEvnt)
 	return nil
 }
 

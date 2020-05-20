@@ -50,6 +50,15 @@ type InfraAPI interface {
 	// NotifyVeniceConnection updates venice connection status from netagent
 	NotifyVeniceConnection()
 
+	// UpdateIfChannel updates the intf update channel
+	UpdateIfChannel(evt UpdateIfEvent)
+
+	// GetIntfUpdList returns the list of dirty interfaces
+	GetIntfUpdList() []UpdateIfEvent
+
+	// IfUpdateChannel returns the interface update channel
+	IfUpdateChannel() chan error
+
 	// Close closes the DB Write Handlers
 	Close() error
 

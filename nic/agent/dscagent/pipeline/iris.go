@@ -2019,11 +2019,16 @@ func (i *IrisAPI) createHostInterface(uid string, spec *halapi.LifSpec, status *
 		},
 	}
 
+	ifEvnt := types.UpdateIfEvent{
+		Oper: types.Create,
+		Intf: l,
+	}
 	dat, _ := l.Marshal()
 	if err := i.InfraAPI.Store(l.Kind, l.GetKey(), dat); err != nil {
 		log.Error(errors.Wrapf(types.ErrBoltDBStoreCreate, "Lif: %s | Lif: %v", l.GetKey(), err))
 		return err
 	}
+	i.InfraAPI.UpdateIfChannel(ifEvnt)
 	knownUplinks[l.Status.InterfaceID] = ifName
 	return nil
 }
@@ -2075,11 +2080,16 @@ func (i *IrisAPI) createUplinkInterface(uid string, spec *halapi.PortSpec, statu
 		},
 	}
 
+	ifEvnt := types.UpdateIfEvent{
+		Oper: types.Create,
+		Intf: uplink,
+	}
 	dat, _ := uplink.Marshal()
 	if err := i.InfraAPI.Store(uplink.Kind, uplink.GetKey(), dat); err != nil {
 		log.Error(errors.Wrapf(types.ErrBoltDBStoreCreate, "Uplink: %s | Uplink: %v", uplink.GetKey(), err))
 		return err
 	}
+	i.InfraAPI.UpdateIfChannel(ifEvnt)
 	knownUplinks[uplink.Status.InterfaceID] = ifName
 	return nil
 }

@@ -66,7 +66,12 @@ func (i *mockInfraAPI) UpdateIfChannel(evt types.UpdateIfEvent) {
 }
 
 // IfUpdateChannel returns a channel for propogating interface state to the netagent
-func (i *mockInfraAPI) IfUpdateChannel() chan types.UpdateIfEvent {
+func (i *mockInfraAPI) IfUpdateChannel() chan error {
+	return nil
+}
+
+// GetIntfUpdList returns the list of dirty interfaces (intfs with a status update)
+func (i *mockInfraAPI) GetIntfUpdList() (updList []types.UpdateIfEvent) {
 	return nil
 }
 

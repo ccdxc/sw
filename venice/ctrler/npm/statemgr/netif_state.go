@@ -169,30 +169,26 @@ func (sm *Statemgr) OnInterfaceCreateReq(nodeID string, agentNetif *netproto.Int
 
 // OnInterfaceUpdateReq gets called when agent sends update request
 func (sm *Statemgr) OnInterfaceUpdateReq(nodeID string, agentNetif *netproto.Interface) error {
-	obj, err := sm.FindObject("NetworkInterface", agentNetif.ObjectMeta.Tenant, agentNetif.ObjectMeta.Namespace, agentNetif.ObjectMeta.Name)
+	obj, err := smgrNetworkInterface.FindNetworkInterface(agentNetif.Name)
 	if err != nil {
+		log.Errorf("Error finding interface %v for update", agentNetif.Name)
 		return err
 	}
 
-	// delete the networkInterface
-	ctkitNetif, ok := obj.(*ctkit.NetworkInterface)
-	if !ok {
-		return ErrIncorrectObjectType
-	}
-
-	ctkitNetif.Lock()
-	defer ctkitNetif.Unlock()
-
+	obj.Lock()
+	defer obj.Unlock()
 	//For now Update only operation status
-	if ctkitNetif.Status.OperStatus == agentNetif.Status.OperStatus {
+	opStatus := strings.ToUpper(agentNetif.Status.OperStatus)
+	if obj.NetworkInterfaceState.Status.OperStatus == opStatus {
 		return nil
 	}
-	ctkitNetif.Status.OperStatus = agentNetif.Status.OperStatus
+	log.Infof("Updating network interface state %v : %v", agentNetif.Name, opStatus)
+	obj.NetworkInterfaceState.Status.OperStatus = opStatus
 	// retry till it succeeds
 	now := time.Now()
 	retries := 0
 	for {
-		err := ctkitNetif.Write()
+		err := obj.Write()
 		if err == nil {
 			break
 		}

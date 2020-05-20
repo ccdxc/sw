@@ -602,37 +602,42 @@ func (c *API) Stop() error {
 
 func (c *API) netIfWorker(ctx context.Context) {
 	log.Infof("Starting Netif worker")
+	defer log.Info("Ending Netif worker")
 	if c.npmClient == nil {
 		log.Info("NPM Client not intialized. Exiting Interface updater")
 		return
 	}
 
+	var intfs []netproto.Interface
+	var err error
 	ifClient := netproto.NewInterfaceApiV1Client(c.npmClient.ClientConn)
-	var operUpd netproto.InterfaceApiV1_InterfaceOperUpdateClient
-	nctx, cancel := context.WithCancel(context.Background())
 
-	defer log.Info("Ending Netif worker")
-	ticker := time.NewTicker(types.NetIfUpdateDelay)
 	for {
 		select {
 		case <-ctx.Done():
 			log.Info("Context done, exiting")
-			if operUpd != nil {
-				operUpd.CloseSend()
-			}
-			cancel()
 			return
-		case <-ticker.C:
-			intfKind := netproto.Interface{
-				TypeMeta: api.TypeMeta{Kind: "Interface"},
-			}
-
-			interfaces, _ := c.PipelineAPI.HandleInterface(types.List, intfKind)
-			for _, intf := range interfaces {
-				intf.Status.DSCID = c.InfraAPI.GetConfig().DSCID
-				if resp, err := ifClient.CreateInterface(nctx, &intf); err != nil {
+		case <-c.InfraAPI.IfUpdateChannel():
+			// Set the DSC ID
+			updList := c.InfraAPI.GetIntfUpdList()
+			for _, evt := range updList {
+				if c.InfraAPI.GetConfig().DSCID == "" {
+					log.Error("DSCID not populated in the controller. Retrying...")
+					c.InfraAPI.UpdateIfChannel(evt)
+					continue
+				}
+				if intfs, err = c.PipelineAPI.HandleInterface(types.Get, evt.Intf); err != nil {
+					log.Errorf("Interface GET failed for intf %s. Retrying...", evt.Intf.GetKey())
+					// Interface deletes are not yet supported, interface should be present in DB
+					// Mark the interface dirty to retry the operation after all errors are resolved
+					c.InfraAPI.UpdateIfChannel(evt)
+					continue
+				}
+				intfs[0].Status.DSCID = c.InfraAPI.GetConfig().DSCID
+				log.Infof("CREATE interface: [%+v]", intfs[0])
+				if resp, err := ifClient.CreateInterface(ctx, &intfs[0]); err != nil {
 					log.Errorf("create interface [%v] failed (%s)", resp, err)
-					break
+					c.InfraAPI.UpdateIfChannel(evt)
 				}
 			}
 		}
