@@ -123,8 +123,7 @@ export class ClusterupdateComponent extends BaseComponent implements OnInit {
   }
 
   addtoNTPServers() {
-    const len = this.ntp.length + 1;
-    this.form.get(['spec', 'ntp-servers']).setValue(this.ntp.slice(0, this.ntp.length).concat(len + '.' + this.addNTP.value));
+    this.form.get(['spec', 'ntp-servers']).setValue(this.ntp.slice(0, this.ntp.length).concat(this.addNTP.value));
     this.ntp = this.form.get(['spec', 'ntp-servers']).value;
     this.addNTP.reset('');
   }

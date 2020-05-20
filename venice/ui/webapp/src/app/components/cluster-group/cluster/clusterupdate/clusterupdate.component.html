@@ -45,6 +45,7 @@
               <div>{{server}}</div>
               <div fxFlex="10px"></div>
               <mat-icon [matTooltip]="'Remove this server from NTP servers list'"
+                        *ngIf="ntp.length > 1"
                         fxFlex="nogrow" (click)="onDeleteNTPServer(server,index)">
                 delete
               </mat-icon>
