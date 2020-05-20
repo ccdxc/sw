@@ -38,9 +38,10 @@ def Trigger(tc):
         api.Logger.info("Moving server %s" %(client.workload_name))
         tc.vm_node = server
 
+    vm_utils.get_vm_dbg_stats(tc)
+
     tc.cmd_cookies = []
     num_moves_done = 0
-
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     tc.cmd_descr = "Server: %s(%s) <--> Client: %s(%s)" %\
                    (server.workload_name, server.ip_address, client.workload_name, client.ip_address)
@@ -170,4 +171,5 @@ def Teardown(tc):
 
     CleanupNFSServer(tc.server, tc.client)
     vm_utils.move_back_vms(tc)
-    return api.types.status.SUCCESS
+
+    return vm_utils.verify_vm_dbg_stats(tc)

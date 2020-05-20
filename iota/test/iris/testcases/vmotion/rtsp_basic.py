@@ -33,6 +33,8 @@ def Trigger(tc):
     else:
         tc.vm_node = server
 
+    vm_utils.get_vm_dbg_stats(tc)
+
     tc.cmd_cookies = []
 
     serverReq = None
@@ -126,5 +128,5 @@ def Teardown(tc):
         return tc.GetStatus()
 
     vm_utils.move_back_vms(tc)
-    return api.types.status.SUCCESS
+    return vm_utils.verify_vm_dbg_stats(tc)
 

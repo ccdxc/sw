@@ -8,6 +8,7 @@ import re
 import iota.test.iris.config.netagent.api as agent_api
 import iota.harness.api as api
 import yaml
+import pprint
 
 
 __fuz_run_time = "240s"
@@ -348,8 +349,47 @@ def process_dbg_vmotion_output(tc, f):
             api.Logger.info("mac_addr {} not found in vm dbg cmd".format(mac_addr))
             ret = api.types.status.FAILURE
     return ret 
+
+def vm_process_dbg_stats(f):
+    stats_dict = dict()
+    lines = f.splitlines()
+    for line in lines:
+        m = re.search('Total (.*):(.*)',line)
+        if m:
+            stat_string = m.group(1).strip()
+            count       = int(m.group(2).strip())
+            if stat_string not in stats_dict:
+                stats_dict[stat_string] = count
+    pprint.pprint(stats_dict)
+    return stats_dict
+
+def get_dbg_vmotion_stats(tc, node):
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    api.Trigger_AddNaplesCommand(req, node, "/nic/bin/halctl debug vmotion")
+    trig_resp = api.Trigger(req)
+    term_resp = api.Trigger_TerminateAllCommands(trig_resp)
+    tc.resp = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp)
+    for cmd in tc.resp.commands:
+        api.PrintCommandResults(cmd)
+        if cmd.stdout == '':
+           api.Logger.info("hal debug vmotion returned no info")
+           return None
+        else:
+           ret = vm_process_dbg_stats(cmd.stdout)
+           return ret
+
+def check_dbg_stats(stats_before, stats_after):
+    ret = api.types.status.SUCCESS
+    if stats_before['Failed Migration'] != stats_after['Failed Migration']:
+        api.Logger.info("failed migration, before :{}, after {}".format(stats_before['Failed Migration'],stats_after['Failed Migration']))
+        ret = api.types.status.FAILURE
+    if stats_before['Aborted Migration'] != stats_after['Aborted Migration']:
+        api.Logger.info("aborted migration, before :{}, after {}".format(stats_before['Aborted Migration'],stats_after['Aborted Migration']))
+        ret = api.types.status.FAILURE
+    return ret
  
 def verify_dbg_vmotion(tc, node):
+    tc.cmd_cookies = []
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     cmd_cookie = "hal debug vmotion"
     api.Trigger_AddNaplesCommand(req, node, "/nic/bin/halctl debug vmotion")
@@ -362,12 +402,38 @@ def verify_dbg_vmotion(tc, node):
         #api.Logger.info("Results for %s" % (tc.cmd_cookies[cookie_idx]))
         #api.PrintCommandResults(cmd)
         if tc.cmd_cookies[cookie_idx].find("hal debug vmotion") != -1 and cmd.stdout == '':
-           api.Logger.info("hal show session returned no sessions")
+           api.Logger.info("hal debug vmotion returned no EP info")
            return None
         else:
            ret = process_dbg_vmotion_output(tc, cmd.stdout)
            return ret
 
+def get_vm_dbg_stats(tc,before=True):
+    if before:
+        if not (hasattr(tc, 'Nodes')):
+            tc.Nodes    = api.GetNaplesHostnames()
+        if not (hasattr(tc, 'dbg_stats_before')):
+            tc.dbg_stats_before = dict()
+            tc.dbg_stats_after  = dict()
+    for node in tc.Nodes:
+        if before:
+            tc.dbg_stats_before[node]  = get_dbg_vmotion_stats(tc, node)
+        else:
+            tc.dbg_stats_after[node]  = get_dbg_vmotion_stats(tc, node)
+
+def verify_vm_dbg_stats(tc):
+    dbg_ret = api.types.status.SUCCESS
+    fail    = False
+    get_vm_dbg_stats(tc,False)
+    for node in tc.Nodes:
+        dbg_ret = check_dbg_stats(tc.dbg_stats_before[node], tc.dbg_stats_after[node])
+        if dbg_ret != api.types.status.SUCCESS:
+            api.Logger.info("dbg_stats shows node {} vmotion failure".format(node))
+            fail = True
+    if fail:
+        return api.types.status.FAILURE
+    else:
+        return api.types.status.SUCCESS
 
 def copy_fuz(tc):
     tc.fuz_exec = {}

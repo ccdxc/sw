@@ -37,6 +37,8 @@ def Trigger(tc):
         api.Logger.info("Moving server %s" %(client.workload_name))
         tc.vm_node = server
 
+    vm_utils.get_vm_dbg_stats(tc)
+
     tc.cmd_cookies = []
 
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
@@ -125,4 +127,4 @@ def Teardown(tc):
         api.Logger.info("verify failed, returning without teardown")
         return api.types.status.SUCCESS 
     vm_utils.move_back_vms(tc)
-    return api.types.status.SUCCESS
+    return vm_utils.verify_vm_dbg_stats(tc)

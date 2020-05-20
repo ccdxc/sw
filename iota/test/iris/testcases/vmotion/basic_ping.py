@@ -44,6 +44,8 @@ def Setup(tc):
     tc.vm_dsc_to_dsc     = False
     tc.skip_teardown     = False
     tc.move_info         = []
+    tc.dbg_stats_before  = dict()
+    tc.dbg_stats_after   = dict()
     if tc.args.vm_type == 'non_dsc_to_dsc':
         tc.vm_non_dsc_to_dsc = True
     else:
@@ -75,6 +77,8 @@ def Setup(tc):
     identify workloads to be moved, as we want to run fuz if wl being moved is involved
     '''
     vm_utils.create_move_info(tc, tc.vm_dsc_to_dsc)
+
+    vm_utils.get_vm_dbg_stats(tc)
 
     #Start Fuz
     ret = vm_utils.start_fuz(tc)
@@ -121,4 +125,5 @@ def Teardown(tc):
         return tc.GetStatus()
 
     vm_utils.move_back_vms(tc)
-    return api.types.status.SUCCESS
+
+    return vm_utils.verify_vm_dbg_stats(tc) 
