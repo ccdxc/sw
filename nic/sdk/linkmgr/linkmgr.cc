@@ -1213,11 +1213,8 @@ port_update (void *pd_p, port_args_t *args)
         configured = true;
     }
 
-    // TODO need check?
     if (args->mac_stats_reset == true) {
-        SDK_TRACE_DEBUG("Resetting MAC stats");
-        port_p->port_mac_stats_reset(args->mac_stats_reset);
-        port_p->port_mac_stats_reset(false);
+        port_stats_reset(port_p);
     }
 
     if (args->port_an_args != NULL) {
@@ -1253,6 +1250,20 @@ port_update (void *pd_p, port_args_t *args)
         break;
     }
 
+    return ret;
+}
+
+sdk_ret_t
+port_stats_reset (void *pd_p)
+{
+    sdk_ret_t ret     = SDK_RET_OK;
+    port      *port_p = (port *)pd_p;
+
+    SDK_TRACE_DEBUG("Resetting MAC stats");
+    // Put in reset 
+    ret = port_p->port_mac_stats_reset(true);
+    // Release from reset 
+    ret = port_p->port_mac_stats_reset(false);
     return ret;
 }
 

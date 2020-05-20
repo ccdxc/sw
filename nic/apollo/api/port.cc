@@ -456,4 +456,38 @@ port_get (const if_index_t *key, port_get_cb_t port_get_cb, void *ctxt)
     return SDK_RET_OK;
 }
 
+static bool
+if_walk_port_stats_reset_cb (void *entry, void *ctxt)
+{
+    sdk_ret_t ret;
+    if_entry *intf = (if_entry *)entry;
+
+    ret = sdk::linkmgr::port_stats_reset(intf->port_info());
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to reset port stats for %s, err %u",
+                      eth_ifindex_to_str(intf->ifindex()).c_str(),
+                      ret);
+    }
+    return false;
+}
+
+sdk_ret_t
+port_stats_reset (const pds_obj_key_t *key)
+{
+    if_entry *intf;
+
+    if ((key == NULL) || (*key == k_pds_obj_key_invalid)) {
+        if_db()->walk(IF_TYPE_ETH, if_walk_port_stats_reset_cb, NULL);
+    } else {
+        intf = if_db()->find(key);
+        if (intf == NULL)  {
+            PDS_TRACE_ERR("Port %s not found",
+                          eth_ifindex_to_str(intf->ifindex()).c_str());
+            return SDK_RET_INVALID_OP;
+        }
+        if_walk_port_stats_reset_cb(intf, NULL);
+    }
+    return SDK_RET_OK;
+}
+
 }    // namespace api

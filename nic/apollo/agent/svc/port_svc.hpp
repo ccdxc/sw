@@ -417,4 +417,18 @@ pds_port_to_proto (sdk::linkmgr::port_args_t *port_info, void *ctxt)
     pds_port_status_to_proto(status, port_info);
 }
 
+static inline sdk_ret_t 
+pds_svc_port_stats_reset (const types::Id *req)
+{
+    pds_obj_key_t key;
+    sdk_ret_t     ret;
+
+    if (req->id().empty()) {
+        ret = api::port_stats_reset(&k_pds_obj_key_invalid);
+    } else {
+        pds_obj_key_proto_to_api_spec(&key, req->id());
+        ret = api::port_stats_reset(&key);
+    }
+    return ret;
+}
 #endif    //__AGENT_SVC_PORT_SVC_HPP__

@@ -92,6 +92,7 @@ void *port_create(port_args_t *port_args);
 sdk_ret_t port_update(void *port_p, port_args_t *port_args);
 sdk_ret_t port_delete(void *port_p);
 sdk_ret_t port_get(void *port_p, port_args_t *port_args);
+sdk_ret_t port_stats_reset(void *port_p);
 void linkmgr_set_link_poll_enable(bool enable);
 sdk_ret_t port_args_set_by_xcvr_state(port_args_t *port_args);
 sdk_ret_t port_update_xcvr_event(

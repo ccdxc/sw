@@ -57,6 +57,14 @@ void port_event_cb(port_event_info_t *port_event_info);
 
 sdk_ret_t port_shutdown_all(void);
 
+/**
+  * @brief   reset port stats
+  * @param[in]    key         key/uuid of the port or k_pds_obj_key_invalid/NULL
+  *                           for all ports
+  * @return    SDK_RET_OK on success, failure status code on error
+  */
+sdk_ret_t port_stats_reset(const pds_obj_key_t *key);
+
 }    // namespace api
 
 #endif    /** __PORT_HPP__ */
