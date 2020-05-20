@@ -229,7 +229,7 @@ func localMappingFilterCheck(resp *pds.Mapping, cmd *cobra.Command) bool {
 			return false
 		}
 		if cmd.Flags().Changed("subnet") {
-			if uuid.FromBytesOrNil(spec.GetMACKey().GetSubnetId()).String() != subStr {
+			if utils.IdToStr(spec.GetMACKey().GetSubnetId()) != subStr {
 				return false
 			}
 			if spec.GetMACKey().GetMACAddr() !=
@@ -242,7 +242,7 @@ func localMappingFilterCheck(resp *pds.Mapping, cmd *cobra.Command) bool {
 			return false
 		}
 		if cmd.Flags().Changed("vpc") {
-			if uuid.FromBytesOrNil(spec.GetIPKey().GetVPCId()).String() != vpcStr {
+			if utils.IdToStr(spec.GetIPKey().GetVPCId()) != vpcStr {
 				return false
 			}
 			if utils.IPAddrToStr(spec.GetIPKey().GetIPAddr()) != mappingIP {
@@ -284,20 +284,20 @@ func printLocalMapping(resp *pds.Mapping) {
 	switch spec.GetMacOrIp().(type) {
 	case *pds.MappingSpec_MACKey:
 		fmt.Printf("%-40s%-40s%-18s%-40s%-18s%-16s%-40s%-14s\n",
-			uuid.FromBytesOrNil(spec.GetId()).String(),
-			uuid.FromBytesOrNil(spec.GetMACKey().GetSubnetId()).String(),
+			utils.IdToStr(spec.GetId()),
+			utils.IdToStr(spec.GetMACKey().GetSubnetId()),
 			utils.MactoStr(spec.GetMACKey().GetMACAddr()),
-			uuid.FromBytesOrNil(spec.GetVnicId()).String(),
+			utils.IdToStr(spec.GetVnicId()),
 			utils.MactoStr(spec.GetMACAddr()),
 			utils.EncapToString(spec.GetEncap()),
 			utils.IPAddrToStr(spec.GetPublicIP()), tags)
 	case *pds.MappingSpec_IPKey:
 		fmt.Printf("%-40s%-40s%-40s%-40s%-40s%-18s%-16s%-40s%-14s\n",
-			uuid.FromBytesOrNil(spec.GetId()).String(),
-			uuid.FromBytesOrNil(spec.GetIPKey().GetVPCId()).String(),
+			utils.IdToStr(spec.GetId()),
+			utils.IdToStr(spec.GetIPKey().GetVPCId()),
 			utils.IPAddrToStr(spec.GetIPKey().GetIPAddr()),
-			uuid.FromBytesOrNil(spec.GetSubnetId()).String(),
-			uuid.FromBytesOrNil(spec.GetVnicId()).String(),
+			utils.IdToStr(spec.GetSubnetId()),
+			utils.IdToStr(spec.GetVnicId()),
 			utils.MactoStr(spec.GetMACAddr()),
 			utils.EncapToString(spec.GetEncap()),
 			utils.IPAddrToStr(spec.GetPublicIP()), tags)
@@ -393,7 +393,7 @@ func remoteMappingFilterCheck(resp *pds.Mapping, cmd *cobra.Command) bool {
 			return false
 		}
 		if cmd.Flags().Changed("subnet") {
-			if uuid.FromBytesOrNil(spec.GetMACKey().GetSubnetId()).String() != subStr {
+			if utils.IdToStr(spec.GetMACKey().GetSubnetId()) != subStr {
 				return false
 			}
 			if spec.GetMACKey().GetMACAddr() !=
@@ -406,7 +406,7 @@ func remoteMappingFilterCheck(resp *pds.Mapping, cmd *cobra.Command) bool {
 			return false
 		}
 		if cmd.Flags().Changed("vpc") {
-			if uuid.FromBytesOrNil(spec.GetIPKey().GetVPCId()).String() != vpcStr {
+			if utils.IdToStr(spec.GetIPKey().GetVPCId()) != vpcStr {
 				return false
 			}
 			if utils.IPAddrToStr(spec.GetIPKey().GetIPAddr()) != mappingIP {
@@ -455,18 +455,18 @@ func printRemoteMapping(resp *pds.Mapping) {
 	switch spec.GetMacOrIp().(type) {
 	case *pds.MappingSpec_MACKey:
 		fmt.Printf("%-40s%-40s%-18s%-8s%-18s%-16s%-40s%-14s\n",
-			uuid.FromBytesOrNil(spec.GetId()).String(),
-			uuid.FromBytesOrNil(spec.GetMACKey().GetSubnetId()).String(),
+			utils.IdToStr(spec.GetId()),
+			utils.IdToStr(spec.GetMACKey().GetSubnetId()),
 			utils.MactoStr(spec.GetMACKey().GetMACAddr()),
 			nhType, utils.MactoStr(spec.GetMACAddr()),
 			utils.EncapToString(spec.GetEncap()),
 			utils.IPAddrToStr(spec.GetPublicIP()), tags)
 	case *pds.MappingSpec_IPKey:
 		fmt.Printf("%-40s%-40s%-40s%-40s%-8s%-18s%-16s%-40s%-14s\n",
-			uuid.FromBytesOrNil(spec.GetId()).String(),
-			uuid.FromBytesOrNil(spec.GetIPKey().GetVPCId()).String(),
+			utils.IdToStr(spec.GetId()),
+			utils.IdToStr(spec.GetIPKey().GetVPCId()),
 			utils.IPAddrToStr(spec.GetIPKey().GetIPAddr()),
-			uuid.FromBytesOrNil(spec.GetSubnetId()).String(),
+			utils.IdToStr(spec.GetSubnetId()),
 			nhType, utils.MactoStr(spec.GetMACAddr()),
 			utils.EncapToString(spec.GetEncap()),
 			utils.IPAddrToStr(spec.GetPublicIP()), tags)

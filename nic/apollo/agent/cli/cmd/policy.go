@@ -178,7 +178,7 @@ func printPolicy(resp *pds.SecurityPolicy) {
 	spec := resp.GetSpec()
 
 	fmt.Printf("%-18s : %-40s\n", "Policy ID",
-		uuid.FromBytesOrNil(spec.GetId()).String())
+		utils.IdToStr(spec.GetId()))
 	fmt.Printf("%-18s : %-10s\n", "Address Family",
 		utils.AddrFamilyToStr(spec.GetAddrFamily()))
 	fmt.Printf("%-18s : %-20s\n", "Default FW Action",
@@ -267,7 +267,7 @@ func printPolicy(resp *pds.SecurityPolicy) {
 
 		ruleIDStr := "-"
 		if !bytes.Equal(rule.GetId(), make([]byte, len(rule.GetId()))) {
-			ruleIDStr = uuid.FromBytesOrNil(rule.GetId()).String()
+			ruleIDStr = utils.IdToStr(rule.GetId())
 		}
 
 		if needSecondLine {
@@ -357,7 +357,7 @@ func printProfile(resp *pds.SecurityProfile) {
 	}
 
 	fmt.Printf("%-26s : %s\n", "ID",
-		uuid.FromBytesOrNil(spec.GetId()).String())
+		utils.IdToStr(spec.GetId()))
 
 	fmt.Printf("%-26s : %t\n", "Connection Track Enable",
 		spec.GetConnTrackEn())
@@ -462,8 +462,8 @@ func printRule(resp *pds.SecurityRule) {
 		return
 	}
 
-	fmt.Printf("%-30s : %s\n", "Rule ID", uuid.FromBytesOrNil(spec.GetId()).String())
-	fmt.Printf("%-30s : %s\n", "Policy ID", uuid.FromBytesOrNil(spec.GetSecurityPolicyId()).String())
+	fmt.Printf("%-30s : %s\n", "Rule ID", utils.IdToStr(spec.GetId()))
+	fmt.Printf("%-30s : %s\n", "Policy ID", utils.IdToStr(spec.GetSecurityPolicyId()))
 	fmt.Printf("%-30s : %t\n", "Stateful", attr.GetStateful())
 	fmt.Printf("%-30s : %d\n\n", "Priority", attr.GetPriority())
 
@@ -638,7 +638,7 @@ func securityProfileUpdateCmdHandler(cmd *cobra.Command, args []string) {
 
 	for _, resp := range respMsg.Response {
 		spec := resp.GetSpec()
-		if spec == nil || uuid.FromBytesOrNil(spec.GetId()).String() != profileID {
+		if spec == nil || utils.IdToStr(spec.GetId()) != profileID {
 			continue
 		}
 

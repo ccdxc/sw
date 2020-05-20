@@ -124,7 +124,7 @@ func printNatPb(nat *pds.NatPortBlock) {
 		ipv4prefix.Len = spec.GetNatAddress().GetPrefix().GetIPv4Subnet().GetLen()
 	}
 	fmt.Printf("%-40s%-20s%-10s%-10d%-10d%-10d%-10d\n",
-		uuid.FromBytesOrNil(spec.GetId()).String(),
+		utils.IdToStr(spec.GetId()),
 		utils.IPv4PrefixToStr(&ipv4prefix),
 		utils.IPPrototoStr(spec.GetProtocol()),
 		spec.GetPorts().GetPortLow(),

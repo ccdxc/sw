@@ -107,7 +107,7 @@ func dhcpRelayShowCmdHandler(cmd *cobra.Command, args []string) {
 	if cmd != nil && cmd.Flags().Changed("yaml") {
 		for _, resp := range respMsg.Response {
 			if resp.GetSpec().GetRelaySpec() == nil {
-				continue;
+				continue
 			}
 			respType := reflect.ValueOf(resp)
 			b, _ := yaml.Marshal(respType.Interface())
@@ -120,7 +120,7 @@ func dhcpRelayShowCmdHandler(cmd *cobra.Command, args []string) {
 		printDHCPRelayHeader()
 		count := 0
 		for _, resp := range respMsg.Response {
-			if (printDHCPRelay(resp)) {
+			if printDHCPRelay(resp) {
 				count++
 			}
 		}
@@ -172,7 +172,7 @@ func dhcpProxyShowCmdHandler(cmd *cobra.Command, args []string) {
 	if cmd != nil && cmd.Flags().Changed("yaml") {
 		for _, resp := range respMsg.Response {
 			if resp.GetSpec().GetProxySpec() == nil {
-				continue;
+				continue
 			}
 			respType := reflect.ValueOf(resp)
 			b, _ := yaml.Marshal(respType.Interface())
@@ -185,7 +185,7 @@ func dhcpProxyShowCmdHandler(cmd *cobra.Command, args []string) {
 		printDHCPProxyHeader()
 		count := 0
 		for _, resp := range respMsg.Response {
-			if (printDHCPProxy(resp)) {
+			if printDHCPProxy(resp) {
 				count++
 			}
 		}
@@ -221,7 +221,7 @@ func printDHCPProxy(dhcp *pds.DHCPPolicy) bool {
 		return false
 	}
 
-	outStr := fmt.Sprintf("%-40s", uuid.FromBytesOrNil(spec.GetId()).String())
+	outStr := fmt.Sprintf("%-40s", utils.IdToStr(spec.GetId()))
 
 	switch spec.GetRelayOrProxy().(type) {
 	case *pds.DHCPPolicySpec_ProxySpec:
@@ -262,13 +262,13 @@ func printDHCPRelay(dhcp *pds.DHCPPolicy) bool {
 	}
 
 	relaySpec := spec.GetRelaySpec()
-	if (relaySpec == nil) {
+	if relaySpec == nil {
 		return false
 	}
 
 	fmt.Printf("%-40s%-40s%-20s%-20s\n",
-		uuid.FromBytesOrNil(spec.GetId()).String(),
-		uuid.FromBytesOrNil(relaySpec.GetVPCId()).String(),
+		utils.IdToStr(spec.GetId()),
+		utils.IdToStr(relaySpec.GetVPCId()),
 		utils.IPAddrToStr(relaySpec.GetServerIP()),
 		utils.IPAddrToStr(relaySpec.GetAgentIP()))
 	return true

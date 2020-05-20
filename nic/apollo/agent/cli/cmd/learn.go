@@ -570,8 +570,8 @@ func printLearnMAC(resp *pds.LearnMACGetResponse, detail bool) {
 	for _, MACEntry := range resp.GetResponse() {
 		fmt.Printf("%-20s%-40s%-40s%-10s%-10d%-8d\n",
 			utils.MactoStr(MACEntry.GetKey().GetMACAddr()),
-			uuid.FromBytesOrNil(MACEntry.GetKey().GetSubnetId()).String(),
-			uuid.FromBytesOrNil(MACEntry.GetVnicId()).String(),
+			utils.IdToStr(MACEntry.GetKey().GetSubnetId()),
+			utils.IdToStr(MACEntry.GetVnicId()),
 			LearnStateToStr(MACEntry.GetState()),
 			len(MACEntry.GetIPInfo()),
 			MACEntry.GetTTL())
@@ -606,9 +606,9 @@ func printLearnIP(resp *pds.LearnIPGetResponse) {
 	for _, IPEntry := range resp.GetResponse() {
 		fmt.Printf("%-20s%-40s%-20s%-40s%-10s%-8d\n",
 			utils.IPAddrToStr(IPEntry.GetKey().GetIPAddr()),
-			uuid.FromBytesOrNil(IPEntry.GetKey().GetVPCId()).String(),
+			utils.IdToStr(IPEntry.GetKey().GetVPCId()),
 			utils.MactoStr(IPEntry.GetMACInfo().GetMACAddr()),
-			uuid.FromBytesOrNil(IPEntry.GetMACInfo().GetSubnetId()).String(),
+			utils.IdToStr(IPEntry.GetMACInfo().GetSubnetId()),
 			LearnStateToStr(IPEntry.GetState()),
 			IPEntry.GetTTL())
 	}

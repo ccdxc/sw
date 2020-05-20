@@ -125,7 +125,7 @@ func printPolicer(p *pds.Policer) {
 		burst = spec.GetBPSPolicer().GetBurst()
 	}
 	fmt.Printf("%-40s%-10s%-5s%-14d%-14d%-10d%-10d\n",
-		uuid.FromBytesOrNil(spec.GetId()).String(),
+		utils.IdToStr(spec.GetId()),
 		strings.Replace(spec.GetDirection().String(), "POLICER_DIR_", "", -1),
 		typeStr, count, burst,
 		stats.GetAccept(), stats.GetDrop())

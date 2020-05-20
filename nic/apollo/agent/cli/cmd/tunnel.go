@@ -112,8 +112,8 @@ func printTunnel(tunnel *pds.Tunnel) {
 	spec := tunnel.GetSpec()
 	encapStr := utils.EncapToString(spec.GetEncap())
 	fmt.Printf("%-40s%-40s%-16s%-40s%-40s%-20s%-6d\n",
-		uuid.FromBytesOrNil(spec.GetId()).String(),
-		uuid.FromBytesOrNil(spec.GetVPCId()).String(),
+		utils.IdToStr(spec.GetId()),
+		utils.IdToStr(spec.GetVPCId()),
 		encapStr, utils.IPAddrToStr(spec.GetLocalIP()),
 		utils.IPAddrToStr(spec.GetRemoteIP()),
 		utils.MactoStr(spec.GetMACAddress()),

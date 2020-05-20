@@ -128,9 +128,9 @@ func printVPCHeader() {
 func printVPC(vpc *pds.VPC) {
 	spec := vpc.GetSpec()
 	fmt.Printf("%-40s%-10s%-40s%-20s%-14s\n",
-		uuid.FromBytesOrNil(spec.GetId()).String(),
+		utils.IdToStr(spec.GetId()),
 		strings.Replace(spec.GetType().String(), "VPC_TYPE_", "", -1),
-		uuid.FromBytesOrNil(spec.GetV4RouteTableId()).String(),
+		utils.IdToStr(spec.GetV4RouteTableId()),
 		utils.MactoStr(spec.GetVirtualRouterMac()),
 		utils.EncapToString(spec.GetFabricEncap()))
 }

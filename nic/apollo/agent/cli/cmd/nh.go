@@ -197,12 +197,12 @@ func printNhGroup(resp *pds.NhGroup) {
 	switch typeStr {
 	case "UNDERLAY":
 		fmt.Printf("%-40s%-10d%-16s%-10d",
-			uuid.FromBytesOrNil(spec.GetId()).String(),
+			utils.IdToStr(spec.GetId()),
 			status.GetHwId(), typeStr, numMembers)
 		break
 	case "OVERLAY":
 		fmt.Printf("%-40s%-14s%-10d",
-			uuid.FromBytesOrNil(spec.GetId()).String(),
+			utils.IdToStr(spec.GetId()),
 			typeStr, numMembers)
 		break
 	default:
@@ -398,14 +398,14 @@ func printNexthop(nh *pds.Nexthop) {
 		{
 			nhInfo := spec.GetOverlayNhInfo()
 			fmt.Printf("%-40s%-40s\n",
-				uuid.FromBytesOrNil(nhInfo.GetTunnelId()).String(),
+				utils.IdToStr(nhInfo.GetTunnelId()),
 				utils.IPAddrToStr(status.GetOverlayNhInfo().GetTunnelIP()))
 		}
 	case *pds.NexthopSpec_UnderlayNhInfo:
 		{
 			info := spec.GetUnderlayNhInfo()
 			fmt.Printf("%-40s%-12d%-12d%-18s\n",
-				uuid.FromBytesOrNil(spec.GetId()).String(),
+				utils.IdToStr(spec.GetId()),
 				status.GetUnderlayNhInfo().GetPort(),
 				status.GetUnderlayNhInfo().GetVlan(),
 				utils.MactoStr(info.GetUnderlayMAC()))

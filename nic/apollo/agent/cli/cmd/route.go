@@ -139,14 +139,14 @@ func printRouteTable(rt *pds.RouteTable) {
 		priorityStr = "Y"
 	}
 
-	fmt.Printf("%-40s%-9s", uuid.FromBytesOrNil(spec.GetId()).String(),
+	fmt.Printf("%-40s%-9s", utils.IdToStr(spec.GetId()),
 		priorityStr)
 
 	for _, route := range routes {
 		if first != true {
 			fmt.Printf("%-40s%-9s", "", "")
 		}
-		fmt.Printf("%-40s", uuid.FromBytesOrNil(route.GetId()).String())
+		fmt.Printf("%-40s", utils.IdToStr(route.GetId()))
 		switch route.GetAttrs().GetNh().(type) {
 		case *pds.RouteAttrs_NextHop:
 			fmt.Printf("%-20s%-8s%-40s\n",
@@ -158,31 +158,31 @@ func printRouteTable(rt *pds.RouteTable) {
 			fmt.Printf("%-20s%-8s%-40s\n",
 				utils.IPPrefixToStr(route.GetAttrs().GetPrefix()),
 				"ID",
-				uuid.FromBytesOrNil(route.GetAttrs().GetNexthopId()).String())
+				utils.IdToStr(route.GetAttrs().GetNexthopId()))
 			first = false
 		case *pds.RouteAttrs_NexthopGroupId:
 			fmt.Printf("%-20s%-8s%-40s\n",
 				utils.IPPrefixToStr(route.GetAttrs().GetPrefix()),
 				"ECMP",
-				uuid.FromBytesOrNil(route.GetAttrs().GetNexthopGroupId()).String())
+				utils.IdToStr(route.GetAttrs().GetNexthopGroupId()))
 			first = false
 		case *pds.RouteAttrs_VPCId:
 			fmt.Printf("%-20s%-8s%-40s\n",
 				utils.IPPrefixToStr(route.GetAttrs().GetPrefix()),
 				"VPC",
-				uuid.FromBytesOrNil(route.GetAttrs().GetVPCId()).String())
+				utils.IdToStr(route.GetAttrs().GetVPCId()))
 			first = false
 		case *pds.RouteAttrs_TunnelId:
 			fmt.Printf("%-20s%-8s%-40s\n",
 				utils.IPPrefixToStr(route.GetAttrs().GetPrefix()),
 				"TEP",
-				uuid.FromBytesOrNil(route.GetAttrs().GetTunnelId()).String())
+				utils.IdToStr(route.GetAttrs().GetTunnelId()))
 			first = false
 		case *pds.RouteAttrs_VnicId:
 			fmt.Printf("%-20s%-8s%-40s\n",
 				utils.IPPrefixToStr(route.GetAttrs().GetPrefix()),
 				"VNIC",
-				uuid.FromBytesOrNil(route.GetAttrs().GetVnicId()).String())
+				utils.IdToStr(route.GetAttrs().GetVnicId()))
 			first = false
 		default:
 			fmt.Printf("%-20s%-8s%-40s\n",
@@ -242,8 +242,8 @@ func printRoute(route *pds.Route) {
 		return
 	}
 
-	fmt.Printf("%-30s : %s\n", "Route Id", uuid.FromBytesOrNil(spec.GetId()).String())
-	fmt.Printf("%-30s : %s\n", "Route Table Id", uuid.FromBytesOrNil(spec.GetRouteTableId()).String())
+	fmt.Printf("%-30s : %s\n", "Route Id", utils.IdToStr(spec.GetId()))
+	fmt.Printf("%-30s : %s\n", "Route Table Id", utils.IdToStr(spec.GetRouteTableId()))
 	fmt.Printf("%-30s : %s\n", "Prefix", utils.IPPrefixToStr(attr.GetPrefix()))
 	fmt.Printf("%-30s : %d\n", "Priority", attr.GetPriority())
 
@@ -256,23 +256,23 @@ func printRoute(route *pds.Route) {
 	case *pds.RouteAttrs_NexthopId:
 		fmt.Printf("%-30s : %s\n", "Nexthop Type", "Nexthop ID")
 		fmt.Printf("%-30s : %s\n", "Nexthop",
-			uuid.FromBytesOrNil(attr.GetNexthopId()).String())
+			utils.IdToStr(attr.GetNexthopId()))
 	case *pds.RouteAttrs_NexthopGroupId:
 		fmt.Printf("%-30s : %s\n", "Nexthop Type", "ECMP")
 		fmt.Printf("%-30s : %s\n", "Nexthop",
-			uuid.FromBytesOrNil(attr.GetNexthopGroupId()).String())
+			utils.IdToStr(attr.GetNexthopGroupId()))
 	case *pds.RouteAttrs_VPCId:
 		fmt.Printf("%-30s : %s\n", "Nexthop Type", "VPC")
 		fmt.Printf("%-30s : %s\n", "Nexthop",
-			uuid.FromBytesOrNil(attr.GetVPCId()).String())
+			utils.IdToStr(attr.GetVPCId()))
 	case *pds.RouteAttrs_TunnelId:
 		fmt.Printf("%-30s : %s\n", "Nexthop Type", "TEP")
 		fmt.Printf("%-30s : %s\n", "Nexthop",
-			uuid.FromBytesOrNil(attr.GetTunnelId()).String())
+			utils.IdToStr(attr.GetTunnelId()))
 	case *pds.RouteAttrs_VnicId:
 		fmt.Printf("%-30s : %s\n", "Nexthop Type", "VNIC")
 		fmt.Printf("%-30s : %s\n", "Nexthop",
-			uuid.FromBytesOrNil(attr.GetVnicId()).String())
+			utils.IdToStr(attr.GetVnicId()))
 	default:
 		fmt.Printf("%-30s : %s\n", "Nexthop Type", "-")
 		fmt.Printf("%-30s : %s\n", "Nexthop", "-")

@@ -1,12 +1,14 @@
 package utils
 
 import (
+	"bytes"
 	"encoding/binary"
 	"fmt"
 	"net"
 	"strings"
 
 	"github.com/pensando/sw/nic/apollo/agent/gen/pds"
+	uuid "github.com/satori/go.uuid"
 )
 
 // IPPrototoStr converts ip proto to string
@@ -157,4 +159,14 @@ func AddrFamilyToStr(af pds.IPAF) string {
 	} else {
 		return "None"
 	}
+}
+
+func IdToStr(id []byte) string {
+	str := "-"
+	if id != nil {
+		if !bytes.Equal(id, make([]byte, len(id))) {
+			str = uuid.FromBytesOrNil(id).String()
+		}
+	}
+	return str
 }

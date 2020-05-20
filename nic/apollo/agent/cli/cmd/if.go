@@ -192,10 +192,10 @@ func printIf(intf *pds.Interface) {
 	switch spec.GetType() {
 	case pds.IfType_IF_TYPE_UPLINK:
 		lifId = fmt.Sprint(status.GetUplinkIfStatus().GetLifId())
-		portNum = uuid.FromBytesOrNil(spec.GetUplinkSpec().GetPortId()).String()
+		portNum = utils.IdToStr(spec.GetUplinkSpec().GetPortId())
 	case pds.IfType_IF_TYPE_L3:
-		portNum = uuid.FromBytesOrNil(spec.GetL3IfSpec().GetPortId()).String()
-		vpc = uuid.FromBytesOrNil(spec.GetL3IfSpec().GetVpcId()).String()
+		portNum = utils.IdToStr(spec.GetL3IfSpec().GetPortId())
+		vpc = utils.IdToStr(spec.GetL3IfSpec().GetVpcId())
 		ipPrefix = utils.IPPrefixToStr(spec.GetL3IfSpec().GetPrefix())
 		mac = utils.MactoStr(spec.GetL3IfSpec().GetMACAddress())
 		encap = utils.EncapToString(spec.GetL3IfSpec().GetEncap())
@@ -316,9 +316,9 @@ func printLif(lif *pds.Lif) {
 	state := strings.Replace(status.GetStatus().String(), "IF_STATUS_", "", -1)
 	adminState := strings.Replace(status.GetAdminState().String(), "IF_STATUS_", "", -1)
 	fmt.Printf("%-40s%-10x%-15s%-20s%-40s%-25s%-11s%-11s\n",
-		uuid.FromBytesOrNil(spec.GetId()).String(), status.GetIfIndex(),
+		utils.IdToStr(spec.GetId()), status.GetIfIndex(),
 		status.GetName(), utils.MactoStr(spec.GetMacAddress()),
-		uuid.FromBytesOrNil(spec.GetPinnedInterface()).String(), lifType, state,
+		utils.IdToStr(spec.GetPinnedInterface()), lifType, state,
 		adminState)
 
 }

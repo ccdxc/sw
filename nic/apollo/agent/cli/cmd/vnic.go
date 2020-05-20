@@ -55,7 +55,7 @@ func init() {
 	showCmd.AddCommand(vnicShowCmd)
 	vnicShowCmd.Flags().Bool("yaml", false, "Output in yaml")
 	vnicShowCmd.Flags().Bool("summary", false, "Display number of objects")
-	vnicShowCmd.Flags().Bool("detail", false, "Display detailed outputdt")
+	vnicShowCmd.Flags().Bool("detail", false, "Display detailed output")
 	vnicShowCmd.Flags().StringVarP(&vnicID, "id", "i", "", "Specify vnic ID")
 
 	vnicShowCmd.AddCommand(vnicShowStatisticsCmd)
@@ -207,8 +207,8 @@ func printVnic(vnic *pds.Vnic) {
 	}
 
 	fmt.Printf("%-40s%-40s%-14s%-20s%-10t%-14s%-11t%-10s\n",
-		uuid.FromBytesOrNil(spec.GetId()).String(),
-		uuid.FromBytesOrNil(spec.GetSubnetId()).String(), vnicEncapStr,
+		utils.IdToStr(spec.GetId()),
+		utils.IdToStr(spec.GetSubnetId()), vnicEncapStr,
 		utils.MactoStr(spec.GetMACAddress()), spec.GetSourceGuardEnable(),
 		fabricEncapStr, spec.GetSwitchVnic(), lifName)
 }
@@ -246,9 +246,9 @@ func printVnicDetail(vnic *pds.Vnic) {
 	}
 
 	fmt.Printf("%-30s : %s\n", "Vnic ID",
-		uuid.FromBytesOrNil(spec.GetId()).String())
+		utils.IdToStr(spec.GetId()))
 	fmt.Printf("%-30s : %s\n", "Subnet ID",
-		uuid.FromBytesOrNil(spec.GetSubnetId()).String())
+		utils.IdToStr(spec.GetSubnetId()))
 	fmt.Printf("%-30s : %s\n", "Vnic Encap", vnicEncapStr)
 	fmt.Printf("%-30s : %s\n", "MAC address",
 		utils.MactoStr(spec.GetMACAddress()))
@@ -317,7 +317,7 @@ func vnicShowStatisticsCmdHandler(cmd *cobra.Command, args []string) {
 			spec := resp.GetSpec()
 			stats := resp.GetStats()
 			fmt.Printf("\n")
-			fmt.Printf("Vnic ID: %s\n", uuid.FromBytesOrNil(spec.GetId()).String())
+			fmt.Printf("Vnic ID: %s\n", utils.IdToStr(spec.GetId()))
 			fmt.Printf("\tTxBytes       : %d\n", stats.GetTxBytes())
 			fmt.Printf("\tTxPackets     : %d\n", stats.GetTxPackets())
 			fmt.Printf("\tRxBytes       : %d\n", stats.GetRxBytes())

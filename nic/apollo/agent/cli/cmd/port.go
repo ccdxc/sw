@@ -559,7 +559,7 @@ func printPortStatus(resp *pds.Port) {
 	}
 
 	outStr := fmt.Sprintf("%-40s%-10s0x%-10x%-7s%-10s%4s/%-5s",
-		uuid.FromBytesOrNil(spec.GetId()).String(),
+		utils.IdToStr(spec.GetId()),
 		ifIndexToPortIdStr(status.GetIfIndex()), status.GetIfIndex(),
 		speedStr, macStr, fecCfgStr, fecOperStr)
 	outStr += fmt.Sprintf("%2s/%-7s%-6d%-7s%2s/%-4s",
@@ -803,7 +803,7 @@ func portXcvrShowResp(resp *pds.Port) {
 	}
 
 	fmt.Printf("%-30s: %d\n", "Port", xcvrPortNum)
-	fmt.Printf("%-30s: %s\n", "Id", uuid.FromBytesOrNil(resp.GetSpec().GetId()).String())
+	fmt.Printf("%-30s: %s\n", "Id", utils.IdToStr(resp.GetSpec().GetId()))
 	fmt.Printf("%-30s: %s\n", "State", xcvrStateStr)
 	fmt.Printf("%-30s: %s\n", "PID", xcvrPidStr)
 	fmt.Printf("%-30s: %d KM\n", "Length Single Mode Fiber", lengthSmfKm)

@@ -112,8 +112,8 @@ func printService(svc *pds.SvcMapping) {
 	spec := svc.GetSpec()
 	key := spec.GetKey()
 	fmt.Printf("%-40s%-40s%-40s%-8d%-40s%-7d\n",
-		uuid.FromBytesOrNil(spec.GetId()).String(),
-		uuid.FromBytesOrNil(key.GetVPCId()).String(),
+		utils.IdToStr(spec.GetId()),
+		utils.IdToStr(key.GetVPCId()),
 		utils.IPAddrToStr(key.GetBackendIP()),
 		key.GetBackendPort(),
 		utils.IPAddrToStr(spec.GetIPAddr()),
