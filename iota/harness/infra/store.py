@@ -194,6 +194,13 @@ def GetRemoteWorkloadPairs():
                 pairs.append((w1, w2))
     return pairs
 
+def GetRemoteParentWLPairs():
+    pairs = []
+    for (w1, w2) in GetRemoteWorkloadPairs():
+        if w1.parent_interface == w1.interface and w2.parent_interface == w2.interface:
+            pairs.append((w1, w2))
+    return pairs
+
 def SetVeniceConfigs(json_objs):
     global __gl_venice_configs
     __gl_venice_configs = json_objs

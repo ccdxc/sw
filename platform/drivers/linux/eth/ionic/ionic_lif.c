@@ -321,7 +321,7 @@ static void ionic_lif_quiesce(struct ionic_lif *lif)
 			.opcode = IONIC_CMD_LIF_SETATTR,
 			.attr = IONIC_LIF_ATTR_STATE,
 			.index = lif->index,
-			.state = IONIC_LIF_DISABLE
+			.state = IONIC_LIF_QUIESCE
 		},
 	};
 

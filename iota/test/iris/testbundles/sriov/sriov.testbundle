@@ -1,0 +1,38 @@
+meta:
+    name    : sriov 
+    nics    : [ pensando, mellanox ]
+    os      : [ linux ]
+    targetcount : 65 
+
+testcases:
+    -   name    : VF_DEFAULT_ATTRS
+        testcase: testcases.sriov.vf_default_attrs
+        
+    -   name    : VF_MAC_ADDR
+        testcase: testcases.sriov.vf_mac_addr
+    
+    -   name     : VF_TX_RATE
+        testcase : testcases.sriov.vf_tx_rate
+        iterators :
+            type    : nested
+            rate   : [100, 1000, 5000, 10000]
+
+    -   name     : VF_LINK
+        testcase : testcases.sriov.vf_link
+    
+    -   name     : VF_STATS
+        testcase : testcases.sriov.vf_stats
+        iterators :
+            type    : nested
+            mode   : [RX, TX]
+    
+    -   name     : VF_TRUST
+        testcase : testcases.sriov.vf_trust
+    
+    -   name     : SPOOF_CHECK
+        testcase : testcases.sriov.spoof_check
+        enable   : False
+
+    -   name     : VF_VLAN
+        testcase : testcases.sriov.vf_vlan
+        enable   : False

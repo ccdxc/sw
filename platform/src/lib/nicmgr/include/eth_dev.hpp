@@ -134,22 +134,24 @@ struct EthDevInfo {
 };
 
 /**
- * ETH PF Device
+ * ETH Device
  */
 class Eth : public Device
 {
 public:
     Eth(devapi *dev_api, void *dev_spec, PdClient *pd_client, EV_P);
-    Eth(devapi *dev_api, struct EthDevInfo *dev_info, PdClient *pd_client, EV_P);
+    Eth(devapi *dev_api, struct EthDevInfo *dev_info, PdClient *pd_client,
+        EV_P);
     ~Eth();
 
     static std::vector<Eth *> factory(devapi *dev_api, void *dev_spec, PdClient *pd_client, EV_P);
-    void Init(struct eth_devspec *spec);
+    void Init(Eth *pf_dev);
     void UpgradeGracefulInit(struct eth_devspec *spec);
     void UpgradeHitlessInit(struct eth_devspec *spec);
 
     std::string GetName() { return spec->name; }
     EthDevType GetEthType() { return spec->eth_type; }
+    Eth *GetPfDev() { return pf_dev; }
 
     void DevcmdHandler();
     status_code_t CmdProxyHandler(void *req, void *req_data, void *resp, void *resp_data);
@@ -187,6 +189,9 @@ public:
     static std::string eth_type_to_str(EthDevType type);
     static EthDevType str_to_eth_type(std::string const &s);
 
+    void AddVfDev(Eth *vf_eth_dev);
+    EthLif* GetLifByIndex(uint32_t idx);
+
 private:
     // Device Spec
     const struct eth_devspec *spec;
@@ -201,6 +206,8 @@ private:
     // Active lif set
     std::set<uint16_t> active_lif_set;
     // Resources
+    std::vector<Eth*> vf_devs;
+    Eth *pf_dev;
     struct eth_dev_res dev_resources;
     // Devcmd
     uint64_t devcmd_mem_addr;
@@ -208,6 +215,8 @@ private:
     union ionic_dev_cmd_regs *devcmd;
     // PCIe info
     pciehdev_t *pdev;
+    BusType dev_bus_type;
+
     // Port Info
     uint64_t host_port_info_addr;
     // Port Config
@@ -237,6 +246,8 @@ private:
 
     bool LoadOprom();
 
+    void DeviceInit(Eth *pf_dev);
+
     // Devcmd Memory/control opertions
     void DevcmdRegInit(void);
     void DevcmdRegMemReserve(void);
@@ -263,7 +274,8 @@ private:
     static void DevcmdPreparePoll(EV_P_ ev_prepare *w, int events);
     static void DevcmdCheckPoll(EV_P_ ev_check *w, int events);
     static void DevcmdTimerPoll(EV_P_ ev_timer *w, int events);
-
+    
+    status_code_t _CmdAccessCheck(cmd_opcode_t opcode);
     status_code_t _CmdIdentify(void *req, void *req_data, void *resp, void *resp_data);
     status_code_t _CmdInit(void *req, void *req_data, void *resp, void *resp_data);
     status_code_t _CmdReset(void *req, void *req_data, void *resp, void *resp_data);
@@ -286,6 +298,11 @@ private:
     status_code_t _CmdLifInit(void *req, void *req_data, void *resp, void *resp_data);
     status_code_t _CmdLifReset(void *req, void *req_data, void *resp, void *resp_data);
 
+    status_code_t _CmdVFSetAttr(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t _CmdVFGetAttr(void *req, void *req_data, void *resp, void *resp_data);
+
+    void port_stats_init_(uint32_t ifindex, sdk::types::mem_addr_t stats_hbm_base_addr);
+
     // Tasks
     static void StatsUpdate(EV_P_ ev_timer *w, int events);
     static void PortConfigUpdate(void *obj);
@@ -295,6 +312,7 @@ private:
 
     const char *opcode_to_str(cmd_opcode_t opcode);
     const char *qos_class_to_str(uint8_t qos_class);
+    const char *vf_attr_to_str(uint8_t attr);
 
     // stats
     void StatsInit(void);

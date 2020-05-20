@@ -11,6 +11,7 @@ using namespace std;
 #include "nic/sdk/platform/devapi/devapi.hpp"
 #include "pd_client.hpp"
 #include "ev.h"
+#include <unordered_map>
 
 namespace pt = boost::property_tree;
 
@@ -99,6 +100,7 @@ enum eth_lif_state {
     LIF_STATE_CREATED,
     LIF_STATE_INITING,
     LIF_STATE_INIT,
+    // LIF LINK STATES
     LIF_STATE_UP,
     LIF_STATE_DOWN,
 };
@@ -106,7 +108,7 @@ enum eth_lif_state {
 class EthLif
 {
   public:
-    EthLif(Eth *dev, devapi *dev_api, void *dev_spec, PdClient *pd_client, eth_lif_res_t *res,
+    EthLif(Eth *dev, devapi *dev_api, const void *dev_spec, PdClient *pd_client, eth_lif_res_t *res,
            EV_P);
 
     void Init(void);
@@ -145,12 +147,53 @@ class EthLif
 
     EV_P;
 
-  private:
+    /* Station mac address */
+    void GetMacAddr(uint8_t macaddr[6]);
+    void SetMacAddr(uint8_t macaddr[6]);
+
+    /* LIF admin state */
+    status_code_t SetAdminState(uint8_t admin_state);
+    uint8_t GetAdminState() { return admin_state; }
+
+    /* Proxy LIF admin state of a VF controlled by a PF */
+    status_code_t SetProxyAdminState(uint8_t admin_state);
+    uint8_t GetProxyAdminState() { return proxy_admin_state; }
+
+    status_code_t LifToggleTxRxState(bool enable);
+    status_code_t LifQuiesce();
+
+    /* LIF overall link state */
+    enum eth_lif_state GetLifLinkState() { return state; }
+
+    /* Address to store VF's stats */
+    void SetPfStatsAddr(uint64_t addr);
+    uint64_t GetPfStatsAddr();
+
+    /* Rate limiting */
+    status_code_t SetMaxTxRate(uint32_t rate_in_mbps);
+    status_code_t GetMaxTxRate(uint32_t *rate_in_mbps);
+
+    /* PF VF functions */
+    void SubscribePfAdminState();
+    void UnsubscribePfAdminState();
+    void AddAdminStateSubscriber(EthLif *vf_lif);
+    void DelAdminStateSubscriber(EthLif *vf_lif);
+    void NotifyAdminStateChange();
+
+    /* Attributes */
+    uint64_t GetLifId() { return hal_lif_info_.lif_id; };
+    std::string GetName() { return hal_lif_info_.name; };
+private:
     Eth *dev;
+    std::unordered_map<uint64_t, EthLif *> subscribers_map;
     static sdk::lib::indexer *fltr_allocator;
     // Info
     char name[IONIC_IFNAMSIZ];
     enum eth_lif_state state;
+    uint8_t admin_state;
+    uint8_t proxy_admin_state;
+    uint8_t port_status;
+
     // PD Info
     PdClient *pd;
     // HAL Info
@@ -173,6 +216,8 @@ class EthLif
     // Stats
     uint64_t lif_stats_addr;
     uint64_t host_lif_stats_addr;
+    uint64_t pf_lif_stats_addr;
+
     // NotifyQ
     uint16_t notify_ring_head;
     uint64_t notify_ring_base;
@@ -198,6 +243,7 @@ class EthLif
     // Tasks
     ev_timer stats_timer = {0};
     ev_timer sched_eval_timer = {0};
+    bool stats_timer_init_done = false;
 
     // ref_cnt for queues for this lif
     uint32_t active_q_ref_cnt;
@@ -208,7 +254,9 @@ class EthLif
     EdmaQ *edmaq_async;
 
     /* AdminQ Commands */
-    static void AdminCmdHandler(void *obj, void *req, void *req_data, void *resp, void *resp_data);
+    static void AdminCmdHandler(void *obj,
+        void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t _CmdAccessCheck(cmd_opcode_t opcode);
 
     status_code_t _CmdSetAttr(void *req, void *req_data, void *resp, void *resp_data);
     status_code_t SetFeatures(void *req, void *req_data, void *resp, void *resp_data);
@@ -266,9 +314,19 @@ class EthLif
     void QinfoInit(void);
     void FwBufferInit(void);
     void StatsEnable(void);
+    void LifStatsInit();
+    void LifStatsClear();
+
+    // Lif state functions
+    status_code_t SetLifLinkState();
+    void NotifyLifLinkState();
+    status_code_t UpdateHalLifAdminStatus();
 
     static const char *lif_state_to_str(enum eth_lif_state state);
+    static const char *port_status_to_str(uint8_t port_status);
+    static const char *admin_state_to_str(uint8_t admin_state);
     static lif_state_t ConvertEthLifStateToLifState(enum eth_lif_state lif_state);
+
 };
 
 #endif /* __ETH_LIF_HPP__ */

@@ -16,7 +16,7 @@
 /**
  * Device Types
  */
-enum DeviceType
+typedef enum DeviceType
 {
     INVALID,
     DEBUG,
@@ -28,7 +28,19 @@ enum DeviceType
     FTL,
     DEVICETYPE_MAX,
     DEVICETYPE_FIRST = DEBUG
-};
+} DeviceType;
+
+typedef enum BusType_s
+{
+    BUS_TYPE_PCIE_PF,
+    BUS_TYPE_PCIE_VF,
+    BUS_TYPE_PLATFORM,
+} BusType;
+
+typedef enum DevTrustType {
+    DEV_UNTRUSTED = 0,
+    DEV_TRUSTED = 1,
+} DevTrustType;
 
 /**
  * OPROM
@@ -49,10 +61,20 @@ OpromType str_to_oprom_type(std::string const& s);
 class Device {
     public:
         virtual ~Device() {}
-        virtual enum DeviceType GetType() final { return type; }
-        virtual void SetType(enum DeviceType type) final { this->type = type; }
-    private:
-        enum DeviceType type;
+        
+        virtual DeviceType GetType() final { return type; }
+        virtual void SetType(DeviceType type) final { this->type = type; }
+    
+        BusType GetBusType() { return bus_type; }
+        void SetBusType(BusType bus_type) { this->bus_type = bus_type; }
+
+        DevTrustType GetTrustType() { return trust_type; }
+        void SetTrustType(DevTrustType trust_type) { this->trust_type = trust_type; }
+
+    protected:
+        DeviceType type;
+	    BusType bus_type;
+	    DevTrustType trust_type;
 };
 
 #endif /* __NICMGR_DEVICE_HPP__ */

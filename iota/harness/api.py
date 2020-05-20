@@ -227,6 +227,10 @@ def GetLocalWorkloadPairs(naples=False):
 def GetRemoteWorkloadPairs():
     return store.GetRemoteWorkloadPairs()
 
+# Get workload pairs consisting of only parent interfaces
+def GetRemoteParentWLPairs():
+    return store.GetRemoteParentWLPairs()
+
 def Trigger(req):
     global gl_topo_svc_stub
     Logger.debug("Trigger Message:")

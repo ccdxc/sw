@@ -56,7 +56,29 @@ EthLif::lif_state_to_str(enum eth_lif_state state)
     }
 }
 
-const char *
+const char*
+EthLif::port_status_to_str(uint8_t port_status)
+{
+    switch(port_status) {
+        CASE(IONIC_PORT_OPER_STATUS_NONE);
+        CASE(IONIC_PORT_OPER_STATUS_UP);
+        CASE(IONIC_PORT_OPER_STATUS_DOWN);
+        default: return "IONIC_PORT_OPER_STATUS_INVALID";
+    }
+}
+
+const char*
+EthLif::admin_state_to_str(uint8_t admin_state)
+{
+    switch(admin_state) {
+        CASE(IONIC_PORT_ADMIN_STATE_NONE);
+        CASE(IONIC_PORT_ADMIN_STATE_UP);
+        CASE(IONIC_PORT_ADMIN_STATE_DOWN);
+        default: return "IONIC_PORT_ADMIN_STATE_INVALID";
+    }
+}
+
+const char*
 EthLif::opcode_to_str(cmd_opcode_t opcode)
 {
     switch (opcode) {
@@ -80,7 +102,7 @@ EthLif::opcode_to_str(cmd_opcode_t opcode)
     }
 }
 
-EthLif::EthLif(Eth *dev, devapi *dev_api, void *dev_spec,
+EthLif::EthLif(Eth *dev, devapi *dev_api, const void *dev_spec,
                PdClient *pd_client, eth_lif_res_t *res, EV_P)
 {
     EthLif::dev = dev;
@@ -92,10 +114,14 @@ EthLif::EthLif(Eth *dev, devapi *dev_api, void *dev_spec,
     strncpy0(EthLif::name, spec->name.c_str(), sizeof(EthLif::name));
     EthLif::loop = loop;
     EthLif::host_lif_stats_addr = 0;
+    EthLif::pf_lif_stats_addr = 0;
     EthLif::mtu = MTU_DEFAULT;
     EthLif::active_q_ref_cnt = 0;
     EthLif::notify_enabled = 0;
     EthLif::notify_ring_head = 0;
+    EthLif::admin_state = IONIC_PORT_ADMIN_STATE_DOWN;
+    EthLif::proxy_admin_state = IONIC_PORT_ADMIN_STATE_DOWN;
+    EthLif::port_status = IONIC_PORT_OPER_STATUS_DOWN;
 }
 
 void
@@ -131,16 +157,7 @@ EthLif::Init(void) {
     NIC_LOG_INFO("{}: created lif_id {} mac {} uplink {}", spec->name, hal_lif_info_.lif_id,
                  mac2str(spec->mac_addr), spec->uplink_port_num);
 
-    // Stats
-    lif_stats_addr = pd->mp_->start_addr(MEM_REGION_LIF_STATS_NAME);
-    if (lif_stats_addr == INVALID_MEM_ADDRESS || lif_stats_addr == 0) {
-        NIC_LOG_ERR("{}: Failed to locate stats region", hal_lif_info_.name);
-        throw;
-    }
-    lif_stats_addr += (hal_lif_info_.lif_id << LG2_LIF_STATS_SIZE);
-
-    NIC_LOG_INFO("{}: lif_stats_addr: {:#x}", hal_lif_info_.name, lif_stats_addr);
-
+    LifStatsInit();
     AddLifMetrics();
     LifConfigStatusMem(true);
 
@@ -188,16 +205,7 @@ EthLif::UpgradeGracefulInit(void) {
     NIC_LOG_INFO("{}: created lif_id {} mac {} uplink {}", spec->name, hal_lif_info_.lif_id,
                  mac2str(spec->mac_addr), spec->uplink_port_num);
 
-    // Stats
-    lif_stats_addr = pd->mp_->start_addr(MEM_REGION_LIF_STATS_NAME);
-    if (lif_stats_addr == INVALID_MEM_ADDRESS || lif_stats_addr == 0) {
-        NIC_LOG_ERR("{}: Failed to locate stats region", hal_lif_info_.name);
-        throw;
-    }
-    lif_stats_addr += (hal_lif_info_.lif_id << LG2_LIF_STATS_SIZE);
-
-    NIC_LOG_INFO("{}: lif_stats_addr: {:#x}", hal_lif_info_.name, lif_stats_addr);
-
+    LifStatsInit();
     AddLifMetrics();
     LifConfigStatusMem(false);
 
@@ -216,6 +224,7 @@ void
 EthLif::UpgradeHitlessInit(void) {
     // Create LIF
     state = LIF_STATE_CREATING;
+    //FIXME: Initial values
 
     NIC_LOG_INFO("{}: Lif Upgrade Hitless Init", spec->name);
 
@@ -241,16 +250,7 @@ EthLif::UpgradeHitlessInit(void) {
     NIC_LOG_INFO("{}: created lif_id {} mac {} uplink {}", spec->name, hal_lif_info_.lif_id,
                  mac2str(spec->mac_addr), spec->uplink_port_num);
 
-    // Stats
-    lif_stats_addr = pd->mp_->start_addr(MEM_REGION_LIF_STATS_NAME);
-    if (lif_stats_addr == INVALID_MEM_ADDRESS || lif_stats_addr == 0) {
-        NIC_LOG_ERR("{}: Failed to locate stats region", hal_lif_info_.name);
-        throw;
-    }
-    lif_stats_addr += (hal_lif_info_.lif_id << LG2_LIF_STATS_SIZE);
-
-    NIC_LOG_INFO("{}: lif_stats_addr: {:#x}", hal_lif_info_.name, lif_stats_addr);
-
+    LifStatsInit();
     AddLifMetrics();
     LifConfigStatusMem(false);
 
@@ -263,6 +263,38 @@ EthLif::UpgradeHitlessInit(void) {
     }
 
     StatsEnable();
+}
+
+
+void
+EthLif::LifStatsInit()
+{
+    // Stats
+    lif_stats_addr = pd->mp_->start_addr(MEM_REGION_LIF_STATS_NAME);
+    if (lif_stats_addr == INVALID_MEM_ADDRESS || lif_stats_addr == 0) {
+        NIC_LOG_ERR("{}: Failed to locate stats region", hal_lif_info_.name);
+        throw;
+    }
+    lif_stats_addr += (hal_lif_info_.lif_id << LG2_LIF_STATS_SIZE);
+
+    NIC_LOG_INFO("{}: lif_stats_addr: {:#x}", hal_lif_info_.name, lif_stats_addr);
+    LifStatsClear();
+}
+
+void
+EthLif::LifStatsClear()
+{
+    if (!lif_stats_addr) {
+        return;
+    }
+
+    MEM_SET(lif_stats_addr, 0, LIF_STATS_SIZE, 0);
+    sdk::asic::pd::asicpd_p4plus_invalidate_cache(lif_stats_addr, sizeof(struct ionic_lif_stats),
+                                                  P4PLUS_CACHE_INVALIDATE_BOTH);
+    sdk::asic::pd::asicpd_p4_invalidate_cache(lif_stats_addr, sizeof(struct ionic_lif_stats),
+                                              P4_TBL_CACHE_INGRESS);
+    sdk::asic::pd::asicpd_p4_invalidate_cache(lif_stats_addr, sizeof(struct ionic_lif_stats),
+                                              P4_TBL_CACHE_EGRESS);
 }
 
 void
@@ -603,10 +635,13 @@ EthLif::CmdInit(void *req, void *req_data, void *resp, void *resp_data)
         NIC_LOG_INFO("{}: host_lif_status_addr {:#x}", hal_lif_info_.name, host_lif_status_addr);
 
         host_lif_stats_addr = cmd->info_pa + offsetof(struct ionic_lif_info, stats);
-        NIC_LOG_INFO("{}: host_lif_stats_addr {:#x}", hal_lif_info_.name, host_lif_stats_addr);
-
-        // Start stats timer
-        ev_timer_start(EV_A_ & stats_timer);
+        NIC_LOG_INFO("{}: host_lif_stats_addr {:#x}",
+                    hal_lif_info_.name, host_lif_stats_addr);
+        if (!stats_timer_init_done) {
+            // Start stats timer
+            ev_timer_start(EV_A_ & stats_timer);
+            stats_timer_init_done = true;
+        }
     }
 
     // Workaround for Capri Scheduler bug.
@@ -631,15 +666,11 @@ EthLif::CmdInit(void *req, void *req_data, void *resp, void *resp_data)
     memset(lif_status, 0, sizeof(*lif_status));
 
     // Init the stats region
-    MEM_SET(lif_stats_addr, 0, LIF_STATS_SIZE, 0);
-    sdk::asic::pd::asicpd_p4plus_invalidate_cache(lif_stats_addr, sizeof(struct ionic_lif_stats),
-                                                  P4PLUS_CACHE_INVALIDATE_BOTH);
-    sdk::asic::pd::asicpd_p4_invalidate_cache(lif_stats_addr, sizeof(struct ionic_lif_stats),
-                                              P4_TBL_CACHE_INGRESS);
-    sdk::asic::pd::asicpd_p4_invalidate_cache(lif_stats_addr, sizeof(struct ionic_lif_stats),
-                                              P4_TBL_CACHE_EGRESS);
+    LifStatsClear();
 
     state = LIF_STATE_INIT;
+    admin_state = IONIC_PORT_ADMIN_STATE_UP;
+    proxy_admin_state = IONIC_PORT_ADMIN_STATE_UP;
 
     return (IONIC_RC_SUCCESS);
 }
@@ -784,8 +815,9 @@ EthLif::Reset()
     adminq->Reset();
 
     // Disable Stats
-    if (host_lif_stats_addr != 0) {
+    if (host_lif_stats_addr != 0 || pf_lif_stats_addr != 0) {
         host_lif_stats_addr = 0;
+        pf_lif_stats_addr = 0;
         ev_timer_stop(EV_A_ & stats_timer);
     }
 
@@ -794,6 +826,11 @@ EthLif::Reset()
     }
 
     state = LIF_STATE_RESET;
+
+    UnsubscribePfAdminState();
+    admin_state = IONIC_PORT_ADMIN_STATE_DOWN;
+    proxy_admin_state = IONIC_PORT_ADMIN_STATE_DOWN;
+    
 
     return (IONIC_RC_SUCCESS);
 }
@@ -842,7 +879,34 @@ EthLif::AdminCmdHandler(void *obj, void *req, void *req_data, void *resp, void *
 }
 
 status_code_t
-EthLif::CmdHandler(void *req, void *req_data, void *resp, void *resp_data)
+EthLif::_CmdAccessCheck(cmd_opcode_t opcode)
+{
+    status_code_t status = IONIC_RC_SUCCESS;
+
+    if (dev->GetTrustType() == DEV_TRUSTED) {
+        return status;
+    }
+
+    switch(opcode) {
+        case IONIC_CMD_FW_DOWNLOAD:
+        case IONIC_CMD_FW_CONTROL:
+        case IONIC_CMD_RX_MODE_SET:
+        case IONIC_CMD_RX_FILTER_ADD:
+        case IONIC_CMD_RX_FILTER_DEL:
+            status = IONIC_RC_EPERM;
+            break;
+        default:
+        /* The rest of the devcmd opcodes are allowed. */
+            status = IONIC_RC_SUCCESS;
+            break;
+    }
+
+    return status;
+}
+
+status_code_t
+EthLif::CmdHandler(void *req, void *req_data,
+    void *resp, void *resp_data)
 {
     union ionic_dev_cmd *cmd = (union ionic_dev_cmd *)req;
     union ionic_dev_cmd_comp *comp = (union ionic_dev_cmd_comp *)resp;
@@ -852,6 +916,15 @@ EthLif::CmdHandler(void *req, void *req_data, void *resp, void *resp_data)
         NIC_LOG_ERR("{}: Incorrect LIF with index {} for command with lif_index {}",
                     hal_lif_info_.name, res->lif_index, cmd->cmd.lif_index);
         status = IONIC_RC_EINVAL;
+        goto out;
+    }
+
+    /* Check if the lif is permitted to execute this devcmd */
+    status = _CmdAccessCheck((cmd_opcode_t)cmd->cmd.opcode);
+    if (status == IONIC_RC_EPERM) {
+        NIC_LOG_ERR("{}: not permitted to execute {}",
+                    hal_lif_info_.name,
+                    opcode_to_str((cmd_opcode_t)cmd->cmd.opcode));
         goto out;
     }
 
@@ -2167,13 +2240,6 @@ status_code_t
 EthLif::_CmdSetAttr(void *req, void *req_data, void *resp, void *resp_data)
 {
     struct ionic_lif_setattr_cmd *cmd = (struct ionic_lif_setattr_cmd *)req;
-    union {
-        eth_qstate_cfg_t eth;
-    } cfg = {0};
-    uint64_t addr, off;
-    eth_lif_state state;
-    asic_db_addr_t db_addr = { 0 };
-    sdk_ret_t ret;
 
     NIC_LOG_DEBUG("{}: {}: attr {}", hal_lif_info_.name, opcode_to_str(cmd->opcode), cmd->attr);
 
@@ -2186,65 +2252,17 @@ EthLif::_CmdSetAttr(void *req, void *req_data, void *resp, void *resp_data)
 
     switch (cmd->attr) {
     case IONIC_LIF_ATTR_STATE:
-        for (uint32_t qid = 0; qid < spec->rxq_count; qid++) {
-            addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.lif_id, ETH_HW_QTYPE_RX, qid);
-            off = offsetof(eth_rx_qstate_t, q.cfg);
-            if (addr < 0) {
-                NIC_LOG_ERR("{}: Failed to get qstate address for RX qid {}",
-                    hal_lif_info_.name, qid);
-                return (IONIC_RC_ERROR);
-            }
-            READ_MEM(addr + off, (uint8_t *)&cfg.eth, sizeof(cfg.eth), 0);
-            if (!cfg.eth.enable && cmd->state == IONIC_LIF_ENABLE) {
-                cfg.eth.enable = 0x1;
-                active_q_ref_cnt++;
-            } else if (cfg.eth.enable && cmd->state == IONIC_LIF_DISABLE) {
-                cfg.eth.enable = 0x0;
-                active_q_ref_cnt--;
-            }
-            WRITE_MEM(addr + off, (uint8_t *)&cfg.eth, sizeof(cfg.eth), 0);
-            PAL_barrier();
-            sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(eth_rx_qstate_t), P4PLUS_CACHE_INVALIDATE_BOTH);
-        }
-        for (uint32_t qid = 0; qid < spec->txq_count; qid++) {
-            addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.lif_id, ETH_HW_QTYPE_TX, qid);
-            off = offsetof(eth_tx_qstate_t, q.cfg);
-            if (addr < 0) {
-                NIC_LOG_ERR("{}: Failed to get qstate address for TX qid {}",
-                    hal_lif_info_.name, qid);
-                return (IONIC_RC_ERROR);
-            }
-            READ_MEM(addr + off, (uint8_t *)&cfg.eth, sizeof(cfg.eth), 0);
-            if (!cfg.eth.enable && cmd->state == IONIC_LIF_ENABLE) {
-                cfg.eth.enable = 0x1;
-                active_q_ref_cnt++;
-            } else if (cfg.eth.enable && cmd->state == IONIC_LIF_DISABLE) {
-                cfg.eth.enable = 0x0;
-                active_q_ref_cnt--;
-            }
-            WRITE_MEM(addr + off, (uint8_t *)&cfg.eth, sizeof(cfg.eth), 0);
-            PAL_barrier();
-            sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(eth_tx_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
-            /* wake up the queue */
-            if (cmd->state == IONIC_LIF_ENABLE) {
-                db_addr.lif_id = hal_lif_info_.lif_id;
-                db_addr.q_type = ETH_HW_QTYPE_TX;
-                db_addr.upd = ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_EVAL,
-                                                    ASIC_DB_UPD_INDEX_UPDATE_NONE,
-                                                    false);
-                PAL_barrier();
-                sdk::asic::pd::asic_ring_db(&db_addr, (uint64_t)(qid << 24));
-            }
-        }
-        /* TODO: Need to implement queue flushing */
-        if (cmd->state == IONIC_LIF_DISABLE)
-            ev_sleep(RXDMA_LIF_QUIESCE_WAIT_S);
-
-        state = cmd->state ? LIF_STATE_UP : LIF_STATE_DOWN;
-        ret = dev_api->eth_dev_admin_status_update(hal_lif_info_.lif_id,
-                                    (lif_state_t)ConvertEthLifStateToLifState(state));
-        if (ret != SDK_RET_OK) {
-            NIC_LOG_ERR("{}: Failed to eth state in controller", hal_lif_info_.name);
+        switch (cmd->state) {
+            case IONIC_LIF_ENABLE:
+                return SetAdminState(IONIC_PORT_ADMIN_STATE_UP);
+            case IONIC_LIF_DISABLE:
+                return SetAdminState(IONIC_PORT_ADMIN_STATE_DOWN);
+            case IONIC_LIF_QUIESCE:
+                return LifQuiesce();
+            default:
+                NIC_LOG_ERR("{}: Unknown state {} for LIF_ATTR_STATE",
+                            hal_lif_info_.name, cmd->state);
+                return (IONIC_RC_ENOSUPP);
         }
         break;
     case IONIC_LIF_ATTR_NAME:
@@ -2281,13 +2299,7 @@ EthLif::_CmdSetAttr(void *req, void *req_data, void *resp, void *resp_data)
     case IONIC_LIF_ATTR_STATS_CTRL:
         switch (cmd->stats_ctl) {
         case IONIC_STATS_CTL_RESET:
-            MEM_SET(lif_stats_addr, 0, LIF_STATS_SIZE, 0);
-            sdk::asic::pd::asicpd_p4plus_invalidate_cache(lif_stats_addr, sizeof(struct ionic_lif_stats),
-                                                          P4PLUS_CACHE_INVALIDATE_BOTH);
-            sdk::asic::pd::asicpd_p4_invalidate_cache(lif_stats_addr, sizeof(struct ionic_lif_stats),
-                                                      P4_TBL_CACHE_INGRESS);
-            sdk::asic::pd::asicpd_p4_invalidate_cache(lif_stats_addr, sizeof(struct ionic_lif_stats),
-                                                      P4_TBL_CACHE_EGRESS);
+            LifStatsClear();
             break;
         default:
             NIC_LOG_ERR("{}: UNKNOWN COMMAND {} FOR IONIC_LIF_ATTR_STATS_CTRL", hal_lif_info_.name,
@@ -2421,10 +2433,10 @@ status_code_t
 EthLif::_CmdQControl(void *req, void *req_data, void *resp, void *resp_data)
 {
     status_code_t st = IONIC_RC_SUCCESS;
-    sdk_ret_t ret;
     int64_t addr, off;
-    eth_lif_state state;
     struct ionic_q_control_cmd *cmd = (struct ionic_q_control_cmd *)req;
+    lif_state_t hal_lif_admin_state;
+    sdk_ret_t ret;
     // q_enable_comp *comp = (q_enable_comp *)resp;
     union {
         eth_qstate_cfg_t eth;
@@ -2473,11 +2485,14 @@ EthLif::_CmdQControl(void *req, void *req_data, void *resp, void *resp_data)
         if (cmd->oper == IONIC_Q_DISABLE)
             ev_sleep(RXDMA_Q_QUIESCE_WAIT_S);
 
-        state = cmd->oper ? LIF_STATE_UP : LIF_STATE_DOWN;
+        hal_lif_admin_state = cmd->oper == IONIC_Q_ENABLE ?
+                            sdk::types::LIF_STATE_UP :
+                            sdk::types::LIF_STATE_DOWN;
         ret = dev_api->eth_dev_admin_status_update(hal_lif_info_.lif_id,
-                                    (lif_state_t)ConvertEthLifStateToLifState(state));
+                hal_lif_admin_state);
         if (ret != SDK_RET_OK) {
-            NIC_LOG_ERR("{}: Failed to eth state in controller", hal_lif_info_.name);
+            NIC_LOG_ERR("{}: Failed to update admin state in HAL",
+                hal_lif_info_.name);
         }
         break;
     case IONIC_QTYPE_TXQ:
@@ -3124,77 +3139,14 @@ EthLif::LinkEventHandler(port_status_t *evd)
     if (spec->uplink_port_num != evd->id) {
         return;
     }
+    NIC_LOG_INFO("{}: {} => {}", hal_lif_info_.name,
+                                 port_status_to_str(port_status),
+                                 port_status_to_str(evd->status));
+    port_status = evd->status;
 
-    // drop the event if the lif is not initialized
-    if (!IsLifInitialized()) {
-        NIC_LOG_INFO("{}: {} + {} => {} dropping event", hal_lif_info_.name, lif_state_to_str(state),
-                     (evd->status == IONIC_PORT_OPER_STATUS_UP) ? "LINK_UP" : "LINK_DN",
-                     lif_state_to_str(state));
-        return;
-    }
-
-    enum eth_lif_state next_state =
-        (evd->status == IONIC_PORT_OPER_STATUS_UP) ? LIF_STATE_UP : LIF_STATE_DOWN;
-
-    // Update local lif status
-    lif_status->link_status = evd->status;
-    lif_status->link_speed = evd->speed;
-    ++lif_status->eid;
-    if (state == LIF_STATE_UP && next_state == LIF_STATE_DOWN)
-        ++lif_status->link_down_count;
-    WRITE_MEM(lif_status_addr, (uint8_t *)lif_status, sizeof(struct ionic_lif_status), 0);
-
-    NIC_FUNC_DEBUG("{}: state: {} eid: {} link status: {} link speed: {} linkdn cnt: {}",
-                     hal_lif_info_.name, lif_state_to_str(state), lif_status->eid,
-                     lif_status->link_status, lif_status->link_speed, lif_status->link_down_count);
-
-    // Update host lif status
-    if (host_lif_status_addr != 0) {
-        edmaq->Post(spec->host_dev ? EDMA_OPCODE_LOCAL_TO_HOST : EDMA_OPCODE_LOCAL_TO_LOCAL,
-                    lif_status_addr, host_lif_status_addr, sizeof(struct ionic_lif_status), NULL);
-    }
-
-    NIC_LOG_INFO("{}: {} + {} => {}", hal_lif_info_.name, lif_state_to_str(state),
-                 (evd->status == IONIC_PORT_OPER_STATUS_UP) ? "LINK_UP" : "LINK_DN",
-                 lif_state_to_str(next_state));
-
-    state = next_state;
-    // Notify HAL
-    dev_api->lif_upd_state(hal_lif_info_.lif_id, (lif_state_t)ConvertEthLifStateToLifState(state));
-
-    if (notify_enabled == 0) {
-        return;
-    }
-
-    uint64_t addr;
-    uint64_t db_data;
-    asic_db_addr_t db_addr = { 0 };
-
-    // Send the link event notification
-    struct ionic_link_change_event msg = {
-        .eid = lif_status->eid,
-        .ecode = IONIC_EVENT_LINK_CHANGE,
-        .link_status = evd->status,
-        .link_speed = evd->speed,
-    };
-
-    addr = notify_ring_base + notify_ring_head * sizeof(union ionic_notifyq_comp);
-    WRITE_MEM(addr, (uint8_t *)&msg, sizeof(union ionic_notifyq_comp), 0);
-
-    db_addr.lif_id = hal_lif_info_.lif_id;
-    db_addr.q_type = ETH_NOTIFYQ_QTYPE;
-    db_addr.upd = ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_SET,
-                    ASIC_DB_UPD_INDEX_SET_PINDEX, false);
-
-    NIC_FUNC_DEBUG("{}: Sending notify event, eid {} notify_idx {} notify_desc_addr {:#x}",
-         hal_lif_info_.lif_id, lif_status->eid, notify_ring_head, addr);
-    notify_ring_head = (notify_ring_head + 1) % ETH_NOTIFYQ_RING_SIZE;
-    PAL_barrier();
-
-    db_data = (ETH_NOTIFYQ_QID << 24) | notify_ring_head;
-    sdk::asic::pd::asic_ring_db(&db_addr, db_data);
-
-    // FIXME: Wait for completion
+    // Update lif status
+    lif_status->link_speed =  evd->speed;
+    SetLifLinkState();
 }
 
 void
@@ -3318,6 +3270,24 @@ EthLif::SetHalClient(devapi *dapi)
     dev_api = dapi;
 }
 
+void
+EthLif::SetPfStatsAddr(uint64_t addr)
+{
+    pf_lif_stats_addr = addr;
+    NIC_FUNC_INFO("{}: pf_lif_stats_addr {:#x}", hal_lif_info_.name, addr);
+
+    if (!stats_timer_init_done) {
+        ev_timer_init(&stats_timer, &EthLif::StatsUpdate, 0.0, 0.1);
+        stats_timer_init_done = true;
+    }
+}
+
+uint64_t
+EthLif::GetPfStatsAddr()
+{
+    return pf_lif_stats_addr;
+}
+
 /*
  * Callbacks
  */
@@ -3326,12 +3296,28 @@ void
 EthLif::StatsUpdate(EV_P_ ev_timer *w, int events)
 {
     EthLif *eth = (EthLif *)w->data;
+    edma_opcode opcode;
     struct edmaq_ctx ctx = { .cb = NULL, .obj = NULL };
 
-    if (eth->lif_stats_addr != 0 && eth->host_lif_stats_addr != 0) {
-        eth->edmaq_async->Post(eth->spec->host_dev ? EDMA_OPCODE_LOCAL_TO_HOST : EDMA_OPCODE_LOCAL_TO_LOCAL,
-                                eth->lif_stats_addr, eth->host_lif_stats_addr,
-                                sizeof(struct ionic_lif_stats), &ctx);
+    opcode = eth->spec->host_dev
+                ? EDMA_OPCODE_LOCAL_TO_HOST
+                : EDMA_OPCODE_LOCAL_TO_LOCAL;
+
+    if (eth->lif_stats_addr != 0) {
+        if (eth->host_lif_stats_addr != 0) {
+            eth->edmaq->Post(opcode,
+                             eth->lif_stats_addr,
+                             eth->host_lif_stats_addr,
+                             sizeof(struct ionic_lif_stats),
+                             &ctx);
+        }
+        if (eth->pf_lif_stats_addr != 0) {
+            eth->edmaq->Post(opcode,
+                             eth->lif_stats_addr,
+                             eth->pf_lif_stats_addr,
+                             sizeof(struct ionic_lif_stats),
+                             &ctx);
+        }
     }
 }
 
@@ -3433,4 +3419,465 @@ bool
 EthLif::IsLifInitialized()
 {
     return state >= LIF_STATE_INIT;
+}
+
+void
+EthLif::GetMacAddr(uint8_t macaddr[6])
+{
+    //Check byte order
+    memcpy((uint8_t *)macaddr, (uint8_t *)lif_config->mac,
+           sizeof(lif_config->mac));
+}
+
+void
+EthLif::SetMacAddr(uint8_t macaddr[6])
+{
+    // Check byte order
+    memcpy((uint8_t *)lif_config->mac, (uint8_t *)macaddr,
+           sizeof(lif_config->mac));
+}
+
+/*
+ * Sets the overall Lif's status by ANDing
+ * lif_admin_state and lif_port_state.
+ */
+status_code_t
+EthLif::SetLifLinkState()
+{
+    enum eth_lif_state next_lif_state;
+    bool state_changed;
+    sdk_ret_t ret;
+
+     // drop the event if the lif is not initialized
+    if (state != LIF_STATE_INIT &&
+        state != LIF_STATE_UP &&
+        state != LIF_STATE_DOWN) {
+        NIC_LOG_WARN("{}: is in {} admin_state: {} proxy_admin_state: {}"\
+                    "\n\tport_status: {}, cannot transition to UP/DOWN",
+                    hal_lif_info_.name,
+                    lif_state_to_str(state),
+                    admin_state_to_str(admin_state),
+                    admin_state_to_str(proxy_admin_state),
+                    port_status_to_str(port_status));
+        return (IONIC_RC_ERROR);
+    }
+
+    if (admin_state == IONIC_PORT_ADMIN_STATE_UP &&
+        proxy_admin_state == IONIC_PORT_ADMIN_STATE_UP &&
+        port_status == IONIC_PORT_OPER_STATUS_UP) {
+        next_lif_state = LIF_STATE_UP;
+    } else {
+        next_lif_state = LIF_STATE_DOWN;
+    }
+
+    // Track LINK DOWN events
+    if (state == LIF_STATE_UP && next_lif_state == LIF_STATE_DOWN) {
+        // FIXME: This counter now tracks LIF DOWN events instead of PORT DOWN
+        ++lif_status->link_down_count;
+    }
+
+    // Update lif state
+    state_changed = (state == next_lif_state) ? false : true;
+    state = next_lif_state;
+
+    // Update local lif status
+    lif_status->link_status = (lif_state_t)ConvertEthLifStateToLifState(state);
+    ++lif_status->eid;
+    WRITE_MEM(lif_status_addr, (uint8_t *)lif_status, sizeof(struct ionic_lif_status), 0);
+
+    // Update host lif status
+    if (host_lif_status_addr != 0) {
+        edmaq->Post(
+            spec->host_dev ? EDMA_OPCODE_LOCAL_TO_HOST : EDMA_OPCODE_LOCAL_TO_LOCAL,
+            lif_status_addr,
+            host_lif_status_addr,
+            sizeof(struct ionic_lif_status),
+            NULL
+        );
+    }
+
+    DEVAPI_CHECK
+
+    // Notify HAL
+    ret = dev_api->lif_upd_state(hal_lif_info_.lif_id,
+                           (lif_state_t)ConvertEthLifStateToLifState(state));
+    if (ret != SDK_RET_OK) {
+            NIC_LOG_ERR("{}: Failed to update lif state in HAL", hal_lif_info_.name);
+    }
+
+    NIC_LOG_INFO("{}: {} + {} => {}",
+                 hal_lif_info_.name,
+                 lif_state_to_str(state),
+                 (state == LIF_STATE_UP) ? "LINK_UP" : "LINK_DN",
+                 lif_state_to_str(state));
+
+    if (state_changed) {
+        NotifyLifLinkState();
+    }
+
+    return (IONIC_RC_SUCCESS);
+}
+
+status_code_t
+EthLif::LifToggleTxRxState(bool enable)
+{
+    union {
+        eth_qstate_cfg_t eth;
+    } cfg = {0};
+    uint64_t addr, off;
+    asic_db_addr_t db_addr = { 0 };
+
+    NIC_LOG_INFO("{}: {} TxRx queues", hal_lif_info_.name,
+                 enable == true ? "Enabling" : "Disabling");
+
+    for (uint32_t qid = 0; qid < spec->rxq_count; qid++) {
+        addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.lif_id, ETH_HW_QTYPE_RX, qid);
+        off = offsetof(eth_rx_qstate_t, q.cfg);
+        if (addr < 0) {
+            NIC_LOG_ERR("{}: Failed to get qstate address for RX qid {}",
+                hal_lif_info_.name, qid);
+            return (IONIC_RC_ERROR);
+        }
+        READ_MEM(addr + off, (uint8_t *)&cfg.eth, sizeof(cfg.eth), 0);
+        if (!cfg.eth.enable && enable == true) {
+            cfg.eth.enable = 0x1;
+            active_q_ref_cnt++;
+        } else if (cfg.eth.enable && enable == false) {
+            cfg.eth.enable = 0x0;
+            active_q_ref_cnt--;
+        }
+        WRITE_MEM(addr + off, (uint8_t *)&cfg.eth, sizeof(cfg.eth), 0);
+        PAL_barrier();
+        sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(eth_rx_qstate_t), P4PLUS_CACHE_INVALIDATE_BOTH);
+    }
+    for (uint32_t qid = 0; qid < spec->txq_count; qid++) {
+        addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.lif_id, ETH_HW_QTYPE_TX, qid);
+        off = offsetof(eth_tx_qstate_t, q.cfg);
+        if (addr < 0) {
+            NIC_LOG_ERR("{}: Failed to get qstate address for TX qid {}",
+                hal_lif_info_.name, qid);
+            return (IONIC_RC_ERROR);
+        }
+        READ_MEM(addr + off, (uint8_t *)&cfg.eth, sizeof(cfg.eth), 0);
+        if (!cfg.eth.enable && enable == true) {
+            cfg.eth.enable = 0x1;
+            active_q_ref_cnt++;
+        } else if (cfg.eth.enable && enable == false) {
+            cfg.eth.enable = 0x0;
+            active_q_ref_cnt--;
+        }
+        WRITE_MEM(addr + off, (uint8_t *)&cfg.eth, sizeof(cfg.eth), 0);
+        PAL_barrier();
+        sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(eth_tx_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
+        /* wake up the queue */
+        if (state == true) {
+            db_addr.lif_id = hal_lif_info_.lif_id;
+            db_addr.q_type = ETH_HW_QTYPE_TX;
+            db_addr.upd = ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_EVAL,
+                                                ASIC_DB_UPD_INDEX_UPDATE_NONE,
+                                                false);
+            PAL_barrier();
+            sdk::asic::pd::asic_ring_db(&db_addr, (uint64_t)(qid << 24));
+        }
+    }
+
+    return (IONIC_RC_SUCCESS);
+}
+
+status_code_t
+EthLif::LifQuiesce()
+{
+    uint64_t addr, off;
+    union {
+        eth_qstate_cfg_t eth;
+    } cfg = {0};
+
+    NIC_LOG_DEBUG("{}: Quiescing", GetName());
+    /*
+     * Check Tx & Rx queues are empty
+     */
+    for (uint32_t qid = 0; qid < spec->rxq_count; qid++) {
+        addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.lif_id, ETH_HW_QTYPE_RX, qid);
+        off = offsetof(eth_rx_qstate_t, q.cfg);
+        if (addr < 0) {
+            NIC_FUNC_ERR("{}: Failed to get qstate address for RX qid {}",
+                hal_lif_info_.name, qid);
+            return (IONIC_RC_ERROR);
+        }
+        READ_MEM(addr + off, (uint8_t *)&cfg.eth, sizeof(cfg.eth), 0);
+        /*
+         * If a queue is enabled throw an error.
+         */
+        if (cfg.eth.enable == 0x1) {
+            NIC_FUNC_ERR("{}: qid {} is not disabled");
+            return (IONIC_RC_ERROR);
+        }
+        sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(eth_rx_qstate_t), P4PLUS_CACHE_INVALIDATE_BOTH);
+    }
+
+    for (uint32_t qid = 0; qid < spec->txq_count; qid++) {
+        addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.lif_id, ETH_HW_QTYPE_TX, qid);
+        off = offsetof(eth_tx_qstate_t, q.cfg);
+        if (addr < 0) {
+            NIC_FUNC_ERR("{}: Failed to get qstate address for TX qid {}",
+                hal_lif_info_.name, qid);
+            return (IONIC_RC_ERROR);
+        }
+        READ_MEM(addr + off, (uint8_t *)&cfg.eth, sizeof(cfg.eth), 0);
+        /*
+         * If a queue is enabled throw an error.
+         */
+        if (cfg.eth.enable == 0x1) {
+            NIC_FUNC_ERR("{}: qid {} is not disabled");
+            return (IONIC_RC_ERROR);
+        }
+        sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(eth_tx_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
+    }
+    /* TODO: Need to implement queue flushing */
+    ev_sleep(RXDMA_LIF_QUIESCE_WAIT_S);
+
+    return (IONIC_RC_SUCCESS);
+}
+
+status_code_t
+EthLif::SetProxyAdminState(uint8_t next_state)
+{
+    status_code_t status;
+
+    NIC_LOG_INFO("{}: LIF proxy admin state transition {} => {}",
+                 hal_lif_info_.name,
+                 admin_state_to_str(proxy_admin_state),
+                 admin_state_to_str(next_state));
+
+    if (proxy_admin_state == next_state) {
+        return (IONIC_RC_SUCCESS);
+    }
+
+    proxy_admin_state = next_state;
+    UpdateHalLifAdminStatus();
+    status = SetLifLinkState();
+
+    return status;
+}
+
+status_code_t
+EthLif::SetAdminState(uint8_t next_state)
+{
+    status_code_t status;
+    bool enable_queues;
+
+    NIC_LOG_INFO("{}: LIF admin state transition {} => {}",
+                 hal_lif_info_.name,
+                 admin_state_to_str(admin_state),
+                 admin_state_to_str(next_state));
+
+    if (admin_state == next_state) {
+        return (IONIC_RC_SUCCESS);
+    }
+
+    // Program TX & RX queue state
+    enable_queues = (next_state == IONIC_PORT_ADMIN_STATE_UP) ? true : false;
+    status = LifToggleTxRxState(enable_queues);
+    if (status != IONIC_RC_SUCCESS) {
+        return status;
+    }
+
+    admin_state = next_state;
+    UpdateHalLifAdminStatus();
+    status = SetLifLinkState();
+
+    //FIXME: Notfity the corresponding VFs using event timer cb to reduce devcmd delay
+    NotifyAdminStateChange();
+
+    return status;
+}
+
+status_code_t
+EthLif::UpdateHalLifAdminStatus()
+{
+    lif_state_t hal_lif_admin_state;
+    sdk_ret_t ret;
+    const char *admin_state_str;
+
+    if (admin_state == IONIC_PORT_ADMIN_STATE_UP &&
+        proxy_admin_state == IONIC_PORT_ADMIN_STATE_UP) {
+        hal_lif_admin_state = sdk::types::LIF_STATE_UP;
+    } else {
+        hal_lif_admin_state = sdk::types::LIF_STATE_DOWN;
+    }
+
+    admin_state_str = hal_lif_admin_state == sdk::types::LIF_STATE_UP ?
+                       "LIF_STATE_UP" : "LIF_STATE_DOWN";
+    NIC_LOG_INFO("{}: Updating HAL LIF admin state to {}", hal_lif_info_.name,
+            admin_state_str);
+    DEVAPI_CHECK;
+    ret = dev_api->eth_dev_admin_status_update(hal_lif_info_.lif_id,
+            hal_lif_admin_state);
+    if (ret != SDK_RET_OK) {
+        NIC_LOG_ERR("{}: Failed to set lif admin status in HAL",
+                hal_lif_info_.name);
+        return IONIC_RC_ERROR;
+    }
+    return IONIC_RC_SUCCESS;
+}
+
+void
+EthLif::NotifyLifLinkState()
+{
+    uint64_t addr;
+    uint64_t db_data;
+    asic_db_addr_t db_addr = { 0 };
+
+    if (notify_enabled == 0) {
+        return;
+    }
+
+    // Send the link event notification
+    struct ionic_link_change_event msg = {
+        .eid = lif_status->eid,
+        .ecode = IONIC_EVENT_LINK_CHANGE,
+        .link_status = lif_status->link_status,
+        .link_speed = lif_status->link_speed,
+    };
+
+    addr = notify_ring_base + notify_ring_head * sizeof(union ionic_notifyq_comp);
+    WRITE_MEM(addr, (uint8_t *)&msg, sizeof(union ionic_notifyq_comp), 0);
+
+    db_addr.lif_id = hal_lif_info_.lif_id;
+    db_addr.q_type = ETH_NOTIFYQ_QTYPE;
+    db_addr.upd = ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_SET,
+                    ASIC_DB_UPD_INDEX_SET_PINDEX, false);
+
+    NIC_LOG_DEBUG("{}: Sending notify event, eid {} notify_idx {} notify_desc_addr {:#x}",
+         hal_lif_info_.lif_id, lif_status->eid, notify_ring_head, addr);
+    notify_ring_head = (notify_ring_head + 1) % ETH_NOTIFYQ_RING_SIZE;
+    PAL_barrier();
+
+    db_data = (ETH_NOTIFYQ_QID << 24) | notify_ring_head;
+    sdk::asic::pd::asic_ring_db(&db_addr, db_data);
+
+    // FIXME: Wait for completion
+}
+
+status_code_t
+EthLif::SetMaxTxRate(uint32_t rate_in_mbps)
+{
+    uint64_t rate_in_Bps;
+    sdk_ret_t ret;
+
+    DEVAPI_CHECK
+    rate_in_Bps = (uint64_t)rate_in_mbps * 1024 * 1024 / 8;
+    ret = dev_api->lif_upd_max_tx_rate(hal_lif_info_.lif_id, rate_in_Bps);
+    if (ret != SDK_RET_OK) {
+        NIC_FUNC_ERR("{}: failed to set max tx rate {}", hal_lif_info_.name,
+                       rate_in_mbps);
+        if (ret == SDK_RET_ENTRY_NOT_FOUND) {
+            return (IONIC_RC_ENOENT);
+        }
+        return (IONIC_RC_ERROR);
+    }
+    return (IONIC_RC_SUCCESS);
+}
+
+status_code_t
+EthLif::GetMaxTxRate(uint32_t *rate_in_mbps)
+{
+    uint64_t rate_in_Bps;
+    sdk_ret_t ret;
+
+    DEVAPI_CHECK
+    ret = dev_api->lif_get_max_tx_rate(hal_lif_info_.lif_id,
+                                       &rate_in_Bps);
+    if (ret != SDK_RET_OK) {
+        NIC_FUNC_ERR("{}: failed to get max tx rate", hal_lif_info_.name);
+        if (ret == SDK_RET_ENTRY_NOT_FOUND) {
+            return (IONIC_RC_ENOENT);
+        }
+        return (IONIC_RC_ERROR);
+    }
+    *rate_in_mbps = (rate_in_Bps * 8) / (1024 * 1024);
+
+    return (IONIC_RC_SUCCESS);
+}
+
+void
+EthLif::SubscribePfAdminState()
+{
+    Eth *pf_dev;
+    EthLif *pf_lif;
+
+    if (dev->GetBusType() != BUS_TYPE_PCIE_VF) {
+        NIC_LOG_WARN("NA for PF device");
+        return;
+    }
+
+    pf_dev = dev->GetPfDev();
+    if (!pf_dev) {
+        NIC_LOG_ERR("{}: No associated PF device", hal_lif_info_.name);
+        return;
+    }
+
+    pf_lif = pf_dev->GetLifByIndex(0);
+    assert(pf_lif);
+
+    pf_lif->AddAdminStateSubscriber(this);
+}
+
+void
+EthLif::UnsubscribePfAdminState()
+{
+    Eth *pf_dev;
+    EthLif *pf_lif;
+
+    if (dev->GetBusType() != BUS_TYPE_PCIE_VF) {
+        NIC_LOG_WARN("NA for PF device");
+        return;
+    }
+
+    pf_dev = dev->GetPfDev();
+    if (!pf_dev) {
+        NIC_LOG_ERR("{}: No associated PF device", hal_lif_info_.name);
+        return;
+    }
+
+    pf_lif = pf_dev->GetLifByIndex(0);
+    assert(pf_lif);
+
+    pf_lif->DelAdminStateSubscriber(this);
+}
+
+void
+EthLif::AddAdminStateSubscriber(EthLif *vf_lif)
+{
+    uint64_t lif_id = vf_lif->GetLifId();
+
+    auto it = subscribers_map.find(lif_id);
+    if (it == subscribers_map.cend()) {
+        subscribers_map[lif_id] = vf_lif;
+        NIC_LOG_DEBUG("VF {} subscribed to PF {} admin state",
+                      vf_lif->GetName(), GetName());
+    }
+}
+
+void
+EthLif::DelAdminStateSubscriber(EthLif *vf_lif)
+{
+    uint64_t lif_id = vf_lif->GetLifId();
+
+    auto it = subscribers_map.find(lif_id);
+    if (it != subscribers_map.cend()) {
+        subscribers_map.erase(it);
+        NIC_LOG_DEBUG("VF {} unsubscribed from PF {} admin state",
+                      vf_lif->GetName(), GetName());
+    }
+}
+
+void
+EthLif::NotifyAdminStateChange()
+{
+    EthLif *vf_lif;
+    for (auto it : subscribers_map) {
+        vf_lif = it.second;
+        vf_lif->SetProxyAdminState(admin_state);
+    }
 }

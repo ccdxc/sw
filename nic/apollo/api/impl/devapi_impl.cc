@@ -269,6 +269,18 @@ devapi_impl::lif_upd_rx_en(uint32_t lif_id, bool rx_en){
 }
 
 sdk_ret_t
+devapi_impl::lif_upd_max_tx_rate(uint32_t lif_id, uint64_t rate_in_Bps) {
+    PDS_TRACE_WARN("Not implemented");
+    return SDK_RET_ERR;
+}
+
+sdk_ret_t
+devapi_impl::lif_get_max_tx_rate(uint32_t lif_id, uint64_t *rate_in_Bps) {
+    PDS_TRACE_WARN("Not implemented");
+    return SDK_RET_ERR;
+}
+
+sdk_ret_t
 devapi_impl::lif_get_max_filters(uint32_t *ucast_filters,
                                  uint32_t *mcast_filters) {
     *ucast_filters = *mcast_filters = MAX_FILTERS_CLASSIC;

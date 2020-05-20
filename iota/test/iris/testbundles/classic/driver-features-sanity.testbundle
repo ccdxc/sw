@@ -243,11 +243,6 @@ testcases:
         testcase: testcases.drivers.flr
         enable : true
 
-    -   name    : VF_api
-        testcase: testcases.drivers.sriov_api
-        enable : true
-        ignore  : True
-
     -   name    : DriverReloadStress
         testcase: testcases.drivers.driverreload
         disable : False

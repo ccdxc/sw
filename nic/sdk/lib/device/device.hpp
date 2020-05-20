@@ -106,7 +106,6 @@ public:
 private:
     device_t device_db_;    // device database
 
-private:
     device() {};
     ~device();
 

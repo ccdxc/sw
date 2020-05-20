@@ -44,6 +44,8 @@ public:
     sdk_ret_t lif_upd_bcast_filter(uint32_t lif_id, lif_bcast_filter_t bcast_filter);
     sdk_ret_t lif_upd_mcast_filter(uint32_t lif_id, lif_mcast_filter_t mcast_filter);
     sdk_ret_t lif_upd_rx_en(uint32_t lif_id, bool rx_en);
+    sdk_ret_t lif_upd_max_tx_rate(uint32_t lif_id, uint64_t rate_in_Bps);
+    sdk_ret_t lif_get_max_tx_rate(uint32_t lif_id, uint64_t *rate_in_Bps);
 
     // Eth APIs
     sdk_ret_t eth_dev_admin_status_update(uint32_t lif_id, lif_state_t state);

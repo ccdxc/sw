@@ -1043,6 +1043,23 @@ devapi_lif::upd_rdma_sniff(bool rdma_sniff)
 }
 
 sdk_ret_t
+devapi_lif::upd_max_tx_rate(uint64_t rate_in_Bps)
+{
+    if (rate_in_Bps == info_.tx_limit_bytes) {
+        NIC_LOG_WARN("Set max tx rate: {}. No change. Nop",
+                     rate_in_Bps);
+    }
+    info_.tx_limit_bytes = rate_in_Bps;
+    return lif_halupdate();
+}
+
+uint64_t
+devapi_lif::get_max_tx_rate()
+{
+    return info_.tx_limit_bytes;
+}
+
+sdk_ret_t
 devapi_lif::create_macvlan_filter(mac_t mac, vlan_t vlan)
 {
 

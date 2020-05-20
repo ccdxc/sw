@@ -49,6 +49,8 @@ public:
     virtual sdk_ret_t lif_upd_mcast_filter(uint32_t lif_id,
                                            lif_mcast_filter_t mcast_filter) = 0;
     virtual sdk_ret_t lif_upd_rx_en(uint32_t lif_id, bool rx_en) = 0;
+    virtual sdk_ret_t lif_upd_max_tx_rate(uint32_t lif_id, uint64_t rate_in_Bps) = 0;
+    virtual sdk_ret_t lif_get_max_tx_rate(uint32_t lif_id, uint64_t *rate_in_Bps) = 0;
 
     // eth APIs
     virtual sdk_ret_t eth_dev_admin_status_update(uint32_t lif_id,

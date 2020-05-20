@@ -90,6 +90,7 @@ testbundles:
         - cpld/cpldupgrade.testbundle
         - hpe_ilo/hpe_ilo.testbundle
         #- classic/nvme.testbundle
+        #- sriov/sriov.testbundle
 
     extended:
         # Relative paths from iota/test/iris/testbundles/

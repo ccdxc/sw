@@ -978,6 +978,49 @@ end:
 }
 
 sdk_ret_t
+devapi_iris::lif_upd_max_tx_rate(uint32_t lif_id, uint64_t rate_in_Bps)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    devapi_lif *lif = NULL;
+
+    lif = devapi_lif::lookup(lif_id);
+    if (!lif) {
+        NIC_LOG_ERR("Failed to set max tx rate. lif id: {}. Not found",
+                    lif_id);
+        ret = SDK_RET_ENTRY_NOT_FOUND;
+        goto end;
+    }
+    return lif->upd_max_tx_rate(rate_in_Bps);
+
+end:
+    return ret;
+}
+
+sdk_ret_t
+devapi_iris::lif_get_max_tx_rate(uint32_t lif_id, uint64_t *rate_in_Bps)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    devapi_lif *lif = NULL;
+
+    lif = devapi_lif::lookup(lif_id);
+    if (!lif) {
+        NIC_LOG_ERR("Failed to get max tx rate. lif id: {}. Not found",
+                    lif_id);
+        ret = SDK_RET_ENTRY_NOT_FOUND;
+        goto end;
+    }
+    if (!rate_in_Bps) {
+        NIC_LOG_ERR("Failed to get max tx rate for lif id: {}. NULL ptr given",
+                    lif_id);
+        ret = SDK_RET_ERR;
+        goto end;
+    }
+    *rate_in_Bps = lif->get_max_tx_rate();
+end:
+    return ret;
+}
+
+sdk_ret_t
 devapi_iris::swm_enable(void)
 {
     sdk_ret_t ret = SDK_RET_OK;

@@ -215,12 +215,13 @@ Eth::Eth(devapi *dev_api, void *dev_spec, PdClient *pd_client, EV_P) {
     this->host_port_pb_stats_addr = 0;
     this->host_port_status_addr = 0;
     this->host_port_config_addr = 0;
+    this->pf_dev = NULL;
+
     NIC_LOG_DEBUG("{}: eth device initializing", spec->name);
 }
 
 // constructor used in upgrade boot
-Eth::Eth(devapi *dev_api, struct EthDevInfo *dev_info,
-         PdClient *pd_client, EV_P) {
+Eth::Eth(devapi *dev_api, struct EthDevInfo *dev_info, PdClient *pd_client, EV_P) {
     this->dev_api = dev_api;
     this->spec = dev_info->eth_spec;
     this->pd = pd_client;
@@ -233,14 +234,39 @@ Eth::Eth(devapi *dev_api, struct EthDevInfo *dev_info,
     this->host_port_pb_stats_addr = 0;
     this->host_port_status_addr = 0;
     this->host_port_config_addr = 0;
+    this->pf_dev = NULL;
+
     NIC_LOG_DEBUG("{}: Restoring eth device in Upgrade mode", spec->name);
 }
 
 void
-Eth::Init(struct eth_devspec *spec) {
+Eth::DeviceInit(Eth *pf_dev)
+{
+    // Set bus type
+    if (spec->eth_type == ETH_HOST || spec->eth_type == ETH_HOST_MGMT) {
+        bus_type = spec->vf_dev ? BUS_TYPE_PCIE_VF : BUS_TYPE_PCIE_PF;
+    } else {
+        bus_type = BUS_TYPE_PLATFORM;
+    }
+    
+    // Set trust type of device
+    this->trust_type = spec->vf_dev ? DEV_UNTRUSTED : DEV_TRUSTED;
+
+    // PF VF associations
+    this->pf_dev = pf_dev;
+    if (this->pf_dev) {
+        pf_dev->AddVfDev(this);
+    }
+}
+
+void
+Eth::Init(Eth *pf_dev) {
     uint64_t        lif_id;
     eth_lif_res_t   *lif_res;
     EthLif          *eth_lif;
+
+    // Set device attributes
+    DeviceInit(pf_dev);
 
     // alloc lif memory
     LifIDAlloc();
@@ -283,6 +309,10 @@ Eth::UpgradeGracefulInit(struct eth_devspec *spec) {
     eth_lif_res_t   *lif_res;
     EthLif          *eth_lif;
 
+    // Set device attributes
+    // TODO: Add VF support
+    DeviceInit(NULL);
+
     // reserve lif memory
     LifIDReserve();
     IntrMemReserve();
@@ -321,6 +351,10 @@ Eth::UpgradeHitlessInit(struct eth_devspec *spec) {
     uint64_t        lif_id;
     eth_lif_res_t   *lif_res;
     EthLif          *eth_lif;
+
+    // Set device attributes
+    // TODO: Add VF support
+    DeviceInit(NULL);
 
     // reserve lif memory
     LifIDReserve();
@@ -678,17 +712,21 @@ Eth::~Eth()
     DevcmdStop();
 }
 
-std::vector<Eth *>
-Eth::factory(devapi *dev_api, void *dev_spec, PdClient *pd_client, EV_P)
+std::vector<Eth*>
+Eth::factory(devapi *dev_api,
+         void *dev_spec,
+         PdClient *pd_client,
+         EV_P)
 {
-    std::vector<Eth *> eth_devs;
-    Eth *dev_obj;
+    std::vector<Eth*> eth_devs;
+    Eth *pf_dev;
+    Eth *vf_dev;
     struct eth_devspec *spec = (struct eth_devspec *)dev_spec;
 
     // Create object for PF device
-    dev_obj = new Eth(dev_api, spec, pd_client, EV_A);
-    dev_obj->Init(spec);
-    eth_devs.push_back(dev_obj);
+    pf_dev = new Eth(dev_api, spec, pd_client, EV_A);
+    pf_dev->Init(NULL);
+    eth_devs.push_back(pf_dev);
 
     NIC_LOG_DEBUG("{}: num_vfs: {}", spec->name, spec->pcie_total_vfs);
 
@@ -707,9 +745,9 @@ Eth::factory(devapi *dev_api, void *dev_spec, PdClient *pd_client, EV_P)
         // TODO: no cmb bar for now
         vf_spec->barmap_size = 0;
         // Create object for VF device
-        dev_obj = new Eth(dev_api, vf_spec, pd_client, EV_A);
-        dev_obj->Init(vf_spec);
-        eth_devs.push_back(dev_obj);
+        vf_dev = new Eth(dev_api, vf_spec, pd_client, EV_A);
+        vf_dev->Init(pf_dev);
+        eth_devs.push_back(vf_dev);
     }
 
     return eth_devs;
@@ -1146,11 +1184,57 @@ Eth::os_type_to_str(unsigned int os_type)
 }
 
 status_code_t
+Eth::_CmdAccessCheck(cmd_opcode_t opcode)
+{
+    if (GetTrustType() == DEV_TRUSTED) {
+        if (GetBusType() == BUS_TYPE_PCIE_VF) {
+            switch(opcode){
+                case IONIC_CMD_VF_GETATTR:
+                case IONIC_CMD_VF_SETATTR:
+                    return (IONIC_RC_EPERM);
+            }
+        }
+        return (IONIC_RC_SUCCESS);
+    }
+    
+    switch(opcode) {
+        /* Device commands */
+        case IONIC_CMD_SETATTR:
+        /* Port commands */
+        // TODO: Adds port commands
+        /* SR-IOV commands */
+        case IONIC_CMD_VF_GETATTR:
+        case IONIC_CMD_VF_SETATTR:
+        /* QoS commands */
+        case IONIC_CMD_QOS_CLASS_INIT:
+        case IONIC_CMD_QOS_CLASS_RESET:
+        /* Firmware commands */
+        case IONIC_CMD_FW_DOWNLOAD:
+        case IONIC_CMD_FW_CONTROL:
+            return (IONIC_RC_EPERM);
+        default:
+        /* The rest of the devcmd opcodes are allowed.
+         * LIF specific commands are filtered at LIF layer.
+         */
+            return (IONIC_RC_SUCCESS);
+    }
+}
+
+status_code_t
 Eth::CmdHandler(void *req, void *req_data, void *resp, void *resp_data)
 {
     union ionic_dev_cmd *cmd = (union ionic_dev_cmd *)req;
     union ionic_dev_cmd_comp *comp = (union ionic_dev_cmd_comp *)resp;
     status_code_t status = IONIC_RC_SUCCESS;
+
+    /* Check if the device is permitted to execute this devcmd */
+    status = _CmdAccessCheck((cmd_opcode_t)cmd->cmd.opcode);
+    if (status == IONIC_RC_EPERM) {
+        NIC_LOG_ERR("{}: not permitted to execute {}",
+                    spec->name,
+                    opcode_to_str((cmd_opcode_t)cmd->cmd.opcode));
+        goto out;
+    }
 
     if ((cmd_opcode_t)cmd->cmd.opcode != IONIC_CMD_NOP) {
         NIC_LOG_DEBUG("{}: Handling cmd: {}", spec->name,
@@ -1239,12 +1323,22 @@ Eth::CmdHandler(void *req, void *req_data, void *resp, void *resp_data)
         status = _CmdQosClearStats(req, req_data, resp, resp_data);
         break;
 
+    /* VF commands */
+    case IONIC_CMD_VF_SETATTR:
+        status = _CmdVFSetAttr(req, req_data, resp, resp_data);
+        break;
+
+    case IONIC_CMD_VF_GETATTR:
+        status = _CmdVFGetAttr(req, req_data, resp, resp_data);
+        break;
+
     default:
         // FIXME: Check if this is a valid opcode
         status = CmdProxyHandler(req, req_data, resp, resp_data);
         break;
     }
 
+out:
     comp->comp.status = status;
 
     if ((cmd_opcode_t)cmd->cmd.opcode != IONIC_CMD_NOP) {
@@ -2148,6 +2242,153 @@ Eth::_CmdLifReset(void *req, void *req_data, void *resp, void *resp_data)
 }
 
 status_code_t
+Eth::_CmdVFSetAttr(void *req, void *req_data, void *resp, void *resp_data)
+{
+    status_code_t status;
+    struct ionic_vf_setattr_cmd *cmd = (struct ionic_vf_setattr_cmd *)req;
+    struct ionic_vf_setattr_comp *comp = (struct ionic_vf_setattr_comp *)resp;
+    EthLif *pf_lif;
+    EthLif *vf_lif;
+    Eth *vf_eth_dev;
+    u32 vf_index = cmd->vf_index;
+    uint8_t state;
+    uint8_t vf_link_status;
+
+    NIC_LOG_DEBUG("{}: {}: vf index {} attr {}", spec->name,
+                                                 opcode_to_str(cmd->opcode),
+                                                 vf_index,
+                                                 vf_attr_to_str(cmd->attr));
+    if (vf_index >= vf_devs.size()) {
+        NIC_LOG_ERR("{}: vif index {} not found", spec->name, cmd->vf_index);
+        return (IONIC_RC_EVFID);
+    }
+    vf_eth_dev = vf_devs.at(vf_index);
+
+    pf_lif = GetLifByIndex(0);
+    if (pf_lif == NULL) {
+        NIC_FUNC_ERR("{}: no lif found", spec->name);
+        return (IONIC_RC_ENOENT);
+    }
+    vf_lif = vf_eth_dev->GetLifByIndex(0);
+    if (vf_lif == NULL) {
+        NIC_FUNC_ERR("{}: no lif found", vf_eth_dev->GetName());
+        return (IONIC_RC_ENOENT);
+    }
+
+    comp->attr = cmd->attr;
+    comp->vf_index = cmd->vf_index;
+
+    status = IONIC_RC_SUCCESS;
+    switch (cmd->attr) {
+        case IONIC_VF_ATTR_SPOOFCHK:
+            status = IONIC_RC_ENOSUPP;
+            break;
+        case IONIC_VF_ATTR_TRUST:
+            vf_eth_dev->SetTrustType((enum DevTrustType)cmd->trust);
+            break;
+        case IONIC_VF_ATTR_MAC:
+            vf_lif->SetMacAddr(cmd->macaddr);
+            break;
+        case IONIC_VF_ATTR_LINKSTATE:
+            vf_link_status = (enum ionic_vf_link_status)cmd->linkstate;
+            if (vf_link_status == IONIC_VF_LINK_STATUS_AUTO) {
+                vf_lif->SubscribePfAdminState();
+                // Copy PF lif's link state
+                state = pf_lif->GetAdminState();
+            } else {
+                state = (cmd->linkstate == IONIC_VF_LINK_STATUS_UP)
+                            ? IONIC_PORT_ADMIN_STATE_UP
+                            : IONIC_PORT_ADMIN_STATE_DOWN;
+                vf_lif->UnsubscribePfAdminState();
+            }
+            status = vf_lif->SetProxyAdminState(state);
+            break;
+        case IONIC_VF_ATTR_VLAN:
+            status = IONIC_RC_ENOSUPP;
+            break;
+        case IONIC_VF_ATTR_RATE:
+            status = vf_lif->SetMaxTxRate(cmd->maxrate);
+            break;
+        case IONIC_VF_ATTR_STATSADDR:
+            vf_lif->SetPfStatsAddr(cmd->stats_pa);
+            break;
+        default:
+            NIC_FUNC_ERR("{}: vif index {} attr {} not found", spec->name,
+                                                               cmd->vf_index,
+                                                               cmd->attr);
+            status = IONIC_RC_EINVAL;
+            break;
+    }
+
+    return status;
+}
+
+status_code_t
+Eth::_CmdVFGetAttr(void *req, void *req_data, void *resp, void *resp_data)
+{
+    status_code_t status;
+    struct ionic_vf_getattr_cmd *cmd = (struct ionic_vf_getattr_cmd *)req;
+    struct ionic_vf_getattr_comp *comp = (struct ionic_vf_getattr_comp *)resp;
+    EthLif *vf_lif;
+    Eth *vf_eth_dev;
+    u32 vf_index = cmd->vf_index;
+
+    NIC_LOG_DEBUG("{}: {}: vf index {} attr {}", spec->name,
+                                                 opcode_to_str(cmd->opcode),
+                                                 vf_index,
+                                                 vf_attr_to_str(cmd->attr));
+    if (vf_index >= vf_devs.size()) {
+        NIC_FUNC_ERR("{}: vif index {} not found", spec->name, cmd->vf_index);
+        return (IONIC_RC_EVFID);
+    }
+    vf_eth_dev = vf_devs.at(vf_index);
+
+    vf_lif = vf_eth_dev->GetLifByIndex(0); // Get the master lif
+    if (vf_lif == NULL) {
+        NIC_FUNC_ERR("{}: no lif found", vf_eth_dev->GetName());
+        return (IONIC_RC_ENOENT);
+    }
+
+    comp->attr = cmd->attr;
+    comp->vf_index = cmd->vf_index;
+    status = IONIC_RC_SUCCESS;
+    switch (cmd->attr) {
+        case IONIC_VF_ATTR_SPOOFCHK:
+            status = IONIC_RC_ENOSUPP;
+            break;
+        case IONIC_VF_ATTR_TRUST:
+            comp->trust = vf_eth_dev->GetTrustType();
+            break;
+        case IONIC_VF_ATTR_MAC:
+            vf_lif->GetMacAddr(comp->macaddr);
+            break;
+        case IONIC_VF_ATTR_LINKSTATE:
+            comp->linkstate = (vf_lif->GetAdminState()
+                               == IONIC_PORT_ADMIN_STATE_UP)
+                                ? IONIC_VF_LINK_STATUS_UP
+                                : IONIC_VF_LINK_STATUS_DOWN;
+            break;
+        case IONIC_VF_ATTR_VLAN:
+            status = IONIC_RC_ENOSUPP;
+            break;
+        case IONIC_VF_ATTR_RATE:
+            status = vf_lif->GetMaxTxRate(&comp->maxrate);
+            break;
+        case IONIC_VF_ATTR_STATSADDR:
+            comp->stats_pa = vf_lif->GetPfStatsAddr();
+            break;
+        default:
+            NIC_FUNC_ERR("{}: vif index {} attr {} not found", spec->name,
+                                                               cmd->vf_index,
+                                                               cmd->attr);
+            status = IONIC_RC_EINVAL;
+            break;
+    }
+
+    return status;
+}
+
+status_code_t
 Eth::CmdProxyHandler(void *req, void *req_data, void *resp, void *resp_data)
 {
     struct ionic_admin_cmd *cmd = (struct ionic_admin_cmd *)req;
@@ -2543,5 +2784,38 @@ Eth::ConvertDevTypeToLifType(EthDevType dev_type)
         return sdk::platform::LIF_TYPE_CONTROL;
     default:
         return sdk::platform::LIF_TYPE_NONE;
+    }
+}
+
+void
+Eth::AddVfDev(Eth *vf_eth_dev)
+{
+    vf_devs.push_back(vf_eth_dev);
+}
+
+EthLif*
+Eth::GetLifByIndex(uint32_t idx)
+{
+    uint32_t lif_id = dev_resources.lif_base + idx;
+    auto it = lif_map.find(lif_id);
+    if (it == lif_map.cend()) {
+        return NULL;
+    }
+
+    return (EthLif *)it->second;
+}
+
+const char*
+Eth::vf_attr_to_str(uint8_t attr)
+{
+    switch (attr) {
+    CASE(IONIC_VF_ATTR_SPOOFCHK);
+    CASE(IONIC_VF_ATTR_TRUST);
+    CASE(IONIC_VF_ATTR_MAC);
+    CASE(IONIC_VF_ATTR_LINKSTATE);
+    CASE(IONIC_VF_ATTR_VLAN);
+    CASE(IONIC_VF_ATTR_RATE);
+    CASE(IONIC_VF_ATTR_STATSADDR);
+    default: return "IONIC_VF_ATTR_UNKNOWN";
     }
 }

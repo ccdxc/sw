@@ -100,6 +100,8 @@ public:
     sdk_ret_t upd_state(lif_state_t state);
     sdk_ret_t upd_admin_state(lif_state_t state);
     sdk_ret_t upd_rdma_sniff(bool rdma_sniff);
+    sdk_ret_t upd_max_tx_rate(uint64_t rate_in_Bps);
+    uint64_t get_max_tx_rate();
 
     void remove_macfilters(bool skip_native_mac, bool update_d);
     void remove_vlanfilters(bool skip_native_vlan,

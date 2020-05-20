@@ -7,8 +7,8 @@ iper3_env = ["PATH=$PATH:/usr/bin/:/platform/bin/;",
              "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/platform/lib/:/nic/lib/;",
              "export PATH; export LD_LIBRARY_PATH;"]
 
-
-def ServerCmd(port = None, time=None, run_core=None, jsonOut=False, naples=False):
+def ServerCmd(port = None, time=None, run_core=None, jsonOut=False, naples=False,
+              server_ip=None):
     assert(port)
     nodes = api.GetWorkloadNodeHostnames()
     for node in nodes:
@@ -35,11 +35,15 @@ def ServerCmd(port = None, time=None, run_core=None, jsonOut=False, naples=False
         return " ".join(cmd)
     else:
         return " ".join(cmd) + "\""
+    if server_ip:
+        cmd.extend(["-B", server_ip])
+
+    return " ".join(cmd)
 
 def ClientCmd(server_ip, port = None, time=10, pktsize=None, proto='tcp', run_core=None,
               ipproto='v4', bandwidth="100G", num_of_streams = None, jsonOut=False,
               connect_timeout=None, client_ip=None, client_port=None, packet_count=None,
-              naples=False, msssize=None):
+              naples=False, msssize=None, reverse=False):
     assert(port)
     nodes = api.GetWorkloadNodeHostnames()
     for node in nodes:
@@ -96,6 +100,10 @@ def ClientCmd(server_ip, port = None, time=10, pktsize=None, proto='tcp', run_co
         return " ".join(cmd)
     else:
         return " ".join(cmd) + "\""
+    if reverse:
+        cmd.append("-R")   
+        
+    return " ".join(cmd)
 
 
 def __get_json(iperf_out):
@@ -172,6 +180,15 @@ def GetSentGbps(iperf_out):
     if iperfJson["start"]["test_start"]["protocol"] == 'TCP':
         return ('{0:.2f}'.format(end["sum_sent"]["bits_per_second"]/(1024 * 1024 * 1024)))
     return ('{0:.2f}'.format(end["sum"]["bits_per_second"]/(1024 * 1024 * 1024)))
+
+def GetSentMbps(iperf_out):
+    iperfJson = __get_json(iperf_out)
+    end = iperfJson.get("end", None)
+    if not end:
+        return '0'
+    if iperfJson["start"]["test_start"]["protocol"] == 'TCP':
+        return ('{0:.2f}'.format(end["sum_sent"]["bits_per_second"]/(1024 * 1024)))
+    return ('{0:.2f}'.format(end["sum"]["bits_per_second"]/(1024 * 1024)))
 
 
 def GetReceivedGbps(iperf_out):

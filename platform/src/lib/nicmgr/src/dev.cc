@@ -645,7 +645,7 @@ DeviceManager::LoadProfile(string device_json_file, bool init_pci)
 }
 
 void
-DeviceManager::AddDevice(enum DeviceType type, void *dev_spec)
+DeviceManager::AddDevice(DeviceType type, void *dev_spec)
 {
     // In soft init mode, create the device only for CPP process.
     if (sdk::asic::asic_is_soft_init() && !nicmgr_shm_is_cpp_pid(type)) {
@@ -710,6 +710,7 @@ DeviceManager::AddDevice(enum DeviceType type, void *dev_spec)
 #endif // IRIS
 #ifdef ATHENA
     case FTL: {
+        //TODO: Add Bus type for FtlDev
         FtlDev *ftl_dev = new FtlDev(dev_api, dev_spec, pd, EV_A);
         ftl_dev->SetType(type);
         devices[ftl_dev->GetName()] = ftl_dev;
@@ -733,15 +734,16 @@ DeviceManager::DeleteDevices()
 }
 
 void
-DeviceManager::RestoreDevice(enum DeviceType type, void *dev_state)
+DeviceManager::RestoreDevice(DeviceType type, void *dev_state)
 {
     switch (type) {
     case ETH: {
         struct EthDevInfo *dev_info = (struct EthDevInfo *)dev_state;
         Eth *eth_dev = new Eth(dev_api, dev_info, pd, EV_A);
-        eth_dev->UpgradeGracefulInit(dev_info->eth_spec);
         eth_dev->SetType(ETH);
+        eth_dev->UpgradeGracefulInit(dev_info->eth_spec);
         devices[eth_dev->GetName()] = eth_dev;
+        NIC_LOG_DEBUG("Restored ETH device {} after upgrade", eth_dev->GetName());
         break;
     }
     default:
@@ -778,7 +780,7 @@ DeviceManager::SetHalClient(devapi *dev_api)
 {
     for (auto it = devices.begin(); it != devices.end(); it++) {
         Device *dev = it->second;
-        enum DeviceType type = dev->GetType();
+        DeviceType type = dev->GetType();
         switch (type) {
         case ETH: {
             Eth *eth_dev = (Eth *)dev;
@@ -951,7 +953,7 @@ create_mnets(void *obj)
 void
 DeviceManager::DeviceCreate(bool status) {
     Device *dev;
-    enum DeviceType type;
+    DeviceType type;
     EthDevType eth_type;
     vector<struct mnet_dev_create_req_t *> *mnet_list;
     struct mnet_dev_create_req_t * mnet_req;
@@ -1012,7 +1014,6 @@ DeviceManager::DeviceCreate(bool status) {
     for (auto it = devices.begin(); it != devices.end(); it++) {
         dev = it->second;
         type = dev->GetType();
-
         switch (type) {
         case ETH: {
             Eth *eth_dev = (Eth *)dev;
@@ -1168,7 +1169,7 @@ DeviceManager::DelphiMountEventHandler(bool mounted)
 
     for (auto it = devices.begin(); it != devices.end(); it++) {
         Device *dev = it->second;
-        enum DeviceType type = dev->GetType();
+        DeviceType type = dev->GetType();
         switch (type) {
         case ETH: {
             Eth *eth_dev = (Eth *)dev;

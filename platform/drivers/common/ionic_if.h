@@ -91,8 +91,8 @@ enum ionic_status_code {
 	IONIC_RC_DEV_CMD	= 18,	/* Device cmd attempted on AdminQ */
 	IONIC_RC_ENOSUPP	= 19,	/* Operation not supported */
 	IONIC_RC_ERROR		= 29,	/* Generic error */
-
 	IONIC_RC_ERDMA		= 30,	/* Generic RDMA error */
+	IONIC_RC_EVFID		= 31,	/* VF ID does not exist */
 };
 
 enum ionic_notifyq_opcode {
@@ -361,9 +361,9 @@ struct ionic_lif_logical_qtype {
  * @IONIC_LIF_HANG_RESET:  LIF hung, being reset
  */
 enum ionic_lif_state {
-	IONIC_LIF_DISABLE	= 0,
+	IONIC_LIF_QUIESCE	= 0,
 	IONIC_LIF_ENABLE	= 1,
-	IONIC_LIF_HANG_RESET	= 2,
+	IONIC_LIF_DISABLE	= 2,
 };
 
 /**
