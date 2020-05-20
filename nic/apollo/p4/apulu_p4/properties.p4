@@ -68,13 +68,13 @@ action vlan_info(vnic_id, bd_id, vpc_id, rmac) {
 
     // keys for local mapping lookup
     if (control_metadata.rx_packet == FALSE) {
-        if (ipv4_1.valid == TRUE) {
+        if ((ipv4_1.valid == TRUE) and (ipv4_1.srcAddr != 0)) {
             modify_field(key_metadata.local_mapping_lkp_type, KEY_TYPE_IPV4);
             modify_field(key_metadata.local_mapping_lkp_addr, ipv4_1.srcAddr);
             modify_field(key_metadata.local_mapping_lkp_id,
                          vnic_metadata.vpc_id);
         } else {
-            if (arp.valid == TRUE) {
+            if ((arp.valid == TRUE) and (arp.senderIpAddr != 0)) {
                 modify_field(key_metadata.local_mapping_lkp_id,
                              vnic_metadata.vpc_id);
                 modify_field(key_metadata.local_mapping_lkp_type,

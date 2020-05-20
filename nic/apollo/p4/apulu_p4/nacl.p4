@@ -44,6 +44,7 @@ table nacl {
         key_metadata.sport                  : ternary;
         key_metadata.dport                  : ternary;
         ethernet_1.dstAddr                  : ternary;
+        capri_intrinsic.tm_iq               : ternary;
         capri_intrinsic.lif                 : ternary;
         control_metadata.rx_packet          : ternary;
         control_metadata.tunneled_packet    : ternary;
@@ -51,6 +52,7 @@ table nacl {
         control_metadata.local_mapping_miss : ternary;
         control_metadata.learn_enabled      : ternary;
         control_metadata.lif_type           : ternary;
+        arm_to_p4i.learning_done            : ternary;
         arm_to_p4i.nexthop_valid            : ternary;
         ingress_recirc.defunct_flow         : ternary;
         key_metadata.entry_valid            : ternary;

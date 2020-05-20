@@ -64,9 +64,8 @@ local_mapping_info:
     bcf         [c1&c2], local_mapping_hash_hit
     add         r2, r2, d.local_mapping_info_d.more_hints
 local_mapping_miss:
-    seq         c1, k.arm_to_p4i_local_mapping_override, 1
-    phvwr.e     p.control_metadata_local_mapping_done, TRUE
-    phvwr.!c1.f p.control_metadata_local_mapping_miss, TRUE
+    phvwr.e     p.control_metadata_local_mapping_miss, TRUE
+    phvwr.f     p.control_metadata_local_mapping_done, TRUE
 
 local_mapping_hit:
     phvwr       p.p4i_to_arm_local_mapping_ip_type, \

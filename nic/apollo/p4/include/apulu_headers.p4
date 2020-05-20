@@ -103,7 +103,7 @@ header_type apulu_arm_to_p4_header_t {
         pad                     : 1;
         skip_stats_update       : 1;
         flow_lkp_id_override    : 1;
-        local_mapping_override  : 1;
+        learning_done           : 1;
         nexthop_valid           : 1;
         lif                     : 11;
         nexthop_type            : 8;

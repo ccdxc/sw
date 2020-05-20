@@ -26,16 +26,19 @@ vlan_local_mapping_key:
     bbeq            k.control_metadata_rx_packet, TRUE, vlan_local_mapping_key_rx
     seq             c7, k.ipv4_1_valid, TRUE
 vlan_local_mapping_key_tx:
-    bcf             [!c7], vlan_local_mapping_key_tx_non_ipv4
-    phvwr.c7        p.key_metadata_local_mapping_lkp_type, KEY_TYPE_IPV4
+    seq             c1, k.ipv4_1_srcAddr, r0
+    bcf             [!c7 | c1], vlan_local_mapping_key_tx_non_ipv4
+    nop
+    phvwr           p.key_metadata_local_mapping_lkp_type, KEY_TYPE_IPV4
     phvwr           p.key_metadata_local_mapping_lkp_addr, k.ipv4_1_srcAddr
     b               vlan_mapping_key
     phvwr           p.key_metadata_local_mapping_lkp_id, r7
 
 vlan_local_mapping_key_tx_non_ipv4:
-    bbeq            k.arp_valid, TRUE, vlan_local_mapping_key_tx_arp
-    nop
-    phvwr           p.key_metadata_local_mapping_lkp_type, KEY_TYPE_MAC
+    seq             c1, k.arp_valid, TRUE
+    sne.c1          c1, k.arp_senderIpAddr, r0
+    bcf             [c1], vlan_local_mapping_key_tx_arp
+    phvwr.!c1       p.key_metadata_local_mapping_lkp_type, KEY_TYPE_MAC
     phvwr           p.key_metadata_local_mapping_lkp_addr, k.ethernet_1_srcAddr
     b               vlan_mapping_key
     phvwr           p.key_metadata_local_mapping_lkp_id, r6

@@ -131,7 +131,7 @@ action session_track_info(iflow_tcp_state, iflow_tcp_seq_num, iflow_tcp_ack_num,
                 // acceptable. We shouldn't drop this packet as we might have
                 // seen the ack but  sender might not have rcvd the ack as it
                 // could be dropped after us. We will have to update the ack #
-                // and window fromt the packet.
+                // and window from the packet.
                 bit_or(tcp_scratch.tcp_exceptions,
                        tcp_scratch.tcp_exceptions, TCP_FULL_REXMIT);
                 // Update state (ack and window) and exit.
@@ -241,7 +241,7 @@ action session_track_info(iflow_tcp_state, iflow_tcp_seq_num, iflow_tcp_ack_num,
         // INITIATOR_TCP_STATE_TRANSITION:
         // TCP connection state tracking
 
-        // A reordered frame, retransmit or partial window frome in established
+        // A reordered frame, retransmit or partial window from in established
         // state with no SYN, FIN and RST should go through fast processing
         if ((tcp.flags & (TCP_FLAG_SYN|TCP_FLAG_FIN|TCP_FLAG_RST) == 0) and
             (tcp_scratch.iflow_tcp_state == FLOW_STATE_ESTABLISHED)) {
@@ -471,7 +471,7 @@ action session_track_info(iflow_tcp_state, iflow_tcp_seq_num, iflow_tcp_ack_num,
                 // acceptable We shouldn't drop this packet as we might have
                 // seen the ack but sender might not have rcvd the ack as it
                 // could be dropped after us. We will have to update the ack #
-                // and window fromt the packet.
+                // and window from the packet.
                 bit_or(tcp_scratch.tcp_exceptions,
                        tcp_scratch.tcp_exceptions, TCP_FULL_REXMIT);
                 // Update state (ack and window) and exit.
@@ -601,7 +601,7 @@ action session_track_info(iflow_tcp_state, iflow_tcp_seq_num, iflow_tcp_ack_num,
         // RESPONDER_TCP_STATE_TRANSITION:
         // TCP connection state tracking
 
-        // A reordered frame, retransmit or partial window frome in established
+        // A reordered frame, retransmit or partial window from in established
         // state with no SYN, FIN and RST should go through fast processing
         if (((tcp.flags & (TCP_FLAG_SYN|TCP_FLAG_FIN|TCP_FLAG_RST)) == 0) and
             (tcp_scratch.iflow_tcp_state == FLOW_STATE_ESTABLISHED)) {
