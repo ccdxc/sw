@@ -221,10 +221,10 @@ type DeviceSpec struct {
 	// NOTE: when OverlayRoutingEn is modified, it will take affect only after
 	//       next reboot of NAPLES/DSC
 	OverlayRoutingEn bool `protobuf:"varint,12,opt,name=OverlayRoutingEn,proto3" json:"OverlayRoutingEn,omitempty" meta:mandatory`
-	// when SymmetricRoutingEn is enabled, outgoing inter-subnet (encapped)
+	// when SymmetricRoutingEn is set to true, outgoing inter-subnet (encapped)
 	// traffic carries VPC's VxLAN vnid and incoming inter-subnet (encapped)
 	// traffic is expected to come with VPC's VxLAN vnid. If SymmetricRoutingEn is
-	// disabled (default behavior), outgoing inter-subnet (encapped) traffic
+	// set to false (default behavior), outgoing inter-subnet (encapped) traffic
 	// carries egress subnet's VxLAN vnid and incoming inter-subnet (encapped)
 	// traffic is expected to come with destination subnet's VxLAN vnid
 	// NOTE: if the value of this attribute is updated on the fly, it will not

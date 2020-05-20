@@ -278,11 +278,6 @@ public:
     /// \param[in] obj_id    object id
     static bool is_contained_in(obj_id_t obj_id_a, obj_id_t obj_id_b);
 
-    /// \brief return true if object needs to be circulated to other components
-    /// (potentially multiple) in the system
-    /// \param[in] obj_id    object id
-    static bool circulate(obj_id_t obj_id);
-
     /// \brief return true if object reserved any h/w resources
     bool rsvd_rsc(void) const { return rsvd_rsc_ ? true : false; }
 

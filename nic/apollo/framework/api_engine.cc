@@ -13,6 +13,7 @@
 #include "nic/apollo/framework/api_msg.hpp"
 #include "nic/apollo/framework/api_params.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
+#include "nic/apollo/framework/api_ipc.hpp"
 #include "nic/apollo/core/core.hpp"
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/core/trace.hpp"
@@ -572,7 +573,7 @@ api_engine::obj_dependency_computation_stage_(void)
         // if this API msg needs to relayed to other components as well,
         // count it so we can allocate resources for all them in one shot
         if ((obj_ctxt->api_op != API_OP_NONE) &&
-            api_base::circulate(obj_ctxt->obj_id)) {
+            api_obj_circulate(obj_ctxt->obj_id)) {
             batch_ctxt_.num_msgs++;
         }
     }
@@ -665,7 +666,7 @@ api_engine::resource_reservation_stage_(void)
         }
         // if this object needs to be circulated, add it to the msg list
         if ((obj_ctxt->api_op != API_OP_NONE) &&
-            api_base::circulate(obj_ctxt->obj_id)) {
+            api_obj_circulate(obj_ctxt->obj_id)) {
             api_obj->populate_msg(core::pds_msg(batch_ctxt_.pds_msgs, i),
                                   obj_ctxt);
             i++;

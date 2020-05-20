@@ -67,10 +67,10 @@ typedef struct pds_device_s {
     /// NOTE: when overlay_routing_en is modified, it will take affect only
     ///        after reboot of NAPLES/DSC
     bool                   overlay_routing_en;
-    /// when symmetric_routing_en is enabled, outgoing inter-subnet (encapped)
+    /// when symmetric_routing_en is true, outgoing inter-subnet (encapped)
     /// traffic carries VPC's VxLAN vnid and incoming inter-subnet (encapped)
     /// traffic is expected to come with VPC's VxLAN vnid; if
-    /// symmetric_routing_en is disabled (default behavior), outgoing
+    /// symmetric_routing_en is false (default behavior), outgoing
     /// inter-subnet (encapped) traffic carries egress subnet's VxLAN vnid and
     /// incoming inter-subnet (encapped) traffic is expected to come with
     /// destination subnet's VxLAN vnid

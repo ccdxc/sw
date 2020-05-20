@@ -60,6 +60,7 @@ pds_device_api_spec_to_proto (pds::DeviceSpec *proto_spec,
     proto_spec->set_learningen(api_spec->learning_en);
     proto_spec->set_learnagetimeout(api_spec->learn_age_timeout);
     proto_spec->set_overlayroutingen(api_spec->overlay_routing_en);
+    proto_spec->set_symmetricroutingen(api_spec->symmetric_routing_en);
     switch (api_spec->dev_oper_mode) {
     case PDS_DEV_OPER_MODE_BITW:
         proto_spec->set_devopermode(pds::DEVICE_OPER_MODE_BITW);
@@ -194,6 +195,7 @@ pds_device_proto_to_api_spec (pds_device_spec_t *api_spec,
     api_spec->learning_en = proto_spec.learningen();
     api_spec->learn_age_timeout = proto_spec.learnagetimeout();
     api_spec->overlay_routing_en = proto_spec.overlayroutingen();
+    api_spec->symmetric_routing_en = proto_spec.symmetricroutingen();
     switch (proto_spec.devopermode()) {
     case pds::DEVICE_OPER_MODE_BITW:
         api_spec->dev_oper_mode = PDS_DEV_OPER_MODE_BITW;
