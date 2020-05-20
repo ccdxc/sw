@@ -31,6 +31,7 @@ int setup ( )
     memset(&init_params, 0, sizeof(init_params));
     init_params.init_mode = PDS_CINIT_MODE_COLD_START;
     init_params.trace_cb  = myprintf;
+    init_params.flags = PDS_FLAG_INIT_TYPE_SOFT;
 
     ret = pds_global_init(&init_params);
     if (ret != PDS_RET_OK) {
