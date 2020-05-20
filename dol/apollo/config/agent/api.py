@@ -1,12 +1,12 @@
 #! /usr/bin/python3
 import inspect
 import os
-import pdb
 import grpc
 import enum
 import requests
 import time
 import urllib3
+import socket
 
 # operd proto
 import oper_pb2_grpc as oper_pb2_grpc
@@ -54,6 +54,8 @@ import bgp_pb2 as bgp_pb2
 import cp_route_pb2 as cp_route_pb2
 import evpn_pb2 as evpn_pb2
 import policer_pb2 as policer_pb2
+import types_pb2 as types_pb2
+from types_pb2 import ServiceRequestOp as ServiceOp
 
 from infra.common.glopts  import GlobalOptions
 from infra.common.logging import logger
@@ -64,6 +66,8 @@ MAX_MSG_LEN = 1024 * 1024 * 100
 # RPC Timeout - 20mins
 MAX_GRPC_WAIT = 1200
 MAX_BATCH_SIZE = 64
+SVC_SERVER_SOCKET_PATH = "/var/run/pds_svc_server_sock"
+SOCK_BUF_LEN = 1024 * 1024
 
 class AgentPorts(enum.IntEnum):
     NONE = 0
@@ -129,6 +133,11 @@ class PenOperObjectTypes(enum.IntEnum):
     METRICS = 2
     MAX = 3
 
+class Transport(enum.IntEnum):
+    GRPC = 0
+    UDS = 1
+    MAX = 2
+
 class ClientModule:
     def __init__(self, module, msg_prefix):
         self.__module = module
@@ -154,6 +163,28 @@ class ClientModule:
 
     def MsgReq(self, op):
         return self.__msg_reqs[op]
+
+class ClientResponseModule:
+    def __init__(self, module, msg_prefix):
+        self.__module = module
+        self.__msg_resps = [None] * ApiOps.MAX
+        self.__set_msg_resps(msg_prefix)
+        return
+
+    def __set_one_msg_resp(self, op, msgresp):
+        self.__msg_resps[op] = getattr(self.__module, msgresp, None)
+        logger.info("Setting %s for OP: %d" % (self.__msg_resps[op], op))
+        return
+
+    def __set_msg_resps(self, p):
+        self.__set_one_msg_resp(ApiOps.CREATE, "%sResponse"%p)
+        self.__set_one_msg_resp(ApiOps.DELETE, "%sDeleteResponse"%p)
+        self.__set_one_msg_resp(ApiOps.UPDATE, "%sResponse"%p)
+        self.__set_one_msg_resp(ApiOps.GET, "%sGetResponse"%p)
+        return
+
+    def MsgResp(self, op):
+        return self.__msg_resps[op]
 
 class ClientRESTModule:
     def __init__(self, ip, uri):
@@ -308,9 +339,11 @@ class AgentClientBase:
         self.Channel = None
         self.Stubs = [None] * objTypes.MAX
         self.MsgReqs = [None] * objTypes.MAX
+        self.MsgResps = [None] * ObjectTypes.MAX
         self.IPAddr = self.GetAgentIP(ip)
         self.Port = self.GetAgentPort()
         self.Endpoint = f"{self.IPAddr}:{self.Port}"
+        self.Transport = Transport.GRPC
         self.CreateMsgReqTable()
         self.CreateChannel()
         if not self.Connect():
@@ -366,20 +399,31 @@ class AgentClientBase:
     def GetGRPCMsgReq(self, objtype, op):
         return self.MsgReqs[objtype].MsgReq(op)
 
+    def UdsSend(self, oper, objtype, objs):
+        self.__unimplemented()
+
     def Create(self, objtype, objs):
         if GlobalOptions.dryrun: return True
+        if self.Transport == Transport.UDS:
+            return self.UdsSend(ApiOps.CREATE, objtype, objs)
         return self.Stubs[objtype].Rpc(ApiOps.CREATE, objs)
 
     def Delete(self, objtype, objs):
         if GlobalOptions.dryrun: return True
+        if self.Transport == Transport.UDS:
+            return self.UdsSend(ApiOps.DELETE, objtype, objs)
         return self.Stubs[objtype].Rpc(ApiOps.DELETE, objs)
 
     def Update(self, objtype, objs):
         if GlobalOptions.dryrun: return True
+        if self.Transport == Transport.UDS:
+            return self.UdsSend(ApiOps.UPDATE, objtype, objs)
         return self.Stubs[objtype].Rpc(ApiOps.UPDATE, objs)
 
     def Get(self, objtype, objs):
         if GlobalOptions.dryrun: return
+        if self.Transport == Transport.UDS:
+            return self.UdsSend(ApiOps.GET, objtype, objs)
         return self.Stubs[objtype].Rpc(ApiOps.GET, objs)
 
     def Request(self, objtype, rpcname, objs):
@@ -436,6 +480,10 @@ class PdsAgentClient(AgentClientBase):
             self.RestReqs = [None] * ObjectTypes.MAX
             self.__create_restreq_table()
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+        if (os.environ.get("USE_UDS", None)):
+            self.Transport = Transport.UDS
+            self.CreateMsgRespTable()
         return
 
     def GetAgentPort(self):
@@ -550,11 +598,107 @@ class PdsAgentClient(AgentClientBase):
         self.RestReqs[ObjectTypes.DHCP_RELAY] = ClientRESTModule(self.IPAddr, "/api/ipam-policies/")
         return
 
+    def CreateMsgRespTable(self):
+        self.MsgResps[ObjectTypes.DEVICE] = ClientResponseModule(device_pb2, 'Device')
+        self.MsgResps[ObjectTypes.INTERFACE] = ClientResponseModule(interface_pb2, 'Interface')
+        self.MsgResps[ObjectTypes.LMAPPING] = ClientResponseModule(mapping_pb2, 'Mapping')
+        self.MsgResps[ObjectTypes.RMAPPING] = ClientResponseModule(mapping_pb2, 'Mapping')
+        self.MsgResps[ObjectTypes.METER] = ClientResponseModule(meter_pb2, 'Meter')
+        self.MsgResps[ObjectTypes.MIRROR] = ClientResponseModule(mirror_pb2, 'MirrorSession')
+        self.MsgResps[ObjectTypes.NEXTHOP] = ClientResponseModule(nh_pb2, 'Nexthop')
+        self.MsgResps[ObjectTypes.NEXTHOPGROUP] = ClientResponseModule(nh_pb2, 'NhGroup')
+        self.MsgResps[ObjectTypes.ROUTE] = ClientResponseModule(route_pb2, 'RouteTable')
+        self.MsgResps[ObjectTypes.POLICY] = ClientResponseModule(policy_pb2, 'SecurityPolicy')
+        self.MsgResps[ObjectTypes.SECURITY_PROFILE] = ClientResponseModule(policy_pb2, 'SecurityProfile')
+        self.MsgResps[ObjectTypes.SUBNET] = ClientResponseModule(subnet_pb2, 'Subnet')
+        self.MsgResps[ObjectTypes.TAG] = ClientResponseModule(tags_pb2, 'Tag')
+        self.MsgResps[ObjectTypes.TUNNEL] = ClientResponseModule(tunnel_pb2, 'Tunnel')
+        self.MsgResps[ObjectTypes.VPC] = ClientResponseModule(vpc_pb2, 'VPC')
+        self.MsgResps[ObjectTypes.VNIC] = ClientResponseModule(vnic_pb2, 'Vnic')
+        self.MsgResps[ObjectTypes.DHCP_RELAY] = ClientResponseModule(dhcp_pb2, 'DHCPPolicy')
+        self.MsgResps[ObjectTypes.DHCP_PROXY] = ClientResponseModule(dhcp_pb2, 'DHCPPolicy')
+        self.MsgResps[ObjectTypes.NAT] = ClientResponseModule(nat_pb2, 'NatPortBlock')
+        self.MsgResps[ObjectTypes.POLICER] = ClientResponseModule(policer_pb2, 'Policer')
+        self.MsgResps[ObjectTypes.BGP] = ClientResponseModule(bgp_pb2, 'BGP')
+        self.MsgResps[ObjectTypes.BGP_PEER] = ClientResponseModule(bgp_pb2, 'BGPPeer')
+        self.MsgResps[ObjectTypes.BGP_PEER_AF] = ClientResponseModule(bgp_pb2, 'BGPPeerAf')
+        self.MsgResps[ObjectTypes.BGP_EVPN_EVI] = ClientResponseModule(evpn_pb2, 'EvpnEvi')
+        self.MsgResps[ObjectTypes.BGP_EVPN_EVI_RT] = ClientResponseModule(evpn_pb2, 'EvpnEviRt')
+        self.MsgResps[ObjectTypes.BGP_EVPN_IP_VRF] = ClientResponseModule(evpn_pb2, 'EvpnIpVrf')
+        self.MsgResps[ObjectTypes.BGP_EVPN_IP_VRF_RT] = ClientResponseModule(evpn_pb2, 'EvpnIpVrfRt')
+        self.MsgResps[ObjectTypes.STATIC_ROUTE] = ClientResponseModule(cp_route_pb2, 'CPStaticRoute')
+        return
+
+    def ParseServiceResponse(self, objtype, op, resp):
+        msg = self.MsgResps[objtype].MsgResp(op)
+        grpcmsg = msg()
+        if (not resp) or (resp == -1):
+            logger.info("No service response received in UDS")
+        else:
+            service_resp = types_pb2.ServiceResponseMessage()
+            service_resp.ParseFromString(resp)
+            val = service_resp.Response
+            if val.Is(grpcmsg.DESCRIPTOR):
+                val.Unpack(grpcmsg)
+            logger.verbose(f"Received response over UDS: {service_resp}")
+        return grpcmsg
+
+    def SendServiceRequestMessage(self, oper, objs, objtype):
+        service_op = ServiceOp.SERVICE_OP_NONE
+        if oper == ApiOps.CREATE:
+            service_op = ServiceOp.SERVICE_OP_CREATE
+        elif oper == ApiOps.DELETE:
+            service_op = ServiceOp.SERVICE_OP_DELETE
+        elif oper == ApiOps.UPDATE:
+            service_op = ServiceOp.SERVICE_OP_UPDATE
+        elif oper == ApiOps.GET:
+            service_op = ServiceOp.SERVICE_OP_READ
+
+        service_req = types_pb2.ServiceRequestMessage()
+        service_req.ConfigOp = service_op
+        config_msg = service_req.ConfigMsg
+        resps = list()
+        server_address = SVC_SERVER_SOCKET_PATH
+
+        def __triggerRequest(message):
+            #Initialize unix socket
+            sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            if not sock:
+                logger.info("Failed to open unix domain socket")
+                return -1
+            try:
+                ret = sock.connect_ex(server_address)
+                if ret:
+                    raise socket.error(ret)
+                nbytes = message.SerializeToString()
+                sock.sendall(nbytes)
+                logger.verbose(f"Sent a UDS request with message: {message}")
+                bytes_read = sock.recv(int(SOCK_BUF_LEN))
+                if not bytes_read:
+                    logger.info(f"No response received from remote socket")
+            except socket.error as msg:
+                logger.info(f"Received socket error while sending to {server_address}, err {msg}")
+                bytes_read = -1
+            finally:
+                sock.close()
+            return bytes_read
+
+        for obj in objs:
+            config_msg.Pack(obj)
+            resp = __triggerRequest(service_req)
+            service_resp = self.ParseServiceResponse(objtype, oper, resp)
+            resps.append(service_resp)
+        return resps
+
+    def UdsSend(self, oper, objtype, objs):
+        return self.SendServiceRequestMessage(oper, objs, objtype)
+
     def Create(self, objtype, objs):
         if GlobalOptions.netagent:
             if not self.RestReqs[objtype]:
                 return # unsupported object
             return self.RestReqs[objtype].Create(objs)
+
         return super().Create(objtype, objs)
 
     def Delete(self, objtype, objs):
@@ -562,6 +706,7 @@ class PdsAgentClient(AgentClientBase):
             if not self.RestReqs[objtype]:
                 return # unsupported object
             return self.RestReqs[objtype].Delete(objs)
+
         return super().Delete(objtype, objs)
 
     def Update(self, objtype, objs):
@@ -569,6 +714,7 @@ class PdsAgentClient(AgentClientBase):
             if not self.RestReqs[objtype]:
                 return # unsupported object
             return self.RestReqs[objtype].Update(objs)
+
         return super().Update(objtype, objs)
 
     def GetHttp(self, objtype):

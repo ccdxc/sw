@@ -174,10 +174,6 @@ class DeviceObject(base.ConfigObjectBase):
             return False
         return True
 
-    def GetGrpcReadMessage(self):
-        grpcmsg = types_pb2.Empty()
-        return grpcmsg
-
     def IsBitwMode(self):
         if self.Mode == "bitw":
             return True
@@ -230,10 +226,6 @@ class DeviceObjectClient(base.ConfigClientBase):
         self.Objs[node].update({0: obj})
         EzAccessStoreClient[node].SetDevice(obj)
         return
-
-    def GetGrpcReadAllMessage(self, node):
-        grpcmsg = types_pb2.Empty()
-        return grpcmsg
 
     def ValidateGrpcRead(self, node, getResp):
         if utils.IsDryRun(): return True

@@ -1094,7 +1094,7 @@ pds_svc_security_profile_handle_cfg (cfg_ctxt_t *ctxt,
     google::protobuf::Any *any_req = (google::protobuf::Any *)ctxt->req;
 
     switch (ctxt->cfg) {
-    case CFG_MSG_SECURITY_POLICY_CREATE:
+    case CFG_MSG_SECURITY_PROFILE_CREATE:
         {
             pds::SecurityProfileRequest req;
             pds::SecurityProfileResponse rsp;
@@ -1105,7 +1105,7 @@ pds_svc_security_profile_handle_cfg (cfg_ctxt_t *ctxt,
         }
         break;
 
-    case CFG_MSG_SECURITY_POLICY_UPDATE:
+    case CFG_MSG_SECURITY_PROFILE_UPDATE:
         {
             pds::SecurityProfileRequest req;
             pds::SecurityProfileResponse rsp;
@@ -1116,7 +1116,7 @@ pds_svc_security_profile_handle_cfg (cfg_ctxt_t *ctxt,
         }
         break;
 
-    case CFG_MSG_SECURITY_POLICY_DELETE:
+    case CFG_MSG_SECURITY_PROFILE_DELETE:
         {
             pds::SecurityProfileDeleteRequest req;
             pds::SecurityProfileDeleteResponse rsp;
@@ -1127,7 +1127,7 @@ pds_svc_security_profile_handle_cfg (cfg_ctxt_t *ctxt,
         }
         break;
 
-    case CFG_MSG_SECURITY_POLICY_GET:
+    case CFG_MSG_SECURITY_PROFILE_GET:
         {
             pds::SecurityProfileGetRequest req;
             pds::SecurityProfileGetResponse rsp;

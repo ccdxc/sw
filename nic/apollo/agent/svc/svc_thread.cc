@@ -127,11 +127,11 @@ svc_server_thread_init (void *ctxt)
         return;
     }
 
+    PDS_TRACE_INFO ("Connected to unix domain socket {}", SVC_SERVER_SOCKET_PATH);
     memset(&sock_addr, 0, sizeof (sock_addr));
     sock_addr.sun_family = AF_UNIX;
-    strcpy(sock_addr.sun_path, SVC_SERVER_SOCKET_PATH);
-
-    if (bind(g_uds_sock_fd, (struct sockaddr *)&sock_addr, sizeof(sock_addr)) == -1) {
+    strncpy(sock_addr.sun_path, SVC_SERVER_SOCKET_PATH, sizeof(SVC_SERVER_SOCKET_PATH));
+    if (bind(g_uds_sock_fd, (struct sockaddr *)&sock_addr, sizeof(struct sockaddr_un)) == -1) {
         PDS_TRACE_ERR ("Failed to bind unix domain socket for cmd server thread, err {} {}",
                        errno, strerror(errno));
         return;
@@ -143,6 +143,7 @@ svc_server_thread_init (void *ctxt)
         return;
     }
 
+    PDS_TRACE_INFO ("Listening to unix domain socket {}", SVC_SERVER_SOCKET_PATH);
     sdk::event_thread::io_init(&cmd_accept_io, svc_server_accept_cb, g_uds_sock_fd,
                                EVENT_READ);
     sdk::event_thread::io_start(&cmd_accept_io);

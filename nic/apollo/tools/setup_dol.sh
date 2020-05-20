@@ -112,6 +112,7 @@ function remove_stale_files () {
     rm -f $PDSPKG_TOPDIR/conf/gen/device_info.txt
     rm -f /tmp/pen_* /dev/shm/pds_* /dev/shm/ipc_* /dev/shm/metrics_*
     rm -rf /sysconfig/config0
+    rm -f /var/run/pds_svc_server_sock
     remove_db
 }
 
