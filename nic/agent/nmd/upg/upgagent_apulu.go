@@ -118,6 +118,7 @@ func (u *NaplesUpgClient) StartDisruptiveUpgrade(firmwarePkgName string) error {
 			if resp.Status != pds.UpgradeStatus_UPGRADE_STATUS_OK {
 				return fmt.Errorf("DSC Upgrade Failed: %s", resp.Status.String())
 			}
+			return nil
 		}
 	} else {
 		log.Infof("Errored. NAPLES_PIPELINE is %v ok %v", val, ok)
