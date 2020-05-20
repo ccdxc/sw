@@ -13,13 +13,6 @@
 #include <ftl_utils.hpp>
 #include <nic/p4/common/defines.h>
 
-const static std::map<uint8_t,string> proto_num2str_map =
-{
-    {IP_PROTO_TCP,  "TCP"},
-    {IP_PROTO_UDP,  "UDP"},
-    {IP_PROTO_ICMP, "ICMP"}
-};
-
 typedef struct ftl_cb_data_s {
     int fd;
     bool summary;
@@ -50,18 +43,16 @@ ftlv4_entry_iter_cb(sdk::table::sdk_table_api_params_t *params)
         dst.s_addr = ntohl(hwentry->get_key_metadata_ipv4_dst());
         inet_ntop(AF_INET, &src, srcstr, INET_ADDRSTRLEN);
         inet_ntop(AF_INET, &dst, dststr, INET_ADDRSTRLEN);
-        const char *proto = proto_num2str_map.find(
-            hwentry->get_key_metadata_proto())->second.c_str();
-        dprintf(fd, "%-8d%s/%-10s%-6d%-20s%-20d%-20s%-20d%-8s%-8s\n",
+        dprintf(fd, "%-8d%s/%-8s%-6d%-20s%-10d%-20s%-12d%-7s%-8s\n",
                 ses_id,
-                hwentry->get_flow_role() ? "I" : "R",
+                hwentry->get_flow_role() ? "R" : "I",
                 from_host ? "H" : "U",
                 ftlv4_get_lookup_id(hwentry),
                 srcstr,
                 hwentry->get_key_metadata_sport(),
                 dststr,
                 hwentry->get_key_metadata_dport(),
-                proto,
+                pds_ip_protocol_to_str(hwentry->get_key_metadata_proto()),
                 drop ? "D" : "A");
     }
 }
@@ -130,7 +121,7 @@ vpp_uds_flow_dump(int fd, bool summary)
     //params.force_hwread = false;
     //table6->iterate(&params);
 
-    fsync(fd);
+    close(fd);
 }
 
 // initializes callbacks for flow dump

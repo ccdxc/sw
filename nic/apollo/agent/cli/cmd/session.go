@@ -383,18 +383,24 @@ func flowPrintSummary(count int) {
 }
 
 func flowPrintHeader() {
-	fmt.Printf("Legend:\n")
-	fmt.Printf("Handle: Session Handle\n")
-	fmt.Printf("Role: I (Initiator), R (Responder)\n")
-	fmt.Printf("Direction: U (Uplink), H (Host)\n")
-	fmt.Printf("Sport|SeqNo: Sequence num for ICMP, source port for other protocols\n")
-	fmt.Printf("DPort|Type/Code: ICMP type and code, destination port for other protocols\n")
-	fmt.Printf("FlowAction: A (Allowed flow), D (drop flow)\n")
-	hdrLine := strings.Repeat("-", 120)
+	fmt.Printf("Legend\n")
+	fmt.Printf("Handle    : Session Handle\n")
+	fmt.Printf("Role      : I (Initiator), R (Responder)\n")
+	fmt.Printf("Direction : U (From Uplink), H (From Host)\n")
+	fmt.Printf("BdId      : Bridge Domain ID or subnet ID\n")
+	fmt.Printf("SIP       : Source IP address\n")
+	fmt.Printf("Sport     : Source port for TCP/UDP\n")
+	fmt.Printf("Id        : ICMP identifier\n")
+	fmt.Printf("DIP       : Destination IP address\n")
+	fmt.Printf("Dport     : Destination port for TCP/UDP\n")
+	fmt.Printf("TyCo      : ICMP type and code\n")
+	fmt.Printf("Proto     : IP Protocol\n")
+	fmt.Printf("Action    : A (Allow), D (Drop)\n")
+	hdrLine := strings.Repeat("-", 100)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-8s%-10s%-6s%-20s%-20s%-20s%-20s%-8s%-8s\n",
-		"Handle", "Role/Dir", "BdId", "SIP", "Sport|SeqNo", "DIP",
-		"DPort|Type/Code", "Proto", "FlowAction")
+	fmt.Printf("%-8s%-10s%-6s%-20s%-10s%-20s%-12s%-7s%-8s\n",
+		"Handle", "Role/Dir", "BdId", "SIP", "Sport|Id", "DIP",
+		"Dport|TyCo", "Proto", "Action")
 	fmt.Println(hdrLine)
 }
 

@@ -31,3 +31,15 @@ bool pds_flow_get_flow_from_host (u32 ses_id, u8 flow_role)
 {
     return pds_flow_from_host(ses_id, flow_role);
 }
+
+char * pds_ip_protocol_to_str (u8 protocol)
+{
+    static __thread char protostr[20];
+    ip_main_t *im = &ip_main;
+    ip_protocol_info_t *pi = ip_get_protocol_info(im, protocol);
+    if (pi) {
+        return (char *)pi->name;
+    }
+    snprintf(protostr, 20, "%u", protocol);
+    return protostr;
+}

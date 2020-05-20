@@ -57,8 +57,8 @@ def parseFlowEntries(entries, w1, w2):
     iflow_found = False
     rflow_found = False
     api.Logger.info("parseFlowEntries: entries %s" %(entries))
-    # Skip the first 10 lines as they are part of legend and header
-    for entry in entries.splitlines()[10:-1]:
+    # Skip the first 16 lines as they are part of legend and header
+    for entry in entries.splitlines()[16:-1]:
         api.Logger.info("parseFlowEntries: entry %s" %(entry))
         column = entry.split()
         if len(column) < 9:
