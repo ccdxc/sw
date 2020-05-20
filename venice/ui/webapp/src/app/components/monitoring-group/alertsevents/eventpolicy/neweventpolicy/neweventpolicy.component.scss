@@ -3,6 +3,14 @@
 $horizontal-gutter: 10px;
 $vertical-gutter: 5px;
 
+.new-eventpolicy {
+  width: 100%;
+}
+
+.neweventpolicy-span {
+  margin-top: 0px !important;
+}
+
 .neweventpolicy-container {
   background: white;
 
@@ -11,14 +19,11 @@ $vertical-gutter: 5px;
   }
 }
 
-.neweventpolicy-row {
-  margin: 0px $horizontal-gutter;
-}
-
 .neweventpolicy-content {
   background: white;
   min-height: 180px;
-  margin-top: 4* $vertical-gutter;
+  margin-top: 5* $vertical-gutter;
+  margin-bottom: 4* $vertical-gutter;
   @include primary-font();
 }
 

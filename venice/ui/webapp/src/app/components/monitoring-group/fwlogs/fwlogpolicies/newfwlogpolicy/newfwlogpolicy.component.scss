@@ -24,6 +24,7 @@ $vertical-gutter: 5px;
   background: white;
   min-height: 180px;
   margin-top: 4* $vertical-gutter;
+  margin-bottom: 4* $vertical-gutter;
   @include primary-font();
 }
 
@@ -54,24 +55,6 @@ $vertical-gutter: 5px;
   margin: 4px 3px 4px 0px;
   height: 30px !important;
   width: 255px;
-}
-
-.newfwlogpolicy-buttoncontainer {
-
-  .button-container {
-    position: relative;
-    top: 10px;
-    max-height: 0px;
-  }
-
-  .newfwlogpolicy-save,
-  .newfwlogpolicy-cancel {
-    font-size: 16px;
-    display: inline-block;
-    padding: 4px 10px;
-    line-height: 25px;
-    margin: 0px $horizontal-gutter $vertical-gutter $horizontal-gutter;
-  }
 }
 
 .newfwlogpolicy-container .syslog-fieldtitle-prefix-label,
@@ -118,3 +101,5 @@ $vertical-gutter: 5px;
 .newfwlogpolicy-input-slidetoggle {
   @include global-mat-toggle(rgb(209, 209, 208), rgb(103, 103, 99), rgb(211, 226, 246), rgb(101, 169, 227));
 }
+
+@include adjust-inlinebuttons-boundry(1090, newfwlogpolicy-editform-inline)

@@ -25,7 +25,10 @@
 </ng-template>
 
 <ng-template #createTemplate>
-  <app-newfwlogpolicy (formClose)="creationFormClose()" [maxTargets]="maxNewTargets"
+  <app-newfwlogpolicy
+                      (formClose)="creationFormClose()"
+                      [existingObjects]='dataObjects'
+                      [maxTargets]="maxNewTargets"
                       fxFlex="none">
   </app-newfwlogpolicy>
 </ng-template>

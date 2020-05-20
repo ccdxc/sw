@@ -1,13 +1,14 @@
-<div [style.width]="'100%'" fxLayout="column">
+<div class="psm-form newdestination-parent" fxLayout="column">
+  <ng-container *ngTemplateOutlet="inlineButtons"></ng-container>
   <div fxFlex="auto" fxLayout="row" fxLayoutAlign="center start" class="newdestination-container">
     <!-- Limiting the size of the creation form - If it is inline, we have more room to fit in the save/cancel buttons -->
     <div fxFlex="auto" fxLayout="row"
          fxLayoutAlign="start stretch" class="newdestination-content"
-         [formGroup]="newDestination.$formGroup">
+         [formGroup]="newObject.$formGroup.get('meta')">
 
       <div fxFlex="nogrow" fxLayout="column" fxLayoutAlign="center start">
-        <div fxFlex="nogrow" fxLayout="row" formGroupName="meta" [ngClass]="{
-          'requiredField': isFieldEmpty(newDestination.$formGroup.get(['meta', 'name']))
+        <div fxFlex="nogrow" fxLayout="row" [ngClass]="{
+          'requiredField': isFieldEmpty(newObject.$formGroup.get(['meta', 'name']))
         }">
           <!-- First row-->
           <input fxFlex="300px" formControlName="name" class="newdestination-name" appErrorTooltip
@@ -24,7 +25,7 @@
           <!-- <div fxFlex="nogrow" class="newdestination-text">EXPORT ALERT IF:</div>
           <app-fieldselector fxFlex="nogrow" #fieldSelector 
                     kind="Alert"
-                    [formArray]="newDestination.$formGroup.get(['spec', 'selector', 'requirements'])"
+                    [formArray]="newObject.$formGroup.get(['spec', 'selector', 'requirements'])"
                     keyFormName="key" 
                     operatorFormName="operator" 
                     valueFormName="values"
@@ -51,17 +52,6 @@
           </ng-container>
         </div>
       </div>
-      <div *ngIf="isInline" class="newdestination-buttoncontainer" fxFlex="nogrow" fxLayout="row"
-           fxLayoutAlign="start start">
-        <div fxFlex="nogrow">
-          <span (click)="saveDestination()"
-                class="global-button-primary newdestination-save">SAVE</span>
-        </div>
-        <div fxFlex="nogrow">
-          <span (click)="cancelDestination()"
-                class="global-button-neutral newdestination-cancel">CANCEL</span>
-        </div>
-      </div>
     </div>
   </div>
 </div>
@@ -70,20 +60,20 @@
   <app-syslog #syslogComponent
               [syslogFieldsetWidth]="true"
               [syslogRequiredOption]="true"
-              [syslogExport]="newDestination.$formGroup.get(['spec', 'syslog-export']).value"
+              [syslogExport]="newObject.$formGroup.get(['spec', 'syslog-export']).value"
               targetTransport="<TCP/UDP>/<port>"
               fxFlex="nogrow" fxLayout="column"></app-syslog>
 </ng-template>
 
 <ng-template #snmp>
   <!-- SNMP TRAP LISTINGS -->
-  <ng-container [formGroup]="newDestination.$formGroup">
+  <ng-container [formGroup]="newObject.$formGroup">
     <ng-container formArrayName="spec">
       <ng-container formArrayName="snmp-trap-servers">
         <div fxFlex="nogrow" fxLayout="row">
           <div fxFlex="nogrow" fxLayout="column">
             <div fxFlex="nogrow" class="newdestination-snmp" fxLayout="column" [@slideInOut]
-                 *ngFor="let snmp of controlAsFormArray(newDestination.$formGroup.get(['spec','snmp-trap-servers'])).controls; let index = index; let first = first"
+                 *ngFor="let snmp of controlAsFormArray(newObject.$formGroup.get(['spec','snmp-trap-servers'])).controls; let index = index; let first = first"
                  [formGroupName]="index">
               <div fxFlex="20px"></div>
               <!-- Buffer, creating as a div so there are no hiccups in the animation-->
@@ -229,7 +219,7 @@
                        class="newdestination-fieldtitle newdestination-and">
                     <span fxFlex="nogrow" *ngIf="first" (click)="addSnmpTrapConfig()">+ ADD</span>
                     <mat-icon fxFlex="nogrow" [style.color]="'#767676'"
-                              *ngIf="controlAsFormArray(newDestination.$formGroup.get(['spec','snmp-trap-servers'])).length > 1"
+                              *ngIf="controlAsFormArray(newObject.$formGroup.get(['spec','snmp-trap-servers'])).length > 1"
                               (click)="removeSnmpTrapConfig(index)">delete</mat-icon>
                   </div>
                 </div>
@@ -243,4 +233,14 @@
       </ng-container>
     </ng-container>
   </ng-container>
+</ng-template>
+
+<ng-template #inlineButtons>
+  <app-inlinebuttons class="new-dest"
+                     *ngIf="isInline"
+                     [saveButtonClass]="computeFormSubmitButtonClass()"
+                     [saveTooltip]="getSubmitButtonToolTip()"
+                     (cancelFunc)="cancelDestination()"
+                     (saveFunc)="saveDestination()">
+  </app-inlinebuttons>
 </ng-template>

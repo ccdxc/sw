@@ -125,7 +125,7 @@ describe('NeweventpolicyComponent', () => {
     policy.spec.targets[0].destination = '2.2.2.2';
 
     tu.setSyslogData(policy.spec as any);
-    tu.sendClick(tu.getElemByCss('.global-button-primary.neweventpolicy-save'));
+    tu.sendClick(tu.getElemByCss('.form-inlinebuttons-savebutton'));
     expect(spy).toHaveBeenCalled();
     const recVal = spy.calls.mostRecent().args[1];
     const expVal = TrimUIFields(new MonitoringEventPolicy(policy).getModelValues());

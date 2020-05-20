@@ -31,13 +31,28 @@ $dary-grey: #a9a9a9;
 }
 
 .syslog-input {
-  width: 182px;
   height: 30px;
+}
+
+.syslog-target-parent-gateway {
+
+  span,
+  .syslog-input {
+    width: 129px;
+  }
 }
 
 .syslog-value {
   margin: $vertical-gutter $horizontal-gutter;
   align-items: center;
+}
+
+.syslog-export-parent {
+
+  .syslog-value,
+  input {
+    max-width: 145px;
+  }
 }
 
 .syslog-testconnectionbutton {

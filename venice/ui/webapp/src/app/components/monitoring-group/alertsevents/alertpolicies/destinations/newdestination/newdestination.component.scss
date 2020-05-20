@@ -3,6 +3,10 @@
 $horizontal-gutter: 10px;
 $vertical-gutter: 5px;
 
+.newdestination-parent {
+  width: 100%;
+}
+
 .newdestination-container {
   background: white;
 
@@ -70,20 +74,6 @@ $vertical-gutter: 5px;
 
 .newdestination-name {
   margin-left: 0px;
-}
-
-.newdestination-save,
-.newdestination-cancel {
-  font-size: 16px;
-  display: inline-block;
-  padding: 4px 10px;
-  line-height: 25px;
-  margin: 0px $horizontal-gutter $vertical-gutter $horizontal-gutter;
-}
-
-.newdestination-buttoncontainer {
-  margin-top: 1.5 * $vertical-gutter;
-
 }
 
 .newdestination-testconnectionbutton {

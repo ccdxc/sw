@@ -13,7 +13,8 @@
 </app-tableviewedit>
 
 <ng-template #createTemplate>
-  <app-newdestination (formClose)="creationFormClose()" fxFlex="none"></app-newdestination>
+  <app-newdestination (formClose)="creationFormClose()" [existingObjects]='dataObjects'
+                      fxFlex="none"></app-newdestination>
 </ng-template>
 
 <!-- TABLE HEADER -->
@@ -39,20 +40,20 @@
 
 
 <ng-template #expandTemplate let-rowData let-columns="columns">
-  <app-newdestination [destinationData]="rowData" [isInline]="true" (formClose)="closeRowExpand()">
+  <app-newdestination [objectData]="rowData" [isInline]="true" (formClose)="closeRowExpand()"
+                      [maxTargets]="maxNewTargets">
   </app-newdestination>
 </ng-template>
 
 <ng-template #actionTemplate let-rowData>
   <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
-    <mat-icon *roleGuard="'monitoringalertdestination_update'" matTooltip="Edit destination"
-              class="global-table-action-icon"
-              (click)="expandRowRequest($event, rowData)">edit</mat-icon>
-  </div>
-  <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px"
-       *ngIf="showDeleteButton(rowData)">
-    <mat-icon *roleGuard="'monitoringalertdestination_delete'" matTooltip="Delete destination"
-              class="global-table-action-icon"
-              (click)="onDeleteRecord($event, rowData)">delete</mat-icon>
+    <ng-container *ngIf="showUpdateButtons(rowData)">
+      <mat-icon *roleGuard="'monitoringalertdestination_update'" matTooltip="Edit destination"
+                class="global-table-action-icon"
+                (click)="expandRowRequest($event, rowData)">edit</mat-icon>
+      <mat-icon *roleGuard="'monitoringalertdestination_delete'" matTooltip="Delete destination"
+                class="global-table-action-icon"
+                (click)="onDeleteRecord($event, rowData)">delete</mat-icon>
+    </ng-container>
   </div>
 </ng-template>

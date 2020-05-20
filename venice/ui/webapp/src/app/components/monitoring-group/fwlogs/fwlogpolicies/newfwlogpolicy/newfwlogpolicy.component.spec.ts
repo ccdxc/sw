@@ -122,9 +122,6 @@ describe('NewfwlogpolicyComponent', () => {
         config: {
           prefix: 'prefix',
           'facility-override': MonitoringSyslogExportConfig_facility_override.local0,
-        },
-        'psm-target': {
-          enable: true
         }
       }
     };
@@ -136,7 +133,7 @@ describe('NewfwlogpolicyComponent', () => {
     policy.spec.targets[0].destination = '2.2.2.2';
 
     tu.setSyslogData(policy.spec as any);
-    tu.sendClick(tu.getElemByCss('.global-button-primary.newfwlogpolicy-save'));
+    tu.sendClick(tu.getElemByCss('.form-inlinebuttons-savebutton'));
     expect(spy).toHaveBeenCalled();
     const recVal = spy.calls.mostRecent().args[1];
     const expVal = TrimUIFields(new MonitoringFwlogPolicy(policy).getModelValues());

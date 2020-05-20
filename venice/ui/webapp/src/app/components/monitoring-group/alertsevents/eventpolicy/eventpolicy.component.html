@@ -15,7 +15,8 @@
 </app-pagebody>
 
 <ng-template #createTemplate>
-  <app-neweventpolicy (formClose)="creationFormClose()" fxFlex="none"></app-neweventpolicy>
+  <app-neweventpolicy (formClose)="creationFormClose()" [existingObjects]='dataObjects'
+                      fxFlex="none"></app-neweventpolicy>
 </ng-template>
 
 <!-- TABLE HEADER -->
@@ -36,6 +37,11 @@
     <ng-container *ngSwitchDefault>
       {{displayColumn(rowData, col)}}
     </ng-container>
+    <ng-container *ngSwitchCase="'spec.targets'">
+      <ng-container *ngFor="let target of formatTargets(rowData.spec['targets'])">
+        <span style="display: block">{{target}}</span>
+      </ng-container>
+    </ng-container>
   </ng-container>
 </ng-template>
 
@@ -51,6 +57,7 @@
 </ng-template>
 
 <ng-template #expandTemplate let-rowData let-columns="columns">
-  <app-neweventpolicy [objectData]="rowData" [isInline]="true" (formClose)="closeRowExpand()">
+  <app-neweventpolicy [objectData]="rowData" [isInline]="true" (formClose)="closeRowExpand()"
+                      [maxTargets]="maxNewTargets">
   </app-neweventpolicy>
 </ng-template>

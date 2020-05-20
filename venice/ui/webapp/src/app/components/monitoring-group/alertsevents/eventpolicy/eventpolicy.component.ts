@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit, ViewEncapsulation } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, ViewEncapsulation, DoCheck, IterableDiffer, IterableDiffers } from '@angular/core';
 import { Animations } from '@app/animations';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { Utility } from '@app/common/Utility';
@@ -7,7 +7,7 @@ import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { EventsEvent } from '@sdk/v1/models/generated/events';
-import { FieldsRequirement, IApiStatus, IMonitoringEventPolicy, MonitoringEventPolicy } from '@sdk/v1/models/generated/monitoring';
+import { FieldsRequirement, IApiStatus, IMonitoringEventPolicy, MonitoringEventPolicy, IMonitoringExportConfig } from '@sdk/v1/models/generated/monitoring';
 import { Observable } from 'rxjs';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
@@ -20,7 +20,9 @@ import { TableCol, CustomExportMap } from '@app/components/shared/tableviewedit'
   animations: [Animations],
   encapsulation: ViewEncapsulation.None
 })
-export class EventpolicyComponent extends TablevieweditAbstract<IMonitoringEventPolicy, MonitoringEventPolicy> implements OnInit {
+export class EventpolicyComponent extends TablevieweditAbstract<IMonitoringEventPolicy, MonitoringEventPolicy> implements OnInit, DoCheck {
+  public static MAX_TARGETS_PER_POLICY = 2;
+  public static MAX_TOTAL_TARGETS = 8;
   dataObjects: ReadonlyArray<MonitoringEventPolicy> = [];
 
   bodyIcon: Icon = {
@@ -43,10 +45,13 @@ export class EventpolicyComponent extends TablevieweditAbstract<IMonitoringEvent
   policyEventUtility: HttpEventUtility<MonitoringEventPolicy>;
 
   cols: TableCol[] = [
-    { field: 'meta.name', header: 'Name', class: 'eventpolicy-column-name', sortable: true, width: 35 },
+    { field: 'meta.name', header: 'Name', class: 'eventpolicy-column-name', sortable: true, width: 25 },
+    { field: 'spec', header: 'Syslog Exports', class: 'eventpolicy-column-syslog', sortable: false, width: 25 },
     // Commenting out as it is not currently supported by backend
     // { field: 'spec.selector', header: 'Filters', class: 'eventpolicy-column-name', sortable: false, width: 30 },
-    { field: 'spec.targets', header: 'Targets', class: 'eventpolicy-column-targets', sortable: false, width: 65 },
+    { field: 'spec.targets', header: 'Targets', class: 'eventpolicy-column-targets-destination', sortable: false, width: 25 },
+    // { field: 'spec.targets', header: 'Gateway', class: 'eventpolicy-column-target-gateway', sortable: false, width: 25 },
+    // { field: 'spec.targets.transport', header: 'Transport', class: 'eventpolicy-column-transport', sortable: false, width: 25 }
   ];
 
   exportFilename: string = 'PSM-event-policies';
@@ -55,15 +60,28 @@ export class EventpolicyComponent extends TablevieweditAbstract<IMonitoringEvent
   isTabComponent = false;
   disableTableWhenRowExpanded = true;
 
+  maxNewTargets: number = EventpolicyComponent.MAX_TARGETS_PER_POLICY;
+  arrayDiffers: IterableDiffer<any>;
+
   constructor(protected controllerService: ControllerService,
     protected uiconfigsService: UIConfigsService,
     protected cdr: ChangeDetectorRef,
-    protected monitoringService: MonitoringService) {
+    protected monitoringService: MonitoringService,
+    protected _iterableDiffers: IterableDiffers) {
     super(controllerService, cdr, uiconfigsService);
+    this.arrayDiffers = _iterableDiffers.find([]).create(HttpEventUtility.trackBy);
   }
 
   postNgInit() {
     this.getEventPolicy();
+    this.maxNewTargets = this.computeTargets();
+  }
+
+  ngDoCheck() {
+    const changes = this.arrayDiffers.diff(this.dataObjects);
+    if (changes) {
+      this.maxNewTargets = this.computeTargets();
+    }
   }
 
   getClassName(): string {
@@ -76,7 +94,8 @@ export class EventpolicyComponent extends TablevieweditAbstract<IMonitoringEvent
       buttons = [{
         cssClass: 'global-button-primary eventpolicy-button',
         text: 'ADD EVENT POLICY',
-        computeClass: () => this.shouldEnableButtons ? '' : 'global-button-disabled',
+        genTooltip: () => this.getTooltip(),
+        computeClass: () => this.shouldEnableButtons && this.maxNewTargets > 0 ? '' : 'global-button-disabled',
         callback: () => { this.createNewObject(); }
       }];
     }
@@ -87,7 +106,9 @@ export class EventpolicyComponent extends TablevieweditAbstract<IMonitoringEvent
       ]
     });
   }
-
+  getTooltip(): string {
+    return this.maxNewTargets === 0 ? 'Cannot exceed 8 total targets across event policies' : '';
+  }
   getEventPolicy() {
     this.policyEventUtility = new HttpEventUtility<MonitoringEventPolicy>(MonitoringEventPolicy);
     this.dataObjects = this.policyEventUtility.array;
@@ -105,8 +126,8 @@ export class EventpolicyComponent extends TablevieweditAbstract<IMonitoringEvent
     const value = Utility.getObjectValueByPropertyPath(exportData, fields);
     const column = col.field;
     switch (column) {
-      case 'spec.targets':
-        return value.map(item => item.destination).join(', ');
+      case 'spec':
+        return this.formatSyslogExports(value);
       case 'spec.email-list':
         return JSON.stringify(value, null, 2);
       case 'spec.snmp-trap-servers':
@@ -114,6 +135,51 @@ export class EventpolicyComponent extends TablevieweditAbstract<IMonitoringEvent
       default:
         return Array.isArray(value) ? JSON.stringify(value, null, 2) : value;
     }
+  }
+  formatSyslogExports(data) {
+    if (data == null) {
+      return '';
+    }
+    let targetStr: string = '';
+    if (data.format) {
+      targetStr += 'Format:' +  data.format.replace('syslog-', '').toUpperCase() + ', ';
+    }
+    for (const k in data.config) {
+      if (data.config.hasOwnProperty(k) && k !== '_ui') {
+        if (data.config[k]) {
+          targetStr += k.charAt(0).toUpperCase() + k.slice(1) + ':' +  data.config[k] + ', ';
+        }
+      }
+    }
+    if (targetStr.length === 0) {
+      targetStr += '*';
+    } else {
+      targetStr = targetStr.slice(0, -2);
+    }
+    return [targetStr];
+  }
+  formatTargets(data: IMonitoringExportConfig[]) {
+    if (data == null) {
+      return '';
+    }
+    const retArr = [];
+    data.forEach((req) => {
+      let targetStr: string = '';
+      for (const k in req) {
+        if (req.hasOwnProperty(k) && k !== '_ui' && k !== 'credentials') {
+          if (req[k]) {
+            targetStr += k.charAt(0).toUpperCase() + k.slice(1) + ':' +  req[k] + ', ';
+          }
+        }
+      }
+      if (targetStr.length === 0) {
+        targetStr += '*';
+      } else {
+        targetStr = targetStr.slice(0, -2);
+      }
+      retArr.push(targetStr);
+    });
+    return retArr;
   }
 
   formatRequirements(data: FieldsRequirement[]) {
@@ -154,6 +220,16 @@ export class EventpolicyComponent extends TablevieweditAbstract<IMonitoringEvent
 
   generateDeleteSuccessMsg(object: IMonitoringEventPolicy) {
     return 'Deleted policy ' + object.meta.name;
+  }
+  computeTargets(): number {
+    let totaltargets: number = 0;
+    for (const policy of this.dataObjects) {
+      if (policy.spec.targets !== null) {
+        totaltargets += policy.spec.targets.length;
+      }
+    }
+    const remainder = EventpolicyComponent.MAX_TOTAL_TARGETS - totaltargets;
+    return Math.min(remainder, EventpolicyComponent.MAX_TARGETS_PER_POLICY);
   }
 
 }

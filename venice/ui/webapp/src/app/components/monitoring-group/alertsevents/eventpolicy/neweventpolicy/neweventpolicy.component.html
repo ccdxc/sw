@@ -1,16 +1,24 @@
-<div [style.width]="'100%'" fxLayout="column">
-  <div fxFlex="auto" fxLayout="row" fxLayoutAlign="center start" class="neweventpolicy-container">
+<div fxLayout="column" class="psm-form new-eventpolicy">
+  <ng-container *ngTemplateOutlet="inlineButtons"></ng-container>
+  <div fxLayout="column" fxLayoutAlign="center center" class="neweventpolicy-container">
     <!-- Limiting the size of the creation form - If it is inline, we have more room to fit in the save/cancel buttons -->
     <div fxFlex="auto" fxLayout="row" [style.max-width]="isInline ? '1300px' : '1200px'"
-         fxLayoutAlign="start stretch" class="neweventpolicy-content">
+         fxLayoutAlign="start stretch"
+         class="neweventpolicy-content">
       <div fxFlex fxLayout="column">
         <div fxFlex="nogrow" fxLayout="column">
           <div fxFlex="30px" fxLayout="row" [formGroup]="newObject.$formGroup.get('meta')"
                class="neweventpolicy-row">
-            <input fxFlex="300px" formControlName="name" class="neweventpolicy-name" appErrorTooltip
-                   spellcheck="false" type="text" pInputText placeholder="Unique Policy Name...">
+            <span [ngClass]="{
+              'requiredField': isFieldEmpty(newObject.$formGroup.get(['meta', 'name']))
+            }" class="neweventpolicy-span">
+              <input fxFlex="300px" formControlName="name" class="neweventpolicy-name"
+                     appErrorTooltip
+                     spellcheck="false" type="text" pInputText
+                     appFloatLabel="Unique Policy Name...">
+            </span>
           </div>
-          <div fxFlex="25px"></div>
+          <!-- <div fxFlex="20px"></div> -->
           <!-- Buffer, creating as a div so there are no hiccups in the animation-->
           <div fxFlex="noshrink" fxLayout="row" class="neweventpolicy-row"></div>
           <!-- Commenting out as it is not currently supported -->
@@ -25,29 +33,26 @@
           </app-fieldselector> -->
         </div>
 
-        <div fxFlex="20px" fxLayout="row">
-          <div fxFlex="30px"></div>
-          <div fxFlex="auto" class="neweventpolicy-divider"></div>
-          <div fxFlex="30px"></div>
-        </div>
+        <div fxFlex="20px" fxLayout="row"></div>
 
         <div fxFlex="noshrink" fxLayout="row">
           <app-syslog #syslogComponent
                       [syslogExport]="newObject.$formGroup.get(['spec']).value"
                       targetTransport="<TCP/UDP>/<port>"
-                      fxFlex="nogrow" fxLayout="column"></app-syslog>
-        </div>
-      </div>
-      <div *ngIf="isInline" class="neweventpolicy-buttoncontainer" fxFlex="nogrow"
-           fxLayout="row wrap" fxLayoutAlign="start start">
-        <div fxFlex="nogrow">
-          <span (click)="saveObject()" class="global-button-primary neweventpolicy-save">SAVE</span>
-        </div>
-        <div fxFlex="nogrow">
-          <span (click)="cancelObject()"
-                class="global-button-neutral neweventpolicy-cancel">CANCEL</span>
+                      fxFlex="nogrow" fxLayout="column"
+                      [syslogRequiredOption]="true"></app-syslog>
         </div>
       </div>
     </div>
   </div>
 </div>
+
+<ng-template #inlineButtons>
+  <app-inlinebuttons class="new-event"
+                     *ngIf="isInline"
+                     [saveButtonClass]="computeFormSubmitButtonClass()"
+                     [saveTooltip]="getSubmitButtonToolTip()"
+                     (saveFunc)="saveObject()"
+                     (cancelFunc)="cancelObject()">
+  </app-inlinebuttons>
+</ng-template>

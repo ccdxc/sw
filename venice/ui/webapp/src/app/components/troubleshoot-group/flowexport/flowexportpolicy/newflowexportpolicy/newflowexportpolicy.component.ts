@@ -32,7 +32,6 @@ export class NewflowexportpolicyComponent extends CreationForm<IMonitoringFlowEx
   @Input() maxTargets: number;
   @Input() existingObjects: IMonitoringFlowExportPolicy[] = [];
   syslogConfig: IMonitoringSyslogExport;
-  validationMessage: string = null;
   formatOptions: SelectItem[] = Utility.convertEnumToSelectItem(MonitoringFlowExportPolicySpec.propInfo['format'].enum);
 
   ExportPolicyRules: OrderedItem<any>[] = [];
@@ -98,10 +97,7 @@ export class NewflowexportpolicyComponent extends CreationForm<IMonitoringFlowEx
       targets: this.newObject.spec.exports,
     };
 
-
-    if (!this.isInline) {
-      this.setValidators(this.newObject);
-    }
+    this.setValidators(this.newObject);
 
     if (this.isInline) {
       // process match rules
@@ -226,62 +222,66 @@ export class NewflowexportpolicyComponent extends CreationForm<IMonitoringFlowEx
    * Validate user inputs
    */
   isFormValid(): boolean {
-    this.validationMessage = null;
     if (Utility.isEmpty(this.newObject.$formGroup.get(['meta', 'name']).value)) {
-      this.validationMessage = 'Error:Flow export name is required.';
+      this.submitButtonTooltip = 'Error: Flow export name is required.';
       return false;
     }
+    if (!this.isInline) {
+      if (!this.newObject.$formGroup.get(['meta', 'name']).valid) {
+        this.submitButtonTooltip = 'Flow export name is invalid or not unique';
+        return false;
+      }
+    }
     if (!this.syslogComponent.isSyLogFormValid().valid) {
-      this.validationMessage = this.syslogComponent.isSyLogFormValid().errorMessage;
+      this.submitButtonTooltip = this.syslogComponent.isSyLogFormValid().errorMessage;
       return false;
     }
 
     for (let i = 0; i < this.ExportPolicyRules.length; i++) {
       const rule: MonitoringMatchRule = this.ExportPolicyRules[i].data.rule;
       if (!(rule.$formGroup.get(['source', 'ip-addresses']).valid)) {
-        this.validationMessage =
+        this.submitButtonTooltip =
           'Error: Export ' + (i + 1) + ' source IP addresses are invalid.';
         return false;
       }
       if (!(rule.$formGroup.get(['source', 'mac-addresses']).valid)) {
-        this.validationMessage =
+        this.submitButtonTooltip =
           'Error: Export ' + (i + 1) + ' source MAC addresses are invalid.';
         return false;
       }
       if (!(rule.$formGroup.get(['destination', 'ip-addresses']).valid)) {
-        this.validationMessage =
+        this.submitButtonTooltip =
           'Error: Export ' + (i + 1) + ' destination IP addresses are invalid.';
         return false;
       }
       if (!(rule.$formGroup.get(['destination', 'mac-addresses']).valid)) {
-        this.validationMessage =
+        this.submitButtonTooltip =
           'Error: Export ' + (i + 1) + ' destination MAC addresses are invalid.';
         return false;
       }
       if (!(rule.$formGroup.get(['app-protocol-selectors', 'proto-ports']).valid)) {
-        this.validationMessage =
+        this.submitButtonTooltip =
           'Error: Export ' + (i + 1) + ' protocol/ports are invalid.';
         return false;
       }
     }
 
     if (!this.newObject.$formGroup.get(['spec', 'interval']).valid) {
-      this.validationMessage = this.newObject.$formGroup.get(['spec', 'interval']).errors.interval.message;
+      this.submitButtonTooltip = this.newObject.$formGroup.get(['spec', 'interval']).errors.interval.message;
       return false;
     }
 
     if (!this.newObject.$formGroup.get(['spec', 'template-interval']).valid) {
-      this.validationMessage = this.newObject.$formGroup.get(['spec', 'template-interval']).errors['template-interval'].message;
+      this.submitButtonTooltip = this.newObject.$formGroup.get(['spec', 'template-interval']).errors['template-interval'].message;
       return false;
     }
-
     if (!this.newObject.$formGroup.valid) {
-      this.validationMessage = 'Error:Please correct validation error.';
+      this.submitButtonTooltip = 'Error: Please correct validation error.';
       return false;
     }
+    this.submitButtonTooltip = 'Ready to submit';
     return true;
   }
-
   setToolbar() {
     const currToolbar = this.controllerService.getToolbarData();
     currToolbar.buttons = [
@@ -289,8 +289,8 @@ export class NewflowexportpolicyComponent extends CreationForm<IMonitoringFlowEx
         cssClass: 'global-button-primary flowexportpolicy-button',
         text: 'CREATE FLOW EXPORT POLICY',
         callback: () => { this.saveObject(); },
-        computeClass: () => this.computeButtonClass(),
-        genTooltip: () => this.getTooltip(),
+        computeClass: () => this.computeFormSubmitButtonClass(),
+        genTooltip: () => this.getSubmitButtonToolTip()
       },
       {
         cssClass: 'global-button-neutral flowexportpolicy-button',
@@ -300,11 +300,6 @@ export class NewflowexportpolicyComponent extends CreationForm<IMonitoringFlowEx
     ];
 
     this._controllerService.setToolbarData(currToolbar);
-  }
-
-  getTooltip(): string {
-    this.isFormValid();
-    return Utility.isEmpty(this.validationMessage) ? 'Ready to save flow export policy' : this.validationMessage;
   }
 
   getObjectValues(): IMonitoringFlowExportPolicy {

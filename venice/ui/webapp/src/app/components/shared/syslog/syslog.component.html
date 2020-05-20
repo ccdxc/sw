@@ -10,11 +10,11 @@
         <ng-container *ngTemplateOutlet="syslogOptions"></ng-container>
       </app-fieldcontainer>
       <div fxFlex="10px"></div>
-      <app-fieldcontainer fieldTitle="Target">
-        <div fxFlex="nogrow" fxLayout="column" [@slideInOut]
+      <app-fieldcontainer *ngIf="showTargets" fieldTitle="Target">
+        <div fxFlex="" fxLayout="column" [@slideInOut]
              *ngFor="let target of targets; let index = index; let first = first ;let last=last"
              [formGroupName]="index">
-          <div fxFlex="nogrow" fxLayout="row wrap" fxLayoutGap="10px">
+          <div fxFlex="nogrow" fxLayout="row wrap">
             <ng-container *ngTemplateOutlet="syslogTargets; context:{index:index}"></ng-container>
             <!-- Commenting out as it is not currently implemented in the backend -->
             <!-- <ng-container *ngTemplateOutlet="syslogCredentials; context:{index:index}"></ng-container> -->
@@ -41,7 +41,8 @@
   </div>
 
   <ng-template #syslogOptions>
-    <div fxFlex="nogrow" fxLayout="row wrap" [formGroup]="syslogServerForm">
+    <div fxFlex="nogrow" fxLayout="row wrap" class="syslog-export-parent"
+         [formGroup]="syslogServerForm">
       <ng-container *ngIf="showSyslogOptions" formGroupName="config">
         <div fxFlex="nogrow" fxLayout="column">
           <div fxFlex="30px" fxLayout="row" class="syslog-value">
@@ -80,31 +81,39 @@
 
   <ng-template #syslogTargets let-index="index">
     <div fxFlex="10vh" fxFlex="nogrow" fxLayout="row"
+         class="syslog-target-parent-gateway"
          [formGroup]="syslogServerForm.get(['targets', index])">
       <div fxFlex="nogrow" fxLayout="row">
-        <div fxFlex="none" fxLayout="row" class="syslog-value">
-          <span *ngIf="syslogRequiredOption" [ngClass]="{
+        <div fxFlex="" fxLayout="row" class="syslog-value">
+          <span class="syslog-target-span" *ngIf="syslogRequiredOption" [ngClass]="{
                           'requiredField': isFieldEmptySysLog(syslogServerForm.get(['targets', index]).value['destination'])
                         }">
             <input formControlName="destination" appErrorTooltip fxFlex="nogrow"
                    class="syslog-input syslog-destination"
                    spellcheck="false" type="text" pInputText appFloatLabel="Destination">
           </span>
-          <span *ngIf="!syslogRequiredOption">
+          <span class="syslog-target-span" *ngIf="!syslogRequiredOption">
             <input formControlName="destination" appErrorTooltip fxFlex="nogrow"
                    class="syslog-input syslog-destination"
                    spellcheck="false" type="text" pInputText appFloatLabel="Destination">
           </span>
         </div>
-        <div fxFlex="none" fxLayout="row" class="syslog-value">
-          <span *ngIf="syslogRequiredOption" [ngClass]="{
+        <div fxFlex fxLayout="row" class="syslog-value">
+          <span>
+            <input formControlName="gateway" appErrorTooltip fxFlex="nogrow"
+                   class="syslog-input syslog-gateway"
+                   spellcheck="false" type="text" pInputText appFloatLabel="Gateway">
+          </span>
+        </div>
+        <div fxFlex="" fxLayout="row" class="syslog-value">
+          <span class="syslog-target-span" *ngIf="syslogRequiredOption" [ngClass]="{
                       'requiredField': isFieldEmptySysLog(syslogServerForm.get(['targets', index]).value['transport'])
                     }">
             <input formControlName="transport" appErrorTooltip fxFlex="nogrow"
                    class="syslog-input syslog-transport"
                    spellcheck="false" type="text" pInputText appFloatLabel="Transport">
           </span>
-          <span *ngIf="!syslogRequiredOption">
+          <span class="syslog-target-span" *ngIf="!syslogRequiredOption">
             <input formControlName="transport" appErrorTooltip fxFlex="nogrow"
                    class="syslog-input syslog-transport"
                    spellcheck="false" type="text" pInputText appFloatLabel="Transport">

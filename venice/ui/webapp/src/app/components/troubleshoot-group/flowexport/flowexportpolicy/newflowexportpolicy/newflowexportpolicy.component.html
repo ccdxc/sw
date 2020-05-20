@@ -1,6 +1,7 @@
-<div fxFlex="auto" fxLayout="column" class="new-flow-export-container">
+<div fxFlex="auto" fxLayout="column" class="psm-form new-flow-export-container">
   <app-inlinebuttons class="new-workload" *ngIf="isInline"
-                     [saveButtonClass]="computeInlineButtonClass()" [saveTooltip]="getTooltip()"
+                     [saveButtonClass]="computeFormSubmitButtonClass()"
+                     [saveTooltip]="getSubmitButtonToolTip()"
                      (saveFunc)="saveObject()" (cancelFunc)="cancelObject()">
   </app-inlinebuttons>
   <div fxFlex="auto" fxLayout="row wrap"

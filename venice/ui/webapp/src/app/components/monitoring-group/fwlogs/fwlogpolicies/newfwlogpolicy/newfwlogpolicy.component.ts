@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, EventEmitter, Input, OnInit, Output, ViewEncapsulation, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, EventEmitter, Input, OnInit, Output, ViewEncapsulation, ViewChild, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { Animations } from '@app/animations';
 import { ToolbarButton } from '@app/models/frontend/shared/toolbar.interface';
 import { ControllerService } from '@app/services/controller.service';
@@ -9,7 +9,7 @@ import { SyslogComponent } from '@app/components/shared/syslog/syslog.component'
 import { Utility } from '@app/common/Utility';
 import { CreationForm } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
-import { AbstractControl } from '@angular/forms';
+import { ValidatorFn, AbstractControl } from '@angular/forms';
 
 @Component({
   selector: 'app-newfwlogpolicy',
@@ -17,23 +17,25 @@ import { AbstractControl } from '@angular/forms';
   styleUrls: ['./newfwlogpolicy.component.scss'],
   animations: [Animations],
   encapsulation: ViewEncapsulation.None,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class NewfwlogpolicyComponent extends CreationForm<IMonitoringFwlogPolicy, MonitoringFwlogPolicy> implements OnInit, AfterViewInit {
   public static LOGOPTIONS_ALL = 'FIREWALL_ACTION_ALL';
   public static LOGOPTIONS_NONE = 'FIREWALL_ACTION_NONE';
   public static PSM_TARGET = 'psm-target';
 
-  createButtonTooltip: string ;
   @ViewChild('syslogComponent') syslogComponent: SyslogComponent;
   @ViewChild('logOptions') logOptionsMultiSelect: MultiSelect;
 
   @Input() maxTargets: number;
+  @Input() existingObjects: MonitoringFwlogPolicy[] = [];
 
   filterOptions: SelectItem[] = Utility.convertEnumToSelectItem(MonitoringFwlogPolicySpec.propInfo['filter'].enum, [NewfwlogpolicyComponent.LOGOPTIONS_NONE]);
 
   constructor(protected _controllerService: ControllerService,
     protected uiconfigsService: UIConfigsService,
     protected _monitoringService: MonitoringService,
+    private cdr: ChangeDetectorRef
   ) {
     super(_controllerService, uiconfigsService, MonitoringFwlogPolicy);
   }
@@ -43,24 +45,43 @@ export class NewfwlogpolicyComponent extends CreationForm<IMonitoringFwlogPolicy
   }
 
   postNgInit() {
-      // Existing fwl-policies may not have spec['psm-target'],  so we  build it
-      if (!this.newObject.spec[NewfwlogpolicyComponent.PSM_TARGET]) {
-        this.newObject.spec[NewfwlogpolicyComponent.PSM_TARGET] =  new MonitoringPSMExportTarget(this.newObject.spec[NewfwlogpolicyComponent.PSM_TARGET]);
-        this.newObject.setFormGroupValuesToBeModelValues();
-      }
+    // Existing fwl-policies may not have spec['psm-target'],  so we  build it
+    if (!this.newObject.spec[NewfwlogpolicyComponent.PSM_TARGET]) {
+      this.newObject.spec[NewfwlogpolicyComponent.PSM_TARGET] =  new MonitoringPSMExportTarget(this.newObject.spec[NewfwlogpolicyComponent.PSM_TARGET]);
+      this.newObject.setFormGroupValuesToBeModelValues();
+    }
+    this.setValidators(this.newObject);
   }
-
+  postViewInit() {
+    this.cdr.detectChanges();
+  }
   // Empty Hook
   isFormValid(): boolean {
-    this.createButtonTooltip = null;
-     if (!this.syslogComponent.isSyLogFormValid()['valid']) {
-       this.createButtonTooltip = this.syslogComponent.isSyLogFormValid()['errorMessage'];
-       return false;
-     }
-     this.createButtonTooltip = 'Ready to save Firewall log Policy.';
-     return true;
+    if (Utility.isEmpty(this.newObject.$formGroup.get(['meta', 'name']).value)) {
+      this.submitButtonTooltip = 'Policy name is required';
+      return false;
+    }
+    if (this.syslogComponent && this.syslogComponent.syslogRequiredOption && !this.syslogComponent.isSyLogFormValid()['valid']) {
+      this.submitButtonTooltip = this.syslogComponent.isSyLogFormValid()['errorMessage'];
+      return false;
+    }
+    if (!this.isInline) {
+      if (!this.newObject.$formGroup.get(['meta', 'name']).valid) {
+        this.submitButtonTooltip = 'Policy name is invalid or not unique';
+        return false;
+      }
+    }
+    return true;
+  }
+  setValidators(newMonitoringFwlogPolicy: MonitoringFwlogPolicy) {
+    newMonitoringFwlogPolicy.$formGroup.get(['meta', 'name']).setValidators([
+      this.newObject.$formGroup.get(['meta', 'name']).validator,
+      this.isNewFlowExportPolicyNameValid(this.existingObjects)]);
   }
 
+  isNewFlowExportPolicyNameValid(existingObjects: IMonitoringFwlogPolicy[]): ValidatorFn {
+    return Utility.isModelNameUniqueValidator(existingObjects, 'new-Firewall-Log-Policy-name');
+  }
   setToolbar() {
     const currToolbar = this.controllerService.getToolbarData();
     currToolbar.buttons = [
@@ -68,8 +89,8 @@ export class NewfwlogpolicyComponent extends CreationForm<IMonitoringFwlogPolicy
         cssClass: 'global-button-primary fwlogpolicies-button fwlogpolicies-button-SAVE',
         text: 'CREATE FIREWALL LOG POLICY',
         callback: () => { this.saveObject(); },
-        genTooltip: () => this.getTooltip(),
-        computeClass: () => this.computeButtonClass()
+        computeClass: () => this.computeFormSubmitButtonClass(),
+        genTooltip: () => this.getSubmitButtonToolTip()
       },
       {
         cssClass: 'global-button-neutral fwlogpolicies-button fwlogpolicies-button-CANCEL',
@@ -126,15 +147,5 @@ export class NewfwlogpolicyComponent extends CreationForm<IMonitoringFwlogPolicy
         this.logOptionsMultiSelect.value = values;
       }
     }
-  }
-
-  getTooltip() {
-    if (Utility.isEmpty(this.newObject.$formGroup.get(['meta', 'name']).value)) {
-      return 'Error: Name field is empty.';
-    }
-    if (!this.newObject.$formGroup.get(['meta', 'name']).valid)  {
-      return 'Error: Name field is invalid.';
-    }
-    return this.createButtonTooltip;
   }
 }

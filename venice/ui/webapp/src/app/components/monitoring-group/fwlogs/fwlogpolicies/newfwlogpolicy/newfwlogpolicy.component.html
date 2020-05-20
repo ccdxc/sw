@@ -1,6 +1,7 @@
-<div fxFlex="auto" fxLayout="column">
+<div fxFlex="auto" fxLayout="column" class="psm-form">
   <ng-container *ngTemplateOutlet="inlineButtons"></ng-container>
-  <div fxFlex="none" fxLayout="row" fxLayoutAlign="center start" class="newfwlogpolicy-container">
+  <div fxFlex="none" fxLayout="column" class="newfwlogpolicy-container"
+       fxLayoutAlign="start center" [class]="isInline? 'newfwlogpolicy-editform-inline' : ''">
     <ng-container *ngTemplateOutlet="meta"></ng-container>
     <!-- Limiting the size of the creation form - If it is inline, we have more room to fit in the save/cancel buttons -->
   </div>
@@ -66,26 +67,22 @@
       </div>
 
       <div fxFlex="noshrink" fxLayout="row">
-        <app-syslog #syslogComponent [syslogFieldsetWidth]="true" [syslogRequiredOption]="true"
+        <app-syslog #syslogComponent
+                    [syslogFieldsetWidth]="true"
+                    [syslogRequiredOption]="!newObject.$formGroup.get(['spec', 'psm-target', 'enable']).value"
                     [syslogExport]="newObject.$formGroup.get(['spec']).value"
                     targetTransport="<TCP/UDP>/<port>"
-                    [maxTargets]="maxTargets" fxFlex="nogrow" fxLayout="column"></app-syslog>
+                    fxFlex="nogrow" fxLayout="column"></app-syslog>
       </div>
     </div>
   </div>
 </ng-template>
 <ng-template #inlineButtons>
-  <div *ngIf="isInline" class="newfwlogpolicy-buttoncontainer" fxFlex="nogrow" fxLayout="row"
-       fxLayoutAlign="start end">
-    <div fxFlex="auto" fxLayoutAlign="end center" [style.max-height]="'0px'">
-      <div fxFlex="nogrow" class="button-container">
-        <span (click)="saveObject()"
-              class="global-button-primary global-button-padding newfwlogpolicy-save">SAVE</span>
-      </div>
-      <div fxFlex="nogrow" class="button-container">
-        <span (click)="cancelObject()"
-              class="global-button-primary global-button-padding newfwlogpolicy-cancel">CANCEL</span>
-      </div>
-    </div>
-  </div>
+  <app-inlinebuttons class="newfwlogpolicy-buttoncontainer"
+                     *ngIf="isInline"
+                     [saveButtonClass]="computeFormSubmitButtonClass()"
+                     [saveTooltip]="getSubmitButtonToolTip()"
+                     (saveFunc)="saveObject()"
+                     (cancelFunc)="cancelObject()">
+  </app-inlinebuttons>
 </ng-template>
