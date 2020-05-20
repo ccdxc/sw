@@ -2,8 +2,10 @@ import { Component, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Animations } from '@app/animations';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
+import { ObjectsRelationsUtility } from '@app/common/ObjectsRelationsUtility';
 import { Utility } from '@app/common/Utility';
-import { BaseComponent } from '@app/components/base/base.component';
+import { DataComponent } from '@app/components/shared/datacomponent/datacomponent.component';
+import { LabelEditorMetadataModel } from '@app/components/shared/labeleditor';
 import { TableCol } from '@app/components/shared/tableviewedit';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { ControllerService } from '@app/services/controller.service';
@@ -13,8 +15,8 @@ import { SearchService } from '@app/services/generated/search.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { ClusterDistributedServiceCard, ClusterHost } from '@sdk/v1/models/generated/cluster';
 import { SearchSearchRequest } from '@sdk/v1/models/generated/search';
+import { IStagingBulkEditAction } from '@sdk/v1/models/generated/staging';
 import { WorkloadWorkload } from '@sdk/v1/models/generated/workload';
-import { ObjectsRelationsUtility } from '@app/common/ObjectsRelationsUtility';
 
 @Component({
   selector: 'app-workloaddetail',
@@ -23,12 +25,13 @@ import { ObjectsRelationsUtility } from '@app/common/ObjectsRelationsUtility';
   animations: [Animations],
   encapsulation: ViewEncapsulation.None
 })
-export class WorkloaddetailComponent extends BaseComponent implements OnInit, OnDestroy {
+export class WorkloaddetailComponent extends DataComponent implements OnInit, OnDestroy {
   allHosts: ReadonlyArray<ClusterHost> = [];
   allNaples: ReadonlyArray<ClusterDistributedServiceCard> = [];
   initHosts: boolean;
   initNaples: boolean;
   initWorkload: boolean;
+  inLabelEditMode: boolean;
   interfaceColumns: TableCol[] = [];
   interfaceColumnsAll: ReadonlyArray<TableCol> = [
     { field: 'mac-address', header: 'MAC Address', sortable: true },
@@ -42,6 +45,7 @@ export class WorkloaddetailComponent extends BaseComponent implements OnInit, On
     { field: 'value', header: 'Value', sortable: true },
   ];
   labelData: Array<any> = [];
+  labelEditorMetaData: LabelEditorMetadataModel;
   loading: boolean;
   naples: ClusterDistributedServiceCard[] = [];
   selectedId: string;
@@ -255,6 +259,53 @@ export class WorkloaddetailComponent extends BaseComponent implements OnInit, On
         { label: name, url: Utility.getBaseUIUrl() + 'workload/' + name }
       ]
     });
+  }
+
+  editLabels() {
+    this.labelEditorMetaData = {
+      title: 'Edit Workload Labels',
+      keysEditable: true,
+      valuesEditable: true,
+      propsDeletable: true,
+      extendable: true,
+      save: true,
+      cancel: true,
+    };
+
+    if (!this.inLabelEditMode) {
+      this.inLabelEditMode = true;
+    }
+  }
+
+  handleEditSave(updatedWorkloads: WorkloadWorkload[]) {
+    this.bulkeditLabels(updatedWorkloads);
+  }
+
+  handleEditCancel($event) {
+    this.inLabelEditMode = false;
+  }
+
+  onBulkEditSuccess(veniceObjects: any[], stagingBulkEditAction: IStagingBulkEditAction, successMsg: string, failureMsg: string) {
+    this.inLabelEditMode = false;
+  }
+
+  onBulkEditFailure(error: Error, veniceObjects: any[], stagingBulkEditAction: IStagingBulkEditAction, successMsg: string, failureMsg: string, ) {}
+
+  /**
+   * Invoke changing meta.lablels using bulkedit API
+   * @param updatedWorkloads
+   */
+  bulkeditLabels(updatedWorkloads: WorkloadWorkload[]) {
+    const successMsg: string = 'Updated workload labels';
+    const failureMsg: string = 'Failed to update workload labels';
+    const stagingBulkEditAction = this.buildBulkEditLabelsPayload(updatedWorkloads);
+    this.bulkEditHelper(updatedWorkloads, stagingBulkEditAction, successMsg, failureMsg );
+  }
+
+  clearSelectedDataObjects() {}
+
+  getSelectedDataObjects() {
+    return this.selectedObj ? [this.selectedObj] : [];
   }
 
   ngOnDestroy() {

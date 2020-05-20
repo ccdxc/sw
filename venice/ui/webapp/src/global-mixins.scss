@@ -406,26 +406,38 @@ $backgroundGradient: linear-gradient(to left, rgba(255, 255, 255, 0), rgba(255, 
 }
 
 .detail-card-header,
-.detail-card-header-actions {
+.detail-card-header-sm,
+.detail-card-header-actions,
+.detail-card-header-actions-sm {
   @include primary-font(24px, $mediumGray, 300);
   align-items: center;
   display: flex;
   height: 29px;
-  padding-left: 6px;
-  padding-right: 10px;
+  padding: 0 10px 0 6px;
   width: 100%;
 }
 
-.detail-card-header-sm {
+.detail-card-header-sm,
+.detail-card-header-actions-sm {
   @include primary-font(18px, $mediumGray, 300);
-  align-items: center;
-  display: flex;
   height: 22px;
-  padding-right: 10px;
+  padding: 0 10px 0 0;
 }
 
-.detail-card-header-actions {
+.detail-card-header-actions,
+.detail-card-header-actions-sm {
   justify-content: flex-end;
+}
+
+.detail-card-header-actions-sm .global-table-action-icon {
+  align-items: center;
+  display: flex;
+  font-size: 18px;
+  height: 22px;
+  justify-content: center;
+  padding-left: 0;
+  padding-top: 0;
+  width: 22px;
 }
 
 .detail-card-label {

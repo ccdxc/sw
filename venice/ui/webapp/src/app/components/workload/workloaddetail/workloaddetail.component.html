@@ -56,7 +56,23 @@
         </div>
         <div class="workloaddetail-col-3">
           <div class="detail-card-border"></div>
-          <div class="detail-card-header-sm">Labels</div>
+          <div fxLayout="row">
+            <div class="detail-card-header-sm">Labels</div>
+            <div class="detail-card-header-actions-sm"
+                 *roleGuard="'workloadworkload_update'">
+              <mat-icon class="global-table-action-icon"
+                        (click)="editLabels()"
+                        matTooltip="Edit labels">
+                edit
+              </mat-icon>
+              <app-labeleditor (cancelEmitter)="handleEditCancel($event)"
+                               (saveEmitter)="handleEditSave($event)"
+                               [inLabelEditMode]="inLabelEditMode"
+                               [metadata]="labelEditorMetaData"
+                               [objects]="[selectedObj]">
+              </app-labeleditor>
+            </div>
+          </div>
           <div class="detail-card-border"></div>
           <app-pentable #labelTable
                         [bodyTemplate]="labelBodyTemplate"

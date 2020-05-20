@@ -257,7 +257,7 @@ export class WorkloadComponent extends DataComponent  implements OnInit {
 
   setDefaultToolbar() {
     let buttons = [];
-    if (this.uiconfigsService.isAuthorized(UIRolePermissions.securitynetworksecuritypolicy_create)) {
+    if (this.uiconfigsService.isAuthorized(UIRolePermissions.workloadworkload_create)) {
       buttons = [{
         cssClass: 'global-button-primary global-button-padding',
         text: 'ADD WORKLOAD',
@@ -536,7 +536,7 @@ export class WorkloadComponent extends DataComponent  implements OnInit {
 
   editLabels() {
     this.labelEditorMetaData = {
-      title: 'Edit workload labels',
+      title: 'Edit Workload Labels',
       keysEditable: true,
       valuesEditable: true,
       propsDeletable: true,
