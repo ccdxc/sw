@@ -17,7 +17,7 @@ testcases:
 
     -   name        : DISRUPTIVE_UPGRADE_GRACEFUL
         testcase    : testcases.naples_upgrade.disruptive_upgrade
-        disable     : True
+        disable     : False
         ignore      : True
         iterators   :
             type    : simple
@@ -25,6 +25,6 @@ testcases:
             workload_type : [ remote ]
             workload_scope : [ inter-subnet ]
         args        :
-            sleep   : 200
+            sleep   : 300
             mode    : "graceful"
             type    : remote_only

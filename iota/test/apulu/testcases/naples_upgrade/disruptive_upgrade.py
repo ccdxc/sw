@@ -21,7 +21,7 @@ def PacketTestSetup(tc):
     tc.bg_cmd_cookies = None
     tc.bg_cmd_resp = None
     tc.pktsize = 128
-    tc.duration = tc.sleep + 200
+    tc.duration = tc.sleep
     tc.background = True
     tc.pktlossverif = False
     tc.interval = 0.001 #1msec
@@ -74,7 +74,7 @@ def UpdateConfigAfterUpgrade(tc):
 def Setup(tc):
     tc.Nodes = api.GetNaplesHostnames()
     tc.skip = False
-    tc.sleep = getattr(tc.args, "sleep", 60)
+    tc.sleep = getattr(tc.args, "sleep", 200)
     tc.upgrade_mode = getattr(tc.args, "mode", None)
 
     # setup packet test based on upgrade_mode
@@ -87,6 +87,7 @@ def Setup(tc):
     for node in tc.Nodes:
         api.Trigger_AddNaplesCommand(req, node, "touch /data/upgrade_to_same_firmware_allowed")
         api.Trigger_AddNaplesCommand(req, node, "rm -rf /data/techsupport/DSC_TechSupport_*")
+        api.Trigger_AddNaplesCommand(req, node, "rm -rf /update/pds_upg_status.txt")
         api.Trigger_AddNaplesCommand(req, node, "cp /update/{} /update/{}".format(UPGRADE_NAPLES_PKG, NAPLES_PKG))
     resp = api.Trigger(req)
 
@@ -94,17 +95,21 @@ def Setup(tc):
         api.PrintCommandResults(cmd_resp)
         if cmd_resp.exit_code != 0:
             api.Logger.error("Setup failed %s", cmd_resp.command)
+            tc.skip = True
+            return api.types.status.FAILURE
 
     return api.types.status.SUCCESS
+
 
 def Trigger(tc):
     if tc.skip:
         return api.types.status.SUCCESS
+
     req = api.Trigger_CreateExecuteCommandsRequest(serial=False)
     for n in tc.Nodes:
         cmd = 'curl -k -d \'{"kind": "SmartNICRollout","meta": {"name": "test disruptive upgrade","tenant": "tenant-foo"},"spec": {"ops": [{"op": 4,"version": "0.1"}]}}\' -X POST -H "Content-Type:application/json" ' + 'https://' + api.GetNicIntMgmtIP(n) + ':'+utils.GetNaplesMgmtPort()+'/api/v1/naples/rollout/'
         api.Logger.info("Sending rollout request cmd : %s"%cmd)
-        api.Trigger_AddHostCommand(req, n, cmd, timeout=130)
+        api.Trigger_AddHostCommand(req, n, cmd, timeout=30)
     tc.resp = api.Trigger(req)
 
     api.Logger.info("Rollout request processing complete")
@@ -120,21 +125,41 @@ def Verify(tc):
 
     if tc.resp is None:
         api.Logger.error("Received empty response for config request")
-        #return api.types.status.FAILURE
+        return api.types.status.FAILURE
     else:
         for cmd in tc.resp.commands:
             api.PrintCommandResults(cmd)
             if cmd.exit_code != 0:
                 api.Logger.error("Rollout request failed")
-                #return api.types.status.FAILURE
-    api.Logger.info("Sleep for 30 secs before pushing Interface updates after upgrade")
-    misc_utils.Sleep(30)
+                return api.types.status.FAILURE
 
-    UpdateConfigAfterUpgrade(tc)
+    # wait for upgrade to complete. status can be found from the presence of /update/pds_upg_status.txt
+    api.Logger.info("Sleep for 60 secs before checking for /update/pds_upg_status.txt")
+    misc_utils.Sleep(60)
+    file_not_found = True
+    while file_not_found:
+        misc_utils.Sleep(5)
+        req = api.Trigger_CreateExecuteCommandsRequest(serial=False)
+        for node in tc.Nodes:
+            api.Trigger_AddNaplesCommand(req, node, "ls /update/pds_upg_status.txt")
+        resp = api.Trigger(req)
 
-    api.Logger.info("Sleep for %s secs for the UPGRADE processing to complete"%tc.sleep)
-    misc_utils.Sleep(tc.sleep)
+        file_not_found = False
+        for cmd_resp in resp.commands:
+            #api.PrintCommandResults(cmd_resp)
+            if cmd_resp.exit_code != 0:
+                file_not_found = True
+                api.Logger.error("File /update/pds_upg_status.txt not found")
+            else:
+                api.Logger.info("File /update/pds_upg_status.txt found")
 
+    if tc.upgrade_mode:
+        api.Logger.info("Sleep for 1 secs before pushing Interface updates after upgrade")
+        misc_utils.Sleep(1)
+        UpdateConfigAfterUpgrade(tc)
+
+    # below POST is required until NMD is able to get updated
+    # on the upgrade status after completion.
     tmp_req = api.Trigger_CreateExecuteCommandsRequest(serial=False)
     for n in tc.Nodes:
         cmd = 'curl -k -d \'{"kind": "SmartNICRollout","meta": {"name": "test disruptive upgrade","tenant": "tenant-foo"},"spec": {"ops": [{"op": 4,"version": "0.1"}]}}\' -X POST -H "Content-Type:application/json" ' + 'https://' + api.GetNicIntMgmtIP(n) + ':'+utils.GetNaplesMgmtPort()+'/api/v1/naples/rollout/'
@@ -142,6 +167,9 @@ def Verify(tc):
         api.Logger.info("Sending Temporary Second rollout status POST request: %s"%(cmd))
     tc.resp = api.Trigger(tmp_req)
 
+    api.Logger.info("Sleep for 30 secs before querying rollout status")
+    misc_utils.Sleep(30)
+    # get rollout status
     req = api.Trigger_CreateExecuteCommandsRequest(serial=False)
     for n in tc.Nodes:
         cmd = 'curl -k https://' + api.GetNicIntMgmtIP(n) + ':'+utils.GetNaplesMgmtPort()+'/api/v1/naples/rollout/'
@@ -156,63 +184,64 @@ def Verify(tc):
         api.Logger.error(f"Exception occured in sending rollout status get.{e}")
         return api.types.status.FAILURE
 
+    result = api.types.status.SUCCESS
     for cmd in tc.resp.commands:
         if cmd.exit_code != 0:
             api.Logger.info("Rollout status get request returned failure")
-            return api.types.status.FAILURE
+            result = api.types.status.FAILURE
+            continue
         resp = json.loads(cmd.stdout)
         try:
             for item in resp['Status']['status']:
                 if not item['Op'] == 4:
                     api.Logger.info("opcode is bad")
-                    return api.types.status.FAILURE
+                    result = api.types.status.FAILURE
                 if "fail" in tc.iterators.option:
                     if not item['opstatus'] == 'failure':
                         api.Logger.info("opstatus is bad")
-                        return api.types.status.FAILURE
+                        result = api.types.status.FAILURE
                     if tc.iterators.option not in item['Message']:
                         api.Logger.info("message is bad")
-                        return api.types.status.FAILURE
+                        result = api.types.status.FAILURE
                 else:
                     if not item['opstatus'] == 'success':
-                        api.Logger.info("opstatus is bad")
-                        return api.types.status.FAILURE
+                        api.Logger.info("opstatus(%s) is bad"%(item['opstatus']))
+                        result = api.types.status.FAILURE
                     else:
                         api.Logger.info("Rollout status is SUCCESS")
         except Exception as e:
             api.Logger.error("resp: ", json.dumps(resp, indent=1))
             api.Logger.error(f"Exception occured in parsing response: {e}")
 
-    result = api.types.status.SUCCESS
-
     if tc.upgrade_mode:
+        api.Logger.info("Sleep for %s secs for traffic test to complete"%tc.sleep)
+        misc_utils.Sleep(tc.sleep)
+
         # ensure connectivity after upgrade
-        if ping.TestPing(tc, 'user_input', "ipv4", tc.pktsize, interval=tc.interval, \
+        if ping.TestPing(tc, 'user_input', "ipv4", tc.pktsize, interval=0.5, \
                 count=5, background=False) != api.types.status.SUCCESS:
             api.Logger.info("Connectivit check failed after upgrade")
-            ret = api.types.status.FAILURE
-
-    api.Logger.info("Sleeping additional 60 secs for checking background ping stats")
-    misc_utils.Sleep(60)
-
-    pkt_loss_duration = 0
-    if tc.upgrade_mode and tc.background:
-        misc_utils.Sleep (5)
-        if ping.TestTerminateBackgroundPing(tc, tc.pktsize,\
-              pktlossverif=tc.pktlossverif) != api.types.status.SUCCESS:
-            api.Logger.error("Failed in Ping background command termination.")
             result = api.types.status.FAILURE
-        # calculate max packet loss duration for background ping
-        pkt_loss_duration = ping.GetMaxPktLossDuration(tc, interval=tc.interval)
-        if pkt_loss_duration != 0:
-            api.Logger.error("Max Packet Loss Duration during UPGRADE is {} Secs".format(\
-                        int(pkt_loss_duration)))
-            if tc.pktlossverif:
+
+        pkt_loss_duration = 0
+        # terminate background traffic and calculate packet loss duration
+        if tc.background:
+            if ping.TestTerminateBackgroundPing(tc, tc.pktsize,\
+                  pktlossverif=tc.pktlossverif) != api.types.status.SUCCESS:
+                api.Logger.error("Failed in Ping background command termination.")
                 result = api.types.status.FAILURE
-        else:
-            api.Logger.info("No Packet Loss Found during UPGRADE Test")
+            # calculate max packet loss duration for background ping
+            pkt_loss_duration = ping.GetMaxPktLossDuration(tc, interval=tc.interval)
+            if pkt_loss_duration != 0:
+                api.Logger.error("Max Packet Loss Duration during UPGRADE is {} Secs".format(\
+                                 pkt_loss_duration))
+                if tc.pktlossverif:
+                    result = api.types.status.FAILURE
+            else:
+                api.Logger.info("No Packet Loss Found during UPGRADE Test")
 
     return result
+
 
 def Teardown(tc):
     if tc.skip:
