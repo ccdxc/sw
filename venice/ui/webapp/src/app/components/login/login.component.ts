@@ -139,7 +139,7 @@ export class LoginComponent extends BaseComponent implements OnInit, OnDestroy {
    * @param errPayload
    */
   getErrorMessage(errPayload: any): string {
-    const msgFailtoLogin = 'Failed to login! ';
+    const msgFailtoLogin = 'Login error: ';
     const msgConsultAdmin = 'Please consult system administrator';
     if (!errPayload) {
       return msgFailtoLogin + 'for unknown reason. ' + msgConsultAdmin;
@@ -149,7 +149,7 @@ export class LoginComponent extends BaseComponent implements OnInit, OnDestroy {
       return msgFailtoLogin + ' Please refresh browser and ensure you have network connection';
     } else if (errPayload.message && errPayload.message.status === 401) {
       // handle status =401 authentication failure.
-      return msgFailtoLogin + ' Incorrect credentials';
+      return 'Incorrect credentials';
     } else if (errPayload.message && errPayload.message.status === 409) {
       // handle status =409 VS-483 enternal user and local user conflict
       return msgFailtoLogin + (errPayload.message.error && errPayload.message.error.message) ? errPayload.message.error.message : errPayload.message.status + ' ' + errPayload.message.statusText;

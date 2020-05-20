@@ -1,15 +1,17 @@
-import { Component, OnInit, Inject, Output, EventEmitter, ViewEncapsulation } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogRef, MatDialog } from '@angular/material/dialog';
-import { FormGroup, FormArray, FormControl } from '@angular/forms';
-import {SelectItem} from 'primeng/primeng';
-import { EditableColumn } from 'primeng/table';
-import { ClusterCluster, IClusterCluster } from '@sdk/v1/models/generated/cluster';
-import { Observable } from 'rxjs';
-import { IApiStatus} from '@sdk/v1/models/generated/auth';
-import { ControllerService } from '@app/services/controller.service';
-import { BaseComponent } from '@app/components/base/base.component';
-import { ClusterService } from '@app/services/generated/cluster.service';
+import { ChangeDetectionStrategy, Component, EventEmitter, Inject, OnInit, Output, ViewEncapsulation } from '@angular/core';
+import { AbstractControl, FormControl, FormGroup, ValidationErrors, ValidatorFn } from '@angular/forms';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { IPUtility } from '@app/common/IPUtility';
 import { Utility } from '@app/common/Utility';
+import { BaseComponent } from '@app/components/base/base.component';
+import { ControllerService } from '@app/services/controller.service';
+import { ClusterService } from '@app/services/generated/cluster.service';
+import { IApiStatus } from '@sdk/v1/models/generated/auth';
+import { ClusterCluster, IClusterCluster } from '@sdk/v1/models/generated/cluster';
+import { required } from '@sdk/v1/utils/validators';
+import * as _ from 'lodash';
+import { SelectItem } from 'primeng/primeng';
+import { Observable } from 'rxjs';
 
 
 @Component({
@@ -17,6 +19,7 @@ import { Utility } from '@app/common/Utility';
   templateUrl: './clusterupdate.component.html',
   styleUrls: ['./clusterupdate.component.scss'],
   encapsulation: ViewEncapsulation.None,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ClusterupdateComponent extends BaseComponent implements OnInit {
 
@@ -50,6 +53,30 @@ export class ClusterupdateComponent extends BaseComponent implements OnInit {
     this.quorumnodes = this.form.get(['spec', 'quorum-nodes']).value;
     this.ntp = this.form.get(['spec', 'ntp-servers']).value;
     this.getNodeOptions();
+
+    // Set validators
+    this.setValidators();
+  }
+
+  setValidators() {
+    this.addNTP.setValidators([this.isNTPServerNameValid()]);
+    this.tempCluster.$formGroup.get(['spec', 'virtual-ip']).setValidators([IPUtility.isValidIPValidator, required]);
+  }
+
+  isNTPServerNameValid(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const ntpValues = this.form.get(['spec', 'ntp-servers']).value;
+      const isNameExist = ( ntpValues.findIndex( val =>  val === control.value)) >= 0;
+      if (isNameExist) {
+        return {
+          objectname: {
+            required: true,
+            message: 'NTP Name is required and must be unique.'
+          }
+        };
+      }
+      return null;
+    };
   }
 
   updateQuorumNodes() {
@@ -80,10 +107,19 @@ export class ClusterupdateComponent extends BaseComponent implements OnInit {
 
   determineAddButtonClass() {
     const serverarray: any = this.form.get(['spec', 'ntp-servers']).value;
-    if (this.addNTP.value === null || this.addNTP.value === '') {
+    if (! this.isNTPServerInputValid()) {
       return 'global-button-disabled';
     }
     return '';
+  }
+
+  isNTPServerInputValid(): boolean {
+    if ( this.addNTP.dirty &&  this.addNTP.errors ) {
+      return false;
+    } else if (!this.addNTP.dirty || Utility.isEmpty( this.addNTP.value )) {
+      return false;
+    }
+    return true;
   }
 
   addtoNTPServers() {
@@ -103,17 +139,38 @@ export class ClusterupdateComponent extends BaseComponent implements OnInit {
   }
 
   onNoClick(): void {
-    this.form.setValue(this.data.cluster);
+   // this.form.setValue(this.data.cluster);
+   //  this.tempCluster.setFormGroupValuesToBeModelValues();
     this.formClose.emit();
     this.dialogRef.close();
   }
 
-  /** currently the save button is disabled because modifying cluster configuration is not allowed on
-   * backend yet. Later, when backend allows cluster fields like ntp-server, quorum-nodes, etc can be modified,
-   * we can modify this validateInputs function.
-  */
+  /**
+   * Control whether to enable "commit change" button
+   *
+   */
   validateInputs() {
-    return 'global-button-disabled';
+    return ( this.isFormValid()) ? '' : 'global-button-disabled';
+  }
+
+  /**
+    * If form is not dirty, consider form is not valid
+   * otherwise, check form.validity
+   */
+  isFormValid(): boolean {
+    /* if (!this.tempCluster.$formGroup.dirty) {
+      return false;
+    } */
+    if (! this.tempCluster.$formGroup.valid) {
+      return false;
+    }
+    return this.isFormValueChanged();
+  }
+
+  private isFormValueChanged() {
+    const modelValue = Utility.trimUIFields(this.tempCluster.getModelValues());
+    const formValue = Utility.trimUIFields(this.tempCluster.getFormGroupValues());
+    return !_.isEqual(formValue, modelValue);
   }
 
   saveChanges() {

@@ -98,18 +98,13 @@
       <div fxFlex="none" fxLayout="row">
         <!-- Field titles -->
         <div fxFlex="50" fxLayout="column">
-          <!-- Removing VIP as its not supported currently -->
-          <!-- <div class="cluster-node-fieldtitle" fxFlex="30px" fxLayout="row"
+          <div class="cluster-node-fieldtitle" fxFlex="30px" fxLayout="row"
                fxLayoutAlign="start center">
             <div>Virtual IP:</div>
-          </div> -->
+          </div>
           <div class="cluster-node-fieldtitle" fxFlex="30px" fxLayout="row"
                fxLayoutAlign="start center">
             <div>Name:</div>
-          </div>
-          <div class="cluster-node-fieldtitle" fxFlex="45px" fxLayout="row"
-               fxLayoutAlign="start start">
-            <div>NTP Servers:</div>
           </div>
           <div class="cluster-node-fieldtitle" fxFlex="30px" fxLayout="row"
                fxLayoutAlign="start center">
@@ -119,20 +114,19 @@
                fxLayoutAlign="start center">
             <div>Auto Admit DSCs:</div>
           </div>
+          <div class="cluster-node-fieldtitle" fxLayout="row"
+               fxLayoutAlign="start start">
+            <div>NTP Servers:</div>
+          </div>
         </div>
         <!-- Values -->
         <div fxFlex="none" fxLayout="column">
-          <!-- Removing VIP as its not supported currently -->
-          <!-- <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center" class="cluster-node-value">
+          <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center" class="cluster-node-value">
             <div class="cluster-details-panel-virtual-ip">{{ cluster?.spec['virtual-ip'] }}</div>
-          </div> -->
+          </div>
           <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center" class="cluster-node-value">
             <div class="cluster-details-panel-cluster-name">
               {{ cluster?.meta.name }}</div>
-          </div>
-          <div fxFlex="45px" fxLayout="row" fxLayoutAlign="start start" class="cluster-node-value">
-            <div class="cluster-details-panel-ntp-servers"
-                 [innerHTML]="cluster?.spec['ntp-servers'].join('<br>')"></div>
           </div>
           <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center" class="cluster-node-value">
             <div class="cluster-details-panel-last-leader-transition-time">
@@ -142,12 +136,16 @@
             <div class="cluster-details-panel-auto-admit-nics">
               {{ (cluster?.spec['auto-admit-dscs'] === true) ? 'yes' : 'no' }}</div>
           </div>
+          <div fxLayout="row" fxLayoutAlign="start start" class="cluster-node-value">
+            <div class="cluster-details-panel-ntp-servers"
+                 [innerHTML]="cluster?.spec['ntp-servers'].join('<br>')"></div>
+          </div>
         </div>
       </div>
     </div>
-    <!-- <div fxFlex fxLayout="row">
+    <div fxFlex fxLayout="row">
       <button class="global-button-primary cluster-update-button"
               (click)="showUpdateCluster()">UPDATE DETAILS</button>
-    </div> -->
+    </div>
   </div>
 </ng-template>
