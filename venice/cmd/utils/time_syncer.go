@@ -51,7 +51,7 @@ func syncTime(ctx context.Context, ntpServer, ntpContainer string) error {
 
 	doneCh := make(chan error)
 	go func(ch chan error) {
-		// docker run --net host --privileged  registry.test.pensando.io:5000/pens-ntp:v0.4  chronyd -q 'pool pool.ntp.org iburst'
+		// docker run --net host --privileged  registry.test.pensando.io:5000/pens-ntp:v0.7  chronyd -q 'pool pool.ntp.org iburst'
 		_, err := cmd.CombinedOutput()
 		if err != nil {
 			ch <- errors.Errorf("Error %v doing one-time sync of clock, server: %s", err, ntpServer)
