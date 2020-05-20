@@ -1674,6 +1674,9 @@ lif_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
     }
 #endif
 
+    HAL_TRACE_DEBUG("Printing IFs from original:");
+    lif_print_ifs(lif);
+
     dllist_move(&lif_clone->if_list_head, &lif->if_list_head);
 
     HAL_TRACE_DEBUG("Printing IFs from clone:");
@@ -2504,8 +2507,13 @@ lif_add_if (lif_t *lif, if_t *hal_if)
     entry->handle_id = hal_if->hal_handle;
 
     lif_lock(lif, __FILENAME__, __LINE__, __func__);      // lock
+    HAL_TRACE_DEBUG("Before add: Printing back ref ifs: ");
+    lif_print_ifs(lif);
     // Insert into the list
     sdk::lib::dllist_add(&lif->if_list_head, &entry->dllist_ctxt);
+
+    HAL_TRACE_DEBUG("After add: Printing back ref ifs: ");
+    lif_print_ifs(lif);
     lif_unlock(lif, __FILENAME__, __LINE__, __func__);    // unlock
 
 end:
@@ -2514,6 +2522,7 @@ end:
                     "hdls: {} => {}, ret:{}",
                     __FUNCTION__, lif->lif_id, hal_if->if_id,
                     lif->hal_handle, hal_if->hal_handle, ret);
+
     return ret;
 }
 
@@ -2534,6 +2543,10 @@ lif_del_if (lif_t *lif, if_t *hal_if)
     }
 
     lif_lock(lif, __FILENAME__, __LINE__, __func__);      // lock
+
+    HAL_TRACE_DEBUG("Before del: Printing back ref ifs: ");
+    lif_print_ifs(lif);
+
     dllist_for_each_safe(curr, next, &lif->if_list_head) {
         entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
         if (entry->handle_id == hal_if->hal_handle) {
@@ -2544,10 +2557,16 @@ lif_del_if (lif_t *lif, if_t *hal_if)
             ret = HAL_RET_OK;
         }
     }
+
+    HAL_TRACE_DEBUG("After del: Printing back ref ifs: ");
+    lif_print_ifs(lif);
+
     lif_unlock(lif, __FILENAME__, __LINE__, __func__);    // unlock
 
-    HAL_TRACE_DEBUG("pi-if:{}: del lif =/=> if, {} =/=> {}, ret:{}",
-                    __FUNCTION__, lif->lif_id, hal_if->if_id, ret);
+    HAL_TRACE_DEBUG("pi-if:{}: del lif =/=> if, {} =/=> {}, "
+                    "hdls {} =/=> {} ret:{}",
+                    __FUNCTION__, lif->lif_id, hal_if->if_id, 
+                    lif->hal_handle, hal_if->hal_handle, ret);
 
 end:
     return ret;
@@ -2794,7 +2813,8 @@ lif_print_ifs(lif_t *lif)
     dllist_for_each(lnode, &(lif->if_list_head)) {
         entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
         hal_if = find_if_by_handle(entry->handle_id);
-        HAL_TRACE_DEBUG("if: {}", hal_if->if_id);
+        HAL_TRACE_DEBUG("lif: {} -- if: id: {}, hdl: {}", lif->lif_id,
+                        hal_if ? hal_if->if_id : 0, entry->handle_id);
     }
 }
 
