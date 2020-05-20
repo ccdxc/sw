@@ -100,6 +100,16 @@ create_vnic (pds_vnic_spec_t *pds_vnic)
 }
 
 sdk_ret_t
+delete_vnic (pds_obj_key_t *key)
+{
+    if (key) {
+        return pds_vnic_delete(key);
+    } else {
+        return SDK_RET_OK;
+    }
+}
+
+sdk_ret_t
 create_subnet (pds_subnet_spec_t *pds_subnet)
 {
     if (pds_subnet) {

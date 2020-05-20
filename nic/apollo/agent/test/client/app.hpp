@@ -33,6 +33,7 @@ sdk_ret_t create_policy_impl(pds_policy_spec_t *spec);
 sdk_ret_t create_local_mapping_impl(pds_local_mapping_spec_t *spec);
 sdk_ret_t create_remote_mapping_impl(pds_remote_mapping_spec_t *spec);
 sdk_ret_t create_vnic_impl(pds_vnic_spec_t *spec);
+sdk_ret_t delete_vnic_impl(pds_obj_key_t *key);
 sdk_ret_t create_subnet_impl(pds_subnet_spec_t *spec);
 sdk_ret_t create_vpc_impl(pds_vpc_spec_t *spec = NULL);
 sdk_ret_t create_dhcp_policy_impl(pds_dhcp_policy_spec_t *spec);

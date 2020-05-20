@@ -46,5 +46,6 @@ if [[ $linecount -eq 0 ]]; then
     echo "testapp failure"
     exit 1
 fi
+
 echo "success"
 exit 0

@@ -820,6 +820,32 @@ create_vnics (uint32_t num_vpcs, uint32_t num_subnets,
     return rv;
 }
 
+sdk_ret_t
+delete_vnics (uint32_t num_vpcs, uint32_t num_subnets, uint32_t num_vnics)
+{
+    sdk_ret_t         rv = SDK_RET_OK;
+    pds_obj_key_t     key = {0};
+    uint16_t          vnic_key = 1;
+
+    SDK_ASSERT(num_vpcs * num_subnets * num_vnics <= PDS_MAX_VNIC);
+    for (uint32_t i = 1; i <= (uint64_t)num_vpcs; i++) {
+        for (uint32_t j = 1; j <= num_subnets; j++) {
+            for (uint32_t k = 1; k <= num_vnics; k++) {
+                key = test::int2pdsobjkey(vnic_key);
+                rv = delete_vnic(&key);
+                SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
+                                        "delete vnic failed, vnic key %u, ret %u",
+                                        vnic_key, rv);
+                vnic_key++;
+            }
+        }
+    }
+    rv = delete_vnic(NULL);
+    SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
+                             "delete vnic failed, ret %u", rv);
+    return rv;
+}
+
 // VPC prefix is /8, subnet id is encoded in next 10 bits (making it /18 prefix)
 // leaving LSB 14 bits for VNIC IPs
 sdk_ret_t
@@ -1883,10 +1909,20 @@ sdk_ret_t
 delete_objects (void)
 {
     sdk_ret_t ret;
+    timespec_t   start_ts, end_ts;
+    uint64_t     start_ns, end_ns;
 
     if (!apulu()) {
         return SDK_RET_OK;
     }
+
+    ret = parse_test_cfg(g_input_cfg_file, &g_test_params);
+    if (ret != SDK_RET_OK) {
+        exit(1);
+    }
+
+    clock_gettime(CLOCK_MONOTONIC, &start_ts);
+    sdk::timestamp_to_nsecs(&start_ts, &start_ns);
 
     // delete mappings
     ret = delete_mappings(g_test_params.num_vpcs,
@@ -1896,6 +1932,17 @@ delete_objects (void)
     if (ret != SDK_RET_OK) {
         return ret;
     }
+
+    ret = delete_vnics(g_test_params.num_vpcs, g_test_params.num_subnets,
+                       g_test_params.num_vnics);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+
+    clock_gettime(CLOCK_MONOTONIC, &end_ts);
+    sdk::timestamp_to_nsecs(&end_ts, &end_ns);
+    float time = (float(end_ns - start_ns)) /1000000000;
+    std::cout << "Time to delete objects: " << time << " secs" << std::endl;
 
     return ret;
 }

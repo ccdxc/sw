@@ -45,6 +45,7 @@ namespace pt = boost::property_tree;
 char *g_input_cfg_file = NULL;
 char *g_cfg_file = NULL;
 bool g_daemon_mode = false;
+bool g_nocleanup = false;
 
 // print help message showing usage of this gtest
 static void inline print_usage(char **argv)
@@ -73,12 +74,13 @@ main (int argc, char **argv)
         {"config", required_argument, NULL, 'c'},
         {"daemon", required_argument, NULL, 'd'},
         {"server", required_argument, NULL, 's'},
+        {"no-cleanup", no_argument, NULL, 'z'},
         {"help", no_argument, NULL, 'h'},
         {0, 0, 0, 0}
     };
 
     // parse CLI options
-    while ((oc = getopt_long(argc, argv, ":hdc:i:s:W;",
+    while ((oc = getopt_long(argc, argv, ":hdc:i:s:z:W;",
                              longopts, NULL)) != -1) {
         switch (oc) {
         case 'd':
@@ -102,6 +104,10 @@ main (int argc, char **argv)
                 exit(1);
             }
             g_svc_endpoint_ = g_svc_endpoint_ + ":11357";
+            break;
+
+        case 'z':
+            g_nocleanup = true;
             break;
 
         default:
@@ -132,6 +138,11 @@ main (int argc, char **argv)
     if (test_app_push_configs() != SDK_RET_OK) {
         fprintf(stderr, "Config push failed!\n");
         exit(1);
+    }
+
+    // cleanup configs
+    if (!g_nocleanup) {
+        delete_objects();
     }
 
     // deinit app

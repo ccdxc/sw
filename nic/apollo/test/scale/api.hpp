@@ -28,6 +28,7 @@ sdk_ret_t create_svc_mapping(pds_svc_mapping_spec_t *svc_mapping);
 sdk_ret_t create_local_mapping(pds_local_mapping_spec_t *pds_local_mapping);
 sdk_ret_t create_remote_mapping(pds_remote_mapping_spec_t *pds_remote_mapping);
 sdk_ret_t create_vnic(pds_vnic_spec_t *pds_vnic);
+sdk_ret_t delete_vnic(pds_obj_key_t *key);
 sdk_ret_t create_subnet(pds_subnet_spec_t *pds_subnet);
 sdk_ret_t create_vpc(pds_vpc_spec_t *pds_vpc);
 sdk_ret_t create_nat_port_block(pds_nat_port_block_spec_t *pds_napt);

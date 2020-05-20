@@ -61,6 +61,12 @@ create_vnic (pds_vnic_spec_t *pds_vnic)
 }
 
 sdk_ret_t
+delete_vnic (pds_obj_key_t *key)
+{
+    return delete_vnic_impl(key);
+}
+
+sdk_ret_t
 create_vpc (pds_vpc_spec_t *pds_vpc)
 {
     return create_vpc_impl(pds_vpc);

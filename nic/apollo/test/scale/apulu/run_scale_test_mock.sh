@@ -56,7 +56,6 @@ if [[ $? != 0 ]]; then
 fi
 
 $GDB apulu_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/$cfgfile --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apulu_scale_test.xml"
-rm -f $NICDIR/conf/pipeline.json
 if [ $? -eq 0 ]
 then
     rm -f apulu_scale_test.log

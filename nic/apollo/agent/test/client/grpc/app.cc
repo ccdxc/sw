@@ -59,6 +59,7 @@ using std::string;
 using grpc::Channel;
 using grpc::Status;
 using grpc::ClientContext;
+using pds::VnicDeleteResponse;
 using pds::VPCDeleteResponse;
 using pds::VPCGetResponse;
 using pds::VPCPeerResponse;
@@ -98,6 +99,7 @@ pds::RouteTableRequest        g_route_table_req;
 pds::SecurityPolicyRequest    g_policy_req;
 pds::MappingRequest           g_mapping_req;
 pds::VnicRequest              g_vnic_req;
+pds::VnicDeleteRequest        g_vnic_req_del;
 pds::SubnetRequest            g_subnet_req;
 pds::VPCRequest               g_vpc_req;
 pds::DHCPPolicyRequest        g_dhcp_req;
@@ -226,6 +228,29 @@ create_vnic_impl (pds_vnic_spec_t *spec)
             return SDK_RET_ERR;
         }
         g_vnic_req.clear_request();
+    }
+
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+delete_vnic_impl (pds_obj_key_t *key)
+{
+    ClientContext         context;
+    VnicDeleteResponse    response;
+    Status                ret_status;
+
+    if (key != NULL) {
+        g_vnic_req_del.add_id(key->id);
+    }
+
+    if ((g_vnic_req_del.id_size() >= APP_GRPC_BATCH_COUNT) || !key) {
+        ret_status = g_vnic_stub_->VnicDelete(&context, g_vnic_req_del, &response);
+        if (!ret_status.ok()) {
+            printf("%s failed!\n", __FUNCTION__);
+            return SDK_RET_ERR;
+        }
+        g_vnic_req_del.clear_id();
     }
 
     return SDK_RET_OK;

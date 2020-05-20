@@ -50,6 +50,7 @@ static char *g_iov_data;
 #define FD_INVALID (-1)
 
 using std::string;
+using pds::VnicDeleteRequest;
 using pds::VPCDeleteRequest;
 using pds::VPCGetRequest;
 using pds::VPCGetResponse;
@@ -224,6 +225,29 @@ create_vnic_impl (pds_vnic_spec_t *spec)
         pds_vnic_api_spec_to_proto(proto_spec, spec);
         any_req->PackFrom(request);
         service_req.set_configop(types::SERVICE_OP_CREATE);
+        ret = service_request_send(&service_req, &service_rsp);
+        if ((ret != SDK_RET_OK) || (service_rsp.apistatus() != types::API_STATUS_OK)) {
+            printf("%s failed!\n", __FUNCTION__);
+            return SDK_RET_ERR;
+        }
+    }
+
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+delete_vnic_impl (pds_obj_key_t *key)
+{
+    VnicDeleteRequest       request;
+    sdk_ret_t               ret;
+    ServiceRequestMessage   service_req;
+    ServiceResponseMessage  service_rsp;
+
+    if (key) {
+        auto any_req = service_req.mutable_configmsg();
+        request.add_id(key->id);
+        any_req->PackFrom(request);
+        service_req.set_configop(types::SERVICE_OP_DELETE);
         ret = service_request_send(&service_req, &service_rsp);
         if ((ret != SDK_RET_OK) || (service_rsp.apistatus() != types::API_STATUS_OK)) {
             printf("%s failed!\n", __FUNCTION__);

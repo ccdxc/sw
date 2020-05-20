@@ -10,6 +10,8 @@ import (
 	"reflect"
 	"strings"
 
+	"google.golang.org/grpc"
+
 	uuid "github.com/satori/go.uuid"
 	"github.com/spf13/cobra"
 	yaml "gopkg.in/yaml.v2"
@@ -102,20 +104,8 @@ func vnicClearStatsCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func vnicShowCmdHandler(cmd *cobra.Command, args []string) {
-	// Connect to PDS
-	c, err := utils.CreateNewGRPCClient()
-	if err != nil {
-		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
-		return
-	}
-	defer c.Close()
 
-	if len(args) > 0 {
-		fmt.Printf("Invalid argument\n")
-		return
-	}
-
-	client := pds.NewVnicSvcClient(c)
+	respMsg := &pds.VnicGetResponse{}
 
 	var req *pds.VnicGetRequest
 	if cmd != nil && cmd.Flags().Changed("id") {
@@ -130,8 +120,36 @@ func vnicShowCmdHandler(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	// PDS call
-	respMsg, err := client.VnicGet(context.Background(), req)
+	AgentTransport, err := GetAgentTransport(cmd)
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+		return
+	}
+
+	if AgentTransport == AGENT_TRANSPORT_UDS {
+		err = HandleSvcReqConfigMsg(pds.ServiceRequestOp_SERVICE_OP_READ,
+			req, respMsg)
+	} else {
+		// Connect to PDS
+		var c *grpc.ClientConn
+		c, err = utils.CreateNewGRPCClient()
+		if err != nil {
+			fmt.Printf("Could not connect to the PDS, is PDS running?\n")
+			return
+		}
+		defer c.Close()
+
+		if len(args) > 0 {
+			fmt.Printf("Invalid argument\n")
+			return
+		}
+
+		client := pds.NewVnicSvcClient(c)
+
+		// PDS call
+		respMsg, err = client.VnicGet(context.Background(), req)
+	}
+
 	if err != nil {
 		fmt.Printf("Getting Vnic failed, err %v\n", err)
 		return

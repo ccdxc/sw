@@ -17,6 +17,8 @@ sdk_ret_t create_mappings(uint32_t num_teps, uint32_t num_vpcs,
                  uint32_t num_remote_mappings);
 sdk_ret_t create_vnics(uint32_t num_vpcs, uint32_t num_subnets,
                        uint32_t num_vnics, uint16_t vlan_start);
+sdk_ret_t delete_vnics(uint32_t num_vpcs, uint32_t num_subnets,
+                       uint32_t num_vnics);
 sdk_ret_t create_subnets(uint32_t vpc_id, uint32_t num_subnets,
                          ip_prefix_t *vpc_pfx);
 sdk_ret_t create_vpcs(uint32_t num_vpcs, ip_prefix_t *ip_pfx,
