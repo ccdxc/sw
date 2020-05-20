@@ -278,7 +278,7 @@ capri_barco_res_allocator_init(void)
         region = sdk::asic::asic_get_mem_addr(capri_barco_resources[idx].hbm_region_name);
         if (region == INVALID_MEM_ADDRESS) {
             SDK_TRACE_ERR("Failed to retrieve %s memory region",
-                          capri_barco_resources[idx].allocator_name);
+                          capri_barco_resources[idx].hbm_region_name);
             return SDK_RET_ERR;
         }
 

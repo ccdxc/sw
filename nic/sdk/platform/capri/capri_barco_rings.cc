@@ -338,8 +338,8 @@ capri_barco_ring_common_init (capri_barco_ring_t *barco_ring)
 
     ring_base = sdk::asic::asic_get_mem_addr(barco_ring->hbm_region);
     if (ring_base == INVALID_MEM_ADDRESS) {
-        SDK_TRACE_ERR("Failed to retrieve Barco Ring memory region for %s",
-                      barco_ring->ring_name);
+        SDK_TRACE_ERR("Failed to retrieve Barco Ring memory region %s for %s",
+                      barco_ring->hbm_region, barco_ring->ring_name);
         return SDK_RET_ERR;
     }
 

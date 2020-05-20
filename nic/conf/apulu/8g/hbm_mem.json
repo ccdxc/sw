@@ -337,10 +337,39 @@
             "kind": "static",
             "size": "512K"
         },
+	{
+            "name": "crypto-hbm-mem-big",
+            "kind": "static",
+            "size": "5120K"
+        },
         {
             "name": "tls_proxy_pad_table",
             "kind": "static",
             "size": "1K"
+        },
+        {   
+            "name": "key-desc-array",
+            "kind": "static",
+            "size": "1024K"
+        },
+        {
+            "name": "brq-ring-xts0",
+            "kind": "static",
+            "size": "512K",
+            "reset": true
+        },
+        {
+            "name": "brq-ring-xts1",
+            "kind": "static",
+            "size": "512K",
+            "reset": true
+        },
+        {
+            "_comment" : "32 entries of 64 Bytes each",
+            "name": "opaque_tag",
+            "kind": "static",
+            "size": "2K",
+            "reset": true
         },
         {
             "name": "p4_program",
