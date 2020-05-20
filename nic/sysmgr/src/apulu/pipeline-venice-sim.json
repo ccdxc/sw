@@ -19,7 +19,7 @@
     },
     {
         "name": "operd",
-        "command": "/naples/nic/bin/operd /naples/nic/conf/operd-sim.json /naples/nic/conf/operd-decoders-sim.json",
+        "command": "/naples/nic/bin/operd /naples/nic/conf/operd.json /naples/nic/conf/operd-decoders.json",
         "dependencies": [],
         "flags": [],
         "timeout": 0.0,

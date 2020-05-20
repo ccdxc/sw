@@ -11,11 +11,13 @@ export PDSPKG_TOPDIR=${PDSPKG_TOPDIR:-'/sw/nic/'}
 export DOLDIR=${DOLDIR:-'/sw/dol/'}
 export PIPELINE=$1
 export BUILD_DIR=${PDSPKG_TOPDIR}/build/x86_64/${PIPELINE}/${ASIC}
+export BIN_PATH=$BUILD_DIR/bin/
+export LIB_PATH=$BUILD_DIR/lib/
 export CONFIG_PATH=$PDSPKG_TOPDIR/conf/
 export PIPELINE_CONFIG_PATH=$PDSPKG_TOPDIR/conf/${PIPELINE}/
 export COVFILE=$PDSPKG_TOPDIR/coverage/sim_bullseye_hal.cov
-export PATH=${PATH}:${BUILD_DIR}/bin
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PDSPKG_TOPDIR/third-party/metaswitch/output/x86_64/
+export PATH=${PATH}:${BIN_PATH}
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$LIB_PATH:$PDSPKG_TOPDIR/third-party/metaswitch/output/x86_64/
 export OPERD_REGIONS=$PIPELINE_CONFIG_PATH/operd-regions.json
 if [ -z "$2" ]; then
     export PERSISTENT_LOGDIR=$PDSPKG_TOPDIR

@@ -118,11 +118,6 @@ library::try_load_(void) {
     assert(this->dlhandle_ == NULL);
 
     fprintf(stderr, "Loading %s\n", this->path_.c_str());
-    if (access(this->path_.c_str(), F_OK) != 0) {
-        fprintf(stderr, "Can't access %s\n", this->path_.c_str());
-        return false;
-    }
-    
     this->dlhandle_ = dlopen(this->path_.c_str(), RTLD_LAZY);
     if (this->dlhandle_ == NULL) {
         fprintf(stderr, "%s\n", dlerror());
@@ -353,10 +348,6 @@ load_decoders (std::string decoders_file)
         path = obj.second.data().c_str();
 
         fprintf(stderr, "Loading %s\n", path);
-        if (access(path, F_OK) != 0) {
-            fprintf(stderr, "Can't access %s\n", path);
-            continue;
-        }
         handle = dlopen(path, RTLD_LAZY);
         if (handle == NULL) {
             fprintf(stderr, "%s\n", dlerror());

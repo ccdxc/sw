@@ -70,7 +70,7 @@ function start_vpp () {
 }
 
 function start_operd () {
-    operd $PIPELINE_CONFIG_PATH/operd-x86.json $PIPELINE_CONFIG_PATH/operd-decoders-x86.json > operd.log 2>&1 &
+    operd $PIPELINE_CONFIG_PATH/operd.json $PIPELINE_CONFIG_PATH/operd-decoders.json > operd.log 2>&1 &
 }
 
 function start_dhcp_server() {
@@ -104,22 +104,33 @@ function remove_db () {
     rm -f /tmp/*.db
 }
 
+function remove_ipc_files () {
+    rm -f /tmp/pen_*
+}
+
+function remove_shm_files () {
+    rm -f /dev/shm/pds_* /dev/shm/ipc_* /dev/shm/metrics_* /dev/shm/alerts
+    rm -f /dev/shm/nicmgr_shm /dev/shm/sysmgr /dev/shm/vpp
+}
+
 function remove_stale_files () {
     echo "===== Cleaning stale files ====="
     rm -f $PDSPKG_TOPDIR/out.sh
     rm -f $PDSPKG_TOPDIR/conf/pipeline.json
     rm -f $PDSPKG_TOPDIR/conf/gen/dol_agentcfg.json
     rm -f $PDSPKG_TOPDIR/conf/gen/device_info.txt
-    rm -f /tmp/pen_* /dev/shm/pds_* /dev/shm/ipc_* /dev/shm/metrics_*
     rm -rf /sysconfig/config0
     rm -f /var/run/pds_svc_server_sock
     remove_db
+    remove_ipc_files
+    remove_shm_files
 }
 
 function remove_logs () {
     # NOT to be used post run
     echo "===== Cleaning log & core files ====="
     rm -f ${PDSPKG_TOPDIR}/*log* ${PDSPKG_TOPDIR}/core*
+    rm -rf /var/log/pensando/ /obfl/
 }
 
 function collect_logs () {
@@ -144,6 +155,11 @@ function finish () {
 }
 trap finish EXIT
 
+function setup_env () {
+    mkdir -p /var/log/pensando/
+    mkdir -p /obfl/
+}
+
 function setup () {
     # Cleanup of previous run if required
     stop_process
@@ -152,6 +168,9 @@ function setup () {
     # remove stale files from older runs
     remove_stale_files
     remove_logs
+
+    # setup env
+    setup_env
 }
 setup
 

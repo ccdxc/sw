@@ -5,10 +5,12 @@ set -x
 
 export VER=v1
 export NIC_DIR=/naples/nic
+export BIN_PATH=$NIC_DIR/bin/
+export PATH=${PATH}:${BIN_PATH}
 export PLATFORM_DIR=/naples/platform
 export LOG_DIR=/naples/data/logs
 export HAL_CONFIG_PATH=$NIC_DIR/conf/
-export PERSISTENT_LOGDIR=/naples/obfl
+export PERSISTENT_LOGDIR=/obfl
 export NON_PERSISTENT_LOGDIR=$LOG_DIR
 export LD_LIBRARY_PATH=$NIC_DIR/lib64:$NIC_DIR/lib:$HAL_CONFIG_PATH/plugins/lif:$HAL_CONFIG_PATH/linkmgr:$HAL_CONFIG_PATH/sdk:$HAL_CONFIG_PATH/sdk/external:usr/local/lib:/usr/lib::$LD_LIBRARY_PATH
 export NICMGR_LIBRARY_PATH=$PLATFORM_DIR/lib:$NIC_DIR/lib:$NIC_DIR/conf/sdk:$LD_LIBRARY_PATH

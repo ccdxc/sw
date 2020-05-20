@@ -12,7 +12,7 @@
     {
         "output": {
             "type": "binary",
-            "command": "/nic/bin/operdvppconsumer /var/log/pensando/vpp_flow.log"
+            "command": "operdvppconsumer /var/log/pensando/vpp_flow.log"
         },
         "input": ["vpp"]
     },
@@ -22,14 +22,14 @@
         "provider": "pensando.io",
         "output": {
             "type": "library",
-            "location": "/nic/lib/libpen_oper.so"
+            "location": "libpen_oper.so"
         },
         "input": ["alerts"]
     },
     {
         "output": {
             "type": "library",
-            "location": "/nic/lib/libalerts_operd_con.so"
+            "location": "libalerts_operd_con.so"
         },
         "input": ["alerts"]
     },

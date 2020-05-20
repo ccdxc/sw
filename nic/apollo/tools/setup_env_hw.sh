@@ -2,6 +2,8 @@
 
 export PDSPKG_TOPDIR='/nic'
 export SYSCONFIG='/sysconfig/config0'
+export BIN_PATH=$PDSPKG_TOPDIR/bin/
+export PATH=${PATH}:${BIN_PATH}
 export LD_LIBRARY_PATH=$PDSPKG_TOPDIR/lib:/usr/local/lib:/usr/lib/aarch64-linux-gnu:$LD_LIBRARY_PATH
 export CONFIG_PATH=$PDSPKG_TOPDIR/conf/
 export COVFILE=$PDSPKG_TOPDIR/coverage/sim_bullseye_hal.cov
