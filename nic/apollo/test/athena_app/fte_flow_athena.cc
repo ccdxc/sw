@@ -818,15 +818,12 @@ fte_get_session_rewrite_id (uint16_t vnic_id, uint32_t local_ip,
                             uint32_t *h2s_rewrite_id,
                             uint32_t *s2h_rewrite_id)
 {
-    sdk_ret_t ret = SDK_RET_OK;
-
     if (g_flow_cache_policy[vnic_id].nat_enabled) {
-        ret = fte_nmt_get_rewrite_id(vnic_id, local_ip,
-                                     h2s_rewrite_id, s2h_rewrite_id);
-        if (ret != SDK_RET_OK) {
-            PDS_TRACE_DEBUG("fte_nmt_get_rewrite_id failed. \n");
+        if (fte_nmt_get_rewrite_id(vnic_id, local_ip,
+                                   h2s_rewrite_id,
+                                   s2h_rewrite_id) == SDK_RET_OK) {
+            return SDK_RET_OK;
         }
-        return ret;
     }
 
     *h2s_rewrite_id = 
@@ -834,7 +831,7 @@ fte_get_session_rewrite_id (uint16_t vnic_id, uint32_t local_ip,
     *s2h_rewrite_id =
         g_flow_cache_policy[vnic_id].rewrite_host.rewrite_id;
 
-    return ret;
+    return SDK_RET_OK;
 }
 
 static sdk_ret_t
