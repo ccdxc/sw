@@ -32,6 +32,8 @@
 namespace sdk {
 namespace upg {
 
+static char buffer[4096];
+
 // create a map for upgrade stages for json stage comparison
 SDK_DEFINE_MAP(upg_stage_t, UPG_STAGE_ENTRIES)
 
@@ -272,32 +274,47 @@ is_valid_script (std::string tools_dir, const std::string script)
 static bool
 execute (const char *cmd)
 {
-    UPG_TRACE_INFO("Executing script  %s", cmd);
     bool result=true;
-    int status = system(cmd);
 
-    if (status < 0) {
+    UPG_TRACE_INFO("Executing script  %s", cmd);
+    auto pipefp = popen(cmd, "r");
+    if (pipefp == NULL) {
         UPG_TRACE_ERR("Failed to execute script, return code is %d", errno);
-        result = false;
-    } else {
-        if (WIFEXITED(status)) {
-            if (WEXITSTATUS(status) == 0) {
-                UPG_TRACE_INFO("Successfully executed script");
-                result = true;
-            } else {
-                UPG_TRACE_ERR("Script execution failure, return code is %d",
-                               WEXITSTATUS(status));
-                result = false;
+        return false;
+    }
+
+    while (!feof(pipefp)) {
+        errno = 0;
+        auto buf = fgets(buffer, 4096, pipefp);
+        if (buf == NULL) {
+            if (errno == EWOULDBLOCK) {
+                UPG_TRACE_ERR("No response from script, return code is %d", errno);
+                pclose(pipefp);
+                return false;
             }
-        } else if (WIFSIGNALED(status)) {
-            UPG_TRACE_ERR("Abnormal termination, signal number is %d",
-                          WTERMSIG(status));
-            result = false;
         } else {
-            UPG_TRACE_ERR("Failed to execute script, exited abnormaly !");
-            result = false;
+            UPG_TRACE_INFO("%s", buffer);
         }
     }
+    // record the task's exit code
+    auto status = pclose(pipefp);
+    if (WIFEXITED(status)) {
+        if (WEXITSTATUS(status) == 0) {
+            UPG_TRACE_INFO("Successfully executed script");
+        } else {
+            UPG_TRACE_ERR("Script execution failure, return code is %d",
+                    WEXITSTATUS(status));
+            result = false;
+        }
+    } else if (WIFSIGNALED(status)) {
+        UPG_TRACE_ERR("Abnormal termination, signal number is %d",
+                WTERMSIG(status));
+        result = false;
+    } else {
+        UPG_TRACE_ERR("Failed to execute script, exited abnormaly !");
+        result = false;
+    }
+
     return result;
 }
 
