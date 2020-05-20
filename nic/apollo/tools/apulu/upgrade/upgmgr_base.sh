@@ -70,7 +70,6 @@ function upgmgr_pkgcheck() {
 }
 
 function upgmgr_backup() {
-    cp /dev/shm/pds_api_upgrade /update/pds_api_upgdata
     local files_must="/update/pcieport_upgdata /update/pciemgr_upgdata "
     files_must+="/update/pds_api_upgdata "
     local files_optional="/update/pciemgr_upgrollback "
@@ -84,8 +83,8 @@ function upgmgr_backup() {
 }
 
 function upgmgr_restore() {
-    # TODO : check graceful upgrade and validate the file existance
-    mv /update/pds_api_upgdata /dev/shm/pds_api_upgrade
+    echo "Restore, nothing to do, skipping"
+    return 0
 }
 
 function reload_drivers() {

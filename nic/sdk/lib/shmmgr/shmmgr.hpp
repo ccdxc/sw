@@ -68,6 +68,7 @@ private:
     char    name_[SHMSEG_NAME_MAX_LEN];
     void    *mmgr_;
     bool    fixed_;
+    bool    mapped_file_;
 
 private:
     shmmgr();

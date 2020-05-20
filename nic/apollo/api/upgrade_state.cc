@@ -8,6 +8,8 @@
 ///
 //----------------------------------------------------------------------------
 
+#include  <string>
+#include <sys/stat.h>
 #include "nic/sdk/include/sdk/mem.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/core/mem.hpp"
@@ -17,7 +19,7 @@ namespace api {
 
 upg_state *g_upg_state;
 
-#define PDS_API_UPG_SHM_NAME        "pds_api_upgrade"
+#define PDS_API_UPG_SHM_NAME        "/update/pds_api_upgdata"
 #define PDS_API_UPG_SHM_PSTATE_NAME "pds_api_upgrade_pstate"
 // TODO: below size depends on the size of the config hw states to be saved
 // and other nicmgr/linkmgr states etc. need to calculate for the maximum
@@ -29,6 +31,22 @@ sdk_ret_t
 upg_state::init_(bool shm_create) {
     sdk::lib::shm_mode_e mode = shm_create ? sdk::lib::SHM_CREATE_ONLY : sdk::lib::SHM_OPEN_ONLY;
     const char *op = shm_create ? "create" : "open";
+    size_t found;
+    std::string fname = PDS_API_UPG_SHM_NAME;
+    struct stat st = { 0 };
+
+    // create the direcotry if it not exit
+    found = fname.find_last_of("/\\");
+    if (found != std::string::npos) {
+        std::string path = fname.substr(0, found);
+        if (stat(path.c_str(), &st) == -1) {
+            if (mkdir(path.c_str(), 0755) < 0) {
+                SDK_TRACE_ERR("Directory %s/ doesn't exist, failed to create one\n",
+                               path.c_str());
+                return SDK_RET_ERR;
+            }
+        }
+    }
 
     try {
         // if create, delete and re-create as previous size and current size may be different
@@ -37,11 +55,11 @@ upg_state::init_(bool shm_create) {
         }
         shm_mmgr_ = shmmgr::factory(PDS_API_UPG_SHM_NAME, PDS_API_UPG_SHM_SIZE, mode, NULL);
         if (shm_mmgr_ == NULL) {
-            PDS_TRACE_ERR("Upgrade shared mem %s failed", op);
+            PDS_TRACE_ERR("Upgrade shared mem %s failed for %s", op, fname.c_str());
             return SDK_RET_ERR;
         }
     } catch (...) {
-        PDS_TRACE_ERR("Upgrade shared mem %s failed", op);
+        PDS_TRACE_ERR("Upgrade shared mem %s failed for %s", op, fname.c_str());
         return SDK_RET_ERR;
     }
 
@@ -52,7 +70,7 @@ upg_state::init_(bool shm_create) {
         return SDK_RET_ERR;
     }
 
-    PDS_TRACE_DEBUG("Upgrade shared mem %s done", op);
+    PDS_TRACE_DEBUG("Upgrade shared mem %s done for %s", op, fname.c_str());
     return SDK_RET_OK;
 }
 

@@ -532,6 +532,7 @@
             "kind": "opertbl",
             "size": "128M",
             "cache": "p4ig",
+            "reset": true,
             "_comment": "2M * 64B"
         },
         {
@@ -539,6 +540,7 @@
             "kind": "opertbl",
             "size": "16M",
             "cache": "p4ig",
+            "reset": true,
             "_comment": "256K * 64B"
         },
         {
@@ -546,6 +548,7 @@
             "kind": "opertbl",
             "size": "256M",
             "cache": "p4ig",
+            "reset": true,
             "_comment": "8M * 32B"
         },
         {
@@ -553,6 +556,7 @@
             "kind": "opertbl",
             "size": "32M",
             "cache": "p4ig",
+            "reset": true,
             "_comment": "1M * 32B"
         },
         {

@@ -16,12 +16,6 @@ echo "Starting pdsupgmgr: `date +%x_%H:%M:%S:%N`"
 # deleted once the upgrade sequence is completed
 # if it is present, upgmgr will be spawned to continue the upgrade sequence
 
-if [[ -f "$UPGRADE_INIT_MODE_FILE" ]];then
-    # restore the saved files
-    upgmgr_restore
-    [[ $? -ne 0 ]] && echo "Upgmgr restore failed!" && exit 1
-fi
-
 if [[ $1 == "-n" || -f "$UPGRADE_INIT_MODE_FILE" ]];then
     exec $PDSPKG_TOPDIR/bin/pdsupgmgr -t $PDSPKG_TOPDIR/tools/
 fi

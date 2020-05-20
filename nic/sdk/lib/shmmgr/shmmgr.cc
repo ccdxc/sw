@@ -1,13 +1,15 @@
 #include <assert.h>
 #include <iostream>
 #include <boost/interprocess/managed_shared_memory.hpp>
+#include <boost/interprocess/managed_mapped_file.hpp>
 #include "include/sdk/base.hpp"
 #include "include/sdk/mem.hpp"
 #include "lib/shmmgr/shmmgr.hpp"
 
 using namespace boost::interprocess;
-#define TO_FM_SHM(x) ((fixed_managed_shared_memory *)(x))
-#define TO_SHM(x)    ((managed_shared_memory *)(x))
+#define TO_FM_SHM(x)       ((fixed_managed_shared_memory *)(x))
+#define TO_SHM(x)          ((managed_shared_memory *)(x))
+#define TO_FILE_MAP_SHM(x) ((managed_mapped_file *)(x))
 
 namespace sdk {
 namespace lib {
@@ -21,7 +23,23 @@ public:
     std::size_t size;
 };
 
+#define SHMMGR_OP(op, res) {                                        \
+    if (mapped_file_) {                                             \
+        SDK_ASSERT(fixed_ == false);                                \
+        res = TO_FILE_MAP_SHM(mmgr_)->op;                           \
+    } else {                                                        \
+        res = fixed_ ? TO_FM_SHM(mmgr_)->op : TO_SHM(mmgr_)->op;    \
+    }                                                               \
+}
 
+#define SHMMGR_OP_NORET(op) {                                       \
+    if (mapped_file_) {                                             \
+        SDK_ASSERT(fixed_ == false);                                \
+        TO_FILE_MAP_SHM(mmgr_)->op;                                 \
+    } else {                                                        \
+        fixed_ ? TO_FM_SHM(mmgr_)->op : TO_SHM(mmgr_)->op;          \
+    }                                                               \
+}
 
 //------------------------------------------------------------------------------
 // initialization routine
@@ -31,40 +49,68 @@ shmmgr::init(const char *name, const std::size_t size,
              shm_mode_e mode, void *baseaddr)
 {
     if (baseaddr) {
-        fixed_managed_shared_memory    *fixed_mgr_shm;
+        if (strchr(name, '/') == NULL) {
+            fixed_managed_shared_memory    *fixed_mgr_shm;
 
-        if (mode == SHM_CREATE_ONLY) {
-            fixed_mgr_shm = new fixed_managed_shared_memory(create_only, name,
-                                                            size, baseaddr);
-        } else if (mode == SHM_OPEN_ONLY) {
-            fixed_mgr_shm = new fixed_managed_shared_memory(open_only, name,
-                                                            baseaddr);
-        } else if (mode == SHM_OPEN_OR_CREATE) {
-            fixed_mgr_shm = new fixed_managed_shared_memory(open_or_create, name,
-                                                            size, baseaddr);
-        } else if (mode == SHM_OPEN_READ_ONLY) {
-            fixed_mgr_shm = new fixed_managed_shared_memory(open_read_only,
-                                                            name, baseaddr);
+            if (mode == SHM_CREATE_ONLY) {
+                fixed_mgr_shm = new fixed_managed_shared_memory(create_only, name,
+                                                                size, baseaddr);
+            } else if (mode == SHM_OPEN_ONLY) {
+                fixed_mgr_shm = new fixed_managed_shared_memory(open_only, name,
+                                                                baseaddr);
+            } else if (mode == SHM_OPEN_OR_CREATE) {
+                fixed_mgr_shm = new fixed_managed_shared_memory(open_or_create, name,
+                                                                size, baseaddr);
+            } else if (mode == SHM_OPEN_READ_ONLY) {
+                fixed_mgr_shm = new fixed_managed_shared_memory(open_read_only,
+                                                                name, baseaddr);
+            } else {
+                return false;
+            }
+            mmgr_ = fixed_mgr_shm;
+            mapped_file_ = false;
+            SDK_TRACE_DEBUG("SHM manager init, fixed managed %s", name);
         } else {
-            return false;
+            // TODO
+            SDK_ASSERT(0);
         }
-        mmgr_ = fixed_mgr_shm;
         fixed_ = true;
     } else {
-        managed_shared_memory    *mgr_shm;
+        if (strchr(name, '/') == NULL) {
+            managed_shared_memory    *mgr_shm;
 
-        if (mode == SHM_CREATE_ONLY) {
-            mgr_shm = new managed_shared_memory(create_only, name, size);
-        } else if (mode == SHM_OPEN_ONLY) {
-            mgr_shm = new managed_shared_memory(open_only, name);
-        } else if (mode == SHM_OPEN_OR_CREATE) {
-            mgr_shm = new managed_shared_memory(open_or_create, name, size);
-        } else if (mode == SHM_OPEN_READ_ONLY) {
-            mgr_shm = new managed_shared_memory(open_read_only, name);
+            if (mode == SHM_CREATE_ONLY) {
+                mgr_shm = new managed_shared_memory(create_only, name, size);
+            } else if (mode == SHM_OPEN_ONLY) {
+                mgr_shm = new managed_shared_memory(open_only, name);
+            } else if (mode == SHM_OPEN_OR_CREATE) {
+                mgr_shm = new managed_shared_memory(open_or_create, name, size);
+            } else if (mode == SHM_OPEN_READ_ONLY) {
+                mgr_shm = new managed_shared_memory(open_read_only, name);
+            } else {
+                return false;
+            }
+            mmgr_ = mgr_shm;
+            mapped_file_ = false;
+            SDK_TRACE_DEBUG("SHM manager init, managed %s", name);
         } else {
-            return false;
+            managed_mapped_file    *mgr_map_file;
+
+            if (mode == SHM_CREATE_ONLY) {
+                mgr_map_file = new managed_mapped_file(create_only, name, size);
+            } else if (mode == SHM_OPEN_ONLY) {
+                mgr_map_file = new managed_mapped_file(open_only, name);
+            } else if (mode == SHM_OPEN_OR_CREATE) {
+                mgr_map_file = new managed_mapped_file(open_or_create, name, size);
+            } else if (mode == SHM_OPEN_READ_ONLY) {
+                mgr_map_file = new managed_mapped_file(open_read_only, name);
+            } else {
+                return false;
+            }
+            mmgr_ = mgr_map_file;
+            mapped_file_ = true;
+            SDK_TRACE_DEBUG("SHM manager init, file mapped %s", name);
         }
-        mmgr_ = mgr_shm;
         fixed_ = false;
     }
     strncpy(name_, name, SHMSEG_NAME_MAX_LEN);
@@ -134,7 +180,11 @@ shmmgr::remove(const char *name)
         return;
     }
     SDK_TRACE_DEBUG("Deleting segment %s", name);
-    shared_memory_object::remove(name);
+    if (strchr(name, '/') == NULL) {
+        shared_memory_object::remove(name);
+    } else {
+        file_mapping::remove(name);
+    }
 }
 
 //------------------------------------------------------------------------------
@@ -186,12 +236,11 @@ shmmgr::alloc(const std::size_t size, const std::size_t alignment,
     void    *ptr = NULL;
 
     if (alignment == 0) {
-        ptr = fixed_ ? TO_FM_SHM(mmgr_)->allocate(size) : TO_SHM(mmgr_)->allocate(size);
+        SHMMGR_OP(allocate(size), ptr);
     } else {
         assert((alignment & (alignment - 1)) == 0);
         assert(alignment >= 4);
-        ptr = fixed_ ? TO_FM_SHM(mmgr_)->allocate_aligned(size, alignment) :
-            TO_SHM(mmgr_)->allocate_aligned(size, alignment);
+        SHMMGR_OP(allocate_aligned(size, alignment), ptr);
     }
     if (ptr) {
         memset(ptr, 0, size);
@@ -208,7 +257,7 @@ shmmgr::free(void *mem)
     if (mem == NULL) {
         return;
     }
-    fixed_ ? TO_FM_SHM(mmgr_)->deallocate(mem) : TO_SHM(mmgr_)->deallocate(mem);
+    SHMMGR_OP_NORET(deallocate(mem));
 }
 
 //------------------------------------------------------------------------------
@@ -217,7 +266,10 @@ shmmgr::free(void *mem)
 std::size_t
 shmmgr::size(void) const
 {
-    return fixed_ ? TO_FM_SHM(mmgr_)->get_size() : TO_SHM(mmgr_)->get_size();
+    std::size_t size;
+
+    SHMMGR_OP(get_size(), size);
+    return size;
 }
 
 //------------------------------------------------------------------------------
@@ -226,7 +278,10 @@ shmmgr::size(void) const
 std::size_t
 shmmgr::free_size(void) const
 {
-    return fixed_ ? TO_FM_SHM(mmgr_)->get_free_memory() : TO_SHM(mmgr_)->get_free_memory();
+    std::size_t size;
+
+    SHMMGR_OP(get_free_memory(), size);
+    return size;
 }
 
 void *
@@ -240,9 +295,11 @@ shmmgr::segment_find(const char *name, bool create, std::size_t size) {
     std::pair<shm_segment*, std::size_t> res;
     shm_segment* state;
     void *addr = NULL;
-    managed_shared_memory *shm =  (managed_shared_memory *)mmgr_;
 
-    res = shm->find<shm_segment>(name);
+    // TODO : if required provide the support
+    SDK_ASSERT(fixed_ == false);
+
+    SHMMGR_OP(find<shm_segment>(name), res);
     state = res.first;
     if (create) {
         // size should be given
@@ -250,19 +307,19 @@ shmmgr::segment_find(const char *name, bool create, std::size_t size) {
         // free the exiting one
         if (state != NULL) {
             addr = (void *)((uint64_t)state - state->offset);
-            shm->deallocate(addr);
-            shm->destroy_ptr(state);
+            SHMMGR_OP_NORET(deallocate(addr));
+            SHMMGR_OP_NORET(destroy_ptr(state));
         }
-        state = shm->construct<shm_segment>(name)();
+        SHMMGR_OP(construct<shm_segment>(name)(), state);
         if (state) {
-            addr = shm->allocate(size);
+            SHMMGR_OP(allocate(size), addr);
             if (addr) {
                 state->offset = (uint64_t)state - (uint64_t)addr;
                 state->size = size;
                 return addr;
             } else {
                 SDK_TRACE_ERR("Memory alloc failed");
-                shm->destroy_ptr(state);
+                SHMMGR_OP_NORET(destroy_ptr(state));
             }
         }
     } else {
@@ -281,9 +338,8 @@ std::size_t
 shmmgr::get_segment_size(const char *name) {
     std::pair<shm_segment*, std::size_t> res;
     shm_segment* state;
-    managed_shared_memory *shm = (managed_shared_memory *)mmgr_;
 
-    res = shm->find<shm_segment>(name);
+    SHMMGR_OP(find<shm_segment>(name), res);
     state = res.first;
     if (!state) {
         return 0;

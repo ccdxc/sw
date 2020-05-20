@@ -227,6 +227,14 @@ upg_ev_request_hdlr (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
     g_ipc_msg_in_ptr = msg;
 
     if (req->id == UPG_REQ_MSG_ID_START) {
+    #ifdef __aarch64__
+        // respond back immediately for NMD to exit the grpc wait. upgrade
+        // actual status should be read from the generated file
+        upg_status_t status = UPG_STATUS_OK;
+        sdk::ipc::respond(g_ipc_msg_in_ptr, &status, sizeof(status));
+        g_ipc_msg_in_ptr = NULL;
+    #endif
+        // start the fsm
         upg_fsm_init(req->upg_mode, UPG_STAGE_COMPAT_CHECK,
                      req->fw_pkgname, true);
     } else {
