@@ -51,6 +51,7 @@ testbundles:
         #- vmotion/clean.testbundle
         #- vmotion/aging.testbundle
         - vmotion/alg.testbundle
+        - vmotion/mem_leak.testbundle
 
 teardown:
     #- step      : verif.utils.collect_logs_and_cores

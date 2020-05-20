@@ -69,7 +69,10 @@ def Trigger(tc):
     #trigger a vmotion at this point
     new_node = vm_utils.find_new_node_to_move_to(tc, tc.vm_node)
     vm_utils.update_move_info(tc,[tc.vm_node],False,new_node)
-    vm_utils.do_vmotion(tc, True)
+    tc.resp = vm_utils.do_vmotion(tc, True)
+    if tc.resp != api.types.status.SUCCESS:
+        api.Logger.info("vmotion at vcenter failed")
+        return api.types.status.SUCCESS
 
     tc.cmd_cookies = []
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
@@ -105,7 +108,6 @@ def Trigger(tc):
 def Verify(tc):
     if tc.resp is None:
         return api.types.status.FAILURE
-
     result = api.types.status.SUCCESS
     api.Logger.info("Results for %s" % (tc.cmd_descr))
     cookie_idx = 0
@@ -115,14 +117,12 @@ def Verify(tc):
            cmd.stdout == '':
            result = api.types.status.FAILURE
         cookie_idx += 1
-
     return result
 
 def Teardown(tc):
+    CleanupNFSServer(tc.server, tc.client)
     if tc.GetStatus() != api.types.status.SUCCESS:
         api.Logger.info("verify failed, returning without teardown")
-        return tc.GetStatus()
-
-    CleanupNFSServer(tc.server, tc.client)
+        return api.types.status.SUCCESS 
     vm_utils.move_back_vms(tc)
     return api.types.status.SUCCESS

@@ -110,6 +110,8 @@ def build_dict(session, sess_dict):
         sess_i_data['packets'] = session['stats']['initiatorflowstats']['flowpermittedpackets']
     sess_dict[sess_i_key] = sess_i_data
 
+    if 'flowkey' not in session['spec']['responderflow'] or 'v4key' not in session['spec']['responderflow']['flowkey']['flowkey']:
+        return
     r_flow_key  = session['spec']['responderflow']['flowkey']['flowkey']['v4key']
     sess_r_key  = (r_flow_key['sip'], 
                        r_flow_key['dip'], 
@@ -230,7 +232,12 @@ def do_vmotion(tc, dsc_to_dsc):
     # wait for vmotion thread to complete, meaning vmotion is done on vcenter
     for vm_thread in vm_threads:
         vm_thread.join()
-    return api.types.status.SUCCESS
+    if tc.resp != api.types.status.SUCCESS:
+        api.Logger.info("vmotion failed")
+        return api.types.status.FAILURE
+    else:
+        api.Logger.info("vmotion successful")
+        return api.types.status.SUCCESS
 
 
 def create_ep_info(tc, wl, dest_node, migr_state, src_node):
@@ -494,16 +501,24 @@ def wait_and_verify_fuz(tc):
 def update_move_info(tc, workloads, factor_l2seg, new_node):
     wire_encap   = []
     for wl in workloads:
+        found = False
         #import pdb; pdb.set_trace()
         if tc.num_moves <= 2:
             if (factor_l2seg and wl.uplink_vlan in wire_encap):
                 continue
-        move_info = MoveInfo()
+        for old_wl_moveinfo in tc.move_info:
+            if old_wl_moveinfo.wl.workload_name == wl.workload_name:
+                found = True
+                move_info = old_wl_moveinfo
+                break
+        if not found:
+            move_info     = MoveInfo()
+            move_info.wl  = wl
+            wire_encap.append(wl.uplink_vlan)
         move_info.new_node = new_node
-        move_info.wl       = wl
         move_info.old_node = wl.node_name 
-        wire_encap.append(wl.uplink_vlan)
-        tc.move_info.append(move_info)
+        if not found:
+            tc.move_info.append(move_info)
         if (len(tc.move_info) == tc.num_moves):
             break
     api.Logger.info("Num of move_info elements are {}".format(len(tc.move_info)))
@@ -540,7 +555,15 @@ def find_new_node_to_move_to(tc, wl):
     assert(len(naples_nodes) >= 1)
     return naples_nodes[0]
 
-
+def get_memtrack(cmd, allocid):
+    yaml_out = yaml.load_all(cmd.stdout, Loader=yaml.FullLoader)
+    print(type(yaml_out))
+    for data in yaml_out:
+        if data is not None:
+            if allocid == data['spec']['allocid']:
+                stats = data['stats']
+                return ({'allocid': allocid, 'allocs': stats['numallocs'], 'frees': stats['numfrees']})
+    return {}
 
 def move_back_vms(tc):
     vm_threads = [] 

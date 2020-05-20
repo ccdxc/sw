@@ -20,7 +20,8 @@ def Setup(tc):
     tc.node_to_move    = getattr(tc.args,"","client")
     tc.local_or_remote = getattr(tc.args,"","local")
     update_app('ftp', '120s')
-    update_sgpolicy('ftp', True)
+    if tc.iterators.mode == 'active':
+        update_sgpolicy('ftp', True)
     return api.types.status.SUCCESS
 
 def SetupFTPClient(node, workload, server, mode):

@@ -5,27 +5,46 @@ meta:
     #targetcount : 35
 
 testcases:
-   -   name    : TFTP_VM_1
-       testcase: testcases.vmotion.tftp_basic
-       args    :
-            move      : client
-            type      : local
-            #timeout  : 60
-
-   -   name     : FTP_VM_1
-       testcase : testcases.vmotion.ftp_basic
-       iterators:
-            type      : nested
-            mode      : [ active, passive ]
-       args     :
-            move      : client
-            type      : local
-            #timeout   : 60
-
-   -   name    : SUNRPC_VM_1
-       testcase: testcases.vmotion.sunrpc_basic
-       args    :
-            move      : client
-            type      : local
-            #timeout  : 60
-
+  -   name    : TFTP_VM_1
+      testcase: testcases.vmotion.tftp_basic
+      args    :
+           move      : client
+           type      : local
+           #timeout  : 60
+ 
+  -   name     : FTP_VM_1
+      testcase : testcases.vmotion.ftp_basic
+      iterators:
+           type      : nested
+           mode      : [ active, passive ]
+      args     :
+           move      : client
+           type      : local
+           #timeout   : 60
+ 
+  -   name    : RTSP_VM_1
+      testcase: testcases.vmotion.rtsp_basic
+      args    :
+           move      : client
+           type      : local
+           #timeout  : 60
+ 
+  -   name    : SUNRPC_VM_1
+      testcase: testcases.vmotion.sunrpc_basic
+      args    :
+           move      : client
+           type      : local
+           #timeout  : 60
+  -   name    : DNS_VM_1
+      testcase: testcases.vmotion.dns_basic
+      args    :
+           move      : client
+           type      : local
+           #timeout  : 60
+  -   name    : SUNRPC_VM_MOVE_BACK
+      testcase: testcases.vmotion.move_back_2
+      args    :
+           move      : client
+           type      : local 
+           b2b_moves : 3
+           #timeout  : 60

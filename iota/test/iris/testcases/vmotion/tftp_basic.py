@@ -69,13 +69,17 @@ def Trigger(tc):
     # Trigger vMotion
     new_node = vm_utils.find_new_node_to_move_to(tc, tc.vm_node)
     vm_utils.update_move_info(tc,[tc.vm_node],False,new_node)
-    vm_utils.do_vmotion(tc, True)
+    vmotion_resp = vm_utils.do_vmotion(tc, True)
 
     vm_utils.update_node_info(tc, tc.client_resp)
 
     # After vMotion - Wait for Commands to end
     tc.client_resp = api.Trigger_WaitForAllCommands(tc.client_resp)
     api.Trigger_TerminateAllCommands(tc.server_resp)
+
+    if vmotion_resp != api.types.status.SUCCESS:
+        api.Logger.info("vmotion trigger failed, skipping further trigger")
+        return vmotion_resp
 
     # After vMotion - Show sessions dump after vMotion
     tc.cmd_cookies = []
@@ -87,9 +91,6 @@ def Trigger(tc):
     api.Trigger_AddNaplesCommand(req, tc.vm_node.node_name, "/nic/bin/halctl show nwsec flow-gate | grep TFTP")
     tc.cmd_cookies.append("show flow-gate")
  
-    #api.Trigger_AddNaplesCommand(req, tc.vm_node.node_name, "sleep 180", timeout=180)
-    #tc.cmd_cookies.append("sleep")
-
     # Ensure full file is transferred by checking size 
     api.Trigger_AddCommand(req, client.node_name, client.workload_name, "ls -lrth tftpdir/")
     tc.cmd_cookies.append("After get1")
@@ -107,6 +108,7 @@ def Trigger(tc):
 
 def Verify(tc):
     if tc.resp is None:
+        api.Logger.info("skipping verify, trigger failed")
         return api.types.status.FAILURE
 
     result = api.types.status.SUCCESS

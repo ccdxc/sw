@@ -89,8 +89,6 @@ def Trigger(tc):
     return tc.resp 
 
 def Verify(tc):
-    if tc.resp is None:
-        return api.types.status.FAILURE
     new_node = ''
     for wl_info in tc.move_info:
         vm_utils.get_sessions_info(tc, wl_info.new_node)
@@ -98,6 +96,9 @@ def Verify(tc):
         import pprint
         pprint.pprint(wl_info.sess_info_after)
     ret1 =  vm_utils.wait_and_verify_fuz(tc)
+    if tc.resp is None:
+        api.Logger.info("trigger failed, skipping verify")
+        return api.types.status.FAILURE
     ret2 = api.types.status.SUCCESS
     for wl_info in tc.move_info:
         if (wl_info.sess_info_before): 

@@ -1,0 +1,12 @@
+meta:
+    name    : vmotion_mem_leak
+    os      : [ esx ]
+    nics    : [ pensando ]
+    #targetcount : 35
+
+testcases:
+    -   name    : VM_MEM_LEAK 
+        testcase: testcases.vmotion.mem_leak
+        stress  : True
+        args    :
+            vm_type      : dsc_to_dsc
