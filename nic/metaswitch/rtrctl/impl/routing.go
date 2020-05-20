@@ -422,7 +422,7 @@ func routingVrfStatusShowCmdHandler(cmd *cobra.Command, args []string) error {
 		if doJSON {
 			vrfs = append(vrfs, vrf)
 		} else {
-			fmt.Printf(rtgVrfStatusGlobalStr, vrf.EntityIndex, vrf.VrfName, vrf.Description, vrf.OperStatus, vrf.OperReason, vrf.NumInterfaces)
+			fmt.Printf(rtgVrfStatusGlobalStr, vrf.EntityIndex, vrf.VrfName, vrf.Desc, vrf.OperStatus, vrf.OperReason, vrf.NumInterfaces)
 		}
 	}
 	if doJSON {

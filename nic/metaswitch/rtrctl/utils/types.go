@@ -437,14 +437,11 @@ func IPAddrStrToPdsIPAddr(ip string) *pds.IPAddress {
 // ShadowBgpSpec shadows the BGPSpec for CLI purposes
 type ShadowBgpSpec struct {
 	*pds.BGPSpec
-	Id                     string
-	RouterId               string
-	ClusterId              string
-	Status                 string
-	NumAdjRibOutRoutes     uint32
-	PeakNumAdjRibOutRoutes uint32
-	RemDelayTime           uint32
-	TableVer               uint32
+	*pds.BGPStatus
+	Id         string
+	RouterId   string
+	ClusterId  string
+	OperStatus string
 }
 
 // NewBGPGetResp creates a new shadow of the BGPSpec
@@ -456,15 +453,12 @@ func NewBGPGetResp(spec *pds.BGPSpec, status *pds.BGPStatus) *ShadowBgpSpec {
 	}
 
 	return &ShadowBgpSpec{
-		BGPSpec:                spec,
-		Id:                     uidstr,
-		RouterId:               Uint32ToIPv4Address(spec.RouterId),
-		ClusterId:              Uint32ToIPv4Address(spec.ClusterId),
-		Status:                 strings.TrimPrefix(status.Status.String(), "BGP_OPER_STATUS_"),
-		NumAdjRibOutRoutes:     status.NumAdjRibOutRoutes,
-		PeakNumAdjRibOutRoutes: status.PeakNumAdjRibOutRoutes,
-		RemDelayTime:           status.RemDelayTime,
-		TableVer:               status.TableVer,
+		BGPSpec:    spec,
+		BGPStatus:  status,
+		Id:         uidstr,
+		RouterId:   Uint32ToIPv4Address(spec.RouterId),
+		ClusterId:  Uint32ToIPv4Address(spec.ClusterId),
+		OperStatus: strings.TrimPrefix(status.Status.String(), "BGP_OPER_STATUS_"),
 	}
 }
 
@@ -696,8 +690,6 @@ type ShadowBGPPeerAFSpec struct {
 	PeerAddr  string
 	Afi       string
 	Safi      string
-	LocalPort uint32
-	PeerPort  uint32
 }
 
 // NewBGPPeerAfSpec creates a shadow of BGPPeerAFSpec
@@ -714,30 +706,22 @@ func NewBGPPeerAfSpec(in *pds.BGPPeerAfSpec) ShadowBGPPeerAFSpec {
 		PeerAddr:      PdsIPToString(in.PeerAddr),
 		Afi:           strings.TrimPrefix(in.Afi.String(), "BGP_AFI_"),
 		Safi:          strings.TrimPrefix(in.Safi.String(), "BGP_SAFI_"),
-		PeerPort:      in.RemotePort,
-		LocalPort:     in.LocalPort,
 	}
 }
 
 // ShadowBGPPeerAfStatus shadows the BGPPeerAfStatus for CLI purposes
 type ShadowBGPPeerAFStatus struct {
 	*pds.BGPPeerAfStatus
-	UpdGrp           uint32
-	LocalAddrScopeId uint32
-	RtRefresh        bool
-	AddPathCapNeg    string
-	ReflectorClient  string
+	AddPathCapNeg   string
+	ReflectorClient string
 }
 
 // NewBGPPeerAfStatus creates a shadow of BGPPeerAF
 func NewBGPPeerAfStatus(in *pds.BGPPeerAfStatus) ShadowBGPPeerAFStatus {
 	return ShadowBGPPeerAFStatus{
-		BGPPeerAfStatus:  in,
-		LocalAddrScopeId: in.LocalAddrScopeId,
-		RtRefresh:        in.RtRefresh,
-		AddPathCapNeg:    strings.TrimPrefix(in.AddPathCapNeg.String(), "BGP_ADD_PATH_SR_"),
-		ReflectorClient:  strings.TrimPrefix(in.ReflectorClient.String(), "BGP_PEER_RR_"),
-		UpdGrp:           in.UpdateGroup,
+		BGPPeerAfStatus: in,
+		AddPathCapNeg:   strings.TrimPrefix(in.AddPathCapNeg.String(), "BGP_ADD_PATH_SR_"),
+		ReflectorClient: strings.TrimPrefix(in.ReflectorClient.String(), "BGP_PEER_RR_"),
 	}
 }
 
@@ -757,20 +741,15 @@ func NewBGPPeerAf(in *pds.BGPPeerAf) *ShadowBGPPeerAF {
 
 // ShadowBGPNLRIPrefixStatus is a shadow of the BGPNLRIPrefixStatus
 type ShadowBGPNLRIPrefixStatus struct {
-	Prefix           *NLRIPrefix
-	ASPathStr        string
-	PathOrigId       string
-	NextHopAddr      string
-	RouteSource      string
-	FlapStatsFlapcnt uint32
-	FlapStatsSupprsd bool
-	IsActive         string
-	Stale            bool
-	FlapStartTime    uint32
-	ReasonNotBest    string
-	EcmpRoute        bool
-	PeerAddr         string
-	ExtComm          []string
+	Prefix        *NLRIPrefix
+	ASPathStr     string
+	PathOrigId    string
+	NextHopAddr   string
+	RouteSource   string
+	IsActive      string
+	ReasonNotBest string
+	PeerAddr      string
+	ExtComm       []string
 	*pds.BGPNLRIPrefixStatus
 }
 
@@ -849,13 +828,8 @@ func NewBGPNLRIPrefixStatus(in *pds.BGPNLRIPrefixStatus) *ShadowBGPNLRIPrefixSta
 		NextHopAddr:         BGPNextHop(in.RouteSource, in.NextHopAddr),
 		Prefix:              NewNLRIPrefix(int(in.Afi), int(in.Safi), in.Prefix),
 		RouteSource:         BGPRouteSource(in.RouteSource, in.PeerAddr),
-		FlapStatsFlapcnt:    in.FlapStatsFlapcnt,
-		FlapStatsSupprsd:    in.FlapStatsSupprsd,
 		IsActive:            strings.TrimPrefix(in.IsActive.String(), "BGP_NLRI_ISA_"),
-		Stale:               in.Stale,
-		FlapStartTime:       in.FlapStartTime,
 		ReasonNotBest:       strings.TrimPrefix(in.ReasonNotBest.String(), "BGP_REASON_"),
-		EcmpRoute:           in.EcmpRoute,
 		PeerAddr:            PdsIPToString(in.PeerAddr),
 		BGPNLRIPrefixStatus: in,
 	}
@@ -935,37 +909,19 @@ func NewEvpnIpVrf(in *pds.EvpnIpVrf) *ShadowEvpnIpVrf {
 
 // ShadowEvpnMacIpStatus shadows the EvpnMacIpStatus for CLI purposes
 type ShadowEvpnMacIpStatus struct {
-	EVIId      uint32
-	EthTagID   uint32
 	MACAddress string
 	IPAddress  string
-	PathID     uint32
 	Source     string
 	NHAddress  string
-	LocalIfId  uint32
-	Label      uint32
-	InUse      bool
-	Esi        string
-	SeqNum     uint32
-	Sticky     bool
 	*pds.EvpnMacIpStatus
 }
 
 func NewEvpnMacIpStatus(in *pds.EvpnMacIpStatus) ShadowEvpnMacIpStatus {
 	return ShadowEvpnMacIpStatus{
-		EVIId:           in.EVIId,
-		EthTagID:        in.EthTagID,
 		MACAddress:      dumpBytes([]byte(in.MACAddress)),
 		IPAddress:       PdsIPToString(in.IPAddress),
-		PathID:          in.PathID,
 		Source:          strings.TrimPrefix(in.Source.String(), "EVPN_SOURCE_"),
 		NHAddress:       PdsIPToString(in.NHAddress),
-		LocalIfId:       in.LocalIfId,
-		Label:           in.Label,
-		InUse:           in.InUse,
-		Esi:             in.Esi,
-		SeqNum:          in.SeqNum,
-		Sticky:          in.Sticky,
 		EvpnMacIpStatus: in,
 	}
 }
@@ -1206,13 +1162,9 @@ func NewEvpnEviRt(in *pds.EvpnEviRt) *ShadowEvpnEviRt {
 type ShadowLimIfStatus struct {
 	*pds.LimIfStatus
 	OperStatus   string
-	Name         string
-	Description  string
 	Type         string
 	MacAddr      string
-	Mtu          uint32
 	LoopBackMode string
-	FlapCount    uint32
 	OperReason   string
 }
 
@@ -1221,13 +1173,9 @@ func NewLimIfStatusGetResp(status *pds.LimIfStatus) *ShadowLimIfStatus {
 	return &ShadowLimIfStatus{
 		LimIfStatus:  status,
 		OperStatus:   strings.TrimPrefix(status.OperStatus.String(), "OPER_"),
-		Name:         status.Name,
-		Description:  status.Description,
 		Type:         strings.TrimPrefix(status.Type.String(), "IFTYP_"),
 		MacAddr:      dumpBytes([]byte(status.MacAddr)),
-		Mtu:          status.Mtu,
 		LoopBackMode: status.LoopBackMode.String(),
-		FlapCount:    status.FlapCount,
 		OperReason:   strings.TrimPrefix(status.OperReason.String(), "OPR_RSN_"),
 	}
 }
@@ -1235,22 +1183,16 @@ func NewLimIfStatusGetResp(status *pds.LimIfStatus) *ShadowLimIfStatus {
 // ShadowCPStaticRouteSpec shadows the CPStaticRouteSpec for CLI purposes
 type ShadowCPStaticRouteSpec struct {
 	DestAddr    string
-	PrefixLen   uint32
 	NextHopAddr string
 	State       string
-	Override    bool
-	AdminDist   uint32
 	*pds.CPStaticRouteSpec
 }
 
 func newCPStaticRouteSpec(in *pds.CPStaticRouteSpec) ShadowCPStaticRouteSpec {
 	return ShadowCPStaticRouteSpec{
 		DestAddr:          PdsIPToString(in.DestAddr),
-		PrefixLen:         in.PrefixLen,
 		NextHopAddr:       PdsIPToString(in.NextHopAddr),
 		State:             strings.TrimPrefix(in.State.String(), "ADMIN_STATE_"),
-		Override:          in.Override,
-		AdminDist:         in.AdminDist,
 		CPStaticRouteSpec: in,
 	}
 }
@@ -1269,33 +1211,19 @@ func NewCPStaticRoute(in *pds.CPStaticRoute) *ShadowCPStaticRoute {
 
 // ShadowCPActiveRouteStatus shadows the CPActiveRouteStatus for CLI purposes
 type ShadowCPActiveRouteStatus struct {
-	RouteTableId  uint32
-	DestAddr      string
-	DestPrefixLen uint32
-	NHAddr        string
-	IfIndex       uint32
-	Type          string
-	Proto         string
-	Age           int32
-	Metric1       int32
-	Connected     bool
-	AdminDistance int32
+	DestAddr string
+	NHAddr   string
+	Type     string
+	Proto    string
 	*pds.CPActiveRouteStatus
 }
 
 func newCPActiveRouteStatus(in *pds.CPActiveRouteStatus) ShadowCPActiveRouteStatus {
 	return ShadowCPActiveRouteStatus{
-		RouteTableId:        in.RouteTableId,
 		DestAddr:            PdsIPToString(in.DestAddr),
-		DestPrefixLen:       in.DestPrefixLen,
 		NHAddr:              PdsIPToString(in.NHAddr),
-		IfIndex:             in.IfIndex,
 		Type:                strings.TrimPrefix(in.Type.String(), "ROUTE_TYPE_"),
 		Proto:               strings.TrimPrefix(in.Proto.String(), "ROUTE_PROTO_"),
-		Age:                 in.Age,
-		Metric1:             in.Metric1,
-		Connected:           in.Connected,
-		AdminDistance:       in.AdminDistance,
 		CPActiveRouteStatus: in,
 	}
 }
@@ -1315,7 +1243,6 @@ func NewCPActiveRoute(in *pds.CPActiveRoute) *ShadowCPActiveRoute {
 // ShadowLimIfAddrTableStatus shadows the LimIfAddrTableStatus for CLI purposes
 type ShadowLimIfAddrTableStatus struct {
 	*pds.LimIfAddrTableStatus
-	IfIndex    uint32
 	IPAddr     string
 	OperStatus string
 }
@@ -1323,45 +1250,27 @@ type ShadowLimIfAddrTableStatus struct {
 // NewLimIfAddrTableGetResponse creates a new shadow of the LimIfAddrTableStatus
 func NewLimIfAddrTableGetResponse(status *pds.LimIfAddrTableStatus) *ShadowLimIfAddrTableStatus {
 	return &ShadowLimIfAddrTableStatus{
-		IfIndex:    status.IfIndex,
-		IPAddr:     PdsIPToString(status.IPAddr),
-		OperStatus: strings.TrimPrefix(status.OperStatus.String(), "OPER_STATUS_"),
+		LimIfAddrTableStatus: status,
+		IPAddr:               PdsIPToString(status.IPAddr),
+		OperStatus:           strings.TrimPrefix(status.OperStatus.String(), "OPER_STATUS_"),
 	}
 }
 
 // ShadowCPRouteStatus shadows the CPRouteStatus for CLI purposes
 type ShadowCPRouteStatus struct {
-	RouteTableId  uint32
-	DestAddr      string
-	DestPrefixLen uint32
-	NHAddr        string
-	IfIndex       uint32
-	Type          string
-	Proto         string
-	Age           int32
-	Metric1       int32
-	FibRoute      bool
-	Connected     bool
-	LooseNextHop  bool
-	AdminDistance int32
+	DestAddr string
+	NHAddr   string
+	Type     string
+	Proto    string
 	*pds.CPRouteStatus
 }
 
 func newCPRouteStatus(in *pds.CPRouteStatus) ShadowCPRouteStatus {
 	return ShadowCPRouteStatus{
-		RouteTableId:  in.RouteTableId,
 		DestAddr:      PdsIPToString(in.DestAddr),
-		DestPrefixLen: in.DestPrefixLen,
 		NHAddr:        PdsIPToString(in.NHAddr),
-		IfIndex:       in.IfIndex,
 		Type:          strings.TrimPrefix(in.Type.String(), "ROUTE_TYPE_"),
 		Proto:         strings.TrimPrefix(in.Proto.String(), "ROUTE_PROTO_"),
-		Age:           in.Age,
-		Metric1:       in.Metric1,
-		FibRoute:      in.FibRoute,
-		Connected:     in.Connected,
-		LooseNextHop:  in.LooseNextHop,
-		AdminDistance: in.AdminDistance,
 		CPRouteStatus: in,
 	}
 }
@@ -1380,96 +1289,32 @@ func NewCPRoute(in *pds.CPRoute) *ShadowCPRoute {
 
 // ShadowBGPPrfxCntrsStatus is a shadow of the BGPRouteMapStatus
 type ShadowBGPPrfxCntrsStatus struct {
-	EntIndex                uint32
-	PeerIndex               uint32
-	Afi                     string
-	Safi                    string
-	InPrfxes                uint32
-	InPrfxesAccepted        uint32
-	InPrfxesRejected        uint32
-	OutPrfxes               uint32
-	OutPrfxesAdvertised     uint32
-	UserData                string
-	InPrfxesFlapped         uint32
-	InPrfxesFlapSuppressed  uint32
-	InPrfxesFlapHistory     uint32
-	InPrfxesActive          uint32
-	InPrfxesDeniedByPol     uint32
-	NumLocRibRoutes         uint32
-	NumLocRibBestRoutes     uint32
-	InPrfxesDeniedMartian   uint32
-	InPrfxesDeniedAsLoop    uint32
-	InPrfxesDeniedNextHop   uint32
-	InPrfxesDeniedAsLength  uint32
-	InPrfxesDeniedCommunity uint32
-	InPrfxesDeniedLocalOrig uint32
-	InTotalPrfxes           uint32
-	OutTotalPrfxes          uint32
-	PeerState               string
-	OutPrfxesDenied         uint32
-	OutPrfxesImpWdr         uint32
-	OutPrfxesExpWdr         uint32
-	InPrfxesImpWdr          uint32
-	InPrfxesExpWdr          uint32
-	CurPrfxesDeniedByPol    uint32
-	PeerAddr                string
+	Afi       string
+	Safi      string
+	UserData  string
+	PeerState string
+	PeerAddr  string
 	*pds.BGPPrfxCntrsStatus
 }
 
 func NewBGPPrfxCntrsStatus(in *pds.BGPPrfxCntrsStatus) *ShadowBGPPrfxCntrsStatus {
 	return &ShadowBGPPrfxCntrsStatus{
-		EntIndex:                in.EntIndex,
-		PeerIndex:               in.PeerIndex,
-		Afi:                     strings.TrimPrefix(in.Afi.String(), "BGP_AFI_"),
-		Safi:                    strings.TrimPrefix(in.Safi.String(), "BGP_SAFI_"),
-		InPrfxes:                in.InPrfxes,
-		InPrfxesAccepted:        in.InPrfxesAccepted,
-		InPrfxesRejected:        in.InPrfxesRejected,
-		OutPrfxes:               in.OutPrfxes,
-		OutPrfxesAdvertised:     in.OutPrfxesAdvertised,
-		UserData:                dumpBytes([]byte(in.UserData)),
-		InPrfxesFlapped:         in.InPrfxesFlapped,
-		InPrfxesFlapSuppressed:  in.InPrfxesFlapSuppressed,
-		InPrfxesFlapHistory:     in.InPrfxesFlapHistory,
-		InPrfxesActive:          in.InPrfxesActive,
-		InPrfxesDeniedByPol:     in.InPrfxesDeniedByPol,
-		NumLocRibRoutes:         in.NumLocRibRoutes,
-		NumLocRibBestRoutes:     in.NumLocRibBestRoutes,
-		InPrfxesDeniedMartian:   in.InPrfxesDeniedMartian,
-		InPrfxesDeniedAsLoop:    in.InPrfxesDeniedAsLoop,
-		InPrfxesDeniedNextHop:   in.InPrfxesDeniedNextHop,
-		InPrfxesDeniedAsLength:  in.InPrfxesDeniedAsLength,
-		InPrfxesDeniedCommunity: in.InPrfxesDeniedCommunity,
-		InPrfxesDeniedLocalOrig: in.InPrfxesDeniedLocalOrig,
-		InTotalPrfxes:           in.InTotalPrfxes,
-		OutTotalPrfxes:          in.OutTotalPrfxes,
-		PeerState:               strings.TrimPrefix(in.PeerState.String(), "BGP_PEER_STATE_"),
-		OutPrfxesDenied:         in.OutPrfxesDenied,
-		OutPrfxesImpWdr:         in.OutPrfxesImpWdr,
-		OutPrfxesExpWdr:         in.OutPrfxesExpWdr,
-		InPrfxesImpWdr:          in.InPrfxesImpWdr,
-		InPrfxesExpWdr:          in.InPrfxesExpWdr,
-		CurPrfxesDeniedByPol:    in.CurPrfxesDeniedByPol,
-		BGPPrfxCntrsStatus:      in,
+		Afi:                strings.TrimPrefix(in.Afi.String(), "BGP_AFI_"),
+		Safi:               strings.TrimPrefix(in.Safi.String(), "BGP_SAFI_"),
+		UserData:           dumpBytes([]byte(in.UserData)),
+		PeerState:          strings.TrimPrefix(in.PeerState.String(), "BGP_PEER_STATE_"),
+		BGPPrfxCntrsStatus: in,
 	}
 }
 
 // ShadowBGPRouteMapStatus is a shadow of the BGPRouteMapStatus
 type ShadowBGPRouteMapStatus struct {
-	EntIndex uint32
-	Index    uint32
-	Number   uint32
-	Hitcnt   int32
 	OrfAssoc string
 	*pds.BGPRouteMapStatus
 }
 
 func NewBGPRouteMapStatus(in *pds.BGPRouteMapStatus) *ShadowBGPRouteMapStatus {
 	return &ShadowBGPRouteMapStatus{
-		EntIndex:          in.EntIndex,
-		Index:             in.Index,
-		Number:            in.Number,
-		Hitcnt:            in.Hitcnt,
 		OrfAssoc:          strings.TrimPrefix(in.OrfAssoc.String(), "BGP_ORF_ASSOC_"),
 		BGPRouteMapStatus: in,
 	}
@@ -1477,17 +1322,13 @@ func NewBGPRouteMapStatus(in *pds.BGPRouteMapStatus) *ShadowBGPRouteMapStatus {
 
 // ShadowEvpnBdStatus shadows the EvpnBdStatus for CLI purposes
 type ShadowEvpnBdStatus struct {
-	EntityIndex uint32
-	EviIndex    uint32
-	OperStatus  string
-	OperReason  string
+	OperStatus string
+	OperReason string
 	*pds.EvpnBdStatus
 }
 
 func NewEvpnBdStatus(in *pds.EvpnBdStatus) ShadowEvpnBdStatus {
 	return ShadowEvpnBdStatus{
-		EntityIndex:  in.EntityIndex,
-		EviIndex:     in.EviIndex,
 		OperStatus:   strings.TrimPrefix(in.OperStatus.String(), "EVPN_OPER_STATUS_"),
 		OperReason:   strings.TrimPrefix(in.OperReason.String(), "EVPN_"),
 		EvpnBdStatus: in,
@@ -1507,19 +1348,13 @@ func NewEvpnBd(in *pds.EvpnBd) *ShadowEvpnBd {
 
 // ShadowEvpnBdIfStatus shadows the EvpnBdIfStatus for CLI purposes
 type ShadowEvpnBdIfStatus struct {
-	EntityIndex uint32
-	EviIndex    uint32
-	OperStatus  string
-	OperReason  string
-	IfId        uint32
+	OperStatus string
+	OperReason string
 	*pds.EvpnBdIfStatus
 }
 
 func NewEvpnBdIfStatus(in *pds.EvpnBdIfStatus) ShadowEvpnBdIfStatus {
 	return ShadowEvpnBdIfStatus{
-		EntityIndex:    in.EntityIndex,
-		EviIndex:       in.EviIndex,
-		IfId:           in.IfId,
 		OperStatus:     strings.TrimPrefix(in.OperStatus.String(), "EVPN_OPER_STATUS_"),
 		OperReason:     strings.TrimPrefix(in.OperReason.String(), "EVPN_"),
 		EvpnBdIfStatus: in,
@@ -1540,42 +1375,27 @@ func NewEvpnBdIf(in *pds.EvpnBdIf) *ShadowEvpnBdIf {
 // ShadowLimVrfStatus shadows the LimVrfStatus for CLI purposes
 type ShadowLimVrfStatus struct {
 	*pds.LimVrfStatus
-	EntityIndex   uint32
-	VrfName       string
-	Desc          string
-	Description   string
-	OperStatus    string
-	OperReason    string
-	NumInterfaces uint32
+	OperStatus string
+	OperReason string
 }
 
 // NewLimVrfGetResp creates a new shadow of the LimVrfStatus
 func NewLimVrfGetResp(status *pds.LimVrfStatus) *ShadowLimVrfStatus {
 	return &ShadowLimVrfStatus{
-		LimVrfStatus:  status,
-		EntityIndex:   status.EntityIndex,
-		VrfName:       status.VrfName,
-		Description:   status.Desc,
-		OperReason:    strings.TrimPrefix(status.OperReason.String(), "OPR_RSN_"),
-		OperStatus:    strings.TrimPrefix(status.OperStatus.String(), "OPER_STATUS_"),
-		NumInterfaces: status.NumInterfaces,
+		LimVrfStatus: status,
+		OperReason:   strings.TrimPrefix(status.OperReason.String(), "OPR_RSN_"),
+		OperStatus:   strings.TrimPrefix(status.OperStatus.String(), "OPER_STATUS_"),
 	}
 }
 
 // ShadowCPRouteRedistStatus shadows the CPRouteRedistStatus for CLI purposes
 type ShadowCPRouteRedistStatus struct {
-	FteIndex       uint32
-	EntryId        uint32
-	RuleUsageCount uint32
-	AddrFilter     string
+	AddrFilter string
 	*pds.CPRouteRedistStatus
 }
 
 func newCPRouteRedistStatus(in *pds.CPRouteRedistStatus) ShadowCPRouteRedistStatus {
 	return ShadowCPRouteRedistStatus{
-		FteIndex:            in.FteIndex,
-		EntryId:             in.EntryId,
-		RuleUsageCount:      in.RuleUsageCount,
 		AddrFilter:          PdsIPToString(in.AddrFilter),
 		CPRouteRedistStatus: in,
 	}
@@ -1596,22 +1416,15 @@ func NewCPRouteRedist(in *pds.CPRouteRedist) *ShadowCPRouteRedist {
 // ShadowLimSwIfStatus shadows the LimSwIfStatus for CLI purposes
 type ShadowLimSwIfStatus struct {
 	*pds.LimSwIfStatus
-	EntityIndex int32
-	Type        string
-	Index       uint32
-	OperStatus  string
-	Name        string
-	IfIndex     int32
+	Type       string
+	OperStatus string
 }
 
 // NewLimSwIfGetResponse creates a new shadow of the LimSwIfStatus
 func NewLimSwIfGetResponse(status *pds.LimSwIfStatus) *ShadowLimSwIfStatus {
 	return &ShadowLimSwIfStatus{
-		EntityIndex: status.EntityIndex,
-		Type:        strings.TrimPrefix(status.Type.String(), "LIM_SOFTWIF_"),
-		Index:       status.Index,
-		Name:        status.Name,
-		IfIndex:     status.IfIndex,
-		OperStatus:  strings.TrimPrefix(status.OperStatus.String(), "OPER_STATUS_"),
+		LimSwIfStatus: status,
+		Type:          strings.TrimPrefix(status.Type.String(), "LIM_SOFTWIF_"),
+		OperStatus:    strings.TrimPrefix(status.OperStatus.String(), "OPER_STATUS_"),
 	}
 }

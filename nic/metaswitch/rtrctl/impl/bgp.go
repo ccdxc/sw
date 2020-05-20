@@ -141,7 +141,7 @@ func bgpShowCmdHandler(cmd *cobra.Command, args []string) error {
 		fmt.Println(string(b))
 		return nil
 	}
-	fmt.Printf(bgpGlobalStr, v.LocalASN, v.RouterId, v.ClusterId, v.Status, v.NumAdjRibOutRoutes, v.PeakNumAdjRibOutRoutes, v.RemDelayTime, v.TableVer)
+	fmt.Printf(bgpGlobalStr, v.LocalASN, v.RouterId, v.ClusterId, v.OperStatus, v.BGPStatus.NumAdjRibOutRoutes, v.BGPStatus.PeakNumAdjRibOutRoutes, v.BGPStatus.RemDelayTime, v.BGPStatus.TableVer)
 	return nil
 }
 
@@ -327,7 +327,7 @@ func bgpPeersAfShowCmdHandler(cmd *cobra.Command, args []string) error {
 				afs = append(afs, afp)
 			} else {
 				if doDetail {
-					fmt.Printf(bgpPeerAFDetStr, afp.Spec.Afi, afp.Spec.Safi, afp.Spec.PeerAddr, afp.Spec.PeerPort, afp.Spec.LocalAddr, afp.Spec.LocalPort, afp.Status.LocalAddrScopeId, afp.Status.RtRefresh, afp.Status.AddPathCapNeg, afp.Status.ReflectorClient, afp.Status.UpdGrp)
+					fmt.Printf(bgpPeerAFDetStr, afp.Spec.Afi, afp.Spec.Safi, afp.Spec.PeerAddr, afp.Spec.RemotePort, afp.Spec.LocalAddr, afp.Spec.LocalPort, afp.Status.LocalAddrScopeId, afp.Status.RtRefresh, afp.Status.AddPathCapNeg, afp.Status.ReflectorClient, afp.Status.UpdateGroup)
 				} else {
 					fmt.Printf(bgpPeerAFFmt, afp.Spec.PeerAddr, afp.Spec.Afi, afp.Spec.Safi)
 					fmt.Println("")
