@@ -19,7 +19,8 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	cmd "github.com/pensando/sw/iota/svcs/agent/command"
-	utils "github.com/pensando/sw/iota/svcs/agent/utils"
+	"github.com/pensando/sw/iota/svcs/agent/utils"
+	Common "github.com/pensando/sw/iota/svcs/common"
 )
 
 const (
@@ -583,7 +584,7 @@ func (app *bareMetalWorkload) SendArpProbe(ip string, intf string, vlan int) err
 	if app.osType != "windows" {
 		arpCmd = append(arpCmd, "arping", "-c", "5", "-U", ip, "-I", intf)
 	} else {
-		arpCmd = append(arpCmd, "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe", "\"arp-ping -s "+ip+" "+ip+"\"")
+		arpCmd = append(arpCmd, Common.WindowsPowerShell, "\"arp-ping -s "+ip+" "+ip+"\"")
 	}
 
 	cmdResp, _, _ := app.RunCommand(arpCmd, "", 0, 0, false, false)
@@ -609,7 +610,7 @@ func (app *bareMetalWorkload) AddInterface(spec InterfaceSpec) (string, error) {
 		if !ok {
 			break
 		}
-		cmd := []string{"/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe", "Enable-NetAdapter \"" + name + "\" -Confirm:$false"}
+		cmd := []string{Common.WindowsPowerShell, "Enable-NetAdapter \"" + name + "\" -Confirm:$false"}
 		if retCode, stdout, _ := utils.Run(cmd, 0, false, false, nil); retCode != 0 {
 			return "", errors.Errorf("Could not bring up parent interface %s with command %v: %s", spec.Parent, cmd, stdout)
 		}
@@ -667,7 +668,7 @@ func (app *bareMetalWorkload) AddInterface(spec InterfaceSpec) (string, error) {
 			if !ok {
 				break
 			}
-			setMacAddrCmd := []string{"/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe", "Set-NetAdapter -Name '" + name + "' -MacAddress '" + spec.Mac + "' -Confirm:$false"}
+			setMacAddrCmd := []string{Common.WindowsPowerShell, "Set-NetAdapter -Name '" + name + "' -MacAddress '" + spec.Mac + "' -Confirm:$false"}
 			if retCode, stdout, err := utils.Run(setMacAddrCmd, 0, false, false, nil); retCode != 0 {
 				return "", errors.Wrap(err, stdout)
 			}
@@ -693,7 +694,7 @@ func (app *bareMetalWorkload) AddInterface(spec InterfaceSpec) (string, error) {
 				break
 				// return "", errors.Errorf("Failed to find port")
 			}
-			cmd := []string{"/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe", "New-NetIPAddress -InterfaceAlias \"" + intfInfo["Name"] + "\" -IPAddress " + output[0] + " -PrefixLength " + output[1]}
+			cmd := []string{Common.WindowsPowerShell, "New-NetIPAddress -InterfaceAlias \"" + intfInfo["Name"] + "\" -IPAddress " + output[0] + " -PrefixLength " + output[1]}
 			if retCode, stdout, err := utils.Run(cmd, 0, false, false, nil); retCode != 0 {
 				if !strings.Contains(stdout, "already exists") {
 					return "", errors.Wrap(err, stdout)
@@ -722,7 +723,7 @@ func (app *bareMetalWorkload) AddInterface(spec InterfaceSpec) (string, error) {
 				break
 				// return "", errors.Errorf("Failed to find port")
 			}
-			cmd := []string{"/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe", "New-NetIPAddress -InterfaceAlias \"" + intfInfo["Name"] + "\" -AddressFamily IPv6 -IPAddress " + output[0] + " -PrefixLength " + output[1]}
+			cmd := []string{Common.WindowsPowerShell, "New-NetIPAddress -InterfaceAlias \"" + intfInfo["Name"] + "\" -AddressFamily IPv6 -IPAddress " + output[0] + " -PrefixLength " + output[1]}
 			if retCode, stdout, err := utils.Run(cmd, 0, false, false, nil); retCode != 0 {
 				if !strings.Contains(stdout, "already exists") {
 					return "", errors.Wrap(err, stdout)
@@ -923,7 +924,7 @@ func (app *bareMetalWorkload) BringUp(args ...string) error {
 		return nil
 	}
 
-	f, err := os.Open("/pensando/iota/name-mapping.json")
+	f, err := os.Open(Common.WindowsPortMappingFile)
 	if err != nil {
 		app.osType = "linux"
 	} else {

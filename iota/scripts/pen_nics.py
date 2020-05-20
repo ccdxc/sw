@@ -3,7 +3,7 @@ import subprocess
 import argparse
 import sys
 import json
-
+import os
 
 parser = argparse.ArgumentParser(description='Pensando NIC Finder')
 parser.add_argument('--intf-type', dest='intf_type', default='data-nic', choices=['int-mnic','data-nic'])
@@ -172,6 +172,17 @@ def __print_mnic_ip_freebsd(mac_hint, intf_type):
 
 
 def __get_devices_windows(mac_hint):
+    if os.path.exists("/pensando/iota/name-mapping.json"):
+        f = open("/pensando/iota/name-mapping.json")
+        rdata = f.read()
+        jdata = json.JSONDecoder().decode(rdata)
+        f.close()
+        devs = []
+        for intf in jdata.values():
+            if MacInRange(intf["MacAddress"], mac_hint):
+                devs.append((intf["LinuxName"], int(intf["Bus"])))
+        devs.sort(key = lambda x: x[1])
+        return devs
 
     devs = []
     proc = subprocess.Popen(['/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe', 'Get-NetAdapter -InterfaceDescription "Pensando*" | Select-Object Name, ifIndex, MacAddress, ifDesc | Convertto-Json'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -247,6 +258,8 @@ def __get_devices_windows(mac_hint):
     for intf in intfMap.values():
         if MacInRange(intf["MacAddress"], mac_hint):
             devs.append((intf["LinuxName"], int(intf["Bus"])))
+        intf["Bus"] = str(intf["Bus"])
+        intf["ifIndex"] = str(intf["ifIndex"])
         output[intf["LinuxName"]] = intf
 
     ojson = json.JSONEncoder().encode(output)

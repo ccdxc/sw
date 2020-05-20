@@ -89,7 +89,7 @@ func (agent *Service) AddNode(ctx context.Context, in *iota.Node) (*iota.Node, e
 
 	if err != nil {
 		/* Init file and no point pretentding to have a personality */
-		agent.logger.Errorf("Personality Init failed for type %d", in.Type)
+		agent.logger.Errorf("Personality Init failed for type %d: %v", in.Type, err)
 		agent.node = nil
 	}
 

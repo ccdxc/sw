@@ -174,6 +174,12 @@ const (
 	VcenterPvlanStart = 2048
 
 	DvsVersion = "6.6.0"
+
+	// WindowsPowerShell Windows Powershell Command
+	WindowsPowerShell = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe"
+
+	// WindowsPortMappingFile
+	WindowsPortMappingFile = "/pensando/iota/name-mapping.json"
 )
 
 // incrementing constants. List all constants whose value you don't care here
