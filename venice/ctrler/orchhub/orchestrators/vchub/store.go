@@ -240,7 +240,7 @@ func (v *VCHub) handleDC(m defs.VCEventMsg) {
 		oldName, ok := v.DcID2NameMap[m.Key]
 		if ok && oldName != name {
 			// Check if we are managing it
-			if _, ok := v.DcMap[oldName]; !ok {
+			if !v.isManagedNamespace(name) {
 				// DC we aren't managing is renamed, update map entry
 				v.DcID2NameMap[m.Key] = name
 				v.DcMapLock.Unlock()
@@ -285,8 +285,32 @@ func (v *VCHub) handleDC(m defs.VCEventMsg) {
 			_, err := v.NewPenDC(name, m.Key)
 			if err == nil {
 				v.probe.StartWatchForDC(name, m.Key)
+				v.checkNetworks(name)
+			} else {
+				// Verify DC still exists
+				retryFn := func() {
+					v.Log.Infof("Retry Event: Create DC running")
+					dcs := v.probe.ListDC()
+					found := false
+					for _, dc := range dcs {
+						if name == dc.Name {
+							found = true
+							break
+						}
+					}
+
+					if !found {
+						v.Log.Infof("Retry event: DC %s no longer exists, nothing to do", name)
+						return
+					}
+
+					v.vcReadCh <- defs.Probe2StoreMsg{
+						MsgType: defs.VCEvent,
+						Val:     m,
+					}
+				}
+				v.TimerQ.Add(retryFn, retryDelay)
 			}
-			v.checkNetworks(name)
 		}
 
 		// update discovered list

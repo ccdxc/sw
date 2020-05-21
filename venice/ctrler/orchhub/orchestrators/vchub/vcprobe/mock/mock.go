@@ -3,6 +3,7 @@ package mock
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/types"
@@ -16,7 +17,8 @@ type ProbeMock struct {
 	// dc -> pgName -> config
 	PgStateMap map[string](map[string]*types.DVPortgroupConfigSpec)
 	// dc -> dvsName -> portKey -> port info
-	DvsStateMap map[string](map[string](map[string]types.DistributedVirtualPort))
+	DvsStateMapLock sync.Mutex
+	DvsStateMap     map[string](map[string](map[string]types.DistributedVirtualPort))
 }
 
 // NewProbeMock creates a mock wrapper around the given probe
@@ -136,6 +138,8 @@ func (v *ProbeMock) ListDVS(dcRef *types.ManagedObjectReference) []mo.VmwareDist
 
 // UpdateDVSPortsVlan stores the changes locally since vcsim does not support reconfigureDVS
 func (v *ProbeMock) UpdateDVSPortsVlan(dcName, dvsName string, portsSetting vcprobe.PenDVSPortSettings, retry int) error {
+	v.DvsStateMapLock.Lock()
+	defer v.DvsStateMapLock.Unlock()
 	dc := v.DvsStateMap[dcName]
 	portConfigs := map[string]types.DistributedVirtualPort{}
 	if dc == nil {
@@ -181,6 +185,8 @@ func (v *ProbeMock) UpdateDVSPortsVlan(dcName, dvsName string, portsSetting vcpr
 
 // GetPenDVSPorts returns port settings
 func (v *ProbeMock) GetPenDVSPorts(dcName, dvsName string, criteria *types.DistributedVirtualSwitchPortCriteria, retry int) ([]types.DistributedVirtualPort, error) {
+	v.DvsStateMapLock.Lock()
+	defer v.DvsStateMapLock.Unlock()
 	dc := v.DvsStateMap[dcName]
 	portsRet := []types.DistributedVirtualPort{}
 

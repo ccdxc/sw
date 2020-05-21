@@ -128,9 +128,9 @@ func (v *VCProbe) GetPenDVS(dcName, dvsName string, retry int) (*object.Distribu
 
 func (v *VCProbe) getDVSObj(dcName, dvsName string, client *govmomi.Client) (*object.DistributedVirtualSwitch, error) {
 
-	v.State.DvsMapLock.RLock()
+	v.State.DvsIDMapLock.RLock()
 	dvsRef, ok := v.State.DvsIDMap[dvsName]
-	v.State.DvsMapLock.RUnlock()
+	v.State.DvsIDMapLock.RUnlock()
 	if !ok {
 		dc, err := v.getDCObj(dcName, client)
 		if err != nil {

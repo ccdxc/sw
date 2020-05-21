@@ -587,6 +587,9 @@ func TestWorkloads(t *testing.T) {
 					if len(item.Spec.Interfaces) != 3 {
 						return false, nil
 					}
+					if len(item.Spec.Interfaces[2].IpAddresses) == 0 {
+						return false, fmt.Errorf("IP address was empty")
+					}
 					return true, nil
 				}, "Workload not in pcache/statemgr")
 

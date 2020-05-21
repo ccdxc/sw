@@ -413,7 +413,10 @@ func (v *VCHub) handleVMotionStart(m defs.VMotionStartMsg) {
 	// Old VnicInfo is retained as vMotion can be aborted.
 	// Attempt 3 times
 	var err error
-	for i := 0; i < 3; i++ {
+	for i := 0; i < defaultRetryCount; i++ {
+		// Attempt multiple times in case concurrent operations are happening for the
+		// same workload in apiserver. Hook unpacks changes into existing object
+		// so the res ver does not need to be updated in the request
 		_, err = v.StateMgr.Controller().Workload().SyncStartMigration(&wlCopy)
 		if err == nil {
 			break
@@ -472,7 +475,10 @@ func (v *VCHub) handleVMotionFailed(m defs.VMotionFailedMsg) {
 		// Free the useg vlans allocated on the new host
 		v.releaseNewUsegs(wlObj)
 		var err error
-		for i := 0; i < 3; i++ {
+		for i := 0; i < defaultRetryCount; i++ {
+			// Attempt multiple times in case concurrent operations are happening for the
+			// same workload in apiserver. Hook unpacks changes into existing object
+			// so the res ver does not need to be updated in the request
 			_, err = v.StateMgr.Controller().Workload().SyncAbortMigration(wlObj)
 			if err == nil {
 				break
@@ -646,7 +652,10 @@ func (v *VCHub) finalSyncMigration(wlObj *workload.Workload) {
 	}
 
 	var err error
-	for i := 0; i < 3; i++ {
+	for i := 0; i < defaultRetryCount; i++ {
+		// Attempt multiple times in case concurrent operations are happening for the
+		// same workload in apiserver. Hook unpacks changes into existing object
+		// so the res ver does not need to be updated in the request
 		_, err = v.StateMgr.Controller().Workload().SyncFinalSyncMigration(wlObj)
 		if err == nil {
 			break
@@ -666,7 +675,10 @@ func (v *VCHub) finishMigration(wlObj *workload.Workload) {
 		// This should never happen, go ahead and finish migration
 	}
 	var err error
-	for i := 0; i < 3; i++ {
+	for i := 0; i < defaultRetryCount; i++ {
+		// Attempt multiple times in case concurrent operations are happening for the
+		// same workload in apiserver. Hook unpacks changes into existing object
+		// so the res ver does not need to be updated in the request
 		_, err = v.StateMgr.Controller().Workload().SyncFinishMigration(wlObj)
 		if err == nil {
 			break

@@ -12,6 +12,7 @@ import (
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/orchestration"
 	"github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
+	"github.com/pensando/sw/venice/ctrler/orchhub/utils/timerqueue"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -213,15 +214,16 @@ type State struct {
 	StateMgr   *statemgr.Statemgr
 	OrchConfig *orchestration.Orchestrator
 	Wg         *sync.WaitGroup
+	TimerQ     *timerqueue.Queue
 
-	DcMapLock  sync.RWMutex
-	DcIDMap    map[string]types.ManagedObjectReference
-	DvsMapLock sync.RWMutex
-	DvsIDMap   map[string]types.ManagedObjectReference
+	DcMapLock    sync.RWMutex
+	DcIDMap      map[string]types.ManagedObjectReference
+	DvsIDMapLock sync.RWMutex
+	DvsIDMap     map[string]types.ManagedObjectReference
 
 	// If supplied, we only process events if the DC name matches any of this
-	// TODO: for testing locally only, remove eventually
-	ForceDCNames map[string]bool
+	ForceDCNames     map[string]bool
+	ForceDCNamesLock sync.RWMutex
 }
 
 const (

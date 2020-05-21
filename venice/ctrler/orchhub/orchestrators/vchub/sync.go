@@ -373,14 +373,18 @@ func (v *VCHub) syncVMs(workloads []*ctkit.Workload, dc mo.Datacenter, vms []mo.
 			v.Log.Debugf("Skipping workload %s", workload.Name)
 			continue
 		}
+		isVmkWorkload := false
 		if _, ok := vmkMap[workload.Name]; ok {
 			// do not delete vmkWorkloads
-			continue
+			isVmkWorkload = true
 		}
-		if _, ok := vmMap[workload.Name]; !ok {
+
+		isMigrating := v.isWorkloadMigrating(&workload.Workload)
+
+		if _, ok := vmMap[workload.Name]; !ok && !isVmkWorkload {
 			// workload no longer exists
 			v.Log.Infof("Found stale workload %s", workload.Name)
-			if v.isWorkloadMigrating(&workload.Workload) && v.isVMotionAcrossDC(&workload.Workload) {
+			if isMigrating && v.isVMotionAcrossDC(&workload.Workload) {
 				// Fetch the workload to see where it is
 				vmKey := v.parseVMKeyFromWorkloadName(workload.Workload.Name)
 				// check finish migration
@@ -403,6 +407,18 @@ func (v *VCHub) syncVMs(workloads []*ctkit.Workload, dc mo.Datacenter, vms []mo.
 		}
 
 		// build useg state
+		if isMigrating {
+			hostName := workload.Status.HostName
+			// Need to allocate status as well in case vmotion is aborted
+			for _, inf := range workload.Status.Interfaces {
+				if inf.MicroSegVlan != 0 {
+					err := penDvs.UsegMgr.SetVlanForVnic(inf.MACAddress, hostName, int(inf.MicroSegVlan))
+					if err != nil {
+						v.Log.Errorf("Setting vlan %d for status vnic %s returned %s", inf.MicroSegVlan, inf.MACAddress, err)
+					}
+				}
+			}
+		}
 		hostName := workload.Spec.HostName
 		for _, inf := range workload.Spec.Interfaces {
 			if inf.MicroSegVlan != 0 {

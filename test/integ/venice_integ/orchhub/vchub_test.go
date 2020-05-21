@@ -696,5 +696,5 @@ func verifyHostCount(t *testing.T, count int) {
 		}
 
 		return true, nil
-	}, "Failed to find hosts", "5s", "30s")
+	}, "Failed to find hosts", "5s", "2m")
 }

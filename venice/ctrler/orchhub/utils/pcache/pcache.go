@@ -43,10 +43,10 @@ const (
 	PCacheRetryInterval = 10 * time.Second
 
 	// WorkloadKind is the pcache key for workloads
-	WorkloadKind = "Workload"
+	WorkloadKind = string(workload.KindWorkload)
 
 	// HostKind is the pcache key for hosts
-	HostKind = "Host"
+	HostKind = string(cluster.KindHost)
 
 	// How many times to try to rewrite an object before putting in cache
 	writeRetries = 3
@@ -118,6 +118,37 @@ func (p *PCache) GetWorkloadByName(wlName string) *workload.Workload {
 		Namespace: globals.DefaultNamespace,
 	}
 	return p.GetWorkload(meta)
+}
+
+// ListWorkloads  gets all workloads in pcache + statemgr
+func (p *PCache) ListWorkloads(ctx context.Context) map[string]*workload.Workload {
+	p.RLock()
+	kindMap := p.kinds[WorkloadKind]
+	p.RUnlock()
+	items := map[string]*workload.Workload{}
+
+	if kindMap != nil {
+		kindMap.Lock()
+		for key, entry := range kindMap.entries {
+			items[key] = entry.(*workload.Workload)
+		}
+		kindMap.Unlock()
+	}
+
+	ctkitWorkloads, err := p.stateMgr.Controller().Workload().List(ctx, &api.ListWatchOptions{})
+	if err != nil {
+		p.Log.Errorf("Failed to get workloads in statemgr")
+		return items
+	}
+
+	for _, obj := range ctkitWorkloads {
+		key := obj.GetKey()
+		if _, ok := items[key]; !ok {
+			items[key] = &obj.Workload
+		}
+	}
+
+	return items
 }
 
 // GetHost Retrieves a host
@@ -363,11 +394,18 @@ func (p *PCache) writeStateMgr(in interface{}) error {
 					if writeErr == nil {
 						break
 					}
+					time.Sleep(100 * time.Millisecond)
 				}
 			}
 		} else {
-			p.Log.Debugf("%s %s statemgr create called", WorkloadKind, meta.GetKey())
-			writeErr = ctrler.Workload().SyncCreate(obj)
+			for i := 0; i < writeRetries; i++ {
+				p.Log.Debugf("%s %s statemgr create called", WorkloadKind, meta.GetKey())
+				writeErr = ctrler.Workload().SyncCreate(obj)
+				if writeErr == nil {
+					break
+				}
+				time.Sleep(100 * time.Millisecond)
+			}
 		}
 		p.Log.Debugf("%s %s write to statemgr returned %v", WorkloadKind, meta.GetKey(), writeErr)
 		return writeErr
@@ -394,12 +432,26 @@ func (p *PCache) writeStateMgr(in interface{}) error {
 			if !reflect.DeepEqual(&currObj.Host.Spec, obj.Spec) ||
 				!reflect.DeepEqual(&currObj.Host.Status, obj.Status) ||
 				!reflect.DeepEqual(&currObj.Host.Labels, obj.Labels) {
-				p.Log.Debugf("%s %s statemgr update called", HostKind, meta.GetKey())
-				writeErr = ctrler.Host().SyncUpdate(obj)
+				for i := 0; i < writeRetries; i++ {
+					// CAS check is needed in case user adds labels to an object
+					obj.ResourceVersion = currObj.ResourceVersion
+					p.Log.Debugf("%s %s statemgr update called", HostKind, meta.GetKey())
+					writeErr = ctrler.Host().SyncUpdate(obj)
+					if writeErr == nil {
+						break
+					}
+					time.Sleep(100 * time.Millisecond)
+				}
 			}
 		} else {
-			p.Log.Debugf("%s %s statemgr create called", HostKind, meta.GetKey())
-			writeErr = ctrler.Host().SyncCreate(obj)
+			for i := 0; i < writeRetries; i++ {
+				p.Log.Debugf("%s %s statemgr create called", HostKind, meta.GetKey())
+				writeErr = ctrler.Host().SyncCreate(obj)
+				if writeErr == nil {
+					break
+				}
+				time.Sleep(100 * time.Millisecond)
+			}
 		}
 		p.Log.Debugf("%s %s write to statemgr returned %v", HostKind, meta.GetKey(), writeErr)
 		return writeErr

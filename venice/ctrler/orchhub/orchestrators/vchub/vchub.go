@@ -21,6 +21,7 @@ import (
 	"github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
 	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
 	"github.com/pensando/sw/venice/ctrler/orchhub/utils/pcache"
+	"github.com/pensando/sw/venice/ctrler/orchhub/utils/timerqueue"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/ref"
@@ -30,6 +31,7 @@ const (
 	storeQSize          = 64
 	defaultRetryCount   = 3
 	defaultTagSyncDelay = 2 * time.Minute
+	retryDelay          = 30 * time.Second
 )
 
 // VCHub instance
@@ -130,7 +132,7 @@ func (v *VCHub) setupVCHub(stateMgr *statemgr.Statemgr, config *orchestration.Or
 	// Set connection status as unknown
 	o, err := stateMgr.Controller().Orchestrator().Find(&config.ObjectMeta)
 	if err != nil {
-		v.Log.Errorf("Orchestrator Object %v does not exist",
+		logger.Errorf("Orchestrator Object %v does not exist",
 			config.GetKey())
 	} else {
 		v.orchUpdateLock.Lock()
@@ -153,6 +155,7 @@ func (v *VCHub) setupVCHub(stateMgr *statemgr.Statemgr, config *orchestration.Or
 		DcIDMap:      map[string]types.ManagedObjectReference{}, // Obj name to ID
 		DvsIDMap:     map[string]types.ManagedObjectReference{}, // Obj name to ID
 		ForceDCNames: forceDCMap,
+		TimerQ:       timerqueue.NewQueue(),
 		OrchConfig:   ref.DeepCopy(config).(*orchestration.Orchestrator),
 	}
 
@@ -189,7 +192,20 @@ func (v *VCHub) setupVCHub(stateMgr *statemgr.Statemgr, config *orchestration.Or
 	go v.startEventsListener()
 	v.createProbe(config)
 	v.Wg.Add(1)
+	go func() {
+		defer v.Wg.Done()
+		v.TimerQ.Run(ctx)
+	}()
+	v.Wg.Add(1)
 	go v.periodicTagSync()
+
+	// periodic override check
+	v.TimerQ.Add(v.overrideCheckFn, retryDelay)
+}
+
+func (v *VCHub) overrideCheckFn() {
+	v.verifyOverrides()
+	v.TimerQ.Add(v.overrideCheckFn, retryDelay)
 }
 
 func (v *VCHub) createProbe(config *orchestration.Orchestrator) {
@@ -296,7 +312,9 @@ func (v *VCHub) UpdateConfig(config *orchestration.Orchestrator) {
 			forceDCMap[dc] = true
 		}
 
+		v.ForceDCNamesLock.Lock()
 		v.ForceDCNames = forceDCMap
+		v.ForceDCNamesLock.Unlock()
 		v.OrchConfig = ref.DeepCopy(config).(*orchestration.Orchestrator)
 	}
 }
@@ -422,8 +440,37 @@ func (v *VCHub) reconcileNamespaces(config *orchestration.Orchestrator) error {
 			_, err := v.NewPenDC(dc.Name, dc.Self.Value)
 			if err == nil {
 				v.probe.StartWatchForDC(dc.Name, dc.Self.Value)
+				v.checkNetworks(dc.Name)
+			} else {
+				retryFn := func() {
+					v.Log.Infof("Retry Event: Create DC running")
+					name := dc.Name
+					dcs := v.probe.GetDCMap()
+					dcObj, ok := dcs[name]
+					if !ok {
+						v.Log.Infof("Retry event: DC %s no longer exists, nothing to do", name)
+						return
+					}
+
+					v.vcReadCh <- defs.Probe2StoreMsg{
+						MsgType: defs.VCEvent,
+						Val: defs.VCEventMsg{
+							VcObject:   defs.Datacenter,
+							Key:        dcObj.Self.Value,
+							Originator: v.VcID,
+							Changes: []types.PropertyChange{
+								types.PropertyChange{
+									Name: "name",
+									Op:   "add",
+									Val:  name,
+								},
+							},
+						},
+					}
+				}
+				v.Log.Info("Creating state for DC %s failed, pushing to retry queue", dc.Name)
+				v.TimerQ.Add(retryFn, retryDelay)
 			}
-			v.checkNetworks(dc.Name)
 		}
 	}
 
@@ -432,6 +479,8 @@ func (v *VCHub) reconcileNamespaces(config *orchestration.Orchestrator) error {
 
 func (v *VCHub) getManagedNamespaceList() []string {
 	nsList := []string{}
+	v.ForceDCNamesLock.RLock()
+	defer v.ForceDCNamesLock.RUnlock()
 
 	if ok := v.ForceDCNames[utils.ManageAllDcs]; ok {
 		for k := range v.probe.GetDCMap() {
@@ -448,6 +497,8 @@ func (v *VCHub) getManagedNamespaceList() []string {
 
 // Check if the given DC(namespace) is managed by this vchub
 func (v *VCHub) isManagedNamespace(name string) bool {
+	v.ForceDCNamesLock.RLock()
+	defer v.ForceDCNamesLock.RUnlock()
 	if _, ok := v.ForceDCNames[name]; ok {
 		return true
 	}

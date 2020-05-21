@@ -36,6 +36,29 @@ func (v *VCHub) handleNetworkEvent(evtType kvstore.WatchEventType, nw *network.N
 		}
 	}
 	v.Log.Infof("evt %s network %s event for dcs %v", evtType, nw.Name, dcs)
+	retryFn := func() {
+		v.Log.Infof("Retry Event: Create PG running")
+		// Verify this is still needed
+		nw, err := v.StateMgr.Controller().Network().Find(nw.GetObjectMeta())
+		if err != nil {
+			v.Log.Infof("Retry event: network no longer exists, nothing to do. err %s", err)
+			return
+		}
+		apiServerCh, err := v.StateMgr.GetProbeChannel(v.OrchConfig.GetName())
+		if err != nil {
+			v.Log.Errorf("Retry event: Could not get probe channel for %s. Err : %v", v.OrchConfig.GetKey(), err)
+			return
+		}
+		evt := &kvstore.WatchEvent{
+			Type:   kvstore.Updated,
+			Object: &nw.Network,
+		}
+		select {
+		case <-v.Ctx.Done():
+			return
+		case apiServerCh <- evt:
+		}
+	}
 	for _, penDC := range v.DcMap {
 		if _, ok := dcs[penDC.Name]; ok {
 			if evtType == kvstore.Created || evtType == kvstore.Updated {
@@ -62,6 +85,11 @@ func (v *VCHub) handleNetworkEvent(evtType kvstore.WatchEventType, nw *network.N
 						v.handleHost(evt)
 					}
 				}
+				if len(errs) != 0 {
+					// add to queue to retry later
+					v.Log.Infof("Failed to add PG, adding to retry queue")
+					v.TimerQ.Add(retryFn, retryDelay)
+				}
 			} else {
 				// err is already logged inside function
 				remainingAllocs, _ := penDC.RemovePG(pgName, "")
@@ -76,7 +104,12 @@ func (v *VCHub) handleNetworkEvent(evtType kvstore.WatchEventType, nw *network.N
 		} else if evtType == kvstore.Updated {
 			// Check if we need to delete
 			if penDC.GetPG(pgName, "") != nil {
-				penDC.RemovePG(pgName, "")
+				_, errs := penDC.RemovePG(pgName, "")
+				if len(errs) != 0 {
+					// Retry delete
+					v.Log.Infof("Failed to remove PG, adding to retry queue")
+					v.TimerQ.Add(retryFn, retryDelay)
+				}
 			}
 		}
 	}
@@ -97,8 +130,15 @@ func (v *VCHub) checkNetworks(dcName string) {
 				(orch.Namespace == dcName || orch.Namespace == utils.ManageAllDcs) {
 				penDC := v.GetDC(dcName)
 				pgName := CreatePGName(nw.Network.Name)
-				err := penDC.AddPG(pgName, nw.Network.ObjectMeta, "")
-				v.Log.Infof("Create Pen PG %s returned %s", pgName, err)
+				errs := penDC.AddPG(pgName, nw.Network.ObjectMeta, "")
+				if len(errs) != 0 {
+					// add to queue to retry later
+					v.Log.Infof("Failed to add PG, adding to retry queue")
+					v.TimerQ.Add(func() {
+						v.checkNetworks(dcName)
+					}, retryDelay)
+				}
+				v.Log.Infof("Create Pen PG %s returned %s", pgName, errs)
 			} else {
 				v.Log.Debugf("vcID %s dcName %s does not match orch-spec %s - %s",
 					v.VcID, dcName, orch.Name, orch.Namespace)

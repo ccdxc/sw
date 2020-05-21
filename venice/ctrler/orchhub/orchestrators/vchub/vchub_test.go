@@ -2914,6 +2914,163 @@ func TestVCHubDcDelete(t *testing.T) {
 
 }
 
+func TestVerifyOverride(t *testing.T) {
+	logger := setupLogger("vchub_test_verifyOverrides")
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	var vchub *VCHub
+	var s *sim.VcSim
+	var err error
+	var vcp *mock.ProbeMock
+
+	defer func() {
+		logger.Infof("Tearing Down")
+		if vchub != nil {
+			vchub.Destroy(false)
+		}
+
+		cancel()
+		vcp.Wg.Wait()
+
+		if s != nil {
+			s.Destroy()
+		}
+	}()
+	// VChub comes up with PG in use on vcenter
+	// Create network comes after
+	u := createURL(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+
+	s, err = sim.NewVcSim(sim.Config{Addr: u.String()})
+	AssertOk(t, err, "Failed to create vcsim")
+	dcName := defaultTestParams.TestDCName
+	dc1, err := s.AddDC(dcName)
+	AssertOk(t, err, "failed dc create")
+
+	vcp = createProbe(ctx, defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+
+	AssertEventually(t, func() (bool, interface{}) {
+		if !vcp.IsSessionReady() {
+			return false, fmt.Errorf("Session not ready")
+		}
+		return true, nil
+	}, "Session is not Ready", "1s", "10s")
+
+	// Create DVS
+	pvlanConfigSpecArray := testutils.GenPVLANConfigSpecArray(defaultTestParams, "add")
+	dvsCreateSpec := testutils.GenDVSCreateSpec(defaultTestParams, pvlanConfigSpecArray)
+
+	err = vcp.AddPenDVS(dcName, dvsCreateSpec, nil, retryCount)
+	dvsName := CreateDVSName(dcName)
+	dvs, ok := dc1.GetDVS(dvsName)
+	Assert(t, ok, "failed dvs create")
+
+	hostSystem1, err := dc1.AddHost("host1")
+	AssertOk(t, err, "failed host1 create")
+	err = dvs.AddHost(hostSystem1)
+	AssertOk(t, err, "failed to add Host to DVS")
+
+	pNicMac := append(createPenPnicBase(), 0xaa, 0x00, 0x00)
+	// Make it Pensando host
+	err = hostSystem1.AddNic("vmnic0", conv.MacString(pNicMac))
+
+	sm, _, err := smmock.NewMockStateManager()
+	if err != nil {
+		t.Fatalf("Failed to create state manager. Err : %v", err)
+		return
+	}
+
+	spec := testutils.GenPGConfigSpec(CreatePGName("pg1"), 2, 3)
+	err = vcp.AddPenPG(dc1.Obj.Name, dvs.Obj.Name, &spec, nil, retryCount)
+	AssertOk(t, err, "failed to create pg")
+	pg, err := vcp.GetPenPG(dc1.Obj.Name, CreatePGName("pg1"), retryCount)
+	AssertOk(t, err, "failed to get pg")
+
+	// Create VM on this PG
+	_, err = dc1.AddVM("vm1", "host1", []sim.VNIC{
+		sim.VNIC{
+			MacAddress:   "aa:aa:bb:bb:dd:dd",
+			PortgroupKey: pg.Reference().Value,
+			PortKey:      "11",
+		},
+		sim.VNIC{
+			MacAddress:   "aa:aa:bb:bb:dd:ee",
+			PortgroupKey: pg.Reference().Value,
+			PortKey:      "12",
+		},
+	})
+
+	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	orchConfig.Spec.ManageNamespaces = []string{utils.ManageAllDcs}
+
+	err = sm.Controller().Orchestrator().Create(orchConfig)
+
+	// Add network, workload should appear
+	orchInfo1 := []*network.OrchestratorInfo{
+		{
+			Name:      orchConfig.Name,
+			Namespace: defaultTestParams.TestDCName,
+		},
+	}
+	smmock.CreateNetwork(sm, "default", "pg1", "11.1.1.0/24", "11.1.1.1", 500, nil, orchInfo1)
+
+	vchub = LaunchVCHub(sm, orchConfig, logger, WithMockProbe)
+
+	// Wait for it to come up
+	AssertEventually(t, func() (bool, interface{}) {
+		return vchub.IsSyncDone(), nil
+	}, "VCHub sync never finished")
+
+	probe := vchub.probe.(*mock.ProbeMock)
+	AssertEventually(t, func() (bool, interface{}) {
+		probe.DvsStateMapLock.Lock()
+		defer probe.DvsStateMapLock.Unlock()
+		overrides := probe.DvsStateMap[dcName][dvsName]
+		if len(overrides) != 2 {
+			return false, fmt.Errorf("overrides length was %d", len(overrides))
+		}
+		// Check override is present
+		return true, nil
+	}, "Failed to find overrides")
+
+	// Get current override values
+	probe.DvsStateMapLock.Lock()
+
+	overrides := probe.DvsStateMap[dcName][dvsName]
+	currOverrides := map[string]int32{}
+	for key, config := range overrides {
+		currOverrides[key] = config.Config.Setting.(*types.VMwareDVSPortSetting).Vlan.(*types.VmwareDistributedVirtualSwitchVlanIdSpec).VlanId
+	}
+
+	// Modify overrides
+	delete(overrides, "11")
+	overrides["12"].Config.Setting.(*types.VMwareDVSPortSetting).Vlan.(*types.VmwareDistributedVirtualSwitchVlanIdSpec).VlanId = 1
+
+	probe.DvsStateMapLock.Unlock()
+
+	vchub.verifyOverrides()
+
+	AssertEventually(t, func() (bool, interface{}) {
+		probe.DvsStateMapLock.Lock()
+		defer probe.DvsStateMapLock.Unlock()
+		overrides := probe.DvsStateMap[dcName][dvsName]
+		if len(overrides) != 2 {
+			return false, fmt.Errorf("overrides length was %d", len(overrides))
+		}
+		// Check override is present
+		return true, nil
+	}, "Failed to find overrides")
+
+	probe.DvsStateMapLock.Lock()
+
+	overrides = probe.DvsStateMap[dcName][dvsName]
+	for port, config := range overrides {
+		vlan := config.Config.Setting.(*types.VMwareDVSPortSetting).Vlan.(*types.VmwareDistributedVirtualSwitchVlanIdSpec).VlanId
+		AssertEquals(t, currOverrides[port], vlan, "Vlan was not reset for port %s", port)
+	}
+
+}
+
 func setupLogger(logName string) log.Logger {
 	config := log.GetDefaultConfig(logName)
 	config.LogToStdout = true

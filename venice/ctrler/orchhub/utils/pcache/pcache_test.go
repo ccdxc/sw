@@ -110,6 +110,10 @@ func TestPcache(t *testing.T) {
 	AssertEquals(t, entryWorkload, entry, "Get from pcache returned different values")
 	AssertEquals(t, "val1", entryWorkload.Labels[key1], "Workload not in pcache")
 
+	retWorkloads := pCache.ListWorkloads(context.Background())
+	AssertEquals(t, 1, len(retWorkloads), "Number of workloads did not match")
+	AssertEquals(t, expWorkload, retWorkloads[expWorkload.GetKey()], "Get from pcache returned different values")
+
 	// Debug should return value in cache
 	debugInfoResp, err := pCache.Debug(map[string]string{"kind": "Workload"})
 	AssertOk(t, err, "Failed to get debug info")

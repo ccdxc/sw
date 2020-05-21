@@ -24,6 +24,8 @@ import (
 	smmock "github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
 	orchutils "github.com/pensando/sw/venice/ctrler/orchhub/utils"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/events/recorder"
+	mockevtsrecorder "github.com/pensando/sw/venice/utils/events/recorder/mock"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/ref"
 	conv "github.com/pensando/sw/venice/utils/strconv"
@@ -392,12 +394,17 @@ func TestVmotion(t *testing.T) {
 // Tests vmotion by triggering watch events
 func TestVmotionWithWatchers(t *testing.T) {
 	var vchub *VCHub
+	var vchubDummy *VCHub
 	var s *sim.VcSim
 	testCtx, cancel := context.WithCancel(context.Background())
 	err := testutils.ValidateParams(defaultTestParams)
 	if err != nil {
 		t.Fatalf("Failed at validating test parameters")
 	}
+
+	eventRecorder := mockevtsrecorder.NewRecorder("vmotion_test",
+		log.GetNewLogger(log.GetDefaultConfig("vmotion_test")))
+	_ = recorder.Override(eventRecorder)
 
 	// SETTING UP LOGGER
 	config := log.GetDefaultConfig("vmotion_test_with_watchers")
@@ -410,6 +417,9 @@ func TestVmotionWithWatchers(t *testing.T) {
 		cancel()
 		if vchub != nil {
 			vchub.Destroy(false)
+		}
+		if vchubDummy != nil {
+			vchubDummy.Destroy(false)
 		}
 		if s != nil {
 			s.Destroy()
@@ -439,6 +449,15 @@ func TestVmotionWithWatchers(t *testing.T) {
 	orchConfig.Status.OrchID = 1
 
 	err = sm.Controller().Orchestrator().Create(orchConfig)
+	AssertOk(t, err, "failed to create orch config")
+
+	// create second dummy orch config so there are two instances of orchhub during the test
+	orchConfig1 := smmock.GetOrchestratorConfig(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	orchConfig1.ObjectMeta.Name = "vc2"
+	orchConfig1.Spec.ManageNamespaces = []string{"randomDC"}
+	orchConfig1.Status.OrchID = 2
+
+	err = sm.Controller().Orchestrator().Create(orchConfig1)
 	AssertOk(t, err, "failed to create orch config")
 
 	orchInfo1 := []*network.OrchestratorInfo{
@@ -554,6 +573,8 @@ func TestVmotionWithWatchers(t *testing.T) {
 
 	logger.Infof("===== Launch VCHub =====")
 	vchub = LaunchVCHub(sm, orchConfig, logger, WithMockProbe)
+	// Dummy vchub
+	vchubDummy = LaunchVCHub(sm, orchConfig1, logger, WithMockProbe)
 	wlName := vchub.createVMWorkloadName("", vm1.Self.Value)
 	deleteVM := func(sendEvent bool) {
 		// VM must be back on host in DC1 for deletions to work
@@ -811,6 +832,10 @@ func TestVmotionWithWatchers(t *testing.T) {
 		wlName = vchub.createVMWorkloadName("", vm1.Self.Value)
 	}
 
+	verifyNoEvents := func() {
+		AssertEquals(t, 0, len(eventRecorder.GetEvents()), "Expected no events, got events %v", eventRecorder.GetEvents())
+	}
+
 	waitVMReady()
 	testCases := func(dstHost *sim.Host, dstDC *sim.Datacenter) {
 		isAcrossDC := dstDC.Obj.Name != defaultTestParams.TestDCName
@@ -824,6 +849,7 @@ func TestVmotionWithWatchers(t *testing.T) {
 
 			logger.Infof("===== Test: VMotion Happy case - AcrossDC: %v =====", isAcrossDC)
 
+			eventRecorder.ClearEvents()
 			// Start migration
 			vMotionStart(dstHost, dstDC)
 			checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationStart)
@@ -847,11 +873,15 @@ func TestVmotionWithWatchers(t *testing.T) {
 			// Now that we are done migrating, verify new vnic was added
 			verifyWorkload(dstHost, nil, 2, isAcrossDC)
 
+			verifyNoEvents()
+
 			// CLEANUP
 			vchub.Destroy(false)
+			vchubDummy.Destroy(false)
 			deleteVM(false)
 			recreateVM()
 			vchub = LaunchVCHub(sm, orchConfig, logger, WithMockProbe)
+			vchubDummy = LaunchVCHub(sm, orchConfig1, logger, WithMockProbe)
 			waitForWatch()
 		}
 
@@ -864,6 +894,7 @@ func TestVmotionWithWatchers(t *testing.T) {
 			*/
 			logger.Infof("===== Test: VMotion Happy abort - AcrossDC: %v =====", isAcrossDC)
 
+			eventRecorder.ClearEvents()
 			// Start migration
 			vMotionStart(dstHost, dstDC)
 
@@ -885,13 +916,16 @@ func TestVmotionWithWatchers(t *testing.T) {
 
 			// Now that we are done migrating, verify new vnic was added
 			verifyWorkload(penHost1, nil, 2, isAcrossDC)
+			verifyNoEvents()
 
 			// CLEANUP
 			// remove vnic, move back vm
 			vchub.Destroy(false)
+			vchubDummy.Destroy(false)
 			deleteVM(false)
 			recreateVM()
 			vchub = LaunchVCHub(sm, orchConfig, logger, WithMockProbe)
+			vchubDummy = LaunchVCHub(sm, orchConfig1, logger, WithMockProbe)
 			waitForWatch()
 			waitVMReady()
 		}
@@ -906,6 +940,7 @@ func TestVmotionWithWatchers(t *testing.T) {
 
 			logger.Infof("===== Test: VMotion datapath fail - AcrossDC: %v =====", isAcrossDC)
 
+			eventRecorder.ClearEvents()
 			// Start migration
 			vMotionStart(dstHost, dstDC)
 
@@ -930,12 +965,15 @@ func TestVmotionWithWatchers(t *testing.T) {
 
 			// Now that we are done migrating, verify new vnic was added
 			verifyWorkload(dstHost, nil, 2, isAcrossDC)
+			verifyNoEvents()
 
 			// CLEANUP
 			vchub.Destroy(false)
+			vchubDummy.Destroy(false)
 			deleteVM(false)
 			recreateVM()
 			vchub = LaunchVCHub(sm, orchConfig, logger, WithMockProbe)
+			vchubDummy = LaunchVCHub(sm, orchConfig1, logger, WithMockProbe)
 			waitForWatch()
 			waitVMReady()
 		}
@@ -949,6 +987,7 @@ func TestVmotionWithWatchers(t *testing.T) {
 
 			logger.Infof("===== Test: VMotion datapath timeout - AcrossDC: %v =====", isAcrossDC)
 
+			eventRecorder.ClearEvents()
 			// Start migration
 			vMotionStart(dstHost, dstDC)
 
@@ -970,12 +1009,15 @@ func TestVmotionWithWatchers(t *testing.T) {
 			// Now that we are done migrating, verify new vnic was added
 			// verify we are on the old host
 			verifyWorkload(penHost1, nil, 2, isAcrossDC)
+			verifyNoEvents()
 
 			// CLEANUP
 			vchub.Destroy(false)
+			vchubDummy.Destroy(false)
 			deleteVM(false)
 			recreateVM()
 			vchub = LaunchVCHub(sm, orchConfig, logger, WithMockProbe)
+			vchubDummy = LaunchVCHub(sm, orchConfig1, logger, WithMockProbe)
 			waitForWatch()
 			waitVMReady()
 		}
@@ -988,6 +1030,7 @@ func TestVmotionWithWatchers(t *testing.T) {
 			*/
 
 			logger.Infof("===== Test: VMotion delete before datapath finishes - AcrossDC: %v =====", isAcrossDC)
+			eventRecorder.ClearEvents()
 			vMotionStart(dstHost, dstDC)
 			checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationStart)
 
@@ -1016,11 +1059,14 @@ func TestVmotionWithWatchers(t *testing.T) {
 				}
 				return true, nil
 			}, "workload should have been deleted")
+			verifyNoEvents()
 
 			// CLEANUP - recreate workload on host1
 			vchub.Destroy(false)
+			vchubDummy.Destroy(false)
 			recreateVM()
 			vchub = LaunchVCHub(sm, orchConfig, logger, WithMockProbe)
+			vchubDummy = LaunchVCHub(sm, orchConfig1, logger, WithMockProbe)
 			waitForWatch()
 			waitVMReady()
 		}
@@ -1038,6 +1084,7 @@ func TestVmotionWithWatchers(t *testing.T) {
 			if isAcrossDC {
 				logger.Infof("===== Test: VMotion across DC with host update before valid VNICs =====")
 
+				eventRecorder.ClearEvents()
 				// Start migration
 				vMotionStart(dstHost, dstDC)
 				checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationStart)
@@ -1049,12 +1096,15 @@ func TestVmotionWithWatchers(t *testing.T) {
 				checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationStart)
 
 				// VCSim will crash if we attempt to query info about the migrating VM. Can't test updating vnics
+				verifyNoEvents()
 
 				// CLEANUP
 				vchub.Destroy(false)
+				vchubDummy.Destroy(false)
 				deleteVM(false)
 				recreateVM()
 				vchub = LaunchVCHub(sm, orchConfig, logger, WithMockProbe)
+				vchubDummy = LaunchVCHub(sm, orchConfig1, logger, WithMockProbe)
 				waitForWatch()
 				waitVMReady()
 			}
@@ -1075,6 +1125,7 @@ func TestVmotionWithWatchers(t *testing.T) {
 			*/
 			if !isAcrossDC { // Doesn't work with sim as inventory watches think VM is in the wrong DC when the watch restarts
 				logger.Infof("===== Test: Restart during host config update - AcrossDC: %v =====", isAcrossDC)
+				eventRecorder.ClearEvents()
 				vMotionStart(dstHost, dstDC)
 				checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationStart)
 
@@ -1099,12 +1150,15 @@ func TestVmotionWithWatchers(t *testing.T) {
 				checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationDone)
 
 				verifyWorkload(dstHost, nil, 2, isAcrossDC)
+				verifyNoEvents()
 
 				// CLEANUP
 				vchub.Destroy(false)
+				vchubDummy.Destroy(false)
 				deleteVM(false)
 				recreateVM()
 				vchub = LaunchVCHub(sm, orchConfig, logger, WithMockProbe)
+				vchubDummy = LaunchVCHub(sm, orchConfig1, logger, WithMockProbe)
 				waitForWatch()
 				waitVMReady()
 			}
@@ -1122,6 +1176,7 @@ func TestVmotionWithWatchers(t *testing.T) {
 			*/
 			if !isAcrossDC { // Doesn't work with sim as inventory watches think VM is in the wrong DC when the watch restarts
 				logger.Infof("===== Test: Restart during data path failure - AcrossDC: %v =====", isAcrossDC)
+				eventRecorder.ClearEvents()
 				vMotionStart(dstHost, dstDC)
 				checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationStart)
 
@@ -1142,11 +1197,15 @@ func TestVmotionWithWatchers(t *testing.T) {
 				checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationDone)
 
 				verifyWorkload(dstHost, nil, 2, isAcrossDC)
+				verifyNoEvents()
+
 				// CLEANUP
 				vchub.Destroy(false)
+				vchubDummy.Destroy(false)
 				deleteVM(false)
 				recreateVM()
 				vchub = LaunchVCHub(sm, orchConfig, logger, WithMockProbe)
+				vchubDummy = LaunchVCHub(sm, orchConfig1, logger, WithMockProbe)
 				waitForWatch()
 				waitVMReady()
 			}
@@ -1162,6 +1221,7 @@ func TestVmotionWithWatchers(t *testing.T) {
 			6. VCHub comes back, vm should be deleted
 			*/
 			logger.Infof("===== Test: VM deleted after VMotion with restart - AcrossDC: %v =====", isAcrossDC)
+			eventRecorder.ClearEvents()
 			vMotionStart(dstHost, dstDC)
 			checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationStart)
 
@@ -1195,10 +1255,14 @@ func TestVmotionWithWatchers(t *testing.T) {
 				}
 				return true, nil
 			}, "workload should have been deleted")
+			verifyNoEvents()
+
 			// CLEANUP - recreate workload on host1
 			vchub.Destroy(false)
+			vchubDummy.Destroy(false)
 			recreateVM()
 			vchub = LaunchVCHub(sm, orchConfig, logger, WithMockProbe)
+			vchubDummy = LaunchVCHub(sm, orchConfig1, logger, WithMockProbe)
 			waitForWatch()
 			waitVMReady()
 		}

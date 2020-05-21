@@ -144,11 +144,11 @@ func (v *VCHub) RemovePenDC(dcName string) {
 
 	existingDC.Lock()
 	for dvsName := range existingDC.DvsMap {
-		v.State.DvsMapLock.Lock()
+		v.State.DvsIDMapLock.Lock()
 		if _, ok := v.State.DvsIDMap[dvsName]; ok {
 			delete(v.State.DvsIDMap, dvsName)
 		}
-		v.State.DvsMapLock.Unlock()
+		v.State.DvsIDMapLock.Unlock()
 	}
 	existingDC.Unlock()
 
