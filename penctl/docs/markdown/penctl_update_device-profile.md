@@ -1,4 +1,4 @@
-## penctl update dsc-profile
+## penctl update device-profile
 
 Distributed Service Card profile object
 
@@ -12,14 +12,14 @@ Distributed Service Card profile object
 
 
 ```
-penctl update dsc-profile [flags]
+penctl update device-profile [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help                  help for dsc-profile
-  -n, --name string           Name of the Distributed Service Card profile to be created
+  -h, --help                  help for device-profile
+  -n, --name string           Name of the Device Profile to be updated
   -p, --port-default string   Set default port admin state for next reboot. (enable | disable) (default "enable")
 ```
 

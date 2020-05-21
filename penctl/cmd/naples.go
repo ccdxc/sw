@@ -39,31 +39,30 @@ var naplesShowCmd = &cobra.Command{
 	RunE:    naplesShowCmdHandler,
 }
 
-var naplesProfileShowCmd = &cobra.Command{
-	Use:     "dsc-profiles",
-	Aliases: []string{"naples-profiles"},
-	Short:   "Show Available Distributed Service Card Profiles",
-	Long:    "\n----------------------------\n Show Distributed Service Card Profiles \n----------------------------\n",
-	Args:    cobra.NoArgs,
-	RunE:    naplesProfileShowCmdHandler,
+var deviceProfileShowCmd = &cobra.Command{
+	Use:   "device-profiles",
+	Short: "Show Available Distributed Service Card Profiles",
+	Long:  "\n----------------------------\n Show Distributed Service Card Profiles \n----------------------------\n",
+	Args:  cobra.NoArgs,
+	RunE:  deviceProfileShowCmdHandler,
 }
 
-var naplesProfileUpdateCmd = &cobra.Command{
-	Use:   "dsc-profile",
+var deviceProfileUpdateCmd = &cobra.Command{
+	Use:   "device-profile",
 	Short: "Distributed Service Card profile object",
 	Long:  "\n----------------------------\n Update Distributed Service Card Profiles \n----------------------------\n",
-	RunE:  naplesProfileUpdateCmdHandler,
-	Args:  naplesProfileUpdateCmdValidator,
+	RunE:  deviceProfileUpdateCmdHandler,
+	Args:  deviceProfileUpdateCmdValidator,
 }
 
 var controllers []string
-var managedBy, managementNetwork, priMac, id, mgmtIP, defaultGW, naplesProfile, profileName, portDefault, bondIP string
+var managedBy, managementNetwork, priMac, id, mgmtIP, defaultGW, deviceProfile, profileName, portDefault, bondIP string
 var dnsServers []string
 
 func init() {
 	updateCmd.AddCommand(naplesCmd)
-	showCmd.AddCommand(naplesShowCmd, naplesProfileShowCmd)
-	updateCmd.AddCommand(naplesProfileUpdateCmd)
+	showCmd.AddCommand(naplesShowCmd, deviceProfileShowCmd)
+	updateCmd.AddCommand(deviceProfileUpdateCmd)
 
 	naplesCmd.Flags().StringSliceVarP(&controllers, "controllers", "c", make([]string, 0), "List of controller IP addresses or ids")
 	naplesCmd.Flags().StringVarP(&managedBy, "managed-by", "o", "host", "Distributed Service Card Management. host or network")
@@ -73,12 +72,11 @@ func init() {
 	naplesCmd.Flags().StringVarP(&mgmtIP, "mgmt-ip", "m", "", "Management IP in CIDR format")
 	naplesCmd.Flags().StringVarP(&defaultGW, "default-gw", "g", "", "Default GW for mgmt")
 	naplesCmd.Flags().StringVarP(&bondIP, "inband-ip", "b", "", "Inband IP in CIDR format")
-	naplesCmd.Flags().StringVarP(&naplesProfile, "dsc-profile", "s", "FEATURE_PROFILE_BASE", "Active Distributed Service Card Profile")
-	naplesCmd.Flags().StringVarP(&naplesProfile, "naples-profile", "f", "FEATURE_PROFILE_BASE", "Active Distributed Service Card Profile")
+	naplesCmd.Flags().StringVarP(&deviceProfile, "device-profile", "s", "FEATURE_PROFILE_BASE", "Device Profile to be activated on the Distributed Service Card")
 	naplesCmd.Flags().StringSliceVarP(&dnsServers, "dns-servers", "d", make([]string, 0), "List of DNS servers")
 
-	naplesProfileUpdateCmd.Flags().StringVarP(&profileName, "name", "n", "", "Name of the Distributed Service Card profile to be created")
-	naplesProfileUpdateCmd.Flags().StringVarP(&portDefault, "port-default", "p", "enable", "Set default port admin state for next reboot. (enable | disable)")
+	deviceProfileUpdateCmd.Flags().StringVarP(&profileName, "name", "n", "", "Name of the Device Profile to be updated")
+	deviceProfileUpdateCmd.Flags().StringVarP(&portDefault, "port-default", "p", "enable", "Set default port admin state for next reboot. (enable | disable)")
 }
 
 func naplesCmdHandler(cmd *cobra.Command, args []string) error {
@@ -90,7 +88,7 @@ func naplesCmdHandler(cmd *cobra.Command, args []string) error {
 		managementNetwork = ""
 
 		// check if profile exists.
-		if err := checkProfileExists(naplesProfile); err != nil {
+		if err := checkProfileExists(deviceProfile); err != nil {
 			return err
 		}
 
@@ -131,7 +129,7 @@ func naplesCmdHandler(cmd *cobra.Command, args []string) error {
 			Mode:           managementMode.String(),
 			NetworkMode:    networkManagementMode.String(),
 			Controllers:    controllers,
-			DSCProfile:     naplesProfile,
+			DSCProfile:     deviceProfile,
 		},
 	}
 
@@ -167,7 +165,7 @@ func naplesShowCmdHandler(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func naplesProfileShowCmdHandler(cmd *cobra.Command, args []string) error {
+func deviceProfileShowCmdHandler(cmd *cobra.Command, args []string) error {
 	resp, err := restGet("api/v1/naples/profiles/")
 
 	if err != nil {
@@ -187,9 +185,9 @@ func naplesProfileShowCmdHandler(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func naplesProfileUpdateCmdValidator(cmd *cobra.Command, args []string) (err error) {
+func deviceProfileUpdateCmdValidator(cmd *cobra.Command, args []string) (err error) {
 	if len(profileName) == 0 {
-		err = errors.New("must specify a dsc profile name")
+		err = errors.New("must specify a device profile name")
 		return
 	}
 
@@ -200,7 +198,7 @@ func naplesProfileUpdateCmdValidator(cmd *cobra.Command, args []string) (err err
 	return
 }
 
-func naplesProfileUpdateCmdHandler(cmd *cobra.Command, args []string) error {
+func deviceProfileUpdateCmdHandler(cmd *cobra.Command, args []string) error {
 	var portState string
 
 	// check if currently attached profile is being updated
@@ -334,8 +332,8 @@ func naplesCmdValidator(cmd *cobra.Command, args []string) (err error) {
 			}
 		}
 
-		if len(naplesProfile) != 0 && naplesProfile != "FEATURE_PROFILE_BASE" {
-			err = fmt.Errorf("dsc profile is not applicable when Distributed Service Card is manged by network")
+		if len(deviceProfile) != 0 && deviceProfile != "FEATURE_PROFILE_BASE" {
+			err = fmt.Errorf("device profile is not applicable when Distributed Service Card is manged by network")
 		}
 
 		if len(id) != 0 {
@@ -435,7 +433,7 @@ func checkAttachedProfile(profileName string) error {
 	json.Unmarshal(body, &naplesCfg)
 
 	if naplesCfg.Spec.DSCProfile == profileName {
-		return fmt.Errorf("dsc profile %v is currently in use", profileName)
+		return fmt.Errorf("device profile %v is currently in use", profileName)
 	}
 
 	return nil

@@ -31,8 +31,8 @@ Update Object
 
 ### SEE ALSO
 * [penctl](penctl.md)	 - Pensando CLIs
+* [penctl update device-profile](penctl_update_device-profile.md)	 - Distributed Service Card profile object
 * [penctl update dsc](penctl_update_dsc.md)	 - Set Distributed Service Card Modes and Profiles
-* [penctl update dsc-profile](penctl_update_dsc-profile.md)	 - Distributed Service Card profile object
 * [penctl update interface](penctl_update_interface.md)	 - Create interface
 * [penctl update port](penctl_update_port.md)	 - update port object
 * [penctl update qos-class](penctl_update_qos-class.md)	 - qos-class object

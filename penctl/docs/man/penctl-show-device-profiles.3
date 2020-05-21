@@ -5,32 +5,24 @@
 
 .SH NAME
 .PP
-penctl\-update\-dsc\-profile \- Distributed Service Card profile object
+penctl\-show\-device\-profiles \- Show Available Distributed Service Card Profiles
 
 
 .SH SYNOPSIS
 .PP
-\fBpenctl update dsc\-profile [flags]\fP
+\fBpenctl show device\-profiles [flags]\fP
 
 
 .SH DESCRIPTION
 .ti 0
 \l'\n(.lu'
 
-.SH Update Distributed Service Card Profiles
+.SH Show Distributed Service Card Profiles
 
 .SH OPTIONS
 .PP
 \fB\-h\fP, \fB\-\-help\fP[=false]
-    help for dsc\-profile
-
-.PP
-\fB\-n\fP, \fB\-\-name\fP=""
-    Name of the Distributed Service Card profile to be created
-
-.PP
-\fB\-p\fP, \fB\-\-port\-default\fP="enable"
-    Set default port admin state for next reboot. (enable | disable)
+    help for device\-profiles
 
 
 .SH OPTIONS INHERITED FROM PARENT COMMANDS
@@ -51,6 +43,10 @@ penctl\-update\-dsc\-profile \- Distributed Service Card profile object
     display in json format
 
 .PP
+\fB\-t\fP, \fB\-\-tabular\fP[=false]
+    display in table format
+
+.PP
 \fB\-\-verbose\fP[=false]
     display penctl debug log
 
@@ -65,4 +61,4 @@ penctl\-update\-dsc\-profile \- Distributed Service Card profile object
 
 .SH SEE ALSO
 .PP
-\fBpenctl\-update(3)\fP
+\fBpenctl\-show(3)\fP

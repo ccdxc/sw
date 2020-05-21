@@ -1,7 +1,7 @@
-.. _penctl_show_dsc-profiles:
+.. _penctl_show_device-profiles:
 
-penctl show dsc-profiles
-------------------------
+penctl show device-profiles
+---------------------------
 
 Show Available Distributed Service Card Profiles
 
@@ -17,14 +17,14 @@ Synopsis
 
 ::
 
-  penctl show dsc-profiles [flags]
+  penctl show device-profiles [flags]
 
 Options
 ~~~~~~~
 
 ::
 
-  -h, --help   help for dsc-profiles
+  -h, --help   help for device-profiles
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

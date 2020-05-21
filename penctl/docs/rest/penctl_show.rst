@@ -40,9 +40,9 @@ SEE ALSO
 ~~~~~~~~
 
 * `penctl <penctl.rst>`_ 	 - Pensando CLIs
+* `penctl show device-profiles <penctl_show_device-profiles.rst>`_ 	 - Show Available Distributed Service Card Profiles
 * `penctl show dsc <penctl_show_dsc.rst>`_ 	 - Show Distributed Service Card Modes and Profiles
 * `penctl show dsc-config <penctl_show_dsc-config.rst>`_ 	 - Show Distributed Service Card Configuration
-* `penctl show dsc-profiles <penctl_show_dsc-profiles.rst>`_ 	 - Show Available Distributed Service Card Profiles
 * `penctl show events <penctl_show_events.rst>`_ 	 - Show events from Distributed Service Card
 * `penctl show firmware-version <penctl_show_firmware-version.rst>`_ 	 - Get firmware version on Distributed Service Card
 * `penctl show interface <penctl_show_interface.rst>`_ 	 - Show interface

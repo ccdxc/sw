@@ -26,15 +26,14 @@ Options
 
   -c, --controllers stringSlice     List of controller IP addresses or ids
   -g, --default-gw string           Default GW for mgmt
+  -s, --device-profile string       Device Profile to be activated on the Distributed Service Card (default "FEATURE_PROFILE_BASE")
   -d, --dns-servers stringSlice     List of DNS servers
-  -s, --dsc-profile string          Active Distributed Service Card Profile (default "FEATURE_PROFILE_BASE")
   -h, --help                        help for dsc
   -i, --id string                   DSC ID
   -b, --inband-ip string            Inband IP in CIDR format
   -o, --managed-by string           Distributed Service Card Management. host or network (default "host")
   -k, --management-network string   Management Network. inband or oob
   -m, --mgmt-ip string              Management IP in CIDR format
-  -f, --naples-profile string       Active Distributed Service Card Profile (default "FEATURE_PROFILE_BASE")
   -p, --primary-mac string          Primary mac
 
 Options inherited from parent commands

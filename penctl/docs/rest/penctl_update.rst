@@ -39,8 +39,8 @@ SEE ALSO
 ~~~~~~~~
 
 * `penctl <penctl.rst>`_ 	 - Pensando CLIs
+* `penctl update device-profile <penctl_update_device-profile.rst>`_ 	 - Distributed Service Card profile object
 * `penctl update dsc <penctl_update_dsc.rst>`_ 	 - Set Distributed Service Card Modes and Profiles
-* `penctl update dsc-profile <penctl_update_dsc-profile.rst>`_ 	 - Distributed Service Card profile object
 * `penctl update interface <penctl_update_interface.rst>`_ 	 - Create interface
 * `penctl update port <penctl_update_port.rst>`_ 	 - update port object
 * `penctl update qos-class <penctl_update_qos-class.rst>`_ 	 - qos-class object

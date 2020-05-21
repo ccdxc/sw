@@ -32,9 +32,9 @@ Show Object and Information
 
 ### SEE ALSO
 * [penctl](penctl.md)	 - Pensando CLIs
+* [penctl show device-profiles](penctl_show_device-profiles.md)	 - Show Available Distributed Service Card Profiles
 * [penctl show dsc](penctl_show_dsc.md)	 - Show Distributed Service Card Modes and Profiles
 * [penctl show dsc-config](penctl_show_dsc-config.md)	 - Show Distributed Service Card Configuration
-* [penctl show dsc-profiles](penctl_show_dsc-profiles.md)	 - Show Available Distributed Service Card Profiles
 * [penctl show events](penctl_show_events.md)	 - Show events from Distributed Service Card
 * [penctl show firmware-version](penctl_show_firmware-version.md)	 - Get firmware version on Distributed Service Card
 * [penctl show interface](penctl_show_interface.md)	 - Show interface
