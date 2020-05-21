@@ -10,7 +10,11 @@ struct phv_             p;
 %%
 
 vnic_rx_stats:
-    tbladd.e        d.vnic_rx_stats_d.in_packets, 1
+    seq             c1, k.control_metadata_is_local, FALSE
+    seq.!c1         c1, k.egress_recirc_mapping_done, FALSE
+    seq.!c1         c1, k.p4e_to_arm_valid, TRUE
+    tbladd.c1.e.f   d.vnic_rx_stats_d.in_packets, 0
+    tbladd.!c1.e    d.vnic_rx_stats_d.in_packets, 1
     tbladd.f        d.vnic_rx_stats_d.in_bytes, k.capri_p4_intrinsic_packet_len
 
 /*****************************************************************************/

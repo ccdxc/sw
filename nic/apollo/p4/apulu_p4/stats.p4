@@ -2,6 +2,11 @@
 /* Ingress VNIC stats                                                        */
 /*****************************************************************************/
 action vnic_tx_stats(out_packets, out_bytes) {
+    if ((control_metadata.rx_packet == TRUE) or
+        (ingress_recirc.valid == TRUE) or
+        (arm_to_p4i.valid == TRUE)) {
+        // return;
+    }
     add(scratch_metadata.in_packets, out_packets, 1);
     add(scratch_metadata.in_bytes, out_bytes, capri_p4_intrinsic.packet_len);
 }
@@ -68,9 +73,7 @@ table p4i_drop_stats {
 }
 
 control ingress_stats {
-    if (control_metadata.rx_packet == FALSE) {
-        apply(vnic_tx_stats);
-    }
+    apply(vnic_tx_stats);
     if (capri_intrinsic.drop == TRUE) {
         apply(p4i_drop_stats);
     }
@@ -80,6 +83,11 @@ control ingress_stats {
 /* Egress VNIC stats                                                         */
 /*****************************************************************************/
 action vnic_rx_stats(in_packets, in_bytes) {
+    if ((control_metadata.is_local == FALSE) or
+        (egress_recirc.mapping_done == FALSE) or
+        (p4e_to_arm.valid == TRUE)) {
+        // return;
+    }
     add(scratch_metadata.in_packets, in_packets, 1);
     add(scratch_metadata.in_bytes, in_bytes, capri_p4_intrinsic.packet_len);
 }
@@ -133,9 +141,7 @@ table p4e_drop_stats {
 }
 
 control egress_stats {
-    if (control_metadata.is_local == TRUE) {
-        apply(vnic_rx_stats);
-    }
+    apply(vnic_rx_stats);
 }
 
 /*****************************************************************************/
