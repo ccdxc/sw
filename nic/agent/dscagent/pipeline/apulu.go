@@ -208,6 +208,10 @@ func (a *ApuluAPI) HandleVeniceCoordinates(dsc types.DistributedServiceCardStatu
 			Type:        netproto.InterfaceSpec_LOOPBACK.String(),
 			AdminStatus: netproto.IFStatus_UP.String(),
 		},
+		Status: netproto.InterfaceStatus{
+			DSC:   a.InfraAPI.GetDscName(),
+			DSCID: a.InfraAPI.GetConfig().DSCID,
+		},
 	}
 
 	ifName, err := utils.GetIfName(a.InfraAPI.GetDscName(), utils.GetIfIndex(netproto.InterfaceSpec_LOOPBACK.String(), 0, 0, 1), "")
