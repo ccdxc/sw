@@ -12,6 +12,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/shirou/gopsutil/process"
+
 	"github.com/influxdata/influxdb/models"
 
 	"github.com/shirou/gopsutil/disk"
@@ -27,7 +29,7 @@ import (
 	"github.com/pensando/sw/venice/citadel/collector"
 	"github.com/pensando/sw/venice/citadel/collector/rpcserver"
 	"github.com/pensando/sw/venice/citadel/data"
-	"github.com/pensando/sw/venice/citadel/http"
+	httpserver "github.com/pensando/sw/venice/citadel/http"
 	"github.com/pensando/sw/venice/citadel/meta"
 	"github.com/pensando/sw/venice/citadel/query"
 	"github.com/pensando/sw/venice/globals"
@@ -76,12 +78,26 @@ func reportStats(node string, dbpath string, br *broker.Broker) {
 				continue
 			}
 
+			pid := os.Getpid()
+			process, err := process.NewProcess(int32(pid))
+			if err != nil {
+				log.Errorf("failed to get process info for pid %v. Err: %v", pid, err)
+				continue
+			}
+			memInfo, err := process.MemoryInfo()
+			if err != nil {
+				log.Errorf("failed to get memory info for pid %v. Err: %v", pid, err)
+				continue
+			}
+
 			points, err := models.NewPoint("ctstats", models.NewTags(map[string]string{
 				"reporterID": node,
 			}), map[string]interface{}{
 				"disk_citadel": du >> 10,
 				"disk_used":    f.Used >> 10,
 				"disk_free":    f.Free >> 10,
+				"mem_vms":      memInfo.VMS >> 10,
+				"mem_rss":      memInfo.RSS >> 10,
 			}, time.Now())
 			if err != nil {
 				log.Errorf("failed to parse disk stats, %v", err)

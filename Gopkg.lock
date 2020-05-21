@@ -3296,6 +3296,7 @@
     "github.com/shirou/gopsutil/disk",
     "github.com/shirou/gopsutil/mem",
     "github.com/shirou/gopsutil/net",
+    "github.com/shirou/gopsutil/process",
     "github.com/sirupsen/logrus",
     "github.com/spf13/cobra",
     "github.com/spf13/cobra/doc",
