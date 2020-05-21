@@ -75,10 +75,15 @@ func (it *integTestSuite) TestNpmMirrorPolicy(c *C) {
 	_, err = it.apisrvClient.MonitoringV1().MirrorSession().Create(context.Background(), &mr)
 	AssertOk(c, err, "error creating mirror policy")
 
+	mr.Spec.SpanID = 1024
+	_, err = it.apisrvClient.MonitoringV1().MirrorSession().Update(context.Background(), &mr)
+	Assert(c, err != nil, "Invalid range about 1023 for SpanID must fail")
+	mr.Spec.SpanID = 1
+
 	mdup := mr
-	mdup.Name = "dupMirrorSpanID"
+	mdup.Name = "dupMirror"
 	_, err = it.apisrvClient.MonitoringV1().MirrorSession().Create(context.Background(), &mdup)
-	Assert(c, err != nil, "Sucessfully created mirrorSession but duplicate SpanID must fail")
+	AssertOk(c, err, "Sucessfully created mirrorSession but duplicate spanid and collector must not fail")
 
 	// verify agent state has the policy and has the rules
 	for _, ag := range it.agents {

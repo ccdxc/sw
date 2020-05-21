@@ -457,6 +457,42 @@ var testBadMirrorSessions = []monitoring.MirrorSession{
 			},
 		},
 	},
+}
+
+var testGoodMirrorSession = []monitoring.MirrorSession{
+	{
+		ObjectMeta: api.ObjectMeta{
+			Name:   "Test Mirror Session 1",
+			Tenant: "Tenant 1",
+		},
+		TypeMeta: api.TypeMeta{
+			Kind:       "MirrorSession",
+			APIVersion: "v1",
+		},
+		Spec: monitoring.MirrorSessionSpec{
+			PacketSize:    128,
+			PacketFilters: []string{monitoring.MirrorSessionSpec_ALL_PKTS.String()},
+			Collectors: []monitoring.MirrorCollector{
+				{
+					Type: "ERSPAN_TYPE_3",
+					ExportCfg: &monitoring.MirrorExportConfig{
+						Destination: "127.0.0.1",
+					},
+				},
+			},
+
+			MatchRules: []monitoring.MatchRule{
+				{
+					Src: &monitoring.MatchSelector{
+						IPAddresses: []string{"192.168.100.2"},
+					},
+					AppProtoSel: &monitoring.AppProtoSelector{
+						ProtoPorts: []string{"TCP/1234"},
+					},
+				},
+			},
+		},
+	},
 	{
 		ObjectMeta: api.ObjectMeta{
 			Name:   "dup type",
@@ -528,93 +564,6 @@ var testBadMirrorSessions = []monitoring.MirrorSession{
 					},
 					AppProtoSel: &monitoring.AppProtoSelector{
 						ProtoPorts: []string{"1234"},
-					},
-				},
-			},
-		},
-	},
-	{
-		// invalid span id
-		ObjectMeta: api.ObjectMeta{
-			Name:   "Invalid-SpanID",
-			Tenant: "Tenant 1",
-		},
-		TypeMeta: api.TypeMeta{
-			Kind:       "MirrorSession",
-			APIVersion: "v1",
-		},
-		Spec: monitoring.MirrorSessionSpec{
-			PacketSize:    128,
-			SpanID:        1024,
-			PacketFilters: []string{monitoring.MirrorSessionSpec_ALL_PKTS.String()},
-			Collectors: []monitoring.MirrorCollector{
-				{
-					Type: monitoring.PacketCollectorType_ERSPAN_TYPE_3.String(),
-					ExportCfg: &monitoring.MirrorExportConfig{
-						Destination: "10.1.1.1",
-					},
-					StripVlanHdr: true,
-				},
-				{
-					Type: monitoring.PacketCollectorType_ERSPAN_TYPE_3.String(),
-					ExportCfg: &monitoring.MirrorExportConfig{
-						Destination: "10.1.1.1",
-					},
-					StripVlanHdr: false,
-				},
-			},
-
-			MatchRules: []monitoring.MatchRule{
-				{
-					Src: &monitoring.MatchSelector{
-						IPAddresses: []string{"192.168.100.2"},
-					},
-					AppProtoSel: &monitoring.AppProtoSelector{
-						ProtoPorts: []string{"1234"},
-					},
-				},
-				{
-					Src: &monitoring.MatchSelector{
-						IPAddresses: []string{"192.168.100.2"},
-					},
-					AppProtoSel: &monitoring.AppProtoSelector{
-						ProtoPorts: []string{"TCP/1234"},
-					},
-				},
-			},
-		},
-	},
-}
-
-var testGoodMirrorSession = []monitoring.MirrorSession{
-	{
-		ObjectMeta: api.ObjectMeta{
-			Name:   "Test Mirror Session 1",
-			Tenant: "Tenant 1",
-		},
-		TypeMeta: api.TypeMeta{
-			Kind:       "MirrorSession",
-			APIVersion: "v1",
-		},
-		Spec: monitoring.MirrorSessionSpec{
-			PacketSize:    128,
-			PacketFilters: []string{monitoring.MirrorSessionSpec_ALL_PKTS.String()},
-			Collectors: []monitoring.MirrorCollector{
-				{
-					Type: "ERSPAN_TYPE_3",
-					ExportCfg: &monitoring.MirrorExportConfig{
-						Destination: "127.0.0.1",
-					},
-				},
-			},
-
-			MatchRules: []monitoring.MatchRule{
-				{
-					Src: &monitoring.MatchSelector{
-						IPAddresses: []string{"192.168.100.2"},
-					},
-					AppProtoSel: &monitoring.AppProtoSelector{
-						ProtoPorts: []string{"TCP/1234"},
 					},
 				},
 			},

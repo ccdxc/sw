@@ -23,10 +23,10 @@ type mirrorSessionHooks struct {
 
 const (
 	// Finalize these parameters once we decide how to store the packets captured by Venice
-	veniceMaxPacketSize             = 2048
-	veniceMaxCollectorsPerSession   = 2
-	veniceMaxUniqueMirrorCollectors = 4
-	veniceMaxMirrorSessions         = 8
+	veniceMaxPacketSize           = 2048
+	veniceMaxCollectorsPerSession = 2
+	veniceMaxMirrorCollectors     = 8
+	veniceMaxMirrorSessions       = 8
 )
 
 func (r *mirrorSessionHooks) validateMirrorSession(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
@@ -217,52 +217,15 @@ type gCollector struct {
 }
 
 func globalMirrorSessionValidator(ms *monitoring.MirrorSession, mirrors *monitoring.MirrorSessionList) error {
-	expConfig := make(map[string]gCollector)
-	var spanID uint32 = 1
-
-	if ms.Spec.SpanID > 0 {
-		spanID = ms.Spec.SpanID
-	}
-
+	totalCollectors := len(ms.Spec.Collectors)
 	for _, mir := range mirrors.Items {
 		if mir.Name == ms.Name {
 			continue
 		}
-		for j, col := range mir.Spec.Collectors {
-			expConfig[col.ExportCfg.Destination] = gCollector{pktSize: mir.Spec.PacketSize, c: &mir.Spec.Collectors[j]}
-		}
-		if mir.Spec.SpanID == spanID {
-			return fmt.Errorf("SpanID %v already used on mirror session %v",
-				spanID, mir.Name)
-		}
+		totalCollectors = totalCollectors + len(mir.Spec.Collectors)
 	}
-	for j, col := range ms.Spec.Collectors {
-		if col.ExportCfg != nil {
-			if existingCfg, ok := expConfig[col.ExportCfg.Destination]; !ok {
-				expConfig[col.ExportCfg.Destination] = gCollector{pktSize: ms.Spec.PacketSize, c: &ms.Spec.Collectors[j]}
-			} else {
-				if existingCfg.c.ExportCfg.Gateway != col.ExportCfg.Gateway {
-					return fmt.Errorf("Collector %v already added with gateway %v",
-						col.ExportCfg.Destination, existingCfg.c.ExportCfg.Gateway)
-				}
-				if existingCfg.c.Type != col.Type {
-					return fmt.Errorf("Collector %v already added with type %v",
-						col.ExportCfg.Destination, existingCfg.c.Type)
-				}
-				if existingCfg.c.StripVlanHdr != col.StripVlanHdr {
-					return fmt.Errorf("Collector %v already added with strip-vlan %v",
-						col.ExportCfg.Destination, existingCfg.c.StripVlanHdr)
-				}
-				if existingCfg.pktSize != ms.Spec.PacketSize {
-					return fmt.Errorf("Collector %v already added with packet-size %v",
-						col.ExportCfg.Destination, existingCfg.pktSize)
-				}
-			}
-		}
-	}
-	if len(expConfig) > veniceMaxUniqueMirrorCollectors {
-		return fmt.Errorf("invalid %v unique collectors, can't configure more than %v unique collectors",
-			len(expConfig), veniceMaxUniqueMirrorCollectors)
+	if totalCollectors > veniceMaxMirrorCollectors {
+		return fmt.Errorf("can't configure more than %v mirror collectors", veniceMaxMirrorCollectors)
 	}
 	return nil
 }
