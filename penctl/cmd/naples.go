@@ -296,7 +296,7 @@ func naplesCmdValidator(cmd *cobra.Command, args []string) (err error) {
 			}
 
 			if vldtor.CIDR(bondIP) != nil {
-				err = fmt.Errorf("invalid management IP %v specified. Must be in CIDR Format", mgmtIP)
+				err = fmt.Errorf("invalid inband IP %v specified. Must be in CIDR Format", mgmtIP)
 				return
 			}
 		}
