@@ -10,6 +10,23 @@ import traceback
 
 log = logging.getLogger()
 
+winCoreDirs = [
+    "c:\\windows\\",
+    "c:\\windows\system32\\",
+]
+winCoreFileREs = [
+    "MEMORY.DMP",
+]
+
+linuxCoreDirs = [
+    "/var/crash/",
+    "/var/core/",
+]
+linuxCoreFileREs = [
+    "core.*",
+]
+
+
 class CoreCollector(object):
 
     def __init__(self,testbed, destDir, username, password, log=None):
@@ -20,8 +37,8 @@ class CoreCollector(object):
         self.testbed = testbed
         self.username = username
         self.password = password
-        self.scpPfx = "sshpass -p %s scp -o ConnectTimeout=60 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "%password
-        self.sshPfx = "sshpass -p %s ssh -o ConnectTimeout=60 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "%password
+        self.scpPfx = "timeout 300 sshpass -p %s scp -o ConnectTimeout=60 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "%password
+        self.sshPfx = "timeout 300 sshpass -p %s ssh -o ConnectTimeout=60 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "%password
         if destDir == "/":
             raise ValueError("destDir cannot be / directory")
         if destDir == "":
@@ -44,7 +61,11 @@ class CoreCollector(object):
             msg="failed to build nodes from testbed file. error was:"
             msg+=traceback.format_exc()
             print(msg)
-        return nodes
+        try:
+            osType = data["Provision"]["Vars"]["BmOs"]
+        except:
+            osType = "linux"
+        return nodes, osType
 
     def sshCmd(self,ip,cmd,verbose=False):
         sshHost = "%s@%s" % (self.username, ip)
@@ -65,15 +86,23 @@ class CoreCollector(object):
     def gatherCores(self):
         maxCores = 5
         filelist = ""
-        nodes = self.buildNodesFromTestbedFile()
-        self.log.debug("gathering cores for nodes {0}".format(nodes))
-        for _dir in ["/var/crash/", "/var/core/"]:
+        nodes,osType = self.buildNodesFromTestbedFile()
+        cfREs = []
+        if osType == "windows":
+            coreDirs = winCoreDirs
+            for cfre in winCoreFileREs:
+                cfREs.append(re.compile('(' + cfre + ')'))
+        else:
+            coreDirs = linuxCoreDirs
+            for cfre in linuxCoreFileREs:
+                cfREs.append(re.compile('(' + cfre + ')'))
+        for _dir in coreDirs:
             for node in nodes:
                 coreCount = 0
                 self.log.debug("looking for cores in dir {0} on host {1}".format(_dir, node))
                 try:
                     corefiles = self.sshCmd(node,"sudo find {0} -maxdepth 1 -type f".format(_dir),verbose=True)
-                    corefiles = [re.sub(_dir,"",c) for c in corefiles if re.search("[\w]+", c)]
+                    corefiles = [re.sub(_dir,"",c) for c in corefiles]
                     self.log.debug("found raw corefile list: {0}".format(corefiles))
                 except subprocess.CalledProcessError as e:
                     if e.returncode == 1:
@@ -92,14 +121,24 @@ class CoreCollector(object):
                     if coreCount >= maxCores:
                         self.log.debug("skipping file {0}. max core count of {1} reached for node {2} in directory {3}".format(core,maxCores,node,_dir)) 
                         continue
+                    for cfre in cfREs:
+                        if cfre.search(core):
+                            self.log.debug("matched re {0} to corefile {1}".format(cfre, core))
+                            break
+                    else:
+                        continue
                     coreCount += 1
                     destFile = self.destDir + core
                     try:
-                        print("processing core file {0}".format(core))
-                        self.sshCmd(node,"sudo cp {0}/{1} /var/".format(_dir,core))
-                        self.sshCmd(node,"sudo chown vm:vm /var/{0}".format(core))
-                        self.scpGetFile(node,"/var/{0}".format(core),destFile)
-                        self.sshCmd(node,"sudo rm /var/{0}".format(core))
+                        self.log.debug("processing core file {0}".format(core))
+                        if osType == "windows":
+                            self.scpGetFile(node,"{0}\{1}".format(_dir, core), destFile)
+                            self.sshCmd(node,"sudo rm {0}\{1}".format(_dir, core))
+                        else:
+                            self.sshCmd(node,"sudo mv {0}/{1} /tmp".format(_dir,core))
+                            self.sshCmd(node,"sudo chown vm:vm /tmp/{0}".format(core))
+                            self.scpGetFile(node,"/tmp/{0}".format(core),destFile)
+                            self.sshCmd(node,"sudo rm /tmp/{0}".format(core))
                         filelist += destFile + ' '
                     except:
                         self.log.debug("failed to scp core file. error was: {0}".format(traceback.format_exc()))

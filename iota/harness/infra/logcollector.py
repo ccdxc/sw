@@ -40,7 +40,7 @@ class CollectLogNode:
 
 
 def __collect_onenode(node):
-    SSHCMD = "sshpass -p {0} scp -r -o ConnectTimeout=60 -o StrictHostKeyChecking=no {1}@".format(node.password,node.username)
+    SSHCMD = "timeout 300 sshpass -p {0} scp -r -o ConnectTimeout=60 -o StrictHostKeyChecking=no {1}@".format(node.password,node.username)
     msg="Collecting Logs for Node: %s (%s)" % (node.Name(), node.ip)
     print(msg)
     Logger.debug(msg)
@@ -50,7 +50,7 @@ def __collect_onenode(node):
     localdir = "%s/logs/%s/nodes/%s/" % (GlobalOptions.logdir, tsName, node.Name())
     subprocess.call("mkdir -p %s" % localdir,shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
     for logdir in logdirs:
-        permCmd = "sshpass -p vm ssh -o ConnectTimeout=60 vm@" + node.ip + " sudo chown -R vm:vm " + logdir
+        permCmd = "timeout 300 sshpass -p vm ssh -o ConnectTimeout=60 vm@" + node.ip + " sudo chown -R vm:vm " + logdir
         Logger.debug(permCmd)
         try:
             proc=subprocess.Popen(permCmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
