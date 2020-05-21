@@ -63,12 +63,21 @@ var getSystemQueueStatsCmd = &cobra.Command{
 	Run:   getSystemQueueStatsCmdHandler,
 }
 
+var getAlomPresentCmd = &cobra.Command{
+	Use:   "alompresent",
+	Short: "check if alom is present or not",
+	Long:  "\n------------------------------------\n checks to see if alom is present or not \n------------------------------------\n",
+	Args:  cobra.NoArgs,
+	RunE:  getAlomPresentCmdHandler,
+}
+
 func init() {
 	showCmd.AddCommand(getSysMemCmd)
 	showCmd.AddCommand(getProcMemInfoCmd)
 	showCmd.AddCommand(getSystemCmd)
 	showCmd.AddCommand(getNaplesInfoCmd)
 	getSystemCmd.AddCommand(getSystemStatusCmd)
+	getSystemCmd.AddCommand(getAlomPresentCmd)
 	getSystemCmd.AddCommand(getSystemQueueStatsCmd)
 	showCmd.PersistentFlags().BoolVarP(&tabularFormat, "tabular", "t", false, "display in table format")
 }
@@ -142,4 +151,12 @@ func getSystemQueueStatsCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	return
+}
+
+func getAlomPresentCmdHandler(cmd *cobra.Command, args []string) error {
+	v := &nmd.DistributedServiceCardCmdExecute{
+		Executable: "systemctlshow",
+		Opts:       "",
+	}
+	return naplesExecCmd(v)
 }

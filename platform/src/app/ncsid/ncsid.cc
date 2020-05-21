@@ -9,8 +9,6 @@
 #include "nic/sdk/lib/logger/logger.hpp"
 #include "grpc_ipc.h"
 
-#define ALOM_PRESENT           0x20
-
 #define ARRAY_LEN(var)   (int)((sizeof(var)/sizeof(var[0])))
 
 #define NCSI_TRACE_ERR(fmt...)             \
@@ -149,6 +147,7 @@ void InitNcsiMgr()
 int main(int argc, char* argv[])
 {
     int32_t cpld_cntl_reg;
+    int32_t cpld_id;
     ncsimgr = new NcsiMgr();
     grpc_ipc_svc = make_shared<grpc_ipc>();
     Logger logger_obj;
@@ -175,6 +174,11 @@ int main(int argc, char* argv[])
 
     /* If listening on oob interface, then we must be connected to ALOM 
      * in order to receive NCSI packet from BMC */
+    cpld_id = cpld_reg_rd(CPLD_REGISTER_ID);
+    if (cpld_id != CPLD_ID_NAPLES25_SWM) {
+        SDK_TRACE_INFO("Not a SWM card. Exiting ncsid app !");
+        return 0;
+    }
     if (!strcmp(iface_name, "oob_mnic0")) {
         cpld_cntl_reg = cpld_reg_rd(CPLD_REGISTER_CTRL);
         if (cpld_cntl_reg == -1) {
@@ -182,7 +186,7 @@ int main(int argc, char* argv[])
                     "Exiting ncsid app !");
             return 0;
         }
-        if (! (cpld_cntl_reg & ALOM_PRESENT)) {
+        if (! (cpld_cntl_reg & CPLD_ALOM_PRESENT_BIT)) {
             SDK_TRACE_INFO("ALOM is not present. NCSI cannot function without ALOM."
                     "Exiting ncsid app !");
             return 0;

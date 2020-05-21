@@ -81,6 +81,7 @@ usage(void)
     cerr << "cpldapp (-verifyflash <filename>) - Reads the flash and verifies against the file provided." << endl;
     cerr << "cpldapp (-writeflash <filename>) - write the flash with the file provided." << endl;
     cerr << "cpldapp (-hwlock) - checks whether cpld is hwlock enabled or not." << endl;
+    cerr << "cpldapp (-alompresent) - checks whether alom is present or not(only for swm cards)." << endl;
     return unlock_cpldapp(-1);
 }
 
@@ -209,7 +210,7 @@ main(int argc, char *argv[])
         }
     } else if (strcmp(argv[1], "-r") == 0) {
         if (argc < 3) {
-            usage();
+            return usage();
         }
         cout << hex << showbase << cpld_reg_rd(strtoul(argv[2], NULL, 0)) << endl;
     } else if (strcmp(argv[1], "-verifyflash") == 0) {
@@ -221,7 +222,7 @@ main(int argc, char *argv[])
         }
     } else if (strcmp(argv[1], "-writeflash") == 0) {
         if (argc < 3) {
-            usage();
+            return usage();
         }
         for (int counter=0; counter < MAX_WRITE_RETRY; counter++) {
             if (writeflash(argv[2]) == 0) {
@@ -231,6 +232,14 @@ main(int argc, char *argv[])
         return unlock_cpldapp(-1);
     } else if (strcmp(argv[1], "-hwlock") == 0) {
         cout << "CPLD hwlock is" << (pal_cpld_hwlock_enabled() ? "enabled" : "disabled") << endl;
+    } else if (strcmp(argv[1], "-alompresent") == 0) {
+        if (cpld_reg_rd(CPLD_REGISTER_ID) == CPLD_ID_NAPLES25_SWM) {
+            if (cpld_reg_rd(CPLD_REGISTER_CTRL) & CPLD_ALOM_PRESENT_BIT) {
+                cout << "ALOM present";
+                goto success;
+            }
+        }
+        cout << "ALOM not present";
     } else {
         return usage();
     }

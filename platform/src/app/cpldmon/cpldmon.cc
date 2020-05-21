@@ -52,7 +52,6 @@
 #define OCP_PWRBRK             0x10
 
 // CPLD control register bits
-#define ALOM_PRESENT           0x20
 #define HOST_POWER_ON          0x80
 
 namespace cpldmon {
@@ -514,7 +513,7 @@ main(int argc, char *argv[])
         cpldmon_exit("Error reading cpld control register for ALOM presence", cpld_cntl_reg);
     } else {
         CLOG_INFO("cpld control register: 0x{}", cpld_cntl_reg);
-        if (cpld_cntl_reg & ALOM_PRESENT) {
+        if (cpld_cntl_reg & CPLD_ALOM_PRESENT_BIT) {
             CLOG_INFO("ALOM present");
 
             // Live status check

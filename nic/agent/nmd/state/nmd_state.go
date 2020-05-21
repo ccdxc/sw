@@ -966,6 +966,7 @@ func initAllowedCommands() {
 	allowedCommands["halctlshowsystemstatisticspbdetail"] = 43
 	allowedCommands["halctlshowqosclassqueues"] = 44
 	allowedCommands["showinterfacemanagement"] = 45
+	allowedCommands["systemctlshow"] = 46
 }
 
 func isCmdAllowed(cmd string) bool {
@@ -1145,6 +1146,9 @@ func naplesExecCmd(req *nmd.DistributedServiceCardCmdExecute) (string, error) {
 	} else if req.Executable == "showinterfacemanagement" {
 		req.Executable = "/sbin/ifconfig"
 		req.Opts = "-a"
+	} else if req.Executable == "systemctlshow" {
+		req.Executable = "cpldapp"
+		req.Opts = "-alompresent"
 	}
 	return executeCmd(req, strings.Fields(req.Opts))
 }
