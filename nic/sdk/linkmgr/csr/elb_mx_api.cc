@@ -3,13 +3,13 @@
 #include <cstdint>
 #include "include/sdk/types.hpp"
 #include "lib/catalog/catalog.hpp"
-#include "include/sdk/asic/capri/cap_mx_api.h"
-#include "third-party/asic/capri/model/cap_mx/cap_mx_csr.h"
-#include "third-party/asic/capri/model/cap_bx/cap_bx_csr.h"
-#include "cap_blk_reg_model.h"
+#include "include/sdk/asic/elba/elb_mx_api.h"
+#include "third-party/asic/elba/model/elb_mx/elb_mx_csr.h"
+#include "third-party/asic/elba/model/elb_bx/elb_bx_csr.h"
+#include "elb_blk_reg_model.h"
+
 
 mac_profile_t mx[MAX_MAC];
-
 #if 0
 // TBD-ELBA-REBASE
 
@@ -36,13 +36,13 @@ cap_mx_serdes_lpbk_get (int chip_id, int inst_id, int ch)
     return (data & (1 << ch)) >> ch;
 }
 
-void cap_mx_set_ch_enable(int chip_id, int inst_id, int value) { 
+void cap_mx_set_ch_enable(int chip_id, int inst_id, int value) {
     // channel enable: {ch3, ch2, ch1, ch0}
     cap_mx_apb_write(chip_id, inst_id, 0x4, value);
 }
 
 // MX Port# to MX TDM Slot Mapping
-void cap_mx_set_cfg_mac_tdm(int chip_id, int inst_id, int slot0, int slot1, int slot2, int slot3) { 
+void cap_mx_set_cfg_mac_tdm(int chip_id, int inst_id, int slot0, int slot1, int slot2, int slot3) {
  cap_mx_csr_t & mx_csr = CAP_BLK_REG_MODEL_ACCESS(cap_mx_csr_t, chip_id, inst_id);
    mx_csr.cfg_mac_tdm.slot0(slot0);
    mx_csr.cfg_mac_tdm.slot1(slot1);
@@ -322,7 +322,7 @@ void cap_mx_load_from_cfg_glbl2(int chip_id, int inst_id, int ch_enable_vec) {
    }
    if(mx[inst_id].tx_pad_disable) {
      cap_mx_tx_pad_disable(0,inst_id);
-   }  
+   }
 
    cap_mx_apb_write(chip_id, inst_id, 0x1901, mx[inst_id].serdes_lp);
 }
@@ -525,9 +525,9 @@ void cap_mx_dump_mibs(int chip_id) {
 void print_msg(string msg) {
 #ifdef _CSV_INCLUDED_
     vpi_printf((PLI_BYTE8*) "%s", msg.c_str());
-#else 
+#else
     std::cout << msg;
-#endif    
+#endif
 }
 
 void cap_mx_set_tx_drain(int chip_id, int inst_id, int ch, int value) {
@@ -799,7 +799,7 @@ void cap_mx_bist_chk(int chip_id, int inst_id) {
 }
 #endif
 
-// KCM 
+// KCM
 int
 cap_mx_base_r_pcs_status2 (int chip_id, int inst_id, int mac_ch)
 {
@@ -827,7 +827,7 @@ cap_mx_base_r_pcs_status2 (int chip_id, int inst_id, int mac_ch)
     }
 
     return cap_mx_apb_read(chip_id, inst_id, addr);
-#else 
+#else
     return 0;
 #endif
 }
@@ -860,7 +860,7 @@ cap_mx_base_r_pcs_status2_clear (int chip_id, int inst_id, int mac_ch)
 
     cap_mx_apb_write(chip_id, inst_id, addr, 0x0);
     return 0;
-#else 
+#else
     return 0;
 #endif
 }
@@ -908,9 +908,9 @@ int cap_mx_check_ch_sync(int chip_id, int inst_id, int ch) {
 void cap_mx_load_from_cfg_glbl1(int chip_id, int inst_id, int *ch_enable_vec) {
 #if 0
 // TBD-ELBA-REBASE
-   // 
+   //
    // Comira MAC Configurations
-   // 
+   //
    // bit[15]: slot2chmappingenable, bit[14:9]: 1 ch thres, bit[8:4]: 2 ch thres, bit[3:0]: 4 ch thres
    // 16'b1_010000_01000_1000 = 16'b1010_0000_1000_1000
    cap_mx_apb_write(chip_id, inst_id, 0x201, 0xA088);
@@ -1153,7 +1153,7 @@ cap_mx_serdes_lpbk_set (int chip_id, int inst_id, int ch, int value)
 #endif
 }
 
-void cap_mx_set_ch_enable(int chip_id, int inst_id, int ch, int value) { 
+void cap_mx_set_ch_enable(int chip_id, int inst_id, int ch, int value) {
 #if 0
 // TBD-ELBA-REBASE
     // channel enable: {ch3, ch2, ch1, ch0}
@@ -1445,7 +1445,7 @@ void cap_mx_soft_reset(int chip_id, int inst_id) {
 #endif
 }
 
-void cap_mx_set_soft_reset(int chip_id, int inst_id, int value) { 
+void cap_mx_set_soft_reset(int chip_id, int inst_id, int value) {
 #if 0
 // TBD-ELBA-REBASE
     // Software reset for stats: {ch3, ch2, ch1, ch0}
@@ -1559,7 +1559,7 @@ cap_mx_tx_drain (int chip_id, int inst_id, int mac_ch, bool drain)
    return 0;
 }
 
-void cap_mx_set_soft_reset(int chip_id, int inst_id, int ch, int value) { 
+void cap_mx_set_soft_reset(int chip_id, int inst_id, int ch, int value) {
 #if 0
 // TBD-ELBA-REBASE
     int rdata;

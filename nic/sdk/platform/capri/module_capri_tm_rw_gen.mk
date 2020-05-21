@@ -9,4 +9,5 @@ MODULE_OUTFILE      = ${MODULE_SRC_DIR}/capri_tm_rw.cc
 MODULE_ARGS         = ${SDKDIR}/third-party/asic/capri/verif/common/csr_gen/pbc.yaml
 MODULE_POSTGEN_MK   = module.mk
 MODULE_CLEAN_DIRS   = ${MODULE_SRC_DIR}/capri_tm_rw.cc
+MODULE_ASIC         = capri
 include ${MKDEFS}/post.mk

@@ -13,7 +13,11 @@
 #include "nic/linkmgr/linkmgr_utils.hpp"
 #include "nic/hal/hal.hpp"
 #include "nic/sdk/platform/drivers/xcvr.hpp"
+#ifdef ELBA
+#include "nic/sdk/include/sdk/asic/elba/elb_mx_api.h"
+#else
 #include "nic/sdk/include/sdk/asic/capri/cap_mx_api.h"
+#endif
 #include "nic/sdk/lib/pal/pal.hpp"
 #include "platform/pal/include/pal_types.h"
 #include "platform/drivers/xcvr.hpp"
@@ -128,7 +132,7 @@ static const std::string
 get_logfile (const char *env, const char *base, const char *alt)
 {
     const char *logdir = NULL;
-    
+
     logdir = std::getenv(env);
     if (!logdir) {
         return std::string(alt);
@@ -1286,12 +1290,12 @@ port_mgmt_metrics_update (uint32_t port_num, port_args_t *port_args)
 #if 0
     HAL_TRACE_DEBUG("Mgmt Mac BW port: {} intervaL {} : tx_pps: {}, tx_bytesps: {}, rx_pps: {}, rx_bytesps: {}",
                     port_num, interval,
-                    mgmt_mac_metrics.tx_pps, mgmt_mac_metrics.tx_bytesps, 
+                    mgmt_mac_metrics.tx_pps, mgmt_mac_metrics.tx_bytesps,
                     mgmt_mac_metrics.rx_pps, mgmt_mac_metrics.rx_bytesps);
 #endif
 
     delphi::objects::MgmtMacMetrics::Publish(
-            ETH_IFINDEX_TO_UPLINK_IFINDEX(sdk::lib::catalog::logical_port_to_ifindex(port_num)), 
+            ETH_IFINDEX_TO_UPLINK_IFINDEX(sdk::lib::catalog::logical_port_to_ifindex(port_num)),
             &mgmt_mac_metrics);
 
     // release memory
@@ -1419,12 +1423,12 @@ port_uplink_metrics_update (uint32_t port_num, port_args_t *port_args, delphi::o
 #if 0
     HAL_TRACE_DEBUG("Mac BW port: {} : tx_pps: {}, tx_bytesps: {}, rx_pps: {}, rx_bytesps: {}",
                     port_num,
-                    mac_metrics.tx_pps, mac_metrics.tx_bytesps, 
+                    mac_metrics.tx_pps, mac_metrics.tx_bytesps,
                     mac_metrics.rx_pps, mac_metrics.rx_bytesps);
 #endif
 
     delphi::objects::MacMetrics::Publish(
-                  ETH_IFINDEX_TO_UPLINK_IFINDEX(sdk::lib::catalog::logical_port_to_ifindex(port_num)), 
+                  ETH_IFINDEX_TO_UPLINK_IFINDEX(sdk::lib::catalog::logical_port_to_ifindex(port_num)),
                   &mac_metrics);
 }
 

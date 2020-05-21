@@ -163,6 +163,10 @@ class capri_backend:
 
         capri_model_dbg_output(self, dbg_info)
 
+def setup_elba_hw_parameters(capri_model):
+    capri_model['match_action']['num_stages'] = 8
+    capri_model['match_action']['num_table_profiles'] = 32
+
 def setup_p4_plus_hw_parameters(capri_model):
     capri_model['match_action']['num_stages'] = 8
     setup_num_phv_flits(capri_model, 12)
@@ -203,6 +207,9 @@ def main():
             h.add_preprocessor_args(fe_flags_arg)
     if not h.build():
         sys.exit(1)
+
+    if args.asic == 'elba':
+       setup_elba_hw_parameters(capri_model)
 
     if args.p4_plus:
         if args.p4_plus_module == 'sxdma':

@@ -68,7 +68,7 @@ sdk/third-party/avago/include/
 sdk/third-party/openssl/aarch64
 sdk/third-party/openssl/include
 sdk/third-party/openssl/x86_64
-model_sim/libs/
+sdk/model_sim/libs/**
 tools/ncc/csr_json/
 tools/sorrento/
 conf/init_bins

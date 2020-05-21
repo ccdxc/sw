@@ -2,6 +2,7 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = cap_model.bin
+MODULE_ASIC     = capri
 MODULE_ARCH     = x86_64
 MODULE_LDPATHS  = $(abspath ${MODULE_DIR}/../../libs)
 MODULE_LDLIBS   = model_cc capsim common_cc top_csr_compile sknobs \

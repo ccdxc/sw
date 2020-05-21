@@ -16,14 +16,10 @@ namespace elba {
 #define ELBA_TM_PORT_UPLINK_1               1
 #define ELBA_TM_PORT_UPLINK_2               2
 #define ELBA_TM_PORT_UPLINK_3               3
-#define ELBA_TM_PORT_UPLINK_4               4
-#define ELBA_TM_PORT_UPLINK_5               5
-#define ELBA_TM_PORT_UPLINK_6               6
-#define ELBA_TM_PORT_UPLINK_7               7
-#define ELBA_TM_PORT_NCSI                   8
-#define ELBA_TM_PORT_DMA                    9 /* Tx and Rx DMA */
-#define ELBA_TM_PORT_EGRESS                 10
-#define ELBA_TM_PORT_INGRESS                11
+#define ELBA_TM_PORT_NCSI                   4
+#define ELBA_TM_PORT_DMA                    5 /* Tx and Rx DMA */
+#define ELBA_TM_PORT_EGRESS                 6
+#define ELBA_TM_PORT_INGRESS                7
 #define ELBA_TM_UPLINK_PORT_BEGIN           ELBA_TM_PORT_UPLINK_0
 #define ELBA_TM_UPLINK_PORT_END             ELBA_TM_PORT_NCSI
 #define ELBA_TM_DMA_PORT_BEGIN              ELBA_TM_PORT_DMA
@@ -32,6 +28,16 @@ namespace elba {
 #define ELBA_TM_P4_PORT_END                 ELBA_TM_PORT_INGRESS
 #define ELBA_TM_NUM_UPLINK_PORTS            (ELBA_TM_UPLINK_PORT_END-ELBA_TM_UPLINK_PORT_BEGIN+1)
 #define ELBA_TM_NUM_PORTS                   (ELBA_TM_PORT_INGRESS+1)
+
+/*****************************************************************************/
+/* ELBA_TM instance type                                                   */
+/*****************************************************************************/
+#define ELBA_TM_INSTANCE_TYPE_NORMAL         0
+#define ELBA_TM_INSTANCE_TYPE_MULTICAST      1
+#define ELBA_TM_INSTANCE_TYPE_CPU            2
+#define ELBA_TM_INSTANCE_TYPE_SPAN           3
+#define ELBA_TM_INSTANCE_TYPE_CPU_AND_DROP   4
+#define ELBA_TM_INSTANCE_TYPE_SPAN_AND_DROP  5
 
 /*****************************************************************************/
 /* Header sizes                                                              */

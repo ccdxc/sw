@@ -145,13 +145,9 @@ nic/build/$ARCH/$PIPELINE/lib/libpenipc.so                             /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpenipc_ev.so                          /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libzmq.so                                /nic/lib/libzmq.so.3
 nic/build/$ARCH/$PIPELINE/lib/libsdkxcvrdriver.so                      /nic/lib/
-nic/sdk/third-party/asic/capri/model/capsim-master/gen/aarch64/lib/libmpuobj.so     /nic/lib/
-nic/sdk/third-party/asic/capri/model/capsim-master/gen/aarch64/lib/libcapisa.so     /nic/lib/
-nic/sdk/third-party/asic/capri/model/capsim-master/gen/aarch64/lib/libisa.so        /nic/lib/
 
-nic/sdk/third-party/asic/ip/verif/pensim/gen/aarch64/lib/libmpuobj.so   /nic/lib/
+nic/sdk/third-party/asic/capri/model/capsim-master/gen/aarch64/lib/libcapisa.so     /nic/lib/
 nic/sdk/third-party/asic/ip/verif/pensim/gen/aarch64/lib/libelbisa.so   /nic/lib/
-nic/sdk/third-party/asic/ip/verif/pensim/gen/aarch64/lib/libisa.so      /nic/lib/
 
 nic/hal/third-party/openssl/aarch64/lib/libssl.so.1.1               /nic/lib/
 nic/hal/third-party/openssl/aarch64/lib/libcrypto.so.1.1            /nic/lib/

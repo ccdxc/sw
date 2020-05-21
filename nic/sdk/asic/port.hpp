@@ -86,6 +86,16 @@ namespace asic {
 #define TM_NUM_PORTS                   ELBA_TM_NUM_PORTS
 
 /*****************************************************************************/
+/* TM instance type                                                          */
+/*****************************************************************************/
+#define TM_INSTANCE_TYPE_NORMAL         ELBA_TM_INSTANCE_TYPE_NORMAL
+#define TM_INSTANCE_TYPE_MULTICAST      ELBA_TM_INSTANCE_TYPE_MULTICAST
+#define TM_INSTANCE_TYPE_CPU            ELBA_TM_INSTANCE_TYPE_CPU
+#define TM_INSTANCE_TYPE_SPAN           ELBA_TM_INSTANCE_TYPE_SPAN
+#define TM_INSTANCE_TYPE_CPU_AND_DROP   ELBA_TM_INSTANCE_TYPE_CPU_AND_DROP
+#define TM_INSTANCE_TYPE_SPAN_AND_DROP  ELBA_TM_INSTANCE_TYPE_SPAN_AND_DROP
+
+/*****************************************************************************/
 /* Header sizes                                                              */
 /*****************************************************************************/
 #define ASICPD_GLOBAL_INTRINSIC_HDR_SZ  ELBA_GLOBAL_INTRINSIC_HDR_SZ

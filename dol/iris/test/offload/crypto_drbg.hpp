@@ -9,7 +9,7 @@
 #include "utils.hpp"
 #ifdef ELBA
 #include "third-party/asic/elba/model/elb_top/elb_top_csr_defines.h"
-#include "third-party/asic/elba/model/elb_he/readonly/elb_hens_csr_define.h"
+#include "third-party/asic/elba/model/elb_top/csr_defines/elb_hens_c_hdr.h"
 #else
 #include "third-party/asic/capri/model/cap_top/cap_top_csr_defines.h"
 #include "third-party/asic/capri/model/cap_he/readonly/cap_hens_csr_define.h"
@@ -74,21 +74,21 @@ crypto_ctl_drbg_random_num1_select(uint32_t select)
 #define CRYPTO_CTL_DRBG_REG_OFFSET(inst, reg)                           \
     (ELB_ADDR_BASE_MD_HENS_OFFSET +                                     \
      ELB_HENS_CSR_DHS_CRYPTO_CTL_MD_DRBG##inst##_##reg##_BYTE_ADDRESS)
-     
+
 #define CRYPTO_CTL_DRBG_WORD_DEPTH(inst, reg)                           \
     ELB_HENS_CSR_DHS_CRYPTO_CTL_MD_DRBG##inst##_##reg##_ARRAY_COUNT
-    
+
 #else
 #define DRBG_DEVICE_NAME        "Capri"
 
 #define CRYPTO_CTL_DRBG_REG_OFFSET(inst, reg)                           \
     (CAP_ADDR_BASE_MD_HENS_OFFSET +                                     \
      CAP_HENS_CSR_DHS_CRYPTO_CTL_MD_DRBG_##reg##_BYTE_ADDRESS)
-     
+
 #define CRYPTO_CTL_DRBG_WORD_DEPTH(inst, reg)                           \
     CAP_HENS_CSR_DHS_CRYPTO_CTL_MD_DRBG_##reg##_ARRAY_COUNT
 #endif
-    
+
 /*
  * Register and cryptoram access
  */
@@ -96,12 +96,12 @@ crypto_ctl_drbg_random_num1_select(uint32_t select)
     do {                                                                \
         WRITE_REG32(regs.cfg, val);                                     \
     } while (false)
-    
+
 #define CRYPTO_CTL_DRBG_RD(cfg, ret_val)                                \
     do {                                                                \
         ret_val = READ_REG32(regs.cfg);                                 \
     } while (false)
-    
+
 /*
  * The cache should be considered as holding a big number in big-endian
  * format. The cryptoram is in little-endian format where offset 0 holds

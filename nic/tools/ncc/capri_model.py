@@ -39,13 +39,13 @@ capri_model = {
             'no_load_bit' : '0x1FFF',
             # lkup types
             'no_op'             : '0',
-            'mpu_only'          : '1', 
-            'hash_only'         : '2', 
-            'tcam_only'         : '3', 
-            'tcam_sram'         : '4', 
+            'mpu_only'          : '1',
+            'hash_only'         : '2',
+            'tcam_only'         : '3',
+            'tcam_sram'         : '4',
             'hash_otcam_sram'   : '5',
-            'direct'            : '6', 
-            'rsvd'              : '7', 
+            'direct'            : '6',
+            'rsvd'              : '7',
             # hash_type
             'num_hash_types'    : 4,    # 0-3 CRC hash, 4= toeplitz hash
 

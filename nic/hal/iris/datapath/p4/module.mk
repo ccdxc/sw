@@ -9,10 +9,19 @@ MODULE_NCC_OPTS     = --asm-out --pd-gen --gen-dir ${BLD_P4GEN_DIR} \
                       --split-deparse-only-headers \
                       --phv-flits=10 \
                       --pipeline ${PIPELINE}
+
 ifeq ($(PLATFORM),haps)
+ifeq ($(ASIC),elba)
+MODULE_NCC_OPTS     += --asic elba --fe-flags="-DELBA -DPLATFORM_HAPS -I${TOPDIR} -I${SDKDIR}"
+else
 MODULE_NCC_OPTS     += --fe-flags="-DPLATFORM_HAPS -I${TOPDIR} -I${SDKDIR}"
+endif
+else
+ifeq ($(ASIC),elba)
+MODULE_NCC_OPTS     += --asic elba --fe-flags="-DELBA -I${TOPDIR} -I${SDKDIR}"
 else
 MODULE_NCC_OPTS     += --fe-flags="-I${TOPDIR} -I${SDKDIR}"
+endif
 endif
 
 MODULE_DEPS         = $(shell find ${MODULE_DIR} -name '*.p4' -o -name '*.h')

@@ -22,7 +22,6 @@ nic/build/$ARCH/$PIPELINE/lib/libsdk$ASIC_csrint.so               /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/librte_indexer.so                   /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpdsproto.so                      /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libmpuobj.so                        /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libmpuobj.so                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/liblogger.so                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/liblfq.so                           /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libisa.so                           /nic/lib/

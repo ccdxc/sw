@@ -21,8 +21,8 @@
 #include "third-party/asic/elba/model/elb_pic/elb_pics_csr.h"
 #include "third-party/asic/elba/model/elb_te/elb_te_csr.h"
 #include "third-party/asic/ip/verif/pcpp/cpp_int_helper.h"
-#include "third-party/asic/elba/verif/apis/elb_pics_api.h"
-#include "third-party/asic/elba/verif/apis/elb_pict_api.h"
+#include "third-party/asic/elba/verif/apis/elb_pics_sw_api.h"
+#include "third-party/asic/elba/verif/apis/elb_pict_sw_api.h"
 #include "third-party/asic/elba/model/elb_top/csr_defines/elb_pics_c_hdr.h"
 #include "third-party/asic/elba/design/common/gen/elb_pf_decoders.h"
 
@@ -38,10 +38,12 @@ namespace elba {
 #define ELBA_FREE    free
 
 /* Cache invalidate register address and memory mapped addresses */
-#define CSR_CACHE_INVAL_INGRESS_REG_ADDR 0x25002ec  /* TBD-ELBA-REBASE */
-#define CSR_CACHE_INVAL_EGRESS_REG_ADDR  0x2d002ec
-#define CSR_CACHE_INVAL_TXDMA_REG_ADDR   0x45002ec
-#define CSR_CACHE_INVAL_RXDMA_REG_ADDR   0x4d002ec
+#define CSR_CACHE_INVAL_INGRESS_REG_ADDR 0x61701000
+#define CSR_CACHE_INVAL_EGRESS_REG_ADDR  0x60f01000
+#define CSR_CACHE_INVAL_TXDMA_REG_ADDR   0x12701000
+#define CSR_CACHE_INVAL_RXDMA_REG_ADDR   0x60701000
+#define CSR_CACHE_INVAL_XDMA_REG_ADDR    0x12a01000
+#define CSR_CACHE_INVAL_PXB_REG_ADDR     0x200c7000
 
 static uint32_t *csr_cache_inval_ingress_va;
 static uint32_t *csr_cache_inval_egress_va;
@@ -642,6 +644,7 @@ elba_deparser_init(int tm_port_ingress, int tm_port_egress)
     // Egress deparser is indexed with 0
     elb0.dpr.dpr[0].cfg_global_2.read();
     elb0.dpr.dpr[0].cfg_global_2.increment_recirc_cnt_en(0);
+    elb0.dpr.dpr[0].cfg_global_2.frame_size_rw_bm(0xffff);
     elb0.dpr.dpr[0].cfg_global_2.write();
 }
 

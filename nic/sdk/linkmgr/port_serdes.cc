@@ -5,7 +5,6 @@
 #include "port_serdes.hpp"
 #include "linkmgr_types.hpp"
 #include "linkmgr_internal.hpp"
-#include "include/sdk/asic/capri/cap_mx_api.h"
 #include "third-party/avago/build/include/aapl/aapl.h"
 #include "platform/pal/include/pal.h"
 
@@ -280,7 +279,7 @@ sbus_access (uint32_t sbus_addr,
 {
     uint32_t chip_id     = 0;
     uint32_t status      = 0;
-    uint32_t ring_number = ((sbus_addr >> 8 ) & 0x0f); 
+    uint32_t ring_number = ((sbus_addr >> 8 ) & 0x0f);
     uint32_t sbus_id     = (sbus_addr         & 0xff);
 
     //Required commands are:

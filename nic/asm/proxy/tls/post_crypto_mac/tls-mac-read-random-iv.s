@@ -18,14 +18,14 @@ struct d_struct {
     random_num  : 128;
     pad         : 384;
 };
-	
+
 struct tx_table_s4_t1_k k;
 struct phv_ p;
 struct d_struct d;
-	
+
 %%
-        
-tls_mac_read_random_iv:        
+
+tls_mac_read_random_iv:
 
 table_read_RANDOM_IV:
     CAPRI_SET_DEBUG_STAGE4_7(p.to_s5_debug_stage4_7_thread, CAPRI_MPU_STAGE_4, CAPRI_MPU_TABLE_1)
@@ -37,7 +37,11 @@ table_read_RANDOM_IV:
      * DRBG crypto-ram.
      */
     phvwr    p.crypto_random_iv_explicit_iv, d.random_num
+#ifdef ELBA
+    /*CAPRI_OPERAND_DEBUG(d.random_num)*/
+#else
     CAPRI_OPERAND_DEBUG(d.random_num)
+#endif
 
     nop.e
     nop

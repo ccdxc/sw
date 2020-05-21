@@ -1,8 +1,8 @@
 #include "model_sim/include/sknobs.h"
 #include "include/sdk/types.hpp"
 #include "lib/catalog/catalog.hpp"
-#include "include/sdk/asic/capri/cap_mx_api.h"
-#include "cap_bx_api.h"
+#include "include/sdk/asic/elba/elb_mx_api.h"
+#include "elb_bx_api.h"
 #include "msg_man.h"
 
 mac_profile_t bx[MAX_MAC];

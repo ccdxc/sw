@@ -1,8 +1,1 @@
 nic/sdk/model_sim/libs/*
-nic/sdk/third-party/asic/capri/model/capsim-master/gen/x86_64/lib/*.so
-nic/sdk/third-party/asic/capri/model/capsim-master/gen/x86_64/lib/*.a
-nic/sdk/third-party/asic/capri/model/capsim-master/gen/x86_64/bin/*
-nic/sdk/third-party/asic/capri/model/capsim-master/gen/aarch64/lib/*.so
-nic/sdk/third-party/asic/capri/model/capsim-master/gen/aarch64/lib/*.a
-nic/sdk/third-party/asic/capri/model/capsim-master/gen/aarch64/bin/*
-nic/tools/asic/tcl.tar.gz

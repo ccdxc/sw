@@ -39,6 +39,10 @@ ifeq ($(PIPELINE), iris)
 	COMMON_GXX_FLAGS        += -DENABLE_SDK_MTRACK
 endif
 
+ifeq ($(ASIC), elba)
+	COMMON_GXX_FLAGS        += -DELBA
+endif
+
 COMMON_GPP_FLAGS        := ${COMMON_GXX_FLAGS} --std=c++11
 COMMON_AR_FLAGS         := rcs
 COMMON_ARLIB_FLAGS      :=
@@ -66,7 +70,7 @@ NAME_GCC       := "[  GCC   ]"
 NAME_GXX       := "[  G++   ]"
 NAME_SYMLINK   := "[SYMLINK ]"
 NAME_NCC       := "[  NCC   ]"
-NAME_CAPAS     := "[ CAPAS  ]"
+#NAME_CAPAS     := "[ CAPAS  ]"
 NAME_PROTOC    := "[ PROTOC ]"
 NAME_SVCGEN    := "[ SVCGEN ]"
 NAME_PROT2CC   := "[PROTO2CC]"
@@ -94,14 +98,28 @@ COMMON_CMD_NCC              := ${TOPDIR}/nic/tools/ncc/capri-ncc.py
 COMMON_CMD_SORRENTO         := ${TOPDIR}/nic/tools/sorrento/bin/p4c-sorrento.sh
 COMMON_P4C_OPTS             :=
 
-COMMON_CMD_CAPAS            := ${SDKDIR}/third-party/asic/capri/model/capsim-gen/bin/capas
+ifeq ($(ASIC),elba)
+     NAME_CAPAS     := "[ ELBAS  ]"
+     COMMON_CMD_CAPAS            := ${SDKDIR}/third-party/asic/ip/verif/pensim/gen/x86_64/bin/elbas
+     COMMON_NCC_OPTS             := --asic "elba"
+else
+     NAME_CAPAS     := "[ CAPAS  ]"
+     COMMON_CMD_CAPAS            := ${SDKDIR}/third-party/asic/capri/model/capsim-gen/bin/capas
+     COMMON_NCC_OPTS             :=
+endif
+
 COMMON_CAPAS_OPTS           := -t
+
 ifeq ($(PLATFORM),haps)
     COMMON_CAPAS_OPTS       += -DHAPS
 endif
 
 ifeq ($(PLATFORM),hw)
     COMMON_CAPAS_OPTS       += -DHW
+endif
+
+ifeq ($(ASIC),elba)
+    COMMON_CAPAS_OPTS       += -DELBA --no-bds-check
 endif
 
 ifeq ($(COVERAGE), 1)

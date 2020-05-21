@@ -139,9 +139,7 @@ nic/build/$ARCH/$PIPELINE/lib/libzmq.so                                /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libtwheel.so                             /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libutils.so                              /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkxcvrdriver.so                      /nic/lib/
-nic/sdk/third-party/asic/capri/model/capsim-master/gen/aarch64/lib/libmpuobj.so     /nic/lib/
 nic/sdk/third-party/asic/capri/model/capsim-master/gen/aarch64/lib/libcapisa.so     /nic/lib/
-nic/sdk/third-party/asic/capri/model/capsim-master/gen/aarch64/lib/libisa.so        /nic/lib/
 nic/hal/third-party/openssl/aarch64/lib/libssl.so.1.1               /nic/lib/
 nic/hal/third-party/openssl/aarch64/lib/libcrypto.so.1.1            /nic/lib/
 nic/hal/third-party/google/aarch64/lib/libprotobuf.so.14            /nic/lib/

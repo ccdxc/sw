@@ -536,12 +536,12 @@ aclqos_init (hal_cfg_t *hal_cfg)
     // TODO acls need cpu interface. Right now, in GFT mode, the
     // hal_cpu_if_create() fails, so cpu interface is not created
     // So skipping installation of acls
-    if (getenv("MICROSEG_ENABLE") && 
+    if (getenv("MICROSEG_ENABLE") &&
         (hal_cfg->features != HAL_FEATURE_SET_GFT)) {
         // do acl creates after qos creates. acls depend on qos config
         ret = hal_acl_config_init();
         HAL_ABORT(ret == HAL_RET_OK);
-    } 
+    }
 
     return HAL_RET_OK;
 }

@@ -3840,9 +3840,12 @@ def capri_dump_registers(asic_name, cfg_out_dir, prog_name, cap_mod, cap_inst, r
         base_addr_file = os.path.join(cur_path, 'csr_json/elb_addr.json')
     base_addr_fp = open(base_addr_file)
     base_addr_json = json.load(base_addr_fp)
-    addr_map_size = eval(base_addr_json[cap_mod]['amap_size'])
-    base_addr = int(base_addr_json[cap_mod]['base_addr'], 16)
-    base_addr += addr_map_size * cap_inst
+    if asic_name == "capri":
+        addr_map_size = eval(base_addr_json[cap_mod]['amap_size'])
+        base_addr = int(base_addr_json[cap_mod]['base_addr'], 16)
+        base_addr += addr_map_size * cap_inst
+    elif asic_name == "elba":
+        base_addr = int(base_addr_json[cap_mod]['inst'][cap_inst]['base_addr'], 16)
 
     for name, conf in regs.iteritems():
         addr_offset = int(conf['addr_offset'], 16) + base_addr
@@ -3938,7 +3941,7 @@ def te_tbl_property_print(json_tbl_):
     pstr += '\tmpu_pc_loc = %s, ' % json_tbl_['mpu_pc_loc']['value']
     pstr += '\tmpu_pc = %s, ' % json_tbl_['mpu_pc']['value']
     pstr += '\tmpu_pc_raw = %s\n' % json_tbl_['mpu_pc_raw']['value']
-    pstr += '\tmpu_pc_ofst_err = %s, ' % json_tbl_['mpu_pc_ofst_err']['value']
+    #pstr += '\tmpu_pc_ofst_err = %s, ' % json_tbl_['mpu_pc_ofst_err']['value']
     pstr += '\tmpu_vec = %s\n' % json_tbl_['mpu_vec']['value']
     pstr += '\taddr_base = %s, ' % json_tbl_['addr_base']['value']
     pstr += '\taddr_sz = %s, ' % json_tbl_['addr_sz']['value']

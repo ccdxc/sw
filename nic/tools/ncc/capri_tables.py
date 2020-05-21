@@ -264,6 +264,7 @@ class capri_table:
         self.hash_type = 0  # pragma hash_type
         self.is_raw = False # Raw table (used in p4_plus)
         self.is_raw_index = False # Raw index table (used in p4_plus) - slightly different from raw
+        self.is_qstate_addr = False # To indicate shift qstate_addr by 5
         self.is_hbm = False # If table resides in HBM, it will be set to true.
                             # A pragma is used in P4 to qualify the table.
         self.is_writeback = False # True when MPU writes to table entry - need lock
@@ -6406,9 +6407,10 @@ class capri_table_manager:
                     if mem_type == 'sram':
                         if self.asic == 'capri': 
                             cap_name = 'cap_pics'
+                            profile_name = "%s_csr_cfg_table_profile[%d]" % (cap_name, profile_id)
                         elif self.asic == 'elba':
                             cap_name = 'elb_pics'
-                        profile_name = "%s_csr_cfg_table_profile[%d]" % (cap_name, profile_id)
+                            profile_name = "%s_csr_cfg_table_profile_entry[%d]" % (cap_name, profile_id)
                         profile = pic[mem_type][xgress_to_string(direction)][cap_name]['registers'][profile_name]
                         profile['width']['value'] = "0x%x" % table['width']
                         profile['hash']['value'] = "0x%x" % 0 # Not used, confirmed by hw
@@ -6482,7 +6484,10 @@ class capri_table_manager:
                         elif self.asic == 'elba':
                             cap_name = 'elb_pict'
                         num_bkts = 0 if table['depth'] == 0 else (capri_get_depth_from_layout(layout) / table['depth'])
-                        profile_name = "%s_csr_cfg_tcam_table_profile[%d]" % (cap_name, profile_id)
+                        if self.asic == 'capri':
+                            profile_name = "%s_csr_cfg_tcam_table_profile[%d]" % (cap_name, profile_id)
+                        elif self.asic == 'elba':
+                            profile_name = "%s_csr_cfg_tcam_table_profile_entry[%d]" % (cap_name, profile_id)
                         profile = pic[mem_type][xgress_to_string(direction)][cap_name]['registers'][profile_name]
                         profile['width']['value'] = "0x%x" % table['width']
                         profile['bkts']['value'] = "0x%x" % (num_bkts)

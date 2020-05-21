@@ -25,8 +25,16 @@ input_properties_mac_vlan_tcp:
     bbne            k.tcp_valid, TRUE, input_properties_mac_vlan_common
     crestore        [c5-c2], k.{inner_ipv4_valid,inner_ipv6_valid, \
                         ipv4_valid,ipv6_valid}, 0xF
+#ifdef ELBA
+    /* TBD-ELBA-REBASE : bcpri not supported by Elba: */
+    /* Added the following 3 lines based on dac2 input */
+    csave r8, [c5-c2]
+    .brbegin
+    brpri r8[3:0], [0,1,2,3]
+#else
     .brbegin
     bcpri           [c5-c2], [0,1,2,3]
+#endif
     nop
     .brcase 0
     // c2

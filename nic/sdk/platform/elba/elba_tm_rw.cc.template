@@ -242,10 +242,6 @@ elba_tm_get_port_type (tm_port_t port)
         case ELBA_TM_PORT_UPLINK_1:
         case ELBA_TM_PORT_UPLINK_2:
         case ELBA_TM_PORT_UPLINK_3:
-        case ELBA_TM_PORT_UPLINK_4:
-        case ELBA_TM_PORT_UPLINK_5:
-        case ELBA_TM_PORT_UPLINK_6:
-        case ELBA_TM_PORT_UPLINK_7:
         case ELBA_TM_PORT_NCSI:
             return TM_PORT_TYPE_UPLINK;
         case ELBA_TM_PORT_DMA:
@@ -400,10 +396,6 @@ tm_is_high_perf_q (tm_q_t q)
 //::    "ELBA_TM_PORT_UPLINK_1",
 //::    "ELBA_TM_PORT_UPLINK_2",
 //::    "ELBA_TM_PORT_UPLINK_3",
-//::    "ELBA_TM_PORT_UPLINK_4",
-//::    "ELBA_TM_PORT_UPLINK_5",
-//::    "ELBA_TM_PORT_UPLINK_6",
-//::    "ELBA_TM_PORT_UPLINK_7",
 //::    "ELBA_TM_PORT_NCSI",
 //::    "ELBA_TM_PORT_DMA",
 //::    "ELBA_TM_PORT_EGRESS",

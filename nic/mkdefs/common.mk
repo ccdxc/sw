@@ -103,7 +103,12 @@ export NIC_HAL_PD_SOLIBS_aarch64 :=
 export NIC_HAL_PD_SOLIBS := sdk_asicrw_if pdcommon sdkp4 \
        pd_${PIPELINE} sdkasicpd sdkasiccmn asicpd pd_acl_tcam pd_met \
        ${NIC_HAL_PD_SOLIBS_${ARCH}}
+
+ifeq ($(ASIC),elba)
+export NIC_CAPSIM_LDLIBS := mpuobj elbisa isa sknobs
+else
 export NIC_CAPSIM_LDLIBS := mpuobj capisa isa sknobs
+endif
 
 export NIC_HAL_CORE_SOLIBS := hal_src heartbeat core hal_lib
 

@@ -8,5 +8,6 @@ MODULE_TEMPLATE     = ${MODULE_SRC_DIR}/elba_tm_rw.cc.template
 MODULE_OUTFILE      = ${MODULE_SRC_DIR}/elba_tm_rw.cc
 MODULE_ARGS         = ${SDKDIR}/third-party/asic/elba/verif/common/csr_gen/pbc.yaml
 MODULE_POSTGEN_MK   = module.mk
+MODULE_ASIC         = elba
 MODULE_CLEAN_DIRS   = ${MODULE_SRC_DIR}/elba_tm_rw.cc
 include ${MKDEFS}/post.mk
