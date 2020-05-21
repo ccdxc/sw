@@ -1,51 +1,52 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:difxapp="http://schemas.microsoft.com/wix/DifxAppExtension">
-  <Product Id="*" Name="Pensando Ionic Driver" Language="1033" Version="$(env.IONIC_VERSION_MAJOR).$(env.IONIC_VERSION_MINOR).$(env.IONIC_VERSION_SP).$(env.IONIC_VERSION_BUILD)" Manufacturer="Pensando Systems" UpgradeCode="a13e47d8-4da5-4249-8a4d-d060deaeb27f">
-    <Package Id="*" Keywords="Installer" Comments="Copyright (c) Pensando Systems All rights reserved." Description="Pensando Ionic NDIS miniport driver" InstallerVersion="200" Languages="1033" Compressed="yes" InstallScope="perMachine" />
-
-    <MajorUpgrade Schedule="afterInstallValidate" AllowDowngrades="no" DowngradeErrorMessage="A newer version of Pensando Ionic Driver is already installed." AllowSameVersionUpgrades="yes" />
-
-    <Media Id="1" Cabinet="PensandoIonicMiniport.cab" EmbedCab="yes" />
+    <Product Id="*" Name="Pensando Ionic Driver" Language="1033" Version="$(env.IONIC_VERSION_MAJOR).$(env.IONIC_VERSION_MINOR).$(env.IONIC_VERSION_SP).$(env.IONIC_VERSION_BUILD)" Manufacturer="Pensando Systems" UpgradeCode="a13e47d8-4da5-4249-8a4d-d060deaeb27f">
+        <Package Id="*" Keywords="Installer" Comments="Copyright (c) Pensando Systems All rights reserved." Description="Pensando Ionic NDIS miniport driver" InstallerVersion="200" Languages="1033" Compressed="yes" InstallScope="perMachine" />
+        
+        <MajorUpgrade Schedule="afterInstallExecute" AllowDowngrades="no" DowngradeErrorMessage="A newer version of Pensando Ionic Driver is already installed." AllowSameVersionUpgrades="yes" />
+        
+        <Media Id="1" Cabinet="PensandoIonicMiniport.cab" EmbedCab="yes" />
+        
         <Feature Id="Complete" Title="Ionic Driver Complete Package" Description="Pensando Ionic Driver and Tools Installation Package" Display="expand" Level="1" ConfigurableDirectory="INSTALLDIR" AllowAdvertise="no" Absent="disallow">
-          <Feature Id="MainDrivers" Title="Ionic Driver" Description="Ionic NDIS miniport driver" Level="1" Absent="disallow" AllowAdvertise="no">
-            <ComponentRef Id="IonicDriverPackage" />
-            <ComponentRef Id="PerfCountersManifest" />
-            <ComponentRef Id="SetMgmtIfIPs"/>
-          </Feature>
-          <Feature Id="CommandLineTools" Title="Ionic Driver Tools" Description="Ionic Driver Tools: IonicConfig.exe, Penctl.exe" Level="1" AllowAdvertise="no">
-            <ComponentRef Id="IonicConfig" />
-            <ComponentRef Id="Penctl" />
-            <ComponentRef Id="PensandoToolsCmd" />
-            <ComponentRef Id="ProgramMenuDir" />
-          </Feature>
-       </Feature>
-  </Product>
+            <Feature Id="MainDrivers" Title="Ionic Driver" Description="Ionic NDIS miniport driver" Level="1" Absent="disallow" AllowAdvertise="no">
+                <ComponentRef Id="IonicDriverPackage" />
+                <ComponentRef Id="PerfCountersManifest" />
+                <ComponentRef Id="SetMgmtIfIPs"/>
+            </Feature>
+            <Feature Id="CommandLineTools" Title="Ionic Driver Tools" Description="Ionic Driver Tools: IonicConfig.exe, Penctl.exe" Level="1" AllowAdvertise="no">
+                <ComponentRef Id="IonicConfig" />
+                <ComponentRef Id="Penctl" />
+                <ComponentRef Id="PensandoToolsCmd" />
+                <ComponentRef Id="ProgramMenuDir" />
+            </Feature>
+        </Feature>
+    </Product>
 
-  <Fragment>
-    <Directory Id="TARGETDIR" Name="SourceDir">
+    <Fragment>
+        <Directory Id="TARGETDIR" Name="SourceDir">
             <Directory Id="ProgramFiles64Folder">
                 <Directory Id="Pensando" Name="Pensando Systems">
                     <Directory Id="INSTALLDIR" Name="Pensando Driver Tools">
                         <Component Id="PensandoToolsCmd">
-                          <File Id="PensandoToolsCmdBAT" Source="BuildFiles\PensandoToolsCmd.bat" KeyPath="yes">
-                            <Shortcut Id="DesktopPensandoToolsCmd" Directory="DesktopFolder" Name="PensandoToolsCmd" WorkingDirectory="INSTALLDIR" Advertise="yes" Icon="Cmd.ico" IconIndex="0" />
-                            <Shortcut Id="StartMenuPensandoToolsCmd" Directory="ProgramMenuDir" Name="PensandoToolsCmd" WorkingDirectory="INSTALLDIR" Advertise="yes" Icon="Cmd.ico" IconIndex="0" />
-                          </File>
-                          <Environment Id="PATH" Name="PATH" Value="[INSTALLDIR]" Permanent="no" Part="last" Action="set" System="yes" />
+                            <File Id="PensandoToolsCmdBAT" Source="BuildFiles\PensandoToolsCmd.bat" KeyPath="yes">
+                                <Shortcut Id="DesktopPensandoToolsCmd" Directory="DesktopFolder" Name="PensandoToolsCmd" WorkingDirectory="INSTALLDIR" Advertise="yes" Icon="Cmd.ico" IconIndex="0" />
+                                <Shortcut Id="StartMenuPensandoToolsCmd" Directory="ProgramMenuDir" Name="PensandoToolsCmd" WorkingDirectory="INSTALLDIR" Advertise="yes" Icon="Cmd.ico" IconIndex="0" />
+                            </File>
+                            <Environment Id="PATH" Name="PATH" Value="[INSTALLDIR]" Permanent="no" Part="last" Action="set" System="yes" />
                         </Component>
                         <Component Id="IonicConfig">
-                          <File Id="IonicConfigEXE" Name="$(var.Config Tool.TargetFileName)" Source="$(var.Config Tool.TargetPath)" KeyPath="yes" />
+                            <File Id="IonicConfigEXE" Name="$(var.Config Tool.TargetFileName)" Source="$(var.Config Tool.TargetPath)" KeyPath="yes" />
                         </Component>
                         <Component Id="Penctl">
-                          <File Id="PenctlEXE" Source="BuildFiles\Penctl.exe" KeyPath="yes" />
+                            <File Id="PenctlEXE" Source="BuildFiles\Penctl.exe" KeyPath="yes" />
                         </Component>
                         <Component Id="PerfCountersManifest">
-                          <File Id="PerfCountersManFile" Name="perf_counters.man" Source="$(var.Ionic.ProjectDir)" KeyPath="yes" />
+                            <File Id="PerfCountersManFile" Name="perf_counters.man" Source="$(var.Ionic.ProjectDir)" KeyPath="yes" />
                         </Component>
                         <Component Id="SetMgmtIfIPs">
-                          <File Id="SetMgmtIfIPsScript" Source="BuildFiles\setdsc.ps1" KeyPath="yes" />
+                            <File Id="SetMgmtIfIPsScript" Source="BuildFiles\setdsc.ps1" KeyPath="yes" />
                         </Component>
-                      <Directory Id="Ionic64" Name="Ionic64">
+                        <Directory Id="Ionic64" Name="Ionic64">
                             <Component Id="IonicDriverPackage" Guid="B0F10226-F3CD-4C3B-814E-BBB95B763360">
                                 <difxapp:Driver AddRemovePrograms="no" DeleteFiles="yes" ForceInstall="yes" Legacy="no" PlugAndPlayPrompt="no" Sequence="0" />
                                 <File Id="Ionic64InfFile" Source="$(var.SolutionDir)\$(var.Ionic.Platform)\$(var.Ionic.Configuration)\Ionic\Ionic64.inf" KeyPath="yes" />
@@ -67,47 +68,36 @@
             </Directory>
 
             <Directory Id="DesktopFolder" />
-    
-    </Directory>
+
+        </Directory>
         <WixVariable Id="WixUIDialogBmp" Value="BuildFiles\platform-banner-logo.jpg" />
         <WixVariable Id="WixUIBannerBmp" Value="BuildFiles\top-banner-logo.jpg" />
         <WixVariable Id="WixUILicenseRtf" Value="BuildFiles\License.rtf" />
-    
+
         <UI Id='Mondo'>
-          <UIRef Id="WixUI_Mondo" />
-          <UIRef Id="WixUI_ErrorProgressText" />
-                  
-          <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="LicenseAgreementDlg" Order="3">1</Publish>
-          <Publish Dialog="LicenseAgreementDlg" Control="Back" Event="NewDialog" Value="SetupTypeDlg" Order="3">1</Publish>
-      <Publish Dialog="SetupTypeDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg" Order="3">1</Publish>
+            <UIRef Id="WixUI_Mondo" />
+            <UIRef Id="WixUI_ErrorProgressText" />
+
+            <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="LicenseAgreementDlg" Order="3">1</Publish>
+            <Publish Dialog="LicenseAgreementDlg" Control="Back" Event="NewDialog" Value="SetupTypeDlg" Order="3">1</Publish>
+            <Publish Dialog="SetupTypeDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg" Order="3">1</Publish>
         </UI>
 
-    
-      <Condition Message="Windows Server 20016 64 bit">VersionNT64 &gt;= 603</Condition>
+
+        <Condition Message="Windows Server 20016 64 bit">VersionNT64 &gt;= 603</Condition>
         <Icon Id="Cmd.ico" SourceFile="BuildFiles\Cmd.ico" />
 
-      <CustomAction Id="UnregisterPreviousPerfCounters" Directory="INSTALLDIR" Execute="deferred" Impersonate="no" ExeCommand="cmd.exe /c &quot;unlodctr /p:IonicPerfCounters&quot;" Return="ignore" />
-      <CustomAction Id="RegisterPerfCounters" Directory="INSTALLDIR" Execute="deferred" Impersonate="no" ExeCommand="cmd.exe /c &quot;lodctr /M:perf_counters.man&quot;" Return="ignore" />
-      <CustomAction Id="UnregisterPerfCounters" Directory="INSTALLDIR" Execute="deferred" Impersonate="no" ExeCommand="cmd.exe /c &quot;unlodctr /p:IonicPerfCounters&quot;" Return="ignore" />
-      <CustomAction Id="SetMgmtIterfaces" Directory="INSTALLDIR" Execute="deferred" Impersonate="no" ExeCommand="powershell.exe -file setdsc.ps1" Return="check" />
+        <CustomAction Id="UnregisterPreviousPerfCounters" Directory="INSTALLDIR" Execute="deferred" Impersonate="no" ExeCommand="cmd.exe /c &quot;unlodctr /p:IonicPerfCounters&quot;" Return="ignore" />
+        <CustomAction Id="RegisterPerfCounters" Directory="INSTALLDIR" Execute="deferred" Impersonate="no" ExeCommand="cmd.exe /c &quot;lodctr /M:perf_counters.man&quot;" Return="ignore" />
+        <CustomAction Id="UnregisterPerfCounters" Directory="INSTALLDIR" Execute="deferred" Impersonate="no" ExeCommand="cmd.exe /c &quot;unlodctr /p:IonicPerfCounters&quot;" Return="ignore" />
+        <CustomAction Id="SetMgmtIterfaces" Directory="INSTALLDIR" Execute="deferred" Impersonate="no" ExeCommand="powershell.exe -file setdsc.ps1" Return="check" />
 
-      <InstallExecuteSequence>
-        <Custom Action="UnregisterPreviousPerfCounters" After="InstallFiles">NOT Installed</Custom>
-        <Custom Action="RegisterPerfCounters" After="UnregisterPreviousPerfCounters">NOT Installed</Custom>
-        <Custom Action="SetMgmtIterfaces" After="InstallFiles">NOT Installed</Custom>
-        <Custom Action="UnregisterPerfCounters" Before="RemoveFiles">REMOVE="ALL"</Custom>
-      </InstallExecuteSequence>
-  </Fragment>
-<!--
-  <Fragment>
-    <ComponentGroup Id="ProductComponents" Directory="INSTALLDIR">
--->    
-      <!-- TODO: Remove the comments around this Component element and the ComponentRef below in order to add resources to this installer. -->
-      <!-- <Component Id="ProductComponent"> -->
-        <!-- TODO: Insert files, registry keys, and other resources here. -->
-      <!-- </Component> -->
-<!--
-    </ComponentGroup>
-  </Fragment>
--->
+        <InstallExecuteSequence>
+            <Custom Action="UnregisterPreviousPerfCounters" After="InstallFiles">NOT Installed</Custom>
+            <Custom Action="RegisterPerfCounters" After="UnregisterPreviousPerfCounters">NOT Installed</Custom>
+            <Custom Action="SetMgmtIterfaces" After="InstallFiles">(NOT Installed) AND (NOT WIX_UPGRADE_DETECTED)</Custom>
+            <Custom Action="UnregisterPerfCounters" Before="RemoveFiles">(REMOVE="ALL") AND (NOT UPGRADINGPRODUCTCODE)</Custom>
+        </InstallExecuteSequence>
+    </Fragment>
+
 </Wix>
