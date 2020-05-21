@@ -340,7 +340,7 @@ nexthop_impl::restore(obj_info_t *info, upg_obj_info_t *upg_info) {
     // now restore hw resources
     ret = restore_resources((obj_info_t *)nh_info);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to restore hw resources for nexthop %s",
+        PDS_TRACE_ERR("Failed to restore hw resources for nexthop %s, err %u",
                       nh_info->spec.key.str(), ret);
         return ret;
     }
