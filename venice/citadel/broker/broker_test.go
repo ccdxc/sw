@@ -427,7 +427,8 @@ func TestBrokerTstoreContinuousQuery(t *testing.T) {
 	}
 
 	// wait for continuous query routine to detect data points in Node
-	time.Sleep(40 * time.Second)
+	log.Infof("Waiting for one cqRoutineDuration")
+	time.Sleep(5 * 60 * time.Second)
 
 	// Check continuous query result
 	targetShard, err := brokers[0].GetCluster(meta.ClusterTypeTstore).ShardMap.GetShardForPoint("cqdb", "Node", "")

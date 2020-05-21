@@ -26,7 +26,10 @@ import (
 )
 
 const (
-	defaultRetentionPeriodInHours = 24
+	defaultRetentionPeriod = time.Duration(24) * time.Hour
+	defaultDBWaitFreq      = time.Duration(30) * time.Second
+	cqRoutineWakeupFreq    = time.Duration(5) * time.Minute
+	cqRoutineDuration      = time.Duration(1) * time.Hour
 )
 
 // createDatabaseInReplica creates the database in replica
@@ -1164,15 +1167,15 @@ func (br *Broker) continuousQueryWaitDB() {
 		databases, err := br.ReadDatabases(br.cqCtx)
 		if err != nil {
 			br.logger.Errorf("Error reading databases for cq routine. Err: %v", err)
-			time.Sleep(30 * time.Second)
+			time.Sleep(defaultDBWaitFreq)
 			continue
 		}
 
 		for _, dbInfo := range databases {
 			if dbInfo.Name == "default" {
-				err := br.UpdateRetentionPolicy(br.cqCtx, "default", "default", defaultRetentionPeriodInHours)
+				err := br.UpdateRetentionPolicy(br.cqCtx, "default", "default", uint64(defaultRetentionPeriod.Hours()))
 				if err != nil {
-					br.logger.Errorf("Error updating default retention policy to %v hours duration. Err: %v", defaultRetentionPeriodInHours, err)
+					br.logger.Errorf("Error updating default retention policy to %v hours duration. Err: %v", defaultRetentionPeriod, err)
 				}
 				if !br.cqRoutineCreated {
 					br.continuousQueryRoutine(br.cqCtx, "default")
@@ -1181,14 +1184,21 @@ func (br *Broker) continuousQueryWaitDB() {
 			}
 		}
 		// check database every 30 second
-		time.Sleep(30 * time.Second)
+		time.Sleep(defaultDBWaitFreq)
 	}
 }
 
 // continuousQueryRoutine goroutine to auto-create continuous query by detecting the field name inside database
 func (br *Broker) continuousQueryRoutine(ctx context.Context, database string) {
 	br.cqRoutineCreated = true
+	cqRoutineTimerChan := make(chan string, 1)
 	br.logger.Infof("Continuous query routine launched")
+
+	// exit this goroutine after cqRoutineDuration
+	go func() {
+		time.Sleep(cqRoutineDuration)
+		cqRoutineTimerChan <- "cq routine timeout"
+	}()
 
 	// only call create function for new retention policy
 	for _, rpSpec := range cq.RetentionPolicyMap {
@@ -1202,80 +1212,86 @@ func (br *Broker) continuousQueryRoutine(ctx context.Context, database string) {
 
 	// loop forever to create CQ for target measurement
 	for {
-		if ctx.Err() != nil {
-			br.logger.Infof("Broker cq ctx cancel detected. Quit cq goroutine.")
-			br.cqRoutineCreated = false
+		select {
+		case res := <-cqRoutineTimerChan:
+			br.logger.Infof("Received cq routine timeout msg: %v", res)
 			return
-		}
-
-		// fetch current cq information
-		cqInfoList, err := br.GetContinuousQuery(ctx, database, "")
-		if err != nil {
-			br.logger.Errorf("Error fetching cq info from database %v. Err: %v", database, err)
-			time.Sleep(30 * time.Second)
-			continue
-		}
-		for _, cqInfo := range cqInfoList {
-			br.cqInfoMap[cqInfo.Name] = cqInfo.Query
-		}
-
-		// check each measurement
-		for measurement := range cq.CQMeasurementGroupByMap {
-			// if this measurement's cq is created, skip
-			if _, ok := br.metricsWithCQCreated[measurement]; ok {
-				continue
+		default:
+			if ctx.Err() != nil {
+				br.logger.Infof("Broker cq ctx cancel detected. Quit cq goroutine.")
+				br.cqRoutineCreated = false
+				return
 			}
 
-			// query the measurement
-			resp, err := br.ExecuteQuery(ctx, database, "SELECT * FROM "+measurement+" ORDER BY time DESC LIMIT 1")
+			// fetch current cq information
+			cqInfoList, err := br.GetContinuousQuery(ctx, database, "")
 			if err != nil {
-				br.logger.Errorf("Error query metrics %v for continuous query. Err: %v", measurement, err)
+				br.logger.Errorf("Error fetching cq info from database %v. Err: %v", database, err)
+				time.Sleep(defaultDBWaitFreq)
 				continue
 			}
-
-			// check if there is any response or not
-			if len(resp) == 0 || len(resp[0].Series) == 0 || len(resp[0].Series[0].Columns) == 0 {
-				continue
+			for _, cqInfo := range cqInfoList {
+				br.cqInfoMap[cqInfo.Name] = cqInfo.Query
 			}
 
-			// collect field name
-			fields := []string{}
-			for _, column := range resp[0].Series[0].Columns {
-				if !cq.IsTag(column) {
-					fields = append(fields, column)
-				}
-			}
-
-			// generate continuous query
-			cqMap := cq.GenerateContinuousQueryMap(database, measurement, "last", fields)
-
-			// run continuous query
-			for _, cqSpec := range cqMap {
-				// when different version of query string is detected, delete the old cq and create a new one
-				if cqQuery, ok := br.cqInfoMap[cqSpec.CQName]; ok && cqQuery != cqSpec.Query {
-					br.logger.Infof("Detect different version of cq query. Old: %v, New: %v", br.cqInfoMap[cqSpec.CQName], cqQuery)
-					err := br.DeleteContinuousQuery(ctx, database, cqSpec.CQName, measurement)
-					if err != nil {
-						br.logger.Errorf("Failed to delete old version cq %v. Err: %v", cqSpec.CQName, err)
-						continue
-					}
-				}
-
-				err := br.CreateContinuousQuery(ctx, cqSpec.DBName, cqSpec.CQName,
-					cqSpec.RetentionPolicyName, cqSpec.RetentionPolicyInHours, cqSpec.Query)
-				if err != nil {
-					// there exists possibility that cq already exists, let the routine continue
-					br.logger.Errorf("Error creating continuous query %v. Err: %v", cqSpec.CQName, err)
+			// check each measurement
+			for measurement := range cq.CQMeasurementGroupByMap {
+				// if this measurement's cq is created, skip
+				if _, ok := br.metricsWithCQCreated[measurement]; ok {
 					continue
 				}
 
-				// if created without error, registered in AllCQMeasurement
-				cq.AllCQMeasurementMap[cqSpec.CQName] = true
-			}
-			br.metricsWithCQCreated[measurement] = true
-		}
+				// query the measurement
+				resp, err := br.ExecuteQuery(ctx, database, "SELECT * FROM "+measurement+" ORDER BY time DESC LIMIT 1")
+				if err != nil {
+					br.logger.Errorf("Error query metrics %v for continuous query. Err: %v", measurement, err)
+					continue
+				}
 
-		// wake up every 30 seconds
-		time.Sleep(30 * time.Second)
+				// check if there is any response or not
+				if len(resp) == 0 || len(resp[0].Series) == 0 || len(resp[0].Series[0].Columns) == 0 {
+					continue
+				}
+
+				// collect field name
+				fields := []string{}
+				for _, column := range resp[0].Series[0].Columns {
+					if !cq.IsTag(column) {
+						fields = append(fields, column)
+					}
+				}
+
+				// generate continuous query
+				cqMap := cq.GenerateContinuousQueryMap(database, measurement, "last", fields)
+
+				// run continuous query
+				for _, cqSpec := range cqMap {
+					// when different version of query string is detected, delete the old cq and create a new one
+					if cqQuery, ok := br.cqInfoMap[cqSpec.CQName]; ok && cqQuery != cqSpec.Query {
+						br.logger.Infof("Detect different version of cq query. Old: %v, New: %v", br.cqInfoMap[cqSpec.CQName], cqQuery)
+						err := br.DeleteContinuousQuery(ctx, database, cqSpec.CQName, measurement)
+						if err != nil {
+							br.logger.Errorf("Failed to delete old version cq %v. Err: %v", cqSpec.CQName, err)
+							continue
+						}
+					}
+
+					err := br.CreateContinuousQuery(ctx, cqSpec.DBName, cqSpec.CQName,
+						cqSpec.RetentionPolicyName, cqSpec.RetentionPolicyInHours, cqSpec.Query)
+					if err != nil {
+						// there exists possibility that cq already exists, let the routine continue
+						br.logger.Errorf("Error creating continuous query %v. Err: %v", cqSpec.CQName, err)
+						continue
+					}
+
+					// if created without error, registered in AllCQMeasurement
+					cq.AllCQMeasurementMap[cqSpec.CQName] = true
+				}
+				br.metricsWithCQCreated[measurement] = true
+			}
+
+			// wake up freq is cqRoutineWakeupFreq
+			time.Sleep(cqRoutineWakeupFreq)
+		}
 	}
 }
