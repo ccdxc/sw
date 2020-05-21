@@ -34,7 +34,7 @@ class Endpoint:
         elif vnic_inst.SUBNET.VPC.Type == vpc_pb2.VPC_TYPE_CONTROL:
             self.interface = 'control'
         else:
-            self.interface = GetObjClient('interface').GetHostIf(vnic_inst.Node, vnic_inst.SUBNET.HostIfIdx).GetInterfaceName()
+            self.interface = GetObjClient('interface').FindHostInterface(vnic_inst.Node, vnic_inst.SUBNET.HostIfIdx).GetInterfaceName()
         self.vnic = vnic_inst
 
 class VnicRoute:

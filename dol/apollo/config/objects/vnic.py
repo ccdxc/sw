@@ -84,7 +84,7 @@ class VnicObject(base.ConfigObjectBase):
                 self.MACAddr = vmac.get()
             elif vmac == 'usepfmac':
                 # used in IOTA for workload interface
-                hostif = InterfaceClient.GetHostIf(node, parent.HostIfIdx)
+                hostif = InterfaceClient.FindHostInterface(node, parent.HostIfIdx)
                 if hostif != None:
                     self.MACAddr = hostif.GetInterfaceMac()
                 else:

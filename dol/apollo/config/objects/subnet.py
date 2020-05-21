@@ -155,7 +155,7 @@ class SubnetObject(base.ConfigObjectBase):
             lif = hostif.lif
             lififindex = hex(utils.LifId2LifIfIndex(lif.id))
             logger.info("- HostInterface:%s|%s|%s" %\
-                (hostif.Ifname, lif.GID(), lififindex))
+                (hostif.GetInterfaceName(), lif.GID(), lififindex))
         if self.HostIfUuid:
             logger.info("- HostIf:%s" % self.HostIfUuid)
         self.Status.Show()
@@ -210,6 +210,23 @@ class SubnetObject(base.ConfigObjectBase):
                 else:
                     obj.AddDependent(self)
         return
+
+    def ModifyHostInterface(self, hostifidx=None):
+        if not utils.IsNetAgentMode():
+            return False
+
+        if self.HostIfUuid != None:
+            #dissociate this from subnet first
+            InterfaceClient.UpdateHostInterfaces(self.Node, [self], True)
+
+        if hostifidx == None:
+            self.HostIfIdx = InterfaceClient.GetHostInterface(self.Node)
+        else:
+            self.HostIfIdx = hostifidx
+        node_uuid = EzAccessStoreClient[self.Node].GetNodeUuid(self.Node)
+        self.HostIfUuid = utils.PdsUuid(self.HostIfIdx, node_uuid=node_uuid) if self.HostIfIdx else None
+        InterfaceClient.UpdateHostInterfaces(self.Node, [ self ])
+        return True
 
     def UpdateAttributes(self, spec):
         self.VirtualRouterMACAddr = ResmgrClient[self.Node].VirtualRouterMacAllocator.get()

@@ -1120,3 +1120,8 @@ def GetNodeUnderlayNexthop(node, intf_name):
 
 def IsBridgingEnabled(node):
     return EzAccessStoreClient[node].IsBridgingEnabled()
+
+def CopySpec(spec, ifspec):
+    for attr in ifspec.__dict__:
+        setattr(spec, attr, getattr(ifspec, attr))
+    return spec

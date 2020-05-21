@@ -42,6 +42,13 @@ MODE2INTF_TBL = { 'host' : InterfaceTypes.ETH,
                   'loopback': InterfaceTypes.LOOPBACK,
                   'control': InterfaceTypes.CONTROL}
 
+INTFTYPE2STR = { InterfaceTypes.ETH : 'Host',
+                 InterfaceTypes.MGMT : 'Mgmt',
+                 InterfaceTypes.UPLINK : 'Uplink',
+                 InterfaceTypes.L3 : 'L3',
+                 InterfaceTypes.LOOPBACK : 'Loopback',
+                 InterfaceTypes.CONTROL : 'Control' }
+
 ETH_IF_PARENT_PORT_SHIFT = 16
 ETH_IF_PARENT_PORT_MASK = 0xFF
 

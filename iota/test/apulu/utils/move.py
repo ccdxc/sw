@@ -182,7 +182,7 @@ def MoveEpMACEntry(workload, target_subnet, ep_mac_addr, ep_ip_prefixes):
     if api.GlobalOptions.dryrun:
         workload.parent_interface = 'dryrun'
     else:
-        workload.parent_interface = intf_client.GetHostIf(target_subnet.Node, target_subnet.HostIfIdx).GetInterfaceName()
+        workload.parent_interface = intf_client.FindHostInterface(target_subnet.Node, target_subnet.HostIfIdx).GetInterfaceName()
     workload.interface = workload.parent_interface
     workload.mac_address = vnic.MACAddr.get()
     workload.vlan = vnic.VlanId

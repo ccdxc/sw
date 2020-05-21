@@ -41,170 +41,84 @@ class InterfaceStatus(base.StatusObjectBase):
 class InterfaceSpec_:
     pass
 
-class InterfaceInfoObject(base.ConfigObjectBase):
-    def __init__(self, node, iftype, spec, ifspec, ifId):
-        self.Node = node
-        self.__type = iftype
-        self.VrfName = ''
-        self.Network = ''
-        self.PfxStr = ''
+class InterfaceObject(base.ConfigObjectBase):
+    def __init__(self, node, spec, type):
+        super().__init__(api.ObjectTypes.INTERFACE, node)
+        super().SetOrigin(getattr(spec, 'origin', None))
+
+        if hasattr(spec, 'iid'):
+            self.InterfaceId = spec.iid
+        else:
+            self.InterfaceId = next(ResmgrClient[node].InterfaceIdAllocator)
+
+        self.Type = type
+        if hasattr(spec, 'uuid'):
+            self.UUID = spec.uuid
+        else:
+            self.UUID = utils.PdsUuid(self.InterfaceId, self.ObjType)
+        self.IfName = getattr(spec, 'ifname', None)
+        self.AdminState = getattr(spec, 'ifadminstatus', None)
+        self.MacAddr = getattr(spec, 'macaddress', None)
+        self.VPCId = getattr(spec, 'vpcid', None)
+        self.VrfName = None
+        if hasattr(spec, 'vrfname'):
+            self.VrfName = spec.vrfname
+        elif self.VPCId:
+            self.VrfName = f'Vpc{self.VPCId}'
+
+        # Following attributes are valid only for netagent mode
         self.Speed = ''
         self.MTU = topo.MTU
         self.PauseSpec = InterfaceSpec_()
         self.PauseSpec.Type = 'DISABLE'
         self.PauseSpec.TxPauseEnabled = False
         self.PauseSpec.RxPauseEnabled = False
-        if (iftype == topo.InterfaceTypes.UPLINK):
-            self.port_num = getattr(spec, 'port', None)
-            self.VrfName = 'underlay-vpc'
-        elif iftype == topo.InterfaceTypes.MGMT:
-            self.VrfName = 'default'
-        elif (iftype == topo.InterfaceTypes.UPLINKPC):
-            self.port_bmap = getattr(spec, 'portbmp', None)
-        elif (iftype == topo.InterfaceTypes.L3):
-            if (hasattr(spec, 'vpcid')):
-                self.VpcId = spec.vpcid
-                self.VrfName = f'Vpc{spec.vpcid}'
-            self.ip_prefix = None
-            # In IOTA, get L3 interface IPs from testbed json file if present.
-            # If not, then we'll use the one in the cfgyml.
-            if EzAccessStoreClient[node].GetUnderlayIPs():
-                if ifId == 1:
-                    self.ip_prefix = ipaddress.ip_network(EzAccessStoreClient[node].GetUnderlayIp("Uplink0") + "/" + \
-                                                          EzAccessStoreClient[node].GetUnderlayMaskLen("Uplink0"), False)
-                    self.if_ip_prefix = ipaddress.ip_interface(EzAccessStoreClient[node].GetUnderlayIp("Uplink0") + "/" + \
-                                                               EzAccessStoreClient[node].GetUnderlayMaskLen("Uplink0"))
-                    logger.info("Configuring L3 Interface Ifid %d ip-prefix %s if-ip-prefix %s " % (ifId, self.ip_prefix, self.if_ip_prefix))
-                elif ifId == 2:
-                    self.ip_prefix = ipaddress.ip_network(EzAccessStoreClient[node].GetUnderlayIp("Uplink1") + "/" + \
-                                                          EzAccessStoreClient[node].GetUnderlayMaskLen("Uplink1"), False)
-                    self.if_ip_prefix = ipaddress.ip_interface(EzAccessStoreClient[node].GetUnderlayIp("Uplink1") + "/" + \
-                                                               EzAccessStoreClient[node].GetUnderlayMaskLen("Uplink1"))
-                    logger.info("Configuring L3 Interface Ifid %d ip-prefix %s if-ip-prefix %s " % (ifId, self.ip_prefix, self.if_ip_prefix))
-            if not self.ip_prefix:
-                if hasattr(ifspec, 'ipprefix'):
-                    self.ip_prefix = ipaddress.ip_network(ifspec.ipprefix.replace('\\', '/'), False)
-                    self.if_ip_prefix = ipaddress.ip_interface(ifspec.ipprefix.replace('\\', '/'))
-                else:
-                    self.ip_prefix = next(ResmgrClient[node].L3InterfaceIPv4PfxPool)
-                    self.if_ip_prefix = next(ResmgrClient[node].L3InterfaceIPv4PfxPool)
-            self.ethifidx = getattr(spec, 'ethifidx', -1)
-            if utils.IsDol():
-                node_uuid = None
-            else:
-                node_uuid = EzAccessStoreClient[node].GetNodeUuid(node)
-            self.Port = utils.PdsUuid(self.ethifidx, node_uuid=node_uuid)
-            self.port_num = getattr(spec, 'port', -1)
-            self.encap = getattr(spec, 'encap', None)
-            self.macaddr = getattr(spec, 'MACAddr', None)
-        elif (iftype == topo.InterfaceTypes.CONTROL):
-            if (hasattr(spec, 'vpcid')):
-                self.VpcId = spec.vpcid
-                self.VrfName = f'Vpc{spec.vpcid}'
-            self.ip_prefix = None
-            # We'll use the one in the cfgyml.
-            if hasattr(ifspec, 'ipprefix'):
-                self.ip_prefix = ipaddress.ip_network(ifspec.ipprefix.replace('\\', '/'), False)
-                self.if_ip_prefix = ipaddress.ip_interface(ifspec.ipprefix.replace('\\', '/'))
-            else:
-                self.ip_prefix = next(ResmgrClient[node].L3InterfaceIPv4PfxPool)
-                self.if_ip_prefix = next(ResmgrClient[node].L3InterfaceIPv4PfxPool)
-            self.gateway = None
-            if hasattr(ifspec, 'gateway'):
-                self.gateway = ipaddress.IPv4Address(ifspec.gateway)
-            if utils.IsDol():
-                node_uuid = None
-            else:
-                node_uuid = EzAccessStoreClient[node].GetNodeUuid(node)
-            self.macaddr = getattr(spec, 'MACAddr', None) 
-        elif (iftype == topo.InterfaceTypes.LOOPBACK):
-            # If loopback ip exists in testbed json, use that,
-            # else use from cfgyaml
-            self.ip_prefix = utils.GetNodeLoopbackPrefix(node)
-            if not self.ip_prefix and hasattr(ifspec, 'ipprefix'):
-                self.ip_prefix = ipaddress.ip_network(ifspec.ipprefix.replace('\\', '/'), False)
-        if hasattr(self, "ip_prefix"):
-            self.PfxStr = self.ip_prefix.exploded
 
-    def Show(self):
-        if (self.__type == topo.InterfaceTypes.UPLINK):
-            res = f"port num : {self.port_num}"
-        elif (self.__type == topo.InterfaceTypes.UPLINKPC):
-            res = f"port_bmap: {self.port_bmap}"
-        elif (self.__type == topo.InterfaceTypes.L3):
-            res = f"VPC: {self.VrfName} ip: {self.ip_prefix} port: {self.Port} encap: {self.encap} mac: {self.macaddr.get()}"
-        elif (self.__type == topo.InterfaceTypes.CONTROL):
-            res = f"VPC:{self.VrfName} ip:{self.ip_prefix} mac:{self.macaddr.get()}"
-        elif (self.__type == topo.InterfaceTypes.LOOPBACK):
-            res = f"ip:{self.ip_prefix}"
-        else:
-            return
-        logger.info("- %s" % res)
-
-class InterfaceObject(base.ConfigObjectBase):
-    def __init__(self, spec, ifspec, node, spec_json=None, type=topo.InterfaceTypes.NONE):
-        super().__init__(api.ObjectTypes.INTERFACE, node)
-        super().SetOrigin(getattr(ifspec, 'origin', None))
-        if type == topo.InterfaceTypes.ETH:
-            self.InterfaceId = next(ResmgrClient[node].InterfaceIdAllocator)
-            self.Ifname = spec_json['meta']['name']
-            self.Tenant = spec_json['meta']['tenant']
-            self.Namespace = spec_json['meta']['namespace']
-            self.Type = 0
-            if spec_json['spec']['type'] == "HOST_PF":
-                self.Type = topo.InterfaceTypes.ETH
-            else:
-                logger.error("Unhandled if type")
-            self.AdminState = spec_json['spec']['admin-status']
-            info = InterfaceInfoObject(node, topo.InterfaceTypes.ETH, None, None, self.InterfaceId)
-            self.IfInfo = info
-            self.IfInfo.VrfName = self.Tenant
-            self.IfInfo.Network = 'Subnet1'
-            self.IfInfo.ip_prefix = ''
-            self.Status = InterfaceStatus()
-            self.GID(spec_json['meta']['name'])
-            uuid_str = spec_json['meta']['uuid']
-            self.HostIfIdx = spec_json['status']['id']
-            self.UUID = utils.PdsUuid(bytes.fromhex(uuid_str.replace('-','')),\
-                    self.ObjType)
-            self.DeriveOperInfo()
-            self.Show()
-            return
-        ################# PUBLIC ATTRIBUTES OF INTERFACE OBJECT #####################
-        if (hasattr(ifspec, 'iid')):
-            self.InterfaceId = int(ifspec.iid)
-        else:
-            self.InterfaceId = next(ResmgrClient[node].InterfaceIdAllocator)
-        self.Ifname = spec.id
-        self.Type = topo.MODE2INTF_TBL.get(spec.mode)
-        self.AdminState = spec.status
-        info = None
-        self.lifns = getattr(spec, 'lifns', None)
-        if utils.IsHostLifSupported() and self.lifns:
-            self.obj_helper_lif = lif.LifObjectHelper(node)
-            self.__create_lifs(spec)
-        info = InterfaceInfoObject(node, self.Type, spec, ifspec, self.InterfaceId)
-        self.IfInfo = info
         self.Status = InterfaceStatus()
-        self.GID(f"{self.Type.name}Interface{self.InterfaceId}")
-        self.UUID = utils.PdsUuid(self.InterfaceId, self.ObjType)
         self.Mutable = utils.IsUpdateSupported()
-        self.UpdateImplicit()
-
-        ################# PRIVATE ATTRIBUTES OF INTERFACE OBJECT #####################
-        self.DeriveOperInfo()
-        self.Show()
+        if self.IfName:
+            self.GID(f'{self.IfName}')
+        else:
+            self.GID(f'{INTFTYPE2STR.get(type)}Interface{self.InterfaceId:08x}')
         return
 
+    def GetInterfaceName(self):
+        return self.IfName
+
+    def GetInterfaceMac(self):
+        return self.MacAddr
+
+    def GetInterfaceNetwork(self):
+        return ''
+
+    def GetInterfaceIpPrefix(self):
+        return None
+
+    def GetInterfaceIpPfxStr(self):
+        pfx = self.GetInterfaceIpPrefix()
+        if pfx:
+            return pfx.exploded
+        else:
+            return ''
+
     def __repr__(self):
-        return "Interface: %s|Origin:%d|Ifname:%s|Type:%d|AdminState:%s" % \
-                (self.UUID, self.Origin, self.Ifname, self.Type, self.AdminState)
+        return "Interface: %s" % (self.GID())
 
     def Show(self):
         logger.info("InterfaceObject:")
-        logger.info("- %s" % repr(self))
-        if self.IfInfo:
-            self.IfInfo.Show()
+        logger.info(f"- {repr(self)}")
+        str = f"Origin: {self.Origin} "
+        if self.UUID:
+            str += f"{self.UUID} "
+        if self.IfName:
+            str += f"Name: {self.IfName} "
+        if self.MacAddr:
+            str += f"MAC: {self.MacAddr} "
+        if self.VPCId:
+            str += f"VPC: {self.VPCId} "
+        if self.VrfName:
+            str += f"VrfName: {self.VrfName} "
+        logger.info(str)
         return
 
     def UpdateImplicit(self):
@@ -228,6 +142,12 @@ class InterfaceObject(base.ConfigObjectBase):
             elif self.Type == topo.InterfaceTypes.LOOPBACK:
                 if (not ifinst['spec']['type'] == 'LOOPBACK'):
                     continue
+            elif self.Type == topo.InterfaceTypes.ETH:
+                if (not ifinst['spec']['type'] == 'HOST_PF'):
+                    continue
+                if (ifinst['status']['if-host-status']['host-ifname']
+                    != self.IfName):
+                    continue
             else:
                 continue
             # Found matching interface, get basic info
@@ -236,14 +156,19 @@ class InterfaceObject(base.ConfigObjectBase):
                     self.ObjType)
             self.Tenant = ifinst['meta']['tenant']
             self.Namespace = ifinst['meta']['namespace']
-            self.GID(ifinst['meta']['name'])
+            self.SetIfNameFromAgentData(ifinst['meta']['name'])
 
             # get ifinfo
             if hasattr(ifinst['spec'], 'ip-address'):
-                self.IfInfo.ip_prefix = ipaddress.ip_network(ifinst['spec']['ip-address'],\
+                self.IpPrefix = ipaddress.ip_network(ifinst['spec']['ip-address'],\
                         False)
             if hasattr(ifinst['spec'], 'vrf-name'):
-                self.IfInfo.VrfName = ifinst['spec']['vrf-name']
+                self.VrfName = ifinst['spec']['vrf-name']
+        return
+
+    def SetIfNameFromAgentData(self, ifname):
+        self.IfName = ifname
+        self.GID(ifname)
         return
 
     def Dup(self):
@@ -257,19 +182,20 @@ class InterfaceObject(base.ConfigObjectBase):
 
     def CopyObject(self):
         clone = copy.copy(self)
-        clone.IfInfo = copy.copy(self.IfInfo)
+        clone.PauseSpec = copy.copy(self.PauseSpec)
         return clone
 
     def UpdateAttributes(self, spec):
-        self.IfInfo.macaddr = ResmgrClient[self.Node].DeviceMacAllocator.get()
-        self.IfInfo.MTU = self.IfInfo.MTU + 10
-        self.IfInfo.Speed = '' #TODO
-        self.IfInfo.PauseSpec.Type = 'LINK'
+        self.MacAddr = ResmgrClient[self.Node].DeviceMacAllocator.get()
+        self.MTU = self.MTU + 10
+        self.Speed = '' #TODO
+        self.PauseSpec.Type = 'LINK'
         return
 
     def RollbackAttributes(self):
-        self.IfInfo = self.GetPrecedent().IfInfo
-        self.Show()
+        attrlist = ["MacAddr", "MTU", "Speed"]
+        self.RollbackMany(attrlist)
+        self.PauseSpec = self.GetPrecedent().PauseSpec
         return
 
     def PopulateKey(self, grpcmsg):
@@ -277,43 +203,31 @@ class InterfaceObject(base.ConfigObjectBase):
         return
 
     def PopulateSpec(self, grpcmsg):
-        spec = grpcmsg.Request.add()
-        spec.Id = self.GetKey()
-        spec.AdminStatus = interface_pb2.IF_STATUS_UP
-        if self.Type == topo.InterfaceTypes.L3:
-            spec.Type = interface_pb2.IF_TYPE_L3
-            spec.L3IfSpec.PortId = self.IfInfo.Port.GetUuid()
-            spec.L3IfSpec.MACAddress = self.IfInfo.macaddr.getnum()
-            spec.L3IfSpec.VpcId = utils.PdsUuid.GetUUIDfromId(self.IfInfo.VpcId, api.ObjectTypes.VPC)
-            utils.GetRpcIPPrefix(self.IfInfo.ip_prefix, spec.L3IfSpec.Prefix)
-            utils.GetRpcIfIPPrefix(self.IfInfo.if_ip_prefix, spec.L3IfSpec.Prefix)
-
-        if self.Type == topo.InterfaceTypes.CONTROL:
-            spec.Type = interface_pb2.IF_TYPE_CONTROL
-            utils.GetRpcIfIPPrefix(self.IfInfo.if_ip_prefix, spec.ControlIfSpec.Prefix)
-            spec.ControlIfSpec.MACAddress = self.IfInfo.macaddr.getnum()
-            if self.IfInfo.gateway:
-                spec.ControlIfSpec.Gateway.Af = types_pb2.IP_AF_INET
-                spec.ControlIfSpec.Gateway.V4Addr = int(self.IfInfo.gateway)
-
-        if self.Type == topo.InterfaceTypes.LOOPBACK:
-            spec.Type = interface_pb2.IF_TYPE_LOOPBACK
-            utils.GetRpcIPPrefix(self.IfInfo.ip_prefix, spec.LoopbackIfSpec.Prefix)
+        self.__unimplemented()
         return
 
+    def ValidateSpec(self, spec):
+        if spec.Id != self.GetKey():
+            return False
+        if spec.AdminStatus != interface_pb2.IF_STATUS_UP:
+            return False
+        return True
+
     def PopulateAgentJson(self):
+        ifname = self.IfName
         if self.Type == topo.InterfaceTypes.LOOPBACK:
             iftype = 'LOOPBACK'
         elif self.Type == topo.InterfaceTypes.L3:
             iftype = 'L3'
         elif self.Type == topo.InterfaceTypes.ETH:
             iftype = 'HOST_PF'
+            ifname = self.GetRESTKey()
         else:
             return None
         spec = {
             "kind": "Interface",
             "meta": {
-                "name": self.GID(),
+                "name": ifname,
                 "namespace": self.Namespace,
                 "tenant": self.Tenant,
                 "uuid": self.UUID.UuidStr,
@@ -324,100 +238,238 @@ class InterfaceObject(base.ConfigObjectBase):
             "spec": {
                 "type": iftype,
                 "admin-status": 'UP',
-                "vrf-name": self.IfInfo.VrfName,
-                "network": self.IfInfo.Network,
-                "ip-address": self.IfInfo.PfxStr,
-                "speed": self.IfInfo.Speed,
-                "mtu": self.IfInfo.MTU,
+                "vrf-name": self.VrfName,
+                "network": self.GetInterfaceNetwork(),
+                "ip-address": self.GetInterfaceIpPfxStr(),
+                "speed": self.Speed,
+                "mtu": self.MTU,
                 "pause": {
-                    "type": self.IfInfo.PauseSpec.Type,
-                    "tx-pause-enabled": self.IfInfo.PauseSpec.TxPauseEnabled,
-                    "rx-pause-enabled": self.IfInfo.PauseSpec.RxPauseEnabled,
+                    "type": self.PauseSpec.Type,
+                    "tx-pause-enabled": self.PauseSpec.TxPauseEnabled,
+                    "rx-pause-enabled": self.PauseSpec.RxPauseEnabled,
                 }
             }
         }
         return json.dumps(spec)
 
-    def ValidateSpec(self, spec):
-        if spec.Id != self.GetKey():
-            return False
-        if spec.AdminStatus != interface_pb2.IF_STATUS_UP:
-            return False
-        if self.Type == topo.InterfaceTypes.CONTROL:
-            if spec.Type != interface_pb2.IF_TYPE_CONTROL:
-                return False
-        if self.Type == topo.InterfaceTypes.L3:
-            if spec.Type != interface_pb2.IF_TYPE_L3:
-                return False
-            if spec.L3IfSpec.PortId != self.IfInfo.Port.GetUuid():
-                return False
-            # TODO: Enable once device delete is fixed. MAC is also \
-            # overwritten with 0 on deleting device config.
-            #if spec.L3IfSpec.MACAddress != self.IfInfo.macaddr.getnum():
-            #    return False
-        return True
+class HostInterfaceObject(InterfaceObject):
+    def __init__(self, node, spec):
+        super().__init__(node, spec, topo.InterfaceTypes.ETH)
+        self.Network = ''
+        self.RESTKey = None
+        if utils.IsDol() and utils.IsHostLifSupported() and spec.lifns:
+            self.obj_helper_lif = lif.LifObjectHelper(node)
+            self.__create_lifs(spec)
+        self.UpdateImplicit()
+        self.Show()
+        return
+
+    def GetInterfaceNetwork(self):
+        return self.Network
+
+    def SetIfNameFromAgentData(self, ifname):
+        # Netagent uses <mac>-<pfid> as key for host interfaces
+        # for example 00ae.cd00.ff18-pf-71.
+        # Not changing IfName property but keep it for REST purposes
+        self.RESTKey = ifname
+        return
+
+    def GetRESTKey(self):
+        return self.RESTKey
+
+    def GetRESTPath(self):
+        return "%s/%s/%s" % (self.Tenant, self.Namespace, self.RESTKey)
+
+    def Show(self):
+        super().Show()
+        if self.RESTKey:
+            logger.info(f"Agent-IFName: {self.RESTKey}")
+        return
 
     def __create_lifs(self, spec):
-        self.obj_helper_lif.Generate(spec.ifinfo, spec.lifspec, self.lifns)
+        self.obj_helper_lif.Generate(spec.lifinfo, spec.lifspec, spec.lifns)
         self.obj_helper_lif.Configure()
         self.lif = self.obj_helper_lif.GetRandomHostLif()
         logger.info(" Selecting %s for Test" % self.lif.GID())
         self.lif.Show()
         return
 
-    def UpdateVrfAndNetwork(self, subnets):
-        for subnet in subnets:
-            if self.HostIfIdx == subnet.HostIfIdx:
-                self.IfInfo.VrfName = subnet.Tenant
-                self.IfInfo.Network = subnet.GID()
-                return True
-        return False
+    def UpdateVrfAndNetwork(self, subnet, dissociate):
+        if self.InterfaceId == subnet.HostIfIdx:
+            self.VrfName = subnet.Tenant if not dissociate else ""
+            self.Network = subnet.GID() if not dissociate else ""
+        return
+
+class InbandMgmtInterfaceObject(InterfaceObject):
+    def __init__(self, node, spec):
+        super().__init__(node, spec, topo.InterfaceTypes.MGMT)
+        self.Show()
+        return
+
+class ControlInterfaceObject(InterfaceObject):
+    def __init__(self, node, spec):
+        super().__init__(node, spec, topo.InterfaceTypes.CONTROL)
+        if hasattr(spec, 'ipprefix'):
+            self.IpPrefix = ipaddress.ip_network(spec.ipprefix.replace('\\', '/'), False)
+            self.IfIpPrefix= ipaddress.ip_interface(spec.ipprefix.replace('\\', '/'))
+        else:
+            self.IpPrefix = next(ResmgrClient[node].L3InterfaceIPv4PfxPool)
+            self.IfIpPrefix = next(ResmgrClient[node].L3InterfaceIPv4PfxPool)
+        self.Gateway = None
+        if hasattr(spec, 'gateway'):
+            self.Gateway = ipaddress.IPv4Address(spec.gateway)
+        self.Show()
+        return
+
+    def Show(self):
+        super().Show()
+        str = f"IP-Pfx: {self.IpPrefix} IF-IP-Pfx: {self.IfIpPrefix} "
+        if self.Gateway:
+            str += f"Gw: {self.Gateway}"
+        logger.info(str)
+        return
+
+    def PopulateSpec(self, grpcmsg):
+        spec = grpcmsg.Request.add()
+        spec.Id = self.GetKey()
+        spec.AdminStatus = interface_pb2.IF_STATUS_UP
+        spec.Type = interface_pb2.IF_TYPE_CONTROL
+        utils.GetRpcIfIPPrefix(self.IfIpPrefix, spec.ControlIfSpec.Prefix)
+        spec.ControlIfSpec.MACAddress = self.MacAddr.getnum()
+        if self.Gateway:
+            spec.ControlIfSpec.Gateway.Af = types_pb2.IP_AF_INET
+            spec.ControlIfSpec.Gateway.V4Addr = int(self.Gateway)
+        return
+
+    def ValidateSpec(self, spec):
+        if not super().ValidateSpec(spec):
+            return False
+        if spec.Type != interface_pb2.IF_TYPE_CONTROL:
+            return False
+        return True
+
+class L3InterfaceObject(InterfaceObject):
+    def __init__(self, node, spec):
+        super().__init__(node, spec, topo.InterfaceTypes.L3)
+        self.IpPrefix = None
+        # In IOTA, get L3 interface IPs from testbed json file if present.
+        # If not, then we'll use the one in the cfgyml.
+        if EzAccessStoreClient[node].GetUnderlayIPs():
+            ifname = None
+            if self.InterfaceId == 1:
+                ifname = "Uplink0"
+            elif self.InterfaceId == 2:
+                ifname = "Uplink1"
+
+            if ifname:
+                self.IpPrefix = ipaddress.ip_network(EzAccessStoreClient[node].GetUnderlayIp(ifname) + "/" + \
+                                                     EzAccessStoreClient[node].GetUnderlayMaskLen(ifname), False)
+                self.IfIpPrefix = ipaddress.ip_interface(EzAccessStoreClient[node].GetUnderlayIp(ifname) + "/" + \
+                                                       EzAccessStoreClient[node].GetUnderlayMaskLen(ifname))
+                logger.info(f"Configuring L3 Interface Id: {self.InterfaceId}"
+                            f"IP Prefix: {self.IpPrefix} IF IP Prefix: {self.IfIpPrefix}")
+        if not self.IpPrefix:
+            if hasattr(spec, 'ipprefix'):
+                self.IpPrefix = ipaddress.ip_network(spec.ipprefix.replace('\\', '/'), False)
+                self.IfIpPrefix = ipaddress.ip_interface(spec.ipprefix.replace('\\', '/'))
+            else:
+                self.IpPrefix = next(ResmgrClient[node].L3InterfaceIPv4PfxPool)
+                self.IfIpPrefix = next(ResmgrClient[node].L3InterfaceIPv4PfxPool)
+        self.EthIfIdx = getattr(spec, 'ethifidx', -1)
+        if utils.IsDol():
+            node_uuid = None
+        else:
+            node_uuid = EzAccessStoreClient[node].GetNodeUuid(node)
+        self.Port = utils.PdsUuid(self.EthIfIdx, node_uuid=node_uuid)
+        self.PortNum = getattr(spec, 'port', -1)
+        self.Encap = getattr(spec, 'encap', None)
+        self.UpdateImplicit()
+        self.Show()
+        return
+
+    def Show(self):
+        super().Show()
+        str = f"IP-Pfx: {self.IpPrefix} IF-IP-Pfx: {self.IfIpPrefix} "\
+              f"Eth-ifindex: {self.EthIfIdx} Port: {self.Port} Portnum: {self.PortNum} "
+        if self.Encap:
+            str += f"Encap: {self.Encap}"
+        logger.info(str)
+        return
+
+    def GetInterfaceIpPrefix(self):
+        return self.IpPrefix
+
+    def GetInterfaceEthIfIndex(self):
+        return self.EthIfIdx
 
     # TODO: Move this to port object and link interface obj to port obj
     def LinkDown(self, port):
         cmd = " debug port -p "
-        cmd += utils.PdsUuid.GetUuidString(self.IfInfo.Port.GetUuid())
+        cmd += utils.PdsUuid.GetUuidString(self.Port.GetUuid())
         cmd += " -a down"
         pdsctl.ExecutePdsctlCommand(cmd, None, False)
+        return
 
     def LinkUp(self, port):
         cmd = " debug port -p "
-        cmd += utils.PdsUuid.GetUuidString(self.IfInfo.Port.GetUuid())
+        cmd += utils.PdsUuid.GetUuidString(self.Port.GetUuid())
         cmd += " -a up"
         pdsctl.ExecutePdsctlCommand(cmd, None, False)
+        return
 
-class HostInterfaceObject(base.ConfigObjectBase):
-    def __init__(self, node, lif):
-        super().__init__(api.ObjectTypes.INTERFACE, node)
-        self.SetOrigin('implicitly-created')
-        lifSpec = lif.Spec
-        lifStatus = lif.Status
-        self.InterfaceId = lifStatus.IfIndex
-        self.GID(f'HostInterface {self.InterfaceId:08x}')
-        self.UUID = utils.PdsUuid(lifSpec.Id)
-        self.InterfaceName = lifStatus.Name
-        self.MacAddr = objects.MacAddressBase(integer=lifSpec.MacAddress)
+    def PopulateSpec(self, grpcmsg):
+        spec = grpcmsg.Request.add()
+        spec.Id = self.GetKey()
+        spec.AdminStatus = interface_pb2.IF_STATUS_UP
+        spec.Type = interface_pb2.IF_TYPE_L3
+        spec.L3IfSpec.PortId = self.Port.GetUuid()
+        spec.L3IfSpec.MACAddress = self.MacAddr.getnum()
+        spec.L3IfSpec.VpcId = utils.PdsUuid.GetUUIDfromId(self.VPCId, api.ObjectTypes.VPC)
+        utils.GetRpcIPPrefix(self.IpPrefix, spec.L3IfSpec.Prefix)
+        utils.GetRpcIfIPPrefix(self.IfIpPrefix, spec.L3IfSpec.Prefix)
+        return
+
+    def ValidateSpec(self, spec):
+        if not super().ValidateSpec(spec):
+            return False
+        if spec.Type != interface_pb2.IF_TYPE_L3:
+            return False
+        if spec.L3IfSpec.PortId != self.Port.GetUuid():
+            return False
+        # TODO: Enable once device delete is fixed. MAC is also \
+        # overwritten with 0 on deleting device config.
+        #if spec.L3IfSpec.MACAddress != self.MacAddr.getnum():
+        #    return False
+        return True
+
+class LoopbackInterfaceObject(InterfaceObject):
+    def __init__(self, node, spec):
+        super().__init__(node, spec, topo.InterfaceTypes.LOOPBACK)
+        # If loopback ip exists in testbed json, use that,
+        # else use from cfgyaml
+        self.IpPrefix = utils.GetNodeLoopbackPrefix(node)
+        if not self.IpPrefix and hasattr(spec, 'ipprefix'):
+            self.IpPrefix = ipaddress.ip_network(spec.ipprefix.replace('\\', '/'), False)
+        self.UpdateImplicit()
         self.Show()
         return
 
-    def __repr__(self):
-        return f"HostInterface: {self.UUID} {self.InterfaceName}"
-
     def Show(self):
-        logger.info("InterfaceObject:")
-        logger.info(f"- {repr(self)}")
-        logger.info(f"- IfIndex 0x{self.InterfaceId:08x}")
-        logger.info(f"- MacAddress {self.MacAddr}")
+        super().Show()
+        if self.IpPrefix:
+            logger.info(f"IP-Pfx: {self.IpPrefix}")
         return
 
-    def GetInterfaceIndex(self):
-        return self.InterfaceId
+    def GetInterfaceIpPrefix(self):
+        return self.IpPrefix
 
-    def GetInterfaceName(self):
-        return self.InterfaceName
-
-    def GetInterfaceMac(self):
-        return self.MacAddr
+    def PopulateSpec(self, grpcmsg):
+        spec = grpcmsg.Request.add()
+        spec.Id = self.GetKey()
+        spec.AdminStatus = interface_pb2.IF_STATUS_UP
+        spec.Type = interface_pb2.IF_TYPE_LOOPBACK
+        utils.GetRpcIPPrefix(self.IpPrefix, spec.LoopbackIfSpec.Prefix)
+        return
 
 class InterfaceObjectClient(base.ConfigClientBase):
     def __init__(self):
@@ -439,14 +491,16 @@ class InterfaceObjectClient(base.ConfigClientBase):
             return self.__hostifs_iter[node].rrnext()
         return None
 
-    def GetHostIf(self, node, hostifindex):
+    def FindHostInterface(self, node, hostifindex):
         if self.__hostifs[node]:
             return self.__hostifs[node].get(hostifindex, None)
         return None
 
     def GetNHInterfaceMac(self, node, ifname):
         if self.__inband_mgmt_ifs[node]:
-            return self.__inband_mgmt_ifs[node].get(ifname, None)
+            intf = self.__inband_mgmt_ifs[node].get(ifname, None)
+            if intf:
+                return intf.GetInterfaceMac()
         return None
 
     def GetL3UplinkInterface(self, node):
@@ -454,50 +508,65 @@ class InterfaceObjectClient(base.ConfigClientBase):
             return self.__uplinkl3ifs_iter[node].rrnext()
         return None
 
-    def __generate_host_interfaces(self, node, ifspec):
+    def __generate_host_interfaces_dol(self, node, ifspec):
         if not ifspec:
             return
         spec = InterfaceSpec_()
-        spec.port = 0
-        spec.ethifidx = 0
-        spec.status = 'UP'
-        spec.mode = 'host'
+        spec.ifadminstatus = 'UP'
         spec.lifspec = ifspec.lif.Get(EzAccessStoreClient[node])
         for obj in ResmgrClient[node].HostIfs.values():
-            spec.id = obj.IfName
-            spec.ifinfo = obj
+            spec = utils.CopySpec(spec, ifspec)
+            spec.ifname = obj.IfName
+            spec.lifinfo = obj
             lifstart = obj.LifBase
             lifend = lifstart + obj.LifCount - 1
             spec.lifns = objects.TemplateFieldObject("range/%d/%d" % (lifstart, lifend))
-            ifobj = InterfaceObject(spec, ifspec, node=node)
-            self.__hostifs[node].update({ifobj.InterfaceId: ifobj})
+
+            spec = utils.CopySpec(spec, ifspec)
+            hostif_obj = HostInterfaceObject(node, spec)
+            self.__hostifs[node].update({hostif_obj.InterfaceId: hostif_obj})
 
         if self.__hostifs[node]:
             self.__hostifs_iter[node] = utils.rrobiniter(self.__hostifs[node].values())
         return
 
-    def __generate_iota_host_interfaces_map(self, node):
-        resps = self.ReadLifs(node)
+    def __generate_host_interfaces_iota(self, node):
+        cmd_op = self.ReadLifs(node)
 
         if utils.IsDryRun():
             return
-        for r in resps:
-            if not utils.ValidateGrpcResponse(r):
-                logger.error(f"INTERFACE LIF get request failed with {r}")
+        for lif in cmd_op:
+            lif_yaml = utils.LoadYaml(lif)
+            if not lif_yaml:
                 continue
-            for lif in r.Response:
-                intf_type = lif.Spec.Type
-                if intf_type == types_pb2.LIF_TYPE_INBAND_MGMT:
-                    key = self.GetKeyfromSpec(lif.Spec)
-                    intf_name = lif.Status.Name
-                    intf_mac = objects.MacAddressBase(integer=lif.Spec.MacAddress)
-                    self.__inband_mgmt_ifs[node].update({intf_name: intf_mac})
-                    logger.info(f"Adding inband-mgmt-if {intf_name}-{intf_mac} in {node}")
-                elif intf_type == types_pb2.LIF_TYPE_HOST:
-                    hostif = HostInterfaceObject(node, lif)
-                    self.__hostifs[node].update({hostif.InterfaceId: hostif})
+            lif_spec = lif_yaml['spec']
+            lif_status = lif_yaml['status']
+            intf_type = lif_spec['type']
+            spec = InterfaceSpec_()
+            spec.iid = lif_status['ifindex']
+            spec.uuid = utils.PdsUuid(lif_spec['id'])
+            spec.ifname = lif_status['name']
+            spec.macaddress = objects.MacAddressBase(integer=lif_spec['macaddress'])
+            spec.origin = 'implicitly-created'
+
+            if intf_type == types_pb2.LIF_TYPE_INBAND_MGMT:
+                inb_mgmtif = InbandMgmtInterfaceObject(node, spec)
+                self.__inband_mgmt_ifs[node].update({inb_mgmtif.GetInterfaceName(): inb_mgmtif})
+            elif intf_type == types_pb2.LIF_TYPE_HOST:
+                hostif = HostInterfaceObject(node, spec)
+                self.__hostifs[node].update({hostif.InterfaceId: hostif})
         if self.__hostifs[node]:
             self.__hostifs_iter[node] = utils.rrobiniter(sorted(self.__hostifs[node].keys()))
+        return
+
+    def GenerateHostInterfaces(self, node, topospec):
+        if not utils.IsInterfaceSupported():
+            return
+        if not utils.IsDol():
+            self.__generate_host_interfaces_iota(node)
+        else:
+            if hasattr(topospec, 'hostinterface'):
+                self.__generate_host_interfaces_dol(node, topospec.hostinterface)
         return
 
     def __generate_l3_uplink_interfaces(self, node, parent, iflist):
@@ -507,21 +576,19 @@ class InterfaceObjectClient(base.ConfigClientBase):
 
         for port in uplink_ports:
             spec = InterfaceSpec_()
-            spec.mode = 'l3'
+            spec.vpcid = parent.VPCId
             spec.port = port.Port - 1
             spec.ethifidx = topo.PortToEthIfIdx(port.Port)
-            spec.id = 'Uplink%d' % spec.port
-            spec.status = port.AdminState
+            spec.ifname = 'Uplink%d' % spec.port
+            spec.ifadminstatus = port.AdminState
             for ifspec in iflist:
                 if ifspec.iftype != 'l3':
                     continue
                 if ifspec.portid == port.Port:
-                    if (hasattr(ifspec, 'macaddress')):
-                        spec.MACAddr = ifspec.macaddress
-                    else:
-                        spec.MACAddr = ResmgrClient[node].DeviceMacAllocator.get()
-                    spec.vpcid = parent.VPCId
-                    ifobj = InterfaceObject(spec, ifspec, node=node)
+                    spec = utils.CopySpec(spec, ifspec)
+                    if not hasattr(ifspec, 'macaddress'):
+                        spec.macaddress = ResmgrClient[node].DeviceMacAllocator.get()
+                    ifobj = L3InterfaceObject(node, spec)
                     self.Objs[node].update({ifobj.InterfaceId: ifobj})
                     self.__uplinkl3ifs[node].update({ifobj.InterfaceId: ifobj})
 
@@ -529,66 +596,29 @@ class InterfaceObjectClient(base.ConfigClientBase):
             self.__uplinkl3ifs_iter[node] = utils.rrobiniter(self.__uplinkl3ifs[node].values())
         return
 
-    def GenerateHostInterfaces(self, node, topospec):
-        if not utils.IsInterfaceSupported():
-            return
-        if not utils.IsDol():
-            self.__generate_iota_host_interfaces_map(node)
-            return
-        hostifspec = getattr(topospec, 'hostinterface', None)
-        if not hostifspec:
-            return
-        self.__generate_host_interfaces(node, hostifspec)
-        return
-
-    def __read_agent_loopback(self, node):
-        resp = self.ReadAgentInterfaces(node)
-        if utils.IsDryRun():
-            return
-        if not resp:
-            return None
-        for r in resp:
-            if r['spec']['type'] == 'LOOPBACK':
-                return r
-        return
-
-    def __generate_loopback_interfaces(self, node, parent, iflist):
-        spec = InterfaceSpec_()
-        spec.mode = 'loopback'
-        spec.id = 0
+    def __generate_loopback_interfaces(self, node, iflist):
         for ifspec in iflist:
             if ifspec.iftype != 'loopback':
                 continue
-            rdata = None
-            if GlobalOptions.netagent:
-                rdata = self.__read_agent_loopback(node)
-                if rdata:
-                    spec.id = rdata['meta']['name']
-            if not rdata:
-                # if netagent read fail, or we're in pds agent mode, use allocator
-                spec.id = 'Loopback%d' % next(ResmgrClient[node].LoopbackIfIdAllocator)
-
-            spec.status = ifspec.ifadminstatus
-            ifobj = InterfaceObject(spec, ifspec, node=node, spec_json=rdata)
+            spec = InterfaceSpec_()
+            spec = utils.CopySpec(spec, ifspec)
+            spec.ifname = 'Loopback%d' % next(ResmgrClient[node].LoopbackIfIdAllocator)
+            ifobj = LoopbackInterfaceObject(node, spec)
             self.Objs[node].update({ifobj.InterfaceId: ifobj})
             self.__loopback_if[node] = ifobj
+        return
 
     def __generate_control_interfaces(self, node, parent, iflist):
-        spec = InterfaceSpec_()
-        spec.mode = 'control'
-        spec.id = 0
         for ifspec in iflist:
             if ifspec.iftype != 'control':
                 continue
-            rdata = None
-            spec.id = 'ctrl0'
-            if (hasattr(ifspec, 'macaddress')):
-                spec.MACAddr = ifspec.macaddress
-            else:
-                spec.MACAddr = ResmgrClient[node].DeviceMacAllocator.get()
+            spec = InterfaceSpec_()
+            spec = utils.CopySpec(spec, ifspec)
+            spec.ifname = 'ctrl0'
             spec.vpcid = parent.VPCId
-            spec.status = ifspec.ifadminstatus
-            ifobj = InterfaceObject(spec, ifspec, node=node, spec_json=rdata)
+            if not hasattr(ifspec, 'macaddress'):
+                spec.macaddress = ResmgrClient[node].DeviceMacAllocator.get()
+            ifobj = ControlInterfaceObject(node, spec)
             self.Objs[node].update({ifobj.InterfaceId: ifobj})
             self.__control_if[node] = ifobj
 
@@ -597,7 +627,7 @@ class InterfaceObjectClient(base.ConfigClientBase):
             return
         iflist = getattr(topospec, 'interface', [])
         self.__generate_l3_uplink_interfaces(node, parent, iflist)
-        self.__generate_loopback_interfaces(node, parent, iflist)
+        self.__generate_loopback_interfaces(node, iflist)
         self.__generate_control_interfaces(node, parent, iflist)
         return
 
@@ -609,40 +639,20 @@ class InterfaceObjectClient(base.ConfigClientBase):
         self.Objs[obj.Node].pop(obj.InterfaceId, None)
         return
 
-    def __get_first_host_if(self, node):
-        resp = self.ReadAgentInterfaces(node)
-        #if utils.IsDryRun():
-            #return
-        if not resp:
-            return None
-        for r in resp:
-            if r['spec']['type'] == 'HOST_PF':
-                utils.dump(r)
-                return r
-        return None
-
-    def UpdateHostInterfaces(self, node, subnets):
+    def UpdateHostInterfaces(self, node, subnets, dissociate=False):
         if utils.IsDryRun() or not utils.IsNetAgentMode():
             return
-        resp = api.client[node].GetHttp(api.ObjectTypes.INTERFACE)
-        if not resp:
-            return None
-        for r in resp:
-            id = r['status'].get('id', None)
-            if r['spec']['type'] == 'HOST_PF' and id != None:
-                ifspec = InterfaceSpec_()
-                ifinfo = InterfaceSpec_()
-                ifspec.origin = 'fixed'
-                obj = InterfaceObject(None, ifspec, spec_json=r, node=node, \
-                                      type=topo.InterfaceTypes.ETH)
-                self.Objs[node].update({obj.InterfaceId: obj})
-                if obj.UpdateVrfAndNetwork(subnets):
-                    obj.Show()
-                    api.client[node].Update(api.ObjectTypes.INTERFACE, [obj])
+        for subnet in subnets:
+            hostif = self.FindHostInterface(node, subnet.HostIfIdx)
+            if hostif:
+                hostif.UpdateVrfAndNetwork(subnet, dissociate)
+                hostif.Show()
+                api.client[node].Update(api.ObjectTypes.INTERFACE, [hostif])
         print("after update pf")
         resp = api.client[node].GetHttp(api.ObjectTypes.INTERFACE)
         for r in resp:
             print(r)
+        return
 
     def CreateObjects(self, node):
         if not GlobalOptions.netagent:
@@ -678,15 +688,14 @@ class InterfaceObjectClient(base.ConfigClientBase):
             api.client[node].Update(api.ObjectTypes.INTERFACE, [obj])
         return
 
-    def GetGrpcReadAllLifMessage(self):
-        grpcmsg = interface_pb2.LifGetRequest()
-        return grpcmsg
-
     def ReadLifs(self, node):
         if utils.IsDryRun(): return
-        msg = self.GetGrpcReadAllLifMessage()
-        resp = api.client[node].Request(api.ObjectTypes.INTERFACE, 'LifGet', [msg])
-        return resp
+        ret, op = utils.RunPdsctlShowCmd(node, "lif", yaml=True)
+        if not ret:
+            logger.error(f"show lif failed for node {node}")
+            return False
+        cmdop = op.split("---")
+        return cmdop
 
     def ReadAgentInterfaces(self, node):
         if utils.IsDryRun(): return

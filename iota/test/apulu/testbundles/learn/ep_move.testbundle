@@ -8,7 +8,6 @@ testcases:
     -   name    : Local_To_Remote_Ip
         testcase: testcases.learn.local_to_remote_ip
         stress  : True
-        disable : True
 
     -   name    : Local_To_Remote_Mac
         testcase: testcases.learn.local_to_remote_mac
@@ -20,4 +19,7 @@ testcases:
             mac_mov      : [ same ]
             #mac_mov      : [ same, new ]
             ip_mov       : [ all, subset, new ]
+
+    -   name    : Host_PF_Change
+        testcase: testcases.learn.modify_hostif
 

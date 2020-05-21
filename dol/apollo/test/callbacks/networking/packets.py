@@ -802,7 +802,7 @@ def GetUplinkPortMacFromRoute(tc, pkt, args=None):
     if tep.IsUnderlay():
         nh = tep.NEXTHOP
     l3if = nh.L3Interface
-    mac = l3if.IfInfo.macaddr.get()
+    mac = l3if.GetInterfaceMac().get()
     return mac
 
 def GetUnderlayRemoteMacFromRoute(tc, pkt, args=None):
@@ -919,7 +919,7 @@ def GetExpectedEgressUplinkPort(testcase, args=None):
     if nh is None:
         return None
     l3if = nh.L3Interface
-    port = topo.EthIfIdx2Port(l3if.IfInfo.ethifidx)
+    port = topo.EthIfIdx2Port(l3if.GetInterfaceEthIfIndex())
     return port
 
 def GetUplinkPortMac(testcase, args=None):
@@ -927,7 +927,7 @@ def GetUplinkPortMac(testcase, args=None):
     if nh is None:
         return None
     l3if = nh.L3Interface
-    mac = l3if.IfInfo.macaddr.get()
+    mac = l3if.GetInterfaceMac().get()
     return mac
 
 def GetUnderlayRemoteMac(testcase, args=None):
