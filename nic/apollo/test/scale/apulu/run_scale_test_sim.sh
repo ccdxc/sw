@@ -3,7 +3,7 @@
 set -e
 export ASIC="${ASIC:-capri}"
 export NICDIR=`pwd`
-export NON_PERSISTENT_LOGDIR=${NICDIR}
+export NON_PERSISTENT_LOG_DIR=${NICDIR}
 export ZMQ_SOC_DIR=${NICDIR}
 export CONFIG_PATH=${NICDIR}/conf/
 #export ASIC_MOCK_MODE=1

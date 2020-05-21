@@ -5,7 +5,7 @@ source $CUR_DIR/setup_env_hw.sh
 #export VPP_IPC_MOCK_MODE=1
 
 # remove logs
-rm -f $NON_PERSISTENT_LOGDIR/pds-athena-sec-agent.log*
+rm -f $NON_PERSISTENT_LOG_DIR/pds-athena-sec-agent.log*
 
 ulimit -c unlimited
 
@@ -18,4 +18,4 @@ if  ! mount | grep hugetlbfs ; then
     mount -t hugetlbfs nodev /dev/hugepages
 fi
 
-exec taskset 1 $PDSPKG_TOPDIR/bin/athena_app -c hal_hw.json -m soft-init $* >$NON_PERSISTENT_LOGDIR/athena_sec_app_console.log &
+exec taskset 1 $PDSPKG_TOPDIR/bin/athena_app -c hal_hw.json -m soft-init $* >$NON_PERSISTENT_LOG_DIR/athena_sec_app_console.log &

@@ -5,7 +5,7 @@ export GEN_TEST_RESULTS_DIR=${BUILD_DIR}/gtest_results
 export CONFIG_PATH=${NICDIR}/conf/
 export ZMQ_SOC_DIR=${NICDIR}
 export PATH=${PATH}:${BUILD_DIR}/bin
-export NON_PERSISTENT_LOGDIR=${NICDIR}
+export NON_PERSISTENT_LOG_DIR=${NICDIR}
 unset ASIC_MOCK_MODE
 
 cleanup () {

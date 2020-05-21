@@ -10,8 +10,8 @@ export PATH=${PATH}:${BIN_PATH}
 export PLATFORM_DIR=/naples/platform
 export LOG_DIR=/naples/data/logs
 export HAL_CONFIG_PATH=$NIC_DIR/conf/
-export PERSISTENT_LOGDIR=/obfl
-export NON_PERSISTENT_LOGDIR=$LOG_DIR
+export PERSISTENT_LOG_DIR=/obfl
+export NON_PERSISTENT_LOG_DIR=$LOG_DIR
 export LD_LIBRARY_PATH=$NIC_DIR/lib64:$NIC_DIR/lib:$HAL_CONFIG_PATH/plugins/lif:$HAL_CONFIG_PATH/linkmgr:$HAL_CONFIG_PATH/sdk:$HAL_CONFIG_PATH/sdk/external:usr/local/lib:/usr/lib::$LD_LIBRARY_PATH
 export NICMGR_LIBRARY_PATH=$PLATFORM_DIR/lib:$NIC_DIR/lib:$NIC_DIR/conf/sdk:$LD_LIBRARY_PATH
 export NICMGR_CONFIG_PATH=$PLATFORM_DIR/etc/nicmgrd
@@ -113,7 +113,7 @@ export MAX_LIFS
 ulimit -c unlimited
 
 # create directory for logs/traces
-mkdir -p $PERSISTENT_LOGDIR
+mkdir -p $PERSISTENT_LOG_DIR
 mkdir -p $LOG_DIR
 exec > $LOG_DIR/start-naples.log
 exec 2>&1

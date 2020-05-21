@@ -605,9 +605,9 @@ hal_logger_init (hal_cfg_t *hal_cfg)
         hal_cfg->sync_mode_logging = true;
     }
 
-    persistent_logfile = get_logfile("PERSISTENT_LOGDIR", "hal.log",
+    persistent_logfile = get_logfile("PERSISTENT_LOG_DIR", "hal.log",
                                      "./hal.pers.log");
-    non_persistent_logfile = get_logfile("NON_PERSISTENT_LOGDIR", "hal.log",
+    non_persistent_logfile = get_logfile("NON_PERSISTENT_LOG_DIR", "hal.log",
                                          "./hal.nonpers.log");
     hal::utils::trace_init("hal", hal_cfg->control_cores_mask,
                            hal_cfg->sync_mode_logging,
@@ -620,9 +620,9 @@ hal_logger_init (hal_cfg_t *hal_cfg)
                                                        (::utils::trace_debug));
 
     // link logger
-    persistent_logfile = get_logfile("PERSISTENT_LOGDIR", "linkmgr_err.log",
+    persistent_logfile = get_logfile("PERSISTENT_LOG_DIR", "linkmgr_err.log",
                                      "./linkmgr_err.pers.log");
-    non_persistent_logfile = get_logfile("NON_PERSISTENT_LOGDIR", "linkmgr.log",
+    non_persistent_logfile = get_logfile("NON_PERSISTENT_LOG_DIR", "linkmgr.log",
                                      "./linkmgr.nonpers.log");
     hal::utils::link_trace_init("linkmgr", hal_cfg->control_cores_mask,
                                 hal_cfg->sync_mode_logging,

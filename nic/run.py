@@ -403,7 +403,7 @@ def run_hal(args):
     if args.test_suf is not None:
         hal_log_dir = nic_dir + "/logs_%s/" % args.test_suf
 
-    os.environ["NON_PERSISTENT_LOGDIR"] = hal_log_dir
+    os.environ["NON_PERSISTENT_LOG_DIR"] = hal_log_dir
     hal_log = hal_log_dir + "/hal.log"
     os.system("rm -rf %s/hal.log.*" % hal_log_dir)
     device_conf_file = nic_dir + "/conf/device.conf"

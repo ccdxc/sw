@@ -5,7 +5,7 @@ source $CUR_DIR/setup_env_hw.sh
 #export VPP_IPC_MOCK_MODE=1
 
 # remove logs
-rm -f $NON_PERSISTENT_LOGDIR/pds-athena-agent.log*
+rm -f $NON_PERSISTENT_LOG_DIR/pds-athena-agent.log*
 
 ulimit -c unlimited
 
@@ -14,4 +14,4 @@ ulimit -c unlimited
 #mkdir -p /dev/hugepages
 #mount -t hugetlbfs nodev /dev/hugepages
 
-exec taskset 1 $PDSPKG_TOPDIR/bin/athena_app -c hal_hw.json -m no-dpdk $* >$NON_PERSISTENT_LOGDIR/athena_app_console.log &
+exec taskset 1 $PDSPKG_TOPDIR/bin/athena_app -c hal_hw.json -m no-dpdk $* >$NON_PERSISTENT_LOG_DIR/athena_app_console.log &

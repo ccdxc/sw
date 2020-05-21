@@ -4,7 +4,7 @@
 ifneq ($(ARCH),aarch64)
     ARCH = x86_64
 endif
-export NON_PERSISTENT_LOGDIR=$(TOPDIR)
+export NON_PERSISTENT_LOG_DIR=$(TOPDIR)
 GEN_TEST_RESULTS_DIR = $(TOPDIR)/gen/test_results
 SNORT_EXPORT_DIR = $(TOPDIR)/hal/third-party/snort3/export
 SNORT_CMD_OPTS = SNORT_LUA_PATH=$(SNORT_EXPORT_DIR)/lua/ LUA_PATH="$(SNORT_EXPORT_DIR)/lua/?.lua;;" SNORT_DAQ_PATH=$(SNORT_EXPORT_DIR)/$(ARCH)/lib/

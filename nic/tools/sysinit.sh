@@ -7,8 +7,8 @@ export PLATFORM="$2"
 export IMAGE_TYPE="$3"
 export GOTRACEBACK='crash'
 
-export PERSISTENT_LOGDIR='/obfl/'
-export NON_PERSISTENT_LOGDIR='/var/log/pensando/'
+export PERSISTENT_LOG_DIR='/obfl/'
+export NON_PERSISTENT_LOG_DIR='/var/log/pensando/'
 
 export LD_LIBRARY_PATH=$NIC_DIR/lib:$PLATFORM_DIR/lib
 export COVFILE=$NIC_DIR/conf/hw_bullseye_hal.cov

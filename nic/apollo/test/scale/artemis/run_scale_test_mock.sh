@@ -4,7 +4,7 @@ set -e
 export ASIC="${ASIC:-capri}"
 export NICDIR=`pwd`
 export PDSPKG_TOPDIR=$NICDIR
-export NON_PERSISTENT_LOGDIR=${NICDIR}
+export NON_PERSISTENT_LOG_DIR=${NICDIR}
 export ZMQ_SOC_DIR=${NICDIR}
 export ASIC_MOCK_MODE=1
 export ASIC_MOCK_MEMORY_MODE=1

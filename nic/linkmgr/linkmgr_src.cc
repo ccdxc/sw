@@ -151,9 +151,9 @@ linkmgr_logger_init (void)
     std::string  persistent;
     std::string  non_persistent;
 
-    persistent = get_logfile("PERSISTENT_LOGDIR", "linkmgr.log",
+    persistent = get_logfile("PERSISTENT_LOG_DIR", "linkmgr.log",
         "./linkmgr.pers.log");
-    non_persistent = get_logfile("NON_PERSISTENT_LOGDIR", "linkmgr.log",
+    non_persistent = get_logfile("NON_PERSISTENT_LOG_DIR", "linkmgr.log",
         "./linkmgr.nonpers.log");
 
     logger =
