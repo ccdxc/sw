@@ -5,8 +5,10 @@
   <div *ngIf="!enableDragDrop" fxLayout="column" class="orderedlist-list">
     <ng-container *ngTemplateOutlet="withoutDrag;"></ng-container>
   </div>
-  <div *ngIf="supportAddClick" fxFlex="none" (click)="onClickAdd()"
-       class="orderedlist-add-icon">+ {{ addItemText }}</div>
+  <button pButton type="button" *ngIf="supportAddClick" fxFlex="nogrow"
+          class="orderedlist-add-icon" (click)="onClickAdd()">
+    <mat-icon>add</mat-icon><span>{{ addItemText }}</span>
+  </button>
 </div>
 
 <ng-template #withDrag>

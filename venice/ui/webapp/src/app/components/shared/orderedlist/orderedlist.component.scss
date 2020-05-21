@@ -90,8 +90,19 @@
 }
 
 .orderedlist-add-icon {
-  @include primary-font(16px, #6ba0e5, 400);
+  font-size: 16px;
+  font-weight: 400;
   margin-top: 5px;
   cursor: pointer;
-  width: 100px;
+  height: 30px;
+  background: #6ba0e5 !important;
+  border-radius: 15px;
+  width: 120px;
+
+  span {
+    line-height: 30px;
+    margin-left: 5px;
+    position: relative;
+    top: -5px;
+  }
 }

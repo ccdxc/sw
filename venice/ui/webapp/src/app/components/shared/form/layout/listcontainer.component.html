@@ -1,0 +1,18 @@
+<div class="psm-listcontainer" fxLayout="column" fxLayoutAlign="start start">
+  <div fxFlex="none" fxLayout="column" [fxLayoutGap]="rowGap">
+    <div fxFlex="nogrow" [@slideInOut]
+         *ngFor="let item of formGroup.controls; index as index;">
+      <div class="listcontainer-row" fxFlex="none" fxLayout="row" fxLayoutAlign="start end">
+        <ng-container *ngTemplateOutlet="itemTemplate; context:{item: item, index: index}">
+        </ng-container>
+        <mat-icon fxFlex="nogrow" class="global-trash-button listcontainer-delete-icon"
+                  *ngIf="showDelete(index)" (click)="onClickDelete(index)">delete</mat-icon>
+      </div>
+    </div>
+  </div>
+  <div fxFlex="10px"></div>
+  <button pButton type="button" fxFlex="none" *ngIf="showAdd()" (click)="onClickAdd()"
+          class="listcontainer-add-icon">
+    <mat-icon>add</mat-icon><span>{{ addText }}</span>
+  </button>
+</div>

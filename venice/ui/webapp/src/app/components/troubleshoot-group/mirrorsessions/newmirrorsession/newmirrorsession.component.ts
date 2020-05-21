@@ -56,7 +56,6 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
     'hit enter or space key to add more. Port can be individual or range.' +
     'for example: icmp, any/2345, tcp/60001-60100...';
 
-  createButtonTooltip: string = '';
   minDate: Date = Utility.convertLocalTimeToUTCTime(new Date());
   defaultDate: Date = Utility.convertLocalTimeToUTCTime(new Date());
 
@@ -216,13 +215,23 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
     // due to currently backend does not support all drops, comment out next lines
     /*
     if (!this.newObject.$formGroup.get(['spec', 'packet-filters']).valid) {
-      this.createButtonTooltip = PACKET_FILTERS_ERRORMSG;
+      this.submitButtonTooltip = PACKET_FILTERS_ERRORMSG;
       return false;
     }
     */
 
+   if (Utility.isEmpty(this.newObject.$formGroup.get(['meta', 'name']).value)) {
+      this.submitButtonTooltip = 'Error: Name field is empty.';
+      return false;
+    }
+
+    if (this.newObject.$formGroup.get(['meta', 'name']).invalid) {
+      this.submitButtonTooltip =  'Error: Name field is invalid.';
+      return false;
+    }
+
     if (!this.newObject.$formGroup.get(['spec', 'packet-size']).valid) {
-      this.createButtonTooltip = 'Invalid Packet Size';
+      this.submitButtonTooltip = 'Invalid Packet Size';
       return false;
     }
 
@@ -231,69 +240,59 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
     for (let i = 0; i < collectors.length; i++) {
       const collector = collectors[i];
       if (Utility.isEmpty(collector.get(['export-config', 'destination']).value)) {
-        this.createButtonTooltip = 'Error: Collector Destination is required.';
+        this.submitButtonTooltip = 'Error: Collector Destination is required.';
         return false;
       }
     }
 
     if (this.radioSelection === 'labels') {
       if (!this.getAllInterfaceSelectorsValues()) {
-        this.createButtonTooltip = 'At least one label is incomplete.';
+        this.submitButtonTooltip = 'At least one label is incomplete.';
         return false;
       }
     } else {
       // validate rules
       if (this.areAllRulesEmpty()) {
-        this.createButtonTooltip = 'At least one match rule must be specified.';
+        this.submitButtonTooltip = 'At least one match rule must be specified.';
         return false;
       }
 
       for (let i = 0; i < this.rules.length; i++) {
         const rule: MonitoringMatchRule = this.rules[i].data.rule;
         if (!(rule.$formGroup.get(['source', 'ip-addresses']).valid)) {
-          this.createButtonTooltip =
+          this.submitButtonTooltip =
             'Error: Rule ' + (i + 1) + ' source IP adresses are invalid.';
           return false;
         }
         if (!(rule.$formGroup.get(['source', 'mac-addresses']).valid)) {
-          this.createButtonTooltip =
+          this.submitButtonTooltip =
             'Error: Rule ' + (i + 1) + ' source MAC adresses are invalid.';
           return false;
         }
         if (!(rule.$formGroup.get(['destination', 'ip-addresses']).valid)) {
-          this.createButtonTooltip =
+          this.submitButtonTooltip =
             'Error: Rule ' + (i + 1) + ' destination IP adresses are invalid.';
           return false;
         }
         if (!(rule.$formGroup.get(['destination', 'mac-addresses']).valid)) {
-          this.createButtonTooltip =
+          this.submitButtonTooltip =
             'Error: Rule ' + (i + 1) + ' destination MAC adresses are invalid.';
           return false;
         }
         if (!(rule.$formGroup.get(['app-protocol-selectors', 'proto-ports']).valid)) {
-          this.createButtonTooltip =
+          this.submitButtonTooltip =
             'Error: Rule ' + (i + 1) + ' protocol/ports are invalid.';
           return false;
         }
       }
     }
     if (!this.newObject.$formGroup.valid) {
-      this.createButtonTooltip = 'Error: Form is invalid.';
+      this.submitButtonTooltip = 'Error: Form is invalid.';
       return false;
     }
 
-    this.createButtonTooltip = '';
+    this.submitButtonTooltip = '';
     return true;
-  }
-
-  getTooltip(): string {
-    if (Utility.isEmpty(this.newObject.$formGroup.get(['meta', 'name']).value)) {
-      return 'Error: Name field is empty.';
-    }
-    if (this.newObject.$formGroup.get(['meta', 'name']).invalid) {
-      return 'Error: Name field is invalid.';
-    }
-    return this.createButtonTooltip;
   }
 
   getObjectValues() {
@@ -376,9 +375,9 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
         cssClass: 'global-button-primary newmirrorsession-toolbar-button newmirrorsession-toolbar-SAVE',
         text: 'CREATE MIRROR SESSION',
         matTooltipClass: 'validation_error_tooltip',
-        genTooltip: () => this.getTooltip(),
         callback: () => { this.saveObject(); },
-        computeClass: () => this.computeButtonClass()
+        computeClass: () => this.computeFormSubmitButtonClass(),
+        genTooltip: () => this.getSubmitButtonToolTip(),
       },
       {
         cssClass: 'global-button-neutral newmirrorsession-toolbar-button newmirrorsession-toolbar-CANCEL',

@@ -38,10 +38,9 @@ $dary-grey: #a9a9a9;
 
       .new-network-radio-format {
         margin-left: 5px;
-        margin-top: 9px;
         @include global-mat-radio(12px);
         position: relative;
-        top: 10px;
+        top: -10px;
       }
 
       p-multiselect.ng-invalid .ui-multiselect {
@@ -62,14 +61,9 @@ $dary-grey: #a9a9a9;
         width: 265px;
       }
 
-      .new-network-add-orchestrator {
-        cursor: pointer;
-        width: 100px;
-        margin-left: 10px;
-      }
-
-      .new-network-orchestrator-delete-icon {
-        margin-left: 5px;
+      .listcontainer-delete-icon {
+        position: relative;
+        top: -20px;
       }
     }
   }

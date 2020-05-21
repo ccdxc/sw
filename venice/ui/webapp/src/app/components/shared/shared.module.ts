@@ -23,6 +23,7 @@ import { FieldselectorComponent } from './fieldselector/fieldselector.component'
 import { HerocardComponent } from './herocard/herocard.component';
 import { WidgetsModule } from 'web-app-framework';
 import { WorkloadsColumnComponent } from './table-columns/workloadscolumn.component';
+import { ListContainerComponent } from './form/layout/listcontainer.component';
 import { FieldContainerComponent } from './form/layout/fieldcontainer.component';
 import { InlineButtonsComponent } from './form/layout/inlinebuttons.component';
 import { CpuMemoryStorageStatsComponent } from './cpu-memory-storage-chart/cpumemorystoragestats.component';
@@ -83,6 +84,7 @@ import { ExportLogsComponent } from './exportlogs/exportlogs.component';
     FieldselectorComponent,
     HerocardComponent,
     WorkloadsColumnComponent,
+    ListContainerComponent,
     FieldContainerComponent,
     InlineButtonsComponent,
     CpuMemoryStorageStatsComponent,
@@ -130,6 +132,7 @@ import { ExportLogsComponent } from './exportlogs/exportlogs.component';
     FieldselectorComponent,
     HerocardComponent,
     WorkloadsColumnComponent,
+    ListContainerComponent,
     FieldContainerComponent,
     InlineButtonsComponent,
     CpuMemoryStorageStatsComponent,

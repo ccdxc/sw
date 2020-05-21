@@ -37,6 +37,8 @@ export class NewnetworkComponent extends CreationForm<INetworkNetwork, NetworkNe
     {label: 'Choose Individual Datacenters', value: this.EACH_DATACENTER}
   ];
 
+  existingObjectVlanId: number = -1;
+
   constructor(protected _controllerService: ControllerService,
     protected uiconfigsService: UIConfigsService,
     protected networkService: NetworkService,
@@ -109,6 +111,7 @@ export class NewnetworkComponent extends CreationForm<INetworkNetwork, NetworkNe
     const ctrl: AbstractControl = this.newObject.$formGroup.get(['spec', 'vlan-id']);
     if (this.isInline) {
       ctrl.disable();
+      this.existingObjectVlanId = ctrl.value;
     } else {
       this.addFieldValidator(ctrl, this.isVlanAlreadyUsed(this.existingObjects));
       this.addFieldValidator(ctrl, minValueValidator(0));
@@ -164,22 +167,24 @@ export class NewnetworkComponent extends CreationForm<INetworkNetwork, NetworkNe
 
   // Empty Hook
   isFormValid() {
-    if (Utility.isEmpty(this.newObject.$formGroup.get(['meta', 'name']).value)) {
-      this.submitButtonTooltip = 'Error: Name field is empty.';
-      return false;
-    }
-    if (this.newObject.$formGroup.get(['meta', 'name']).invalid)  {
-      this.submitButtonTooltip = 'Error: Name field is invalid.';
-      return false;
-    }
-    if (Utility.isEmpty(this.newObject.$formGroup.get(['spec', 'vlan-id']).value)) {
-      this.submitButtonTooltip = 'Error: VLAN is required.';
-      return false;
-    }
+    if (!this.isInline) {
+      if (Utility.isEmpty(this.newObject.$formGroup.get(['meta', 'name']).value)) {
+        this.submitButtonTooltip = 'Error: Name field is empty.';
+        return false;
+      }
+      if (this.newObject.$formGroup.get(['meta', 'name']).invalid)  {
+        this.submitButtonTooltip = 'Error: Name field is invalid.';
+        return false;
+      }
+      if (Utility.isEmpty(this.newObject.$formGroup.get(['spec', 'vlan-id']).value)) {
+        this.submitButtonTooltip = 'Error: VLAN is required.';
+        return false;
+      }
 
-    if (!this.newObject.$formGroup.get(['spec', 'vlan-id']).valid) {
-      this.submitButtonTooltip = 'Error: Invalid VLAN';
-      return false;
+      if (!this.newObject.$formGroup.get(['spec', 'vlan-id']).valid) {
+        this.submitButtonTooltip = 'Error: Invalid VLAN';
+        return false;
+      }
     }
 
     const orchestrators = this.controlAsFormArray(
@@ -205,6 +210,11 @@ export class NewnetworkComponent extends CreationForm<INetworkNetwork, NetworkNe
 
   getObjectValues(): INetworkNetwork {
     const currValue: INetworkNetwork =  this.newObject.getFormGroupValues();
+    // when in editting, vlan-id box is disabled, need manually set vlan-id
+    // before submitting.
+    if (this.isInline) {
+      currValue.spec['vlan-id'] = this.existingObjectVlanId;
+    }
     const orchestrators = [];
     if (currValue.spec.orchestrators && currValue.spec.orchestrators.length > 0) {
       currValue.spec.orchestrators.forEach((each) => {

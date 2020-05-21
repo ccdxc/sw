@@ -71,10 +71,10 @@ export class SecurityappsComponent extends TablevieweditAbstract<ISecurityApp, S
 
 
   cols: TableCol[] = [
-    { field: 'meta.name', header: 'Name', class: 'securityapps-column-metaname', sortable: true, width: 15 },
+    { field: 'meta.name', header: 'Name', class: 'securityapps-column-metaname', sortable: true, width: '400px' },
     { field: 'meta.mod-time', header: 'Modification Time', class: 'securityapps-column-date', sortable: true, width: '175px' },
     { field: 'meta.creation-time', header: 'Creation Time', class: 'securityapps-column-date', sortable: true, width: '175px' },
-    { field: 'spec.alg.type', header: 'Configuration', class: 'securityapps-column-host-name', sortable: false, width: 35 },
+    { field: 'spec.alg.type', header: 'Configuration', class: 'securityapps-column-host-name', sortable: false, width: 100 },
   ];
 
   constructor(protected _controllerService: ControllerService,

@@ -1,6 +1,7 @@
-<div fxFlex="auto" fxLayout="column" class="newmirrorsession-container">
+<div fxFlex="auto" fxLayout="column" class="psm-form newmirrorsession-container">
   <app-inlinebuttons class="newMirrorSession" *ngIf="isInline"
-                     [saveButtonClass]="computeInlineButtonClass()" [saveTooltip]="getTooltip()"
+                     [saveButtonClass]="computeFormSubmitButtonClass()"
+                     [saveTooltip]="getSubmitButtonToolTip()"
                      (saveFunc)="saveObject()" (cancelFunc)="cancelObject()">
   </app-inlinebuttons>
   <div fxFlex="auto" fxLayout="row wrap"
@@ -87,53 +88,44 @@
 <ng-template #collectors>
   <app-fieldcontainer class="newmirrorsession-collectors"
                       fieldTitle="Collectors" subtitle="(specify one or more)">
-    <div fxFlex="none" fxLayout="column" fxLayoutGap="15px"
-         [formGroup]="newObject.$formGroup.get(['spec', 'collectors'])">
-      <div fxFlex="nogrow" [formGroupName]="index" [@fastSlideInOut]
-           *ngFor="let collector of controlAsFormArray(newObject.$formGroup.get(['spec','collectors'])).controls; index as index;">
-        <div fxFlex="none" fxLayout="row" fxLayoutAlign="start center">
-          <!-- temporarily hide next part because right now only one coolect is allowed
-          <div fxFlex="none" class="newmirrorsession-collector-indexLabel">#{{index + 1}}</div>
-          -->
-          <div fxFlex="8px"></div>
-          <span fxFlex="none" fxLayout="row" class="newmirrorsession-collector-box">
-            <p-dropdown appFloatLabel="Type" appendTo="body"
-                        [options]="collectorTypeOptions" formControlName="type">
-            </p-dropdown>
-          </span>
-          <div fxFlex="10px"></div>
-          <span fxFlex="none" fxLayout="row" [formGroup]="collector.get(['export-config'])"
-                [ngClass]="{
-                'newmirrorsession-collector-box': true,
-                'requiredField': isFieldEmpty(collector.get(['export-config', 'destination']))
-              }">
-            <input fxFlex="nogrow" appFloatLabel="Destination" appErrorTooltip
-                   formControlName="destination" spellcheck="false" type="text" pInputText>
-          </span>
-          <div fxFlex="10px"></div>
-          <span fxFlex="none" fxLayout="row" [formGroup]="collector.get(['export-config'])"
-                class="newmirrorsession-collector-box">
-            <input fxFlex="nogrow" appFloatLabel="Gateway" appErrorTooltip
-                   formControlName="gateway" spellcheck="false" type="text" pInputText>
-          </span>
-          <div fxFlex="10px"></div>
-          <span fxFlex="none" fxLayout="row">
-            <span class="newmirrorsession-stripvlan-label">Strip VLAN</span>
-            <p-inputSwitch class="newmirrorsession-stripvlan-toggle" appendTo="body"
-                           [appErrorTooltip]="'Remove VLAN info from mirror packets'"
-                           formControlName="strip-vlan-hdr"></p-inputSwitch>
-          </span>
-          <mat-icon fxFlex="nogrow" class="global-trash-button newmirrorsession-delete"
-                    *ngIf="controlAsFormArray(newObject.$formGroup.get(['spec','collectors'])).length > 1"
-                    (click)="removeCollector(index)">delete</mat-icon>
-        </div>
-      </div>
-    </div>
-    <div fxFlex="10px"></div>
-    <div *ngIf="isShowAddCollector()" fxFlex="none" (click)="addCollector()"
-         class="newmirrorsession-add-collector">+ ADD</div>
-    <div class="newmirrorsession-add-collector" *ngIf="!isShowAddCollector()"></div>
+    <app-listcontainer
+                       [formGroup]="newObject.$formGroup.get(['spec', 'collectors'])"
+                       [itemTemplate]="collectRowTemplate" addText="COLLECTOR" [maxiumCount]="2"
+                       (addItem)="addCollector()" (deleteItem)="removeCollector($event)">
+    </app-listcontainer>
   </app-fieldcontainer>
+</ng-template>
+
+<ng-template #collectRowTemplate let-collector="item" let-index="index">
+  <div fxFlex="520px" fxLayout="row" [formGroup]="collector">
+    <span fxFlex="none" fxLayout="row" class="newmirrorsession-collector-box">
+      <p-dropdown appFloatLabel="Type" appendTo="body"
+                  [options]="collectorTypeOptions" formControlName="type">
+      </p-dropdown>
+    </span>
+    <div fxFlex="10px"></div>
+    <span fxFlex="none" fxLayout="row" [formGroup]="collector.get(['export-config'])"
+          [ngClass]="{
+          'newmirrorsession-collector-box': true,
+          'requiredField': isFieldEmpty(collector.get(['export-config', 'destination']))
+        }">
+      <input fxFlex="nogrow" appFloatLabel="Destination" appErrorTooltip
+             formControlName="destination" spellcheck="false" type="text" pInputText>
+    </span>
+    <div fxFlex="10px"></div>
+    <span fxFlex="none" fxLayout="row" [formGroup]="collector.get(['export-config'])"
+          class="newmirrorsession-collector-box">
+      <input fxFlex="nogrow" appFloatLabel="Gateway" appErrorTooltip
+             formControlName="gateway" spellcheck="false" type="text" pInputText>
+    </span>
+    <div fxFlex="10px"></div>
+    <span fxFlex="none" fxLayout="row">
+      <span class="newmirrorsession-stripvlan-label">Strip VLAN</span>
+      <p-inputSwitch class="newmirrorsession-stripvlan-toggle" appendTo="body"
+                     [appErrorTooltip]="'Remove VLAN info from mirror packets'"
+                     formControlName="strip-vlan-hdr"></p-inputSwitch>
+    </span>
+  </div>
 </ng-template>
 
 <ng-template #interface_selector>

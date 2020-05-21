@@ -86,14 +86,7 @@ $dary-grey: #a9a9a9;
   .newmirrorsession-stripvlan-toggle {
     position: relative;
     left: -55px;
-    top: 8px;
-  }
-
-  .newmirrorsession-add-collector {
-    cursor: pointer;
-    width: 100px;
-    @include primary-font(16px, #6ba0e5, 400);
-    margin-top: 5px;
+    top: 12px;
   }
 
   .newmirrorsession-selectors {
@@ -257,8 +250,4 @@ $dary-grey: #a9a9a9;
 
 .newmirrorsession-fieldtitle {
   margin: $vertical-gutter $horizontal-gutter;
-}
-
-.newmirrorsession-delete {
-  margin-top: 10px;
 }
