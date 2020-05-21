@@ -8,6 +8,22 @@ from iota.test.iris.testcases.alg.alg_utils import *
 import iota.test.iris.testcases.vmotion.vm_utils as vm_utils 
 import pdb
 
+def DNSCleanup(server, client):
+    # Cleanup DNS Server
+    SetupDNSServer(server, True)
+
+    # Cleanup DNS Client
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    api.Trigger_AddCommand(req, client.node_name, client.workload_name, "sudo rm /etc/resolv.conf")
+
+    trig_resp = api.Trigger(req)
+    term_resp = api.Trigger_TerminateAllCommands(trig_resp)
+
+    for cmd in trig_resp.commands:
+        api.PrintCommandResults(cmd)
+
+    return api.types.status.SUCCESS
+
 def Setup(tc):
     tc.move_info       = []
     tc.uuidMap         = api.GetNaplesNodeUuidMap()
@@ -41,8 +57,8 @@ def Trigger(tc):
     serverReq = None
     clientReq = None
 
-    serverReq = api.Trigger_CreateExecuteCommandsRequest(serial = False)
-    clientReq = api.Trigger_CreateExecuteCommandsRequest(serial = False)
+    serverReq = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    clientReq = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
     tc.cmd_descr = "Server: %s(%s) <--> Client: %s(%s)" %\
                    (server.workload_name, server.ip_address, client.workload_name, client.ip_address)
@@ -94,7 +110,7 @@ def Trigger(tc):
     term_resp = api.Trigger_TerminateAllCommands(trig_resp)
     tc.resp   = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp)
 
-    SetupDNSServer(server, True)
+    DNSCleanup(server, client)
 
     return api.types.status.SUCCESS
 

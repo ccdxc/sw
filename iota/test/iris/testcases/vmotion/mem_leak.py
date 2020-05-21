@@ -39,6 +39,7 @@ def Trigger(tc):
         alg_meminfo = get_meminfo(memslab_cmd, 'alg')
         for info in alg_meminfo:
            if (info['inuse'] != 0 or info['allocs'] != info['frees']):
+               api.Logger.info("Memleak detected in Slab %d" %info['inuse'])
                tc.memleak = 1
 
         cmd_cnt += 1
@@ -56,6 +57,7 @@ def Trigger(tc):
         for info in vm_memtrack:
            if 'allocs' in info and 'frees' in info:
                if ((info['allocs'] - 4) != info['frees']):
+                   api.Logger.info("Memleak detected in Mtrack %d %d" %(info['allocs'], info['frees']))
                    tc.memleak = 1
 
         cmd_cnt += 1
