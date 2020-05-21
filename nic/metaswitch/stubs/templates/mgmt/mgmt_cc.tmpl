@@ -951,12 +951,35 @@
             {{$filterMib}} filter_data = {0};
             {{$filterFields := $filterMsg.Fields}}
             {{range $filterFields}}
-            if (req->filter().{{.GetName | ToLower}}().length() != 0) {
               {{$filterFieldOpt := (getPdsaFieldOpt . $cam $struct)}}
-              {{if not (eq $filterFieldOpt.FilterFieldLen "")}} 
-                pds_ms_set_string_in_byte_array_with_len((NBB_BYTE*)filter_data.{{$filterFieldOpt.Field}}, (NBB_ULONG*)&(filter_data.{{$filterFieldOpt.FilterFieldLen}}), req->filter().{{.GetName | ToLower}}());
+              {{$castFn := getPdsaCastSetFilterFunc .Type $filterFieldOpt}}
+              {{if (eq $castFn "")}}
+                {{if (eq .GetTypeName ".types.IPAddress")}}
+            if (req->filter().{{.GetName | ToLower}}() != "") {
+                ip_addr_t       outAddr_{{$filterFieldOpt.Field}};
+
+                ip_addr_spec_to_ip_addr(req->filter().{{.GetName | ToLower}}(), &outAddr_{{$filterFieldOpt.Field}});
+                pds_ms_convert_ip_addr_to_amb_ip_addr(outAddr_{{$filterFieldOpt.Field}},
+                                                      &(filter_data.{{$filterFieldOpt.AddrTypeFieldName}}),
+                                                      &(filter_data.{{$filterFieldOpt.AddrLenFieldName}}),
+                                                      filter_data.{{$filterFieldOpt.Field}},
+                                                      {{$filterFieldOpt.IsZeroIPValid}});
+                {{else}}
+            if (req->filter().{{.GetName | ToLower}}() != 0) {
+                filter_data.{{$filterFieldOpt.Field}} = req->filter().{{.GetName | ToLower}}();
+                {{end}}
               {{else}}
-                pds_ms_set_string_in_byte_array(filter_data.{{$filterFieldOpt.Field}}, req->filter().{{.GetName | ToLower}}());
+                {{if (eq $castFn "pds_ms_set_amb_bool")}}
+            if (req->filter().{{.GetName | ToLower}}() != false) {
+                {{$castFn}}((NBB_LONG*)&filter_data.{{$filterFieldOpt.Field}}, req->filter().{{.GetName | ToLower}}());
+                {{else}}
+            if (req->filter().{{.GetName | ToLower}}().length() != 0) {
+                  {{if (eq $filterFieldOpt.FilterFieldLen "")}} 
+                {{$castFn}}((NBB_BYTE*)filter_data.{{$filterFieldOpt.Field}}, req->filter().{{.GetName | ToLower}}());
+                  {{else}}
+                {{$castFn}}((NBB_BYTE*)filter_data.{{$filterFieldOpt.Field}}, (NBB_ULONG*)&(filter_data.{{$filterFieldOpt.FilterFieldLen}}), req->filter().{{.GetName | ToLower}}());
+                  {{end}}
+                {{end}}
               {{end}}
                 filter_data.{{$filterParam.FilterTypeField}} |= {{$filterFieldOpt.FilterType}};
             }

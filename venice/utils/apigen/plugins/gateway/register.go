@@ -870,6 +870,19 @@ func getPdsaCastPrintFunc(protoFieldTypeName gogoproto.FieldDescriptorProto_Type
 	return ""
 }
 
+func getPdsaCastSetFilterFunc(protoFieldTypeName gogoproto.FieldDescriptorProto_Type, f pdsaFieldOpt) string {
+	if protoFieldTypeName == gogoproto.FieldDescriptorProto_TYPE_BYTES || protoFieldTypeName == gogoproto.FieldDescriptorProto_TYPE_STRING {
+		if f.FilterFieldLen != "" {
+			return "pds_ms_set_string_in_byte_array_with_len"
+		}
+		return "pds_ms_set_string_in_byte_array"
+	}
+	if protoFieldTypeName == gogoproto.FieldDescriptorProto_TYPE_BOOL {
+		return "pds_ms_set_amb_bool"
+	}
+	return ""
+}
+
 func getPdsaCastSetFunc(protoFieldTypeName gogoproto.FieldDescriptorProto_Type, camInfoFieldTypeName string, f pdsaFieldOpt) string {
 	if protoFieldTypeName == gogoproto.FieldDescriptorProto_TYPE_FIXED32 && camInfoFieldTypeName == "byteArray" {
 		return "NBB_PUT_LONG"
@@ -4103,6 +4116,7 @@ func init() {
 	reg.RegisterFunc("getMetaswitchMibTablesInfo", getMetaswitchMibTablesInfo)
 	reg.RegisterFunc("TypeIsMessage", typeIsMessage)
 	reg.RegisterFunc("getPdsaCastSetFunc", getPdsaCastSetFunc)
+	reg.RegisterFunc("getPdsaCastSetFilterFunc", getPdsaCastSetFilterFunc)
 	reg.RegisterFunc("getPdsaCastGetFunc", getPdsaCastGetFunc)
 	reg.RegisterFunc("getPdsaCastPrintFunc", getPdsaCastPrintFunc)
 	reg.RegisterFunc("getPdsaCastValidateFunc", getPdsaCastValidateFunc)
