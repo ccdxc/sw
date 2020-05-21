@@ -211,6 +211,9 @@ func (n *NMD) UpdateNaplesConfig(cfg nmd.DistributedServiceCard) error {
 		if err := n.handleHostModeTransition(); err != nil {
 			return errInternalServer(err)
 		}
+
+		// Update the status appropriately.
+		n.config.Status.Mode = nmd.MgmtMode_HOST.String()
 		isEmulation := false
 		if _, err := os.Stat(globals.IotaEmulation); err == nil {
 			log.Infof("NMD running in Emulation mode as a real Venice controller is not available. Remove %v file if this was not desired.", globals.IotaEmulation)
@@ -292,7 +295,6 @@ func (n *NMD) PersistState(updateDelphi bool) (err error) {
 			return
 		}
 	}
-	n.config.Status.Mode = n.config.Spec.Mode
 
 	if updateDelphi && n.Pipeline != nil {
 		if err = n.Pipeline.WriteDelphiObjects(); err != nil {
@@ -514,11 +516,13 @@ func (n *NMD) runAdmissionControlLoop() {
 	}
 
 	spec := n.config.Spec
+
 	if spec.IPConfig != nil && len(spec.IPConfig.IPAddress) != 0 {
 		log.Info("Performing singleton static admission")
 		if err := n.triggerAdmissionEvents(); err != nil {
 			log.Errorf("Failed to trigger admission events for static IPConfig: %v", err)
 		}
+
 		if err := n.PersistState(isEmulation); err != nil {
 			log.Errorf("Failed to persist config during admission control loop. Err: %v", errInternalServer(err))
 		}
@@ -573,6 +577,8 @@ func (n *NMD) triggerAdmissionEvents() error {
 		log.Errorf("Naples Admission mode transition event failed. Err: %v", err)
 		return fmt.Errorf("NAPLES Admission mode transition event failed. Err: %v", err)
 	}
+	// Update the status appropriately.
+	n.config.Status.Mode = nmd.MgmtMode_NETWORK.String()
 	return nil
 }
 

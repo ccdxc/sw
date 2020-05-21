@@ -196,6 +196,7 @@ func NewNMD(pipeline Pipeline,
 			},
 		},
 		Status: nmd.DistributedServiceCardStatus{
+			Mode:     nmd.MgmtMode_HOST.String(), // Default to Host Mode
 			Fru:      fru,
 			TimeZone: "UTC",
 			DSCName:  fru.MacStr,
@@ -237,7 +238,7 @@ func NewNMD(pipeline Pipeline,
 		// Clear persisted controllers and status fields
 		config.Status.Controllers = []string{}
 		config.Status.AdmissionPhaseReason = ""
-		config.Status.Mode = ""
+		config.Status.Mode = nmd.MgmtMode_HOST.String()
 		config.Status.ManagementInterface = ""
 	} else {
 		// persist the default naples config

@@ -57,7 +57,6 @@ func (d *DelSrv) OnMountComplete() {
 	if err := d.Agent.Nmd.UpdateNaplesConfig(d.Agent.Nmd.GetNaplesConfig()); err != nil {
 		log.Errorf("Failed to update naples during onMountComplete. Err: %v", err)
 	}
-	d.Agent.Nmd.UpdateCurrentManagementMode()
 	d.Agent.Nmd.CreateIPClient()
 	if err := d.Agent.Nmd.Upgmgr.IsUpgClientRegistered(); err != nil {
 		log.Errorf("No upgrade manager")
