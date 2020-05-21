@@ -556,6 +556,7 @@ fte_flow_h2s_rewrite_geneve (struct rte_mbuf *m,
         ip4h = rte_pktmbuf_mtod_offset(m, struct ipv4_hdr *, ip_offset);
         if (fte_nmt_get_nat_ip(vnic_id, rte_be_to_cpu_32(ip4h->src_addr),
                                &nat_ip) == SDK_RET_OK) {
+            fte_nat_csum_adj_h2s_v4(ip4h, nat_ip);
             ip4h->src_addr = rte_cpu_to_be_32(nat_ip);
         }
     }
@@ -1302,6 +1303,58 @@ fte_h2s_nat_v4_session_rewrite_mplsoudp (uint32_t session_rewrite_id,
 }
 
 sdk_ret_t
+fte_h2s_nat_v4_session_rewrite_geneve (uint32_t session_rewrite_id,
+                                   mac_addr_t *substrate_dmac,
+                                   mac_addr_t *substrate_smac,
+                                   uint16_t substrate_vlan,
+                                   uint32_t substrate_sip,
+                                   uint32_t substrate_dip,
+                                   uint32_t vni, uint32_t src_slot_id,
+                                   uint32_t dst_slot_id,
+                                   uint16_t sg_id1, uint16_t sg_id2,
+                                   uint16_t sg_id3, uint16_t sg_id4,
+                                   uint16_t sg_id5, uint16_t sg_id6,
+                                   uint32_t orig_phy_ip,
+                                   pds_flow_session_rewrite_nat_type_t nat_type,
+                                   ipv4_addr_t ipv4_addr)
+{
+    pds_flow_session_rewrite_spec_t spec;
+
+    memset(&spec, 0, sizeof(spec));
+    spec.key.session_rewrite_id = session_rewrite_id;
+
+    spec.data.strip_l2_header = FALSE;
+    spec.data.strip_vlan_tag = TRUE;
+
+    spec.data.nat_info.nat_type = nat_type;
+    spec.data.nat_info.u.ipv4_addr = (uint32_t) ipv4_addr;
+
+    spec.data.encap_type = ENCAP_TYPE_GENEVE;
+    sdk::lib::memrev(spec.data.u.geneve_encap.l2_encap.dmac,
+                     (uint8_t*)substrate_dmac, sizeof(mac_addr_t));
+    sdk::lib::memrev(spec.data.u.geneve_encap.l2_encap.smac,
+                     (uint8_t*)substrate_smac, sizeof(mac_addr_t));
+    spec.data.u.geneve_encap.l2_encap.insert_vlan_tag = TRUE;
+    spec.data.u.geneve_encap.l2_encap.vlan_id = substrate_vlan;
+
+    spec.data.u.geneve_encap.ip_encap.ip_saddr = substrate_sip;
+    spec.data.u.geneve_encap.ip_encap.ip_daddr = substrate_dip;
+
+    spec.data.u.geneve_encap.vni = vni;
+    spec.data.u.geneve_encap.source_slot_id = src_slot_id;
+    spec.data.u.geneve_encap.destination_slot_id = dst_slot_id;
+    spec.data.u.geneve_encap.sg_id1 = sg_id1;
+    spec.data.u.geneve_encap.sg_id2 = sg_id2;
+    spec.data.u.geneve_encap.sg_id3 = sg_id3;
+    spec.data.u.geneve_encap.sg_id4 = sg_id4;
+    spec.data.u.geneve_encap.sg_id5 = sg_id5;
+    spec.data.u.geneve_encap.sg_id6 = sg_id6;
+    spec.data.u.geneve_encap.originator_physical_ip = orig_phy_ip;
+
+    return (sdk_ret_t)pds_flow_session_rewrite_create(&spec);
+}
+
+sdk_ret_t
 fte_create_dnat_map_ipv4(uint16_t vnic_id, ipv4_addr_t v4_nat_dip, 
         ipv4_addr_t v4_orig_dip, uint16_t dnat_epoch)
 {
@@ -1398,6 +1451,30 @@ fte_s2h_nat_v4_session_rewrite (uint32_t session_rewrite_id,
     return (sdk_ret_t)pds_flow_session_rewrite_create(&spec);
 }
 
+sdk_ret_t
+fte_s2h_nat_v4_session_rewrite_l2 (uint32_t session_rewrite_id,
+                               uint16_t vnic_vlan,
+                               pds_flow_session_rewrite_nat_type_t nat_type,
+                               ipv4_addr_t ipv4_addr)
+{
+    pds_flow_session_rewrite_spec_t spec;
+
+    memset(&spec, 0, sizeof(spec));
+    spec.key.session_rewrite_id = session_rewrite_id;
+
+    spec.data.strip_encap_header = TRUE;
+    spec.data.strip_l2_header = TRUE;
+    spec.data.strip_vlan_tag = TRUE;
+
+    spec.data.nat_info.nat_type = nat_type;
+    spec.data.nat_info.u.ipv4_addr = (uint32_t) ipv4_addr;
+
+    spec.data.encap_type = ENCAP_TYPE_INSERT_CTAG;
+    spec.data.u.insert_ctag.vlan_id = vnic_vlan;
+
+    return (sdk_ret_t)pds_flow_session_rewrite_create(&spec);
+}
+
 static sdk_ret_t 
 fte_setup_dnat_flow (flow_cache_policy_info_t *policy)
 {
@@ -1448,6 +1525,32 @@ fte_setup_dnat_flow (flow_cache_policy_info_t *policy)
                                 "failed.\n");
                 return ret;
             }
+        } else if (rewrite_underlay->encap_type == ENCAP_GENEVE) {
+            ret = fte_h2s_nat_v4_session_rewrite_geneve(
+                        nat_map_tbl[map_cnt].h2s_rewrite_id,
+                        (mac_addr_t *)rewrite_underlay->substrate_dmac,
+                        (mac_addr_t *)rewrite_underlay->substrate_smac,
+                        rewrite_underlay->substrate_vlan,
+                        rewrite_underlay->substrate_sip,
+                        rewrite_underlay->substrate_dip,
+                        rewrite_underlay->u.geneve.vni,
+                        policy->src_slot_id,
+                        rewrite_underlay->u.geneve.dst_slot_id,
+                        rewrite_underlay->u.geneve.sg_id1,
+                        rewrite_underlay->u.geneve.sg_id2,
+                        rewrite_underlay->u.geneve.sg_id3,
+                        rewrite_underlay->u.geneve.sg_id4,
+                        rewrite_underlay->u.geneve.sg_id5,
+                        rewrite_underlay->u.geneve.sg_id6,
+                        rewrite_underlay->u.geneve.orig_phy_ip,
+                        REWRITE_NAT_TYPE_IPV4_SNAT,
+                        (ipv4_addr_t)nat_ip);
+
+            if (ret != SDK_RET_OK) {
+                PDS_TRACE_DEBUG("fte_h2s_nat_v4_session_rewrite_geneve "
+                                "failed.\n");
+                return ret;
+            }
         } else {
             PDS_TRACE_DEBUG("Unsupported encap_type:%u \n",
                             rewrite_underlay->encap_type);
@@ -1455,16 +1558,29 @@ fte_setup_dnat_flow (flow_cache_policy_info_t *policy)
         }
 
         nat_map_tbl[map_cnt].s2h_rewrite_id = g_session_rewrite_index++;
-        ret = fte_s2h_nat_v4_session_rewrite(
+        if (policy->vnic_type == VNIC_L2) {
+            ret = fte_s2h_nat_v4_session_rewrite_l2(
+                    nat_map_tbl[map_cnt].s2h_rewrite_id,
+                    policy->vlan_id,
+                    REWRITE_NAT_TYPE_IPV4_DNAT,
+                    (ipv4_addr_t)local_ip);
+            if (ret != SDK_RET_OK) {
+                PDS_TRACE_DEBUG("fte_s2h_nat_v4_session_rewrite_l2 "
+                                "failed.\n");
+                return ret;
+            }
+        } else {
+            ret = fte_s2h_nat_v4_session_rewrite(
                     nat_map_tbl[map_cnt].s2h_rewrite_id,
                     (mac_addr_t *)rewrite_host->ep_dmac,
                     (mac_addr_t *)rewrite_host->ep_smac,
                     policy->vlan_id,
                     REWRITE_NAT_TYPE_IPV4_DNAT,
                     (ipv4_addr_t)local_ip);
-        if (ret != SDK_RET_OK) {
-            PDS_TRACE_DEBUG("fte_s2h_nat_v4_session_rewrite failed.\n");
-            return ret;
+            if (ret != SDK_RET_OK) {
+                PDS_TRACE_DEBUG("fte_s2h_nat_v4_session_rewrite failed.\n");
+                return ret;
+            }
         }
 
         local_ip++;
