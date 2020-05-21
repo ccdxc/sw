@@ -228,7 +228,8 @@
           "ConfigurationSnapshot",
           "SnapshotRestore",
           "License",
-          "DSCProfile"
+          "DSCProfile",
+          "Credentials"
         ],
         "Properties": {
           "Cluster": {
@@ -263,6 +264,12 @@
               "save"
             ],
             "URI": "/configs/cluster/v1/config-snapshot"
+          },
+          "Credentials": {
+            "Scopes": [
+              "cluster"
+            ],
+            "URI": "/configs/cluster/v1/credentials"
           },
           "DSCProfile": {
             "Scopes": [

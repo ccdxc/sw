@@ -201,6 +201,10 @@ func (m mockClusterV1) DSCProfile() cluster.ClusterV1DSCProfileInterface {
 	return nil
 }
 
+func (m mockClusterV1) Credentials() cluster.ClusterV1CredentialsInterface {
+	return nil
+}
+
 func (m mockClusterV1) Watch(ctx context.Context, options *api.AggWatchOptions) (kvstore.Watcher, error) {
 	return nil, nil
 }

@@ -149,6 +149,19 @@ type ClusterV1DSCProfileInterface interface {
 	Allowed(oper apiintf.APIOperType) bool
 }
 
+// ClusterV1CredentialsInterface exposes the CRUD methods for Credentials
+type ClusterV1CredentialsInterface interface {
+	Create(ctx context.Context, in *Credentials) (*Credentials, error)
+	Update(ctx context.Context, in *Credentials) (*Credentials, error)
+	UpdateStatus(ctx context.Context, in *Credentials) (*Credentials, error)
+	Label(ctx context.Context, in *api.Label) (*Credentials, error)
+	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Credentials, error)
+	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Credentials, error)
+	List(ctx context.Context, options *api.ListWatchOptions) ([]*Credentials, error)
+	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
+	Allowed(oper apiintf.APIOperType) bool
+}
+
 // ClusterV1Interface exposes objects with CRUD operations allowed by the service
 type ClusterV1Interface interface {
 	Cluster() ClusterV1ClusterInterface
@@ -161,5 +174,6 @@ type ClusterV1Interface interface {
 	SnapshotRestore() ClusterV1SnapshotRestoreInterface
 	License() ClusterV1LicenseInterface
 	DSCProfile() ClusterV1DSCProfileInterface
+	Credentials() ClusterV1CredentialsInterface
 	Watch(ctx context.Context, options *api.AggWatchOptions) (kvstore.Watcher, error)
 }

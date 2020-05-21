@@ -747,6 +747,22 @@ func restPutDSCProfile(hostname, token string, obj interface{}) error {
 
 }
 
+func restGetCredentials(hostname, tenant, token string, obj interface{}) error {
+	return fmt.Errorf("get operation not supported for Credentials object")
+}
+
+func restDeleteCredentials(hostname, token string, obj interface{}) error {
+	return fmt.Errorf("delete operation not supported for Credentials object")
+}
+
+func restPostCredentials(hostname, token string, obj interface{}) error {
+	return fmt.Errorf("create operation not supported for Credentials object")
+}
+
+func restPutCredentials(hostname, token string, obj interface{}) error {
+	return fmt.Errorf("put operation not supported for Credentials object")
+}
+
 func init() {
 	cl := gen.GetInfo()
 	if cl == nil {

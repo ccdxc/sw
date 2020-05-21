@@ -74,7 +74,7 @@ type Services interface {
 	BookstoreV1() bookstore.BookstoreV1Interface
 	// Package is browser and len of messages is 0
 	BrowserV1() browser.BrowserV1Interface
-	// Package is cluster and len of messages is 10
+	// Package is cluster and len of messages is 11
 	ClusterV1() cluster.ClusterV1Interface
 	// Package is diagnostics and len of messages is 1
 	DiagnosticsV1() diagnostics.DiagnosticsV1Interface

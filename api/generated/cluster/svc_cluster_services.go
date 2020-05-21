@@ -22,6 +22,7 @@ type ServiceClusterV1Client interface {
 	AuthBootstrapComplete(ctx context.Context, t *ClusterAuthBootstrapRequest) (*Cluster, error)
 	AutoAddCluster(ctx context.Context, t *Cluster) (*Cluster, error)
 	AutoAddConfigurationSnapshot(ctx context.Context, t *ConfigurationSnapshot) (*ConfigurationSnapshot, error)
+	AutoAddCredentials(ctx context.Context, t *Credentials) (*Credentials, error)
 	AutoAddDSCProfile(ctx context.Context, t *DSCProfile) (*DSCProfile, error)
 	AutoAddDistributedServiceCard(ctx context.Context, t *DistributedServiceCard) (*DistributedServiceCard, error)
 	AutoAddHost(ctx context.Context, t *Host) (*Host, error)
@@ -32,6 +33,7 @@ type ServiceClusterV1Client interface {
 	AutoAddVersion(ctx context.Context, t *Version) (*Version, error)
 	AutoDeleteCluster(ctx context.Context, t *Cluster) (*Cluster, error)
 	AutoDeleteConfigurationSnapshot(ctx context.Context, t *ConfigurationSnapshot) (*ConfigurationSnapshot, error)
+	AutoDeleteCredentials(ctx context.Context, t *Credentials) (*Credentials, error)
 	AutoDeleteDSCProfile(ctx context.Context, t *DSCProfile) (*DSCProfile, error)
 	AutoDeleteDistributedServiceCard(ctx context.Context, t *DistributedServiceCard) (*DistributedServiceCard, error)
 	AutoDeleteHost(ctx context.Context, t *Host) (*Host, error)
@@ -42,6 +44,7 @@ type ServiceClusterV1Client interface {
 	AutoDeleteVersion(ctx context.Context, t *Version) (*Version, error)
 	AutoGetCluster(ctx context.Context, t *Cluster) (*Cluster, error)
 	AutoGetConfigurationSnapshot(ctx context.Context, t *ConfigurationSnapshot) (*ConfigurationSnapshot, error)
+	AutoGetCredentials(ctx context.Context, t *Credentials) (*Credentials, error)
 	AutoGetDSCProfile(ctx context.Context, t *DSCProfile) (*DSCProfile, error)
 	AutoGetDistributedServiceCard(ctx context.Context, t *DistributedServiceCard) (*DistributedServiceCard, error)
 	AutoGetHost(ctx context.Context, t *Host) (*Host, error)
@@ -52,6 +55,7 @@ type ServiceClusterV1Client interface {
 	AutoGetVersion(ctx context.Context, t *Version) (*Version, error)
 	AutoLabelCluster(ctx context.Context, t *api.Label) (*Cluster, error)
 	AutoLabelConfigurationSnapshot(ctx context.Context, t *api.Label) (*ConfigurationSnapshot, error)
+	AutoLabelCredentials(ctx context.Context, t *api.Label) (*Credentials, error)
 	AutoLabelDSCProfile(ctx context.Context, t *api.Label) (*DSCProfile, error)
 	AutoLabelDistributedServiceCard(ctx context.Context, t *api.Label) (*DistributedServiceCard, error)
 	AutoLabelHost(ctx context.Context, t *api.Label) (*Host, error)
@@ -62,6 +66,7 @@ type ServiceClusterV1Client interface {
 	AutoLabelVersion(ctx context.Context, t *api.Label) (*Version, error)
 	AutoListCluster(ctx context.Context, t *api.ListWatchOptions) (*ClusterList, error)
 	AutoListConfigurationSnapshot(ctx context.Context, t *api.ListWatchOptions) (*ConfigurationSnapshotList, error)
+	AutoListCredentials(ctx context.Context, t *api.ListWatchOptions) (*CredentialsList, error)
 	AutoListDSCProfile(ctx context.Context, t *api.ListWatchOptions) (*DSCProfileList, error)
 	AutoListDistributedServiceCard(ctx context.Context, t *api.ListWatchOptions) (*DistributedServiceCardList, error)
 	AutoListHost(ctx context.Context, t *api.ListWatchOptions) (*HostList, error)
@@ -72,6 +77,7 @@ type ServiceClusterV1Client interface {
 	AutoListVersion(ctx context.Context, t *api.ListWatchOptions) (*VersionList, error)
 	AutoUpdateCluster(ctx context.Context, t *Cluster) (*Cluster, error)
 	AutoUpdateConfigurationSnapshot(ctx context.Context, t *ConfigurationSnapshot) (*ConfigurationSnapshot, error)
+	AutoUpdateCredentials(ctx context.Context, t *Credentials) (*Credentials, error)
 	AutoUpdateDSCProfile(ctx context.Context, t *DSCProfile) (*DSCProfile, error)
 	AutoUpdateDistributedServiceCard(ctx context.Context, t *DistributedServiceCard) (*DistributedServiceCard, error)
 	AutoUpdateHost(ctx context.Context, t *Host) (*Host, error)
@@ -94,6 +100,7 @@ type ServiceClusterV1Client interface {
 	AutoWatchSnapshotRestore(ctx context.Context, in *api.ListWatchOptions) (ClusterV1_AutoWatchSnapshotRestoreClient, error)
 	AutoWatchLicense(ctx context.Context, in *api.ListWatchOptions) (ClusterV1_AutoWatchLicenseClient, error)
 	AutoWatchDSCProfile(ctx context.Context, in *api.ListWatchOptions) (ClusterV1_AutoWatchDSCProfileClient, error)
+	AutoWatchCredentials(ctx context.Context, in *api.ListWatchOptions) (ClusterV1_AutoWatchCredentialsClient, error)
 }
 
 // ServiceClusterV1Server is the server interface for the service.
@@ -103,6 +110,7 @@ type ServiceClusterV1Server interface {
 	AuthBootstrapComplete(ctx context.Context, t ClusterAuthBootstrapRequest) (Cluster, error)
 	AutoAddCluster(ctx context.Context, t Cluster) (Cluster, error)
 	AutoAddConfigurationSnapshot(ctx context.Context, t ConfigurationSnapshot) (ConfigurationSnapshot, error)
+	AutoAddCredentials(ctx context.Context, t Credentials) (Credentials, error)
 	AutoAddDSCProfile(ctx context.Context, t DSCProfile) (DSCProfile, error)
 	AutoAddDistributedServiceCard(ctx context.Context, t DistributedServiceCard) (DistributedServiceCard, error)
 	AutoAddHost(ctx context.Context, t Host) (Host, error)
@@ -113,6 +121,7 @@ type ServiceClusterV1Server interface {
 	AutoAddVersion(ctx context.Context, t Version) (Version, error)
 	AutoDeleteCluster(ctx context.Context, t Cluster) (Cluster, error)
 	AutoDeleteConfigurationSnapshot(ctx context.Context, t ConfigurationSnapshot) (ConfigurationSnapshot, error)
+	AutoDeleteCredentials(ctx context.Context, t Credentials) (Credentials, error)
 	AutoDeleteDSCProfile(ctx context.Context, t DSCProfile) (DSCProfile, error)
 	AutoDeleteDistributedServiceCard(ctx context.Context, t DistributedServiceCard) (DistributedServiceCard, error)
 	AutoDeleteHost(ctx context.Context, t Host) (Host, error)
@@ -123,6 +132,7 @@ type ServiceClusterV1Server interface {
 	AutoDeleteVersion(ctx context.Context, t Version) (Version, error)
 	AutoGetCluster(ctx context.Context, t Cluster) (Cluster, error)
 	AutoGetConfigurationSnapshot(ctx context.Context, t ConfigurationSnapshot) (ConfigurationSnapshot, error)
+	AutoGetCredentials(ctx context.Context, t Credentials) (Credentials, error)
 	AutoGetDSCProfile(ctx context.Context, t DSCProfile) (DSCProfile, error)
 	AutoGetDistributedServiceCard(ctx context.Context, t DistributedServiceCard) (DistributedServiceCard, error)
 	AutoGetHost(ctx context.Context, t Host) (Host, error)
@@ -133,6 +143,7 @@ type ServiceClusterV1Server interface {
 	AutoGetVersion(ctx context.Context, t Version) (Version, error)
 	AutoLabelCluster(ctx context.Context, t api.Label) (Cluster, error)
 	AutoLabelConfigurationSnapshot(ctx context.Context, t api.Label) (ConfigurationSnapshot, error)
+	AutoLabelCredentials(ctx context.Context, t api.Label) (Credentials, error)
 	AutoLabelDSCProfile(ctx context.Context, t api.Label) (DSCProfile, error)
 	AutoLabelDistributedServiceCard(ctx context.Context, t api.Label) (DistributedServiceCard, error)
 	AutoLabelHost(ctx context.Context, t api.Label) (Host, error)
@@ -143,6 +154,7 @@ type ServiceClusterV1Server interface {
 	AutoLabelVersion(ctx context.Context, t api.Label) (Version, error)
 	AutoListCluster(ctx context.Context, t api.ListWatchOptions) (ClusterList, error)
 	AutoListConfigurationSnapshot(ctx context.Context, t api.ListWatchOptions) (ConfigurationSnapshotList, error)
+	AutoListCredentials(ctx context.Context, t api.ListWatchOptions) (CredentialsList, error)
 	AutoListDSCProfile(ctx context.Context, t api.ListWatchOptions) (DSCProfileList, error)
 	AutoListDistributedServiceCard(ctx context.Context, t api.ListWatchOptions) (DistributedServiceCardList, error)
 	AutoListHost(ctx context.Context, t api.ListWatchOptions) (HostList, error)
@@ -153,6 +165,7 @@ type ServiceClusterV1Server interface {
 	AutoListVersion(ctx context.Context, t api.ListWatchOptions) (VersionList, error)
 	AutoUpdateCluster(ctx context.Context, t Cluster) (Cluster, error)
 	AutoUpdateConfigurationSnapshot(ctx context.Context, t ConfigurationSnapshot) (ConfigurationSnapshot, error)
+	AutoUpdateCredentials(ctx context.Context, t Credentials) (Credentials, error)
 	AutoUpdateDSCProfile(ctx context.Context, t DSCProfile) (DSCProfile, error)
 	AutoUpdateDistributedServiceCard(ctx context.Context, t DistributedServiceCard) (DistributedServiceCard, error)
 	AutoUpdateHost(ctx context.Context, t Host) (Host, error)
@@ -175,4 +188,5 @@ type ServiceClusterV1Server interface {
 	AutoWatchSnapshotRestore(in *api.ListWatchOptions, stream ClusterV1_AutoWatchSnapshotRestoreServer) error
 	AutoWatchLicense(in *api.ListWatchOptions, stream ClusterV1_AutoWatchLicenseServer) error
 	AutoWatchDSCProfile(in *api.ListWatchOptions, stream ClusterV1_AutoWatchDSCProfileServer) error
+	AutoWatchCredentials(in *api.ListWatchOptions, stream ClusterV1_AutoWatchCredentialsServer) error
 }

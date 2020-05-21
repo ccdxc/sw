@@ -6549,6 +6549,29 @@
         }
       }
     },
+    "clusterAutoMsgCredentialsWatchHelper": {
+      "type": "object",
+      "properties": {
+        "events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterAutoMsgCredentialsWatchHelperWatchEvent"
+          }
+        }
+      },
+      "description": "AutoMsgCredentialsWatchHelper is a wrapper object for watch events for Credentials objects."
+    },
+    "clusterAutoMsgCredentialsWatchHelperWatchEvent": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "object": {
+          "$ref": "#/definitions/clusterCredentials"
+        }
+      }
+    },
     "clusterAutoMsgDSCProfileWatchHelper": {
       "type": "object",
       "properties": {
@@ -7027,6 +7050,64 @@
           "$ref": "#/definitions/ConfigurationSnapshotStatusConfigSaveStatus"
         }
       }
+    },
+    "clusterCredentials": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/clusterCredentialsSpec",
+          "description": "CredentialsSpec contains the credential information needed to access a service."
+        },
+        "status": {
+          "$ref": "#/definitions/clusterCredentialsStatus"
+        }
+      }
+    },
+    "clusterCredentialsList": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "list-meta": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterCredentials"
+          },
+          "description": "List of Credentials objects."
+        }
+      },
+      "description": "CredentialsList is a container object for list of Credentials objects."
+    },
+    "clusterCredentialsSpec": {
+      "type": "object",
+      "properties": {
+        "key-value-pairs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterKeyValue"
+          },
+          "description": "KeyValuePairs contains all key,value pairs that constitute credentials to access a service."
+        }
+      }
+    },
+    "clusterCredentialsStatus": {
+      "type": "object"
     },
     "clusterDSCCondition": {
       "type": "object",
@@ -7527,6 +7608,18 @@
         }
       },
       "description": "IPConfig defines the static IP configuration for a DistributedServiceCard."
+    },
+    "clusterKeyValue": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
     },
     "clusterLicense": {
       "type": "object",

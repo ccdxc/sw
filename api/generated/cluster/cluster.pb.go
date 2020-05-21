@@ -8,6 +8,7 @@
 
 	It is generated from these files:
 		cluster.proto
+		credentials.proto
 		dscprofile.proto
 		license.proto
 		smartnic.proto
@@ -45,6 +46,10 @@
 		Version
 		VersionSpec
 		VersionStatus
+		Credentials
+		CredentialsSpec
+		CredentialsStatus
+		KeyValue
 		DSCProfile
 		DSCProfileSpec
 		DSCProfileStatus
@@ -72,6 +77,7 @@
 		SnapshotRestoreStatus
 		AutoMsgClusterWatchHelper
 		AutoMsgConfigurationSnapshotWatchHelper
+		AutoMsgCredentialsWatchHelper
 		AutoMsgDSCProfileWatchHelper
 		AutoMsgDistributedServiceCardWatchHelper
 		AutoMsgHostWatchHelper
@@ -82,6 +88,7 @@
 		AutoMsgVersionWatchHelper
 		ClusterList
 		ConfigurationSnapshotList
+		CredentialsList
 		DSCProfileList
 		DistributedServiceCardList
 		HostList

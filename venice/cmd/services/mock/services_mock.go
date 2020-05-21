@@ -848,6 +848,11 @@ func (ma *APIClient) License() cmd.ClusterV1LicenseInterface {
 	return nil
 }
 
+// Credentials returns mock Credentials interface - nill till we need this functionality
+func (ma *APIClient) Credentials() cmd.ClusterV1CredentialsInterface {
+	return nil
+}
+
 // Watch implements a watch on the service - nill till we need this functionality
 func (ma *APIClient) Watch(ctx context.Context, options *api.AggWatchOptions) (kvstore.Watcher, error) {
 	return nil, nil

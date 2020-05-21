@@ -1458,6 +1458,145 @@ func (mr *MockClusterV1DSCProfileInterfaceMockRecorder) Allowed(oper interface{}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Allowed", reflect.TypeOf((*MockClusterV1DSCProfileInterface)(nil).Allowed), oper)
 }
 
+// MockClusterV1CredentialsInterface is a mock of ClusterV1CredentialsInterface interface
+type MockClusterV1CredentialsInterface struct {
+	ctrl     *gomock.Controller
+	recorder *MockClusterV1CredentialsInterfaceMockRecorder
+}
+
+// MockClusterV1CredentialsInterfaceMockRecorder is the mock recorder for MockClusterV1CredentialsInterface
+type MockClusterV1CredentialsInterfaceMockRecorder struct {
+	mock *MockClusterV1CredentialsInterface
+}
+
+// NewMockClusterV1CredentialsInterface creates a new mock instance
+func NewMockClusterV1CredentialsInterface(ctrl *gomock.Controller) *MockClusterV1CredentialsInterface {
+	mock := &MockClusterV1CredentialsInterface{ctrl: ctrl}
+	mock.recorder = &MockClusterV1CredentialsInterfaceMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (m *MockClusterV1CredentialsInterface) EXPECT() *MockClusterV1CredentialsInterfaceMockRecorder {
+	return m.recorder
+}
+
+// Create mocks base method
+func (m *MockClusterV1CredentialsInterface) Create(ctx context.Context, in *cluster.Credentials) (*cluster.Credentials, error) {
+	ret := m.ctrl.Call(m, "Create", ctx, in)
+	ret0, _ := ret[0].(*cluster.Credentials)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Create indicates an expected call of Create
+func (mr *MockClusterV1CredentialsInterfaceMockRecorder) Create(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockClusterV1CredentialsInterface)(nil).Create), ctx, in)
+}
+
+// Update mocks base method
+func (m *MockClusterV1CredentialsInterface) Update(ctx context.Context, in *cluster.Credentials) (*cluster.Credentials, error) {
+	ret := m.ctrl.Call(m, "Update", ctx, in)
+	ret0, _ := ret[0].(*cluster.Credentials)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Update indicates an expected call of Update
+func (mr *MockClusterV1CredentialsInterfaceMockRecorder) Update(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockClusterV1CredentialsInterface)(nil).Update), ctx, in)
+}
+
+// UpdateStatus mocks base method
+func (m *MockClusterV1CredentialsInterface) UpdateStatus(ctx context.Context, in *cluster.Credentials) (*cluster.Credentials, error) {
+	ret := m.ctrl.Call(m, "UpdateStatus", ctx, in)
+	ret0, _ := ret[0].(*cluster.Credentials)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateStatus indicates an expected call of UpdateStatus
+func (mr *MockClusterV1CredentialsInterfaceMockRecorder) UpdateStatus(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockClusterV1CredentialsInterface)(nil).UpdateStatus), ctx, in)
+}
+
+// Label mocks base method
+func (m *MockClusterV1CredentialsInterface) Label(ctx context.Context, in *api.Label) (*cluster.Credentials, error) {
+	ret := m.ctrl.Call(m, "Label", ctx, in)
+	ret0, _ := ret[0].(*cluster.Credentials)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Label indicates an expected call of Label
+func (mr *MockClusterV1CredentialsInterfaceMockRecorder) Label(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Label", reflect.TypeOf((*MockClusterV1CredentialsInterface)(nil).Label), ctx, in)
+}
+
+// Get mocks base method
+func (m *MockClusterV1CredentialsInterface) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.Credentials, error) {
+	ret := m.ctrl.Call(m, "Get", ctx, objMeta)
+	ret0, _ := ret[0].(*cluster.Credentials)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Get indicates an expected call of Get
+func (mr *MockClusterV1CredentialsInterfaceMockRecorder) Get(ctx, objMeta interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockClusterV1CredentialsInterface)(nil).Get), ctx, objMeta)
+}
+
+// Delete mocks base method
+func (m *MockClusterV1CredentialsInterface) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.Credentials, error) {
+	ret := m.ctrl.Call(m, "Delete", ctx, objMeta)
+	ret0, _ := ret[0].(*cluster.Credentials)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Delete indicates an expected call of Delete
+func (mr *MockClusterV1CredentialsInterfaceMockRecorder) Delete(ctx, objMeta interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockClusterV1CredentialsInterface)(nil).Delete), ctx, objMeta)
+}
+
+// List mocks base method
+func (m *MockClusterV1CredentialsInterface) List(ctx context.Context, options *api.ListWatchOptions) ([]*cluster.Credentials, error) {
+	ret := m.ctrl.Call(m, "List", ctx, options)
+	ret0, _ := ret[0].([]*cluster.Credentials)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// List indicates an expected call of List
+func (mr *MockClusterV1CredentialsInterfaceMockRecorder) List(ctx, options interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockClusterV1CredentialsInterface)(nil).List), ctx, options)
+}
+
+// Watch mocks base method
+func (m *MockClusterV1CredentialsInterface) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	ret := m.ctrl.Call(m, "Watch", ctx, options)
+	ret0, _ := ret[0].(kvstore.Watcher)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Watch indicates an expected call of Watch
+func (mr *MockClusterV1CredentialsInterfaceMockRecorder) Watch(ctx, options interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Watch", reflect.TypeOf((*MockClusterV1CredentialsInterface)(nil).Watch), ctx, options)
+}
+
+// Allowed mocks base method
+func (m *MockClusterV1CredentialsInterface) Allowed(oper interfaces.APIOperType) bool {
+	ret := m.ctrl.Call(m, "Allowed", oper)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// Allowed indicates an expected call of Allowed
+func (mr *MockClusterV1CredentialsInterfaceMockRecorder) Allowed(oper interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Allowed", reflect.TypeOf((*MockClusterV1CredentialsInterface)(nil).Allowed), oper)
+}
+
 // MockClusterV1Interface is a mock of ClusterV1Interface interface
 type MockClusterV1Interface struct {
 	ctrl     *gomock.Controller
@@ -1599,6 +1738,18 @@ func (m *MockClusterV1Interface) DSCProfile() cluster.ClusterV1DSCProfileInterfa
 // DSCProfile indicates an expected call of DSCProfile
 func (mr *MockClusterV1InterfaceMockRecorder) DSCProfile() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DSCProfile", reflect.TypeOf((*MockClusterV1Interface)(nil).DSCProfile))
+}
+
+// Credentials mocks base method
+func (m *MockClusterV1Interface) Credentials() cluster.ClusterV1CredentialsInterface {
+	ret := m.ctrl.Call(m, "Credentials")
+	ret0, _ := ret[0].(cluster.ClusterV1CredentialsInterface)
+	return ret0
+}
+
+// Credentials indicates an expected call of Credentials
+func (mr *MockClusterV1InterfaceMockRecorder) Credentials() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Credentials", reflect.TypeOf((*MockClusterV1Interface)(nil).Credentials))
 }
 
 // Watch mocks base method

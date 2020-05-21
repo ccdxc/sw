@@ -71,6 +71,20 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 		).Endpoint()
 		lAutoAddConfigurationSnapshotEndpoint = trace.ClientEndPoint("ClusterV1:AutoAddConfigurationSnapshot")(lAutoAddConfigurationSnapshotEndpoint)
 	}
+	var lAutoAddCredentialsEndpoint endpoint.Endpoint
+	{
+		lAutoAddCredentialsEndpoint = grpctransport.NewClient(
+			conn,
+			"cluster.ClusterV1",
+			"AutoAddCredentials",
+			cluster.EncodeGrpcReqCredentials,
+			cluster.DecodeGrpcRespCredentials,
+			&cluster.Credentials{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoAddCredentialsEndpoint = trace.ClientEndPoint("ClusterV1:AutoAddCredentials")(lAutoAddCredentialsEndpoint)
+	}
 	var lAutoAddDSCProfileEndpoint endpoint.Endpoint
 	{
 		lAutoAddDSCProfileEndpoint = grpctransport.NewClient(
@@ -210,6 +224,20 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoDeleteConfigurationSnapshotEndpoint = trace.ClientEndPoint("ClusterV1:AutoDeleteConfigurationSnapshot")(lAutoDeleteConfigurationSnapshotEndpoint)
+	}
+	var lAutoDeleteCredentialsEndpoint endpoint.Endpoint
+	{
+		lAutoDeleteCredentialsEndpoint = grpctransport.NewClient(
+			conn,
+			"cluster.ClusterV1",
+			"AutoDeleteCredentials",
+			cluster.EncodeGrpcReqCredentials,
+			cluster.DecodeGrpcRespCredentials,
+			&cluster.Credentials{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoDeleteCredentialsEndpoint = trace.ClientEndPoint("ClusterV1:AutoDeleteCredentials")(lAutoDeleteCredentialsEndpoint)
 	}
 	var lAutoDeleteDSCProfileEndpoint endpoint.Endpoint
 	{
@@ -351,6 +379,20 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 		).Endpoint()
 		lAutoGetConfigurationSnapshotEndpoint = trace.ClientEndPoint("ClusterV1:AutoGetConfigurationSnapshot")(lAutoGetConfigurationSnapshotEndpoint)
 	}
+	var lAutoGetCredentialsEndpoint endpoint.Endpoint
+	{
+		lAutoGetCredentialsEndpoint = grpctransport.NewClient(
+			conn,
+			"cluster.ClusterV1",
+			"AutoGetCredentials",
+			cluster.EncodeGrpcReqCredentials,
+			cluster.DecodeGrpcRespCredentials,
+			&cluster.Credentials{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoGetCredentialsEndpoint = trace.ClientEndPoint("ClusterV1:AutoGetCredentials")(lAutoGetCredentialsEndpoint)
+	}
 	var lAutoGetDSCProfileEndpoint endpoint.Endpoint
 	{
 		lAutoGetDSCProfileEndpoint = grpctransport.NewClient(
@@ -490,6 +532,20 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoLabelConfigurationSnapshotEndpoint = trace.ClientEndPoint("ClusterV1:AutoLabelConfigurationSnapshot")(lAutoLabelConfigurationSnapshotEndpoint)
+	}
+	var lAutoLabelCredentialsEndpoint endpoint.Endpoint
+	{
+		lAutoLabelCredentialsEndpoint = grpctransport.NewClient(
+			conn,
+			"cluster.ClusterV1",
+			"AutoLabelCredentials",
+			cluster.EncodeGrpcReqLabel,
+			cluster.DecodeGrpcRespCredentials,
+			&cluster.Credentials{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelCredentialsEndpoint = trace.ClientEndPoint("ClusterV1:AutoLabelCredentials")(lAutoLabelCredentialsEndpoint)
 	}
 	var lAutoLabelDSCProfileEndpoint endpoint.Endpoint
 	{
@@ -631,6 +687,20 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 		).Endpoint()
 		lAutoListConfigurationSnapshotEndpoint = trace.ClientEndPoint("ClusterV1:AutoListConfigurationSnapshot")(lAutoListConfigurationSnapshotEndpoint)
 	}
+	var lAutoListCredentialsEndpoint endpoint.Endpoint
+	{
+		lAutoListCredentialsEndpoint = grpctransport.NewClient(
+			conn,
+			"cluster.ClusterV1",
+			"AutoListCredentials",
+			cluster.EncodeGrpcReqListWatchOptions,
+			cluster.DecodeGrpcRespCredentialsList,
+			&cluster.CredentialsList{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoListCredentialsEndpoint = trace.ClientEndPoint("ClusterV1:AutoListCredentials")(lAutoListCredentialsEndpoint)
+	}
 	var lAutoListDSCProfileEndpoint endpoint.Endpoint
 	{
 		lAutoListDSCProfileEndpoint = grpctransport.NewClient(
@@ -770,6 +840,20 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoUpdateConfigurationSnapshotEndpoint = trace.ClientEndPoint("ClusterV1:AutoUpdateConfigurationSnapshot")(lAutoUpdateConfigurationSnapshotEndpoint)
+	}
+	var lAutoUpdateCredentialsEndpoint endpoint.Endpoint
+	{
+		lAutoUpdateCredentialsEndpoint = grpctransport.NewClient(
+			conn,
+			"cluster.ClusterV1",
+			"AutoUpdateCredentials",
+			cluster.EncodeGrpcReqCredentials,
+			cluster.DecodeGrpcRespCredentials,
+			&cluster.Credentials{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoUpdateCredentialsEndpoint = trace.ClientEndPoint("ClusterV1:AutoUpdateCredentials")(lAutoUpdateCredentialsEndpoint)
 	}
 	var lAutoUpdateDSCProfileEndpoint endpoint.Endpoint
 	{
@@ -931,6 +1015,7 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 		AuthBootstrapCompleteEndpoint:            lAuthBootstrapCompleteEndpoint,
 		AutoAddClusterEndpoint:                   lAutoAddClusterEndpoint,
 		AutoAddConfigurationSnapshotEndpoint:     lAutoAddConfigurationSnapshotEndpoint,
+		AutoAddCredentialsEndpoint:               lAutoAddCredentialsEndpoint,
 		AutoAddDSCProfileEndpoint:                lAutoAddDSCProfileEndpoint,
 		AutoAddDistributedServiceCardEndpoint:    lAutoAddDistributedServiceCardEndpoint,
 		AutoAddHostEndpoint:                      lAutoAddHostEndpoint,
@@ -941,6 +1026,7 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 		AutoAddVersionEndpoint:                   lAutoAddVersionEndpoint,
 		AutoDeleteClusterEndpoint:                lAutoDeleteClusterEndpoint,
 		AutoDeleteConfigurationSnapshotEndpoint:  lAutoDeleteConfigurationSnapshotEndpoint,
+		AutoDeleteCredentialsEndpoint:            lAutoDeleteCredentialsEndpoint,
 		AutoDeleteDSCProfileEndpoint:             lAutoDeleteDSCProfileEndpoint,
 		AutoDeleteDistributedServiceCardEndpoint: lAutoDeleteDistributedServiceCardEndpoint,
 		AutoDeleteHostEndpoint:                   lAutoDeleteHostEndpoint,
@@ -951,6 +1037,7 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 		AutoDeleteVersionEndpoint:                lAutoDeleteVersionEndpoint,
 		AutoGetClusterEndpoint:                   lAutoGetClusterEndpoint,
 		AutoGetConfigurationSnapshotEndpoint:     lAutoGetConfigurationSnapshotEndpoint,
+		AutoGetCredentialsEndpoint:               lAutoGetCredentialsEndpoint,
 		AutoGetDSCProfileEndpoint:                lAutoGetDSCProfileEndpoint,
 		AutoGetDistributedServiceCardEndpoint:    lAutoGetDistributedServiceCardEndpoint,
 		AutoGetHostEndpoint:                      lAutoGetHostEndpoint,
@@ -961,6 +1048,7 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 		AutoGetVersionEndpoint:                   lAutoGetVersionEndpoint,
 		AutoLabelClusterEndpoint:                 lAutoLabelClusterEndpoint,
 		AutoLabelConfigurationSnapshotEndpoint:   lAutoLabelConfigurationSnapshotEndpoint,
+		AutoLabelCredentialsEndpoint:             lAutoLabelCredentialsEndpoint,
 		AutoLabelDSCProfileEndpoint:              lAutoLabelDSCProfileEndpoint,
 		AutoLabelDistributedServiceCardEndpoint:  lAutoLabelDistributedServiceCardEndpoint,
 		AutoLabelHostEndpoint:                    lAutoLabelHostEndpoint,
@@ -971,6 +1059,7 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 		AutoLabelVersionEndpoint:                 lAutoLabelVersionEndpoint,
 		AutoListClusterEndpoint:                  lAutoListClusterEndpoint,
 		AutoListConfigurationSnapshotEndpoint:    lAutoListConfigurationSnapshotEndpoint,
+		AutoListCredentialsEndpoint:              lAutoListCredentialsEndpoint,
 		AutoListDSCProfileEndpoint:               lAutoListDSCProfileEndpoint,
 		AutoListDistributedServiceCardEndpoint:   lAutoListDistributedServiceCardEndpoint,
 		AutoListHostEndpoint:                     lAutoListHostEndpoint,
@@ -981,6 +1070,7 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 		AutoListVersionEndpoint:                  lAutoListVersionEndpoint,
 		AutoUpdateClusterEndpoint:                lAutoUpdateClusterEndpoint,
 		AutoUpdateConfigurationSnapshotEndpoint:  lAutoUpdateConfigurationSnapshotEndpoint,
+		AutoUpdateCredentialsEndpoint:            lAutoUpdateCredentialsEndpoint,
 		AutoUpdateDSCProfileEndpoint:             lAutoUpdateDSCProfileEndpoint,
 		AutoUpdateDistributedServiceCardEndpoint: lAutoUpdateDistributedServiceCardEndpoint,
 		AutoUpdateHostEndpoint:                   lAutoUpdateHostEndpoint,
@@ -3115,6 +3205,211 @@ func (a *restObjClusterV1DSCProfile) Allowed(oper apiintf.APIOperType) bool {
 	}
 }
 
+type grpcObjClusterV1Credentials struct {
+	logger log.Logger
+	client cluster.ServiceClusterV1Client
+}
+
+func (a *grpcObjClusterV1Credentials) Create(ctx context.Context, in *cluster.Credentials) (*cluster.Credentials, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Credentials", "oper", "create")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoAddCredentials(nctx, in)
+}
+
+func (a *grpcObjClusterV1Credentials) Update(ctx context.Context, in *cluster.Credentials) (*cluster.Credentials, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Credentials", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateCredentials(nctx, in)
+}
+
+func (a *grpcObjClusterV1Credentials) UpdateStatus(ctx context.Context, in *cluster.Credentials) (*cluster.Credentials, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Credentials", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
+	return a.client.AutoUpdateCredentials(nctx, in)
+}
+
+func (a *grpcObjClusterV1Credentials) Label(ctx context.Context, in *api.Label) (*cluster.Credentials, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Credentials", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelCredentials(nctx, in)
+}
+
+func (a *grpcObjClusterV1Credentials) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.Credentials, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Credentials", "oper", "get")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := cluster.Credentials{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoGetCredentials(nctx, &in)
+}
+
+func (a *grpcObjClusterV1Credentials) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.Credentials, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Credentials", "oper", "delete")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := cluster.Credentials{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoDeleteCredentials(nctx, &in)
+}
+
+func (a *grpcObjClusterV1Credentials) List(ctx context.Context, options *api.ListWatchOptions) ([]*cluster.Credentials, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Credentials", "oper", "list")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	r, err := a.client.AutoListCredentials(nctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *grpcObjClusterV1Credentials) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Credentials", "oper", "WatchOper")
+	nctx := addVersion(ctx, "v1")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	stream, err := a.client.AutoWatchCredentials(nctx, options)
+	if err != nil {
+		return nil, err
+	}
+	wstream := stream.(cluster.ClusterV1_AutoWatchCredentialsClient)
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			r, err := wstream.Recv()
+			if err != nil {
+				a.logger.ErrorLog("msg", "error on receive", "err", err)
+				close(lw.OutCh)
+				return
+			}
+			for _, e := range r.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-wstream.Context().Done():
+					close(lw.OutCh)
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)
+	lw.Run()
+	return lw, nil
+}
+
+func (a *grpcObjClusterV1Credentials) Allowed(oper apiintf.APIOperType) bool {
+	return true
+}
+
+type restObjClusterV1Credentials struct {
+	endpoints cluster.EndpointsClusterV1RestClient
+	instance  string
+}
+
+func (a *restObjClusterV1Credentials) Create(ctx context.Context, in *cluster.Credentials) (*cluster.Credentials, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoAddCredentials(ctx, in)
+}
+
+func (a *restObjClusterV1Credentials) Update(ctx context.Context, in *cluster.Credentials) (*cluster.Credentials, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoUpdateCredentials(ctx, in)
+}
+
+func (a *restObjClusterV1Credentials) UpdateStatus(ctx context.Context, in *cluster.Credentials) (*cluster.Credentials, error) {
+	return nil, errors.New("not supported for REST")
+}
+
+func (a *restObjClusterV1Credentials) Label(ctx context.Context, in *api.Label) (*cluster.Credentials, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelCredentials(ctx, in)
+}
+
+func (a *restObjClusterV1Credentials) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.Credentials, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := cluster.Credentials{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoGetCredentials(ctx, &in)
+}
+
+func (a *restObjClusterV1Credentials) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.Credentials, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := cluster.Credentials{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoDeleteCredentials(ctx, &in)
+}
+
+func (a *restObjClusterV1Credentials) List(ctx context.Context, options *api.ListWatchOptions) ([]*cluster.Credentials, error) {
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+
+	r, err := a.endpoints.AutoListCredentials(ctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *restObjClusterV1Credentials) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoWatchCredentials(ctx, options)
+}
+
+func (a *restObjClusterV1Credentials) Allowed(oper apiintf.APIOperType) bool {
+	switch oper {
+	case apiintf.CreateOper:
+		return false
+	case apiintf.UpdateOper:
+		return false
+	case apiintf.GetOper:
+		return false
+	case apiintf.DeleteOper:
+		return false
+	case apiintf.ListOper:
+		return false
+	case apiintf.WatchOper:
+		return false
+	default:
+		return false
+	}
+}
+
 type crudClientClusterV1 struct {
 	logger log.Logger
 	client cluster.ServiceClusterV1Client
@@ -3129,6 +3424,7 @@ type crudClientClusterV1 struct {
 	grpcSnapshotRestore        cluster.ClusterV1SnapshotRestoreInterface
 	grpcLicense                cluster.ClusterV1LicenseInterface
 	grpcDSCProfile             cluster.ClusterV1DSCProfileInterface
+	grpcCredentials            cluster.ClusterV1CredentialsInterface
 }
 
 // NewGrpcCrudClientClusterV1 creates a GRPC client for the service
@@ -3148,6 +3444,7 @@ func NewGrpcCrudClientClusterV1(conn *grpc.ClientConn, logger log.Logger) cluste
 		grpcSnapshotRestore:        &grpcObjClusterV1SnapshotRestore{client: client, logger: logger},
 		grpcLicense:                &grpcObjClusterV1License{client: client, logger: logger},
 		grpcDSCProfile:             &grpcObjClusterV1DSCProfile{client: client, logger: logger},
+		grpcCredentials:            &grpcObjClusterV1Credentials{client: client, logger: logger},
 	}
 }
 
@@ -3189,6 +3486,10 @@ func (a *crudClientClusterV1) License() cluster.ClusterV1LicenseInterface {
 
 func (a *crudClientClusterV1) DSCProfile() cluster.ClusterV1DSCProfileInterface {
 	return a.grpcDSCProfile
+}
+
+func (a *crudClientClusterV1) Credentials() cluster.ClusterV1CredentialsInterface {
+	return a.grpcCredentials
 }
 
 func (a *crudClientClusterV1) Watch(ctx context.Context, options *api.AggWatchOptions) (kvstore.Watcher, error) {
@@ -3252,6 +3553,7 @@ type crudRestClientClusterV1 struct {
 	restSnapshotRestore        cluster.ClusterV1SnapshotRestoreInterface
 	restLicense                cluster.ClusterV1LicenseInterface
 	restDSCProfile             cluster.ClusterV1DSCProfileInterface
+	restCredentials            cluster.ClusterV1CredentialsInterface
 }
 
 // NewRestCrudClientClusterV1 creates a REST client for the service.
@@ -3272,6 +3574,7 @@ func NewRestCrudClientClusterV1(url string, httpClient *http.Client) cluster.Clu
 		restSnapshotRestore:        &restObjClusterV1SnapshotRestore{endpoints: endpoints, instance: url},
 		restLicense:                &restObjClusterV1License{endpoints: endpoints, instance: url},
 		restDSCProfile:             &restObjClusterV1DSCProfile{endpoints: endpoints, instance: url},
+		restCredentials:            &restObjClusterV1Credentials{endpoints: endpoints, instance: url},
 	}
 }
 
@@ -3293,6 +3596,7 @@ func NewStagedRestCrudClientClusterV1(url string, id string, httpClient *http.Cl
 		restSnapshotRestore:        &restObjClusterV1SnapshotRestore{endpoints: endpoints, instance: url},
 		restLicense:                &restObjClusterV1License{endpoints: endpoints, instance: url},
 		restDSCProfile:             &restObjClusterV1DSCProfile{endpoints: endpoints, instance: url},
+		restCredentials:            &restObjClusterV1Credentials{endpoints: endpoints, instance: url},
 	}
 }
 
@@ -3334,6 +3638,10 @@ func (a *crudRestClientClusterV1) License() cluster.ClusterV1LicenseInterface {
 
 func (a *crudRestClientClusterV1) DSCProfile() cluster.ClusterV1DSCProfileInterface {
 	return a.restDSCProfile
+}
+
+func (a *crudRestClientClusterV1) Credentials() cluster.ClusterV1CredentialsInterface {
+	return a.restCredentials
 }
 
 func (a *crudRestClientClusterV1) Watch(ctx context.Context, options *api.AggWatchOptions) (kvstore.Watcher, error) {

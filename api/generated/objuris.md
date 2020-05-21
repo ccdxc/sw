@@ -12,6 +12,7 @@
 | Certificate | /configs/security/v1/certificates |
 | Cluster | /configs/cluster/v1/cluster |
 | ConfigurationSnapshot | /configs/cluster/v1/config-snapshot |
+| Credentials | /configs/cluster/v1/credentials |
 | DSCProfile | /configs/cluster/v1/dscprofiles |
 | DistributedServiceCard | /configs/cluster/v1/distributedservicecards |
 | Endpoint | /configs/workload/v1/endpoints |

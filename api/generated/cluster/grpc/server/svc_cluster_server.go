@@ -53,6 +53,7 @@ type eClusterV1Endpoints struct {
 	fnAuthBootstrapComplete            func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddCluster                   func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddConfigurationSnapshot     func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoAddCredentials               func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddDSCProfile                func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddDistributedServiceCard    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddHost                      func(ctx context.Context, t interface{}) (interface{}, error)
@@ -63,6 +64,7 @@ type eClusterV1Endpoints struct {
 	fnAutoAddVersion                   func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteCluster                func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteConfigurationSnapshot  func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoDeleteCredentials            func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteDSCProfile             func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteDistributedServiceCard func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteHost                   func(ctx context.Context, t interface{}) (interface{}, error)
@@ -73,6 +75,7 @@ type eClusterV1Endpoints struct {
 	fnAutoDeleteVersion                func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetCluster                   func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetConfigurationSnapshot     func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoGetCredentials               func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetDSCProfile                func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetDistributedServiceCard    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetHost                      func(ctx context.Context, t interface{}) (interface{}, error)
@@ -83,6 +86,7 @@ type eClusterV1Endpoints struct {
 	fnAutoGetVersion                   func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoLabelCluster                 func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoLabelConfigurationSnapshot   func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelCredentials             func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoLabelDSCProfile              func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoLabelDistributedServiceCard  func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoLabelHost                    func(ctx context.Context, t interface{}) (interface{}, error)
@@ -93,6 +97,7 @@ type eClusterV1Endpoints struct {
 	fnAutoLabelVersion                 func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListCluster                  func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListConfigurationSnapshot    func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoListCredentials              func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListDSCProfile               func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListDistributedServiceCard   func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListHost                     func(ctx context.Context, t interface{}) (interface{}, error)
@@ -103,6 +108,7 @@ type eClusterV1Endpoints struct {
 	fnAutoListVersion                  func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateCluster                func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateConfigurationSnapshot  func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoUpdateCredentials            func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateDSCProfile             func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateDistributedServiceCard func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateHost                   func(ctx context.Context, t interface{}) (interface{}, error)
@@ -125,6 +131,7 @@ type eClusterV1Endpoints struct {
 	fnAutoWatchSnapshotRestore        func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 	fnAutoWatchLicense                func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 	fnAutoWatchDSCProfile             func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
+	fnAutoWatchCredentials            func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 }
 
 func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
@@ -133,6 +140,7 @@ func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 
 		"cluster.AutoMsgClusterWatchHelper":                apisrvpkg.NewMessage("cluster.AutoMsgClusterWatchHelper"),
 		"cluster.AutoMsgConfigurationSnapshotWatchHelper":  apisrvpkg.NewMessage("cluster.AutoMsgConfigurationSnapshotWatchHelper"),
+		"cluster.AutoMsgCredentialsWatchHelper":            apisrvpkg.NewMessage("cluster.AutoMsgCredentialsWatchHelper"),
 		"cluster.AutoMsgDSCProfileWatchHelper":             apisrvpkg.NewMessage("cluster.AutoMsgDSCProfileWatchHelper"),
 		"cluster.AutoMsgDistributedServiceCardWatchHelper": apisrvpkg.NewMessage("cluster.AutoMsgDistributedServiceCardWatchHelper"),
 		"cluster.AutoMsgHostWatchHelper":                   apisrvpkg.NewMessage("cluster.AutoMsgHostWatchHelper"),
@@ -195,6 +203,36 @@ func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			return r, nil
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
 			r := i.(cluster.ConfigurationSnapshotList)
+			return &r
+		}),
+		"cluster.CredentialsList": apisrvpkg.NewMessage("cluster.CredentialsList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
+
+			into := cluster.CredentialsList{}
+			into.Kind = "CredentialsList"
+			r := cluster.Credentials{}
+			r.ObjectMeta = options.ObjectMeta
+			key := r.MakeKey(prefix)
+
+			ctx = apiutils.SetVar(ctx, "ObjKind", "cluster.Credentials")
+			err := kvs.ListFiltered(ctx, key, &into, *options)
+			if err != nil {
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "err", err)
+				return nil, err
+			}
+			err = into.ApplyStorageTransformer(ctx, false)
+			if err != nil {
+				return nil, err
+			}
+			return into, nil
+		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
+			r := i.(cluster.CredentialsList)
+			r.APIVersion = ver
+			for i := range r.Items {
+				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
+			}
+			return r, nil
+		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
+			r := i.(cluster.CredentialsList)
 			return &r
 		}),
 		"cluster.DSCProfileList": apisrvpkg.NewMessage("cluster.DSCProfileList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
@@ -449,6 +487,11 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/config-snapshot"), nil
 		}).HandleInvocation
 
+		s.endpointsClusterV1.fnAutoAddCredentials = srv.AddMethod("AutoAddCredentials",
+			apisrvpkg.NewMethod(srv, pkgMessages["cluster.Credentials"], pkgMessages["cluster.Credentials"], "cluster", "AutoAddCredentials")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).HandleInvocation
+
 		s.endpointsClusterV1.fnAutoAddDSCProfile = srv.AddMethod("AutoAddDSCProfile",
 			apisrvpkg.NewMethod(srv, pkgMessages["cluster.DSCProfile"], pkgMessages["cluster.DSCProfile"], "cluster", "AutoAddDSCProfile")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(cluster.DSCProfile)
@@ -513,6 +556,11 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 		s.endpointsClusterV1.fnAutoDeleteConfigurationSnapshot = srv.AddMethod("AutoDeleteConfigurationSnapshot",
 			apisrvpkg.NewMethod(srv, pkgMessages["cluster.ConfigurationSnapshot"], pkgMessages["cluster.ConfigurationSnapshot"], "cluster", "AutoDeleteConfigurationSnapshot")).WithOper(apiintf.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/config-snapshot"), nil
+		}).HandleInvocation
+
+		s.endpointsClusterV1.fnAutoDeleteCredentials = srv.AddMethod("AutoDeleteCredentials",
+			apisrvpkg.NewMethod(srv, pkgMessages["cluster.Credentials"], pkgMessages["cluster.Credentials"], "cluster", "AutoDeleteCredentials")).WithOper(apiintf.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoDeleteDSCProfile = srv.AddMethod("AutoDeleteDSCProfile",
@@ -583,6 +631,11 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 		s.endpointsClusterV1.fnAutoGetConfigurationSnapshot = srv.AddMethod("AutoGetConfigurationSnapshot",
 			apisrvpkg.NewMethod(srv, pkgMessages["cluster.ConfigurationSnapshot"], pkgMessages["cluster.ConfigurationSnapshot"], "cluster", "AutoGetConfigurationSnapshot")).WithOper(apiintf.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/config-snapshot"), nil
+		}).HandleInvocation
+
+		s.endpointsClusterV1.fnAutoGetCredentials = srv.AddMethod("AutoGetCredentials",
+			apisrvpkg.NewMethod(srv, pkgMessages["cluster.Credentials"], pkgMessages["cluster.Credentials"], "cluster", "AutoGetCredentials")).WithOper(apiintf.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoGetDSCProfile = srv.AddMethod("AutoGetDSCProfile",
@@ -693,6 +746,34 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 				return "", fmt.Errorf("Expected type to be api.Label")
 			}
 			cur := cluster.ConfigurationSnapshot{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
+		}).HandleInvocation
+
+		s.endpointsClusterV1.fnAutoLabelCredentials = srv.AddMethod("AutoLabelCredentials",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["cluster.Credentials"], "cluster", "AutoLabelCredentials")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := cluster.Credentials{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := cluster.Credentials{}
 			cur.ObjectMeta = label.ObjectMeta
 			key := cur.MakeKey(prefix)
 			if err := kvs.Get(ctx, key, &cur); err != nil {
@@ -955,6 +1036,11 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
+		s.endpointsClusterV1.fnAutoListCredentials = srv.AddMethod("AutoListCredentials",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["cluster.CredentialsList"], "cluster", "AutoListCredentials")).WithOper(apiintf.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).HandleInvocation
+
 		s.endpointsClusterV1.fnAutoListDSCProfile = srv.AddMethod("AutoListDSCProfile",
 			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["cluster.DSCProfileList"], "cluster", "AutoListDSCProfile")).WithOper(apiintf.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(api.ListWatchOptions)
@@ -1023,6 +1109,11 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 		s.endpointsClusterV1.fnAutoUpdateConfigurationSnapshot = srv.AddMethod("AutoUpdateConfigurationSnapshot",
 			apisrvpkg.NewMethod(srv, pkgMessages["cluster.ConfigurationSnapshot"], pkgMessages["cluster.ConfigurationSnapshot"], "cluster", "AutoUpdateConfigurationSnapshot")).WithOper(apiintf.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/config-snapshot"), nil
+		}).HandleInvocation
+
+		s.endpointsClusterV1.fnAutoUpdateCredentials = srv.AddMethod("AutoUpdateCredentials",
+			apisrvpkg.NewMethod(srv, pkgMessages["cluster.Credentials"], pkgMessages["cluster.Credentials"], "cluster", "AutoUpdateCredentials")).WithOper(apiintf.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoUpdateDSCProfile = srv.AddMethod("AutoUpdateDSCProfile",
@@ -1120,6 +1211,8 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 
 		s.endpointsClusterV1.fnAutoWatchDSCProfile = pkgMessages["cluster.DSCProfile"].WatchFromKv
 
+		s.endpointsClusterV1.fnAutoWatchCredentials = pkgMessages["cluster.Credentials"].WatchFromKv
+
 		s.Services = map[string]apiserver.Service{
 			"cluster.ClusterV1": srv,
 		}
@@ -1127,7 +1220,7 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 		endpoints := cluster.MakeClusterV1ServerEndpoints(s.endpointsClusterV1, logger)
 		server := cluster.MakeGRPCServerClusterV1(ctx, endpoints, logger)
 		cluster.RegisterClusterV1Server(grpcserver.GrpcServer, server)
-		svcObjs := []string{"Cluster", "Node", "Host", "DistributedServiceCard", "Tenant", "Version", "ConfigurationSnapshot", "SnapshotRestore", "License", "DSCProfile"}
+		svcObjs := []string{"Cluster", "Node", "Host", "DistributedServiceCard", "Tenant", "Version", "ConfigurationSnapshot", "SnapshotRestore", "License", "DSCProfile", "Credentials"}
 		fieldhooks.RegisterImmutableFieldsServiceHooks("cluster", "ClusterV1", svcObjs)
 	}
 }
@@ -2199,6 +2292,116 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 			}
 		})
 
+		pkgMessages["cluster.Credentials"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
+			o := cluster.Credentials{}
+			key := o.MakeKey(svcprefix)
+			if strings.HasSuffix(key, "//") {
+				key = strings.TrimSuffix(key, "/")
+			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
+			}
+			wstream := stream.(cluster.ClusterV1_AutoWatchCredentialsServer)
+			nctx, cancel := context.WithCancel(wstream.Context())
+			defer cancel()
+			id := fmt.Sprintf("%s-%x", ctxutils.GetPeerID(nctx), &key)
+
+			nctx = ctxutils.SetContextID(nctx, id)
+			if kvs == nil {
+				return fmt.Errorf("Nil KVS")
+			}
+			nctx = apiutils.SetVar(nctx, "ObjKind", "cluster.Credentials")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "cluster.Credentials")
+			watcher, err := kvs.WatchFiltered(nctx, key, *options)
+			if err != nil {
+				l.ErrorLog("msg", "error starting Watch on KV", "err", err, "WatcherID", id, "bbject", "cluster.Credentials")
+				return err
+			}
+			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
+			if !timer.Stop() {
+				<-timer.C
+			}
+			running := false
+			events := &cluster.AutoMsgCredentialsWatchHelper{}
+			sendToStream := func() error {
+				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
+				if err := wstream.Send(events); err != nil {
+					l.ErrorLog("msg", "Stream send error'ed for Order", "err", err, "WatcherID", id, "bbject", "cluster.Credentials")
+					return err
+				}
+				events = &cluster.AutoMsgCredentialsWatchHelper{}
+				return nil
+			}
+			defer l.InfoLog("msg", "exiting watcher", "service", "cluster.Credentials")
+			for {
+				select {
+				case ev, ok := <-watcher.EventChan():
+					if !ok {
+						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "cluster.Credentials")
+						return nil
+					}
+					evin, ok := ev.Object.(*cluster.Credentials)
+					if !ok {
+						status, ok := ev.Object.(*api.Status)
+						if !ok {
+							return errors.New("unknown error")
+						}
+						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
+					}
+					// XXX-TODO(sanjayt): Avoid a copy and update selflink at enqueue.
+					cin, err := evin.Clone(nil)
+					if err != nil {
+						return fmt.Errorf("unable to clone object (%s)", err)
+					}
+					in := cin.(*cluster.Credentials)
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "cluster")
+					{
+						txin, err := cluster.StorageCredentialsTransformer.TransformFromStorage(nctx, *in)
+						if err != nil {
+							return errors.Wrap(err, "Failed to apply storage transformer to Credentials")
+						}
+						obj := txin.(cluster.Credentials)
+						in = &obj
+					}
+					strEvent := &cluster.AutoMsgCredentialsWatchHelper_WatchEvent{
+						Type:   string(ev.Type),
+						Object: in,
+					}
+					l.DebugLog("msg", "received Credentials watch event from KV", "type", ev.Type)
+					if version != in.APIVersion {
+						i, err := txfn(in.APIVersion, version, in)
+						if err != nil {
+							l.ErrorLog("msg", "Failed to transform message", "type", "Credentials", "fromver", in.APIVersion, "tover", version, "WatcherID", id, "bbject", "cluster.Credentials")
+							break
+						}
+						strEvent.Object = i.(*cluster.Credentials)
+					}
+					events.Events = append(events.Events, strEvent)
+					if !running {
+						running = true
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+					if len(events.Events) >= apiserver.DefaultWatchBatchSize {
+						if err = sendToStream(); err != nil {
+							return err
+						}
+						if !timer.Stop() {
+							<-timer.C
+						}
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+				case <-timer.C:
+					running = false
+					if err = sendToStream(); err != nil {
+						return err
+					}
+				case <-nctx.Done():
+					l.DebugLog("msg", "Context cancelled for Watcher", "WatcherID", id, "bbject", "cluster.Credentials")
+					return wstream.Context().Err()
+				}
+			}
+		})
+
 	}
 
 }
@@ -2240,6 +2443,14 @@ func (e *eClusterV1Endpoints) AutoAddConfigurationSnapshot(ctx context.Context, 
 		return r.(cluster.ConfigurationSnapshot), err
 	}
 	return cluster.ConfigurationSnapshot{}, err
+
+}
+func (e *eClusterV1Endpoints) AutoAddCredentials(ctx context.Context, t cluster.Credentials) (cluster.Credentials, error) {
+	r, err := e.fnAutoAddCredentials(ctx, t)
+	if err == nil {
+		return r.(cluster.Credentials), err
+	}
+	return cluster.Credentials{}, err
 
 }
 func (e *eClusterV1Endpoints) AutoAddDSCProfile(ctx context.Context, t cluster.DSCProfile) (cluster.DSCProfile, error) {
@@ -2322,6 +2533,14 @@ func (e *eClusterV1Endpoints) AutoDeleteConfigurationSnapshot(ctx context.Contex
 	return cluster.ConfigurationSnapshot{}, err
 
 }
+func (e *eClusterV1Endpoints) AutoDeleteCredentials(ctx context.Context, t cluster.Credentials) (cluster.Credentials, error) {
+	r, err := e.fnAutoDeleteCredentials(ctx, t)
+	if err == nil {
+		return r.(cluster.Credentials), err
+	}
+	return cluster.Credentials{}, err
+
+}
 func (e *eClusterV1Endpoints) AutoDeleteDSCProfile(ctx context.Context, t cluster.DSCProfile) (cluster.DSCProfile, error) {
 	r, err := e.fnAutoDeleteDSCProfile(ctx, t)
 	if err == nil {
@@ -2400,6 +2619,14 @@ func (e *eClusterV1Endpoints) AutoGetConfigurationSnapshot(ctx context.Context, 
 		return r.(cluster.ConfigurationSnapshot), err
 	}
 	return cluster.ConfigurationSnapshot{}, err
+
+}
+func (e *eClusterV1Endpoints) AutoGetCredentials(ctx context.Context, t cluster.Credentials) (cluster.Credentials, error) {
+	r, err := e.fnAutoGetCredentials(ctx, t)
+	if err == nil {
+		return r.(cluster.Credentials), err
+	}
+	return cluster.Credentials{}, err
 
 }
 func (e *eClusterV1Endpoints) AutoGetDSCProfile(ctx context.Context, t cluster.DSCProfile) (cluster.DSCProfile, error) {
@@ -2482,6 +2709,14 @@ func (e *eClusterV1Endpoints) AutoLabelConfigurationSnapshot(ctx context.Context
 	return cluster.ConfigurationSnapshot{}, err
 
 }
+func (e *eClusterV1Endpoints) AutoLabelCredentials(ctx context.Context, t api.Label) (cluster.Credentials, error) {
+	r, err := e.fnAutoLabelCredentials(ctx, t)
+	if err == nil {
+		return r.(cluster.Credentials), err
+	}
+	return cluster.Credentials{}, err
+
+}
 func (e *eClusterV1Endpoints) AutoLabelDSCProfile(ctx context.Context, t api.Label) (cluster.DSCProfile, error) {
 	r, err := e.fnAutoLabelDSCProfile(ctx, t)
 	if err == nil {
@@ -2562,6 +2797,14 @@ func (e *eClusterV1Endpoints) AutoListConfigurationSnapshot(ctx context.Context,
 	return cluster.ConfigurationSnapshotList{}, err
 
 }
+func (e *eClusterV1Endpoints) AutoListCredentials(ctx context.Context, t api.ListWatchOptions) (cluster.CredentialsList, error) {
+	r, err := e.fnAutoListCredentials(ctx, t)
+	if err == nil {
+		return r.(cluster.CredentialsList), err
+	}
+	return cluster.CredentialsList{}, err
+
+}
 func (e *eClusterV1Endpoints) AutoListDSCProfile(ctx context.Context, t api.ListWatchOptions) (cluster.DSCProfileList, error) {
 	r, err := e.fnAutoListDSCProfile(ctx, t)
 	if err == nil {
@@ -2640,6 +2883,14 @@ func (e *eClusterV1Endpoints) AutoUpdateConfigurationSnapshot(ctx context.Contex
 		return r.(cluster.ConfigurationSnapshot), err
 	}
 	return cluster.ConfigurationSnapshot{}, err
+
+}
+func (e *eClusterV1Endpoints) AutoUpdateCredentials(ctx context.Context, t cluster.Credentials) (cluster.Credentials, error) {
+	r, err := e.fnAutoUpdateCredentials(ctx, t)
+	if err == nil {
+		return r.(cluster.Credentials), err
+	}
+	return cluster.Credentials{}, err
 
 }
 func (e *eClusterV1Endpoints) AutoUpdateDSCProfile(ctx context.Context, t cluster.DSCProfile) (cluster.DSCProfile, error) {
@@ -2760,6 +3011,9 @@ func (e *eClusterV1Endpoints) AutoWatchLicense(in *api.ListWatchOptions, stream 
 }
 func (e *eClusterV1Endpoints) AutoWatchDSCProfile(in *api.ListWatchOptions, stream cluster.ClusterV1_AutoWatchDSCProfileServer) error {
 	return e.fnAutoWatchDSCProfile(in, stream, "cluster")
+}
+func (e *eClusterV1Endpoints) AutoWatchCredentials(in *api.ListWatchOptions, stream cluster.ClusterV1_AutoWatchCredentialsServer) error {
+	return e.fnAutoWatchCredentials(in, stream, "cluster")
 }
 func (e *eClusterV1Endpoints) AutoWatchSvcClusterV1(in *api.AggWatchOptions, stream cluster.ClusterV1_AutoWatchSvcClusterV1Server) error {
 	return e.fnAutoWatchSvcClusterV1(in, stream, "")

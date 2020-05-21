@@ -46,6 +46,16 @@ func (m *ConfigurationSnapshotList) MakeURI(ver, prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
+func (m *CredentialsList) MakeKey(prefix string) string {
+	obj := Credentials{}
+	return obj.MakeKey(prefix)
+}
+
+func (m *CredentialsList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", globals.ConfigURIPrefix, "/", prefix, "/", ver)
+}
+
+// MakeKey generates a KV store key for the object
 func (m *DSCProfileList) MakeKey(prefix string) string {
 	obj := DSCProfile{}
 	return obj.MakeKey(prefix)
@@ -134,6 +144,12 @@ func (m *AutoMsgClusterWatchHelper) MakeKey(prefix string) string {
 // MakeKey generates a KV store key for the object
 func (m *AutoMsgConfigurationSnapshotWatchHelper) MakeKey(prefix string) string {
 	obj := ConfigurationSnapshot{}
+	return obj.MakeKey(prefix)
+}
+
+// MakeKey generates a KV store key for the object
+func (m *AutoMsgCredentialsWatchHelper) MakeKey(prefix string) string {
+	obj := Credentials{}
 	return obj.MakeKey(prefix)
 }
 
@@ -266,6 +282,48 @@ func (m *AutoMsgConfigurationSnapshotWatchHelper_WatchEvent) Clone(into interfac
 
 // Default sets up the defaults for the object
 func (m *AutoMsgConfigurationSnapshotWatchHelper_WatchEvent) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgCredentialsWatchHelper) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgCredentialsWatchHelper
+	var ok bool
+	if into == nil {
+		out = &AutoMsgCredentialsWatchHelper{}
+	} else {
+		out, ok = into.(*AutoMsgCredentialsWatchHelper)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*AutoMsgCredentialsWatchHelper))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgCredentialsWatchHelper) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgCredentialsWatchHelper_WatchEvent) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgCredentialsWatchHelper_WatchEvent
+	var ok bool
+	if into == nil {
+		out = &AutoMsgCredentialsWatchHelper_WatchEvent{}
+	} else {
+		out, ok = into.(*AutoMsgCredentialsWatchHelper_WatchEvent)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*AutoMsgCredentialsWatchHelper_WatchEvent))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgCredentialsWatchHelper_WatchEvent) Defaults(ver string) bool {
 	return false
 }
 
@@ -648,6 +706,27 @@ func (m *ConfigurationSnapshotList) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *CredentialsList) Clone(into interface{}) (interface{}, error) {
+	var out *CredentialsList
+	var ok bool
+	if into == nil {
+		out = &CredentialsList{}
+	} else {
+		out, ok = into.(*CredentialsList)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*CredentialsList))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *CredentialsList) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *DSCProfileList) Clone(into interface{}) (interface{}, error) {
 	var out *DSCProfileList
 	var ok bool
@@ -930,6 +1009,66 @@ func (m *AutoMsgConfigurationSnapshotWatchHelper_WatchEvent) Validate(ver, path 
 }
 
 func (m *AutoMsgConfigurationSnapshotWatchHelper_WatchEvent) Normalize() {
+
+	if m.Object != nil {
+		m.Object.Normalize()
+	}
+
+}
+
+func (m *AutoMsgCredentialsWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *AutoMsgCredentialsWatchHelper) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	for k, v := range m.Events {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *AutoMsgCredentialsWatchHelper) Normalize() {
+
+	for k, v := range m.Events {
+		if v != nil {
+			v.Normalize()
+			m.Events[k] = v
+		}
+	}
+
+}
+
+func (m *AutoMsgCredentialsWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *AutoMsgCredentialsWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+
+	if m.Object != nil {
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Object"
+			if errs := m.Object.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+				ret = append(ret, errs...)
+			}
+		}
+	}
+	return ret
+}
+
+func (m *AutoMsgCredentialsWatchHelper_WatchEvent) Normalize() {
 
 	if m.Object != nil {
 		m.Object.Normalize()
@@ -1531,6 +1670,36 @@ func (m *ConfigurationSnapshotList) Normalize() {
 
 }
 
+func (m *CredentialsList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *CredentialsList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	for k, v := range m.Items {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *CredentialsList) Normalize() {
+
+	for k, v := range m.Items {
+		if v != nil {
+			v.Normalize()
+			m.Items[k] = v
+		}
+	}
+
+}
+
 func (m *DSCProfileList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -1839,6 +2008,44 @@ func (m *AutoMsgClusterWatchHelper_WatchEvent) EraseSecrets() {
 	return
 }
 
+func (m *AutoMsgCredentialsWatchHelper) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	for i, v := range m.Events {
+		c := *v
+		if err := c.ApplyStorageTransformer(ctx, toStorage); err != nil {
+			return err
+		}
+		m.Events[i] = &c
+	}
+	return nil
+}
+
+func (m *AutoMsgCredentialsWatchHelper) EraseSecrets() {
+	for _, v := range m.Events {
+		v.EraseSecrets()
+	}
+	return
+}
+
+func (m *AutoMsgCredentialsWatchHelper_WatchEvent) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+
+	if m.Object != nil {
+		if err := m.Object.ApplyStorageTransformer(ctx, toStorage); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m *AutoMsgCredentialsWatchHelper_WatchEvent) EraseSecrets() {
+
+	if m.Object != nil {
+		m.Object.EraseSecrets()
+	}
+
+	return
+}
+
 func (m *ClusterList) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
 	for i, v := range m.Items {
 		c := *v
@@ -1851,6 +2058,24 @@ func (m *ClusterList) ApplyStorageTransformer(ctx context.Context, toStorage boo
 }
 
 func (m *ClusterList) EraseSecrets() {
+	for _, v := range m.Items {
+		v.EraseSecrets()
+	}
+	return
+}
+
+func (m *CredentialsList) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	for i, v := range m.Items {
+		c := *v
+		if err := c.ApplyStorageTransformer(ctx, toStorage); err != nil {
+			return err
+		}
+		m.Items[i] = &c
+	}
+	return nil
+}
+
+func (m *CredentialsList) EraseSecrets() {
 	for _, v := range m.Items {
 		v.EraseSecrets()
 	}
