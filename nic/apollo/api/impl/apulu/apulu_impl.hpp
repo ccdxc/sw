@@ -130,10 +130,10 @@ namespace impl {
                      ETH_ADDR_LEN);                                          \
 }
 
-#define PDS_IMPL_FILL_LOCAL_IP_MAPPING_APPDATA(data, vnic_hw_id, xlate_idx,  \
-                                               rxdma_tag_idx,                \
-                                               binding_idx1, binding_idx2,   \
-                                               allow_tagged, mapping_type)   \
+#define PDS_IMPL_FILL_LOCAL_MAPPING_APPDATA(data, vnic_hw_id, xlate_idx,     \
+                                            rxdma_tag_idx,                   \
+                                            binding_idx1, binding_idx2,      \
+                                            allow_tagged, mapping_type)      \
 {                                                                            \
     memset(data, 0, sizeof(*(data)));                                        \
     (data)->vnic_id = (vnic_hw_id);                                          \

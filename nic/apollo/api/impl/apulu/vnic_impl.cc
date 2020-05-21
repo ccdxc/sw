@@ -915,26 +915,21 @@ vnic_impl::add_local_mapping_entry_(pds_epoch_t epoch, vpc_entry *vpc,
                                     pds_vnic_spec_t *spec) {
     sdk_ret_t ret;
     sdk_table_api_params_t tparams;
-    local_mapping_swkey_t local_mapping_key = { 0 };
-    local_mapping_appdata_t local_mapping_data = { 0 };
+    local_mapping_swkey_t local_mapping_key;
+    local_mapping_appdata_t local_mapping_data;
 
     // fill the key
-    local_mapping_key.key_metadata_local_mapping_lkp_type = KEY_TYPE_MAC;
-    local_mapping_key.key_metadata_local_mapping_lkp_id =
-        ((subnet_impl *)subnet->impl())->hw_id();
-    sdk::lib::memrev(local_mapping_key.key_metadata_local_mapping_lkp_addr,
-                     spec->mac_addr, ETH_ADDR_LEN);
-
+    PDS_IMPL_FILL_LOCAL_L2_MAPPING_SWKEY(&local_mapping_key,
+                                         ((subnet_impl *)subnet->impl())->hw_id(),
+                                         spec->mac_addr);
     // fill the data
-    local_mapping_data.vnic_id = hw_id_;
-    local_mapping_data.xlate_id = PDS_IMPL_RSVD_NAT_HW_ID;
-#if 0
-    if (spec->binding_checks_en) {
-        local_mapping_data.binding_check_enabled = TRUE;
-        // we don't know the IPs associated with this yet until local IP
-        // mappings are created later on
-    }
-#endif
+    PDS_IMPL_FILL_LOCAL_MAPPING_APPDATA(&local_mapping_data, hw_id_,
+                                        PDS_IMPL_RSVD_NAT_HW_ID,
+                                        PDS_IMPL_RSVD_TAG_HW_ID,
+                                        PDS_IMPL_RSVD_IP_MAC_BINDING_HW_ID,
+                                        PDS_IMPL_RSVD_IP_MAC_BINDING_HW_ID,
+                                        vnic->tagged(),
+                                        MAPPING_TYPE_OVERLAY);
 
     // program LOCAL_MAPPING entry
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &local_mapping_key, NULL,

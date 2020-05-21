@@ -1351,7 +1351,7 @@ mapping_impl::fill_public_ip_mapping_key_data_(
     // fill LOCAL_MAPPING table entry key, data for public IP
     PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(local_mapping_key, vpc->hw_id(),
                                          &spec->public_ip);
-    PDS_IMPL_FILL_LOCAL_IP_MAPPING_APPDATA(local_mapping_data,
+    PDS_IMPL_FILL_LOCAL_MAPPING_APPDATA(local_mapping_data,
         vnic_impl_obj->hw_id(), to_overlay_ip_nat_idx_,
         rxdma_local_mapping_tag_idx_,
         vnic_impl_obj->binding_hw_id(),
@@ -1440,7 +1440,7 @@ mapping_impl::fill_local_overlay_ip_mapping_key_data_(
     // fill LOCAL_MAPPING table entry key, data and table params for overlay IP
     PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(local_mapping_key, vpc->hw_id(),
                                          &spec->skey.ip_addr);
-    PDS_IMPL_FILL_LOCAL_IP_MAPPING_APPDATA(local_mapping_data,
+    PDS_IMPL_FILL_LOCAL_MAPPING_APPDATA(local_mapping_data,
         vnic_impl_obj->hw_id(), to_public_ip_nat_idx_,
         rxdma_local_mapping_tag_idx_,
         vnic_impl_obj->binding_hw_id(),
