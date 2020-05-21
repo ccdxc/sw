@@ -5,6 +5,12 @@ meta:
     cfgmode     : netagent
     nicmode     : bitw
     os          : [ linux, freebsd, esx ]
+    pipelines:
+        - node: node2
+          nicNumber: 1
+          version: 1.5.0-E-14
+          pipeline: iris
+          mode: classic
 
 packages:
     - iota.test.athena
