@@ -1454,7 +1454,7 @@ elba_tm_alloc_hbm_buffers (elba_tm_buf_cfg_t *buf_cfg)
     payload_chunks = control_chunks * tm_asic_profile()->hbm_fifo_control_scale_factor;
     SDK_ASSERT((payload_chunks + control_chunks) <= total_hbm_chunks);
 
-    SDK_TRACE_DEBUG("Available hbm chunks total %u payload %u control %u",
+    SDK_TRACE_DEBUG("Available hbm chunks total %lu payload %lu control %lu",
                     total_hbm_chunks, payload_chunks, control_chunks);
 
     uint64_t total_reserved_hbm_chunks = 0;
@@ -1481,8 +1481,8 @@ elba_tm_alloc_hbm_buffers (elba_tm_buf_cfg_t *buf_cfg)
     }
 
     if (payload_chunks < total_reserved_hbm_chunks) {
-        SDK_TRACE_ERR("Error allocating hbm fifo . Available chunks %u "
-                      "total reserved required %u ",
+        SDK_TRACE_ERR("Error allocating hbm fifo. Available chunks %lu "
+                      "total reserved required %lu",
                       payload_chunks, total_reserved_hbm_chunks);
         return sdk::SDK_RET_NO_RESOURCE;
     }
@@ -1492,9 +1492,9 @@ elba_tm_alloc_hbm_buffers (elba_tm_buf_cfg_t *buf_cfg)
     //
     uint64_t payload_chunks_per_context = rem_payload_chunks/total_hbm_contexts;
 
-    SDK_TRACE_DEBUG("HBM fifo allocation total payload %u, reserved %u "
-                    "remaining %u total_contexts %u "
-                    "payload chunks per context %u",
+    SDK_TRACE_DEBUG("HBM fifo allocation total payload %lu, reserved %lu "
+                    "remaining %lu total_contexts %lu "
+                    "payload chunks per context %lu",
                     payload_chunks, total_reserved_hbm_chunks,
                     rem_payload_chunks, total_hbm_contexts, payload_chunks_per_context);
 
@@ -1517,7 +1517,7 @@ elba_tm_alloc_hbm_buffers (elba_tm_buf_cfg_t *buf_cfg)
         }
     }
     SDK_ASSERT(offset <= (control_chunks + payload_chunks));
-    SDK_TRACE_DEBUG("unallocated hbm chunks %u total %u",
+    SDK_TRACE_DEBUG("unallocated hbm chunks %lu total %lu",
                     (control_chunks + payload_chunks) - offset,
                     total_hbm_chunks);
     return sdk::SDK_RET_OK;
@@ -2656,7 +2656,7 @@ elba_tm_init_qos_profile (elba_tm_cfg_profile_t *tm_cfg_profile,
     uint32_t num_p4ig_qs   = qos_profile->num_p4ig_qs;
     uint32_t num_p4eg_qs   = qos_profile->num_p4eg_qs;
     uint32_t num_dma_qs    = qos_profile->num_dma_qs;
-    uint32_t num_p4_high_perf_qs = qos_profile->num_p4_high_perf_qs;
+    //uint32_t num_p4_high_perf_qs = qos_profile->num_p4_high_perf_qs;
 
     if (num_uplink_qs == 0) {
         SDK_TRACE_ERR("Invalid qos profile");
@@ -2771,7 +2771,7 @@ elba_tm_soft_init (sdk::lib::catalog* catalog,
     }
 
     SDK_TRACE_DEBUG("cfg-profile sw_init_en %u sw_cfg_write_en %u "
-                    "num_active_uplink_ports %u hbm_fifo_size %u hbm_fifo_base 0x%x",
+                    "num_active_uplink_ports %u hbm_fifo_size %u hbm_fifo_base 0x%lx",
                     tm_cfg_profile->sw_init_enabled,
                     tm_cfg_profile->sw_cfg_write_enabled,
                     tm_cfg_profile->num_active_uplink_ports,
@@ -2817,7 +2817,7 @@ elba_tm_init (sdk::lib::catalog* catalog,
     }
 
     SDK_TRACE_DEBUG("cfg-profile sw_init_en %u sw_cfg_write_en %u "
-                    "num_active_uplink_ports %u hbm_fifo_size %u hbm_fifo_base 0x%x",
+                    "num_active_uplink_ports %u hbm_fifo_size %u hbm_fifo_base 0x%lx",
                     tm_cfg_profile->sw_init_enabled,
                     tm_cfg_profile->sw_cfg_write_enabled,
                     tm_cfg_profile->num_active_uplink_ports,

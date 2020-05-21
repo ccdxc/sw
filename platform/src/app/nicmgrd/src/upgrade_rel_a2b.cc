@@ -98,7 +98,7 @@ restore_uplinks(void)
 {
     std::vector <delphi::objects::UplinkInfoPtr> uplink_proto_list =
         delphi::objects::UplinkInfo::List(delphi_sdk);
-    uint32_t id, port;
+    uint32_t id = 0, port = 0;
 
     NIC_FUNC_DEBUG("Retreiving {} UplinkProto objects from Delphi", uplink_proto_list.size());
     for (auto it = uplink_proto_list.begin(); it != uplink_proto_list.end(); ++it) {

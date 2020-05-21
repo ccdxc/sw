@@ -84,7 +84,7 @@ if_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
         api_obj->set_rsvd_rsc();
         ret = if_impl_db()->lif_idxr()->alloc(&idx);
         if (ret != SDK_RET_OK) {
-            PDS_TRACE_ERR("Failed to alloc lif hw id for uplink 0x%x, err %u",
+            PDS_TRACE_ERR("Failed to alloc lif hw id for uplink %s, err %u",
                           spec->key.id, ret);
             return ret;
         }
@@ -124,7 +124,7 @@ if_impl::activate_create_(pds_epoch_t epoch, if_entry *intf,
     uint32_t tm_port;
     p4pd_error_t p4pd_ret;
 
-    PDS_TRACE_DEBUG("Activating if 0x%x, type %u, admin state %u",
+    PDS_TRACE_DEBUG("Activating if %s, type %u, admin state %u",
                     spec->key.id, spec->type, spec->admin_state);
 
     if (spec->type == IF_TYPE_UPLINK) {
@@ -133,13 +133,13 @@ if_impl::activate_create_(pds_epoch_t epoch, if_entry *intf,
         // program the lif id in the TM
         tm_port =
             g_pds_state.catalogue()->ifindex_to_tm_port(intf->ifindex());
-        PDS_TRACE_DEBUG("Creating uplink if 0x%x, port %u, hw_id_ %u, "
+        PDS_TRACE_DEBUG("Creating uplink if %s, port %s, hw_id_ %u, "
                         "tm_port %u", spec->key.id, spec->uplink_info.port.str(),
                         hw_id_, tm_port);
         ret = sdk::asic::pd::asicpd_tm_uplink_lif_set(tm_port,
                                                       sdk::lib::catalog::ifindex_to_logical_port(intf->ifindex()));
         if (ret != SDK_RET_OK) {
-            PDS_TRACE_ERR("Failed to program uplink 0x%s's lif %u in TM "
+            PDS_TRACE_ERR("Failed to program uplink %s's lif %u in TM "
                           "register", spec->key.id, hw_id_);
         }
     }

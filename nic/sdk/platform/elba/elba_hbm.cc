@@ -362,8 +362,8 @@ populate_hbm_bw (uint64_t max_rd, uint64_t max_wr,
     hbm_bw->avg.read  = (avg_rd * (num_bits * elba_freq)/1000.0f) / window_size;
     hbm_bw->avg.write = (avg_wr * (num_bits * elba_freq)/1000.0f) / window_size;
 
-    SDK_TRACE_DEBUG("AVG_RD: %llu, AVG_WR: %llu, "
-                    "MAX_RD: %llu, MAX_WR: %llu",
+    SDK_TRACE_DEBUG("AVG_RD: %lf, AVG_WR: %lf, "
+                    "MAX_RD: %lf, MAX_WR: %lf",
                     hbm_bw->avg.read, hbm_bw->avg.write,
                     hbm_bw->max.read, hbm_bw->max.write);
 }
@@ -447,9 +447,9 @@ elba_hbm_bw (uint32_t samples, uint32_t u_sleep, bool ms_pcie,
         hbm_bw->clk_diff = clk_diff;
         elba_tpc_bw_mon_rd_get(&max_rd, &avg_rd);
         elba_tpc_bw_mon_wr_get(&max_wr, &avg_wr);
-        SDK_TRACE_DEBUG("CLK_DIFF: %llu, TXDMA BW "
-                        "AVG_RD: %llu, AVG_WR: %llu, "
-                        "MAX_RD: %llu, MAX_WR: %llu",
+        SDK_TRACE_DEBUG("CLK_DIFF: %lu, TXDMA BW "
+                        "AVG_RD: %lu, AVG_WR: %lu, "
+                        "MAX_RD: %lu, MAX_WR: %lu",
                         clk_diff,
                         avg_rd, avg_wr,
                         max_rd, max_wr);
@@ -460,9 +460,9 @@ elba_hbm_bw (uint32_t samples, uint32_t u_sleep, bool ms_pcie,
         hbm_bw->clk_diff = clk_diff;
         elba_rpc_bw_mon_rd_get(&max_rd, &avg_rd);
         elba_rpc_bw_mon_wr_get(&max_wr, &avg_wr);
-        SDK_TRACE_DEBUG("CLK_DIFF: %llu, RXDMA BW "
-                        "AVG_RD: %llu, AVG_WR: %llu, "
-                        "MAX_RD: %llu, MAX_WR: %llu",
+        SDK_TRACE_DEBUG("CLK_DIFF: %lu, RXDMA BW "
+                        "AVG_RD: %lu, AVG_WR: %lu, "
+                        "MAX_RD: %lu, MAX_WR: %lu",
                         clk_diff,
                         avg_rd, avg_wr,
                         max_rd, max_wr);
@@ -473,9 +473,9 @@ elba_hbm_bw (uint32_t samples, uint32_t u_sleep, bool ms_pcie,
         hbm_bw->clk_diff = clk_diff;
         elba_ms_bw_mon_rd_get(&max_rd, &avg_rd);
         elba_ms_bw_mon_wr_get(&max_wr, &avg_wr);
-        SDK_TRACE_DEBUG("CLK_DIFF: %llu, MS BW "
-                        "AVG_RD: %llu, AVG_WR: %llu, "
-                        "MAX_RD: %llu, MAX_WR: %llu",
+        SDK_TRACE_DEBUG("CLK_DIFF: %lu, MS BW "
+                        "AVG_RD: %lu, AVG_WR: %lu, "
+                        "MAX_RD: %lu, MAX_WR: %lu",
                         clk_diff,
                         avg_rd, avg_wr,
                         max_rd, max_wr);
@@ -486,9 +486,9 @@ elba_hbm_bw (uint32_t samples, uint32_t u_sleep, bool ms_pcie,
         hbm_bw->clk_diff = clk_diff;
         elba_pxb_bw_mon_rd_get(&max_rd, &avg_rd);
         elba_pxb_bw_mon_wr_get(&max_wr, &avg_wr);
-        SDK_TRACE_DEBUG("CLK_DIFF: %llu, PCIE BW "
-                        "AVG_RD: %llu, AVG_WR: %llu, "
-                        "MAX_RD: %llu, MAX_WR: %llu",
+        SDK_TRACE_DEBUG("CLK_DIFF: %lu, PCIE BW "
+                        "AVG_RD: %lu, AVG_WR: %lu, "
+                        "MAX_RD: %lu, MAX_WR: %lu",
                         clk_diff,
                         avg_rd, avg_wr,
                         max_rd, max_wr);
@@ -512,8 +512,8 @@ elba_hbm_bw (uint32_t samples, uint32_t u_sleep, bool ms_pcie,
 
         hbm_bw->avg.read  = avg_rd;
         hbm_bw->avg.write = avg_wr;
-        SDK_TRACE_DEBUG("CLK_DIFF: %llu, PB BW "
-                        "AVG_RD: %llu, AVG_WR: %llu",
+        SDK_TRACE_DEBUG("CLK_DIFF: %lu, PB BW "
+                        "AVG_RD: %lu, AVG_WR: %lu",
                         clk_diff,
                         avg_rd, avg_wr);
 

@@ -587,7 +587,7 @@ TEST_F(dm_test, test10) {
     ASSERT_TRUE(ret == SDK_RET_OK);
     // Delete
     ret = test_dm->remove(0, &data);
-    SDK_TRACE_DEBUG("ret:{}", ret);
+    SDK_TRACE_DEBUG("ret:%d", ret);
     ASSERT_TRUE(ret == SDK_RET_OK);
 
     // Insert
@@ -596,7 +596,7 @@ TEST_F(dm_test, test10) {
     // Insert with id
     data.actionid = 0;
     ret = test_dm->insert_withid(&data, 20);
-    SDK_TRACE_DEBUG("ret:{}", ret);
+    SDK_TRACE_DEBUG("ret:%d", ret);
     ASSERT_TRUE(ret == SDK_RET_OK);
     // Delete
     ret = test_dm->remove(0, &data);

@@ -38,7 +38,7 @@ elba_barco_sym_hash_process_request (CryptoApiHashType hash_type, bool generate,
     int32_t                     hmac_key_descr_idx = -1;
 
 
-    SDK_TRACE_DEBUG("Running {}-{} test:\n",
+    SDK_TRACE_DEBUG("Running %s-%s test:\n",
                     CryptoApiHashType_Name(hash_type),
                     generate ? "generate" : "verify");
 
@@ -53,44 +53,44 @@ elba_barco_sym_hash_process_request (CryptoApiHashType hash_type, bool generate,
     ret = elba_barco_res_alloc(CRYPTO_BARCO_RES_SYM_MSG_DESCR,
                                NULL, &ilist_msg_descr_addr);
     if (ret != SDK_RET_OK) {
-        SDK_TRACE_ERR("SYM Hash {}-{}: Failed to allocate memory for ilist MSG Descr",
+        SDK_TRACE_ERR("SYM Hash %s-%s: Failed to allocate memory for ilist MSG Descr",
               CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG("SYM Hash {}-{}: Allocated memory for ilist DMA Descr @ {:x}",
+    SDK_TRACE_DEBUG("SYM Hash %s-%s: Allocated memory for ilist DMA Descr @ 0x%lx",
             CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
             ilist_msg_descr_addr);
 
     ret = elba_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
                 NULL, &ilist_mem_addr);
     if (ret != SDK_RET_OK) {
-        SDK_TRACE_ERR("SYM Hash {}-{}: Failed to allocate memory for ilist content",
+        SDK_TRACE_ERR("SYM Hash %s-%s: Failed to allocate memory for ilist content",
               CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG("SYM Hash {}-{}: Allocated memory for input mem @ {:x}",
+    SDK_TRACE_DEBUG("SYM Hash %s-%s: Allocated memory for input mem @ 0x%lx",
             CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
             ilist_mem_addr);
 
     ret = elba_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
                 NULL, &auth_tag_mem_addr);
     if (ret != SDK_RET_OK) {
-        SDK_TRACE_ERR("SYM Hash {}-{}: Failed to allocate memory for auth-tag content",
+        SDK_TRACE_ERR("SYM Hash %s-%s: Failed to allocate memory for auth-tag content",
               CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG("SYM Hash {}-{}: Allocated memory for auth-tag mem @ {:x}",
+    SDK_TRACE_DEBUG("SYM Hash %s-%s: Allocated memory for auth-tag mem @ 0x%lx",
             CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
             auth_tag_mem_addr);
 
     ret = elba_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
                 NULL, &status_addr);
     if (ret != SDK_RET_OK) {
-        SDK_TRACE_ERR("SYM Hash {}-{}: Failed to allocate memory for storing status",
+        SDK_TRACE_ERR("SYM Hash %s-%s: Failed to allocate memory for storing status",
               CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG("SYM Hash {}-{}: Allocated memory for status mem @ {:x}",
+    SDK_TRACE_DEBUG("SYM Hash %s-%s: Allocated memory for status mem @ 0x%lx",
             CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
             status_addr);
 
@@ -98,23 +98,23 @@ elba_barco_sym_hash_process_request (CryptoApiHashType hash_type, bool generate,
         ret = elba_barco_sym_alloc_key(&hmac_key_descr_idx);
 
     if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("SYM Hash {}-{}: Failed to allocate key descriptor",
+            SDK_TRACE_ERR("SYM Hash %s-%s: Failed to allocate key descriptor",
               CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG("SYM Hash {}-{}: Allocated HMAC Key Descr @ {:x}",
+    SDK_TRACE_DEBUG("SYM Hash %s-%s: Allocated HMAC Key Descr @ 0x%x",
             CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
             hmac_key_descr_idx);
 
     ret = elba_barco_setup_key(hmac_key_descr_idx, CRYPTO_KEY_TYPE_HMAC,
                     (uint8_t *)key, (uint32_t) key_len);
     if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("SYM Hash {}-{}: Failed to write HMAC Key @ {:x}",
+            SDK_TRACE_ERR("SYM Hash %s-%s: Failed to write HMAC Key @ 0x%x",
               CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
               hmac_key_descr_idx);
         goto cleanup;
     }
-    SDK_TRACE_DEBUG("SYM Hash {}-{}: Setup HMAC Key @ {:x}",
+    SDK_TRACE_DEBUG("SYM Hash %s-%s: Setup HMAC Key @ 0x%x",
             CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
             hmac_key_descr_idx);
     }
@@ -123,7 +123,7 @@ elba_barco_sym_hash_process_request (CryptoApiHashType hash_type, bool generate,
     curr_ptr = ilist_mem_addr;
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)data, data_len)) {
-        SDK_TRACE_ERR("SYM Hash {}-{}: Failed to write data bytes into ilist memory @ {:x}",
+        SDK_TRACE_ERR("SYM Hash %s-%s: Failed to write data bytes into ilist memory @ 0x%lx",
               CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
               (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
@@ -146,7 +146,7 @@ elba_barco_sym_hash_process_request (CryptoApiHashType hash_type, bool generate,
 
     if (sdk::asic::asic_mem_write(ilist_msg_descr_addr, (uint8_t*)&ilist_msg_descr,
                 sizeof(ilist_msg_descr))) {
-        SDK_TRACE_ERR("SYM Hash {}-{}: Failed to write ilist MSG Descr @ {:x}",
+        SDK_TRACE_ERR("SYM Hash %s-%s: Failed to write ilist MSG Descr @ 0x%lx",
               CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
               (uint64_t) ilist_msg_descr_addr);
         ret = SDK_RET_INVALID_ARG;
@@ -160,7 +160,7 @@ elba_barco_sym_hash_process_request (CryptoApiHashType hash_type, bool generate,
     if (!generate) {
         if (sdk::asic::asic_mem_write(auth_tag_mem_addr, (uint8_t*)digest,
                                       digest_len)) {
-            SDK_TRACE_ERR("SYM Hash {}-{}: Failed to write input digest @ {:x}",
+            SDK_TRACE_ERR("SYM Hash %s-%s: Failed to write input digest @ 0x%lx",
                           CryptoApiHashType_Name(hash_type), generate ?
                           "generate" : "verify",
                           (uint64_t) auth_tag_mem_addr);
@@ -173,7 +173,7 @@ elba_barco_sym_hash_process_request (CryptoApiHashType hash_type, bool generate,
          */
         if (sdk::asic::asic_mem_write(status_addr, (uint8_t*) & status,
                                       sizeof(status))) {
-            SDK_TRACE_ERR("SYM Hash {}-{}: Failed to initialize status value @ {:x}",
+            SDK_TRACE_ERR("SYM Hash %s-%s: Failed to initialize status value @ 0x%lx",
                           CryptoApiHashType_Name(hash_type), generate ?
                           "generate" : "verify",
                           (uint64_t) status_addr);
@@ -232,7 +232,7 @@ elba_barco_sym_hash_process_request (CryptoApiHashType hash_type, bool generate,
     case CRYPTOAPI_HASHTYPE_SHA512_224:
     case CRYPTOAPI_HASHTYPE_SHA512_256:
     default:
-        SDK_TRACE_ERR("SYM Hash {}-{}: Invalid Hash request",
+        SDK_TRACE_ERR("SYM Hash %s-%s: Invalid Hash request",
               CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify");
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -256,7 +256,7 @@ elba_barco_sym_hash_process_request (CryptoApiHashType hash_type, bool generate,
     ret = elba_barco_ring_queue_request(BARCO_RING_MPP0, (void *)&sym_req_descr,
                      &req_tag, true);
     if (ret != SDK_RET_OK) {
-        SDK_TRACE_ERR("SYM Hash {}-{}: Failed to enqueue request",
+        SDK_TRACE_ERR("SYM Hash %s-%s: Failed to enqueue request",
               CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify");
         ret = SDK_RET_ERR;
         goto cleanup;
@@ -264,14 +264,14 @@ elba_barco_sym_hash_process_request (CryptoApiHashType hash_type, bool generate,
 
     /* Poll for completion */
     while (elba_barco_ring_poll(BARCO_RING_MPP0, req_tag) != TRUE) {
-        //SDK_TRACE_DEBUG("SYM Hash {}-{}: Waiting for Barco completion...",
+        //SDK_TRACE_DEBUG("SYM Hash %s-%s: Waiting for Barco completion...",
         //                CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify");
     }
 
     /* Copy out the results */
     if (generate) {
         if (sdk::asic::asic_mem_read(auth_tag_mem_addr, (uint8_t*)digest, digest_len)) {
-        SDK_TRACE_ERR("SYM Hash {}-{}: Failed to read output digest at Auth-tag addr @ {:x}",
+        SDK_TRACE_ERR("SYM Hash %s-%s: Failed to read output digest at Auth-tag addr @ 0x%lx",
               CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
               (uint64_t) auth_tag_mem_addr);
         ret = SDK_RET_INVALID_ARG;
@@ -279,13 +279,13 @@ elba_barco_sym_hash_process_request (CryptoApiHashType hash_type, bool generate,
     }
     } else {
         if (sdk::asic::asic_mem_read(status_addr, (uint8_t*)&status, sizeof(uint64_t))){
-        SDK_TRACE_ERR("SYM Hash {}-{}: Failed to read status at Status addr @ {:x}",
+        SDK_TRACE_ERR("SYM Hash %s-%s: Failed to read status at Status addr @ 0x%lx",
               CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
               (uint64_t) status_addr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
-    SDK_TRACE_DEBUG("SYM Hash {}-{}:  Verify - got STATUS {:x}-{} from barco",
+    SDK_TRACE_DEBUG("SYM Hash %s-%s:  Verify - got STATUS 0x%lx-%s from barco",
             CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
             status, barco_symm_err_status_str(status));
     }
@@ -295,7 +295,7 @@ cleanup:
     if (status_addr) {
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B, status_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("SYM Hash {}-{}: Failed to free memory for status addr content:{:x}",
+            SDK_TRACE_ERR("SYM Hash %s-%s: Failed to free memory for status addr content:0x%lx",
               CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
               status_addr);
         }
@@ -304,7 +304,7 @@ cleanup:
     if (auth_tag_mem_addr) {
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B, auth_tag_mem_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("SYM Hash {}-{}: Failed to free memory for auth-tag addr content:{:x}",
+            SDK_TRACE_ERR("SYM Hash %s-%s: Failed to free memory for auth-tag addr content:0x%lx",
               CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
               auth_tag_mem_addr);
         }
@@ -313,7 +313,7 @@ cleanup:
     if (ilist_mem_addr) {
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B, ilist_mem_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("SYM Hash {}-{}: Failed to free memory for ilist content:{:x}",
+            SDK_TRACE_ERR("SYM Hash %s-%s: Failed to free memory for ilist content:0x%lx",
               CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
               ilist_mem_addr);
         }
@@ -322,7 +322,7 @@ cleanup:
     if (ilist_msg_descr_addr) {
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_SYM_MSG_DESCR, ilist_msg_descr_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("SYM Hash {}-{}: Failed to free memory for ilist MSG Descr:{:x}",
+            SDK_TRACE_ERR("SYM Hash %s-%s: Failed to free memory for ilist MSG Descr:0x%lx",
               CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
               ilist_msg_descr_addr);
         }
@@ -331,7 +331,7 @@ cleanup:
     if (hmac_key_descr_idx != -1) {
         ret = elba_barco_sym_free_key(hmac_key_descr_idx);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("SYM Hash {}-{}: Failed to free key descriptor @ {:x}",
+            SDK_TRACE_ERR("SYM Hash %s-%s: Failed to free key descriptor @ 0x%x",
               CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
               hmac_key_descr_idx);
         }
@@ -360,7 +360,7 @@ elba_barco_sym_aes_encrypt_process_request (elba_barco_symm_enctype_e enc_type,
     uint32_t                    req_tag = 0;
     int32_t                     aes_key_descr_idx = -1;
 
-    SDK_TRACE_DEBUG("Running {}-{} test:\n",
+    SDK_TRACE_DEBUG("Running %s-%s test:\n",
                     elba_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt");
 
     if (encrypt) {
@@ -378,22 +378,22 @@ elba_barco_sym_aes_encrypt_process_request (elba_barco_symm_enctype_e enc_type,
     ret = elba_barco_res_alloc(CRYPTO_BARCO_RES_SYM_MSG_DESCR,
                 NULL, &ilist_msg_descr_addr);
     if (ret != SDK_RET_OK) {
-        SDK_TRACE_ERR("SYMM Encrypt {}-{}: Failed to allocate memory for ilist MSG Descr",
+        SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to allocate memory for ilist MSG Descr",
               elba_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG("SYMM Encrypt {}-{}: Allocated memory for ilist DMA Descr @ {:x}",
+    SDK_TRACE_DEBUG("SYMM Encrypt %s-%s: Allocated memory for ilist DMA Descr @ 0x%lx",
             elba_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
             ilist_msg_descr_addr);
 
     ret = elba_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
                 NULL, &ilist_mem_addr);
     if (ret != SDK_RET_OK) {
-        SDK_TRACE_ERR("SYMM Encrypt {}-{}: Failed to allocate memory for ilist content",
+        SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to allocate memory for ilist content",
               elba_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG("SYMM Encrypt {}-{}: Allocated memory for input mem @ {:x}",
+    SDK_TRACE_DEBUG("SYMM Encrypt %s-%s: Allocated memory for input mem @ 0x%lx",
             elba_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
             ilist_mem_addr);
 
@@ -401,55 +401,55 @@ elba_barco_sym_aes_encrypt_process_request (elba_barco_symm_enctype_e enc_type,
     ret = elba_barco_res_alloc(CRYPTO_BARCO_RES_SYM_MSG_DESCR,
                 NULL, &olist_msg_descr_addr);
     if (ret != SDK_RET_OK) {
-        SDK_TRACE_ERR("SYMM Encrypt {}-{}: Failed to allocate memory for olist MSG Descr",
+        SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to allocate memory for olist MSG Descr",
               elba_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG("SYMM Encrypt {}-{}: Allocated memory for olist DMA Descr @ {:x}",
+    SDK_TRACE_DEBUG("SYMM Encrypt %s-%s: Allocated memory for olist DMA Descr @ 0x%lx",
             elba_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
             olist_msg_descr_addr);
 
     ret = elba_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
                 NULL, &olist_mem_addr);
     if (ret != SDK_RET_OK) {
-        SDK_TRACE_ERR("SYMM Encrypt {}-{}: Failed to allocate memory for olist content",
+        SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to allocate memory for olist content",
               elba_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG("SYMM Encrypt {}-{}: Allocated memory for output mem @ {:x}",
+    SDK_TRACE_DEBUG("SYMM Encrypt %s-%s: Allocated memory for output mem @ 0x%lx",
             elba_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
             olist_mem_addr);
 
     ret = elba_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
                 NULL, &iv_addr);
     if (ret != SDK_RET_OK) {
-        SDK_TRACE_ERR("SYMM Encrypt {}-{}: Failed to allocate memory for IV address content",
+        SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to allocate memory for IV address content",
               elba_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG("SYMM Encrypt {}-{}: Allocated memory for IV content @ {:x}",
+    SDK_TRACE_DEBUG("SYMM Encrypt %s-%s: Allocated memory for IV content @ 0x%lx",
             elba_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
             iv_addr);
 
     ret = elba_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
                 NULL, &auth_tag_mem_addr);
     if (ret != SDK_RET_OK) {
-        SDK_TRACE_ERR("SYMM Encrypt {}-{}: Failed to allocate memory for auth-tag content",
+        SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to allocate memory for auth-tag content",
               elba_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG("SYMM Encrypt {}-{}: Allocated memory for auth-tag mem @ {:x}",
+    SDK_TRACE_DEBUG("SYMM Encrypt %s-%s: Allocated memory for auth-tag mem @ 0x%lx",
             elba_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
             auth_tag_mem_addr);
 
     ret = elba_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B,
                 NULL, &status_addr);
     if (ret != SDK_RET_OK) {
-        SDK_TRACE_ERR("SYMM Encrypt {}-{}: Failed to allocate memory for storing status",
+        SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to allocate memory for storing status",
               elba_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG("SYMM Encrypt {}-{}: Allocated memory for status mem @ {:x}",
+    SDK_TRACE_DEBUG("SYMM Encrypt %s-%s: Allocated memory for status mem @ 0x%lx",
             elba_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
             status_addr);
 
@@ -457,23 +457,23 @@ elba_barco_sym_aes_encrypt_process_request (elba_barco_symm_enctype_e enc_type,
         ret = elba_barco_sym_alloc_key(&aes_key_descr_idx);
 
     if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("SYMM Encrypt {}-{}: Failed to allocate key descriptor",
+            SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to allocate key descriptor",
               elba_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt");
         goto cleanup;
     }
-    SDK_TRACE_DEBUG("SYMM Encrypt {}-{}: Allocated AES128 Key Descr @ {:x}",
+    SDK_TRACE_DEBUG("SYMM Encrypt %s-%s: Allocated AES128 Key Descr @ 0x%x",
             elba_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
             aes_key_descr_idx);
 
     ret = elba_barco_setup_key(aes_key_descr_idx, CRYPTO_KEY_TYPE_AES256,
                     (uint8_t *)key, (uint32_t) key_len);
     if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("SYMM Encrypt {}-{}: Failed to write AES Key @ {:x}",
+            SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to write AES Key @ 0x%x",
               elba_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
               aes_key_descr_idx);
         goto cleanup;
     }
-    SDK_TRACE_DEBUG("SYMM Encrypt {}-{}: Setup AES Key @ {:x}",
+    SDK_TRACE_DEBUG("SYMM Encrypt %s-%s: Setup AES Key @ 0x%x",
             elba_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
             aes_key_descr_idx);
     }
@@ -499,7 +499,7 @@ elba_barco_sym_aes_encrypt_process_request (elba_barco_symm_enctype_e enc_type,
         *ptr = 0;  // 1-byte zero pad
 
     if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)ccm_header, sizeof(ccm_header))) {
-            SDK_TRACE_ERR("SYMM Encrypt {}-{}: Failed to write header bytes into ilist memory @ {:x}",
+            SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to write header bytes into ilist memory @ 0x%lx",
               elba_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
               (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
@@ -509,7 +509,7 @@ elba_barco_sym_aes_encrypt_process_request (elba_barco_symm_enctype_e enc_type,
     } else {
 
         if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)header, header_len)) {
-        SDK_TRACE_ERR("SYMM Encrypt {}-{}: Failed to write header bytes into ilist memory @ {:x}",
+        SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to write header bytes into ilist memory @ 0x%lx",
               elba_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
               (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
@@ -521,7 +521,7 @@ elba_barco_sym_aes_encrypt_process_request (elba_barco_symm_enctype_e enc_type,
 
     if (encrypt) {
         if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)plaintext, plaintext_len)) {
-        SDK_TRACE_ERR("SYMM Encrypt {}-{}: Failed to write plaintext bytes into ilist memory @ {:x}",
+        SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to write plaintext bytes into ilist memory @ 0x%lx",
               elba_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
               (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
@@ -529,7 +529,7 @@ elba_barco_sym_aes_encrypt_process_request (elba_barco_symm_enctype_e enc_type,
     }
     } else {
         if (sdk::asic::asic_mem_write(curr_ptr, (uint8_t*)ciphertext, ciphertext_len)) {
-        SDK_TRACE_ERR("SYMM Encrypt {}-{}: Failed to write ciphertext bytes into ilist memory @ {:x}",
+        SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to write ciphertext bytes into ilist memory @ 0x%lx",
               elba_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
               (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
@@ -539,7 +539,7 @@ elba_barco_sym_aes_encrypt_process_request (elba_barco_symm_enctype_e enc_type,
 
     /* Copy the IV content */
     if (sdk::asic::asic_mem_write(iv_addr, (uint8_t*)iv, iv_len)) {
-        SDK_TRACE_ERR("SYMM Encrypt {}-{}: Failed to write IV bytes into ilist memory @ {:x}",
+        SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to write IV bytes into ilist memory @ 0x%lx",
               elba_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
               (uint64_t) curr_ptr);
         ret = SDK_RET_INVALID_ARG;
@@ -562,7 +562,7 @@ elba_barco_sym_aes_encrypt_process_request (elba_barco_symm_enctype_e enc_type,
 
     if (sdk::asic::asic_mem_write(ilist_msg_descr_addr, (uint8_t*)&ilist_msg_descr,
                 sizeof(ilist_msg_descr))) {
-        SDK_TRACE_ERR("SYMM Encrypt {}-{}: Failed to write ilist MSG Descr @ {:x}",
+        SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to write ilist MSG Descr @ 0x%lx",
               elba_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
               (uint64_t) ilist_msg_descr_addr);
         ret = SDK_RET_INVALID_ARG;
@@ -585,7 +585,7 @@ elba_barco_sym_aes_encrypt_process_request (elba_barco_symm_enctype_e enc_type,
 
     if (sdk::asic::asic_mem_write(olist_msg_descr_addr, (uint8_t*)&olist_msg_descr,
                 sizeof(olist_msg_descr))) {
-        SDK_TRACE_ERR("SYMM Encrypt {}-{}: Failed to write olist MSG Descr @ {:x}",
+        SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to write olist MSG Descr @ 0x%lx",
               elba_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
               (uint64_t) olist_msg_descr_addr);
         ret = SDK_RET_INVALID_ARG;
@@ -599,7 +599,7 @@ elba_barco_sym_aes_encrypt_process_request (elba_barco_symm_enctype_e enc_type,
     if (!encrypt) {
         if (sdk::asic::asic_mem_write(auth_tag_mem_addr, (uint8_t*)auth_tag,
                 auth_tag_len)) {
-        SDK_TRACE_ERR("SYMM Decrypt {}-{}: Failed to write input auth-tag @ {:x}",
+        SDK_TRACE_ERR("SYMM Decrypt %s-%s: Failed to write input auth-tag @ 0x%lx",
               elba_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
               (uint64_t) auth_tag_mem_addr);
         ret = SDK_RET_INVALID_ARG;
@@ -611,7 +611,7 @@ elba_barco_sym_aes_encrypt_process_request (elba_barco_symm_enctype_e enc_type,
      */
         if (sdk::asic::asic_mem_write(status_addr, (uint8_t*)&status,
                 sizeof(status))) {
-        SDK_TRACE_ERR("SYMM Encrypt {}-{}: Failed to write ilist MSG Descr @ {:x}",
+        SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to write ilist MSG Descr @ 0x%lx",
               elba_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
               (uint64_t) ilist_msg_descr_addr);
         ret = SDK_RET_INVALID_ARG;
@@ -678,7 +678,7 @@ elba_barco_sym_aes_encrypt_process_request (elba_barco_symm_enctype_e enc_type,
         ELBA_BARCO_SYM_COMMAND_AES_HASH_CBC_HMAC_SHA384_Decrypt;
       break;
     default:
-        SDK_TRACE_ERR("SYMM Encrypt {}-{}: Invalid Hash request",
+        SDK_TRACE_ERR("SYMM Encrypt %s-%s: Invalid Hash request",
               elba_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt");
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
@@ -709,14 +709,14 @@ elba_barco_sym_aes_encrypt_process_request (elba_barco_symm_enctype_e enc_type,
     }
 
     if (ret != SDK_RET_OK) {
-        SDK_TRACE_ERR("SYMM Encrypt {}-{}: Failed to enqueue request",
+        SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to enqueue request",
               elba_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt");
         ret = SDK_RET_ERR;
         goto cleanup;
     }
 
     if (!schedule_barco) {
-        SDK_TRACE_DEBUG("SYMM Encrypt {}-{}: Request at slot {:x}, Barco PI not updated",
+        SDK_TRACE_DEBUG("SYMM Encrypt %s-%s: Request at slot 0x%x, Barco PI not updated",
                 elba_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
                 req_tag);
         ret = SDK_RET_OK;
@@ -726,12 +726,12 @@ elba_barco_sym_aes_encrypt_process_request (elba_barco_symm_enctype_e enc_type,
     /* Poll for completion */
     if (enc_type == ELBA_SYMM_ENCTYPE_AES_GCM) {
         while (elba_barco_ring_poll(BARCO_RING_GCM0, req_tag) != TRUE) {
-           //SDK_TRACE_DEBUG("SYMM Encrypt {}-{}: Waiting for Barco completion...",
+           //SDK_TRACE_DEBUG("SYMM Encrypt %s-%s: Waiting for Barco completion...",
            //                elba_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt");
         }
     } else {
         while (elba_barco_ring_poll(BARCO_RING_MPP0, req_tag) != TRUE) {
-            //SDK_TRACE_DEBUG("SYMM Encrypt {}-{}: Waiting for Barco completion...",
+            //SDK_TRACE_DEBUG("SYMM Encrypt %s-%s: Waiting for Barco completion...",
             //                elba_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt");
         }
     }
@@ -739,7 +739,7 @@ elba_barco_sym_aes_encrypt_process_request (elba_barco_symm_enctype_e enc_type,
     /* Copy out the results */
     if (encrypt) {
         if (sdk::asic::asic_mem_read(auth_tag_mem_addr, (uint8_t*)auth_tag, auth_tag_len)) {
-        SDK_TRACE_ERR("SYMM Encrypt {}-{}: Failed to read output Auth-tag at addr @ {:x}",
+        SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to read output Auth-tag at addr @ 0x%lx",
               elba_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
               (uint64_t) auth_tag_mem_addr);
         ret = SDK_RET_INVALID_ARG;
@@ -747,7 +747,7 @@ elba_barco_sym_aes_encrypt_process_request (elba_barco_symm_enctype_e enc_type,
     }
 
         if (sdk::asic::asic_mem_read(olist_mem_addr + header_len, (uint8_t*)ciphertext, ciphertext_len)) {
-        SDK_TRACE_ERR("SYMM Encrypt {}-{}: Failed to read output ciphertext at addr @ {:x}",
+        SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to read output ciphertext at addr @ 0x%lx",
               elba_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
               (uint64_t) olist_mem_addr);
         ret = SDK_RET_INVALID_ARG;
@@ -756,18 +756,18 @@ elba_barco_sym_aes_encrypt_process_request (elba_barco_symm_enctype_e enc_type,
 
     } else {
         if (sdk::asic::asic_mem_read(status_addr, (uint8_t*)&status, sizeof(uint64_t))){
-        SDK_TRACE_ERR("SYMM Decrypt {}-{}: Failed to read status at Status addr @ {:x}",
+        SDK_TRACE_ERR("SYMM Decrypt %s-%s: Failed to read status at Status addr @ 0x%lx",
               elba_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
               (uint64_t) status_addr);
         ret = SDK_RET_INVALID_ARG;
         goto cleanup;
     }
-    SDK_TRACE_DEBUG("SYMM Decrypt {}-{}:  Decrypt - got STATUS {:x}-{} from barco",
+    SDK_TRACE_DEBUG("SYMM Decrypt %s-%s:  Decrypt - got STATUS 0x%lx-%s from barco",
             elba_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
             status, barco_symm_err_status_str(status));
 
         if (sdk::asic::asic_mem_read(olist_mem_addr + header_len, (uint8_t*)plaintext, plaintext_len)) {
-        SDK_TRACE_ERR("SYMM Decrypt {}-{}: Failed to read output decrypted plaintext @ {:x}",
+        SDK_TRACE_ERR("SYMM Decrypt %s-%s: Failed to read output decrypted plaintext @ 0x%lx",
               elba_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
               (uint64_t) (olist_mem_addr + header_len));
         ret = SDK_RET_INVALID_ARG;
@@ -780,7 +780,7 @@ cleanup:
     if (status_addr) {
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B, status_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("SYMM Encrypt {}-{}: Failed to free memory for status addr content:{:x}",
+            SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to free memory for status addr content:0x%lx",
               elba_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
               status_addr);
         }
@@ -789,7 +789,7 @@ cleanup:
     if (iv_addr) {
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B, iv_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("SYMM Encrypt {}-{}: Failed to free memory for IV addr content:{:x}",
+            SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to free memory for IV addr content:0x%lx",
               elba_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
               iv_addr);
         }
@@ -798,7 +798,7 @@ cleanup:
     if (auth_tag_mem_addr) {
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B, auth_tag_mem_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("SYMM Encrypt {}-{}: Failed to free memory for auth-tag addr content:{:x}",
+            SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to free memory for auth-tag addr content:0x%lx",
               elba_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
               auth_tag_mem_addr);
         }
@@ -807,7 +807,7 @@ cleanup:
     if (olist_mem_addr) {
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B, olist_mem_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("SYMM Encrypt {}-{}: Failed to free memory for olist content:{:x}",
+            SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to free memory for olist content:0x%lx",
               elba_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
               olist_mem_addr);
         }
@@ -816,7 +816,7 @@ cleanup:
     if (ilist_mem_addr) {
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_HBM_MEM_512B, ilist_mem_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("SYMM Encrypt {}-{}: Failed to free memory for ilist content:{:x}",
+            SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to free memory for ilist content:0x%lx",
               elba_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
               ilist_mem_addr);
         }
@@ -825,7 +825,7 @@ cleanup:
     if (olist_msg_descr_addr) {
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_SYM_MSG_DESCR, olist_msg_descr_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("SYMM Encrypt {}-{}: Failed to free memory for olist MSG Descr:{:x}",
+            SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to free memory for olist MSG Descr:0x%lx",
               elba_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
               olist_msg_descr_addr);
         }
@@ -834,7 +834,7 @@ cleanup:
     if (ilist_msg_descr_addr) {
         ret = elba_barco_res_free(CRYPTO_BARCO_RES_SYM_MSG_DESCR, ilist_msg_descr_addr);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("SYMM Encrypt {}-{}: Failed to free memory for ilist MSG Descr:{:x}",
+            SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to free memory for ilist MSG Descr:0x%lx",
               elba_barco_symm_enctype_name(enc_type), encrypt ? "encrypt" : "decrypt",
               ilist_msg_descr_addr);
         }
@@ -844,7 +844,7 @@ cleanup:
         ret = elba_barco_sym_free_key(aes_key_descr_idx);
 
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("SYMM Encrypt {}-{}: Failed to free key descriptor @ {:x}",
+            SDK_TRACE_ERR("SYMM Encrypt %s-%s: Failed to free key descriptor @ 0x%x",
                           elba_barco_symm_enctype_name(enc_type),
                           encrypt ? "encrypt" : "decrypt",
                           aes_key_descr_idx);
@@ -1329,7 +1329,7 @@ elba_barco_init_drbg (void)
     SDK_TRACE_DEBUG("[DRBG] initializing ...");
     strcpy((char *)psnl_str_p, "elb/he/drbg/pensando-pers-string"); // Less than 32 bytes
     psnl_str_p_len = strlen((const char *)psnl_str_p);
-    SDK_TRACE_DEBUG("[DRBG] generated personalized string P -- {:s} len {:d}",
+    SDK_TRACE_DEBUG("[DRBG] generated personalized string P -- %s len %u",
                     psnl_str_p, psnl_str_p_len);
     elb_drbg_write_ram_psnl_str_p(0, psnl_str_p, psnl_str_p_len, true);
 
@@ -1347,25 +1347,25 @@ elba_barco_init_drbg (void)
     elb_trng_set_ctl_reg(0, 0x406F1, true);
     do {
       val = elb_trng_get_status(0, true);
-        //SDK_TRACE_DEBUG("[DRBG] TRNG status = 0x{:x}", val);
+        //SDK_TRACE_DEBUG("[DRBG] TRNG status = 0x%x", val);
         val = elb_trng_get_fifo_level(0, true);
-        //SDK_TRACE_DEBUG("[DRBG] TRNG fifo level = 0x{:x}", val);
+        //SDK_TRACE_DEBUG("[DRBG] TRNG fifo level = 0x%x", val);
     } while (0); //val < 0x20);
 
     //////////// DRBG
     rng = 0;
     rng |= (0x1 << 0); ///NDRNG
-    SDK_TRACE_DEBUG("[DRBG] rng = {:x}", rng);
+    SDK_TRACE_DEBUG("[DRBG] rng = 0x%x", rng);
     rng |= (0x1 << 2); ///DRNG
-    SDK_TRACE_DEBUG("[DRBG] rng = {:x}", rng);
+    SDK_TRACE_DEBUG("[DRBG] rng = 0x%x", rng);
     rng |= (0x80 << 4); //size
-    SDK_TRACE_DEBUG("[DRBG] rng = {:x}", rng);
+    SDK_TRACE_DEBUG("[DRBG] rng = 0x%x", rng);
     rng |= (0x0 << 29); ///TestDRNG
-    SDK_TRACE_DEBUG("[DRBG] rng = {:x}", rng);
+    SDK_TRACE_DEBUG("[DRBG] rng = 0x%x", rng);
     rng |= ((psnl_str_p_len << 3) << 16); ///PSize
-    SDK_TRACE_DEBUG("[DRBG] rng = {:x}", rng);
+    SDK_TRACE_DEBUG("[DRBG] rng = 0x%x", rng);
     rng |= (0x1 << 31); ///start 0
-    SDK_TRACE_DEBUG("[DRBG] set rng = {:x}", rng);
+    SDK_TRACE_DEBUG("[DRBG] set rng = 0x%x", rng);
     elb_drbg_set_ctl_rng(0, rng, true);
 
     SDK_TRACE_DEBUG("[DRBG] start polling gs");
@@ -1389,7 +1389,7 @@ elba_barco_init_drbg (void)
     rng |= (0x80 << 4); //size
     rng |= (0x0 << 29); //TestDRNG
     rng |= (0x1 << 31); //start
-    SDK_TRACE_DEBUG("[DRBG] set rng = {:x}", rng);
+    SDK_TRACE_DEBUG("[DRBG] set rng = 0x%x", rng);
     elb_drbg_set_ctl_rng(0, rng, true);
 
     SDK_TRACE_DEBUG("[DRBG] start polling gs");

@@ -48,6 +48,7 @@ pcie_hostdn(void)
     if (r < 0) pciesys_logerror("pcie_hostdn failed %d\n", r);
 }
 
+#ifdef __aarch64__
 /*
  * When Naples25 SWM ALOM card is not present hostdn handling is
  * the same as Naples25.  This function is used to negate the
@@ -83,6 +84,7 @@ static int swm_alom_present(void)
         return 0;
     }
 }
+#endif /* __aarch64__ */
 
 /*
  * With long-lived SWM cards, a hostdn is a sign the host is going away.

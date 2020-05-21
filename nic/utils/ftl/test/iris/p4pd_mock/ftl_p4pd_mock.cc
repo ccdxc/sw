@@ -59,7 +59,7 @@ ftl_mock_get_valid_count (uint32_t table_id)
 {
     uint32_t count = 0;
     uint32_t size = table_size_get(table_id);
-    SDK_TRACE_VERBOSE("size of table id : %lu is %lu ", table_id, size);
+    SDK_TRACE_VERBOSE("size of table id : %u is %u", table_id, size);
 
     for (uint32_t i = 0; i < size; i++) {
         if (mocktables[table_id].entries[i].entry_valid) {

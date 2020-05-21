@@ -292,7 +292,7 @@ elba_ppa_sw_phv_inject (uint8_t pidx, uint8_t prof_num, uint8_t start_idx,
     elb_ppa_csr_t &ppa_csr = elb0.ppa.ppa[pidx];
     pu_cpp_int< 512 > flit_data;
 
-    SDK_TRACE_DEBUG("Injecting PHV into PPA {}", __func__, pidx);
+    SDK_TRACE_DEBUG("Injecting PHV into PPA %s %u", __func__, pidx);
 
     int index = 0;
     elba_flit_t *curr_flit_ptr = (elba_flit_t *)data;
@@ -352,7 +352,7 @@ elba_sw_phv_inject (asic_swphv_type_t type, uint8_t prof_num,
 {
     sdk_ret_t   ret = SDK_RET_OK;
 
-    SDK_TRACE_DEBUG("Injecting Software PHV type {}", type);
+    SDK_TRACE_DEBUG("Injecting Software PHV type %u", type);
 
     // switch based on pipeline type
     switch(type) {
@@ -475,7 +475,7 @@ elba_sw_phv_get (asic_swphv_type_t type, uint8_t prof_num,
 {
     sdk_ret_t   ret = SDK_RET_OK;
 
-    SDK_TRACE_DEBUG("Getting Software PHV state for type {}", type);
+    SDK_TRACE_DEBUG("Getting Software PHV state for type %u", type);
 
     // switch based on pipeline type
     switch(type) {

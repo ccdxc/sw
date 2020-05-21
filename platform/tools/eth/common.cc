@@ -98,8 +98,6 @@ mpart_cfg_path()
 {
     std::string mpart_json;
     std::string hal_cfg_path_ = hal_cfg_path();
-    sdk::lib::device *device =
-        sdk::lib::device::factory("/sysconfig/config0/device.conf");
 
     // WARNING -- this must be picked based on profile, this is guaranteed to be
     // broken soon
@@ -114,6 +112,8 @@ mpart_cfg_path()
 #else
     std::string profile_name;
     sdk::lib::dev_feature_profile_t feature_profile;
+    sdk::lib::device *device =
+        sdk::lib::device::factory("/sysconfig/config0/device.conf");
 
     feature_profile = device->get_feature_profile();
     profile_name = std::string(DEV_FEATURE_PROFILE_str(feature_profile));

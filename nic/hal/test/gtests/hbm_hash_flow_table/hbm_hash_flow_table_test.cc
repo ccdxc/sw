@@ -1322,7 +1322,7 @@ TEST_F(hbm_hash_test, DISABLED_test18) {
     SDK_TRACE_DEBUG("tableid:%d, table_name:%s, capacity:%d, coll_capac:%d, "
                     "num_in_use:%d, coll_num_in_use:%d"
                     "num_inserts:%d, num_insert_errors:%d, "
-                    "num_deletes:{}, num_delete_errors:%d\n",
+                    "num_deletes:%d, num_delete_errors:%d\n",
                     fl->table_id(), fl->table_name(),
                     fl->table_capacity(), fl->coll_table_capacity(),
                     fl->table_num_entries_in_use(), fl->coll_table_num_entries_in_use(),

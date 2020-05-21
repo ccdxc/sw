@@ -43,19 +43,19 @@ pd_asic_init (pd_func_args_t *pd_func_args)
     sdk_ret = sdk::asic::pd::asicpd_init(args->cfg);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     SDK_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
-                            "Asic init failure, err : {}", ret);
+                            "Asic init failure, err : %d", ret);
 
     sdk_ret = asicpd_sw_phv_init();
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     SDK_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
-                            "Capri s/w phv init failure, err : {}", ret);
+                            "Capri s/w phv init failure, err : %d", ret);
 
     // TODO: Move to lif plugin init
     ret = (hal_ret_t)sdk::platform::utils::lif_mgr::lifs_reset(
                                                     HAL_LIF_ID_UPLINK_MIN - 1,
                                                     HAL_LIF_ID_SVC_LIF_MAX);
     SDK_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
-                            "LIF reset failure, err : {}", ret);
+                            "LIF reset failure, err : %d", ret);
 
     return HAL_RET_OK;
 }

@@ -278,9 +278,9 @@ sbus_access (uint32_t sbus_addr,
              unsigned char command,
              uint *sbus_data)
 {
-    uint32_t chip_id     = 0;
+    //uint32_t chip_id     = 0;
     uint32_t status      = 0;
-    uint32_t ring_number = ((sbus_addr >> 8 ) & 0x0f); 
+    uint32_t ring_number = ((sbus_addr >> 8 ) & 0x0f);
     uint32_t sbus_id     = (sbus_addr         & 0xff);
 
     //Required commands are:
@@ -581,44 +581,44 @@ serdes_spico_upload_hw (uint32_t sbus_addr, const char* filename)
     return rc;
 }
 
-static int
-serdes_pre_ical_start_hw (uint32_t sbus_addr)
-{
-    int int_code;
-    int int_data;
-    int int_ret;
+// static int
+// serdes_pre_ical_start_hw (uint32_t sbus_addr)
+// {
+//     int int_code;
+//     int int_data;
+//     int int_ret;
 
-    int_code = 0x18;
-    int_data = 0x7;
-    int_ret = serdes_spico_int_check_hw(sbus_addr, int_code, int_data);
-    if (int_ret == false) {
-        SDK_LINKMGR_TRACE_ERR("Failed to send interrupt to serdes. "
-                              "sbus_addr %u, int_code 0x%x, int_data 0x%x",
-                              sbus_addr, int_code, int_data);
-        return -1;
-    }
+//     int_code = 0x18;
+//     int_data = 0x7;
+//     int_ret = serdes_spico_int_check_hw(sbus_addr, int_code, int_data);
+//     if (int_ret == false) {
+//         SDK_LINKMGR_TRACE_ERR("Failed to send interrupt to serdes. "
+//                               "sbus_addr %u, int_code 0x%x, int_data 0x%x",
+//                               sbus_addr, int_code, int_data);
+//         return -1;
+//     }
 
-    int_code = 0x19;
-    int_data = 0x2710;
-    int_ret = serdes_spico_int_check_hw(sbus_addr, int_code, int_data);
-    if (int_ret == false) {
-        SDK_LINKMGR_TRACE_ERR("Failed to send interrupt to serdes. "
-                              "sbus_addr %u, int_code 0x%x, int_data 0x%x",
-                              sbus_addr, int_code, int_data);
-        return -1;
-    }
+//     int_code = 0x19;
+//     int_data = 0x2710;
+//     int_ret = serdes_spico_int_check_hw(sbus_addr, int_code, int_data);
+//     if (int_ret == false) {
+//         SDK_LINKMGR_TRACE_ERR("Failed to send interrupt to serdes. "
+//                               "sbus_addr %u, int_code 0x%x, int_data 0x%x",
+//                               sbus_addr, int_code, int_data);
+//         return -1;
+//     }
 
-    int_code = 0x19;
-    int_data = 0x0;
-    int_ret = serdes_spico_int_check_hw(sbus_addr, int_code, int_data);
-    if (int_ret == false) {
-        SDK_LINKMGR_TRACE_ERR("Failed to send interrupt to serdes. "
-                              "sbus_addr %u, int_code 0x%x, int_data 0x%x",
-                              sbus_addr, int_code, int_data);
-        return -1;
-    }
-    return 0;
-}
+//     int_code = 0x19;
+//     int_data = 0x0;
+//     int_ret = serdes_spico_int_check_hw(sbus_addr, int_code, int_data);
+//     if (int_ret == false) {
+//         SDK_LINKMGR_TRACE_ERR("Failed to send interrupt to serdes. "
+//                               "sbus_addr %u, int_code 0x%x, int_data 0x%x",
+//                               sbus_addr, int_code, int_data);
+//         return -1;
+//     }
+//     return 0;
+// }
 
 int
 serdes_ical_start_hw (uint32_t sbus_addr, port_speed_t serdes_speed)

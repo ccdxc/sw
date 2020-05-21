@@ -159,16 +159,16 @@ hbm_temp_test(void)
 
     hbm_temperature = 85;   /* TBD-ELBA-REBASE: */
 
-    SDK_TRACE_INFO("HBM temperature is (%d) degree Celsius \n",
+    SDK_TRACE_INFO("HBM temperature is (%ld) degree Celsius\n",
                    hbm_temperature);
     if (hbm_temperature > MAX_HBM_TEMPERATURE_SUPPORTED) {
-        SDK_TRACE_ERR("HBM temperature(%d) is above Max limit(%d)\n",
+        SDK_TRACE_ERR("HBM temperature(%ld) is above Max limit(%d)\n",
                       hbm_temperature,  MAX_HBM_TEMPERATURE_SUPPORTED);
         retval = -1;
     }
 
     if (hbm_temperature < MIN_HBM_TEMPERATURE_SUPPORTED) {
-        SDK_TRACE_ERR("HBM temperature(%d) is below Min limit(%d)\n",
+        SDK_TRACE_ERR("HBM temperature(%ld) is below Min limit(%d)\n",
                       hbm_temperature,  MIN_HBM_TEMPERATURE_SUPPORTED);
         retval = -1;
     }

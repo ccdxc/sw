@@ -486,7 +486,7 @@ elba_barco_asym_poller (elba_barco_ring_t *barco_ring, uint32_t req_tag)
     }
     else {
         if ((int32_t(curr_opaque_tag - req_tag)) > 0) {
-            SDK_TRACE_DEBUG("Poll:%s: Check for req: 0x%lx: Retrieved opaque tag addr: {:#x}value: 0x%lx",
+            SDK_TRACE_DEBUG("Poll:%s: Check for req: 0x%x: Retrieved opaque tag addr: 0x%lx value: 0x%x",
                             barco_ring->ring_name, req_tag,
                             barco_ring->opaque_tag_addr, curr_opaque_tag);
 
@@ -1854,8 +1854,6 @@ elba_barco_sym1_ring0_queue_request (struct elba_barco_ring_s *barco_ring,
                                      void *req,
                                      uint32_t *req_tag, bool schedule_barco)
 {
-    elb_top_csr_t &cap0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
-    elb_hens_csr_t &hens = cap0.md.hens;
     uint64_t slot_addr = 0;
     sdk_ret_t ret = SDK_RET_OK;
     barco_symm_req_descriptor_t *sym_req_descr = NULL;
@@ -1895,6 +1893,9 @@ elba_barco_sym1_ring0_queue_request (struct elba_barco_ring_s *barco_ring,
 
         /* Barco doorbell */
 #if 0
+        elb_top_csr_t &cap0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
+        elb_hens_csr_t &hens = cap0.md.hens;
+
         hens.dhs_crypto_ctl.gcm1_producer_idx.fld(barco_ring->producer_idx);
         hens.dhs_crypto_ctl.gcm1_producer_idx.write();
 #endif
@@ -2086,7 +2087,7 @@ elba_barco_symm_req_descr_get (barco_rings_t ring_type,
     uint8_t  value[barco_ring->descriptor_size];
     uint32_t index = (slot_index % barco_ring->ring_size);
     slot_addr = barco_ring->ring_base + (index * barco_ring->descriptor_size);
-    SDK_TRACE_DEBUG("%s@0x%lx: Ring base 0x%lx, slot_addr 0x%lx, read size 0x%lx",
+    SDK_TRACE_DEBUG("%s@0x%x: Ring base 0x%lx, slot_addr 0x%lx, read size 0x%x",
                     barco_ring->ring_name, barco_ring->ring_size,
                     barco_ring->ring_base, (uint64_t) slot_addr,
                     barco_ring->descriptor_size);
@@ -2196,7 +2197,7 @@ elba_barco_ring_meta_get (barco_rings_t ring_type,
       return SDK_RET_INVALID_ARG;
       break;
     }
-    SDK_TRACE_DEBUG("%s: PI 0x%lx, CI 0x%lx",
+    SDK_TRACE_DEBUG("%s: PI 0x%x, CI 0x%x",
                     barco_rings[ring_type].ring_name, *pi, *ci);
     return SDK_RET_OK;
 }

@@ -442,7 +442,7 @@ capri_p4plus_table_init (platform_type_t platform_type,
                         (char *) CAPRI_P4PLUS_RXDMA_EXT_PROG);
         return CAPRI_FAIL;
     }
-    SDK_TRACE_DEBUG("Resolved handle %s program %s to PC %llx",
+    SDK_TRACE_DEBUG("Resolved handle %s program %s to PC %lx",
                     (char *) CAPRI_P4PLUS_HANDLE,
                     (char *) CAPRI_P4PLUS_RXDMA_EXT_PROG,
                     capri_action_p4plus_asm_base);

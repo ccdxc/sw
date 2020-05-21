@@ -679,7 +679,7 @@ TEST_F(sldm_test, DISABLED_test10) {
     ap.handle.pindex(20);
     data.actionid = 0;
     ret = test_dm->insert_withid(&ap);
-    SDK_TRACE_DEBUG("ret:{}", ret);
+    SDK_TRACE_DEBUG("ret:%d", ret);
     ASSERT_TRUE(ret == SDK_RET_OK);
     // Delete
     ap.handle.pindex(index);

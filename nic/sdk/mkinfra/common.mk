@@ -15,7 +15,7 @@ COMMON_GXX_FLAGS        := -fstack-protector \
                            -Wno-free-nonheap-object \
                            -Wno-builtin-macro-redefined \
                            -MD
-ifeq ($(COVERAGE),0)
+ifneq ($(COVERAGE),1)
     COMMON_GXX_FLAGS        += -Wuninitialized
     COMMON_GXX_FLAGS        += -Werror
 endif

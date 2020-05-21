@@ -335,7 +335,7 @@ hal_thread_init (hal_cfg_t *hal_cfg)
                                       sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_DATA),
                                       hal_cfg);
                 SDK_ASSERT_TRACE_RETURN((hal_thread != NULL), HAL_RET_ERR,
-                                        "FTE thread {} creation failed", tid);
+                                        "FTE thread %u creation failed", tid);
                 data_cores_mask = data_cores_mask & (data_cores_mask-1);
             }
         }

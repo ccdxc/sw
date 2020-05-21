@@ -87,7 +87,7 @@ elba_pgm_init (void)
         }
         ret = sdk::asic::asic_load_config((char *)full_path.c_str());
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("Failed to load config %s", full_path);
+            SDK_TRACE_ERR("Failed to load config %s", full_path.c_str());
             return ret;
         }
     }

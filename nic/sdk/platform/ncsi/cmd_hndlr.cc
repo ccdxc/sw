@@ -24,7 +24,7 @@
 
 #define NCSI_CMD_END_BANNER() \
 { \
-    SDK_TRACE_INFO("cmd: %s, response code: 0x%x, reason code: 0x%x, response status: %d", \
+    SDK_TRACE_INFO("cmd: %s, response code: 0x%x, reason code: 0x%x, response status: %ld", \
             __FUNCTION__, ntohs(resp.rsp.code), ntohs(resp.rsp.reason), ret); \
     SDK_TRACE_INFO("-------------- NCSI Cmd End --------------"); \
 }
@@ -129,95 +129,95 @@ void CmdHndler::ReadMacStats(uint32_t port, struct port_stats& stats)
 
     SDK_TRACE_DEBUG("Stats for port: %d\n", port);
     SDK_TRACE_DEBUG("======================================");
-    SDK_TRACE_DEBUG(" frames_rx_ok                :%ld",      stats.frames_rx_ok              );
-    SDK_TRACE_DEBUG(" frames_rx_all               :%ld",      stats.frames_rx_all             );
-    SDK_TRACE_DEBUG(" frames_rx_bad_fcs           :%ld",      stats.frames_rx_bad_fcs         );
-    SDK_TRACE_DEBUG(" frames_rx_bad_all           :%ld",      stats.frames_rx_bad_all         );
-    SDK_TRACE_DEBUG(" octets_rx_ok                :%ld",      stats.octets_rx_ok              );
-    SDK_TRACE_DEBUG(" octets_rx_all               :%ld",      stats.octets_rx_all             );
-    SDK_TRACE_DEBUG(" frames_rx_unicast           :%ld",      stats.frames_rx_unicast         );
-    SDK_TRACE_DEBUG(" frames_rx_multicast         :%ld",      stats.frames_rx_multicast       );
-    SDK_TRACE_DEBUG(" frames_rx_broadcast         :%ld",      stats.frames_rx_broadcast       );
-    SDK_TRACE_DEBUG(" frames_rx_pause             :%ld",      stats.frames_rx_pause           );
-    SDK_TRACE_DEBUG(" frames_rx_bad_length        :%ld",      stats.frames_rx_bad_length      );
-    SDK_TRACE_DEBUG(" frames_rx_undersized        :%ld",      stats.frames_rx_undersized      );
-    SDK_TRACE_DEBUG(" frames_rx_oversized         :%ld",      stats.frames_rx_oversized       );
-    SDK_TRACE_DEBUG(" frames_rx_fragments         :%ld",      stats.frames_rx_fragments       );
-    SDK_TRACE_DEBUG(" frames_rx_jabber            :%ld",      stats.frames_rx_jabber          );
-    SDK_TRACE_DEBUG(" frames_rx_pripause          :%ld",      stats.frames_rx_pripause        );
-    SDK_TRACE_DEBUG(" frames_rx_stomped_crc       :%ld",      stats.frames_rx_stomped_crc     );
-    SDK_TRACE_DEBUG(" frames_rx_too_long          :%ld",      stats.frames_rx_too_long        );
-    SDK_TRACE_DEBUG(" frames_rx_vlan_good         :%ld",      stats.frames_rx_vlan_good       );
-    SDK_TRACE_DEBUG(" frames_rx_dropped           :%ld",      stats.frames_rx_dropped         );
-    SDK_TRACE_DEBUG(" frames_rx_less_than_64b     :%ld",      stats.frames_rx_less_than_64b   );
-    SDK_TRACE_DEBUG(" frames_rx_64b               :%ld",      stats.frames_rx_64b             );
-    SDK_TRACE_DEBUG(" frames_rx_65b_127b          :%ld",      stats.frames_rx_65b_127b        );
-    SDK_TRACE_DEBUG(" frames_rx_128b_255b         :%ld",      stats.frames_rx_128b_255b       );
-    SDK_TRACE_DEBUG(" frames_rx_256b_511b         :%ld",      stats.frames_rx_256b_511b       );
-    SDK_TRACE_DEBUG(" frames_rx_512b_1023b        :%ld",      stats.frames_rx_512b_1023b      );
-    SDK_TRACE_DEBUG(" frames_rx_1024b_1518b       :%ld",      stats.frames_rx_1024b_1518b     );
-    SDK_TRACE_DEBUG(" frames_rx_1519b_2047b       :%ld",      stats.frames_rx_1519b_2047b     );
-    SDK_TRACE_DEBUG(" frames_rx_2048b_4095b       :%ld",      stats.frames_rx_2048b_4095b     );
-    SDK_TRACE_DEBUG(" frames_rx_4096b_8191b       :%ld",      stats.frames_rx_4096b_8191b     );
-    SDK_TRACE_DEBUG(" frames_rx_8192b_9215b       :%ld",      stats.frames_rx_8192b_9215b     );
-    SDK_TRACE_DEBUG(" frames_rx_other             :%ld",      stats.frames_rx_other           );
-    SDK_TRACE_DEBUG(" frames_tx_ok                :%ld",      stats.frames_tx_ok              );
-    SDK_TRACE_DEBUG(" frames_tx_all               :%ld",      stats.frames_tx_all             );
-    SDK_TRACE_DEBUG(" frames_tx_bad               :%ld",      stats.frames_tx_bad             );
-    SDK_TRACE_DEBUG(" octets_tx_ok                :%ld",      stats.octets_tx_ok              );
-    SDK_TRACE_DEBUG(" octets_tx_total             :%ld",      stats.octets_tx_total           );
-    SDK_TRACE_DEBUG(" frames_tx_unicast           :%ld",      stats.frames_tx_unicast         );
-    SDK_TRACE_DEBUG(" frames_tx_multicast         :%ld",      stats.frames_tx_multicast       );
-    SDK_TRACE_DEBUG(" frames_tx_broadcast         :%ld",      stats.frames_tx_broadcast       );
-    SDK_TRACE_DEBUG(" frames_tx_pause             :%ld",      stats.frames_tx_pause           );
-    SDK_TRACE_DEBUG(" frames_tx_pripause          :%ld",      stats.frames_tx_pripause        );
-    SDK_TRACE_DEBUG(" frames_tx_vlan              :%ld",      stats.frames_tx_vlan            );
-    SDK_TRACE_DEBUG(" frames_tx_less_than_64b     :%ld",      stats.frames_tx_less_than_64b   );
-    SDK_TRACE_DEBUG(" frames_tx_64b               :%ld",      stats.frames_tx_64b             );
-    SDK_TRACE_DEBUG(" frames_tx_65b_127b          :%ld",      stats.frames_tx_65b_127b        );
-    SDK_TRACE_DEBUG(" frames_tx_128b_255b         :%ld",      stats.frames_tx_128b_255b       );
-    SDK_TRACE_DEBUG(" frames_tx_256b_511b         :%ld",      stats.frames_tx_256b_511b       );
-    SDK_TRACE_DEBUG(" frames_tx_512b_1023b        :%ld",      stats.frames_tx_512b_1023b      );
-    SDK_TRACE_DEBUG(" frames_tx_1024b_1518b       :%ld",      stats.frames_tx_1024b_1518b     );
-    SDK_TRACE_DEBUG(" frames_tx_1519b_2047b       :%ld",      stats.frames_tx_1519b_2047b     );
-    SDK_TRACE_DEBUG(" frames_tx_2048b_4095b       :%ld",      stats.frames_tx_2048b_4095b     );
-    SDK_TRACE_DEBUG(" frames_tx_4096b_8191b       :%ld",      stats.frames_tx_4096b_8191b     );
-    SDK_TRACE_DEBUG(" frames_tx_8192b_9215b       :%ld",      stats.frames_tx_8192b_9215b     );
-    SDK_TRACE_DEBUG(" frames_tx_other             :%ld",      stats.frames_tx_other           );
-    SDK_TRACE_DEBUG(" frames_tx_pri_0             :%ld",      stats.frames_tx_pri_0           );
-    SDK_TRACE_DEBUG(" frames_tx_pri_1             :%ld",      stats.frames_tx_pri_1           );
-    SDK_TRACE_DEBUG(" frames_tx_pri_2             :%ld",      stats.frames_tx_pri_2           );
-    SDK_TRACE_DEBUG(" frames_tx_pri_3             :%ld",      stats.frames_tx_pri_3           );
-    SDK_TRACE_DEBUG(" frames_tx_pri_4             :%ld",      stats.frames_tx_pri_4           );
-    SDK_TRACE_DEBUG(" frames_tx_pri_5             :%ld",      stats.frames_tx_pri_5           );
-    SDK_TRACE_DEBUG(" frames_tx_pri_6             :%ld",      stats.frames_tx_pri_6           );
-    SDK_TRACE_DEBUG(" frames_tx_pri_7             :%ld",      stats.frames_tx_pri_7           );
-    SDK_TRACE_DEBUG(" frames_rx_pri_0             :%ld",      stats.frames_rx_pri_0           );
-    SDK_TRACE_DEBUG(" frames_rx_pri_1             :%ld",      stats.frames_rx_pri_1           );
-    SDK_TRACE_DEBUG(" frames_rx_pri_2             :%ld",      stats.frames_rx_pri_2           );
-    SDK_TRACE_DEBUG(" frames_rx_pri_3             :%ld",      stats.frames_rx_pri_3           );
-    SDK_TRACE_DEBUG(" frames_rx_pri_4             :%ld",      stats.frames_rx_pri_4           );
-    SDK_TRACE_DEBUG(" frames_rx_pri_5             :%ld",      stats.frames_rx_pri_5           );
-    SDK_TRACE_DEBUG(" frames_rx_pri_6             :%ld",      stats.frames_rx_pri_6           );
-    SDK_TRACE_DEBUG(" frames_rx_pri_7             :%ld",      stats.frames_rx_pri_7           );
-    SDK_TRACE_DEBUG(" tx_pripause_0_1us_count     :%ld",      stats.tx_pripause_0_1us_count   );
-    SDK_TRACE_DEBUG(" tx_pripause_1_1us_count     :%ld",      stats.tx_pripause_1_1us_count   );
-    SDK_TRACE_DEBUG(" tx_pripause_2_1us_count     :%ld",      stats.tx_pripause_2_1us_count   );
-    SDK_TRACE_DEBUG(" tx_pripause_3_1us_count     :%ld",      stats.tx_pripause_3_1us_count   );
-    SDK_TRACE_DEBUG(" tx_pripause_4_1us_count     :%ld",      stats.tx_pripause_4_1us_count   );
-    SDK_TRACE_DEBUG(" tx_pripause_5_1us_count     :%ld",      stats.tx_pripause_5_1us_count   );
-    SDK_TRACE_DEBUG(" tx_pripause_6_1us_count     :%ld",      stats.tx_pripause_6_1us_count   );
-    SDK_TRACE_DEBUG(" tx_pripause_7_1us_count     :%ld",      stats.tx_pripause_7_1us_count   );
-    SDK_TRACE_DEBUG(" rx_pripause_0_1us_count     :%ld",      stats.rx_pripause_0_1us_count   );
-    SDK_TRACE_DEBUG(" rx_pripause_1_1us_count     :%ld",      stats.rx_pripause_1_1us_count   );
-    SDK_TRACE_DEBUG(" rx_pripause_2_1us_count     :%ld",      stats.rx_pripause_2_1us_count   );
-    SDK_TRACE_DEBUG(" rx_pripause_3_1us_count     :%ld",      stats.rx_pripause_3_1us_count   );
-    SDK_TRACE_DEBUG(" rx_pripause_4_1us_count     :%ld",      stats.rx_pripause_4_1us_count   );
-    SDK_TRACE_DEBUG(" rx_pripause_5_1us_count     :%ld",      stats.rx_pripause_5_1us_count   );
-    SDK_TRACE_DEBUG(" rx_pripause_6_1us_count     :%ld",      stats.rx_pripause_6_1us_count   );
-    SDK_TRACE_DEBUG(" rx_pripause_7_1us_count     :%ld",      stats.rx_pripause_7_1us_count   );
-    SDK_TRACE_DEBUG(" rx_pause_1us_count          :%ld",      stats.rx_pause_1us_count        );
-    SDK_TRACE_DEBUG(" frames_tx_truncated         :%ld",      stats.frames_tx_truncated       );
+    SDK_TRACE_DEBUG(" frames_rx_ok                :%llu",     stats.frames_rx_ok              );
+    SDK_TRACE_DEBUG(" frames_rx_all               :%llu",     stats.frames_rx_all             );
+    SDK_TRACE_DEBUG(" frames_rx_bad_fcs           :%llu",     stats.frames_rx_bad_fcs         );
+    SDK_TRACE_DEBUG(" frames_rx_bad_all           :%llu",     stats.frames_rx_bad_all         );
+    SDK_TRACE_DEBUG(" octets_rx_ok                :%llu",     stats.octets_rx_ok              );
+    SDK_TRACE_DEBUG(" octets_rx_all               :%llu",     stats.octets_rx_all             );
+    SDK_TRACE_DEBUG(" frames_rx_unicast           :%llu",     stats.frames_rx_unicast         );
+    SDK_TRACE_DEBUG(" frames_rx_multicast         :%llu",     stats.frames_rx_multicast       );
+    SDK_TRACE_DEBUG(" frames_rx_broadcast         :%llu",     stats.frames_rx_broadcast       );
+    SDK_TRACE_DEBUG(" frames_rx_pause             :%llu",     stats.frames_rx_pause           );
+    SDK_TRACE_DEBUG(" frames_rx_bad_length        :%llu",     stats.frames_rx_bad_length      );
+    SDK_TRACE_DEBUG(" frames_rx_undersized        :%llu",     stats.frames_rx_undersized      );
+    SDK_TRACE_DEBUG(" frames_rx_oversized         :%llu",     stats.frames_rx_oversized       );
+    SDK_TRACE_DEBUG(" frames_rx_fragments         :%llu",     stats.frames_rx_fragments       );
+    SDK_TRACE_DEBUG(" frames_rx_jabber            :%llu",     stats.frames_rx_jabber          );
+    SDK_TRACE_DEBUG(" frames_rx_pripause          :%llu",     stats.frames_rx_pripause        );
+    SDK_TRACE_DEBUG(" frames_rx_stomped_crc       :%llu",     stats.frames_rx_stomped_crc     );
+    SDK_TRACE_DEBUG(" frames_rx_too_long          :%llu",     stats.frames_rx_too_long        );
+    SDK_TRACE_DEBUG(" frames_rx_vlan_good         :%llu",     stats.frames_rx_vlan_good       );
+    SDK_TRACE_DEBUG(" frames_rx_dropped           :%llu",     stats.frames_rx_dropped         );
+    SDK_TRACE_DEBUG(" frames_rx_less_than_64b     :%llu",     stats.frames_rx_less_than_64b   );
+    SDK_TRACE_DEBUG(" frames_rx_64b               :%llu",     stats.frames_rx_64b             );
+    SDK_TRACE_DEBUG(" frames_rx_65b_127b          :%llu",     stats.frames_rx_65b_127b        );
+    SDK_TRACE_DEBUG(" frames_rx_128b_255b         :%llu",     stats.frames_rx_128b_255b       );
+    SDK_TRACE_DEBUG(" frames_rx_256b_511b         :%llu",     stats.frames_rx_256b_511b       );
+    SDK_TRACE_DEBUG(" frames_rx_512b_1023b        :%llu",     stats.frames_rx_512b_1023b      );
+    SDK_TRACE_DEBUG(" frames_rx_1024b_1518b       :%llu",     stats.frames_rx_1024b_1518b     );
+    SDK_TRACE_DEBUG(" frames_rx_1519b_2047b       :%llu",     stats.frames_rx_1519b_2047b     );
+    SDK_TRACE_DEBUG(" frames_rx_2048b_4095b       :%llu",     stats.frames_rx_2048b_4095b     );
+    SDK_TRACE_DEBUG(" frames_rx_4096b_8191b       :%llu",     stats.frames_rx_4096b_8191b     );
+    SDK_TRACE_DEBUG(" frames_rx_8192b_9215b       :%llu",     stats.frames_rx_8192b_9215b     );
+    SDK_TRACE_DEBUG(" frames_rx_other             :%llu",     stats.frames_rx_other           );
+    SDK_TRACE_DEBUG(" frames_tx_ok                :%llu",     stats.frames_tx_ok              );
+    SDK_TRACE_DEBUG(" frames_tx_all               :%llu",     stats.frames_tx_all             );
+    SDK_TRACE_DEBUG(" frames_tx_bad               :%llu",     stats.frames_tx_bad             );
+    SDK_TRACE_DEBUG(" octets_tx_ok                :%llu",     stats.octets_tx_ok              );
+    SDK_TRACE_DEBUG(" octets_tx_total             :%llu",     stats.octets_tx_total           );
+    SDK_TRACE_DEBUG(" frames_tx_unicast           :%llu",     stats.frames_tx_unicast         );
+    SDK_TRACE_DEBUG(" frames_tx_multicast         :%llu",     stats.frames_tx_multicast       );
+    SDK_TRACE_DEBUG(" frames_tx_broadcast         :%llu",     stats.frames_tx_broadcast       );
+    SDK_TRACE_DEBUG(" frames_tx_pause             :%llu",     stats.frames_tx_pause           );
+    SDK_TRACE_DEBUG(" frames_tx_pripause          :%llu",     stats.frames_tx_pripause        );
+    SDK_TRACE_DEBUG(" frames_tx_vlan              :%llu",     stats.frames_tx_vlan            );
+    SDK_TRACE_DEBUG(" frames_tx_less_than_64b     :%llu",     stats.frames_tx_less_than_64b   );
+    SDK_TRACE_DEBUG(" frames_tx_64b               :%llu",     stats.frames_tx_64b             );
+    SDK_TRACE_DEBUG(" frames_tx_65b_127b          :%llu",     stats.frames_tx_65b_127b        );
+    SDK_TRACE_DEBUG(" frames_tx_128b_255b         :%llu",     stats.frames_tx_128b_255b       );
+    SDK_TRACE_DEBUG(" frames_tx_256b_511b         :%llu",     stats.frames_tx_256b_511b       );
+    SDK_TRACE_DEBUG(" frames_tx_512b_1023b        :%llu",     stats.frames_tx_512b_1023b      );
+    SDK_TRACE_DEBUG(" frames_tx_1024b_1518b       :%llu",     stats.frames_tx_1024b_1518b     );
+    SDK_TRACE_DEBUG(" frames_tx_1519b_2047b       :%llu",     stats.frames_tx_1519b_2047b     );
+    SDK_TRACE_DEBUG(" frames_tx_2048b_4095b       :%llu",     stats.frames_tx_2048b_4095b     );
+    SDK_TRACE_DEBUG(" frames_tx_4096b_8191b       :%llu",     stats.frames_tx_4096b_8191b     );
+    SDK_TRACE_DEBUG(" frames_tx_8192b_9215b       :%llu",     stats.frames_tx_8192b_9215b     );
+    SDK_TRACE_DEBUG(" frames_tx_other             :%llu",     stats.frames_tx_other           );
+    SDK_TRACE_DEBUG(" frames_tx_pri_0             :%llu",     stats.frames_tx_pri_0           );
+    SDK_TRACE_DEBUG(" frames_tx_pri_1             :%llu",     stats.frames_tx_pri_1           );
+    SDK_TRACE_DEBUG(" frames_tx_pri_2             :%llu",     stats.frames_tx_pri_2           );
+    SDK_TRACE_DEBUG(" frames_tx_pri_3             :%llu",     stats.frames_tx_pri_3           );
+    SDK_TRACE_DEBUG(" frames_tx_pri_4             :%llu",     stats.frames_tx_pri_4           );
+    SDK_TRACE_DEBUG(" frames_tx_pri_5             :%llu",     stats.frames_tx_pri_5           );
+    SDK_TRACE_DEBUG(" frames_tx_pri_6             :%llu",     stats.frames_tx_pri_6           );
+    SDK_TRACE_DEBUG(" frames_tx_pri_7             :%llu",     stats.frames_tx_pri_7           );
+    SDK_TRACE_DEBUG(" frames_rx_pri_0             :%llu",     stats.frames_rx_pri_0           );
+    SDK_TRACE_DEBUG(" frames_rx_pri_1             :%llu",     stats.frames_rx_pri_1           );
+    SDK_TRACE_DEBUG(" frames_rx_pri_2             :%llu",     stats.frames_rx_pri_2           );
+    SDK_TRACE_DEBUG(" frames_rx_pri_3             :%llu",     stats.frames_rx_pri_3           );
+    SDK_TRACE_DEBUG(" frames_rx_pri_4             :%llu",     stats.frames_rx_pri_4           );
+    SDK_TRACE_DEBUG(" frames_rx_pri_5             :%llu",     stats.frames_rx_pri_5           );
+    SDK_TRACE_DEBUG(" frames_rx_pri_6             :%llu",     stats.frames_rx_pri_6           );
+    SDK_TRACE_DEBUG(" frames_rx_pri_7             :%llu",     stats.frames_rx_pri_7           );
+    SDK_TRACE_DEBUG(" tx_pripause_0_1us_count     :%llu",     stats.tx_pripause_0_1us_count   );
+    SDK_TRACE_DEBUG(" tx_pripause_1_1us_count     :%llu",     stats.tx_pripause_1_1us_count   );
+    SDK_TRACE_DEBUG(" tx_pripause_2_1us_count     :%llu",     stats.tx_pripause_2_1us_count   );
+    SDK_TRACE_DEBUG(" tx_pripause_3_1us_count     :%llu",     stats.tx_pripause_3_1us_count   );
+    SDK_TRACE_DEBUG(" tx_pripause_4_1us_count     :%llu",     stats.tx_pripause_4_1us_count   );
+    SDK_TRACE_DEBUG(" tx_pripause_5_1us_count     :%llu",     stats.tx_pripause_5_1us_count   );
+    SDK_TRACE_DEBUG(" tx_pripause_6_1us_count     :%llu",     stats.tx_pripause_6_1us_count   );
+    SDK_TRACE_DEBUG(" tx_pripause_7_1us_count     :%llu",     stats.tx_pripause_7_1us_count   );
+    SDK_TRACE_DEBUG(" rx_pripause_0_1us_count     :%llu",     stats.rx_pripause_0_1us_count   );
+    SDK_TRACE_DEBUG(" rx_pripause_1_1us_count     :%llu",     stats.rx_pripause_1_1us_count   );
+    SDK_TRACE_DEBUG(" rx_pripause_2_1us_count     :%llu",     stats.rx_pripause_2_1us_count   );
+    SDK_TRACE_DEBUG(" rx_pripause_3_1us_count     :%llu",     stats.rx_pripause_3_1us_count   );
+    SDK_TRACE_DEBUG(" rx_pripause_4_1us_count     :%llu",     stats.rx_pripause_4_1us_count   );
+    SDK_TRACE_DEBUG(" rx_pripause_5_1us_count     :%llu",     stats.rx_pripause_5_1us_count   );
+    SDK_TRACE_DEBUG(" rx_pripause_6_1us_count     :%llu",     stats.rx_pripause_6_1us_count   );
+    SDK_TRACE_DEBUG(" rx_pripause_7_1us_count     :%llu",     stats.rx_pripause_7_1us_count   );
+    SDK_TRACE_DEBUG(" rx_pause_1us_count          :%llu",     stats.rx_pause_1us_count        );
+    SDK_TRACE_DEBUG(" frames_tx_truncated         :%llu",     stats.frames_tx_truncated       );
 
     SDK_TRACE_DEBUG("======================================");
 
@@ -280,47 +280,47 @@ void CmdHndler::GetMacStats(uint32_t port, struct GetNicStatsRespPkt& resp)
     ////resp.rx_jabber_pkts = p_stats.
 
     SDK_TRACE_DEBUG("Response message: ");
-    SDK_TRACE_DEBUG("cnt_hi                :%ld", resp.cnt_hi            );
-    SDK_TRACE_DEBUG("cnt_lo                :%ld", resp.cnt_lo            );
-    SDK_TRACE_DEBUG("rx_bytes              :%ld", resp.rx_bytes          );
-    SDK_TRACE_DEBUG("tx_bytes              :%ld", resp.tx_bytes          );
-    SDK_TRACE_DEBUG("rx_uc_pkts            :%ld", resp.rx_uc_pkts        );
-    SDK_TRACE_DEBUG("rx_mc_pkts            :%ld", resp.rx_mc_pkts        );
-    SDK_TRACE_DEBUG("rx_bc_pkts            :%ld", resp.rx_bc_pkts        );
-    SDK_TRACE_DEBUG("tx_uc_pkts            :%ld", resp.tx_uc_pkts        );
-    SDK_TRACE_DEBUG("tx_mc_pkts            :%ld", resp.tx_mc_pkts        );
-    SDK_TRACE_DEBUG("tx_bc_pkts            :%ld", resp.tx_bc_pkts        );
-    SDK_TRACE_DEBUG("fcs_err               :%ld", resp.fcs_err           );
-    SDK_TRACE_DEBUG("align_err             :%ld", resp.align_err         );
-    SDK_TRACE_DEBUG("false_carrier         :%ld", resp.false_carrier     );
-    SDK_TRACE_DEBUG("runt_pkts             :%ld", resp.runt_pkts         );
-    SDK_TRACE_DEBUG("jabber_pkts           :%ld", resp.jabber_pkts       );
-    SDK_TRACE_DEBUG("rx_pause_xon          :%ld", resp.rx_pause_xon      );
-    SDK_TRACE_DEBUG("rx_pause_xoff         :%ld", resp.rx_pause_xoff     );
-    SDK_TRACE_DEBUG("tx_pause_xon          :%ld", resp.tx_pause_xon      );
-    SDK_TRACE_DEBUG("tx_pause_xoff         :%ld", resp.tx_pause_xoff     );
-    SDK_TRACE_DEBUG("tx_s_collision        :%ld", resp.tx_s_collision    );
-    SDK_TRACE_DEBUG("tx_m_collision        :%ld", resp.tx_m_collision    );
-    SDK_TRACE_DEBUG("l_collision           :%ld", resp.l_collision       );
-    SDK_TRACE_DEBUG("e_collision           :%ld", resp.e_collision       );
-    SDK_TRACE_DEBUG("rx_ctl_frames         :%ld", resp.rx_ctl_frames     );
-    SDK_TRACE_DEBUG("rx_64_frames          :%ld", resp.rx_64_frames      );
-    SDK_TRACE_DEBUG("rx_127_frames         :%ld", resp.rx_127_frames     );
-    SDK_TRACE_DEBUG("rx_255_frames         :%ld", resp.rx_255_frames     );
-    SDK_TRACE_DEBUG("rx_511_frames         :%ld", resp.rx_511_frames     );
-    SDK_TRACE_DEBUG("rx_1023_frames        :%ld", resp.rx_1023_frames    );
-    SDK_TRACE_DEBUG("rx_1522_frames        :%ld", resp.rx_1522_frames    );
-    SDK_TRACE_DEBUG("rx_9022_frames        :%ld", resp.rx_9022_frames    );
-    SDK_TRACE_DEBUG("tx_64_frames          :%ld", resp.tx_64_frames      );
-    SDK_TRACE_DEBUG("tx_127_frames         :%ld", resp.tx_127_frames     );
-    SDK_TRACE_DEBUG("tx_255_frames         :%ld", resp.tx_255_frames     );
-    SDK_TRACE_DEBUG("tx_511_frames         :%ld", resp.tx_511_frames     );
-    SDK_TRACE_DEBUG("tx_1023_frames        :%ld", resp.tx_1023_frames    );
-    SDK_TRACE_DEBUG("tx_1522_frames        :%ld", resp.tx_1522_frames    );
-    SDK_TRACE_DEBUG("tx_9022_frames        :%ld", resp.tx_9022_frames    );
-    SDK_TRACE_DEBUG("rx_valid_bytes        :%ld", resp.rx_valid_bytes    );
-    SDK_TRACE_DEBUG("rx_runt_pkts          :%ld", resp.rx_runt_pkts      );
-    SDK_TRACE_DEBUG("rx_jabber_pkts        :%ld", resp.rx_jabber_pkts    );
+    SDK_TRACE_DEBUG("cnt_hi                :%u",   resp.cnt_hi            );
+    SDK_TRACE_DEBUG("cnt_lo                :%u",   resp.cnt_lo            );
+    SDK_TRACE_DEBUG("rx_bytes              :%llu", resp.rx_bytes          );
+    SDK_TRACE_DEBUG("tx_bytes              :%llu", resp.tx_bytes          );
+    SDK_TRACE_DEBUG("rx_uc_pkts            :%llu", resp.rx_uc_pkts        );
+    SDK_TRACE_DEBUG("rx_mc_pkts            :%llu", resp.rx_mc_pkts        );
+    SDK_TRACE_DEBUG("rx_bc_pkts            :%llu", resp.rx_bc_pkts        );
+    SDK_TRACE_DEBUG("tx_uc_pkts            :%llu", resp.tx_uc_pkts        );
+    SDK_TRACE_DEBUG("tx_mc_pkts            :%llu", resp.tx_mc_pkts        );
+    SDK_TRACE_DEBUG("tx_bc_pkts            :%llu", resp.tx_bc_pkts        );
+    SDK_TRACE_DEBUG("fcs_err               :%u",   resp.fcs_err           );
+    SDK_TRACE_DEBUG("align_err             :%u",   resp.align_err         );
+    SDK_TRACE_DEBUG("false_carrier         :%u",   resp.false_carrier     );
+    SDK_TRACE_DEBUG("runt_pkts             :%u",   resp.runt_pkts         );
+    SDK_TRACE_DEBUG("jabber_pkts           :%u",   resp.jabber_pkts       );
+    SDK_TRACE_DEBUG("rx_pause_xon          :%u",   resp.rx_pause_xon      );
+    SDK_TRACE_DEBUG("rx_pause_xoff         :%u",   resp.rx_pause_xoff     );
+    SDK_TRACE_DEBUG("tx_pause_xon          :%u",   resp.tx_pause_xon      );
+    SDK_TRACE_DEBUG("tx_pause_xoff         :%u",   resp.tx_pause_xoff     );
+    SDK_TRACE_DEBUG("tx_s_collision        :%u",   resp.tx_s_collision    );
+    SDK_TRACE_DEBUG("tx_m_collision        :%u",   resp.tx_m_collision    );
+    SDK_TRACE_DEBUG("l_collision           :%u",   resp.l_collision       );
+    SDK_TRACE_DEBUG("e_collision           :%u",   resp.e_collision       );
+    SDK_TRACE_DEBUG("rx_ctl_frames         :%u",   resp.rx_ctl_frames     );
+    SDK_TRACE_DEBUG("rx_64_frames          :%u",   resp.rx_64_frames      );
+    SDK_TRACE_DEBUG("rx_127_frames         :%u",   resp.rx_127_frames     );
+    SDK_TRACE_DEBUG("rx_255_frames         :%u",   resp.rx_255_frames     );
+    SDK_TRACE_DEBUG("rx_511_frames         :%u",   resp.rx_511_frames     );
+    SDK_TRACE_DEBUG("rx_1023_frames        :%u",   resp.rx_1023_frames    );
+    SDK_TRACE_DEBUG("rx_1522_frames        :%u",   resp.rx_1522_frames    );
+    SDK_TRACE_DEBUG("rx_9022_frames        :%u",   resp.rx_9022_frames    );
+    SDK_TRACE_DEBUG("tx_64_frames          :%u",   resp.tx_64_frames      );
+    SDK_TRACE_DEBUG("tx_127_frames         :%u",   resp.tx_127_frames     );
+    SDK_TRACE_DEBUG("tx_255_frames         :%u",   resp.tx_255_frames     );
+    SDK_TRACE_DEBUG("tx_511_frames         :%u",   resp.tx_511_frames     );
+    SDK_TRACE_DEBUG("tx_1023_frames        :%u",   resp.tx_1023_frames    );
+    SDK_TRACE_DEBUG("tx_1522_frames        :%u",   resp.tx_1522_frames    );
+    SDK_TRACE_DEBUG("tx_9022_frames        :%u",   resp.tx_9022_frames    );
+    SDK_TRACE_DEBUG("rx_valid_bytes        :%llu", resp.rx_valid_bytes    );
+    SDK_TRACE_DEBUG("rx_runt_pkts          :%u",   resp.rx_runt_pkts      );
+    SDK_TRACE_DEBUG("rx_jabber_pkts        :%u",   resp.rx_jabber_pkts    );
 
 
 }
@@ -420,7 +420,7 @@ int CmdHndler::SendNcsiCmdResponse(const void *buf, ssize_t sz)
     ret = xport->SendPkt(buf, sz);
 
     if (ret < 0) {
-        SDK_TRACE_ERR("%s: sending cmd response failed with error code: %d",
+        SDK_TRACE_ERR("%s: sending cmd response failed with error code: %ld",
                 __FUNCTION__, ret);
         return -1;
     }
@@ -449,7 +449,7 @@ int CmdHndler::ConfigVlanFilter(uint8_t filter_idx, uint16_t vlan,
 
         if (ret) {
             SDK_TRACE_ERR("Vlan delete for filter_idx: %d , vlan_id: %d failed"
-                    "with error code: %d", filter_idx,
+                    "with error code: %ld", filter_idx,
                     vlan_filter_list[port][filter_idx], ret);
             return ret;
         }
@@ -467,7 +467,7 @@ int CmdHndler::ConfigVlanFilter(uint8_t filter_idx, uint16_t vlan,
         NcsiDb[vlan_msg.port]->UpdateNcsiParam(vlan_msg);
     }
     else
-        SDK_TRACE_ERR("Vlan update(%s) failed with error code: %d",
+        SDK_TRACE_ERR("Vlan update(%s) failed with error code: %ld",
                 enable ? "Create" : "Remove", ret);
 
     return ret;
@@ -492,7 +492,7 @@ int CmdHndler::ConfigMacFilter(uint8_t filter_idx, const uint8_t* mac_addr,
 
         if (ret) {
             SDK_TRACE_ERR("MAC delete for filter_idx: %d failed"
-                    "with error code: %d", filter_idx, ret);
+                    "with error code: %ld", filter_idx, ret);
             return ret;
         }
     }
@@ -511,7 +511,7 @@ int CmdHndler::ConfigMacFilter(uint8_t filter_idx, const uint8_t* mac_addr,
         NcsiDb[mac_filter_msg.port]->UpdateNcsiParam(mac_filter_msg);
     }
     else
-        SDK_TRACE_ERR("MAC update(%s) failed with error code: %d",
+        SDK_TRACE_ERR("MAC update(%s) failed with error code: %ld",
                 enable ? "Create" : "Remove", ret);
 
     return ret;
@@ -561,16 +561,14 @@ void CmdHndler::SetVlanFilter(void *obj, const void *cmd_pkt, ssize_t cmd_sz)
         if (sm_ret == INIT_REQRD) {
             resp.rsp.code = htons(NCSI_RSP_COMMAND_FAILED);
             resp.rsp.reason = htons(NCSI_REASON_INTF_INIT_REQRD);
-            SDK_TRACE_ERR("cmd: %x failed as channel is not initialized", cmd);
-
+            SDK_TRACE_ERR("cmd: %p failed as channel is not initialized", cmd);
             goto error_out;
         }
         else {
             resp.rsp.code = htons(NCSI_RSP_COMMAND_FAILED);
             resp.rsp.reason = htons(NCSI_REASON_INTERNAL_ERR);
-            SDK_TRACE_ERR("cmd: %x failed due to internal err in state machine",
+            SDK_TRACE_ERR("cmd: %p failed due to internal err in state machine",
                     cmd);
-
             goto error_out;
         }
     }
@@ -622,18 +620,16 @@ void CmdHndler::ClearInitState(void *obj, const void *cmd_pkt, ssize_t cmd_sz)
         if (sm_ret == INVALID) {
             resp.rsp.code = htons(NCSI_RSP_COMMAND_FAILED);
             resp.rsp.reason = htons(NCSI_REASON_INVALID_CMD_ERR);
-            SDK_TRACE_ERR("cmd: %x failed as its invalid cmd with "
+            SDK_TRACE_ERR("cmd: %p failed as its invalid cmd with "
                     "current ncsi state: 0x%x", cmd,
                     StateM[cmd->cmd.NcsiHdr.channel]->GetCurState());
-
             goto error_out;
         }
         else {
             resp.rsp.code = htons(NCSI_RSP_COMMAND_FAILED);
             resp.rsp.reason = htons(NCSI_REASON_INTERNAL_ERR);
-            SDK_TRACE_ERR("cmd: %x failed due to internal err in state machine",
+            SDK_TRACE_ERR("cmd: %p failed due to internal err in state machine",
                     cmd);
-
             goto error_out;
         }
     }
@@ -672,18 +668,16 @@ void CmdHndler::SelectPackage(void *obj, const void *cmd_pkt, ssize_t cmd_sz)
         if (sm_ret == INVALID) {
             resp.rsp.code = htons(NCSI_RSP_COMMAND_FAILED);
             resp.rsp.reason = htons(NCSI_REASON_INVALID_CMD_ERR);
-            SDK_TRACE_ERR("cmd: %x failed as its invalid cmd with "
+            SDK_TRACE_ERR("cmd: %p failed as its invalid cmd with "
                     "current ncsi state: 0x%x", cmd,
                     StateM[ncsi_channel]->GetCurState());
-
             goto error_out;
         }
         else {
             resp.rsp.code = htons(NCSI_RSP_COMMAND_FAILED);
             resp.rsp.reason = htons(NCSI_REASON_INTERNAL_ERR);
-            SDK_TRACE_ERR("cmd: %x failed due to internal err in state machine",
+            SDK_TRACE_ERR("cmd: %p failed due to internal err in state machine",
                     cmd);
-
             goto error_out;
         }
     }
@@ -721,18 +715,16 @@ void CmdHndler::DeselectPackage(void *obj, const void *cmd_pkt, ssize_t cmd_sz)
         if (sm_ret == INVALID) {
             resp.rsp.code = htons(NCSI_RSP_COMMAND_FAILED);
             resp.rsp.reason = htons(NCSI_REASON_INVALID_CMD_ERR);
-            SDK_TRACE_ERR("cmd: %x failed as its invalid cmd with "
+            SDK_TRACE_ERR("cmd: %p failed as its invalid cmd with "
                     "current ncsi state: 0x%x", cmd,
                     StateM[cmd->cmd.NcsiHdr.channel]->GetCurState());
-
             goto error_out;
         }
         else {
             resp.rsp.code = htons(NCSI_RSP_COMMAND_FAILED);
             resp.rsp.reason = htons(NCSI_REASON_INTERNAL_ERR);
-            SDK_TRACE_ERR("cmd: %x failed due to internal err in state machine",
+            SDK_TRACE_ERR("cmd: %p failed due to internal err in state machine",
                     cmd);
-
             goto error_out;
         }
     }
@@ -955,16 +947,14 @@ void CmdHndler::EnableChan(void *obj, const void *cmd_pkt, ssize_t cmd_sz)
         if (sm_ret == INIT_REQRD) {
             resp.rsp.code = htons(NCSI_RSP_COMMAND_FAILED);
             resp.rsp.reason = htons(NCSI_REASON_INTF_INIT_REQRD);
-            SDK_TRACE_ERR("cmd: %x failed as channel is not initialized", cmd);
-
+            SDK_TRACE_ERR("cmd: %p failed as channel is not initialized", cmd);
             goto error_out;
         }
         else {
             resp.rsp.code = htons(NCSI_RSP_COMMAND_FAILED);
             resp.rsp.reason = htons(NCSI_REASON_INTERNAL_ERR);
-            SDK_TRACE_ERR("cmd: %x failed due to internal err in state machine",
+            SDK_TRACE_ERR("cmd: %p failed due to internal err in state machine",
                     cmd);
-
             goto error_out;
         }
     }
@@ -972,7 +962,7 @@ void CmdHndler::EnableChan(void *obj, const void *cmd_pkt, ssize_t cmd_sz)
     if (hndlr->EnableChannelRx(cmd->cmd.NcsiHdr.channel, enable)) {
         resp.rsp.code = htons(NCSI_RSP_COMMAND_FAILED);
         resp.rsp.reason = htons(NCSI_REASON_INTERNAL_ERR);
-        SDK_TRACE_ERR("cmd: %x failed due to internal err in ipc", cmd);
+        SDK_TRACE_ERR("cmd: %p failed due to internal err in ipc", cmd);
     }
 
 error_out:
@@ -1011,16 +1001,14 @@ void CmdHndler::ResetChan(void *obj, const void *cmd_pkt, ssize_t cmd_sz)
         if (sm_ret == INIT_REQRD) {
             resp.rsp.code = htons(NCSI_RSP_COMMAND_FAILED);
             resp.rsp.reason = htons(NCSI_REASON_INTF_INIT_REQRD);
-            SDK_TRACE_ERR("cmd: %x failed as channel is not initialized", cmd);
-
+            SDK_TRACE_ERR("cmd: %p failed as channel is not initialized", cmd);
             goto error_out;
         }
         else {
             resp.rsp.code = htons(NCSI_RSP_COMMAND_FAILED);
             resp.rsp.reason = htons(NCSI_REASON_INTERNAL_ERR);
-            SDK_TRACE_ERR("cmd: %x failed due to internal err in state machine",
+            SDK_TRACE_ERR("cmd: %p failed due to internal err in state machine",
                     cmd);
-
             goto error_out;
         }
     }
@@ -1111,16 +1099,14 @@ void CmdHndler::EnableChanNwTx(void *obj, const void *cmd_pkt, ssize_t cmd_sz)
         if (sm_ret == INIT_REQRD) {
             resp.rsp.code = htons(NCSI_RSP_COMMAND_FAILED);
             resp.rsp.reason = htons(NCSI_REASON_INTF_INIT_REQRD);
-            SDK_TRACE_ERR("cmd: %x failed as channel is not initialized", cmd);
-
+            SDK_TRACE_ERR("cmd: %p failed as channel is not initialized", cmd);
             goto error_out;
         }
         else {
             resp.rsp.code = htons(NCSI_RSP_COMMAND_FAILED);
             resp.rsp.reason = htons(NCSI_REASON_INTERNAL_ERR);
-            SDK_TRACE_ERR("cmd: %x failed due to internal err in state machine",
+            SDK_TRACE_ERR("cmd: %p failed due to internal err in state machine",
                     cmd);
-
             goto error_out;
         }
     }
@@ -1128,7 +1114,7 @@ void CmdHndler::EnableChanNwTx(void *obj, const void *cmd_pkt, ssize_t cmd_sz)
     if (hndlr->EnableChannelTx(cmd->cmd.NcsiHdr.channel, enable)) {
         resp.rsp.code = htons(NCSI_RSP_COMMAND_FAILED);
         resp.rsp.reason = htons(NCSI_REASON_INTERNAL_ERR);
-        SDK_TRACE_ERR("cmd: %x failed due to internal err in ipc", cmd);
+        SDK_TRACE_ERR("cmd: %p failed due to internal err in ipc", cmd);
     }
 
 error_out:
@@ -1170,16 +1156,14 @@ void CmdHndler::SetLink(void *obj, const void *cmd_pkt, ssize_t cmd_sz)
         if (sm_ret == INIT_REQRD) {
             resp.rsp.code = htons(NCSI_RSP_COMMAND_FAILED);
             resp.rsp.reason = htons(NCSI_REASON_INTF_INIT_REQRD);
-            SDK_TRACE_ERR("cmd: %x failed as channel is not initialized", cmd);
-
+            SDK_TRACE_ERR("cmd: %p failed as channel is not initialized", cmd);
             goto error_out;
         }
         else {
             resp.rsp.code = htons(NCSI_RSP_COMMAND_FAILED);
             resp.rsp.reason = htons(NCSI_REASON_INTERNAL_ERR);
-            SDK_TRACE_ERR("cmd: %x failed due to internal err in state machine",
+            SDK_TRACE_ERR("cmd: %p failed due to internal err in state machine",
                     cmd);
-
             goto error_out;
         }
     }
@@ -1260,16 +1244,14 @@ void CmdHndler::GetLinkStatus(void *obj, const void *cmd_pkt, ssize_t cmd_sz)
         if (sm_ret == INIT_REQRD) {
             resp.rsp.code = htons(NCSI_RSP_COMMAND_FAILED);
             resp.rsp.reason = htons(NCSI_REASON_INTF_INIT_REQRD);
-            SDK_TRACE_ERR("cmd: %x failed as channel is not initialized", cmd);
-
+            SDK_TRACE_ERR("cmd: %p failed as channel is not initialized", cmd);
             goto error_out;
         }
         else {
             resp.rsp.code = htons(NCSI_RSP_COMMAND_FAILED);
             resp.rsp.reason = htons(NCSI_REASON_INTERNAL_ERR);
-            SDK_TRACE_ERR("cmd: %x failed due to internal err in state machine",
+            SDK_TRACE_ERR("cmd: %p failed due to internal err in state machine",
                     cmd);
-
             goto error_out;
         }
     }
@@ -1307,16 +1289,14 @@ void CmdHndler::EnableVlan(void *obj, const void *cmd_pkt, ssize_t cmd_sz)
         if (sm_ret == INIT_REQRD) {
             resp.rsp.code = htons(NCSI_RSP_COMMAND_FAILED);
             resp.rsp.reason = htons(NCSI_REASON_INTF_INIT_REQRD);
-            SDK_TRACE_ERR("cmd: %x failed as channel is not initialized", cmd);
-
+            SDK_TRACE_ERR("cmd: %p failed as channel is not initialized", cmd);
             goto error_out;
         }
         else {
             resp.rsp.code = htons(NCSI_RSP_COMMAND_FAILED);
             resp.rsp.reason = htons(NCSI_REASON_INTERNAL_ERR);
-            SDK_TRACE_ERR("cmd: %x failed due to internal err in state machine",
+            SDK_TRACE_ERR("cmd: %p failed due to internal err in state machine",
                     cmd);
-
             goto error_out;
         }
     }
@@ -1328,7 +1308,6 @@ void CmdHndler::EnableVlan(void *obj, const void *cmd_pkt, ssize_t cmd_sz)
             SDK_TRACE_ERR("Failed to set vlan Mode");
             resp.rsp.code = htons(NCSI_RSP_COMMAND_FAILED);
             resp.rsp.reason = htons(NCSI_REASON_INTERNAL_ERR);
-
             goto error_out;
         }
     }
@@ -1371,16 +1350,14 @@ void CmdHndler::DisableVlan(void *obj, const void *cmd_pkt, ssize_t cmd_sz)
         if (sm_ret == INIT_REQRD) {
             resp.rsp.code = htons(NCSI_RSP_COMMAND_FAILED);
             resp.rsp.reason = htons(NCSI_REASON_INTF_INIT_REQRD);
-            SDK_TRACE_ERR("cmd: %x failed as channel is not initialized", cmd);
-
+            SDK_TRACE_ERR("cmd: %p failed as channel is not initialized", cmd);
             goto error_out;
         }
         else {
             resp.rsp.code = htons(NCSI_RSP_COMMAND_FAILED);
             resp.rsp.reason = htons(NCSI_REASON_INTERNAL_ERR);
-            SDK_TRACE_ERR("cmd: %x failed due to internal err in state machine",
+            SDK_TRACE_ERR("cmd: %p failed due to internal err in state machine",
                     cmd);
-
             goto error_out;
         }
     }
@@ -1448,16 +1425,14 @@ void CmdHndler::SetMacAddr(void *obj, const void *cmd_pkt, ssize_t cmd_sz)
         if (sm_ret == INIT_REQRD) {
             resp.rsp.code = htons(NCSI_RSP_COMMAND_FAILED);
             resp.rsp.reason = htons(NCSI_REASON_INTF_INIT_REQRD);
-            SDK_TRACE_ERR("cmd: %x failed as channel is not initialized", cmd);
-
+            SDK_TRACE_ERR("cmd: %p failed as channel is not initialized", cmd);
             goto error_out;
         }
         else {
             resp.rsp.code = htons(NCSI_RSP_COMMAND_FAILED);
             resp.rsp.reason = htons(NCSI_REASON_INTERNAL_ERR);
-            SDK_TRACE_ERR("cmd: %x failed due to internal err in state machine",
+            SDK_TRACE_ERR("cmd: %p failed due to internal err in state machine",
                     cmd);
-
             goto error_out;
         }
     }
@@ -1486,7 +1461,6 @@ void CmdHndler::SetMacAddr(void *obj, const void *cmd_pkt, ssize_t cmd_sz)
             SDK_TRACE_ERR("Failed to set mac filter");
             resp.rsp.code = htons(NCSI_RSP_COMMAND_FAILED);
             resp.rsp.reason = htons(NCSI_REASON_INTERNAL_ERR);
-
             goto error_out;
         }
         else {
@@ -1533,16 +1507,14 @@ void CmdHndler::EnableBcastFilter(void *obj, const void *cmd_pkt,
         if (sm_ret == INIT_REQRD) {
             resp.rsp.code = htons(NCSI_RSP_COMMAND_FAILED);
             resp.rsp.reason = htons(NCSI_REASON_INTF_INIT_REQRD);
-            SDK_TRACE_ERR("cmd: %x failed as channel is not initialized", cmd);
-
+            SDK_TRACE_ERR("cmd: %p failed as channel is not initialized", cmd);
             goto error_out;
         }
         else {
             resp.rsp.code = htons(NCSI_RSP_COMMAND_FAILED);
             resp.rsp.reason = htons(NCSI_REASON_INTERNAL_ERR);
-            SDK_TRACE_ERR("cmd: %x failed due to internal err in state machine",
+            SDK_TRACE_ERR("cmd: %p failed due to internal err in state machine",
                     cmd);
-
             goto error_out;
         }
     }
@@ -1596,16 +1568,14 @@ void CmdHndler::DisableBcastFilter(void *obj, const void *cmd_pkt,
         if (sm_ret == INIT_REQRD) {
             resp.rsp.code = htons(NCSI_RSP_COMMAND_FAILED);
             resp.rsp.reason = htons(NCSI_REASON_INTF_INIT_REQRD);
-            SDK_TRACE_ERR("cmd: %x failed as channel is not initialized", cmd);
-
+            SDK_TRACE_ERR("cmd: %p failed as channel is not initialized", cmd);
             goto error_out;
         }
         else {
             resp.rsp.code = htons(NCSI_RSP_COMMAND_FAILED);
             resp.rsp.reason = htons(NCSI_REASON_INTERNAL_ERR);
-            SDK_TRACE_ERR("cmd: %x failed due to internal err in state machine",
+            SDK_TRACE_ERR("cmd: %p failed due to internal err in state machine",
                     cmd);
-
             goto error_out;
         }
     }
@@ -1660,16 +1630,14 @@ void CmdHndler::EnableGlobalMcastFilter(void *obj, const void *cmd_pkt,
         if (sm_ret == INIT_REQRD) {
             resp.rsp.code = htons(NCSI_RSP_COMMAND_FAILED);
             resp.rsp.reason = htons(NCSI_REASON_INTF_INIT_REQRD);
-            SDK_TRACE_ERR("cmd: %x failed as channel is not initialized", cmd);
-
+            SDK_TRACE_ERR("cmd: %p failed as channel is not initialized", cmd);
             goto error_out;
         }
         else {
             resp.rsp.code = htons(NCSI_RSP_COMMAND_FAILED);
             resp.rsp.reason = htons(NCSI_REASON_INTERNAL_ERR);
-            SDK_TRACE_ERR("cmd: %x failed due to internal err in state machine",
+            SDK_TRACE_ERR("cmd: %p failed due to internal err in state machine",
                     cmd);
-
             goto error_out;
         }
     }
@@ -1725,16 +1693,14 @@ void CmdHndler::DisableGlobalMcastFilter(void *obj, const void *cmd_pkt,
         if (sm_ret == INIT_REQRD) {
             resp.rsp.code = htons(NCSI_RSP_COMMAND_FAILED);
             resp.rsp.reason = htons(NCSI_REASON_INTF_INIT_REQRD);
-            SDK_TRACE_ERR("cmd: %x failed as channel is not initialized", cmd);
-
+            SDK_TRACE_ERR("cmd: %p failed as channel is not initialized", cmd);
             goto error_out;
         }
         else {
             resp.rsp.code = htons(NCSI_RSP_COMMAND_FAILED);
             resp.rsp.reason = htons(NCSI_REASON_INTERNAL_ERR);
-            SDK_TRACE_ERR("cmd: %x failed due to internal err in state machine",
+            SDK_TRACE_ERR("cmd: %p failed due to internal err in state machine",
                     cmd);
-
             goto error_out;
         }
     }
@@ -1814,16 +1780,14 @@ void CmdHndler::GetCapabilities(void *obj, const void *cmd_pkt, ssize_t cmd_sz)
         if (sm_ret == INIT_REQRD) {
             resp.rsp.code = htons(NCSI_RSP_COMMAND_FAILED);
             resp.rsp.reason = htons(NCSI_REASON_INTF_INIT_REQRD);
-            SDK_TRACE_ERR("cmd: %x failed as channel is not initialized", cmd);
-
+            SDK_TRACE_ERR("cmd: %p failed as channel is not initialized", cmd);
             goto error_out;
         }
         else {
             resp.rsp.code = htons(NCSI_RSP_COMMAND_FAILED);
             resp.rsp.reason = htons(NCSI_REASON_INTERNAL_ERR);
-            SDK_TRACE_ERR("cmd: %x failed due to internal err in state machine",
+            SDK_TRACE_ERR("cmd: %p failed due to internal err in state machine",
                     cmd);
-
             goto error_out;
         }
     }
@@ -1860,16 +1824,14 @@ void CmdHndler::GetParams(void *obj, const void *cmd_pkt, ssize_t cmd_sz)
         if (sm_ret == INIT_REQRD) {
             resp.rsp.code = htons(NCSI_RSP_COMMAND_FAILED);
             resp.rsp.reason = htons(NCSI_REASON_INTF_INIT_REQRD);
-            SDK_TRACE_ERR("cmd: %x failed as channel is not initialized", cmd);
-
+            SDK_TRACE_ERR("cmd: %p failed as channel is not initialized", cmd);
             goto error_out;
         }
         else {
             resp.rsp.code = htons(NCSI_RSP_COMMAND_FAILED);
             resp.rsp.reason = htons(NCSI_REASON_INTERNAL_ERR);
-            SDK_TRACE_ERR("cmd: %x failed due to internal err in state machine",
+            SDK_TRACE_ERR("cmd: %p failed due to internal err in state machine",
                     cmd);
-
             goto error_out;
         }
     }
@@ -1905,16 +1867,14 @@ void CmdHndler::GetNicPktStats(void *obj, const void *cmd_pkt, ssize_t cmd_sz)
         if (sm_ret == INIT_REQRD) {
             resp.rsp.code = htons(NCSI_RSP_COMMAND_FAILED);
             resp.rsp.reason = htons(NCSI_REASON_INTF_INIT_REQRD);
-            SDK_TRACE_ERR("cmd: %x failed as channel is not initialized", cmd);
-
+            SDK_TRACE_ERR("cmd: %p failed as channel is not initialized", cmd);
             goto error_out;
         }
         else {
             resp.rsp.code = htons(NCSI_RSP_COMMAND_FAILED);
             resp.rsp.reason = htons(NCSI_REASON_INTERNAL_ERR);
-            SDK_TRACE_ERR("cmd: %x failed due to internal err in state machine",
+            SDK_TRACE_ERR("cmd: %p failed due to internal err in state machine",
                     cmd);
-
             goto error_out;
         }
     }
@@ -1952,16 +1912,14 @@ void CmdHndler::GetNcsiStats(void *obj, const void *cmd_pkt, ssize_t cmd_sz)
         if (sm_ret == INIT_REQRD) {
             resp.rsp.code = htons(NCSI_RSP_COMMAND_FAILED);
             resp.rsp.reason = htons(NCSI_REASON_INTF_INIT_REQRD);
-            SDK_TRACE_ERR("cmd: %x failed as channel is not initialized", cmd);
-
+            SDK_TRACE_ERR("cmd: %p failed as channel is not initialized", cmd);
             goto error_out;
         }
         else {
             resp.rsp.code = htons(NCSI_RSP_COMMAND_FAILED);
             resp.rsp.reason = htons(NCSI_REASON_INTERNAL_ERR);
-            SDK_TRACE_ERR("cmd: %x failed due to internal err in state machine",
+            SDK_TRACE_ERR("cmd: %p failed due to internal err in state machine",
                     cmd);
-
             goto error_out;
         }
     }
@@ -2011,16 +1969,14 @@ void CmdHndler::GetNcsiPassthruStats(void *obj, const void *cmd_pkt,
         if (sm_ret == INIT_REQRD) {
             resp.rsp.code = htons(NCSI_RSP_COMMAND_FAILED);
             resp.rsp.reason = htons(NCSI_REASON_INTF_INIT_REQRD);
-            SDK_TRACE_ERR("cmd: %x failed as channel is not initialized", cmd);
-
+            SDK_TRACE_ERR("cmd: %p failed as channel is not initialized", cmd);
             goto error_out;
         }
         else {
             resp.rsp.code = htons(NCSI_RSP_COMMAND_FAILED);
             resp.rsp.reason = htons(NCSI_REASON_INTERNAL_ERR);
-            SDK_TRACE_ERR("cmd: %x failed due to internal err in state machine",
+            SDK_TRACE_ERR("cmd: %p failed due to internal err in state machine",
                     cmd);
-
             goto error_out;
         }
     }
@@ -2042,7 +1998,7 @@ void CmdHndler::GetNcsiPassthruStats(void *obj, const void *cmd_pkt,
     resp.rx_channel_err = 0;//FIXME
 
     SDK_TRACE_DEBUG("Response for GetNcsiPassthruStats:");
-    SDK_TRACE_DEBUG("tx_pkts (in BE format)         :%ld",resp.tx_pkts       );
+    SDK_TRACE_DEBUG("tx_pkts (BE)    :%llu",resp.tx_pkts       );
     SDK_TRACE_DEBUG("tx_dropped      :%d",ntohl(resp.tx_dropped    ));
     SDK_TRACE_DEBUG("tx_channel_err  :%d",ntohl(resp.tx_channel_err));
     SDK_TRACE_DEBUG("tx_us_err       :%d",ntohl(resp.tx_us_err     ));
@@ -2129,7 +2085,7 @@ int CmdHndler::ValidateCmdPkt(const void *pkt, ssize_t sz)
     }
 
     if (sz < MIN_802_3_FRAME_SZ) {
-        SDK_TRACE_ERR("NCSI packet size (%d) is less than min frame size "
+        SDK_TRACE_ERR("NCSI packet size (%ld) is less than min frame size "
                 "for 802.3", sz);
         stats.rx_drop_cnt++;
     }

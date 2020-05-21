@@ -336,16 +336,16 @@ protected:
         table->stats_get(&api_stats, &table_stats);
         SDK_TRACE_VERBOSE("HW Table Stats: Entries:%d Collisions:%d",
                (mtable_count + htable_count), htable_count);
-        SDK_TRACE_VERBOSE("SW Table Stats: Entries=%d Collisions:%d",
+        SDK_TRACE_VERBOSE("SW Table Stats: Entries=%lu Collisions:%lu",
                 table_stats.entries, table_stats.collisions);
-        
+
         SDK_TRACE_VERBOSE("Test  API Stats: Insert=%d Update=%d Get=%d Remove:%d Reserve:%d Release:%d",
                           num_insert, num_update, num_get, num_remove, num_reserve, num_release);
-        SDK_TRACE_VERBOSE("Table API Stats: Insert=%d Update=%d Get=%d Remove:%d Reserve:%d Release:%d",
+        SDK_TRACE_VERBOSE("Table API Stats: Insert=%lu Update=%lu Get=%lu Remove:%lu Reserve:%lu Release:%lu",
                           api_stats.insert, api_stats.update, api_stats.get,
                           api_stats.remove, api_stats.reserve, api_stats.release);
 #endif
-        return;    
+        return;
     }
 
     sdk_ret_t ValidateStats() {
@@ -378,10 +378,10 @@ protected:
         MHTEST_CHECK_RETURN(rs == expret, sdk::SDK_RET_MAX);
         return sdk::SDK_RET_OK;
     }
-    
+
     static void
     IterateCallback(sdk_table_api_params_t *params) {
-        SDK_TRACE_VERBOSE("Entry[%#016lx] Key=[%s] Data=[%s]", params->handle,
+        SDK_TRACE_VERBOSE("Entry[%p] Key=[%s] Data=[%s]", &params->handle,
                h5_key2str(params->key), h5_appdata2str(params->appdata));
         return;
     }

@@ -321,10 +321,10 @@ update_enic(gtest_enic_t *enic, gtest_oper_t oper)
         enicif_spec.mutable_if_enic_info()->mutable_enic_info()->mutable_l2segment_key_handle()->set_segment_id(enic->l2seg_id);
         enicif_spec.mutable_if_enic_info()->mutable_enic_info()->set_encap_vlan_id(enic->encap);
     }
-    for (int i = 0; i < enic->tx_mirr_count; i++) {
+    for (uint32_t i = 0; i < enic->tx_mirr_count; i++) {
         enicif_spec.add_txmirrorsessions()->set_mirrorsession_id(enic->tx_mirr[i]);
     }
-    for (int i = 0; i < enic->rx_mirr_count; i++) {
+    for (uint32_t i = 0; i < enic->rx_mirr_count; i++) {
         enicif_spec.add_rxmirrorsessions()->set_mirrorsession_id(enic->rx_mirr[i]);
     }
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -540,7 +540,7 @@ update_mirror (gtest_mirror_t *mirror, bool create)
     return ret;
 }
 
-hal_ret_t 
+hal_ret_t
 update_flow_monitor (gtest_flow_mon_t *fmon, bool create)
 {
     hal_ret_t ret;
@@ -551,7 +551,7 @@ update_flow_monitor (gtest_flow_mon_t *fmon, bool create)
     spec.mutable_vrf_key_handle()->set_vrf_id(fmon->vrf_id);
     auto action = spec.mutable_action();
     action->add_action(telemetry::RuleAction::MIRROR);
-    for (int i = 0; i < fmon->sess_count; i++) {
+    for (uint32_t i = 0; i < fmon->sess_count; i++) {
         action->add_ms_key_handle()->set_mirrorsession_id(fmon->sess_id[i]);
     }
 

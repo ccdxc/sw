@@ -283,7 +283,7 @@ pd_table_index_get_entries (uint32_t table_id, TableResponse *rsp, bool get_all)
         }
         TABLE_TEST_TRACE_RSP_RETURN((sldm_cb.sldm != NULL), rsp,
                                     HAL_RET_ENTRY_NOT_FOUND,
-                                    "Failed to find the table id: {}",
+                                    "Failed to find the table id: %u",
                                     table_id);
 
         sldm_cb.msg   = msg;
@@ -316,7 +316,7 @@ pd_table_index_get_entries (uint32_t table_id, TableResponse *rsp, bool get_all)
     }
     TABLE_TEST_TRACE_RSP_RETURN((cb.dm != NULL), rsp,
                                 HAL_RET_ENTRY_NOT_FOUND,
-                                "Failed to find the table id: {}",
+                                "Failed to find the table id: %u",
                                 table_id);
     cb.msg = msg;
 
@@ -361,7 +361,7 @@ pd_table_tcam_get_entries (uint32_t table_id, TableResponse *rsp, bool get_all)
     }
     TABLE_TEST_TRACE_RSP_RETURN((cb.tcam_table != NULL), rsp,
                                 HAL_RET_ENTRY_NOT_FOUND,
-                                "Failed to find the tcam table id: {}",
+                                "Failed to find the tcam table id: %u",
                                 table_id);
     cb.msg = msg;
 
@@ -405,7 +405,7 @@ pd_table_hash_get_entries (uint32_t table_id, TableResponse *rsp, bool get_all)
     }
     TABLE_TEST_TRACE_RSP_RETURN((cb.hash_table != NULL), rsp,
                               HAL_RET_ENTRY_NOT_FOUND,
-                              "Failed to find the hash table id: {}",
+                              "Failed to find the hash table id: %u",
                               table_id);
     cb.msg = msg;
 
@@ -467,7 +467,7 @@ pd_table_get_entries(uint32_t table_id, TableResponse *rsp, bool get_all)
 
     ret = pd_table_kind_get_from_id(table_id, &kind);
     TABLE_TEST_TRACE_RSP_RETURN((ret == HAL_RET_OK), rsp,
-            ret, "Failed to find table with id: {}",
+            ret, "Failed to find table with id: %u",
             table_id);
 
     HAL_TRACE_VERBOSE("Retrieving Table entries for table id {}", table_id);

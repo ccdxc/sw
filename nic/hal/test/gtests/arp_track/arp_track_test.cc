@@ -223,7 +223,7 @@ TEST_F (arp_track_test, mirror_order2) {
     uint32_t       l2seg_id_hp1 = 101;
     uint32_t       src_ip = 0x0a000001;
     uint32_t       ips[2] = {0x0a000002, 0x0a000003};
-    uint32_t       sid1 = 1, sid2 = 2, cid1 = 1, cid2 = 2;
+    uint32_t       sid1 = 1, sid2 = 2;
     uint32_t       up_ifid[2], ifid_count = 0;
 
     // Create uplinks
@@ -265,10 +265,12 @@ TEST_F (arp_track_test, mirror_order2) {
     ASSERT_EQ(create_ep(vrf_id_hp1, l2seg_id_hp1, uplinkif_id1, 0x000010002001, ips, 2), HAL_RET_OK);
 
 #if 0
+    uint32_t       cid1 = 1, cid2 = 2;
+
     // Create collector
     ASSERT_EQ(create_collector(cid1, vrf_id_hp1, l2seg_id_hp1, src_ip, ips[0]), HAL_RET_OK);
     ASSERT_EQ(create_collector(cid2, vrf_id_hp1, l2seg_id_hp1, src_ip, ips[1]), HAL_RET_OK);
-     
+
     // Remove IP from EP
     ASSERT_EQ(update_ep(vrf_id_hp1, l2seg_id_hp1, uplinkif_id1, 0x000010002001, ips, 1), HAL_RET_OK);
 

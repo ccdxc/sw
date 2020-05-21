@@ -523,10 +523,10 @@ TEST_F(hash_test, test6) {
         ASSERT_TRUE(rs == sdk::SDK_RET_OK);
     }
 
-    SDK_TRACE_DEBUG("tableid:{}, table_name:{}, capacity:{}, oflow_capac:{}, "
-                    "num_in_use:{}, oflow_num_in_use:{}"
-                    "num_inserts:{}, num_insert_errors:{}, "
-                    "num_deletes:{}, num_delete_errors:{}",
+    SDK_TRACE_DEBUG("tableid:%d, table_name:%s, capacity:%d, oflow_capac:%d, "
+                    "num_in_use:%d, oflow_num_in_use:%d"
+                    "num_inserts:%d, num_insert_errors:%d, "
+                    "num_deletes:%d, num_delete_errors:%d",
                     test_hash->id(), test_hash->name(),
                     test_hash->capacity(), test_hash->oflow_capacity(),
                     test_hash->num_entries_in_use(), test_hash->oflow_num_entries_in_use(),

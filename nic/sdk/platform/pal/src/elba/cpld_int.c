@@ -148,6 +148,7 @@ write_gpios(int gpio, uint32_t data)
     return 0;
 }
 
+#if 0
 static int
 read_gpios(int d, uint32_t mask)
 {
@@ -190,7 +191,7 @@ read_gpios(int d, uint32_t mask)
     }
     return value;
 }
-
+#endif
 
 static int
 cpld_read(uint8_t addr)

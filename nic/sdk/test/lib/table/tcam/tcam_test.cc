@@ -615,9 +615,9 @@ TEST_F(tcam_test, test7) {
         ASSERT_TRUE(rs == SDK_RET_OK);
     }
 
-    SDK_TRACE_DEBUG("tableid:{}, table_name:{}, capacity:{}, num_in_use:{}, "
-                    "num_inserts:{}, num_insert_errors:{}, "
-                    "num_deletes:{}, num_delete_errors:{}",
+    SDK_TRACE_DEBUG("tableid:%d, table_name:%s, capacity:%d, num_in_use:%d, "
+                    "num_inserts:%d, num_insert_errors:%d, "
+                    "num_deletes:%d, num_delete_errors:%d",
                     test_tcam->id(), test_tcam->name(),
                     test_tcam->capacity(), test_tcam->num_entries_in_use(),
                     test_tcam->num_inserts(), test_tcam->num_insert_errors(),

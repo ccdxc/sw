@@ -287,18 +287,18 @@ protected:
 
         table->stats_get(&api_stats, &table_stats);
         SDK_TRACE_DEBUG("HW Table Stats: Entries:%d", table_count);
-        SDK_TRACE_DEBUG("SW Table Stats: Entries=%d", table_stats.entries);
-        
+        SDK_TRACE_DEBUG("SW Table Stats: Entries=%lu", table_stats.entries);
+
         SDK_TRACE_DEBUG("Test  API Stats: Insert=%d Update=%d Get=%d Remove:%d Reserve:%d Release:%d",
                         num_insert, num_update, num_get, num_remove, num_reserve, num_release);
-        SDK_TRACE_DEBUG("Table API Stats: Insert=%d Update=%d Get=%d Remove:%d Reserve:%d Release:%d",
+        SDK_TRACE_DEBUG("Table API Stats: Insert=%lu Update=%lu Get=%lu Remove:%lu Reserve:%lu Release:%lu",
                         api_stats.insert + api_stats.insert_duplicate + api_stats.insert_fail,
                         api_stats.update + api_stats.update_fail,
                         api_stats.get + api_stats.get_fail,
                         api_stats.remove + api_stats.remove_not_found + api_stats.remove_fail,
                         api_stats.reserve + api_stats.reserve_fail,
                         api_stats.release + api_stats.release_fail);
-        return;    
+        return;
     }
 
     sdk_ret_t ValidateStats() {
@@ -330,7 +330,7 @@ protected:
 
     static void
     IterateCallback(sdk_table_api_params_t *params) {
-        SDK_TRACE_DEBUG("Entry[%#016lx] Key=[%s] Mask=[%s] Data=[%s]", params->handle,
+        SDK_TRACE_DEBUG("Entry[%p] Key=[%s] Mask=[%s] Data=[%s]", &params->handle,
                         sltcam_key2str(params->key), sltcam_key2str(params->mask),
                         sltcam_data2str(params->appdata));
         return;

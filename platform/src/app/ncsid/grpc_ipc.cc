@@ -206,8 +206,8 @@ int grpc_ipc::PostMsg(struct VlanFilterMsg& vlan_filter)
         }
     } else {
         SDK_TRACE_ERR("Failed to %s vlan filter for vlan_id: 0x%x. err: 0x%x err_msg: %s",
-                vlan_filter.enable ? "create":"delete", 
-                vlan_filter.vlan_id, status.error_code(), status.error_message());
+                vlan_filter.enable ? "create":"delete",
+                vlan_filter.vlan_id, status.error_code(), status.error_message().c_str());
         ret = SDK_RET_ERR;
         goto end;
     }
@@ -252,7 +252,7 @@ int grpc_ipc::PostMsg(struct VlanModeMsg& vlan_mode)
         }
     } else {
         SDK_TRACE_ERR("Failed to update vlan mode: 0x%x. err: 0x%x err_msg: %s",
-                vlan_mode.mode, status.error_code(), status.error_message());
+                vlan_mode.mode, status.error_code(), status.error_message().c_str());
         ret = SDK_RET_ERR;
         goto end;
     }
@@ -274,7 +274,7 @@ int grpc_ipc::PostMsg(struct MacFilterMsg& mac_filter)
     memcpy(&mac_addr, mac_filter.mac_addr, sizeof(mac_filter.mac_addr));
     memrev((uint8_t* )&mac_addr, 6);
 
-    SDK_TRACE_INFO("mac filter %s on ncsi channel: 0x%x, mac_addr: 0x%llx", 
+    SDK_TRACE_INFO("mac filter %s on ncsi channel: 0x%x, mac_addr: 0x%lx",
             mac_filter.enable ? "create" : "remove", mac_filter.port, mac_addr);
     req = req_msg.add_request();
 
@@ -292,23 +292,23 @@ int grpc_ipc::PostMsg(struct MacFilterMsg& mac_filter)
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() == types::API_STATUS_OK) {
-        } 
+        }
         else if (mac_filter.enable && rsp.api_status() == types::API_STATUS_EXISTS_ALREADY) {
-            SDK_TRACE_ERR("mac filter already exists with mac_addr: 0x%llx", 
+            SDK_TRACE_ERR("mac filter already exists with mac_addr: 0x%lx",
                     mac_addr);
             ret = SDK_RET_ERR;
             goto end;
         } else {
-            SDK_TRACE_ERR("Failed to %s mac filter for mac_addr: 0x%llx. err: 0x%x",
+            SDK_TRACE_ERR("Failed to %s mac filter for mac_addr: 0x%lx. err: 0x%x",
                     mac_filter.enable ? "create":"delete",
                     mac_addr, rsp.api_status());
             ret = SDK_RET_ERR;
             goto end;
         }
     } else {
-        SDK_TRACE_ERR("Failed to %s mac filter for mac_addr: 0x%llx. err: 0x%x err_msg: %s",
-                mac_filter.enable ? "create":"delete", mac_addr, 
-                status.error_code(), status.error_message());
+        SDK_TRACE_ERR("Failed to %s mac filter for mac_addr: 0x%lx. err: 0x%x err_msg: %s",
+                mac_filter.enable ? "create":"delete", mac_addr,
+                status.error_code(), status.error_message().c_str());
         ret = SDK_RET_ERR;
         goto end;
     }
@@ -343,8 +343,8 @@ int grpc_ipc::PostMsg(struct EnableChanMsg& enable_ch)
     status = channel_state_get(get_req_msg, get_rsp_msg);
 
     if (!status.ok()) {
-        SDK_TRACE_ERR("Failed to get channel state for channel: %d. err: {}, err_msg: {}",
-                enable_ch.port, status.error_code(), status.error_message());
+        SDK_TRACE_ERR("Failed to get channel state for channel: %d. err: 0x%x, err_msg: %s",
+                enable_ch.port, status.error_code(), status.error_message().c_str());
         ret = SDK_RET_ERR;
         goto end;
     }
@@ -377,7 +377,7 @@ int grpc_ipc::PostMsg(struct EnableChanMsg& enable_ch)
         }
     } else {
         SDK_TRACE_ERR("Failed to update channel state. err: 0x%x err_msg: %s",
-                status.error_code(), status.error_message());
+                status.error_code(), status.error_message().c_str());
         ret = SDK_RET_ERR;
         goto end;
     }
@@ -407,8 +407,8 @@ int grpc_ipc::PostMsg(struct ResetChanMsg& reset_ch)
     status = channel_state_get(get_req_msg, get_rsp_msg);
 
     if (!status.ok()) {
-        SDK_TRACE_ERR("Failed to get channel state for channel: %d. err: {}, err_msg: {}",
-                reset_ch.port, status.error_code(), status.error_message());
+        SDK_TRACE_ERR("Failed to get channel state for channel: %d. err: 0x%x, err_msg: %s",
+                reset_ch.port, status.error_code(), status.error_message().c_str());
         ret = SDK_RET_ERR;
         goto end;
     }
@@ -438,7 +438,7 @@ int grpc_ipc::PostMsg(struct ResetChanMsg& reset_ch)
         }
     } else {
         SDK_TRACE_ERR("Failed to update channel state. err: 0x%x err_msg: %s",
-                status.error_code(), status.error_message());
+                status.error_code(), status.error_message().c_str());
         ret = SDK_RET_ERR;
         goto end;
     }
@@ -468,8 +468,8 @@ int grpc_ipc::PostMsg(struct EnableChanTxMsg& enable_ch_tx)
     status = channel_state_get(get_req_msg, get_rsp_msg);
 
     if (!status.ok()) {
-        SDK_TRACE_ERR("Failed to get channel state for channel: %d. err: {}, err_msg: {}",
-                enable_ch_tx.port, status.error_code(), status.error_message());
+        SDK_TRACE_ERR("Failed to get channel state for channel: %d. err: 0x%x, err_msg: %s",
+                enable_ch_tx.port, status.error_code(), status.error_message().c_str());
         ret = SDK_RET_ERR;
         goto end;
     }
@@ -499,7 +499,7 @@ int grpc_ipc::PostMsg(struct EnableChanTxMsg& enable_ch_tx)
         }
     } else {
         SDK_TRACE_ERR("Failed to update channel state. err: 0x%x err_msg: %s",
-                status.error_code(), status.error_message());
+                status.error_code(), status.error_message().c_str());
         ret = SDK_RET_ERR;
         goto end;
     }
@@ -529,8 +529,8 @@ int grpc_ipc::PostMsg(struct EnableBcastFilterMsg& bcast_filter)
     status = bcast_filters_get(get_req_msg, get_rsp_msg);
 
     if (!status.ok()) {
-        SDK_TRACE_ERR("Failed to get broadcast filters for channel: %d. err: {}, err_msg: {}",
-                bcast_filter.port, status.error_code(), status.error_message());
+        SDK_TRACE_ERR("Failed to get broadcast filters for channel: %d. err: 0x%x, err_msg: %s",
+                bcast_filter.port, status.error_code(), status.error_message().c_str());
         ret = SDK_RET_ERR;
         goto end;
     }
@@ -563,7 +563,7 @@ int grpc_ipc::PostMsg(struct EnableBcastFilterMsg& bcast_filter)
         }
     } else {
         SDK_TRACE_ERR("Failed to update broadcast filters. err: 0x%x err_msg: %s",
-                status.error_code(), status.error_message());
+                status.error_code(), status.error_message().c_str());
         ret = SDK_RET_ERR;
         goto end;
     }
@@ -593,8 +593,8 @@ int grpc_ipc::PostMsg(struct EnableGlobalMcastFilterMsg& mcast_filter)
     status = mcast_filters_get(get_req_msg, get_rsp_msg);
 
     if (!status.ok()) {
-        SDK_TRACE_ERR("Failed to get multicast filters for channel: %d. err: {}, err_msg: {}",
-                mcast_filter.port, status.error_code(), status.error_message());
+        SDK_TRACE_ERR("Failed to get multicast filters for channel: %d. err: 0x%x, err_msg: %s",
+                mcast_filter.port, status.error_code(), status.error_message().c_str());
         ret = SDK_RET_ERR;
         goto end;
     }
@@ -629,7 +629,7 @@ int grpc_ipc::PostMsg(struct EnableGlobalMcastFilterMsg& mcast_filter)
         }
     } else {
         SDK_TRACE_ERR("Failed to update multicast filters. err: 0x%x err_msg: %s",
-                status.error_code(), status.error_message());
+                status.error_code(), status.error_message().c_str());
         ret = SDK_RET_ERR;
         goto end;
     }

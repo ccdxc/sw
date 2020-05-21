@@ -440,7 +440,7 @@ mirror_session_create (MirrorSessionSpec &spec, MirrorSessionResponse *rsp)
     kh::InterfaceKeyHandle ifid;
     hal_ret_t ret;
     auto ms_ht = g_hal_state->mirror_session_ht();
-    if_t *id, *dest_if;
+    if_t *id;
 
     hal_api_trace(" API Begin: Mirror Session create ");
     proto_msg_dump(spec);
@@ -500,6 +500,7 @@ mirror_session_create (MirrorSessionSpec &spec, MirrorSessionResponse *rsp)
                                                 spec);
         break;
 #if 0
+	if_t *dest_if;
         auto erspan = spec.erspan_spec();
         session->mirror_destination_u.er_span_dest.vrf_id =
             spec.vrf_key_handle().vrf_id();

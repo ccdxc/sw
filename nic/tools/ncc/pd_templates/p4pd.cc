@@ -3560,6 +3560,9 @@ ${api_prefix}_table_entry_decoded_string_get(uint32_t   tableid,
 //::                        actionfldname  = actionfld['p4_name']
 //::                        actionfldwidth = actionfld['len']
 //::                        if actionfldwidth <= 32:
+// Split fields like lpm_v4addr1 break here. They belong in the next branch, to iterate over p4fldwidth_byte,
+// instead of being converted with %x here. Turn off the warning for now.
+#pragma GCC diagnostic ignored "-Wformat"
                         b = snprintf(buf, blen, "%s: 0x%x\n", "${actionfldname}",
                              actiondata.action_u.\
                              ${table}_${actionname}.${actionfldname});

@@ -217,6 +217,7 @@ is_linkmgr_ctrl_thread (void)
 
     // if curr_thread/ctrl_thread is NULL, then init has failed or not invoked
     if (ctrl_thread == NULL) {
+        is_ctrl_thread = false;
         SDK_ASSERT_GOTO(0, end);
     }
 

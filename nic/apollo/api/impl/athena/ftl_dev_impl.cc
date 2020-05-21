@@ -906,7 +906,7 @@ lif_queues_ctl_t::pollers_init(devcmd_t *devcmd)
                                         FTL_DEV_POLLER_RINGS_HBM_HANDLE);
     SDK_ASSERT_TRACE_RETURN((wrings_base_addr != INVALID_MEM_ADDRESS) &&
                             wrings_total_sz, PDS_RET_NO_RESOURCE,
-                            "HBM memory error for %s"
+                            "HBM memory error for "
                             FTL_DEV_POLLER_RINGS_HBM_HANDLE);
     devcmd->req().pollers_init.wrings_base_addr = wrings_base_addr;
     devcmd->req().pollers_init.wrings_total_sz = wrings_total_sz;

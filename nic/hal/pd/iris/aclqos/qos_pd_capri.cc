@@ -2591,37 +2591,37 @@ qos_class_queue_stats_to_proto_stats (qos::QosClassQueueStats *q_stats,
     }
 }
 
-static hal_ret_t
-qos_class_pd_populate_stats (pd_qos_class_t *qos_class_pd, QosClassStats *stats)
-{
-    hal_ret_t                first_err_ret = HAL_RET_OK;
-    hal_ret_t                ret = HAL_RET_OK;
-    sdk_ret_t                sdk_ret = SDK_RET_OK;
-    capri_queue_t            iqs[TM_NUM_PORTS][CAPRI_TM_MAX_IQS] = {};
-    capri_queue_t            oqs[TM_NUM_PORTS][CAPRI_TM_MAX_OQS] = {};
-    capri_queue_stats_t      queue_stats = {0};
+// static hal_ret_t
+// qos_class_pd_populate_stats (pd_qos_class_t *qos_class_pd, QosClassStats *stats)
+// {
+//     hal_ret_t                first_err_ret = HAL_RET_OK;
+//     hal_ret_t                ret = HAL_RET_OK;
+//     sdk_ret_t                sdk_ret = SDK_RET_OK;
+//     capri_queue_t            iqs[TM_NUM_PORTS][CAPRI_TM_MAX_IQS] = {};
+//     capri_queue_t            oqs[TM_NUM_PORTS][CAPRI_TM_MAX_OQS] = {};
+//     capri_queue_stats_t      queue_stats = {0};
 
-    qos_class_pd_get_all_queues(qos_class_pd,
-                                iqs, oqs);
+//     qos_class_pd_get_all_queues(qos_class_pd,
+//                                 iqs, oqs);
 
-    // Update the stats now
-    pd_qos_class_periodic_stats_update(NULL);
+//     // Update the stats now
+//     pd_qos_class_periodic_stats_update(NULL);
 
-    for (unsigned port = 0; port < SDK_ARRAY_SIZE(iqs); port++) {
-        auto port_stats = stats->add_port_stats();
-        qos_class_pd_port_to_packet_buffer_port(port,
-                                                port_stats->mutable_packet_buffer_port());
-        auto q_stats = port_stats->mutable_qos_queue_stats();
-        sdk_ret = capri_populate_queue_stats(
-                        port, iqs[port], oqs[port], &queue_stats);
-        qos_class_queue_stats_to_proto_stats(q_stats, &queue_stats);
-        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
-        if (first_err_ret == HAL_RET_OK) {
-            first_err_ret = ret;
-        }
-    }
-    return first_err_ret;
-}
+//     for (unsigned port = 0; port < SDK_ARRAY_SIZE(iqs); port++) {
+//         auto port_stats = stats->add_port_stats();
+//         qos_class_pd_port_to_packet_buffer_port(port,
+//                                                 port_stats->mutable_packet_buffer_port());
+//         auto q_stats = port_stats->mutable_qos_queue_stats();
+//         sdk_ret = capri_populate_queue_stats(
+//                         port, iqs[port], oqs[port], &queue_stats);
+//         qos_class_queue_stats_to_proto_stats(q_stats, &queue_stats);
+//         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+//         if (first_err_ret == HAL_RET_OK) {
+//             first_err_ret = ret;
+//         }
+//     }
+//     return first_err_ret;
+// }
 
 // ----------------------------------------------------------------------------
 // pd qos_class get
