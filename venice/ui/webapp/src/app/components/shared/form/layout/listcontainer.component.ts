@@ -8,7 +8,6 @@ import { Animations } from '@app/animations';
   styleUrls: ['./listcontainer.component.scss'],
   encapsulation: ViewEncapsulation.None,
   animations: Animations,
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 
 export class ListContainerComponent {

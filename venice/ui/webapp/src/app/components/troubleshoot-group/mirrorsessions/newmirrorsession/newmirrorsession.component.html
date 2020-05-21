@@ -53,13 +53,13 @@
              appErrorTooltip spellcheck="false" type="text" pInputText>
     </span>
     <div fxFlex="89px"></div>
-    <span [formGroup]="newObject.$formGroup.get(['spec', 'start-condition'])"
-          class="newmirrorsession-general-box">
-      <p-calendar [showTime]="true" hourFormat="24" formControlName="schedule-time"
-                  appFloatLabel="Schedule (UTC)" class="ui-calendar-inputbox"
-                  appendTo="body" [showIcon]="true" [minDate]="minDate"
-                  [defaultDate]="defaultDate">
-      </p-calendar>
+    <span [formGroup]="newObject.$formGroup.get(['spec'])"
+          [ngClass]="{
+            'newmirrorsession-general-box': true,
+            'requiredField': isFieldEmpty(newObject.$formGroup.get(['spec', 'span-id']))
+          }">
+      <input formControlName="span-id" appFloatLabel="ERSPAN ID"
+             appErrorTooltip spellcheck="false" type="number" min="1" max="1023" pInputText>
     </span>
   </div>
 </ng-template>
@@ -72,16 +72,24 @@
              appErrorTooltip spellcheck="false" type="number" min="0" pInputText>
     </span>
     <div fxFlex="89px"></div>
+    <span [formGroup]="newObject.$formGroup.get(['spec', 'start-condition'])"
+          class="newmirrorsession-general-box">
+      <p-calendar [showTime]="true" hourFormat="24" formControlName="schedule-time"
+                  appFloatLabel="Schedule (UTC)" class="ui-calendar-inputbox"
+                  appendTo="body" [showIcon]="true" [minDate]="minDate"
+                  [defaultDate]="defaultDate">
+      </p-calendar>
+    </span>
+    <!--
     <span [formGroup]="newObject.$formGroup.get(['spec'])"
           class="newmirrorsession-general-box">
-      <!-- hide this for release a
       <p-multiSelect appFloatLabel="Packet Filters"
                      appendTo="body" [showHeader]="false"
                      formControlName="packet-filters" [filter]="false" [showToggleAll]="false"
                      defaultLabel="All" [options]="packetFilterOptions">
       </p-multiSelect>
-      -->
     </span>
+    -->
   </div>
 </ng-template>
 

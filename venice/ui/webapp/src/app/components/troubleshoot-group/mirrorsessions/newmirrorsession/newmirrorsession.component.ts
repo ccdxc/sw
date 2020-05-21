@@ -145,9 +145,11 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
       this.newObject.$formGroup.get(['meta', 'name']).setValidators([
         this.newObject.$formGroup.get(['meta', 'name']).validator,
         this.isMirrorsessionNameValid(this.existingObjects)]);
+      this.newObject.$formGroup.get(['spec', 'span-id']).setValue(null);
     }
 
     this.newObject.$formGroup.get(['spec', 'packet-size']).setValidators([this.packetSizeValidator()]);
+    this.addFieldValidator(this.newObject.$formGroup.get(['spec', 'span-id']), this.isSpanIDAlreadyUsed(this.existingObjects));
 
     // due to currently backend does not support all drops, comment out next lines
     /*
@@ -208,6 +210,26 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
       return newData;
     }
     return data;
+  }
+
+  isSpanIDAlreadyUsed(existingObjects: IMonitoringMirrorSession[]): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      if (!control.value && control.value !== 0) {
+        return null;
+      }
+      const mirrorSpan: IMonitoringMirrorSession =
+        this.existingObjects.find((item: IMonitoringMirrorSession) =>
+          item.spec['span-id'] === control.value);
+      if (mirrorSpan && mirrorSpan.meta.name !== this.newObject.$formGroup.get(['meta', 'name']).value) {
+        return {
+          objectname: {
+            required: true,
+            message: 'ERSPAN ID must be unique, already used by ' + mirrorSpan.meta.name
+          }
+        };
+      }
+      return null;
+    };
   }
 
   isFormValid(): boolean {

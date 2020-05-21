@@ -161,6 +161,8 @@ export class ChipsComponent extends Chips implements OnInit, AfterViewInit, Afte
     if (this.addOnBlur && this.inputViewChild.nativeElement.value) {
       this.addItem(event, this.inputViewChild.nativeElement.value);
       this.inputViewChild.nativeElement.value = '';
+      this.inputViewChild.nativeElement.focus();
+      this.inputViewChild.nativeElement.blur();
     }
     this.onModelTouched();
   }
