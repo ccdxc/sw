@@ -356,7 +356,7 @@ func (n *NMD) PostStatusToAgent() (err error) {
 	statusObj.DSCID = n.config.Spec.ID
 
 	var resp Response
-	ticker := time.NewTicker(time.Minute)
+	ticker := time.NewTicker(time.Second)
 	if err := netutils.HTTPPost(agentModeChangeURL, &statusObj, &resp); err != nil {
 		go func() {
 			for {
