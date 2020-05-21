@@ -457,22 +457,22 @@ func (m *ServiceHandlers) pollPeerState() {
 						state := peerStateToBool(peer.Status)
 						m.peerTracker[pdsIPToString(peer.Spec.PeerAddr)] = &peerState{epoch: epoch, state: state}
 						if state {
-							recorder.Event(eventtypes.BGP_SESSION_ESTABLISHED, fmt.Sprintf("Peer %v, State %s", pdsIPToString(peer.Spec.PeerAddr), pdsStateToString(peer.Status.Status)), nil)
+							recorder.Event(eventtypes.BGP_SESSION_ESTABLISHED, fmt.Sprintf("Peer %v", pdsIPToString(peer.Spec.PeerAddr)), nil)
 							log.Infof("Peer EVENT: Peer up [%v]", pdsIPToString(peer.Spec.PeerAddr))
 							ups++
 						} else {
-							recorder.Event(eventtypes.BGP_SESSION_DOWN, fmt.Sprintf("Peer %v, State %s", pdsIPToString(peer.Spec.PeerAddr), pdsStateToString(peer.Status.Status)), nil)
+							recorder.Event(eventtypes.BGP_SESSION_DOWN, fmt.Sprintf("Peer %v", pdsIPToString(peer.Spec.PeerAddr)), nil)
 							log.Infof("Peer EVENT: Peer down [%v]", pdsIPToString(peer.Spec.PeerAddr))
 							downs++
 						}
 					} else {
 						if p.state != peerStateToBool(peer.Status) {
 							if peerStateToBool(peer.Status) {
-								recorder.Event(eventtypes.BGP_SESSION_ESTABLISHED, fmt.Sprintf("Peer %v, State %s", pdsIPToString(peer.Spec.PeerAddr), pdsStateToString(peer.Status.Status)), nil)
+								recorder.Event(eventtypes.BGP_SESSION_ESTABLISHED, fmt.Sprintf("Peer %v", pdsIPToString(peer.Spec.PeerAddr)), nil)
 								log.Infof("Peer EVENT: Peer up [%v]", pdsIPToString(peer.Spec.PeerAddr))
 								ups++
 							} else {
-								recorder.Event(eventtypes.BGP_SESSION_DOWN, fmt.Sprintf("Peer %v, State %s", pdsIPToString(peer.Spec.PeerAddr), pdsStateToString(peer.Status.Status)), nil)
+								recorder.Event(eventtypes.BGP_SESSION_DOWN, fmt.Sprintf("Peer %v", pdsIPToString(peer.Spec.PeerAddr)), nil)
 								log.Infof("Peer EVENT: Peer down [%v]", pdsIPToString(peer.Spec.PeerAddr))
 								downs++
 							}

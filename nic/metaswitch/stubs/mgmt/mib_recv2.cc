@@ -200,9 +200,8 @@ NBB_VOID sms_rcv_amb_trap(AMB_TRAP *v_amb_trap NBB_CCXT_T NBB_CXT)
             // Raise an event
             operd::alerts::operd_alerts_t alert;
             alert = operd::alerts::BGP_SESSION_DOWN;
-            operd::alerts::alert_recorder::get()->alert(alert,"Peer %s, State %s",
-                                                      ipaddr2str(&remote_ip), 
-                            ms_bgp_conn_fsm_state_str(trap_data->fsm_state));
+            operd::alerts::alert_recorder::get()->alert(alert,"Peer %s",
+                                                        ipaddr2str(&remote_ip));
           }
       }
       break;
