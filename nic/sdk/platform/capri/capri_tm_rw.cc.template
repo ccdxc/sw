@@ -2642,7 +2642,7 @@ capri_tm_program_hbm_buffers (capri_tm_buf_cfg_t *buf_cfg)
                        CAPRI_TM_DEFAULT_RELATIVE_XON_THRESHOLD_BYTES) - 
                       (3 * CAPRI_TM_JUMBO_FRAME_SIZE) ) >> 9;   // since XOFF is lowered, lower XON also proportionately
 
-                SDK_TRACE_DEBUG("context: %u payload_size: %u xoff_threshold: %u xon_threshold: %u",
+                SDK_TRACE_DEBUG("context: %u payload_size: %lu xoff_threshold: %lu xon_threshold: %lu",
                                 context, payload_size, xoff_threshold, xon_threshold);
 
             } else {
