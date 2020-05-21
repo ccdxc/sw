@@ -30,7 +30,7 @@ Options
   -s, --dsc-profile string          Active Distributed Service Card Profile (default "FEATURE_PROFILE_BASE")
   -h, --help                        help for dsc
   -i, --id string                   DSC ID
-      --inband-ip string            Inband IP in CIDR format
+  -b, --inband-ip string            Inband IP in CIDR format
   -o, --managed-by string           Distributed Service Card Management. host or network (default "host")
   -k, --management-network string   Management Network. inband or oob
   -m, --mgmt-ip string              Management IP in CIDR format

@@ -72,7 +72,7 @@ func init() {
 	naplesCmd.Flags().StringVarP(&id, "id", "i", "", "DSC ID")
 	naplesCmd.Flags().StringVarP(&mgmtIP, "mgmt-ip", "m", "", "Management IP in CIDR format")
 	naplesCmd.Flags().StringVarP(&defaultGW, "default-gw", "g", "", "Default GW for mgmt")
-	naplesCmd.Flags().StringVarP(&bondIP, "inband-ip", "", "", "Inband IP in CIDR format")
+	naplesCmd.Flags().StringVarP(&bondIP, "inband-ip", "b", "", "Inband IP in CIDR format")
 	naplesCmd.Flags().StringVarP(&naplesProfile, "dsc-profile", "s", "FEATURE_PROFILE_BASE", "Active Distributed Service Card Profile")
 	naplesCmd.Flags().StringVarP(&naplesProfile, "naples-profile", "f", "FEATURE_PROFILE_BASE", "Active Distributed Service Card Profile")
 	naplesCmd.Flags().StringSliceVarP(&dnsServers, "dns-servers", "d", make([]string, 0), "List of DNS servers")
