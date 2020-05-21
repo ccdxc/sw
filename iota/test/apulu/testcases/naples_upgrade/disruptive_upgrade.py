@@ -1,11 +1,13 @@
 #! /usr/bin/python3
 import time
 import json
+import random
 import iota.harness.api as api
 import iota.test.common.utils.naples_upgrade.utils as utils
 import iota.test.common.utils.copy_tech_support as techsupp
 import iota.test.apulu.config.api as config_api
 import iota.test.apulu.utils.connectivity as conn_utils
+import iota.test.apulu.testcases.naples_upgrade.upgrade_utils as upgrade_utils
 import iota.test.apulu.utils.pdsctl as pdsctl
 import iota.test.apulu.utils.misc as misc_utils
 import iota.test.utils.ping as ping
@@ -65,6 +67,7 @@ def PacketTestSetup(tc):
 # Push interface config after upgrade
 # Venice is supposed to update interface config after upgrade
 def UpdateConfigAfterUpgrade(tc):
+    if not tc.upgrade_mode: return
     api.Logger.info("Updating Host Interfaces after Upgrade")
     SubnetClient = config_api.GetObjClient('subnet')
     for n in tc.Nodes:
@@ -72,16 +75,11 @@ def UpdateConfigAfterUpgrade(tc):
 
 
 def Setup(tc):
-    tc.Nodes = api.GetNaplesHostnames()
+    tc.Nodes = [random.choice(api.GetNaplesHostnames())]
     tc.skip = False
     tc.sleep = getattr(tc.args, "sleep", 200)
+    tc.expected_down_time = getattr(tc.args, "expected_down_time", 0)
     tc.upgrade_mode = getattr(tc.args, "mode", None)
-
-    # setup packet test based on upgrade_mode
-    result = PacketTestSetup(tc)
-    if result != api.types.status.SUCCESS or tc.skip:
-        api.Logger.error("Failed in Packet Test setup.")
-        return result
 
     req = api.Trigger_CreateExecuteCommandsRequest()
     for node in tc.Nodes:
@@ -97,6 +95,16 @@ def Setup(tc):
             api.Logger.error("Setup failed %s", cmd_resp.command)
             tc.skip = True
             return api.types.status.FAILURE
+
+    if upgrade_utils.ResetUpgLog(tc.Nodes) != api.types.status.SUCCESS:
+        api.Logger.error("Failed in Reseting Upgrade Log files.")
+        return api.types.status.FAILURE
+
+    # setup packet test based on upgrade_mode
+    result = PacketTestSetup(tc)
+    if result != api.types.status.SUCCESS or tc.skip:
+        api.Logger.error("Failed in Packet Test setup.")
+        return result
 
     return api.types.status.SUCCESS
 
@@ -118,6 +126,7 @@ def Trigger(tc):
 def Verify(tc):
     if tc.skip:
         return api.types.status.SUCCESS
+
     if tc.upgrade_mode:
         if tc.background and tc.bg_cmd_resp is None:
             api.Logger.error("Failed in background Ping cmd trigger")
@@ -134,14 +143,15 @@ def Verify(tc):
                 return api.types.status.FAILURE
 
     # wait for upgrade to complete. status can be found from the presence of /update/pds_upg_status.txt
-    api.Logger.info("Sleep for 60 secs before checking for /update/pds_upg_status.txt")
-    misc_utils.Sleep(60)
+    api.Logger.info("Sleep for 70 secs before checking for /update/pds_upg_status.txt")
+    misc_utils.Sleep(70)
     file_not_found = True
     while file_not_found:
-        misc_utils.Sleep(5)
+        misc_utils.Sleep(1)
         req = api.Trigger_CreateExecuteCommandsRequest(serial=False)
         for node in tc.Nodes:
-            api.Trigger_AddNaplesCommand(req, node, "ls /update/pds_upg_status.txt")
+            api.Trigger_AddNaplesCommand(req, node, "ls /update/pds_upg_status.txt", timeout=2)
+        api.Logger.info("Checking for file /update/pds_upg_status.txt")
         resp = api.Trigger(req)
 
         file_not_found = False
@@ -149,14 +159,12 @@ def Verify(tc):
             #api.PrintCommandResults(cmd_resp)
             if cmd_resp.exit_code != 0:
                 file_not_found = True
-                api.Logger.error("File /update/pds_upg_status.txt not found")
+                #api.Logger.info("File /update/pds_upg_status.txt not found")
             else:
                 api.Logger.info("File /update/pds_upg_status.txt found")
 
-    if tc.upgrade_mode:
-        api.Logger.info("Sleep for 1 secs before pushing Interface updates after upgrade")
-        misc_utils.Sleep(1)
-        UpdateConfigAfterUpgrade(tc)
+    # push interface config updates after upgrade completes
+    UpdateConfigAfterUpgrade(tc)
 
     # below POST is required until NMD is able to get updated
     # on the upgrade status after completion.
@@ -214,11 +222,13 @@ def Verify(tc):
             api.Logger.error(f"Exception occured in parsing response: {e}")
 
     if tc.upgrade_mode:
-        api.Logger.info("Sleep for %s secs for traffic test to complete"%tc.sleep)
-        misc_utils.Sleep(tc.sleep)
+        # If rollout status is failure, then no need to wait for traffic test
+        if result == api.types.status.SUCCESS:
+            api.Logger.info("Sleep for %s secs for traffic test to complete"%tc.sleep)
+            misc_utils.Sleep(tc.sleep)
 
         # ensure connectivity after upgrade
-        if ping.TestPing(tc, 'user_input', "ipv4", tc.pktsize, interval=0.5, \
+        if ping.TestPing(tc, 'user_input', "ipv4", tc.pktsize, interval=0.1, \
                 count=5, background=False) != api.types.status.SUCCESS:
             api.Logger.info("Connectivit check failed after upgrade")
             result = api.types.status.FAILURE
@@ -233,12 +243,18 @@ def Verify(tc):
             # calculate max packet loss duration for background ping
             pkt_loss_duration = ping.GetMaxPktLossDuration(tc, interval=tc.interval)
             if pkt_loss_duration != 0:
-                api.Logger.error("Max Packet Loss Duration during UPGRADE is {} Secs".format(\
-                                 pkt_loss_duration))
+                api.Logger.error("Max Packet Loss Duration during UPGRADE is {} Secs Vs Expected duration {} secs".format(\
+                                 pkt_loss_duration, (tc.expected_down_time if tc.expected_down_time else '-')))
                 if tc.pktlossverif:
+                    result = api.types.status.FAILURE
+                if tc.expected_down_time and (pkt_loss_duration > tc.expected_down_time):
                     result = api.types.status.FAILURE
             else:
                 api.Logger.info("No Packet Loss Found during UPGRADE Test")
+
+    if upgrade_utils.VerifyUpgLog(tc.Nodes, tc.GetLogsDir()):
+        api.Logger.error("Failed to verify the upgrade logs")
+        result = api.types.status.FAILURE
 
     return result
 

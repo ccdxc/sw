@@ -8,7 +8,7 @@ testcases:
     -   name        : DISRUPTIVE_UPGRADE
         testcase    : testcases.naples_upgrade.disruptive_upgrade
         disable     : False
-        ignore      : True
+        ignore      : False
         iterators   :
             type    : simple
             option  : [""]
@@ -18,13 +18,14 @@ testcases:
     -   name        : DISRUPTIVE_UPGRADE_GRACEFUL
         testcase    : testcases.naples_upgrade.disruptive_upgrade
         disable     : False
-        ignore      : True
+        ignore      : False
         iterators   :
             type    : simple
             option  : [""]
             workload_type : [ remote ]
             workload_scope : [ inter-subnet ]
         args        :
+            type    : remote_only
             sleep   : 300
             mode    : "graceful"
-            type    : remote_only
+            expected_down_time : 40
