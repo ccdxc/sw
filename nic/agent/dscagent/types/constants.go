@@ -202,6 +202,12 @@ const (
 	// NaplesOOBInterface is the inteface name of OOB Management Interface
 	NaplesOOBInterface = "oob_mnic0"
 
+	// VeniceConfigKind to load/store venice information in DB
+	VeniceConfigKind = "veniceKind"
+
+	// VeniceConfigKey to load/store venice information in DB
+	VeniceConfigKey = "veniceKey"
+
 	//--------------------------- Default ALG Option ---------------------------
 
 	// DefaultDNSMaxMessageLength is set to 8192 by default

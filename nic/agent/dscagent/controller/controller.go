@@ -81,6 +81,16 @@ func NewControllerAPI(p types.PipelineAPI, i types.InfraAPI, npmURL, restURL str
 		kinds:       types.BaseNetKinds,
 	}
 	c.RestServer = c.newRestServer(restURL, c.PipelineAPI)
+
+	var obj types.DistributedServiceCardStatus
+	// Replay config stored in DB after agent restart
+	if dat, err := i.Read(types.VeniceConfigKind, types.VeniceConfigKey); err == nil {
+		if err := json.Unmarshal(dat, &obj); err != nil {
+			log.Error(errors.Wrapf(types.ErrUnmarshal, "Err: %v", err))
+		} else {
+			c.HandleVeniceCoordinates(obj)
+		}
+	}
 	return c
 }
 
@@ -164,6 +174,11 @@ func (c *API) HandleVeniceCoordinates(obj types.DistributedServiceCardStatus) er
 
 		c.Lock()
 		c.InfraAPI.StoreConfig(obj)
+		dat, _ := json.Marshal(obj)
+		// Store config received from nmd.
+		if err := c.InfraAPI.Store(types.VeniceConfigKind, types.VeniceConfigKey, dat); err != nil {
+			log.Error(err)
+		}
 
 		// let the pipeline do its thing
 		c.PipelineAPI.HandleVeniceCoordinates(obj)
