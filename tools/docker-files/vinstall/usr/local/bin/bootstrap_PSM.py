@@ -13,13 +13,13 @@ import argparse
 import subprocess
 import ast
 
-def retry(func, timeout, wait_time, args):
+def retry(func, timeout, wait_time, non_retriable_codes, args):
     attempt_count = 1
     start_time = int(time.time())
     response_code = None
     while int(time.time()) - start_time <= timeout:
         response_code = func(**args)
-        if response_code < 400 or response_code == 409:
+        if response_code < 400 or response_code in non_retriable_codes:
             return response_code
         write_log("* attempt #{0} received response code: {1}, retrying...".format(attempt_count, response_code))
         time.sleep(wait_time)
@@ -145,7 +145,7 @@ def create_tenant():
     ctx = {"method": "POST",
            "url": "https://localhost/configs/cluster/v1/tenants",
            "postdata": json.dumps({"kind": "Tenant", "meta": {"name": "default"}})}
-    return retry(curl_send, opts.timeout, opts.waittime, ctx)
+    return retry(curl_send, opts.timeout, opts.waittime, [409], ctx)
 
 def create_auth_policy():
     ctx = { "method": "POST", "url": "https://localhost/configs/auth/v1/authn-policy" }
@@ -169,8 +169,8 @@ def create_auth_policy():
         }, 
         "APIVersion": "v1"
     })
-    return retry(curl_send, opts.timeout, opts.waittime, ctx)
-    
+    return retry(curl_send, opts.timeout, opts.waittime, [409], ctx)
+
 def create_admin_user():
     ctx = { "method": "POST", "url": "https://localhost/configs/auth/v1/tenant/default/users" }
     ctx["postdata"] = json.dumps({
@@ -186,7 +186,7 @@ def create_admin_user():
             "email": "admin@" + opts.domain
         }
     })
-    return retry(curl_send, opts.timeout, opts.waittime, ctx)
+    return retry(curl_send, opts.timeout, opts.waittime, [409], ctx)
 
 def create_admin_role_binding():
     ctx = { "method": "PUT", "url": "https://localhost/configs/auth/v1/tenant/default/role-bindings/AdminRoleBinding" }
@@ -204,7 +204,7 @@ def create_admin_role_binding():
             ]
         }
     })
-    return retry(curl_send, opts.timeout, opts.waittime, ctx)
+    return retry(curl_send, opts.timeout, opts.waittime, [409], ctx)
 
 def enable_overlay_routing():
     ctx = { "method": "POST", "url": "https://localhost/configs/cluster/v1/licenses" }
@@ -225,13 +225,14 @@ def enable_overlay_routing():
             ]
         }
     })
-    return retry(curl_send, opts.timeout, opts.waittime, ctx)
+    return retry(curl_send, opts.timeout, opts.waittime, [409], ctx)
 
 def complete_auth_bootstrap():
     ctx = {"method": "POST",
            "url": "https://localhost/configs/cluster/v1/cluster/AuthBootstrapComplete",
            "postdata": json.dumps({})}
-    return retry(curl_send, opts.timeout, opts.waittime, ctx)
+    # auth_bootstrap needs to retry on 409
+    return retry(curl_send, opts.timeout, opts.waittime, [], ctx)
 
 def bootstrap_psm():
     write_log("* creating default tenant")
@@ -256,7 +257,7 @@ def bootstrap_psm():
             return False
 
     write_log("* complete PSM bootstraping process")
-    if complete_auth_bootstrap() not in ( 200, 409 ):
+    if complete_auth_bootstrap() != 200:
         return False
 
     return True
