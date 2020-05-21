@@ -23,7 +23,7 @@ void
 nexthop_feeder::init(std::string ip_str, uint64_t mac, uint32_t num_obj,
                      pds_obj_key_t key, pds_nh_type_t type, uint16_t vlan,
                      pds_obj_key_t vpc, pds_obj_key_t l3_intf,
-                     pds_obj_key_t tep) {
+                     pds_obj_key_t tep, bool stash) {
     this->spec.key = key;
     this->spec.type = type;
     this->num_obj = num_obj;
@@ -38,6 +38,7 @@ nexthop_feeder::init(std::string ip_str, uint64_t mac, uint32_t num_obj,
     } else if (type == PDS_NH_TYPE_OVERLAY) {
         this->spec.tep = tep;
     }
+    stash_ = stash;
 }
 
 void
@@ -132,7 +133,7 @@ nexthop_feeder::spec_compare(const pds_nexthop_spec_t *spec) const {
 bool
 nexthop_feeder::status_compare(const pds_nexthop_status_t *status1,
                                const pds_nexthop_status_t *status2) const {
-    return true;
+    return (!memcmp(status1, status2, sizeof(pds_nexthop_status_t)));
 }
 
 //----------------------------------------------------------------------------

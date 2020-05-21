@@ -403,7 +403,7 @@ nexthop_group_impl::read_hw(api_base *api_obj, obj_key_t *key,
 sdk_ret_t
 nexthop_group_impl::backup(obj_info_t *info, upg_obj_info_t *upg_info) {
     sdk_ret_t ret;
-    pds::NhGroupGetResponse proto_msg;;
+    pds::NhGroupGetResponse proto_msg;
     pds_nexthop_group_info_t *nh_group_info;
     upg_obj_tlv_t *tlv;
 
@@ -416,8 +416,7 @@ nexthop_group_impl::backup(obj_info_t *info, upg_obj_info_t *upg_info) {
     }
     // convert api info to proto
     pds_nh_group_api_info_to_proto(nh_group_info, (void *)&proto_msg);
-    ret = pds_svc_serialize_proto_msg(upg_info, tlv,
-                                      (google::protobuf::Message *)&proto_msg);
+    ret = pds_svc_serialize_proto_msg(upg_info, tlv, &proto_msg);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to serialize nh group %s err %u",
                       nh_group_info->spec.key.str(), ret);
@@ -439,7 +438,8 @@ nexthop_group_impl::restore_resources(obj_info_t *info) {
     ret = nexthop_group_impl_db()->nhgroup_idxr()->alloc(status->hw_id);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to restore an entry in ECMP table, "
-                      "for nexthop group %s, err %u", spec->key.str(), ret);
+                      "for nexthop group %s, err %u hw id %u",
+                      spec->key.str(), ret, status->hw_id);
         return ret;
     }
     hw_id_ = status->hw_id;
@@ -450,8 +450,8 @@ nexthop_group_impl::restore_resources(obj_info_t *info) {
             if (ret != SDK_RET_OK) {
                 PDS_TRACE_ERR("Failed to restore %u entries in "
                               "NEXTHOP table for nexthop group %s, "
-                              "err %u", spec->num_nexthops,
-                              spec->key.str(), ret);
+                              "err %u base hw id %u", spec->num_nexthops,
+                              spec->key.str(), ret, status->nh_base_idx);
                 goto error;
             }
             nh_base_hw_id_ = status->nh_base_idx;
@@ -471,7 +471,7 @@ error:
 sdk_ret_t
 nexthop_group_impl::restore(obj_info_t *info, upg_obj_info_t *upg_info) {
     sdk_ret_t ret;
-    pds::NhGroupGetResponse proto_msg;;
+    pds::NhGroupGetResponse proto_msg;
     pds_nexthop_group_info_t *nh_group_info;
     upg_obj_tlv_t *tlv;
     uint32_t obj_size, meta_size;

@@ -21,6 +21,13 @@ pds_nh_api_spec_to_proto (pds::NexthopSpec *proto_spec,
                           const pds_nexthop_spec_t *api_spec)
 {
     proto_spec->set_id(api_spec->key.id, PDS_MAX_KEY_LEN);
+    if (api_spec->type == PDS_NH_TYPE_IP) {
+        auto ipnhinfo = proto_spec->mutable_ipnhinfo();
+    } else if (api_spec->type == PDS_NH_TYPE_OVERLAY) {
+        auto overlayinfo = proto_spec->mutable_overlaynhinfo();
+    } else if (api_spec->type == PDS_NH_TYPE_UNDERLAY) {
+        auto underlayinfo = proto_spec->mutable_underlaynhinfo();
+    }
 }
 
 // populate proto buf status from nh API status
@@ -93,6 +100,24 @@ pds_nh_proto_to_api_spec (pds_nexthop_spec_t *api_spec,
                           const pds::NexthopSpec &proto_spec)
 {
     pds_obj_key_proto_to_api_spec(&api_spec->key, proto_spec.id());
+    switch (proto_spec.nhinfo_case()) {
+    case pds::NexthopSpec::kIPNhInfo:
+        api_spec->type = PDS_NH_TYPE_IP;
+        break;
+
+    case pds::NexthopSpec::kOverlayNhInfo:
+        api_spec->type = PDS_NH_TYPE_OVERLAY;
+        break;
+
+    case pds::NexthopSpec::kUnderlayNhInfo:
+        api_spec->type = PDS_NH_TYPE_UNDERLAY;
+        break;
+
+    default:
+        // by default, we will create a blackhole nexthop
+        api_spec->type = PDS_NH_TYPE_BLACKHOLE;
+        break;
+    }
 }
 
 // build nh group API spec from protobuf spec
@@ -139,6 +164,15 @@ pds_nh_group_proto_to_api_status (pds_nexthop_group_status_t *api_status,
     return SDK_RET_OK;
 }
 
+// populate API status from nexthop proto status
+static inline sdk_ret_t
+pds_nh_proto_to_api_status (pds_nexthop_status_t *api_status,
+                            pds::NexthopStatus &proto_status)
+{
+    api_status->hw_id = proto_status.hwid();
+    return SDK_RET_OK;
+}
+
 // populate API info from nh group proto response
 static inline sdk_ret_t
 pds_nh_group_proto_to_api_info (pds_nexthop_group_info_t *api_info,
@@ -161,6 +195,41 @@ pds_nh_group_proto_to_api_info (pds_nexthop_group_info_t *api_info,
     } else {
         SDK_ASSERT(ret == SDK_RET_OK);
     }
+    return ret;
+}
+
+// populate proto buf from nexthop API info, only what is needed
+static inline void
+pds_nh_api_info_to_proto (pds_nexthop_info_t *api_info, void *ctxt)
+{
+    pds::NexthopGetResponse *proto_rsp = (pds::NexthopGetResponse *)ctxt;
+    auto nh = proto_rsp->add_response();
+    pds::NexthopSpec *proto_spec = nh->mutable_spec();
+    pds::NexthopStatus *proto_status = nh->mutable_status();
+
+    pds_nh_api_spec_to_proto(proto_spec, &api_info->spec);
+    pds_nh_api_status_to_proto(proto_status, &api_info->status, &api_info->spec);
+}
+
+// populate API info from nexthop proto response
+static inline sdk_ret_t
+pds_nh_proto_to_api_info (pds_nexthop_info_t *api_info,
+                          pds::NexthopGetResponse *proto_rsp)
+{
+    pds_nexthop_spec_t *api_spec;
+    pds_nexthop_status_t *api_status;
+    pds::NexthopSpec proto_spec;
+    pds::NexthopStatus proto_status;
+    sdk_ret_t ret;
+
+    SDK_ASSERT(proto_rsp->response_size() == 1);
+    api_spec = &api_info->spec;
+    api_status = &api_info->status;
+    proto_spec = proto_rsp->mutable_response(0)->spec();
+    proto_status = proto_rsp->mutable_response(0)->status();
+    pds_nh_proto_to_api_spec(api_spec, proto_spec);
+    ret = pds_nh_proto_to_api_status(api_status, proto_status);
+    SDK_ASSERT(ret == SDK_RET_OK);
     return ret;
 }
 

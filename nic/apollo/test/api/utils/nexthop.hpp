@@ -30,6 +30,7 @@ enum nexthop_attrs {
 class nexthop_feeder : public feeder {
 public:
     pds_nexthop_spec_t spec;
+    vector<pds_nexthop_info_t *> vec;
 
     // Constructor
     nexthop_feeder() { };
@@ -37,7 +38,7 @@ public:
         init(ipaddr2str(&feeder.spec.ip), MAC_TO_UINT64(feeder.spec.mac),
              feeder.num_obj, feeder.spec.key, feeder.spec.type,
              feeder.spec.vlan, feeder.spec.vpc, feeder.spec.l3_if,
-             feeder.spec.tep);
+             feeder.spec.tep, feeder.stash());
     }
 
     // Initialize feeder with the base set of values
@@ -48,7 +49,8 @@ public:
               pds_nh_type_t type=k_nh_type,
               uint16_t vlan=1, pds_obj_key_t vpc=int2pdsobjkey(1),
               pds_obj_key_t l3_intf = k_l3_if_key,
-              pds_obj_key_t tep = int2pdsobjkey(1));
+              pds_obj_key_t tep = int2pdsobjkey(1),
+              bool stash_ = false);
 
     // Iterate helper routines
     void iter_next(int width = 1);
@@ -108,6 +110,7 @@ operator<<(std::ostream& os, const nexthop_feeder& obj) {
 // CRUD prototypes
 API_CREATE(nexthop);
 API_READ(nexthop);
+API_READ_CMP(nexthop);
 API_UPDATE(nexthop);
 API_DELETE(nexthop);
 

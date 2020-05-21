@@ -11,6 +11,7 @@
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/api/include/pds_nexthop.hpp"
 #include "nic/apollo/api/include/pds_upgrade.hpp"
+#include "nic/apollo/api/nexthop.hpp"
 #include "nic/apollo/api/nexthop_group.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/api/upgrade_state.hpp"
@@ -37,6 +38,11 @@ backup_stateful_obj_cb (void *obj, void *info)
     case OBJ_ID_NEXTHOP_GROUP:
         keystr = ((nexthop_group *)obj)->key2str();
         ret = ((nexthop_group *)obj)->backup(upg_info);
+        break;
+
+    case OBJ_ID_NEXTHOP:
+        keystr = ((nexthop *)obj)->key2str();
+        ret = ((nexthop *)obj)->backup(upg_info);
         break;
 
     default:
@@ -103,6 +109,19 @@ backup_statless_obj_cb (void *key, void *val, void *info)
         upg_info->backup.stashed_obj_count += 1;
     }
     return;
+}
+
+static inline sdk_ret_t
+backup_nexthop (upg_obj_info_t *info)
+{
+    sdk_ret_t ret;
+    ht *nexthop_ht;
+
+    nexthop_ht = nexthop_db()->nh_ht();
+    ret = (nexthop_ht->walk(backup_stateful_obj_cb, (void *)info));
+    // adjust the offset in persistent storage in the end of walk
+    api::g_upg_state->api_upg_ctx()->incr_obj_offset(info->backup.total_size);
+    return ret;
 }
 
 static inline sdk_ret_t
@@ -185,6 +204,13 @@ upg_ev_backup (upg_ev_params_t *params)
             PDS_TRACE_INFO("Stashed %u mapping objs", hdr[id].obj_count);
             break;
 
+        case OBJ_ID_NEXTHOP:
+            ret = backup_nexthop(&info);
+            // update total number of nexthop objs stashed
+            hdr[id].obj_count = info.backup.stashed_obj_count;
+            PDS_TRACE_INFO("Stashed %u nexthop objs", hdr[id].obj_count);
+            break;
+
         default:
             break;
         }
@@ -220,7 +246,7 @@ restore_obj (upg_obj_info_t *info)
     ret = api_obj->restore(info);
     if (ret == SDK_RET_OK) {
         api_obj->add_to_db();
-        // this will prevent resource 'reservation' during config replay
+        // this will cleanup resource in case of rollback during config replay
         api_obj->set_rsvd_rsc();
         api_obj->set_in_restore_list();
     }

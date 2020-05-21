@@ -2,7 +2,8 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = libpdsapi_impl.lib
-MODULE_SRCS     = $(wildcard ${MODULE_SRC_DIR}/*.cc) $(wildcard ${MODULE_SRC_DIR}/${PIPELINE}/*.cc) $(wildcard ${MODULE_SRC_DIR}/${PIPELINE}/svc/*.cc)
+MODULE_SRCS     = $(wildcard ${MODULE_SRC_DIR}/*.cc) $(wildcard ${MODULE_SRC_DIR}/${PIPELINE}/*.cc) \
+                  $(wildcard ${MODULE_SRC_DIR}/${PIPELINE}/svc/*.cc)
 MODULE_PIPELINE = apollo artemis apulu athena
 MODULE_INCS     = ${BLD_OUT_DIR}/pen_dpdk_submake/include/ ${SDK_THIRD_PARTY_OMAPI_INCLUDES} ${MODULE_GEN_DIR}
 MODULE_SOLIBS   = ${NIC_${PIPELINE}_PDSAPI_IMPL_SOLIBS}

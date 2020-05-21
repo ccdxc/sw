@@ -2538,8 +2538,7 @@ mapping_impl::backup(obj_info_t *info, upg_obj_info_t *upg_info) {
     }
     // convert api info to proto
     pds_mapping_api_info_to_proto(mapping_info, (void *)&proto_msg);
-    ret = pds_svc_serialize_proto_msg(upg_info, tlv,
-                                      (google::protobuf::Message *)&proto_msg);
+    ret = pds_svc_serialize_proto_msg(upg_info, tlv, &proto_msg);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to backup mapping %s err %u",
                       mapping_info->spec.key.str(), ret);
@@ -2562,9 +2561,10 @@ mapping_impl::restore_resources(obj_info_t *info) {
     ret = apulu_impl_db()->nat_idxr()->alloc(status->public_ip_nat_idx);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to restore entry for public IP %s in NAT table "
-                      "for mapping (vpc %s, ip %s), err %u",
+                      "for mapping (vpc %s, ip %s), err %u hw idx %u",
                       ipaddr2str(&spec->public_ip), spec->skey.vpc.str(),
-                      ipaddr2str(&spec->skey.ip_addr), ret);
+                      ipaddr2str(&spec->skey.ip_addr), ret,
+                      status->public_ip_nat_idx);
         return ret;
     }
     to_public_ip_nat_idx_ = status->public_ip_nat_idx;
@@ -2573,9 +2573,10 @@ mapping_impl::restore_resources(obj_info_t *info) {
     ret = apulu_impl_db()->nat_idxr()->alloc(status->overlay_ip_nat_idx);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to restore entry for overlay IP %s in NAT table"
-                      "for mapping (vpc %s, ip %s), err %u",
+                      "for mapping (vpc %s, ip %s), err %u hw idx %u",
                       ipaddr2str(&spec->skey.ip_addr), spec->skey.vpc.str(),
-                      ipaddr2str(&spec->public_ip), ret);
+                      ipaddr2str(&spec->public_ip), ret,
+                      status->overlay_ip_nat_idx);
         goto error;
     }
     to_overlay_ip_nat_idx_ = status->overlay_ip_nat_idx;

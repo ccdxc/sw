@@ -14,6 +14,7 @@ if [[ "$1" ==  --coveragerun ]]; then
     run_sdk_gtest
 fi
 
+run_gtest nh_upg
 run_gtest nh_group_upg
 run_gtest mapping_upg
 

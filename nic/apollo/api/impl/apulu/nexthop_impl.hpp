@@ -60,6 +60,18 @@ public:
     /// \return   sdk_ret_ok or error code
     static sdk_ret_t free(nexthop_impl *impl);
 
+    /// \brief     stash this object into persistent storage
+    /// \param[in] info pointer to the info object
+    /// \param[in] upg_info contains location to put stashed object
+    /// \return    sdk_ret_ok or error code
+    virtual sdk_ret_t backup(obj_info_t *info, upg_obj_info_t *upg_info) override;
+
+    /// \brief     restore stashed object from persistent storage
+    /// \param[in] info pointer to the info object
+    /// \param[in] upg_info contains location to read stashed object
+    /// \return    sdk_ret_ok or error code
+    virtual sdk_ret_t restore(obj_info_t *info, upg_obj_info_t *upg_info) override;
+
     /// \brief      allocate/reserve h/w resources for this object
     /// \param[in]  api_obj  object for which resources are being reserved
     /// \param[in]  orig_obj old version of the unmodified object
@@ -77,6 +89,11 @@ public:
     /// \param[in]  api_obj    api object holding the resources
     /// \return     #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t nuke_resources(api_base *api_obj) override;
+
+    /// \brief      restore h/w resources for this obj from persistent storage
+    /// \param[in]  info pointer to the info object
+    /// \return     #SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t restore_resources(obj_info_t *info) override;
 
     /// \brief      program all h/w tables relevant to this object except
     ///             stage 0 table(s), if any
