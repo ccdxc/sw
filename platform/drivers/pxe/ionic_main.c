@@ -1310,7 +1310,7 @@ bool ionic_q_has_space(struct queue *q, unsigned int want)
 /**
  * Allocates and assigns IOB for the rxq.
  * */
-void ionic_rx_fill(struct net_device *netdev, int length)
+void ionic_rx_fill(struct net_device *netdev, u16 length)
 {
 	struct ionic *ionic = netdev->priv;
 	struct queue *rxq = &ionic->lif->rxqcqs->q;

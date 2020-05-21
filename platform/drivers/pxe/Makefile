@@ -29,12 +29,12 @@ $(BLD_BIN_DIR)/ionic.efirom: $(IPXEMOD)/src/bin-x86_64-efi/ionic.efirom
 	cp $(IPXEMOD)/src/bin-x86_64-efi/ionic.efirom $@
 
 $(IPXEMOD)/src/bin-x86_64-efi/ionic.efi: .ipxefiles
-	make PLATFORM=efi ARCH=x86_64 -C $(IPXEMOD)/src bin-x86_64-efi/ionic.efi
-#	make PLATFORM=efi ARCH=x86_64 -C $(IPXEMOD)/src bin-x86_64-efi/ionic.efi DEBUG=ionic:3,ionic_main:3
+	make PLATFORM=efi ARCH=x86_64 SECUREBOOT=1 -C $(IPXEMOD)/src bin-x86_64-efi/ionic.efi
+#	make PLATFORM=efi ARCH=x86_64 SECUREBOOT=1 -C $(IPXEMOD)/src bin-x86_64-efi/ionic.efi DEBUG=ionic:3,ionic_main:3
 
 $(IPXEMOD)/src/bin-x86_64-efi/ionic.efirom: .ipxefiles
-	make PLATFORM=efi ARCH=x86_64 -C $(IPXEMOD)/src bin-x86_64-efi/ionic.efirom
-#	make PLATFORM=efi ARCH=x86_64 -C $(IPXEMOD)/src bin-x86_64-efi/ionic.efirom DEBUG=ionic:3,ionic_main:3
+	make PLATFORM=efi ARCH=x86_64 SECUREBOOT=1 -C $(IPXEMOD)/src bin-x86_64-efi/ionic.efirom
+#	make PLATFORM=efi ARCH=x86_64 SECUREBOOT=1 -C $(IPXEMOD)/src bin-x86_64-efi/ionic.efirom DEBUG=ionic:3,ionic_main:3
 
 .ipxefiles: $(IPXEMOD) $(IONIC_SRC)
 	cp $(IONIC_SRC) $(IPXEMOD)/src/drivers/net/

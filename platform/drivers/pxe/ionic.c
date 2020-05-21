@@ -104,7 +104,7 @@ static int ionic_check_link ( struct net_device *netdev ) {
 static int ionic_open(struct net_device *netdev)
 {
 	struct ionic *ionic = netdev->priv;
-	int mtu;
+	u16 mtu;
 	int err;
 
 	err = ionic_qcq_enable(ionic->lif->txqcqs);
@@ -138,11 +138,14 @@ static void ionic_close(struct net_device *netdev)
 {
 	struct ionic *ionic = netdev->priv;
 
-	ionic_qcq_disable(ionic->lif->rxqcqs);
+	if (ionic_qcq_disable(ionic->lif->rxqcqs))
+		DBGC(ionic, "%s Unable to disable rxqcq\n", __FUNCTION__);
 
-	ionic_qcq_disable(ionic->lif->txqcqs);
+	if (ionic_qcq_disable(ionic->lif->txqcqs))
+		DBGC(ionic, "%s Unable to disable txqcq\n", __FUNCTION__);
 
-	ionic_lif_quiesce(ionic->lif);
+	if (ionic_lif_quiesce(ionic->lif))
+		DBGC(ionic, "%s Unable to quiesce lif\n", __FUNCTION__);
 
 	ionic_tx_flush(netdev, ionic->lif);
 
@@ -171,7 +174,7 @@ static int ionic_transmit(struct net_device *netdev,
 	// fill the descriptor
 	desc->cmd = encode_txq_desc_cmd(IONIC_TXQ_DESC_OPCODE_CSUM_NONE,
 					0, 0, virt_to_bus(iobuf->data));
-	desc->len = iob_len(iobuf);
+	desc->len = cpu_to_le16(iob_len(iobuf));
 	desc->hword0 = 0;
 	desc->hword1 = 0;
 	desc->hword2 = 0;
@@ -201,7 +204,7 @@ static int ionic_transmit(struct net_device *netdev,
  */
 static void ionic_poll(struct net_device *netdev)
 {
-	int mtu;
+	u16 mtu;
 
 	// Poll for transmit completions
 	ionic_poll_tx(netdev);
@@ -277,9 +280,13 @@ static void ionic_unmap_bars(struct ionic *ionic)
 	struct ionic_device_bar *bars = ionic->bars;
 	unsigned int i;
 
-	for (i = 0; i < IONIC_BARS_MAX; i++)
-		if (bars[i].vaddr)
+	for (i = 0; i < IONIC_IPXE_BARS_MAX; i++)
+		if (bars[i].vaddr) {
 			iounmap(bars[i].vaddr);
+			bars[i].bus_addr = 0;
+			bars[i].vaddr = NULL;
+			bars[i].len = 0;
+		}
 }
 
 /**
@@ -404,10 +411,13 @@ static void ionic_remove(struct pci_device *pci)
 	unregister_netdev(netdev);
 
 	// Reset lif
-	ionic_lif_reset(ionic);
+	if (ionic_lif_reset(ionic))
+		DBGC(ionic, "%s Unable to reset card\n", __FUNCTION__);
 
 	// Reset card
-	ionic_reset(ionic);
+	if (ionic_reset(ionic))
+		DBGC(ionic, "%s Unable to reset card\n", __FUNCTION__);
+
 
 	// Free network device
 	ionic_qcq_dealloc(ionic->lif->adminqcq);
