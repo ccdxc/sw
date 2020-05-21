@@ -9,6 +9,8 @@
 #include <pkt.h>
 #include "nat_api.h"
 #include "nat_utils.h"
+#include <mapping.h>
+#include <p4_cpu_hdr_utils.h>
 
 // *INDENT-OFF*
 VLIB_PLUGIN_REGISTER () = {
@@ -134,7 +136,85 @@ error:
     return;
 }
 
-always_inline void
+static void
+nat_internal_icmp_error (vlib_buffer_t *p0, u16 *next0, u32 *counter,
+                         vlib_node_runtime_t *node, vlib_main_t *vm,
+                         u16 vpc_id, ip4_header_t *ip40, icmp46_header_t *icmp0)
+{
+    icmp_error_header_t *icmp_error0;
+    ip4_header_t *ip4_inner0;
+    u8 protocol_inner;
+    ip4_address_t sip, dip, pvt_ip;
+    u16 sport = 0, dport = 0, pvt_port;
+    nat_err_t nat_err = NAT_ERR_FAIL;
+    u16 vnic_hw_id;
+    u8 cidx;
+    nat_trace_t *trace;
+    ip_csum_t sum;
+
+    icmp_error0 = (icmp_error_header_t *)(icmp0 + 1);
+    ip4_inner0 = (ip4_header_t *)icmp_error0->inner_ip;
+    protocol_inner = ip4_inner0->protocol;
+    sip.as_u32 = clib_net_to_host_u32(ip4_inner0->src_address.as_u32);
+    dip.as_u32 = clib_net_to_host_u32(ip4_inner0->dst_address.as_u32);
+    if (protocol_inner == IP_PROTOCOL_UDP || protocol_inner == IP_PROTOCOL_TCP) {
+        udp_header_t *udp_inner0;
+        udp_inner0 = (udp_header_t *)(ip4_inner0 + 1);
+        sport = clib_net_to_host_u16(udp_inner0->src_port);
+        dport = clib_net_to_host_u16(udp_inner0->dst_port);
+
+        nat_err = nat_flow_xlate(vpc_id, dip, dport, protocol_inner,
+                                 sip, sport, &pvt_ip, &pvt_port);
+        udp_inner0->src_port = clib_host_to_net_u16(pvt_port);
+    } else if (protocol_inner == IP_PROTOCOL_ICMP) {
+        icmp46_header_t *icmp_inner0;
+        icmp_echo_header_t *echo_inner0;
+        icmp_inner0 = (icmp46_header_t *)(ip4_inner0 + 1);
+        echo_inner0 = (icmp_echo_header_t *)(icmp_inner0 + 1);
+        sport = clib_net_to_host_u16(echo_inner0->identifier);
+        dport = 0;
+        nat_err = nat_flow_xlate(vpc_id, dip, dport, protocol_inner,
+                                 sip, sport, &pvt_ip, &pvt_port);
+    }
+    if (nat_err == NAT_ERR_OK) {
+        if (pds_local_mapping_vnic_id_get(vpc_id, pvt_ip.as_u32,
+            &vnic_hw_id) == 0) {
+
+            vnet_buffer(p0)->pds_tx_data.vnic_id = vnic_hw_id;
+            vnet_buffer(p0)->pds_tx_data.ether_type = 0;
+
+            ip40->dst_address.as_u32 = clib_host_to_net_u32(pvt_ip.as_u32);
+            ip40->checksum = ip4_header_checksum(ip40);
+            ip4_inner0->src_address.as_u32 = clib_host_to_net_u32(pvt_ip.as_u32);
+            ip4_inner0->checksum = ip4_header_checksum(ip4_inner0);
+            icmp0->checksum = 0;
+            sum = ip_incremental_checksum(0, icmp0, p0->current_length -
+                                          sizeof(ip4_header_t));
+            icmp0->checksum = ~ip_csum_fold(sum);
+
+            *next0 = NAT_NEXT_HOST_TX;
+            cidx = NAT_COUNTER_ICMP_ERR;
+        } else {
+            cidx = NAT_COUNTER_FAILED;
+            *next0 = NAT_NEXT_DROP;
+        }
+    } else {
+        cidx = NAT_COUNTER_FAILED;
+        *next0 = NAT_NEXT_DROP;
+    }
+
+    if (PREDICT_FALSE(node->flags & VLIB_NODE_FLAG_TRACE &&
+                      p0->flags & VLIB_BUFFER_IS_TRACED)) {
+        trace = vlib_add_trace (vm, node, p0, sizeof (trace[0]));
+        nat_trace_add(trace, vpc_id, pvt_ip, pvt_port, dip, dport,
+                      IP_PROTOCOL_ICMP, sip, sport, nat_err,
+                      NAT_NODE_ICMP_ERROR);
+    }
+
+    counter[cidx]++;
+}
+
+static void
 nat_internal_invalidate (vlib_buffer_t *p0, u16 *next0, u32 *counter,
                          vlib_node_runtime_t *node, vlib_main_t *vm)
 {
@@ -156,6 +236,16 @@ nat_internal_invalidate (vlib_buffer_t *p0, u16 *next0, u32 *counter,
         udp0 = (udp_header_t *) (((u8 *) ip40) +
                vnet_buffer (p0)->l4_hdr_offset);
         dport = clib_net_to_host_u16(udp0->dst_port);
+    } else if (protocol == IP_PROTOCOL_ICMP) {
+        icmp46_header_t *icmp0;
+
+        icmp0 = (icmp46_header_t *) (((u8 *) ip40) +
+                vnet_buffer (p0)->l4_hdr_offset);
+        if (icmp4_is_error_message(icmp0)) {
+            nat_internal_icmp_error(p0, next0, counter, node, vm, vpc_id,
+                                    ip40, icmp0);
+            return;
+        }
     }
 
     if (pds_is_flow_napt_svc_en(p0)) {

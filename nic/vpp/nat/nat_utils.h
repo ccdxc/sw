@@ -11,6 +11,12 @@ typedef struct
   u16 sequence;
 } icmp_echo_header_t;
 
+typedef struct
+{
+  u32 unused;
+  u8 inner_ip[0];
+} icmp_error_header_t;
+
 always_inline u8
 icmp4_is_query_message(icmp46_header_t *icmp)
 {

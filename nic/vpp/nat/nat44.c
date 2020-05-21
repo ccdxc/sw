@@ -95,6 +95,8 @@ typedef struct nat_flow_key_s {
     addr_type = ((data) >> 16) & 0xff; \
     nat_rx_hw_index = ((data) >> 32) & 0xffffffff;
 
+#define NAT_FLOW_HT_GET_HW_INDEX(data, nat_rx_hw_index) \
+    nat_rx_hw_index = ((data) >> 32) & 0xffffffff;
 
 // Endpoint hash table maps <pvt_ip, pvt_port> to <public_ip, public_port>
 #define NAT_EP_SET_PUBLIC_IP_PORT(data, public_ip, public_port, ref_count) \
@@ -1134,6 +1136,43 @@ nat_flow_is_dst_valid(u32 vpc_id, ip4_address_t dip, u16 dport,
 
     clib_spinlock_unlock(&vpc->lock);
     return false;
+}
+
+//
+// Get pvt_ip, pvt_port for flow
+//
+nat_err_t
+nat_flow_xlate(u32 vpc_id, ip4_address_t dip, u16 dport,
+               u8 protocol, ip4_address_t sip, u16 sport,
+               ip4_address_t *pvt_ip, u16 *pvt_port)
+{
+    nat_flow_key_t key = { 0 };
+    uword *data, hw_index;
+    nat_vpc_config_t *vpc;
+
+    ASSERT(vpc_id < PDS_MAX_VPC);
+    vpc = &nat_main.vpc_config[vpc_id];
+
+    key.dip = dip;
+    key.sip = sip;
+    key.dport = dport;
+    key.sport = sport;
+    key.protocol = protocol;
+
+    clib_spinlock_lock(&vpc->lock);
+
+    data = hash_get_mem(vpc->nat_flow_ht, &key);
+    if (PREDICT_FALSE(!data)) {
+        clib_spinlock_unlock(&vpc->lock);
+        return NAT_ERR_NOT_FOUND;
+    }
+    clib_spinlock_unlock(&vpc->lock);
+
+    NAT_FLOW_HT_GET_HW_INDEX(*data, hw_index)
+
+    pds_snat_tbl_read_ip4(hw_index, &pvt_ip->as_u32, pvt_port);
+
+    return NAT_ERR_OK;
 }
 
 //

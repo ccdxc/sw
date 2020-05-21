@@ -13,10 +13,12 @@
         _(ERR_DEALLOC, "NAT dealloc due to error" )         \
         _(INVALID_EXISTS, "Invalid NAT flow, PB exists" )   \
         _(INVALID, "Invalid NAT flow, PB does not exist" )  \
+        _(ICMP_ERR, "ICMP error packets sent to the host" ) \
 
 #define foreach_nat_next                                    \
         _(IP4_FLOW_PROG, "pds-ip4-flow-program" )           \
         _(IP4_LINUX_INJECT, "pds-ip4-linux-inject" )        \
+        _(HOST_TX, "pds-vnic-l2-rewrite" )                        \
         _(DROP, "pds-error-drop")                           \
 
 typedef enum
@@ -38,7 +40,8 @@ typedef enum
 typedef enum nat_node_type_s {
     NAT_NODE_ALLOC,
     NAT_NODE_DEALLOC,
-    NAT_NODE_INVALIDATE
+    NAT_NODE_INVALIDATE,
+    NAT_NODE_ICMP_ERROR
 } nat_node_type_t;
 
 typedef struct nat_trace_s {
