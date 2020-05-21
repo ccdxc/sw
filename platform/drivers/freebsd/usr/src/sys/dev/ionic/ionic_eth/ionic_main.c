@@ -416,7 +416,7 @@ ionic_adminq_post(struct ionic_lif *lif, struct ionic_admin_ctx *ctx)
 		print_hex_dump_debug("cmd ", DUMP_PREFIX_OFFSET, 16, 1,
 		    &ctx->cmd, sizeof(ctx->cmd), true);
 
-	adminq->head_index = (adminq->head_index + 1) % adminq->num_descs;
+	adminq->head_index = IONIC_MOD_INC(adminq, head_index);
 	ionic_adminq_ring_doorbell(adminq, adminq->head_index);
 
 	IONIC_ADMIN_UNLOCK(adminq);

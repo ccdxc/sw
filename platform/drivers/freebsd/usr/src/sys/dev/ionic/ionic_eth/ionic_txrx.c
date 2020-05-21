@@ -1093,7 +1093,7 @@ ionic_tx_tso_dump(struct ionic_txque *txq, struct mbuf *m,
 
 	IONIC_TX_TRACE(txq, "start: %d stop: %d\n", txq->head_index, stop_index);
 	len = 0;
-	for (i = txq->head_index; i != stop_index; i = (i + 1) % txq->num_descs) {
+	for (i = txq->head_index; i != stop_index; i = (i + 1) & (txq->num_descs - 1)) {
 		txbuf = &txq->txbuf[i];
 		desc = &txq->cmd_ring[i];
 		sg = &txq->sg_ring[i * txq->sg_desc_stride];
@@ -1109,12 +1109,12 @@ ionic_tx_tso_dump(struct ionic_txque *txq, struct mbuf *m,
 			IONIC_QUE_ERROR(txq, "TSO unexpected start of frame\n");
 		}
 		/* Expected EOF */
-		if ((((i + 1) % txq->num_descs) == stop_index) &&
+		if ((((i + 1) & (txq->num_descs - 1)) == stop_index) &&
 		    ((desc->cmd & IONIC_TXQ_DESC_FLAG_TSO_EOT) == 0)) {
 			IONIC_QUE_ERROR(txq, "TSO w/o end of frame\n");
 		}
 		/* Unexpected EOF */
-		if ((((i + 1) % txq->num_descs) != stop_index) &&
+		if ((((i + 1) & (txq->num_descs - 1)) != stop_index) &&
 		    (desc->cmd & IONIC_TXQ_DESC_FLAG_TSO_EOT)) {
 			IONIC_QUE_ERROR(txq, "TSO unexpected end of frame\n");
 		}
@@ -1378,7 +1378,7 @@ ionic_tx_tso_setup(struct ionic_txque *txq, struct mbuf **m_headp)
 		stats->bytes += desc_len;
 
 		num_descs--;
-		index = (index + 1) % txq->num_descs;
+		index = (index + 1) & (txq->num_descs - 1);
 		if (index % ionic_tx_stride == 0)
 			ionic_tx_ring_doorbell(txq, index);
 	}
@@ -1636,7 +1636,11 @@ ionic_lif_netdev_alloc(struct ionic_lif *lif, int ndescs)
 
 	KASSERT(lif->ionic, ("lif: %s ionic == NULL", lif->name));
 
+#if __FreeBSD_version >= 1300000
+	ifp = if_alloc_dev(IFT_ETHER, lif->ionic->dev->bsddev);
+#else
 	ifp = if_alloc(IFT_ETHER);
+#endif
 	if (ifp == NULL) {
 		dev_err(lif->ionic->dev,
 		    "Cannot allocate ifnet, aborting\n");

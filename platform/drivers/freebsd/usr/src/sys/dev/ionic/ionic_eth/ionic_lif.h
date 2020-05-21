@@ -436,10 +436,10 @@ struct ionic_lif {
 #define IONIC_RX_UNLOCK(x)		mtx_unlock(&(x)->rx_mtx)
 #define IONIC_RX_LOCK_OWNED(x)		mtx_owned(&(x)->rx_mtx)
 
-#define IONIC_MOD_INC(q, index) (((q)->index + 1) % (q)->num_descs)
+#define IONIC_MOD_INC(q, index) (((q)->index + 1) & (q)->num_descs - 1)
 
 #define IONIC_Q_EMPTY(q)	((q)->head_index == (q)->tail_index)
-#define IONIC_Q_LENGTH(q)	(((q)->head_index - (q)->tail_index) % (q)->num_descs)
+#define IONIC_Q_LENGTH(q)	(((q)->head_index - (q)->tail_index) & (q)->num_descs - 1)
 #define IONIC_Q_REMAINING(q)	((q)->num_descs - IONIC_Q_LENGTH(q) - 1)
 #define IONIC_Q_FULL(q)		(IONIC_Q_REMAINING(q) == 0)
 

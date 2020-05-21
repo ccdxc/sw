@@ -3190,7 +3190,7 @@ ionic_tx_clean(struct ionic_txque *txq, int tx_limit)
 		}
 
 		txq->comp_index = IONIC_MOD_INC(txq, comp_index);
-		txq->tail_index = (cmd_stop_index + 1) % txq->num_descs;
+		txq->tail_index = (cmd_stop_index + 1) & (txq->num_descs - 1);
 		/* Roll over condition, flip color. */
 		if (txq->comp_index == 0) {
 			txq->done_color = !txq->done_color;
@@ -3346,7 +3346,7 @@ ionic_rx_refill(struct ionic_rxque *rxq)
 
 	KASSERT(IONIC_RX_LOCK_OWNED(rxq), ("%s is not locked", rxq->name));
 	for (i = rxq->tail_index; i != rxq->head_index;
-	    i = (i + 1) % rxq->num_descs) {
+	    i = (i + 1) & (rxq->num_descs - 1)) {
 		rxbuf = &rxq->rxbuf[i];
 
 		KASSERT(rxbuf->m,
