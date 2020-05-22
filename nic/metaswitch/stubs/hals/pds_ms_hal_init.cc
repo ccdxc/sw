@@ -12,7 +12,10 @@
 #include "nic/metaswitch/stubs/hals/pds_ms_l2f_mai.hpp"
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/lib/ipc/ipc.hpp"
+#include "nic/apollo/include/globals.hpp"
 #include "nic/apollo/core/event.hpp"
+#include "nic/apollo/api/core/msg.h"
+#include "nic/apollo/core/msg.h"
 #include "nic/apollo/agent/core/core.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/sdk/include/sdk/eth.hpp"
@@ -171,6 +174,25 @@ hal_event_callback (sdk::ipc::ipc_msg_ptr msg, const void *ctx)
     return;
 }
 
+static void
+pds_msg_cfg_callback (sdk::ipc::ipc_msg_ptr ipc_msg, const void *ctxt)
+{
+    pds_cfg_msg_t *cfg_msg;
+    pds_msg_list_t *msg_list;
+    sdk_ret_t ret = SDK_RET_OK;
+
+    PDS_TRACE_DEBUG("Rcvd PDS_MSG_TYPE_CFG_OBJ_SET IPC msg");
+    msg_list = (pds_msg_list_t *)ipc_msg->data();
+    for (uint32_t i = 0; i < msg_list->num_msgs; i++) {
+        cfg_msg = &msg_list->msgs[i].cfg_msg;
+        PDS_TRACE_DEBUG("Rcvd api obj %u, api op %u", cfg_msg->obj_id,
+                        cfg_msg->op);
+        // TODO: handle the msg
+        ret = SDK_RET_OK;
+    }
+    sdk::ipc::respond(ipc_msg, (const void *)&ret, sizeof(sdk_ret_t));
+}
+
 void
 ipc_init_cb (int fd, sdk::ipc::handler_ms_cb cb, void *ctx)
 {
@@ -186,13 +208,14 @@ ipc_init_cb (int fd, sdk::ipc::handler_ms_cb cb, void *ctx)
 bool
 hal_init (void)
 {
-    sdk::ipc::ipc_init_metaswitch(core::PDS_AGENT_THREAD_ID_ROUTING,
-                                  &ipc_init_cb);
+    sdk::ipc::ipc_init_metaswitch(PDS_IPC_ID_ROUTING, &ipc_init_cb);
     sdk::ipc::subscribe(EVENT_ID_PORT_STATUS, &hal_event_callback, NULL);
     sdk::ipc::subscribe(EVENT_ID_MAC_LEARN, &hal_event_callback, NULL);
     sdk::ipc::subscribe(EVENT_ID_IP_LEARN, &hal_event_callback, NULL);
     sdk::ipc::subscribe(EVENT_ID_MAC_AGE, &hal_event_callback, NULL);
     sdk::ipc::subscribe(EVENT_ID_IP_AGE, &hal_event_callback, NULL);
+    sdk::ipc::reg_request_handler(PDS_MSG_TYPE_CFG_OBJ_SET,
+                                  pds_msg_cfg_callback, NULL);
     return true;
 }
 
