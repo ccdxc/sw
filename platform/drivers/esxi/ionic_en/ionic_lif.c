@@ -568,6 +568,7 @@ ionic_dev_recover(struct ionic_en_priv_data *priv_data)
 {
         VMK_ReturnStatus status;
         vmk_AddrCookie driver_data;
+        vmk_UplinkState init_state;
         struct lif *lif;
 
         driver_data.ptr = priv_data;
@@ -615,6 +616,12 @@ ionic_dev_recover(struct ionic_en_priv_data *priv_data)
                           vmk_StatusToString(status));
                 goto out_err;
         }
+
+        IONIC_EN_SHARED_AREA_BEGIN_READ(lif->uplink_handle);
+        init_state = lif->uplink_handle->uplink_shared_data.state;
+        IONIC_EN_SHARED_AREA_END_READ(lif->uplink_handle);
+        ionic_set_rx_mode(lif, init_state);
+        lif->uplink_handle->prev_state = init_state;
 
         lif->is_skip_res_alloc_after_fw = VMK_FALSE;
 
@@ -2552,7 +2559,6 @@ static VMK_ReturnStatus
 ionic_lif_init(struct lif *lif)
 {
         VMK_ReturnStatus status;
-        vmk_UplinkState init_state;
         struct ionic_dev *idev = &lif->ionic->en_dev.idev;
         struct ionic_q_init_comp comp;
 
@@ -2640,18 +2646,6 @@ ionic_lif_init(struct lif *lif)
                         }
                 }
 	}
-
-        init_state = VMK_UPLINK_STATE_ENABLED |
-                     VMK_UPLINK_STATE_BROADCAST_OK |
-                     VMK_UPLINK_STATE_MULTICAST_OK |
-                     VMK_UPLINK_STATE_PROMISC;
-
-        ionic_set_rx_mode(lif, init_state);
-
-        lif->uplink_handle->prev_state = init_state;
-        IONIC_EN_SHARED_AREA_BEGIN_WRITE(lif->uplink_handle);
-        lif->uplink_handle->uplink_shared_data.state = init_state;
-        IONIC_EN_SHARED_AREA_END_WRITE(lif->uplink_handle);
 
 	lif->api_private = NULL;
         lif->flags |= LIF_F_INITED;
