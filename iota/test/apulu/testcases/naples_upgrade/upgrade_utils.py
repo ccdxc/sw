@@ -67,8 +67,11 @@ def __dump_upg_log(node, logs):
     api.Logger.SetNode(node)
     indent = "-" * 25
     api.Logger.info(f"{indent} U P G R A D E   L O G S {indent}")
+    api.Logger.SetSkipLogPrefix(True)
     for log in logs:
         api.Logger.info(log)
+    api.Logger.SetSkipLogPrefix(False)
+    api.Logger.info(f"{indent} U P G R A D E   L O G S   E N D {indent}")
     api.Logger.SetNode(None)
 
 def __display_upg_state_transition(node, records):
@@ -77,11 +80,14 @@ def __display_upg_state_transition(node, records):
     indent = "-" * 25
     api.Logger.info("\n")
     api.Logger.info(f"{indent} U P G R A D E   S T A T E   T R A N S I T I O N {indent}")
+    api.Logger.SetSkipLogPrefix(True)
     for r in records:
         if __is_record_type_state(r):
             api.Logger.info("-    {}  ({:<45})  # took {}".format(r['ts'], r['msg'], r['duration']))
     api.Logger.info("Total Time : %s\n\n"%(__get_datetime_from_record(records[-1]) - \
                                            __get_datetime_from_record(records[1])))
+    api.Logger.SetSkipLogPrefix(False)
+    api.Logger.info(f"{indent} U P G R A D E   S T A T E   T R A N S I T I O N   E N D {indent}")
     api.Logger.SetNode(None)
 
 def ResetUpgLog(nodes):

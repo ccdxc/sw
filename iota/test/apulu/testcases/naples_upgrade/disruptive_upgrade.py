@@ -67,7 +67,6 @@ def PacketTestSetup(tc):
 # Push interface config after upgrade
 # Venice is supposed to update interface config after upgrade
 def UpdateConfigAfterUpgrade(tc):
-    if not tc.upgrade_mode: return
     api.Logger.info("Updating Host Interfaces after Upgrade")
     SubnetClient = config_api.GetObjClient('subnet')
     for n in tc.Nodes:
@@ -175,8 +174,11 @@ def Verify(tc):
         api.Logger.info("Sending Temporary Second rollout status POST request: %s"%(cmd))
     tc.resp = api.Trigger(tmp_req)
 
-    api.Logger.info("Sleep for 30 secs before querying rollout status")
-    misc_utils.Sleep(30)
+    # wait to retrieve rollout status
+    api.Logger.info("Sleep for 120 secs before querying rollout status")
+    misc_utils.Sleep(120)
+    tc.sleep = tc.sleep - 120
+
     # get rollout status
     req = api.Trigger_CreateExecuteCommandsRequest(serial=False)
     for n in tc.Nodes:

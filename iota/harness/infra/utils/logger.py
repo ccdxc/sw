@@ -88,6 +88,7 @@ class _Logger:
         self.tcname         = None
         self.tbname         = None
         self.nodename       = None
+        self.skiplogprefix  = False
 
         if stdout:
             global StdoutLoggerSink
@@ -107,6 +108,8 @@ class _Logger:
         return "[%02d:%02d:%02d.%06d] " % (a.hour, a.minute, a.second, a.microsecond)
 
     def __get_log_prefix(self, level=None):
+        if self.skiplogprefix:
+            return " "
         prefix = self.__get_timestamp()
         if self.tsname:
             prefix += "[TS:%s]" % self.tsname
@@ -193,6 +196,10 @@ class _Logger:
 
     def SetNode(self, nodename):
         self.nodename = nodename
+        return
+
+    def SetSkipLogPrefix(self, skip):
+        self.skiplogprefix = skip
         return
 
     def GetLogPrefix(self):
