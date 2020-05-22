@@ -23,7 +23,7 @@ PEN_MGMT_PG = 'PenMgmtPG'
 OLD_DRV_VER = '0.15'
 OLD_FW_VER = '1.1.1'
 
-HOST_MGMT_UPLINK_DESC = 'Pensando Ethernet Management'
+HOST_MGMT_UPLINK_DESC = 'Management Controller'
 
 class MgmtInterface:
     def __init__(self):
