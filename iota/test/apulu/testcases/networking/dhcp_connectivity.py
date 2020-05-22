@@ -162,15 +162,6 @@ def Setup(tc):
         conn_utils.GetWorkloadScope(tc.iterators),
     )
 
-    # Skip subintfs for now. Local intra-subnet connectity not supported.
-    tc.workload_pairs = [
-        pair
-        for pair in tc.workload_pairs
-        if (
-            pair[0].interface == pair[0].parent_interface
-            and pair[1].interface == pair[1].parent_interface
-        )
-    ]
     for pair in tc.workload_pairs:
         api.Logger.info(
             "%s %s %s %s"
