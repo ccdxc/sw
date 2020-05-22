@@ -60,7 +60,7 @@ IMPORTANT: This configuration is only supported for trial up to 4 DSCs
 
 This configuration requires the following:
 * 4 vCPU
-* 16GB RAM
+* 24GB RAM
 * 100GB Storage
         </Description>
       </Configuration>
@@ -72,7 +72,7 @@ IMPORTANT: This configuration is required for production deployment up to 100 DS
 This configuration requires the following:
 * 16 vCPU
 * 64GB RAM
-* 100GB Storage
+* 1TB Storage
         </Description>
       </Configuration>
       <Configuration ovf:id="scale">
@@ -83,7 +83,7 @@ IMPORTANT: This configuration is required for production deployment up to 1000 D
 This configuration requires the following:
 * 32 vCPU
 * 128GB RAM
-* 100GB Storage
+* 10TB Storage
         </Description>
       </Configuration>
     </DeploymentOptionSection>
@@ -184,10 +184,10 @@ cpu_mem_section = [
     <Item xmlns:rasd="http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_ResourceAllocationSettingData" configuration="lab">
       <rasd:AllocationUnits>byte * 2^20</rasd:AllocationUnits>
       <rasd:Description>Memory Size</rasd:Description>
-      <rasd:ElementName>16384 of memory</rasd:ElementName>
+      <rasd:ElementName>24576 of memory</rasd:ElementName>
       <rasd:InstanceID>2</rasd:InstanceID>
       <rasd:ResourceType>4</rasd:ResourceType>
-      <rasd:VirtualQuantity>16384</rasd:VirtualQuantity>
+      <rasd:VirtualQuantity>24576</rasd:VirtualQuantity>
     </Item>
     ''',
     '''
