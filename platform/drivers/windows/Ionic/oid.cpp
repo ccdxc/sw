@@ -295,13 +295,13 @@ oid_multicast_list_set(struct ionic *ionic,
 
                 next = cur->Flink;
 
-                if (is_multicast_ether_addr(f->cmd.mac.addr)) {
+                if (le16_to_cpu(f->cmd.match) == RX_FILTER_MATCH_MAC &&
+                    is_multicast_ether_addr(f->cmd.mac.addr)) {
                     ntStatus = ionic_lif_addr(lif, f->cmd.mac.addr, false);
                     if (ntStatus != NDIS_STATUS_SUCCESS) {
                         DbgTrace((TRACE_COMPONENT_OID, TRACE_LEVEL_VERBOSE,
                                   "%s Failed to clear rx filter Status %08lX\n",
                                   __FUNCTION__, ntStatus));
-                        break;
                     }
                 }
 
