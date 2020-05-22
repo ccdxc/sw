@@ -111,7 +111,9 @@ const static enum rte_rmt_call_master_t fte_call_master_type = SKIP_MASTER;
 static uint16_t nb_rxd = FTE_MAX_RXDSCR;
 static uint16_t nb_txd = FTE_MAX_TXDSCR;
 #ifndef SIM
-static uint16_t nsegs = ( MAX_ETH_RX_LEN + RTE_MBUF_DEFAULT_DATAROOM - 1) / RTE_MBUF_DEFAULT_DATAROOM;
+static uint16_t nsegs = ( MAX_ETH_RX_LEN + RTE_MBUF_ATHENA_DATAROOM - 1) / RTE_MBUF_ATHENA_DATAROOM;
+#else
+static uint16_t nsegs = ( ETHER_MAX_LEN + RTE_MBUF_DEFAULT_DATAROOM - 1) / RTE_MBUF_DEFAULT_DATAROOM;
 #endif
 
 
@@ -974,21 +976,12 @@ check_port_config (void)
 // cache per lcore and mtable per port per lcore.
 // RTE_MAX is used to ensure that NB_MBUF never goes below a minimum
 // value of 8192
-#ifndef SIM
 #define NB_MBUF RTE_MAX(                        \
-        (nb_ports*nb_rx_queue*nb_rxd* nsegs +    \
+        (nb_ports*nb_rx_queue*nb_rxd*nsegs +    \
         nb_ports*nb_lcores*MAX_PKT_BURST +      \
-        nb_ports*n_tx_queue*nb_txd +            \
+        nb_ports*n_tx_queue*nb_txd*nsegs +      \
         nb_lcores*MEMPOOL_CACHE_SIZE),          \
         (unsigned)8192)
-#else
-#define NB_MBUF RTE_MAX(                        \
-        (nb_ports*nb_rx_queue*nb_rxd +    \
-        nb_ports*nb_lcores*MAX_PKT_BURST +      \
-        nb_ports*n_tx_queue*nb_txd +            \
-        nb_lcores*MEMPOOL_CACHE_SIZE),          \
-        (unsigned)8192)
-#endif
 
 static int
 init_mem (unsigned nb_mbuf)
@@ -1022,11 +1015,11 @@ init_mem (unsigned nb_mbuf)
                             RTE_MBUF_ATHENA_BUF_SIZE, socketid);
             if (pktmbuf_pool[socketid] == NULL) {
                 rte_exit(EXIT_FAILURE,
-                         "Cannot init mbuf pool on socket %d\n",
-                         socketid);
+                         "Cannot init mbuf pool on socket %d with %d buffers\n",
+                         socketid, nb_mbuf);
             } else {
-                PDS_TRACE_DEBUG("Allocated mbuf pool on socket %d\n",
-                                socketid);
+                PDS_TRACE_DEBUG("Allocated mbuf pool on socket %d with %d buffers\n",
+                                socketid, nb_mbuf);
             }
         }
     }
@@ -1148,8 +1141,8 @@ _init_port (void)
     struct rte_eth_conf local_port_conf = {0};
     struct rte_eth_dev_info dev_info;
     unsigned nb_ports, lcore_id;
-    uint32_t n_tx_queue, nb_lcores;
-    int8_t nb_rx_queue, socketid;
+    uint32_t n_tx_queue = 0, nb_lcores;
+    int8_t nb_rx_queue = 0, socketid = 0;
     uint16_t queueid, portid;
 
 
@@ -1164,8 +1157,8 @@ _init_port (void)
         if (n_tx_queue > MAX_TX_QUEUE_PER_PORT) {
             n_tx_queue = MAX_TX_QUEUE_PER_PORT;
         }
-        PDS_TRACE_DEBUG("Creating queues: nb_rxq=%d nb_txq=%u... ",
-                        nb_rx_queue, (unsigned)n_tx_queue );
+        PDS_TRACE_DEBUG("Creating queues: nb_rxq=%d nb_txq=%u nb_ports=%u, nsegs=%u  ",
+                        nb_rx_queue, (unsigned)n_tx_queue, nb_ports, nsegs);
 
         rte_eth_dev_info_get(portid, &dev_info);
         if (dev_info.tx_offload_capa &
@@ -1212,11 +1205,6 @@ _init_port (void)
                      "port=%d\n", ret, portid);
         }
 
-        ret = init_mem(NB_MBUF);
-        if (ret < 0) {
-            rte_exit(EXIT_FAILURE, "_init_mem failed\n");
-        }
-
         // init one TX queue per couple (lcore,port)
         queueid = 0;
         for (lcore_id = 0; lcore_id < FTE_MAX_CORES; lcore_id++) {
@@ -1250,6 +1238,11 @@ _init_port (void)
             qconf->n_tx_port++;
         }
         PDS_TRACE_DEBUG("\n");
+    }
+
+    ret = init_mem(NB_MBUF);
+    if (ret < 0) {
+        rte_exit(EXIT_FAILURE, "_init_mem failed\n");
     }
 
     init_rx_queues();
