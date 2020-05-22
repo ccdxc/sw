@@ -56,6 +56,10 @@ func NewPegasusCtlCommand() *cobra.Command {
 }
 
 func genDocs() {
+	_, err := os.Stat("./docs/")
+	if os.IsNotExist(err) {
+		return
+	}
 	genManTreeDocs()
 	genMarkdownDocs()
 	genRestTreeDocs()
