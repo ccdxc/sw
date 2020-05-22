@@ -1111,6 +1111,9 @@
       {{$struct := $param.Struct}}
       {{$specMsgName := $param.SpecMsg}}
       {{$mib    := $param.Mib}}
+      {{if (eq $param.SkipExtToInt true)}}
+        {{$extPkgName = "pds_ms"}}
+      {{end}}
     // Helper to convert {{.GetName}} to {{$specMsgName}}
     NBB_VOID pds_ms_get_{{$specMsgName | ToLower}}_from_{{.GetName | ToLower}}({{$extPkgName}}::{{.GetName}} in, {{$pkgName}}::{{$specMsgName}} &out) {
       {{$fields := .Fields}}
@@ -1163,6 +1166,9 @@
         {{$struct := $param.Struct}}
         {{$specMsgName := $param.SpecMsg}}
         {{$mib    := $param.Mib}}
+        {{if (eq $param.SkipExtToInt true)}}
+          {{$extPkgName = "pds_ms"}}
+        {{end}}
     // Helper to convert {{.GetName}} to {{$specMsgName}}
     NBB_VOID pds_ms_get_{{$specMsgName | ToLower}}_from_{{.GetName | ToLower}}({{$extPkgName}}::{{.GetName}} in, {{$pkgName}}::{{$specMsgName}} &out) {
         {{$fields := .Fields}}

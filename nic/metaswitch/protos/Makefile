@@ -1,5 +1,5 @@
 TOP_DIR = ../../..
-GEN_DIR = ${TOP_DIR}/nic/metaswitch/gen/agent
+GEN_DIR = ${TOP_DIR}/nic/metaswitch/gen/agent/pds_ms
 LD_LIBRARY_PATH=$(TOP_DIR)/nic/hal/third-party/google/x86_64/lib/
 MS_PROTO_FILES = $(shell ls ${CURDIR} | grep .proto | grep -v meta.proto | grep -v types.proto | grep -v module | tr " " "\n" | LC_ALL=C sort | tr "\n" " ")
 MS_PB_GO_FILES = $(patsubst %.proto,%.pb.go,$(MS_PROTO_FILES))

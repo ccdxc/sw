@@ -17,7 +17,7 @@ import (
 	"github.com/pensando/sw/api/generated/routing"
 	"github.com/pensando/sw/events/generated/eventtypes"
 	pdstypes "github.com/pensando/sw/nic/apollo/agent/gen/pds"
-	msTypes "github.com/pensando/sw/nic/metaswitch/gen/agent"
+	msTypes "github.com/pensando/sw/nic/metaswitch/gen/agent/pds_ms"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/perseus/env"
 	"github.com/pensando/sw/venice/perseus/types"

@@ -91,6 +91,7 @@ type PdsaGlobalOpts struct {
 	SpecMsg         string
 	FilterMib       string
 	FilterTypeField string
+	SkipExtToInt    bool
 }
 
 // PenctlCmdOpts holds raw PenctlCmd options data from .proto files
@@ -1167,6 +1168,10 @@ func getPdsaSetGlobalOpts(m *descriptor.Message, cam *CamInfo) (PdsaGlobalOpts, 
 	pdsaGlobOpts.ActionFn = r.ActionFn
 	pdsaGlobOpts.UpdateForDelete = r.UpdateForDelete
 	pdsaGlobOpts.SpecMsg = r.SpecMsg
+	pdsaGlobOpts.SkipExtToInt = false
+	if r.SkipExtToInt == true {
+		pdsaGlobOpts.SkipExtToInt = r.SkipExtToInt
+	}
 	return pdsaGlobOpts, nil
 }
 
@@ -1181,6 +1186,10 @@ func getPdsaGetGlobalOpts(m *descriptor.Message, cam *CamInfo) (PdsaGlobalOpts, 
 	pdsaGlobOpts.FillFn = r.FillFn
 	pdsaGlobOpts.ActionFn = r.ActionFn
 	pdsaGlobOpts.SpecMsg = r.SpecMsg
+	pdsaGlobOpts.SkipExtToInt = false
+	if r.SkipExtToInt == true {
+		pdsaGlobOpts.SkipExtToInt = r.SkipExtToInt
+	}
 	pdsaGlobOpts.FilterMib = r.FilterMib
 	pdsaGlobOpts.FilterTypeField = r.FilterTypeField
 	return pdsaGlobOpts, nil

@@ -13,6 +13,7 @@ message GlobalOpts {
     string SpecMsg         = 6;
     string FilterMib       = 7;
     string FilterTypeField = 8;
+    bool   SkipExtToInt    = 9;
 }
 
 // Venice Option extensions applicable to messages

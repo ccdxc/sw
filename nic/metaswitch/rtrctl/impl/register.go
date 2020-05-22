@@ -75,9 +75,6 @@ func RegisterShowNodes(params *CLIParams, base *cobra.Command) {
 	interfaceShowCmd.PersistentFlags().Bool("json", false, "output in json")
 	routingShowCmd.AddCommand(staticTableShowCmd)
 	staticTableShowCmd.PersistentFlags().Bool("json", false, "output in json")
-	routingShowCmd.AddCommand(osTableShowCmd)
-	osTableShowCmd.AddCommand(osRouteTableShowCmd)
-	osRouteTableShowCmd.PersistentFlags().Bool("json", false, "output in json")
 	interfaceShowCmd.AddCommand(intfAddrShowCmd)
 	intfAddrShowCmd.PersistentFlags().Bool("json", false, "output in json")
 	routingShowCmd.AddCommand(routeTableShowCmd)
@@ -86,4 +83,11 @@ func RegisterShowNodes(params *CLIParams, base *cobra.Command) {
 	vrfStatusShowCmd.PersistentFlags().Bool("json", false, "output in json")
 	routingShowCmd.AddCommand(redistTableShowCmd)
 	redistTableShowCmd.PersistentFlags().Bool("json", false, "output in json")
+
+	//debug commands
+	base.AddCommand(internalShowCmd)
+	internalShowCmd.AddCommand(intRoutingShowCmd)
+	intRoutingShowCmd.AddCommand(osTableShowCmd)
+	osTableShowCmd.AddCommand(osRouteTableShowCmd)
+	osRouteTableShowCmd.PersistentFlags().Bool("json", false, "output in json")
 }

@@ -17,70 +17,52 @@ service CPRouteSvc
   rpc CPStaticRouteDelete (CPStaticRouteDeleteRequest) returns (CPStaticRouteDeleteResponse) {}
   rpc CPStaticRouteGet (CPStaticRouteGetRequest) returns (CPStaticRouteGetResponse) {}
   rpc CPRouteGet (CPRouteGetRequest) returns (CPRouteGetResponse) {}
-  rpc CPActiveRouteGet (CPActiveRouteGetRequest) returns (CPActiveRouteGetResponse) {}
   rpc CPRouteRedistGet (CPRouteRedistGetRequest) returns (CPRouteRedistGetResponse) {}
-}
-
-// route type
-enum RouteType {
-  ROUTE_TYPE_NONE   = 0;
-  ROUTE_TYPE_OTHER  = 1;
-  ROUTE_TYPE_REJECT = 2;
-  ROUTE_TYPE_LOCAL  = 3;
-  ROUTE_TYPE_REMOTE = 4;
-}
-
-// route protocols
-enum RouteProtocol {
- ROUTE_PROTO_NONE   = 0;
- ROUTE_PROTO_LOCAL  = 2;
- ROUTE_PROTO_STATIC = 3;
- ROUTE_PROTO_BGP    = 14;
 }
 
 // control plane route table 
 message CPRouteStatus {
   // route table id this route belongs to
-  uint32          RouteTableId  = 1;
+  uint32              RouteTableId  = 1;
   // destination address
-  types.IPAddress DestAddr      = 2;
+  types.IPAddress     DestAddr      = 2;
   // destination address prefix
-  uint32          DestPrefixLen = 3;
+  uint32              DestPrefixLen = 3;
   // next-hop address
-  types.IPAddress NHAddr        = 4;
+  types.IPAddress     NHAddr        = 4;
   // interface index, if the next-hop is an interface
-  uint32          IfIndex       = 5;
+  uint32              IfIndex       = 5;
   // type of route
-  RouteType       Type          = 6;
+  types.RouteType     Type          = 6;
   // protocol via which the route is learned
-  RouteProtocol   Proto         = 7;
+  types.RouteProtocol Proto         = 7;
   // The number of seconds since this route was last updated or otherwise determined to be correct.
-  int32           Age           = 8;
+  int32               Age           = 8;
   // The primary routing metric for this route
-  int32           Metric1       = 9;
+  int32               Metric1       = 9;
   // Is this route programmed either to a forwarding table, or to a partner that queries route information
-  bool            FibRoute      = 10;
+  bool                FibRoute      = 10;
   // Indicates whether the route destination is directly connected
-  bool            Connected     = 11;
+  bool                Connected     = 11;
   // whether DC-RTM considers that the next-hop address for this route is a loose next hop.
-  bool            LooseNextHop  = 12;
+  bool                LooseNextHop  = 12;
   // Administrative distance for this route
-  int32           AdminDistance = 13;
+  int32               AdminDistance = 13;
 }
 
 message CPRouteKey {
   // route table id this route belongs to
-  uint32          RouteTableId  = 1;
+  uint32              RouteTableId  = 1;
   // destination address
-  types.IPAddress DestAddr      = 2;
+  types.IPAddress     DestAddr      = 2;
   // destination address prefix
-  uint32          DestPrefixLen = 3;
+  uint32              DestPrefixLen = 3;
   // next-hop address
-  types.IPAddress NHAddr        = 4;
+  types.IPAddress     NHAddr        = 4;
   // interface index, if the next-hop is an interface
-  uint32          IfIndex       = 5;
+  uint32              IfIndex       = 5;
   // protocol via which the route is learned
-  RouteProtocol   Proto         = 6;
+  types.RouteProtocol Proto         = 6;
 }
 
 message CPRouteKeyHandle {
@@ -178,65 +160,6 @@ message CPStaticRouteGetRequest {
 message CPStaticRouteGetResponse {
   types.ApiStatus        ApiStatus = 1;
   repeated CPStaticRoute Response  = 2;
-}
-
-// control plane active route table
-message CPActiveRouteStatus {
-  // route table id this route belongs to
-  uint32          RouteTableId  = 1;
-  // destination address
-  types.IPAddress DestAddr      = 2;
-  // destination address prefix
-  uint32          DestPrefixLen = 3;
-  // next-hop address
-  types.IPAddress NHAddr        = 4;
-  // interface index, if the next-hop is an interface
-  uint32          IfIndex       = 5;
-  // type of route
-  RouteType       Type          = 6;
-  // protocol via which the route is learned
-  RouteProtocol   Proto         = 7;
-  // The number of seconds since this route was last updated or otherwise determined to be correct.
-  int32           Age           = 8;
-  // The primary routing metric for this route
-  int32           Metric1       = 9;
-  // Indicates whether the route destination is directly connected
-  bool            Connected     = 10;
-  // Administrative distance for this route
-  int32           AdminDistance = 11;
-}
-
-message CPActiveRouteKey {
-  // route table id this route belongs to
-  uint32          RouteTableId  = 1;
-  // destination address
-  types.IPAddress DestAddr      = 2;
-  // destination address prefix
-  uint32          DestPrefixLen = 3;
-  // next-hop address
-  types.IPAddress NHAddr        = 4;
-  // interface index, if the next-hop is an interface
-  uint32          IfIndex       = 5;
-  // protocol via which the route is learned
-  RouteProtocol   Proto         = 6;
-}
-
-message CPActiveRouteKeyHandle {
-  CPActiveRouteKey Key = 1;
-}
-
-// control plane route table get request
-message CPActiveRouteGetRequest {
-  repeated CPActiveRouteKeyHandle Request = 1;
-}
-
-message CPActiveRoute {
-  CPActiveRouteStatus Status = 1;
-}
-
-message CPActiveRouteGetResponse {
-  types.ApiStatus  ApiStatus               = 1;
-  repeated         CPActiveRoute Response  = 2;
 }
 
 // control plane route table

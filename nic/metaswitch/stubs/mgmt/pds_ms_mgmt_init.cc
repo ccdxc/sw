@@ -12,6 +12,7 @@
 #include "nic/metaswitch/stubs/mgmt/gen/svc/internal_evpn_gen.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/svc/internal_cp_route_gen.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/svc/cp_test_gen.hpp"
+#include "nic/metaswitch/stubs/mgmt/gen/svc/debugpdsms_gen.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/mgmt/pds_ms_internal_cp_route_utils_gen.hpp"
 #include <nbase.h>
 #include <nbbstub.h>
@@ -304,11 +305,12 @@ bool pds_ms_mgmt_init()
 
 namespace pds_ms {
 
-static    CPTestSvcImpl        cp_test_svc;
+static    CPTestSvcImpl         cp_test_svc;
 static    BGPSvcImpl            bgp_svc;
 static    EvpnSvcImpl           evpn_svc;
 static    CPRouteSvcImpl        cp_route_svc;
 static    LimSvcImpl            lim_svc;
+static    DebugPdsMsSvcImpl     debug_svc;
 
 void
 mgmt_svc_init (grpc::ServerBuilder* server_builder)
@@ -317,6 +319,7 @@ mgmt_svc_init (grpc::ServerBuilder* server_builder)
     server_builder->RegisterService(&evpn_svc);
     server_builder->RegisterService(&cp_route_svc);
     server_builder->RegisterService(&lim_svc);
+    server_builder->RegisterService(&debug_svc);
 
 //    if (PDS_MOCK_MODE()) {
         PDS_TRACE_INFO("Registering CP test proto");

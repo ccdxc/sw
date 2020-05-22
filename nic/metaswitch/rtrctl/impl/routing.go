@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/cobra"
 
 	types "github.com/pensando/sw/nic/apollo/agent/gen/pds"
+	msTypes "github.com/pensando/sw/nic/metaswitch/gen/agent/pds_ms"
 	"github.com/pensando/sw/nic/metaswitch/rtrctl/utils"
 )
 
@@ -167,6 +168,13 @@ var osTableShowCmd = &cobra.Command{
 	Args:  cobra.NoArgs,
 }
 
+var intRoutingShowCmd = &cobra.Command{
+	Use:   "routing",
+	Short: "show Routing related information",
+	Long:  "show Routing related information",
+	Args:  cobra.NoArgs,
+}
+
 var osRouteTableShowCmd = &cobra.Command{
 	Use:   "route-table",
 	Short: "show os routing route-table information",
@@ -200,9 +208,9 @@ func osRouteTableShowCmdHandler(cmd *cobra.Command, args []string) error {
 		return errors.New("Could not connect to the PDS. Is PDS Running?")
 	}
 	defer c.Close()
-	client := types.NewCPRouteSvcClient(c)
+	client := msTypes.NewDebugPdsMsSvcClient(c)
 
-	req := &types.CPActiveRouteGetRequest{}
+	req := &msTypes.CPActiveRouteGetRequest{}
 	respMsg, err := client.CPActiveRouteGet(context.Background(), req)
 	if err != nil {
 		return fmt.Errorf("Getting route table failed (%s)", err)

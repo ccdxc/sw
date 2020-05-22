@@ -441,7 +441,7 @@ Status
     } else {
         PDS_TRACE_DEBUG ("Processed gRPC {{.RequestType.Name}} successfully");
 
-  {{if (HasSuffix $rpc "Get") }}
+  {{if and (HasSuffix $rpc "Get") (HasPrefix $fileName "internal_") }}
         //pds_ms_dump_{{$respMsgName| ToLower}}(proto_resp);
         pds_ms_convert_{{$respMsgName | ToLower}}_ext_response (proto_resp, resp);
   {{end}}

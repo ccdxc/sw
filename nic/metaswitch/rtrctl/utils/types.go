@@ -10,6 +10,7 @@ import (
 	"github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/nic/apollo/agent/gen/pds"
+	"github.com/pensando/sw/nic/metaswitch/gen/agent/pds_ms"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -1215,10 +1216,10 @@ type ShadowCPActiveRouteStatus struct {
 	NHAddr   string
 	Type     string
 	Proto    string
-	*pds.CPActiveRouteStatus
+	*pds_ms.CPActiveRouteStatus
 }
 
-func newCPActiveRouteStatus(in *pds.CPActiveRouteStatus) ShadowCPActiveRouteStatus {
+func newCPActiveRouteStatus(in *pds_ms.CPActiveRouteStatus) ShadowCPActiveRouteStatus {
 	return ShadowCPActiveRouteStatus{
 		DestAddr:            PdsIPToString(in.DestAddr),
 		NHAddr:              PdsIPToString(in.NHAddr),
@@ -1234,7 +1235,7 @@ type ShadowCPActiveRoute struct {
 }
 
 // NewCPActiveRoute creates a shadow of CPActiveRoute
-func NewCPActiveRoute(in *pds.CPActiveRoute) *ShadowCPActiveRoute {
+func NewCPActiveRoute(in *pds_ms.CPActiveRoute) *ShadowCPActiveRoute {
 	return &ShadowCPActiveRoute{
 		Status: newCPActiveRouteStatus(in.Status),
 	}

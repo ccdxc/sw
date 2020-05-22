@@ -18,7 +18,7 @@ import (
 	"github.com/pensando/sw/api/generated/network"
 	pdstypes "github.com/pensando/sw/nic/apollo/agent/gen/pds"
 	"github.com/pensando/sw/nic/metaswitch/clientutils"
-	msTypes "github.com/pensando/sw/nic/metaswitch/gen/agent"
+	msTypes "github.com/pensando/sw/nic/metaswitch/gen/agent/pds_ms"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/perseus/env"
 	"github.com/pensando/sw/venice/utils/balancer"

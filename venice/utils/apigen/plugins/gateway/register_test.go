@@ -4581,6 +4581,19 @@ func TestApis(t *testing.T) {
 	if addStr("a", "b") != "ab" {
 		t.Errorf("Got wrong value")
 	}
+	if getPdsaCastSetFilterFunc(gogoproto.FieldDescriptorProto_TYPE_BYTES, opt) != "pds_ms_set_string_in_byte_array" {
+		t.Errorf("Got wrong value")
+	}
+	opt.FilterFieldLen = "10"
+	if getPdsaCastSetFilterFunc(gogoproto.FieldDescriptorProto_TYPE_BYTES, opt) != "pds_ms_set_string_in_byte_array_with_len" {
+		t.Errorf("Got wrong value")
+	}
+	if getPdsaCastSetFilterFunc(gogoproto.FieldDescriptorProto_TYPE_BOOL, opt) != "pds_ms_set_amb_bool" {
+		t.Errorf("Got wrong value")
+	}
+	if getPdsaCastSetFilterFunc(gogoproto.FieldDescriptorProto_TYPE_FIXED64, opt) != "" {
+		t.Errorf("Got wrong value")
+	}
 }
 
 func TestCtrlerPromoteCreateToUpdate(t *testing.T) {

@@ -124,12 +124,18 @@ extern "C" {
       {{if hasExtension "venice.pdsaSetGlobOpts" . }}
         {{$param := (getPdsaSetGlobalOpts . $cam)}}
         {{$specMsg := $param.SpecMsg}}
+        {{if (eq $param.SkipExtToInt true)}}
+          {{$extPkgName = "pds_ms"}}
+        {{end}}
     // Helper to convert {{.GetName}} to {{$specMsg}} 
     NBB_VOID pds_ms_get_{{$specMsg | ToLower}}_from_{{.GetName | ToLower}}({{$extPkgName}}::{{.GetName}} in, {{$pkgName}}::{{$specMsg}} &out);
       {{else}}
         {{if hasExtension "venice.pdsaGetGlobOpts" . }}
           {{$param := (getPdsaGetGlobalOpts . $cam)}}
           {{$specMsg := $param.SpecMsg}}
+          {{if (eq $param.SkipExtToInt true)}}
+            {{$extPkgName = "pds_ms"}}
+          {{end}}
     // Helper to convert {{.GetName}} to {{$specMsg}}
     NBB_VOID pds_ms_get_{{$specMsg | ToLower}}_from_{{.GetName | ToLower}}({{$extPkgName}}::{{.GetName}} in, {{$pkgName}}::{{$specMsg}} &out);
         {{end}}
