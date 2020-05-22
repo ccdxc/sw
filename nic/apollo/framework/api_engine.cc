@@ -546,8 +546,97 @@ api_engine::add_deps_(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-api_engine::obj_dependency_computation_stage_(void)
-{
+api_engine::count_api_msg_(obj_id_t obj_id) {
+    if (!api_obj_circulate(obj_id)) {
+        // none of the IPC endpoints are interested in this API object
+        return SDK_RET_OK;
+    }
+
+    // check which IPC endpoint needs what type of msg and increment
+    // corresponding counters
+    api_obj_ipc_peer_list_t& ipc_ep_list = ipc_peer_list(obj_id);
+    for (auto it = ipc_ep_list.begin(); it != ipc_ep_list.end(); ++it) {
+        if (batch_ctxt_.msg_map.find(it->ipc_id) != batch_ctxt_.msg_map.end()) {
+            if (it->ntfn) {
+                batch_ctxt_.msg_map[it->ipc_id].num_ntfn_msgs++;
+            } else {
+                batch_ctxt_.msg_map[it->ipc_id].num_req_rsp_msgs++;
+            }
+        } else {
+            if (it->ntfn) {
+                batch_ctxt_.msg_map[it->ipc_id].num_req_rsp_msgs = 0;
+                batch_ctxt_.msg_map[it->ipc_id].num_ntfn_msgs = 1;
+            } else {
+                batch_ctxt_.msg_map[it->ipc_id].num_req_rsp_msgs = 1;
+                batch_ctxt_.msg_map[it->ipc_id].num_ntfn_msgs = 0;
+            }
+            batch_ctxt_.msg_map[it->ipc_id].req_rsp_msgs = NULL;
+            batch_ctxt_.msg_map[it->ipc_id].ntfn_msgs = NULL;
+        }
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+api_engine::allocate_api_msgs_(void) {
+    for (auto it = batch_ctxt_.msg_map.begin();
+         it != batch_ctxt_.msg_map.end(); it++) {
+        if (it->second.num_req_rsp_msgs) {
+            it->second.req_rsp_msgs =
+                (pds_msg_list_t *)core::pds_msg_list_alloc(
+                                            PDS_MSG_TYPE_CFG_OBJ_SET,
+                                            batch_ctxt_.epoch,
+                                            it->second.num_req_rsp_msgs);
+            if (it->second.req_rsp_msgs == NULL) {
+                PDS_TRACE_ERR("Failed to allocate memory for %u IPC msgs for "
+                              "IPC id %u", it->second.num_req_rsp_msgs,
+                              it->first);
+                return SDK_RET_OOM;
+            }
+        }
+        if (it->second.num_ntfn_msgs) {
+            it->second.ntfn_msgs =
+                (pds_msg_list_t *)core::pds_msg_list_alloc(
+                                            PDS_MSG_TYPE_CFG_OBJ_SET,
+                                            batch_ctxt_.epoch,
+                                            it->second.num_ntfn_msgs);
+            if (it->second.ntfn_msgs == NULL) {
+                PDS_TRACE_ERR("Failed to allocate memory for %u IPC msgs for "
+                              "IPC id %u", it->second.num_ntfn_msgs, it->first);
+                return SDK_RET_OOM;
+            }
+        }
+        PDS_TRACE_INFO("IPC peer %u circulation list, req/rsp msgs %u, "
+                       "ntfn msgs %u", it->first,
+                       it->second.num_req_rsp_msgs, it->second.num_ntfn_msgs);
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+api_engine::populate_api_msg_(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
+    pds_msg_t msg;
+
+    // form the message we want to send
+    api_obj->populate_msg(&msg, obj_ctxt);
+
+    // walk all IPC endpoints interested in this object and keep a copy
+    // to be send in respective msg list
+    api_obj_ipc_peer_list_t& ipc_ep_list = ipc_peer_list(obj_ctxt->obj_id);
+    for (auto it = ipc_ep_list.begin(); it != ipc_ep_list.end(); ++it) {
+        if (it->ntfn) {
+            // add to notification msg list
+            batch_ctxt_.msg_map[it->ipc_id].add_ntfn_msg(&msg);
+        } else {
+            // add to req/rsp msg list
+            batch_ctxt_.msg_map[it->ipc_id].add_req_rsp_msg(&msg);
+        }
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+api_engine::obj_dependency_computation_stage_(void) {
     sdk_ret_t ret = SDK_RET_OK;
     api_base *api_obj;
     api_obj_ctxt_t *obj_ctxt;
@@ -572,28 +661,17 @@ api_engine::obj_dependency_computation_stage_(void)
         }
         // if this API msg needs to relayed to other components as well,
         // count it so we can allocate resources for all them in one shot
-        if ((obj_ctxt->api_op != API_OP_NONE) &&
-            api_obj_circulate(obj_ctxt->obj_id)) {
-            batch_ctxt_.num_msgs++;
+        if (obj_ctxt->api_op != API_OP_NONE) {
+            count_api_msg_(obj_ctxt->obj_id);
         }
     }
 
     // if some of these APIs need to be shipped to other components, allocate
     // memory for the necessary messages
-    if (batch_ctxt_.num_msgs) {
-        batch_ctxt_.pds_msgs =
-            (pds_msg_list_t *)core::pds_msg_list_alloc(PDS_MSG_TYPE_CFG_OBJ_SET,
-                                                       batch_ctxt_.epoch,
-                                                       batch_ctxt_.num_msgs);
-        if (batch_ctxt_.pds_msgs == NULL) {
-            PDS_TRACE_ERR("Failed to allocate memory for %u IPC msgs",
-                          batch_ctxt_.num_msgs);
-            ret = SDK_RET_OOM;
-        }
+    ret = allocate_api_msgs_();
+    if (likely(ret == SDK_RET_OK)) {
+        PDS_API_OBJ_DEP_UPDATE_COUNTER_INC(ok, 1);
     }
-    PDS_TRACE_INFO("Object circulation list size %u", batch_ctxt_.num_msgs);
-    PDS_API_OBJ_DEP_UPDATE_COUNTER_INC(ok, 1);
-    return SDK_RET_OK;
 
 error:
 
@@ -645,9 +723,7 @@ api_engine::reserve_resources_(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-api_engine::resource_reservation_stage_(void)
-{
-    uint32_t i = 0;
+api_engine::resource_reservation_stage_(void) {
     sdk_ret_t ret;
     api_base *api_obj;
     api_obj_ctxt_t *obj_ctxt;
@@ -667,9 +743,7 @@ api_engine::resource_reservation_stage_(void)
         // if this object needs to be circulated, add it to the msg list
         if ((obj_ctxt->api_op != API_OP_NONE) &&
             api_obj_circulate(obj_ctxt->obj_id)) {
-            api_obj->populate_msg(core::pds_msg(batch_ctxt_.pds_msgs, i),
-                                  obj_ctxt);
-            i++;
+            populate_api_msg_(api_obj, obj_ctxt);
         }
     }
     return SDK_RET_OK;
@@ -1169,7 +1243,6 @@ sdk_ret_t
 api_engine::batch_commit_phase1_(void) {
     sdk_ret_t ret;
 
-    batch_ctxt_.num_msgs = 0;
     // pre process the APIs by walking over the stashed API contexts to form
     // dirty object list
     PDS_TRACE_INFO("Preprocess stage start, epoch %u, API count %lu",
@@ -1285,43 +1358,64 @@ error:
 
 void
 api_engine::process_ipc_async_result_(sdk::ipc::ipc_msg_ptr msg,
-                                      const void *ctx) {
+                                      const void *ctxt) {
     ipc_msg_ptr ipc_msg;
     sdk_ret_t ret = *(sdk_ret_t *)msg->data();
 
-    ipc_msg = api_engine_get()->ipc_msg();
-    if (ret == SDK_RET_OK) {
-        // resume processing the API batch
-        ret = api_engine_get()->batch_commit_phase2_();
-        if (ret != SDK_RET_OK) {
-            // abort the batch
-            api_engine_get()->batch_abort_();
-        }
-    } else {
-        SDK_TRACE_DEBUG("Rcvd failure response to PDS_MSG_TYPE_CFG, "
-                        "err %u", ret);
+    ipc_msg = g_api_engine.ipc_msg();
+    if (ret != SDK_RET_OK) {
+        SDK_TRACE_DEBUG("Rcvd failure response to PDS_MSG_TYPE_CFG_OBJ_SET, "
+                        "aborting batch processing ..., err %u", ret);
         // abort the batch
-        api_engine_get()->batch_abort_();
+        g_api_engine.batch_abort_();
+        // send the response back to the caller
+        sdk::ipc::respond(ipc_msg, &ret, sizeof(ret));
+    } else {
+        // got SUCCESS from this peer, check if there are more peers to
+        // send cfg messages to
+        g_api_engine.batch_ctxt_.msg_map_it++;
+        if (g_api_engine.batch_ctxt_.msg_map_it ==
+                g_api_engine.batch_ctxt_.msg_map.end()) {
+            // received OK responses from all the peers and now we can resume
+            // processing the API batch
+            ret = g_api_engine.batch_commit_phase2_();
+            if (ret != SDK_RET_OK) {
+                // abort the batch
+                g_api_engine.batch_abort_();
+            }
+            // send the response back to the caller
+            sdk::ipc::respond(ipc_msg, &ret, sizeof(ret));
+        } else {
+            // we need to notify the next IPC endpoint with API objects of its
+            // interest
+            ret = send_req_rsp_msgs_(g_api_engine.batch_ctxt_.msg_map_it->first,
+                      &g_api_engine.batch_ctxt_.msg_map_it->second);
+            // sync messages end up returning SDK_RET_IN_PROGRESS we go back to
+            // event loop waiting for the response
+            if (likely(ret != SDK_RET_OK)) {
+                return;
+            }
+        }
     }
-
-    // send the response back to the caller
-    sdk::ipc::respond(ipc_msg, &ret, sizeof(ret));
 }
 
 sdk_ret_t
-api_engine::pds_msg_send_(pds_msg_list_t *msgs) {
-    if (!msgs) {
-        return sdk::SDK_RET_OK;
+api_engine::send_req_rsp_msgs_(pds_ipc_id_t ipc_id,
+                               ipc_peer_api_msg_info_t *api_msg_info) {
+    // if vpp is mocked out, don't send msg to vpp
+    if ((ipc_id == PDS_IPC_ID_VPP) && (g_pds_state.vpp_ipc_mock())) {
+        return SDK_RET_OK;
     }
-
-    if (g_pds_state.vpp_ipc_mock() == false) {
-        sdk::ipc::request(PDS_IPC_ID_VPP, PDS_MSG_TYPE_CFG_OBJ_SET,
-                          msgs, core::pds_msg_list_size(msgs),
+    if (api_msg_info->req_rsp_msgs) {
+        PDS_TRACE_DEBUG("Sending cfg msg to %u, num objs %u", ipc_id,
+                        api_msg_info->num_req_rsp_msgs);
+        sdk::ipc::request(ipc_id, PDS_MSG_TYPE_CFG_OBJ_SET,
+                          api_msg_info->req_rsp_msgs,
+                          core::pds_msg_list_size(api_msg_info->req_rsp_msgs),
                           process_ipc_async_result_, NULL);
-       return sdk::SDK_RET_IN_PROGRESS;
+        return SDK_RET_IN_PROGRESS;
     }
-
-    return sdk::SDK_RET_OK;
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
@@ -1340,9 +1434,17 @@ api_engine::batch_commit(api_msg_t *api_msg, sdk::ipc::ipc_msg_ptr ipc_msg) {
         goto error;
     }
 
-    ret = pds_msg_send_(batch_ctxt_.pds_msgs);
-    if (ret != SDK_RET_OK) {
-        return ret;
+    // if we need to send any msgs to other IPC endpoints, send it now
+    // and get OK or N-OK from them
+    if (!batch_ctxt_.msg_map.empty()) {
+        batch_ctxt_.msg_map_it = batch_ctxt_.msg_map.begin();
+        ret = send_req_rsp_msgs_(batch_ctxt_.msg_map_it->first,
+                                 &batch_ctxt_.msg_map_it->second);
+        // sync messages end up returning SDK_RET_IN_PROGRESS we go back to
+        // event loop waiting for the response
+        if (likely(ret != SDK_RET_OK)) {
+            return ret;
+        }
     }
 
     // this batch of APIs can be processed further as we don't need to wait to

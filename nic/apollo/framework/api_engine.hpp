@@ -112,28 +112,72 @@ typedef list<api_base *> dirty_obj_list_t;
 typedef unordered_map<api_base *, api_obj_ctxt_t *> dep_obj_map_t;
 typedef list<api_base *> dep_obj_list_t;
 
+// per IPC per we need to maintain two lists
+// 1. list of API (sync) request/response msgs to be sent
+// 2. list of API notification msgs sent as events
+typedef struct ipc_peer_api_msg_info_s {
+    // number of request/response style IPC messages
+    uint32_t num_req_rsp_msgs;
+    // request/response style message list
+    pds_msg_list_t *req_rsp_msgs;
+    // numnber of event notification messages
+    uint32_t num_ntfn_msgs;
+    // event notification list
+    pds_msg_list_t *ntfn_msgs;
+
+    // default constructor
+    ipc_peer_api_msg_info_s() {
+        num_req_rsp_msgs = 0;
+        req_rsp_msgs = NULL;
+        num_ntfn_msgs = 0;
+        ntfn_msgs = NULL;
+        ntfn_msg_idx_ = 0;
+        req_rsp_msg_idx_ = 0;
+    }
+
+    // add a notification msg to notification msg list
+    void add_ntfn_msg(pds_msg_t *msg) {
+        SDK_ASSERT(ntfn_msg_idx_ < num_ntfn_msgs);
+        ntfn_msgs->msgs[ntfn_msg_idx_++] = *msg;
+    }
+
+    // add a req/rsp msg to the req/rsp msg list
+    void add_req_rsp_msg(pds_msg_t *msg) {
+        SDK_ASSERT(req_rsp_msg_idx_ < num_req_rsp_msgs);
+        req_rsp_msgs->msgs[req_rsp_msg_idx_++] = *msg;
+    }
+
+private:
+    // ntfn_msg_idx_ keeps track of the next ntfn msg to be filled
+    uint32_t ntfn_msg_idx_ = 0;
+    // req_rsp_msg_idx_ keeps track of next req/rsp msg to be filled
+    uint32_t req_rsp_msg_idx_ = 0;
+
+} ipc_peer_api_msg_info_t;
+
+// messages to be sent on per IPC peer basis
+typedef unordered_map<pds_ipc_id_t, ipc_peer_api_msg_info_t> pds_msg_map_t;
+
 /// \brief    batch context, which is a list of all API contexts
 typedef struct api_batch_ctxt_s {
-    ipc_msg_ptr             ipc_msg;         ///< API msg of the current API batch
-    pds_epoch_t             epoch;           ///< epoch in progress, passed in
-                                             ///< pds_batch_begin()
-    api_batch_stage_t       stage;           ///< phase of the batch processing
-    vector<api_ctxt_t *>    *api_ctxts;      ///< API contexts per batch
+    ipc_msg_ptr             ipc_msg;    ///< API msg of the current API batch
+    pds_epoch_t             epoch;      ///< epoch in progress, passed in
+                                        ///< pds_batch_begin()
+    api_batch_stage_t       stage;      ///< phase of the batch processing
+    vector<api_ctxt_t *>    *api_ctxts; ///< API contexts per batch
 
     // dirty object map is needed because in the same batch we could have
     // multiple modifications of same object, like security rules change and
     // route changes can happen for same vnic in two different API calls but in
     // same batch and we need to activate them in one write (not one after
     // another)
-    dirty_obj_map_t         dom;             ///< dirty object map
-    dirty_obj_list_t        dol;             ///< dirty object list
-    dep_obj_map_t           aom;             ///< affected/dependent object map
-    dep_obj_list_t          aol;             ///< affected/dependent object list
-    uint32_t                num_msgs;        ///< no. of IPC messages to be sent
-    pds_msg_list_t          *pds_msgs;       ///< list of msgs to be relayed
-
-    void init(void) {
-    }
+    dirty_obj_map_t         dom;        ///< dirty object map
+    dirty_obj_list_t        dol;        ///< dirty object list
+    dep_obj_map_t           aom;        ///< affected/dependent object map
+    dep_obj_list_t          aol;        ///< affected/dependent object list
+    pds_msg_map_t           msg_map;    ///< API IPC msg map used to
+                                        ///< dispatch API msgs/ntfns
+    pds_msg_map_t::iterator msg_map_it; ///< iterator to navigate the msg map
 
     void clear(void) {
         ipc_msg.reset();
@@ -144,11 +188,16 @@ typedef struct api_batch_ctxt_s {
         dol.clear();
         aom.clear();
         aol.clear();
-        num_msgs = 0;
-        if (pds_msgs) {
-            core::pds_msg_list_free(pds_msgs);
-            pds_msgs = NULL;
+        for (msg_map_it = msg_map.begin();
+             msg_map_it != msg_map.end(); msg_map_it++) {
+            if (msg_map_it->second.req_rsp_msgs) {
+                core::pds_msg_list_free(msg_map_it->second.req_rsp_msgs);
+            }
+            if (msg_map_it->second.ntfn_msgs) {
+                core::pds_msg_list_free(msg_map_it->second.ntfn_msgs);
+            }
         }
+        msg_map.clear();
     }
 } api_batch_ctxt_t;
 
@@ -547,6 +596,24 @@ private:
     sdk_ret_t rollback_config_(dirty_obj_list_t::iterator it,
                                api_base *api_obj, api_obj_ctxt_t *obj_ctxt);
 
+    /// \brief given an API object id, check which all IPC peers are interested
+    ///        in this object and perform bookkeeping
+    /// \param[in] obj_id API object id
+    /// \return #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t count_api_msg_(obj_id_t obj_id);
+
+    /// \brief allocate all necessary IPC API msgs to send API
+    ///        object request/response msgs and/or event notification messages
+    /// \return #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t allocate_api_msgs_(void);
+
+    /// \brief given an API object, populate the corresponding ntfn or req/rsp
+    ///        msg in the msg buffers of all interested IPC endpoints
+    /// \param[in] api_obj  API object being processed
+    /// \param[in] obj_ctxt    transient information maintained to process API
+    /// \return #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t populate_api_msg_(api_base *obj, api_obj_ctxt_t *obj_ctxt);
+
     /// \brief Pre-process all API calls in a given batch
     /// Form a dirty list of effected obejcts as a result
     /// \return #SDK_RET_OK on success, failure status code on error
@@ -629,6 +696,9 @@ private:
     ///           components (e.g., VPP) and receive a response
     /// \param[in] msgs    batched msg to be sent
     static sdk_ret_t pds_msg_send_(pds_msg_list_t *msgs);
+
+    static sdk_ret_t send_req_rsp_msgs_(pds_ipc_id_t ipc_id,
+                                        ipc_peer_api_msg_info_t *api_msg_info);
 
 private:
     friend api_obj_ctxt_t;

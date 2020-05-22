@@ -45,7 +45,8 @@ typedef enum pds_thread_id_s {
 typedef enum pds_ipc_id_s {
     PDS_IPC_ID_MIN      = (PDS_AGENT_THREAD_ID_MAX + 1),
     PDS_IPC_ID_SYSMGR   = PDS_IPC_ID_MIN,
-    PDS_IPC_ID_VPP      = (PDS_IPC_ID_SYSMGR + 1),
+    PDS_IPC_ID_VPP,
+    PDS_IPC_ID_ROUTING,
 } pds_ipc_id_t;
 
 /// IPC broadcast event ids

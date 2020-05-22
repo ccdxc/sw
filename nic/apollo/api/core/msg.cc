@@ -44,11 +44,4 @@ pds_msg_list_size (pds_msg_list_t *msg_list)
                 (msg_list->num_msgs * sizeof(pds_msg_t)));
 }
 
-pds_msg_t *
-pds_msg (pds_msg_list_t *msg_list, uint32_t idx)
-{
-    SDK_ASSERT(idx < msg_list->num_msgs);
-    return &msg_list->msgs[idx];
-}
-
 }    // namespace core
