@@ -18,7 +18,7 @@ def Trigger(tc):
     netagent_api.ResetConfigs()
 
     # Change mode from unified => hostpin
-    api.SetNicMode("hostpin")
+    api.SetConfigNicMode("hostpin")
 
     # Change mode from TRANSPARENT, FLOWAWARE => INSERTION, ENFORCE
     ret = netagent_api.switch_profile("INSERTION", "ENFORCED")

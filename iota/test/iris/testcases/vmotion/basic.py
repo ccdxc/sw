@@ -14,7 +14,7 @@ def Setup(tc):
         api.Logger.info("Skipping Testcase due to no workload pairs.")
         tc.skip = True
 
-    if api.GetNicMode() != 'hostpin_dvs':
+    if api.GetConfigNicMode() != 'hostpin_dvs':
         api.Logger.info("Skipping Testcase: as vmotion nonly on dvs testsuite")
         tc.skip = True
 

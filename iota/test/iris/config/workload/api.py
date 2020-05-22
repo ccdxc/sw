@@ -36,7 +36,7 @@ def __setup_vmotion_on_hosts():
         if not node_name:
             node_name = ep.spec.node_uuid    
         l2seg = __get_l2segment_vlan_for_endpoint(ep)
-        if  api.GetNicMode() == 'hostpin_dvs' and not vmotion_workloads.get(node_name, None) and l2seg != 0:
+        if  api.GetTestbedNicMode(node_name) == 'hostpin_dvs' and not vmotion_workloads.get(node_name, None) and l2seg != 0:
             ep_ref = copy.deepcopy(ep)
             ep_ref.spec.mac_address = vmotion_mac_allocator.Alloc().get()
             ep_ref.spec.ipv4_addresses = [str(vmotion_ip_allocator.Alloc())]
@@ -62,9 +62,9 @@ def __setup_vmotion_on_hosts():
 
 def __add_workloads(target_node = None):
     req = topo_svc.WorkloadMsg()
-    if api.GetNicMode() in ['hostpin', 'hostpin_dvs', 'unified']:
+    if api.GetTestbedNicMode(target_node) in ['hostpin', 'hostpin_dvs', 'unified']:
         wl_orch.AddConfigWorkloads(req, target_node)
-    elif api.GetNicMode() == 'classic':
+    elif api.GetTestbedNicMode(target_node) == 'classic':
         wl_orch.AddConfigClassicWorkloads(req, target_node)
     else:
         assert(0)
@@ -73,7 +73,7 @@ def __add_workloads(target_node = None):
         resp = api.AddWorkloads(req, skip_bringup=api.IsConfigOnly())
         if resp is None:
             sys.exit(1)
-    if api.GetNicMode() == 'hostpin_dvs':
+    if api.GetTestbedNicMode(target_node) == 'hostpin_dvs':
         ret = __setup_vmotion_on_hosts()
         if ret != api.types.status.SUCCESS:
             sys.exit(1)
@@ -103,14 +103,14 @@ def GetIPv6Allocator(nw_name):
 def GetMacAllocator(): 
     return copy.deepcopy(wl_orch.TopoWorkloadConfig.GetClassicMacAllocator())
 
-def AddWorkloads():
-    __add_workloads()
+def AddWorkloads(target_node = None):
+    __add_workloads(target_node)
 
 def RestoreWorkloads():
     __recover_workloads()
 
-def DeleteWorkloads():
-    if api.GetNicMode() == 'classic':
+def DeleteWorkloads(target_node=None):
+    if api.GetTestbedNicMode(target_node) == 'classic':
         __delete_classic_workloads()
     else:
         __delete_workloads()
@@ -202,7 +202,7 @@ def __delete_workloads(target_node = None):
             sys.exit(1)
 
 def ReAddWorkloads(node):
-    if api.GetNicMode() == 'classic':
+    if api.GetTestbedNicMode(node) == 'classic':
         __delete_classic_workloads(node)
         __readd_classic_workloads(node)
     else:
@@ -231,13 +231,13 @@ def UpdateNetworkAndEnpointObject():
 
 def Main(args):
     #time.sleep(120)
-    api.Logger.info("NIC Mode is %s"%(api.GetNicMode()))
+    api.Logger.info("Testsuite NIC Mode is %s"%(api.GetConfigNicMode()))
     agent_nodes = api.GetNaplesHostnames()
     netagent_api.Init(agent_nodes, hw = True)
 
     netagent_api.ReadConfigs(api.GetTopologyDirectory(), reset=False)
 
-    if api.GetNicMode() in ['unified']:
+    if api.GetConfigNicMode() in ['unified']:
         ret = UpdateNetworkAndEnpointObject()
         if ret != api.types.status.SUCCESS:
             return ret
@@ -248,7 +248,7 @@ def Main(args):
     if GlobalOptions.skip_setup:
         RestoreWorkloads()
     else:
-        if api.GetNicMode() not in ['classic','unified']:
+        if api.GetConfigNicMode() not in ['classic','unified']:
             netagent_api.PushBaseConfig()
         __add_workloads()
     return api.types.status.SUCCESS

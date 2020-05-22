@@ -112,7 +112,7 @@ def Verify(tc):
     if tc.resp is None:
         return api.types.status.FAILURE
 
-    if api.GetNicMode() == 'classic':
+    if api.GetConfigNicMode() == 'classic':
         expect_exit_code = 0
     else:
         # expect OS's EPERM (FreeBSD/Linux is 1) (IONIC_RC_EPERM is 4)

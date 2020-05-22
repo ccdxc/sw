@@ -1433,6 +1433,26 @@ class Topology(object):
     def GetNodes(self):
         return list(self.__nodes.values())
 
+    def GetNicMode(self, node_name, device_name=None):
+        node =  self.__nodes[node_name]
+        devices = node.GetDevices()
+        if device_name:
+            return devices[device_name].GetMode()
+
+        for _, device in devices.items():
+            return device.GetMode()
+
+    def SetNicMode(self, mode, node_name, device_name=None):
+        node =  self.__nodes[node_name]
+        devices = node.GetDevices()
+        if device_name:
+            devices[device_name].SetMode(mode)
+            return
+
+        for _, device in devices.items():
+            devices.SetMode(mode)
+        return
+
     def GetDeviceNames(self, node_name):
         return self.__nodes[node_name].GetDeviceNames()
 

@@ -80,7 +80,7 @@ def Main(step):
     __init_lifdb()
 
     netagent_api.DeleteBaseConfig()
-    if api.GetNicMode() != 'classic':
+    if api.GetConfigNicMode() != 'classic':
         netagent_api.PushBaseConfig()
 
     if not api.IsConfigOnly():

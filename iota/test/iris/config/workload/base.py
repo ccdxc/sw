@@ -462,7 +462,7 @@ def AddConfigWorkloads(req, target_node = None):
             api.Logger.debug("Skipping add workload for node %s" % node_name)
             continue
         if not api.IsNaplesNode(node_name):
-            #if api.GetNicMode() == 'hostpin' and third_party_workload_count > 0:
+            #if api.GetConfigNicMode() == 'hostpin' and third_party_workload_count > 0:
             #    continue
             third_party_workload_count += 1
         req.workload_op = topo_svc.ADD
@@ -478,14 +478,14 @@ def AddConfigWorkloads(req, target_node = None):
 
         encap_vlan = getattr(ep.spec, 'useg_vlan', None)
         host_if = None
-        if api.GetNicMode() == 'hostpin':
+        if api.GetTestbedNicMode(node_name) == 'hostpin':
             host_if = api.AllocateHostInterfaceForNode(wl_msg.node_name)
             intf.uplink_vlan = __get_l2segment_vlan_for_endpoint(ep)
             if api.GetNicType(wl_msg.node_name) in ['pensando', 'naples']:
                 intf.encap_vlan = encap_vlan if encap_vlan else intf.uplink_vlan
             else:
                 intf.encap_vlan = intf.uplink_vlan
-        elif api.GetNicMode() == 'hostpin_dvs':
+        elif api.GetTestbedNicMode() == 'hostpin_dvs':
             host_if = api.AllocateHostInterfaceForNode(wl_msg.node_name)
             intf.interface_type = topo_svc.INTERFACE_TYPE_DVS_PVLAN
             intf.switch_name = api.GetVCenterDVSName()
@@ -496,7 +496,7 @@ def AddConfigWorkloads(req, target_node = None):
             else:
                 intf.encap_vlan = intf.uplink_vlan
 
-        elif api.GetNicMode() == 'classic':
+        elif api.GetTestbedNicMode(node_name) == 'classic':
             global classic_vlan_map
             node_vlan = classic_vlan_map.get(node_name)
             if not node_vlan:
@@ -509,7 +509,7 @@ def AddConfigWorkloads(req, target_node = None):
                 intf.encap_vlan = wire_vlan
                 intf.uplink_vlan = wire_vlan
 
-        elif api.GetNicMode() == 'unified':
+        elif api.GetTestbedNicMode(node_name) == 'unified':
             host_if = api.AllocateHostInterfaceForNode(wl_msg.node_name)
             intf.ipv6_prefix = __prepare_ipv6_address_str_for_endpoint(ep)
             intf.uplink_vlan = __get_l2segment_vlan_for_endpoint(ep)

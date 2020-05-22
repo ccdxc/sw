@@ -41,7 +41,7 @@ def TestPing(tc, input_type, ipaf, pktsize, interval=0.2, count=20, deadline=0,
         api.Logger.info("Skipping Testcase due to no workload pairs.")
         tc.skip = True
 
-    if api.GetNicMode() == 'hostpin' and ipaf == 'ipv6':
+    if api.GetConfigNicMode() == 'hostpin' and ipaf == 'ipv6':
         api.Logger.info("Skipping Testcase: IPv6 not supported in hostpin mode.")
         return api.types.status.SUCCESS
 
@@ -100,7 +100,7 @@ def TestPing(tc, input_type, ipaf, pktsize, interval=0.2, count=20, deadline=0,
             api.Logger.info("ping results for %s" % (tc.cmd_cookies[cookie_idx]))
             api.PrintCommandResults(cmd)
             if cmd.exit_code != 0:
-                if api.GetNicMode() == 'hostpin' and pktsize > 1024:
+                if api.GetConfigNicMode() == 'hostpin' and pktsize > 1024:
                     result = api.types.status.SUCCESS
                 else:
                     result = api.types.status.FAILURE
@@ -128,7 +128,7 @@ def TestTerminateBackgroundPing(tc, pktsize, pktlossverif=False):
         api.Logger.info("ping results for %s" % (tc.bg_cmd_cookies[cookie_idx]))
         api.PrintCommandResults(cmd)
         if cmd.exit_code != 0:
-            if api.GetNicMode() == 'hostpin' and pktsize > 1024:
+            if api.GetConfigNicMode() == 'hostpin' and pktsize > 1024:
                 result = api.types.status.SUCCESS
             else:
                 result = api.types.status.FAILURE

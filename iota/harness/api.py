@@ -524,11 +524,24 @@ def IsDryrun():
 def IsRegression():
     return GlobalOptions.regression
 
-def SetNicMode(mode):
-    return store.GetTestbed().GetCurrentTestsuite().SetNicMode(mode)
+def SetConfigNicMode(mode):
+    return store.GetTestbed().GetCurrentTestsuite().SetDefaultNicMode(mode)
 
-def GetNicMode():
-    return store.GetTestbed().GetCurrentTestsuite().GetNicMode()
+def GetConfigNicMode():
+    return store.GetTestbed().GetCurrentTestsuite().GetDefaultNicMode()
+
+def SetTestbedNicMode(mode, node_name=None, device_name=None): 
+    store.GetTestbed().GetCurrentTestsuite().GetTopology().SetNicMode(node_name, device_name)
+    if not node_name:
+        # Update default/testsuite level NicMode as well
+        store.GetTestbed().GetCurrentTestsuite().SetDefaultNicMode(mode)
+    return
+
+def GetTestbedNicMode(node_name=None, device_name=None):
+    if node_name:
+        return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetNicMode(node_name, device_name)
+    else:
+        return store.GetTestbed().GetCurrentTestsuite().GetDefaultNicMode()
 
 def GetFwdMode():
     return store.GetTestbed().GetCurrentTestsuite().GetFwdMode()

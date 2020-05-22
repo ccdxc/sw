@@ -70,7 +70,7 @@ def Setup(tc):
         api.Logger.info("Skipping Testcase due to no workload pairs.")
         tc.skip = True
 
-    if api.GetNicMode() == 'hostpin' and tc.iterators.ipaf == 'ipv6':
+    if api.GetConfigNicMode() == 'hostpin' and tc.iterators.ipaf == 'ipv6':
         api.Logger.info("Skipping Testcase: IPv6 not supported in hostpin mode.")
         tc.skip = True
 
@@ -132,7 +132,7 @@ def Verify(tc):
         api.Logger.info("Ping Results for %s" % (tc.cmd_cookies[cookie_idx]))
         api.PrintCommandResults(cmd)
         if cmd.exit_code != 0:
-            if api.GetNicMode() == 'hostpin' and tc.iterators.pktsize > 1024:
+            if api.GetConfigNicMode() == 'hostpin' and tc.iterators.pktsize > 1024:
                 result = api.types.status.SUCCESS
             else:
                 try:

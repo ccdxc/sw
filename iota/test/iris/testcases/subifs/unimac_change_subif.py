@@ -158,7 +158,7 @@ def Setup(tc):
         api.Logger.info("Skipping Testcase due to no workload pairs.")
         tc.skip = True
 
-    if api.GetNicMode() == 'hostpin' and tc.iterators.ipaf == 'ipv6':
+    if api.GetConfigNicMode() == 'hostpin' and tc.iterators.ipaf == 'ipv6':
         api.Logger.info("Skipping Testcase: IPv6 not supported in hostpin mode.")
         tc.skip = True
 

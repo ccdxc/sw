@@ -181,7 +181,7 @@ def FlapPorts():
 
 def UpdateNodeUuidEndpoints(objects):
     #allocate pvlan pair for dvs
-    if api.GetNicMode() == 'hostpin_dvs':
+    if api.GetConfigNicMode() == 'hostpin_dvs':
         pvlan_start = api.GetPVlansStart()
         pvlan_end = api.GetPVlansEnd()
         index = 0

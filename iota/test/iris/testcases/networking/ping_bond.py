@@ -40,7 +40,7 @@ def verify_ping_to_bond_result(tc):
         api.Logger.info("Ping Results for %s" % (tc.cmd_cookies[cookie_idx]))
         api.PrintCommandResults(cmd)
         if cmd.exit_code != 0:
-            if api.GetNicMode() == 'hostpin' and tc.iterators.pktsize > 1024:
+            if api.GetConfigNicMode() == 'hostpin' and tc.iterators.pktsize > 1024:
                 result = api.types.status.SUCCESS
             else:
                 result = api.types.status.FAILURE

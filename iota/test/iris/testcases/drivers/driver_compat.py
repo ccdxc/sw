@@ -126,7 +126,7 @@ def Verify(tc):
         if cmd.exit_code != 0:
             if tc.cmd_cookies[cookie_idx] == "Driver-FW-Version":
                 continue # ignore failure for now
-            if api.GetNicMode() == 'hostpin' and tc.args.pktsize > 1024:
+            if api.GetConfigNicMode() == 'hostpin' and tc.args.pktsize > 1024:
                 result = api.types.status.SUCCESS
             else:
                 result = api.types.status.FAILURE

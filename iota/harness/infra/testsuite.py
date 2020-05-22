@@ -156,14 +156,11 @@ class TestSuite:
     def GetTopology(self):
         return self.__topology
 
-    def GetNicMode(self):
-        return self.__spec.meta.nicmode
-
     def GetAllowDuplicateBundle(self):
         return getattr(self.__spec.meta, "allowduplicatebundle", "")
 
-    def SetNicMode(self, mode):
-        self.__spec.meta.nicmode = mode
+    def SetDefaultNicMode(self, mode):
+        self.__defaultNicMode = mode
 
     def GetNaplesPipelines(self):
         return self.__pipelines

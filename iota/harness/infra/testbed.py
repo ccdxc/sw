@@ -425,7 +425,7 @@ class _Testbed:
 
                 cmd.extend([ "%s/iota/scripts/boot_naples_v2.py" % GlobalOptions.topdir ])
 
-                if self.curr_ts.GetNicMode() == "bitw":
+                if self.curr_ts.GetDefaultNicMode() == "bitw":
                     mem_size = None
                     if GlobalOptions.pipeline in [ "iris", "apollo", "artemis", "apulu" ]:
                         mem_size = "8g"
@@ -460,7 +460,7 @@ class _Testbed:
                             cmd.extend(["--mac-hint", port.MAC])
                             break
                         break
-                cmd.extend(["--mode", "%s" % api.GetNicMode()])
+                cmd.extend(["--mode", "%s" % self.curr_ts.GetDefaultNicMode()])
                 if GlobalOptions.skip_driver_install:
                     cmd.extend(["--skip-driver-install"])
                 if GlobalOptions.use_gold_firmware:
@@ -564,9 +564,8 @@ class _Testbed:
     def __init_testbed(self):
         self.__tbid = getattr(self.__tbspec, 'TestbedID', 1)
         self.__vlan_base = getattr(self.__tbspec, 'TestbedVlanBase', 1)
-        self.__vlan_allocator = resmgr.TestbedVlanAllocator(self.__vlan_base, api.GetNicMode())
-        if self.curr_ts:
-            self.__image_manifest_file = self.curr_ts.GetImageManifestFile()
+        self.__vlan_allocator = resmgr.TestbedVlanAllocator(self.__vlan_base, self.curr_ts.GetDefaultNicMode()) 
+        self.__image_manifest_file = self.curr_ts.GetImageManifestFile()
         resp = None
         msg = self.__prepare_TestBedMsg(self.curr_ts)
         if not GlobalOptions.skip_setup:
