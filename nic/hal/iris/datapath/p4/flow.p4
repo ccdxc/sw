@@ -449,7 +449,7 @@ action flow_hash_info(entry_valid, export_en,
     // dummy ops to keep compiler happy
     modify_field(scratch_metadata.entry_valid, entry_valid);
     modify_field(scratch_metadata.export_en, export_en);
-    modify_field(scratch_metadata.pad4, pad4);
+    modify_field(scratch_metadata.size4, pad4);
     modify_field(scratch_metadata.flow_hash1, hash1);
     modify_field(scratch_metadata.flow_hash2, hash2);
     modify_field(scratch_metadata.flow_hash3, hash3);

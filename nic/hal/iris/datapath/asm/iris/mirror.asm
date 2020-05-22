@@ -53,6 +53,8 @@ remote_span:
 
 .align
 erspan_mirror:
+    tbladd          d.u.erspan_mirror_d.npkts, 1
+    tbladd          d.u.erspan_mirror_d.nbytes, k.capri_p4_intrinsic_packet_len
     phvwr           p.gre_opt_seq_seq_num, d.u.erspan_mirror_d.seq_num
     tbladd.f        d.u.erspan_mirror_d.seq_num, 1
     phvwr           p.gre_opt_seq_valid, d.u.erspan_mirror_d.gre_seq_en

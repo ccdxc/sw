@@ -254,14 +254,6 @@ header_type scratch_metadata_t {
         vlan_valid            : 1;
         vlan_id               : 12;
 
-        ipv4_mask             : 32;
-        ipv4_prefix           : 32;
-        ipv4_prefix_len       : 8;
-        mpls_label1           : 20;
-        mpls_label2           : 20;
-        overlay_ip1           : 32;
-        overlay_ip2           : 32;
-
         // flow state
         // initiator flow's TCP state
         iflow_tcp_seq_num             : 32;           // TCP seq#
@@ -310,6 +302,8 @@ header_type scratch_metadata_t {
 
         udp_opt_ocs_valid             : 1;
 
+        size64                        : 64;
+        size32                        : 32;
         size16                        : 16;
         size8                         : 8;
         size4                         : 4;
@@ -317,9 +311,7 @@ header_type scratch_metadata_t {
 
         ticks                         : 64;
         delta                         : 64;
-        size64                        : 64;
         pad192                        : 192;
-        pad4                          : 4;
     }
 }
 

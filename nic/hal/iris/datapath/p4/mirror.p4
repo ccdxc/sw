@@ -52,8 +52,12 @@ action remote_span(dst_lport, truncate_len, tunnel_rewrite_index, vlan,
 }
 
 action erspan_mirror(dst_lport, truncate_len, vlan_strip_en,
-                     tunnel_rewrite_index, span_tm_oq,
-                     erspan_type, gre_seq_en, seq_num, span_id) {
+                     tunnel_rewrite_index, span_tm_oq, erspan_type,
+                     gre_seq_en, span_id, seq_num, pad32, npkts, nbytes) {
+    modify_field(scratch_metadata.size32, pad32);
+    add(scratch_metadata.size64, npkts, 1);
+    add(scratch_metadata.size64, nbytes, capri_p4_intrinsic.packet_len);
+
     modify_field(scratch_metadata.flag, gre_seq_en);
     if (scratch_metadata.flag == TRUE) {
         add_header(gre_opt_seq);
