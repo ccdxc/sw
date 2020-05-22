@@ -967,6 +967,11 @@ func (sma *SmNetworkInterface) OnNetworkInterfaceCreate(ctkitNetif *ctkit.Networ
 	}
 	ifcfg.pushObject = pushObj
 
+	err = sma.updateMirror(ifcfg)
+	if err != nil {
+		log.Errorf("Error updating interface mirror %v", err)
+	}
+
 	sma.sm.PeriodicUpdaterPush(ifcfg)
 
 	return nil
