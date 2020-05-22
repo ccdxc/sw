@@ -76,6 +76,7 @@ func (fes *FlowExportPolicyState) Write() error {
 		Pending:       propStatus.pending,
 		PendingNaples: propStatus.pendingDSCs,
 		Updated:       propStatus.updated,
+		Status:        propStatus.status,
 	}
 	prop := &fes.FlowExportPolicy.Status.PropagationStatus
 

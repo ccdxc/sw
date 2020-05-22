@@ -135,6 +135,7 @@ func (mss *MirrorSessionState) Write() error {
 		Pending:       propStatus.pending,
 		PendingNaples: propStatus.pendingDSCs,
 		Updated:       propStatus.updated,
+		Status:        propStatus.status,
 	}
 	prop := &mss.MirrorSession.Status.PropagationStatus
 

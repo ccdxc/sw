@@ -152,6 +152,7 @@ func (sgp *SgpolicyState) Write() error {
 		Pending:       propStatus.pending,
 		PendingNaples: propStatus.pendingDSCs,
 		Updated:       propStatus.updated,
+		Status:        propStatus.status,
 	}
 
 	//Do write only if changed

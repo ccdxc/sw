@@ -795,6 +795,7 @@ type objectStatus struct {
 	Updated     int32
 	Pending     int32
 	Version     string
+	Status      string
 }
 
 type objectConfigStatus struct {
@@ -1211,6 +1212,7 @@ func (sm *Statemgr) GetObjectConfigPushStatus(kinds []string) interface{} {
 			objStaus.Pending = propStatus.pending
 			objStaus.Version = propStatus.generationID
 			objStaus.PendingDSCs = propStatus.pendingDSCs
+			objStaus.Status = propStatus.status
 			objConfigStatus.KindObjects[kind] = append(objConfigStatus.KindObjects[kind], objStaus)
 		}
 	}

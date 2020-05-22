@@ -1,7 +1,9 @@
 package statemgr
 
 import (
+	"fmt"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/pensando/sw/venice/utils/log"
@@ -28,6 +30,7 @@ type objPropagationStatus struct {
 	pending      int32
 	minVersion   string
 	pendingDSCs  []string
+	status       string
 }
 
 type smObjectTracker struct {
@@ -162,6 +165,12 @@ func (objTracker *smObjectTracker) getPropStatus() objPropagationStatus {
 		}
 
 	}
+	if propStatus.pending == 0 {
+		propStatus.status = fmt.Sprintf("Propagation Complete")
+	} else {
+		propStatus.status = fmt.Sprintf("Propagation pending on: %s", strings.Join(propStatus.pendingDSCs, ", "))
+	}
+	log.Infof("propogation status object %s : %+v", objTracker.obj.GetKey(), propStatus)
 
 	return propStatus
 }

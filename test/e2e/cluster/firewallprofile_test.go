@@ -69,6 +69,8 @@ func (fwp *firewallTestGroup) teardownTest() {
 
 // test to check for proper propagation status for unreachable dscs
 func (fwp *firewallTestGroup) testFirewallPendingPropagation() {
+	ctx := context.Background()
+	snIf := ts.tu.APIClient.ClusterV1().DistributedServiceCard()
 	updateFwp := security.FirewallProfile{
 		ObjectMeta: api.ObjectMeta{
 			Name:   "default",
@@ -84,11 +86,13 @@ func (fwp *firewallTestGroup) testFirewallPendingPropagation() {
 		By(fmt.Sprintf("Pausing NIC container %s", nicContainer))
 		ts.tu.LocalCommandOutput(fmt.Sprintf("docker pause %s", nicContainer))
 	}
+	validateNICHealth(ctx, snIf, ts.tu.NumNaplesHosts, cmd.ConditionStatus_UNKNOWN)
 	By(fmt.Sprintf("Updating the firewallprofile with new values : %v", updateFwp))
-	_, err := fwp.suite.restSvc.SecurityV1().FirewallProfile().Update(fwp.suite.loggedInCtx, &updateFwp)
-	Expect(err).ShouldNot(HaveOccurred())
 
 	time.Sleep(5 * time.Second)
+
+	_, err := fwp.suite.restSvc.SecurityV1().FirewallProfile().Update(fwp.suite.loggedInCtx, &updateFwp)
+	Expect(err).ShouldNot(HaveOccurred())
 
 	By(fmt.Sprintf("Verify the propagation is pending to unreachable DSCs total: %d", numNaples))
 	Eventually(func() bool {

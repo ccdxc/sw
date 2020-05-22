@@ -185,6 +185,7 @@ func (fps *FirewallProfileState) Write() error {
 		Pending:       propStatus.pending,
 		PendingNaples: propStatus.pendingDSCs,
 		Updated:       propStatus.updated,
+		Status:        propStatus.status,
 	}
 	prop := &fps.FirewallProfile.Status.PropagationStatus
 
@@ -283,6 +284,8 @@ func (sm *Statemgr) OnFirewallProfileUpdate(fwProfile *ctkit.FirewallProfile, nf
 		return err
 	}
 	log.Infof("Updated fwProfile: %+v", fwProfile)
+
+	sm.PeriodicUpdaterPush(fps)
 
 	return nil
 }
