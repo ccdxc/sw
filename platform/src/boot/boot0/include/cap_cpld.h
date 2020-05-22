@@ -13,6 +13,7 @@
 #define     CPLD_ID_NAPLES100       0x12
 #define     CPLD_ID_NAPLES25        0x13
 #define     CPLD_ID_FORIO           0x14
-#define     CPLD_ID_VOMERO          0x15
+#define     CPLD_ID_VOMERO_REV1     0x15
+#define     CPLD_ID_VOMERO_REV2     0x1e
 
 #endif

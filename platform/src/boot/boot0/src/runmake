@@ -1,6 +1,8 @@
 #!/bin/sh
 
+export ASIC=capri
+export PIPELINE=iris
 export NICDIR=../../../../../nic
-export BLD_OUT_DIR=$NICDIR/build/aarch64/iris/out
+export BLD_OUT_DIR=$NICDIR/build/aarch64/$PIPELINE/$ASIC/out
 mkdir -p $BLD_OUT_DIR
 exec make "$@"

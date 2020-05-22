@@ -1,5 +1,6 @@
 {
     "board_map": [
+        { "part_number": "68-0011", "min_version": "4" },
         { "part_number": "#",       "min_version": "3" }
     ]
 }

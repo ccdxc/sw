@@ -1,1 +1,1 @@
-#define BOOT0_VERSION 3
+#define BOOT0_VERSION 4

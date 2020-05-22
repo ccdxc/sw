@@ -13,10 +13,19 @@
 // Mapping of [track][attempt] to fwid
 static const bsm_fwid_map_t std_bsm_fwid_map = {
     .track = {    // enable  fwid...
-        [FW_MAIN_A] = { 1, { FW_MAIN_A, FW_MAIN_B, FW_GOLD,   FW_GOLD } },
-        [FW_MAIN_B] = { 1, { FW_MAIN_B, FW_MAIN_A, FW_GOLD,   FW_GOLD } },
-        [FW_GOLD]   = { 1, { FW_GOLD,   FW_GOLD,   FW_GOLD,   FW_GOLD } },
-        [FW_DIAG]   = { 0, { FW_DIAG,   FW_DIAG,   FW_DIAG,   FW_DIAG } }
+        [FW_MAIN_A] = { 1, { FW_MAIN_A, FW_MAIN_B, FW_GOLD,   FW_GOLD   } },
+        [FW_MAIN_B] = { 1, { FW_MAIN_B, FW_MAIN_A, FW_GOLD,   FW_GOLD   } },
+        [FW_GOLD]   = { 1, { FW_GOLD,   FW_GOLD,   FW_GOLD,   FW_GOLD   } },
+        [FW_DIAG]   = { 0, { FW_DIAG,   FW_DIAG,   FW_DIAG,   FW_DIAG   } }
+    }
+};
+
+static const bsm_fwid_map_t vomero_bsm_fwid_map = {
+    .track = {    // enable  fwid...
+        [FW_MAIN_A] = { 1, { FW_MAIN_A, FW_MAIN_B, FW_MAIN_A, FW_MAIN_B } },
+        [FW_MAIN_B] = { 1, { FW_MAIN_B, FW_MAIN_A, FW_MAIN_B, FW_MAIN_A } },
+        [FW_GOLD]   = { 1, { FW_GOLD,   FW_GOLD,   FW_GOLD,   FW_GOLD   } },
+        [FW_DIAG]   = { 0, { FW_DIAG,   FW_DIAG,   FW_DIAG,   FW_DIAG   } }
     }
 };
 
@@ -60,9 +69,17 @@ static const struct board_info brd[BOARD_TYPE_NUM] = {
         .qspi_read_delay    = 1,
         .qspi_frequency     = 40000000,
     },
-    [BOARD_TYPE_VOMERO] = {
+    [BOARD_TYPE_VOMERO_REV1] = {
         .chip_type          = CHIP_TYPE_ASIC,
-        .cpld_id            = CPLD_ID_VOMERO,
+        .cpld_id            = CPLD_ID_VOMERO_REV1,
+        .fwid_map           = &vomero_bsm_fwid_map,
+        .qspi_read_delay    = 1,
+        .qspi_frequency     = 40000000,
+    },
+    [BOARD_TYPE_VOMERO_REV2] = {
+        .chip_type          = CHIP_TYPE_ASIC,
+        .cpld_id            = CPLD_ID_VOMERO_REV2,
+        .fwid_map           = &vomero_bsm_fwid_map,
         .qspi_read_delay    = 1,
         .qspi_frequency     = 40000000,
     }

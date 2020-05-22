@@ -112,11 +112,11 @@ qspi_wait_write_complete(void)
 static void
 qspi_mx_set_cr_dc(uint32_t dc)
 {
-    uint32_t cr;
-    cr = qspi_stig_op(OP_MX_READ_CONFIG_REGISTER, 1, 0, 0);
+    uint32_t sr = qspi_stig_op(OP_READ_SR, 1, 0, 0);
+    uint32_t cr = qspi_stig_op(OP_MX_READ_CONFIG_REGISTER, 1, 0, 0);
     cr = (cr & 0x3f) | (dc << 6);
     qspi_stig_op(OP_WRITE_ENABLE, 0, 0, 0);
-    qspi_stig_op(OP_WRITE_SR, 0, 2, cr << 8);
+    qspi_stig_op(OP_WRITE_SR, 0, 2, (cr << 8) | sr);
     qspi_wait_write_complete();
 }
 
