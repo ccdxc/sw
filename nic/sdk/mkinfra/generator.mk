@@ -177,8 +177,8 @@ define INCLUDE_MODULEMK
             else
                 $${TGID}_NAME_P4C := ${NAME_NCC}
                 $${TGID}_CMD_P4C := ${CMD_NCC}
-                $${TGID}_P4C_OPTS := ${CMD_P4C_OPTS} $${MODULE_NCC_OPTS}
-                $${TGID}_NCC_OPTS           := ${CMD_NCC_OPTS} $${MODULE_NCC_OPTS}
+                $${TGID}_P4C_OPTS := ${CMD_P4C_OPTS} ${COMMON_NCC_OPTS} $${MODULE_NCC_OPTS}
+                $${TGID}_NCC_OPTS           := ${COMMON_NCC_OPTS} $${MODULE_NCC_OPTS}
                 P4_TARGETIDS             += $${TGID}
             endif
         endif
