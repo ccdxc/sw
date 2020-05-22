@@ -87,6 +87,7 @@ mapping_hit:
     phvwr           p.vnic_metadata_egress_bd_id, d.mapping_info_d.egress_bd_id
     phvwr           p.vnic_metadata_rx_vnic_id, d.mapping_info_d.rx_vnic_id
     phvwr           p.rewrite_metadata_dmaci, d.mapping_info_d.dmaci
+    phvwr           p.control_metadata_is_local, d.mapping_info_d.is_local
     phvwr           p.egress_recirc_mapping_done, TRUE
     bbeq            k.p4e_to_arm_valid, TRUE, mapping_hit_arm
     phvwr           p.control_metadata_mapping_done, TRUE
@@ -99,7 +100,6 @@ mapping_hit:
 mapping_hit_arm:
     phvwr           p.p4e_to_arm_nexthop_id, k.{txdma_to_p4e_nexthop_id}.hx
     phvwr           p.p4e_to_arm_nexthop_type, k.txdma_to_p4e_nexthop_type
-    phvwr           p.control_metadata_is_local, d.mapping_info_d.is_local
     phvwr.e         p.p4e_to_arm_is_local, d.mapping_info_d.is_local
     phvwr.f         p.p4e_to_arm_mapping_hit, TRUE
 
