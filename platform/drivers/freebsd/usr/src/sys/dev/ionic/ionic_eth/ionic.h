@@ -160,15 +160,15 @@ struct ionic_dev;
 struct ionic_qos {
 	int max_tcs;
 	enum ionic_qos_class_type class_type;
-	/* Per TC value. */
+	/* Per TC value */
 	uint8_t dwrr_bw_perc[IONIC_QOS_TC_MAX];
 	uint8_t enable_flag[IONIC_QOS_TC_MAX];
 	uint8_t no_drop[IONIC_QOS_TC_MAX];
 	uint8_t pfc_cos[IONIC_QOS_TC_MAX];
 	uint8_t sched_type[IONIC_QOS_TC_MAX];
-	/* PCP to TC map. */
+	/* PCP to TC map */
 	uint8_t pcp_to_tc[IONIC_QOS_PCP_MAX];
-	/* DSCP to TC map. */
+	/* DSCP to TC map */
 	uint8_t dscp_to_tc[IONIC_QOS_DSCP_MAX];
 	/* TC used for all Ethernet traffic */
 	uint8_t tc_ethernet;

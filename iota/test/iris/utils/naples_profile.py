@@ -16,7 +16,7 @@ def Main(args):
     if newProfile != 'FEATURE_PROFILE_BASE':
         req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
         for n in api.GetNaplesHostnames():
-            common.AddPenctlCommand(req, n, "update dsc --dsc-profile %s" % newProfile)
+            common.AddPenctlCommand(req, n, "update dsc --device-profile %s" % newProfile)
         resp = api.Trigger(req)
 
         if not api.Trigger_IsSuccess(resp):
