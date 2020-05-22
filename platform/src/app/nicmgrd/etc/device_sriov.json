@@ -1,0 +1,116 @@
+{
+    "network" : {
+        "uplink" : [
+            { "port": 285278209 },
+            { "port": 285343745 },
+            { "port": 285409281, "oob" : "true" }
+        ]
+    },
+
+    "mnic_dev" : [
+        {
+            "name" : "oob_mnic0",
+            "dev_uuid" : 11,
+            "type": "oob_mgmt",
+            "lif_count" : 1,
+            "rxq_count" : 1,
+            "txq_count" : 1,
+            "adminq_count" : 1,
+            "intr_count" : 4,
+            "network" : {
+                "uplink" : 285409281
+            }
+        },
+        {
+            "name" : "inb_mnic0",
+            "dev_uuid" : 12,
+            "type": "inband_mgmt",
+            "lif_count" : 1,
+            "rxq_count" : 1,
+            "txq_count" : 1,
+            "adminq_count" : 1,
+            "intr_count" : 4,
+            "network" : {
+                "uplink" : 285278209
+            }
+        },
+        {
+            "name" : "inb_mnic1",
+            "dev_uuid" : 13,
+            "type": "inband_mgmt",
+            "lif_count" : 1,
+            "rxq_count" : 1,
+            "txq_count" : 1,
+            "adminq_count" : 1,
+            "intr_count" : 4,
+            "network" : {
+                "uplink" : 285343745
+            }
+        },
+        {
+            "name" : "int_mnic0",
+            "dev_uuid" : 14,
+            "type": "internal_mgmt",
+            "lif_count" : 1,
+            "rxq_count" : 1,
+            "txq_count" : 1,
+            "adminq_count" : 1,
+            "intr_count" : 4
+        }
+    ],
+
+    "eth_dev" : [
+        {
+            "name" : "eth0",
+            "dev_uuid" : 1,
+            "type": "host",
+            "lif_count" : 1,
+            "rxq_count" : 16,
+            "txq_count" : 16,
+            "adminq_count" : 1,
+            "intr_count" : 64,
+            "cmb_size" : 1,
+            "pcie" : {
+                "port" : 0,
+                "total_vfs" : 16,
+                "oprom": "uefi"
+            },
+            "network" : {
+                "uplink" : 285278209
+            }
+        },
+        {
+            "name" : "eth1",
+            "dev_uuid" : 2,
+            "type": "host",
+            "lif_count" : 1,
+            "rxq_count" : 16,
+            "txq_count" : 16,
+            "adminq_count" : 1,
+            "intr_count" : 64,
+            "cmb_size" : 1,
+            "pcie" : {
+                "port" : 0,
+                "total_vfs" : 16,
+                "oprom": "uefi"
+            },
+            "network" : {
+                "uplink" : 285343745
+            }
+        },
+        {
+            "name" : "eth_mgmt0",
+            "dev_uuid" : 3,
+            "type": "host_mgmt",
+            "lif_count" : 1,
+            "rxq_count" : 1,
+            "txq_count" : 1,
+            "adminq_count" : 1,
+            "intr_count" : 4,
+            "pcie" : {
+                "port" : 0,
+                "total_vfs" : 0
+            }
+        }
+    ]
+}
