@@ -27,9 +27,12 @@ def runPdsctlCmd(tc, cmd):
         return api.types.status.SUCCESS
     for node in tc.nodes:
         ret, resp = pdsctl.ExecutePdsctlShowCommand(node, cmd, yaml=False)
-        if ret != True:
-            api.Logger.error("show %s cmd cmd failed at node %s : %s" %(cmd, node, resp))
-            return api.types.status.FAILURE    
+        if ('API_STATUS_NOT_FOUND' in resp) or ("err rpc error" in resp):
+            api.Logger.info(" - ERROR: GRPC get request failed for %s" % cmd)
+            return api.types.status.FAILURE
+        if not ret:
+            api.Logger.error("- ERROR: pdstcl show failed for cmd %s at node %s : %s" %(cmd, node, resp))
+            return api.types.status.FAILURE
     return api.types.status.SUCCESS
 
 def Trigger(tc):

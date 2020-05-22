@@ -6,8 +6,7 @@ import iota.test.athena.utils.misc as misc_utils
 from iota.harness.infra.glopts import GlobalOptions
 import ipaddress
 import json
-import re
-import time
+import os
 
 # Testing default/Custom policy.json
 # Need to start athena_app first
@@ -17,32 +16,35 @@ def Setup(tc):
     tc.nodes= []
     for nic in tc.nics:
         tc.nodes.append(nic.GetNodeName())
+    tc.policy_type = getattr(tc.args, 'type', "default")
+    curr_dir = os.path.dirname(os.path.realpath(__file__))
+    tc.custom_policy_path = curr_dir + '/config/' + tc.policy_type + '.json'
+    tc.default_policy_path = api.GetTopDir() + "/nic/conf/athena/policy.json"
 
     # if file is already there, it will overwrite the old file
     cmd = ""
     for node in tc.nodes:
         # because new logic in athena_app is to read policy.json in /data
         # if we want to test default policy.json, we have to clean /data first
-
-        tc.policy_type = getattr(tc.args, 'type', "default")
         if tc.policy_type == "default":
             api.Logger.info("Test default policy.json")
             api.Logger.info("Clean old policy.json file in /data")
             cmd = "rm -f /data/policy.json"
         else:
             api.Logger.info("Test Custom policy.json")
-            api.Logger.info("Copy policy.json file from /nic/conf/athena/ to /data/")
-            cmd = "cp /nic/conf/athena/" + tc.policy_type + ".json  /data/policy.json"
+            api.Logger.info("Copy policy.json file from IOTA dir to /data/ on Naples")
+            api.CopyToNaples(node, [tc.custom_policy_path], "")
+            cmd = "mv /" + tc.policy_type + ".json  /data/policy.json"
 
         req = api.Trigger_CreateExecuteCommandsRequest()
         api.Trigger_AddNaplesCommand(req, node, cmd)
         api.Trigger_AddNaplesCommand(req, node, "sync")
         resp = api.Trigger(req)
-        cmd = resp.commands[0]
-        api.PrintCommandResults(cmd)
-        if cmd.exit_code != 0:
-            api.Logger.error("copy policy.json file to /data/ failed on node {}".format(node))
-            return api.types.status.FAILURE
+        for cmd in resp.commands:
+            api.PrintCommandResults(cmd)
+            if cmd.exit_code != 0:
+                api.Logger.error("copy policy.json file to /data/ failed on node {}".format(node))
+                return api.types.status.FAILURE
     return api.types.status.SUCCESS
 
 def Trigger(tc):
@@ -58,7 +60,7 @@ def Trigger(tc):
             return api.types.status.FAILURE
 
     # default policy.json needs 80s and 1.5M custom policy.json needs 140s
-    misc_utils.Sleep(140)
+    misc_utils.Sleep(200)
 
     for node in tc.nodes:
         req = api.Trigger_CreateExecuteCommandsRequest()
@@ -124,9 +126,6 @@ def VerifyCustomPolicy(tc, flow_count, cfg_path):
 def Verify(tc):
     misc_utils.Sleep(15) # time gap before further cmd, flow count need time to settle down
 
-    CUSTOM_CFG_PATH = api.GetTopDir() + "/nic/conf" + "/athena" + "/" + tc.policy_type + ".json"
-    DEFAULT_CFG_PATH = api.GetTopDir() + "/nic/conf" + "/athena" + "/" + "policy.json" + ".json"
-
     for node in tc.nodes:
         req = api.Trigger_CreateExecuteCommandsRequest()
         api.Trigger_AddNaplesCommand(req, node, "wc -l /data/flows_sec.log")
@@ -139,12 +138,12 @@ def Verify(tc):
 
         flow_count = cmd.stdout.strip().split()[0]
         if tc.policy_type == "default":
-            ret = VerifyCustomPolicy(tc, flow_count, DEFAULT_CFG_PATH)
+            ret = VerifyCustomPolicy(tc, flow_count, tc.default_policy_path)
             if ret != api.types.status.SUCCESS:
                 api.Logger.error("flow count for default policy.json is wrong, flow_count is %s"% (flow_count))
                 return api.types.status.FAILURE
         else:
-            ret = VerifyCustomPolicy(tc, flow_count, CUSTOM_CFG_PATH)
+            ret = VerifyCustomPolicy(tc, flow_count, tc.custom_policy_path)
             if ret != api.types.status.SUCCESS:
                 api.Logger.error("flow count for custom policy.json is wrong, please check detailed log")
                 return api.types.status.FAILURE

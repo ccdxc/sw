@@ -35,6 +35,9 @@ def showPortStatusCmd(tc):
         #         return api.types.status.FAILURE      
         # misc_utils.Sleep(3)
         ret, resp = pdsctl.ExecutePdsctlShowCommand(node, 'port status', yaml=False)
+        if ('API_STATUS_NOT_FOUND' in resp) or ("err rpc error" in resp):
+            api.Logger.info(" - ERROR: GRPC get request failed for %s" % cmd)
+            return api.types.status.FAILURE
         if ret != True:
             api.Logger.error("show port status cmd failed at node %s : %s" %(node, resp))
             return api.types.status.FAILURE    
@@ -54,6 +57,9 @@ def showPortStatisticsCmd(tc):
         #         return api.types.status.FAILURE      
         # misc_utils.Sleep(3)
         ret, resp = pdsctl.ExecutePdsctlShowCommand(node, 'port statistics', yaml=False)
+        if ('API_STATUS_NOT_FOUND' in resp) or ("err rpc error" in resp):
+            api.Logger.info(" - ERROR: GRPC get request failed for %s" % cmd)
+            return api.types.status.FAILURE
         if ret != True:
             api.Logger.error("show port statistics cmd failed at node %s : %s" %(node, resp))
             return api.types.status.FAILURE    
