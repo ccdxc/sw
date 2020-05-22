@@ -5,7 +5,10 @@ package main
 
 import (
 	"context"
+	"os"
+	"os/signal"
 	"runtime/debug"
+	"syscall"
 	"time"
 
 	"github.com/pensando/sw/venice/utils/tsdb"
@@ -42,6 +45,10 @@ func main() {
 			MaxAge:     7,
 		},
 	}
+
+	doGracefulShutdown := make(chan os.Signal)
+	signal.Notify(doGracefulShutdown, os.Interrupt, syscall.SIGTERM)
+
 	logger := log.SetConfig(logConfig)
 	tsdb.Init(context.Background(), &tsdb.Opts{
 		ClientName:              types.Netagent,
@@ -62,5 +69,10 @@ func main() {
 
 	defer ag.Stop()
 	log.Infof("Agent up and running: %v", ag)
-	select {}
+	select {
+	case <-doGracefulShutdown:
+		log.Info("Agent undergoing a graceful shutdown.")
+		ag.Stop()
+		os.Exit(0)
+	}
 }

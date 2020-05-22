@@ -74,4 +74,8 @@ func (ag *DSCAgent) Stop() {
 	}
 
 	ag.InfraAPI.Close()
+
+	if ag.Logger != nil {
+		ag.Logger.Close()
+	}
 }
