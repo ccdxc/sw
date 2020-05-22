@@ -484,6 +484,12 @@ hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
     SDK_ASSERT_RETURN((slab != NULL), false);
 
+    slab = register_slab(HAL_SLAB_VMOTION,
+                         slab_args={.name="vmotion",
+                        .size=sizeof(hal::vmotion), .num_elements=2,
+                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    SDK_ASSERT_RETURN((slab != NULL), false);
+
     // initialize vmotion ep slab
     slab = register_slab(HAL_SLAB_VMOTION_EP,
                          slab_args={.name="vmotion_ep",
@@ -2269,6 +2275,10 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_PORT_TIMER_CTXT:
         g_hal_state->port_timer_ctxt_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_VMOTION:
+        g_hal_state->vmotion_slab()->free(elem);
         break;
 
     case HAL_SLAB_VMOTION_EP:

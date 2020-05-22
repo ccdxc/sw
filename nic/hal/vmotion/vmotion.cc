@@ -48,7 +48,7 @@ vmotion *
 vmotion::factory(uint32_t max_threads, uint32_t port)
 {
     vmotion     *vmn;
-    void        *mem = HAL_CALLOC(HAL_MEM_ALLOC_VMOTION, sizeof(vmotion));
+    void        *mem = (vmotion *) g_hal_state->vmotion_slab()->alloc();
 
     if (!mem) {
         HAL_TRACE_ERR("OOM failed to allocate memory for vmotion");
@@ -70,7 +70,7 @@ vmotion::destroy(vmotion *vmn)
     hal_ret_t ret = vmn->deinit();
 
     if (ret != HAL_RET_RETRY) {
-        HAL_FREE(hal::HAL_MEM_ALLOC_VMOTION, vmn);
+        hal::delay_delete_to_slab(HAL_SLAB_VMOTION, vmn);
     }
     HAL_TRACE_DEBUG("vMotion Destroy. Ret:{}", ret);
 }
@@ -80,7 +80,7 @@ vmotion_delay_destroy_cb (void *timer, uint32_t timer_id, void *ctxt)
 {
     vmotion *vmn = (vmotion *)ctxt;
     if (vmn->delay_deinit() != HAL_RET_RETRY) {
-        HAL_FREE(hal::HAL_MEM_ALLOC_VMOTION, vmn);
+        hal::delay_delete_to_slab(HAL_SLAB_VMOTION, vmn);
     }
 }
 

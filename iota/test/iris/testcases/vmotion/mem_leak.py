@@ -53,10 +53,10 @@ def Trigger(tc):
         vm_memtrack.append(vm_utils.get_memtrack(memtrack_cmd, 90))
         vm_memtrack.append(vm_utils.get_memtrack(memtrack_cmd, 91))
 
-        # Subtract -4 in vMotion Init, 4 chunks of vMotion alloc will be done
+        # Subtract -3 in vMotion Init, 3 chunks of vMotion alloc will be done
         for info in vm_memtrack:
            if 'allocs' in info and 'frees' in info:
-               if ((info['allocs'] - 4) != info['frees']):
+               if ((info['allocs'] - 3) != info['frees']):
                    api.Logger.info("Memleak detected in Mtrack %d %d" %(info['allocs'], info['frees']))
                    tc.memleak = 1
 

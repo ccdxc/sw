@@ -228,6 +228,7 @@ public:
     slab *ipsec_cfg_pol_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_IPSEC_CFG_POL]); }
     slab *tcp_proxy_cfg_rule_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_TCP_PROXY_CFG_RULE]); }
     slab *tcp_proxy_cfg_pol_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_TCP_PROXY_CFG_POL]); }
+    slab *vmotion_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_VMOTION]); }
     slab *vmotion_ep_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_VMOTION_EP]); }
     slab *vmotion_thread_ctx_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_VMOTION_THREAD_CTX]); }
 
@@ -824,6 +825,7 @@ public:
     slab *filter_slab(void) const { return cfg_db_->filter_slab(); }
 
     // get APIs for vMotion
+    slab *vmotion_slab(void) const { return cfg_db_->vmotion_slab(); }
     slab *vmotion_ep_slab(void) const { return cfg_db_->vmotion_ep_slab(); }
     slab *vmotion_thread_ctx_slab(void) const { return cfg_db_->vmotion_thread_ctx_slab(); }
 

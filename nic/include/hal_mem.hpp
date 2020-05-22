@@ -144,7 +144,8 @@ typedef enum hal_slab_e {
     HAL_SLAB_VMOTION_EP                      = 133,
     HAL_SLAB_VMOTION_THREAD_CTX              = 134,
     HAL_SLAB_MIRROR_SESSION                  = 135,
-    HAL_SLAB_PI_MAX                          = 136,  // NOTE: MUST be last PI slab id
+    HAL_SLAB_VMOTION                         = 136,
+    HAL_SLAB_PI_MAX                          = 137,  // NOTE: MUST be last PI slab id
 
     // PD Slabs
     HAL_SLAB_PD_MIN                          = 1000,
