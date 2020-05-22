@@ -23,7 +23,7 @@ import (
 
 const (
 	// The number of retries before dataplane last sync is declared to be successful
-	defaultLastSyncRetries       = 10
+	defaultLastSyncRetries       = 15
 	defaultMigrationPollInterval = 1 * time.Second
 )
 
