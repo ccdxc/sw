@@ -1090,9 +1090,9 @@
         post_getall_{{$msgName | ToLower}}_{{$struct | ToLower}}_func = func;
     } /* pds_ms_reg_post_getall_{{$msgName | ToLower}}_{{$struct | ToLower}} */
 
-    NBB_VOID pds_ms_post_getall_{{$msgName | ToLower}}_{{$struct | ToLower}}({{$pkgName}}::{{$rootMsg.GetName}}* resp) {
+    NBB_VOID pds_ms_post_getall_{{$msgName | ToLower}}_{{$struct | ToLower}}(const {{$pkgName}}::{{$reqRootMsg.GetName}}* req, {{$pkgName}}::{{$rootMsg.GetName}}* resp) {
         if (post_getall_{{$msgName | ToLower}}_{{$struct | ToLower}}_func != NULL) {
-            post_getall_{{$msgName | ToLower}}_{{$struct | ToLower}}_func(resp);
+            post_getall_{{$msgName | ToLower}}_{{$struct | ToLower}}_func(req, resp);
         }
         return;
     } /* pds_ms_post_getall_{{$msgName | ToLower}}_{{$struct | ToLower}} */

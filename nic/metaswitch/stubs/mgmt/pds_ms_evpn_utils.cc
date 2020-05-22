@@ -130,7 +130,7 @@ evpn_evi_post_get (EvpnEviSpec &req, EvpnEviGetResponse* resp, NBB_VOID* kh)
 }
 
 NBB_VOID
-evpn_evi_post_getall (EvpnEviGetResponse* resp)
+evpn_evi_post_getall (const EvpnEviGetRequest *req, EvpnEviGetResponse* resp)
 {
     return evpn_evi_post_get_common(resp);
 }
@@ -164,7 +164,7 @@ evpn_evi_rt_post_get (EvpnEviRtSpec &req, EvpnEviRtGetResponse* resp,
 }
 
 NBB_VOID
-evpn_evi_rt_post_getall (EvpnEviRtGetResponse* resp)
+evpn_evi_rt_post_getall (const EvpnEviRtGetRequest *req, EvpnEviRtGetResponse* resp)
 {
     return evpn_evi_rt_post_get_common(resp);
 }
@@ -215,7 +215,7 @@ evpn_ip_vrf_post_get (EvpnIpVrfSpec &req, EvpnIpVrfGetResponse *resp,
 }
 
 NBB_VOID
-evpn_ip_vrf_post_getall (EvpnIpVrfGetResponse *resp)
+evpn_ip_vrf_post_getall (const EvpnIpVrfGetRequest *req, EvpnIpVrfGetResponse *resp)
 {
     return evpn_ip_vrf_post_get_common (resp);
 }
@@ -250,7 +250,7 @@ evpn_ip_vrf_rt_post_get (EvpnIpVrfRtSpec &req, EvpnIpVrfRtGetResponse *resp,
 }
 
 NBB_VOID
-evpn_ip_vrf_rt_post_getall (EvpnIpVrfRtGetResponse *resp)
+evpn_ip_vrf_rt_post_getall (const EvpnIpVrfRtGetRequest *req, EvpnIpVrfRtGetResponse *resp)
 {
     return evpn_ip_vrf_rt_post_get_common (resp);
 }

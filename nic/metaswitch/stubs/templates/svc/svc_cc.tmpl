@@ -335,9 +335,9 @@ Status
                         {{if (eq $specMsgName "")}}
                           {{$specMsgName = (TrimPrefix .GetTypeName $pkg)}}
                         {{end}}
+                pds_ms::{{$requestTypeName}} pds_ms_req;
                 PDS_MS_GET_SHARED_START();
                 pds_ms_pre_getall_{{$specMsgName | ToLower}}_{{$struct | ToLower}}(&proto_resp);
-                pds_ms::{{$requestTypeName}} pds_ms_req;
                         {{$reqRootMsg := (getMsg $file $pkg $requestTypeName)}}
                         {{$fields := $reqRootMsg.Fields}}
                         {{range $fields}}
@@ -356,7 +356,7 @@ Status
                 pds_ms_getall_{{$specMsgName | ToLower}}_{{$struct | ToLower}}(&pds_ms_req, &proto_resp);
                 PDS_MS_GET_SHARED_END();
                 ret = pds_ms::mgmt_state_t::ms_response_wait();
-                pds_ms_post_getall_{{$specMsgName | ToLower}}_{{$struct | ToLower}}(&proto_resp);
+                pds_ms_post_getall_{{$specMsgName | ToLower}}_{{$struct | ToLower}}(&pds_ms_req, &proto_resp);
                       {{end}}
                     {{end}}
                     {{if or (eq "status" .GetName) (eq "Status" .GetName)}}
@@ -369,10 +369,10 @@ Status
                           {{$specMsgName = (TrimPrefix .GetTypeName $pkg)}}
                         {{end}}
                 if (ret == types::API_STATUS_OK) {
+                    pds_ms::{{$requestTypeName}} pds_ms_req;
                     PDS_MS_GET_SHARED_START();
                         {{$statusMsgName := (TrimPrefix .GetTypeName $pkg)}}
                     pds_ms_pre_getall_{{$statusMsgName | ToLower}}_{{$struct | ToLower}}(&proto_resp);
-                    pds_ms::{{$requestTypeName}} pds_ms_req;
                         {{$reqRootMsg := (getMsg $file $pkg $requestTypeName)}}
                         {{$fields := $reqRootMsg.Fields}}
                         {{range $fields}}
@@ -391,7 +391,7 @@ Status
                     pds_ms_getall_{{$statusMsgName | ToLower}}_{{$struct | ToLower}}(&pds_ms_req, &proto_resp);
                     PDS_MS_GET_SHARED_END();
                     ret = pds_ms::mgmt_state_t::ms_response_wait();
-                    pds_ms_post_getall_{{$statusMsgName | ToLower}}_{{$struct | ToLower}}(&proto_resp);
+                    pds_ms_post_getall_{{$statusMsgName | ToLower}}_{{$struct | ToLower}}(&pds_ms_req, &proto_resp);
                 }
                       {{end}}
                     {{end}}
@@ -400,9 +400,9 @@ Status
                     {{$param := (getPdsaGetGlobalOpts $innerRespMsg $cam)}}
                     {{$struct := $param.Struct}}
                     {{$specMsgName := (TrimPrefix .GetTypeName $pkg)}}
+                pds_ms::{{$requestTypeName}} pds_ms_req;
                 PDS_MS_GET_SHARED_START();
                 pds_ms_pre_getall_{{$specMsgName | ToLower}}_{{$struct | ToLower}}(&proto_resp);
-                pds_ms::{{$requestTypeName}} pds_ms_req;
                         {{$reqRootMsg := (getMsg $file $pkg $requestTypeName)}}
                         {{$fields := $reqRootMsg.Fields}}
                         {{range $fields}}
@@ -421,7 +421,7 @@ Status
                 pds_ms_getall_{{$specMsgName | ToLower}}_{{$struct | ToLower}}(&pds_ms_req, &proto_resp);
                 PDS_MS_GET_SHARED_END();
                 ret = pds_ms::mgmt_state_t::ms_response_wait();
-                pds_ms_post_getall_{{$specMsgName | ToLower}}_{{$struct | ToLower}}(&proto_resp);
+                pds_ms_post_getall_{{$specMsgName | ToLower}}_{{$struct | ToLower}}(&pds_ms_req, &proto_resp);
                   {{end}}
                 {{end}}
               {{end}}

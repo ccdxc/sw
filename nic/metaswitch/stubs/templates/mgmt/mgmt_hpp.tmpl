@@ -74,11 +74,14 @@ extern "C" {
       {{end}}
       {{if not (eq $oidLen "")}}
         {{$rootMsg := getResponseRootMsg $file $pkgName $msg}}
+        {{$msgnamepfx := TrimSuffix $rootMsg.GetName "Response"}}
+        {{$reqRootMsgName := addStr $msgnamepfx "Request"}}
+        {{$reqRootMsg := (getMsg $file $pkg $reqRootMsgName)}}
     /*===== Get helpers for MS Table: {{$struct}} =====*/
     typedef void (*pre_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_func_type)({{$pkgName}}::{{$specMsgName}} &req, {{$pkgName}}::{{$rootMsg.GetName}}* resp, NBB_VOID* kh);
     typedef void (*post_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_func_type)({{$pkgName}}::{{$specMsgName}} &req, {{$pkgName}}::{{$rootMsg.GetName}}* resp, NBB_VOID* kh);
     typedef void (*pre_getall_{{$msgName | ToLower}}_{{$struct | ToLower}}_func_type)({{$pkgName}}::{{$rootMsg.GetName}}* resp);
-    typedef void (*post_getall_{{$msgName | ToLower}}_{{$struct | ToLower}}_func_type)({{$pkgName}}::{{$rootMsg.GetName}}* resp);
+    typedef void (*post_getall_{{$msgName | ToLower}}_{{$struct | ToLower}}_func_type)(const {{$pkgName}}::{{$reqRootMsg.GetName}}* req, {{$pkgName}}::{{$rootMsg.GetName}}* resp);
     typedef bool (*pre_fill_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_func_type)({{$struct | ToLower}}* v_{{$struct | ToLower}});
     NBB_VOID pds_ms_check_get_{{$msgName | ToLower}}_{{$struct | ToLower}}(NBB_CXT_T NBB_CXT);
     NBB_VOID pds_ms_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_oid({{$pkgName}}::{{$specMsgName}} &req,
@@ -95,11 +98,8 @@ extern "C" {
     NBB_VOID pds_ms_reg_post_getall_{{$msgName | ToLower}}_{{$struct | ToLower}}(post_getall_{{$msgName | ToLower}}_{{$struct | ToLower}}_func_type);
     NBB_VOID pds_ms_getall_{{$msgName | ToLower}}_{{$struct | ToLower}}_oid(NBB_ULONG *oid  NBB_CCXT_T NBB_CXT);
     NBB_VOID pds_ms_pre_getall_{{$msgName | ToLower}}_{{$struct | ToLower}}({{$pkgName}}::{{$rootMsg.GetName}}* resp);
-        {{$msgnamepfx := TrimSuffix $rootMsg.GetName "Response"}}
-        {{$reqRootMsgName := addStr $msgnamepfx "Request"}}
-        {{$reqRootMsg := (getMsg $file $pkg $reqRootMsgName)}}
     NBB_VOID pds_ms_getall_{{$msgName | ToLower}}_{{$struct | ToLower}}(const {{$pkgName}}::{{$reqRootMsg.GetName}}* req, {{$pkgName}}::{{$rootMsg.GetName}}* resp);
-    NBB_VOID pds_ms_post_getall_{{$msgName | ToLower}}_{{$struct | ToLower}}({{$pkgName}}::{{$rootMsg.GetName}}* resp);
+    NBB_VOID pds_ms_post_getall_{{$msgName | ToLower}}_{{$struct | ToLower}}(const {{$pkgName}}::{{$reqRootMsg.GetName}}* req, {{$pkgName}}::{{$rootMsg.GetName}}* resp);
       {{end}}
     {{end}}
     {{if  (HasPrefix $fileName "internal_")}}
