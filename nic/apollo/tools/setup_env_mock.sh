@@ -26,7 +26,7 @@ export LOG_DIR=$NON_PERSISTENT_LOG_DIR
 export ASIC_MOCK_MODE=1
 export ASIC_MOCK_MEMORY_MODE=1
 if [ $PIPELINE != 'apulu' ]; then
-    export VPP_IPC_MOCK_MODE=1
+    export IPC_MOCK_MODE=1
 fi
 
 #GDB='gdb --args'

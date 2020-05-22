@@ -2,7 +2,7 @@
 
 CUR_DIR=$( readlink -f $( dirname $0 ) )
 source $CUR_DIR/setup_env_hw.sh
-#export VPP_IPC_MOCK_MODE=1
+#export IPC_MOCK_MODE=1
 
 # remove logs
 rm -f $NON_PERSISTENT_LOG_DIR/pds-athena-sec-agent.log*

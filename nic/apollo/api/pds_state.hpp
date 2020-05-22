@@ -155,7 +155,7 @@ public:
     void *port_temperature_metrics_handle(void) const {
         return port_temperature_metrics_hndl_;
     }
-    bool vpp_ipc_mock(void) const { return vpp_ipc_mock_; }
+    bool ipc_mock(void) const { return ipc_mock_; }
     void set_control_cores_mask(uint64_t control_cores_mask) {
         control_cores_mask_ = control_cores_mask;
     }
@@ -277,7 +277,7 @@ private:
     string                  firmware_description_str_;
     string                  firmware_build_time_str_;
     // TODO: remove this after we phase out apollo/artemis tests
-    bool                    vpp_ipc_mock_;
+    bool                    ipc_mock_;
     program_info            *pginfo_;
     uint64_t                control_cores_mask_;
     uint16_t                num_control_cores_;

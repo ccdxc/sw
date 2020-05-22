@@ -1337,7 +1337,7 @@ vnic_impl::fill_stats_(pds_vnic_stats_t *stats) {
     stats->meter_rx_pkts = *(uint64_t *)meter_stats.meter_stats_action.in_packets;
     stats->meter_rx_bytes = *(uint64_t *)meter_stats.meter_stats_action.in_bytes;
 
-    if (g_pds_state.vpp_ipc_mock() == false) {
+    if (g_pds_state.ipc_mock() == false) {
         ret = fill_vpp_stats_(stats);
         if (ret != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to read active sessions from VPP, "

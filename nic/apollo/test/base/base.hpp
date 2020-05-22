@@ -98,24 +98,22 @@ asic_mock_mode (void)
             mock_mode = false;
         mock_mode_env_var_read = true;
     }
-
     return mock_mode;
 }
 
-// Returns true if VPP_IPC_MOCK_MODE is enabled, otherwise false
+// Returns true if IPC_MOCK_MODE is enabled, otherwise false
 static inline bool
-vpp_ipc_mock_mode (void)
+ipc_mock_mode (void)
 {
-    static bool vpp_ipc_mock_mode = true;
-    static bool vpp_ipc_mock_mode_env_var_read = false;
+    static bool ipc_mock_mode = true;
+    static bool ipc_mock_mode_env_var_read = false;
 
-    if (!vpp_ipc_mock_mode_env_var_read) {
-        if (getenv("VPP_IPC_MOCK_MODE") == NULL)
-            vpp_ipc_mock_mode = false;
-        vpp_ipc_mock_mode_env_var_read = true;
+    if (!ipc_mock_mode_env_var_read) {
+        if (getenv("IPC_MOCK_MODE") == NULL)
+            ipc_mock_mode = false;
+        ipc_mock_mode_env_var_read = true;
     }
-
-    return vpp_ipc_mock_mode;
+    return ipc_mock_mode;
 }
 
 static inline bool
@@ -129,7 +127,6 @@ agent_mode (void)
             agent_mode = true;
         agent_mode_env_var_read = true;
     }
-
     return agent_mode;
 }
 

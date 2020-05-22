@@ -9,7 +9,7 @@ source $CUR_DIR/../../../tools/setup_env_mock.sh $PIPELINE
 export SKIP_VERIFY=1
 export GEN_TEST_RESULTS_DIR=${BUILD_DIR}/gtest_results
 export VAL_CMD=valgrind
-export VPP_IPC_MOCK_MODE=1
+export IPC_MOCK_MODE=1
 
 function finish () {
     # auto invoked on any exit
@@ -20,7 +20,7 @@ function finish () {
     sudo rm -f /tmp/*.db /tmp/pen_* /dev/shm/pds_* /dev/shm/ipc_*
     sudo rm -f /dev/shm/metrics_*
     if [ $PIPELINE == 'apulu' ]; then
-        if [ -z "$VPP_IPC_MOCK_MODE" ]; then
+        if [ -z "$IPC_MOCK_MODE" ]; then
             sudo pkill -9 vpp
         fi
         sudo pkill -9 dhcpd
@@ -36,7 +36,7 @@ function setup () {
 
     echo "xxx"
     if [ $PIPELINE == 'apulu' ]; then
-        if [ -z "$VPP_IPC_MOCK_MODE" ]; then
+        if [ -z "$IPC_MOCK_MODE" ]; then
             echo "Starting VPP"
             sudo ${PDSPKG_TOPDIR}/vpp/tools/start-vpp-mock.sh --pipeline apulu
             if [[ $? != 0 ]]; then

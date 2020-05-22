@@ -80,7 +80,7 @@ pds_test_base::SetUpTestCase(test_case_params_t& params)
 {
     pds_init_params_t init_params;
 
-    if (vpp_ipc_mock_mode()) {
+    if (ipc_mock_mode()) {
         vpp_thread_create();
     }
 

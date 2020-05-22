@@ -46,7 +46,7 @@ pds_ipc_cfg_get (pds_ipc_id_t ipc_id, obj_id_t obj_id,
     request.obj_id = obj_id;
     request.key = *key;
     if ((ipc_id == PDS_IPC_ID_VPP) &&
-        (api::g_pds_state.vpp_ipc_mock() == false)) {
+        (api::g_pds_state.ipc_mock() == false)) {
         sdk::ipc::request(PDS_IPC_ID_VPP, PDS_MSG_TYPE_CFG_OBJ_GET, &request,
                           sizeof(request), cfg_get_ipc_reply_cb, &reply);
         retval = (sdk::sdk_ret_t )reply.status;
@@ -102,7 +102,7 @@ pds_ipc_cfg_get_all (pds_ipc_id_t ipc_id, obj_id_t obj_id,
     ctxt.reply = reply;
     ctxt.sz = sz;
     if ((ipc_id == PDS_IPC_ID_VPP) &&
-        (api::g_pds_state.vpp_ipc_mock() == false)) {
+        (api::g_pds_state.ipc_mock() == false)) {
         sdk::ipc::request(PDS_IPC_ID_VPP, PDS_MSG_TYPE_CFG_OBJ_GET_ALL,
                           &request, sizeof(request),
                           cfg_get_all_ipc_reply_cb, &ctxt);

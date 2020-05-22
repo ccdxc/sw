@@ -32,9 +32,9 @@ pds_state::pds_state() {
     memset(state_, 0, sizeof(state_));
     event_cb_ = nullptr;
     memset(&system_mac_, 0, sizeof(system_mac_));
-    // set vpp mock mode as needed
-    if (getenv("VPP_IPC_MOCK_MODE")) {
-        vpp_ipc_mock_ = true;
+    // set IPC mock mode as needed
+    if (getenv("IPC_MOCK_MODE")) {
+        ipc_mock_ = true;
     }
     // set the config path
     SDK_ASSERT(std::getenv("CONFIG_PATH"));

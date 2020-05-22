@@ -6,7 +6,7 @@ export ASIC="${ASIC:-capri}"
 export PDSPKG_TOPDIR=$NICDIR
 # for mock runs, point obfl logging to /tmp
 export PERSISTENT_LOG_DIR=/tmp/
-export VPP_IPC_MOCK_MODE=1
+export IPC_MOCK_MODE=1
 export AGENT_TRANSPORT_UDS=1
 echo $NICDIR
 

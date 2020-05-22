@@ -12,7 +12,7 @@ export SKIP_VERIFY=1
 export BUILD_DIR=${NICDIR}/build/x86_64/apulu/${ASIC}
 export GEN_TEST_RESULTS_DIR=${BUILD_DIR}/gtest_results
 export CONFIG_PATH=${NICDIR}/conf
-export VPP_IPC_MOCK_MODE=1
+export IPC_MOCK_MODE=1
 #export GDB='gdb --args'
 
 cfgfile=apulu/scale_cfg.json

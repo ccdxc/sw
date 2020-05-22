@@ -38,7 +38,7 @@ for (( j=0; j<argc; j++ )); do
         DOL_RUN=1
     elif [ ${argv[j]} == '--doltest' ];then
         DOL_TEST=1
-    elif [ ${argv[j]} == '--underlay' ];then    
+    elif [ ${argv[j]} == '--underlay' ];then
         UNDERLAY=1
     else
         CMDARGS+="${argv[j]} "
@@ -126,11 +126,11 @@ if [ $RR == 1 ]; then
     echo "RR testing mode"
 fi
 
-if [ $DOL_RUN == 0 ]; then 
+if [ $DOL_RUN == 0 ]; then
     echo "start pdsagent in "$CONTAINER"1"
     ret=0
-    docker exec -dit -w "$DOL_CFG"1 "$CONTAINER"1 sh -c "VPP_IPC_MOCK_MODE=1 $PDSAGENT --log-dir ${DOL_CFG}1" || ret=$?
-    
+    docker exec -dit -w "$DOL_CFG"1 "$CONTAINER"1 sh -c "IPC_MOCK_MODE=1 $PDSAGENT --log-dir ${DOL_CFG}1" || ret=$?
+
     if [ $ret -ne 0 ]; then
         echo "failed to start pdsagent in "$CONTAINER"1: $ret"
     fi

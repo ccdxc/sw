@@ -21,7 +21,7 @@ export ZMQ_SOC_DIR=$PDSPKG_TOPDIR
 
 export ASIC_MOCK_MODE=1
 export ASIC_MOCK_MEMORY_MODE=1
-export VPP_IPC_MOCK_MODE=1
+export IPC_MOCK_MODE=1
 
 #GDB='gdb --args'
 #VALGRIND='valgrind --leak-check=full --show-leak-kinds=all --gen-suppressions=all --error-limit=no --verbose --log-file=valgrind-out.txt --track-origins=yes'

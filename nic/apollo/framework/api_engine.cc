@@ -1402,8 +1402,8 @@ api_engine::process_ipc_async_result_(sdk::ipc::ipc_msg_ptr msg,
 sdk_ret_t
 api_engine::send_req_rsp_msgs_(pds_ipc_id_t ipc_id,
                                ipc_peer_api_msg_info_t *api_msg_info) {
-    // if vpp is mocked out, don't send msg to vpp
-    if (g_pds_state.vpp_ipc_mock()) {
+    // if IPC is mocked out, don't send msg to any IPC endpoints
+    if (g_pds_state.ipc_mock()) {
         return SDK_RET_OK;
     }
     if (api_msg_info->req_rsp_msgs) {
