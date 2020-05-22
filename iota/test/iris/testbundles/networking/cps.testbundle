@@ -26,19 +26,20 @@ testcases:
             proto     : [ tcp, udp ]
             cps       : [ 1000 ]
             duration  : [ 300 ]
+
     -   name    : session_scale
         testcase: testcases.networking.session_scale
         stress  : True
-        ignore  : True
+        ignore  : False
         args    :
              latency_pps: 10
         iterators:
             type             : simple
-            max_active_flow  : [64000]
+            max_active_flow  : [32000]
             cps              : [900]
             duration         : [300]
         background_tasks:
-            showStats        : 
+            showStats        :
                 trigger         : auto
                 run             : repeat
                 sleep_interval  : 60

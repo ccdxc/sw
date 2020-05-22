@@ -585,6 +585,8 @@ typedef struct session_get_stream_filter_ {
 
 // max. number of session supported  (TODO: we can take this from cfg file)
 #define HAL_CFG_MAX_SESSIONS               65535
+// DSC max sessions the system supports
+#define HAL_DSC_MAX_SESSIONS               32768
 
 session_t *find_session_by_handle(hal_handle_t handle);
 

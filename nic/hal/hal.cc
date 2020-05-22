@@ -207,7 +207,7 @@ hal_init (hal_cfg_t *hal_cfg)
 
     // This should come from hal-config file or policy
     hal_cfg->bypass_fte = false;
-    hal_cfg->max_sessions = HAL_CFG_MAX_SESSIONS; // This is total sessions supported in the system
+    hal_cfg->max_sessions = HAL_DSC_MAX_SESSIONS; // This is total sessions supported per DSC
                                                  // should come from config-file, should be modifiable in future
 
     // validate control/data cores against catalog

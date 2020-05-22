@@ -7,13 +7,13 @@ testcases:
     -   name    : session_scale_stress_1hr
         testcase: testcases.networking.session_scale
         stress  : True
-        ignore  : True
+        ignore  : False
         args    :
              timeout: 7200
              latency_pps: 10
         iterators:
             type             : simple
-            max_active_flow  : [64000]
+            max_active_flow  : [32000]
             cps              : [900]
             duration         : [3600]
         background_tasks:

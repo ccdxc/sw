@@ -2,16 +2,22 @@
 import sys
 import os
 import time
+import glob
 import traceback
 import iota.harness.api as api
 import iota.test.iris.config.netagent.api as agent_api
 import iota.test.iris.testcases.security.utils as utils
-import iota.test.iris.testcases.telemetry.utils as tutils
 import iota.harness.infra.utils.periodic_timer as pt
 from iota.test.iris.utils import vmotion_utils
 
 from trex.astf.api import *
 from iota.test.iris.utils.trex_wrapper import *
+
+def GetProtocolDirectory(feature, proto):
+    return api.GetTopologyDirectory() + "/gen/telemetry/{}/{}".format(feature, proto)
+
+def GetTargetJsons(feature, proto):
+    return glob.glob(GetProtocolDirectory(feature, proto) + "/*_policy.json")
 
 def findWorkloadPeers(tc):
     for w1,w2 in  api.GetRemoteWorkloadPairs():
@@ -147,8 +153,8 @@ def configurationChangeEvent(tc):
                 return api.types.status.SUCCESS
 
     for proto in ['tcp', 'udp', 'icmp', 'mixed', 'scale']:
-        mirrorPolicies = tutils.GetTargetJsons('mirror', proto)
-        flowmonPolicies = tutils.GetTargetJsons('flowmon', proto)
+        mirrorPolicies = GetTargetJsons('mirror', proto)
+        flowmonPolicies = GetTargetJsons('flowmon', proto)
         for mp_json, fp_json in zip(mirrorPolicies, flowmonPolicies):
             mpObjs = agent_api.AddOneConfig(mp_json)
             fpObjs = agent_api.AddOneConfig(fp_json)
