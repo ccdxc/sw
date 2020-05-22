@@ -157,6 +157,9 @@ sysmon_init (void)
     sysmon_cfg.temp_event_cb = temperature_event_cb;
     sysmon_cfg.memory_event_cb = memory_event_cb;
     sysmon_cfg.catalog = api::g_pds_state.catalogue();
+    sysmon_cfg.panic_event_cb = panic_event_cb;
+    sysmon_cfg.postdiag_event_cb = postdiag_event_cb;
+    sysmon_cfg.pciehealth_event_cb = pciehealth_event_cb;
 
     // init the sysmon lib
     sysmon_init(&sysmon_cfg);

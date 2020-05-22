@@ -156,8 +156,10 @@ interrupt_event_cb (const intr_reg_t *reg, const intr_field_t *field)
 void
 cattrip_event_cb (void)
 {
-    operd::alerts::alert_recorder::get()->alert(operd::alerts::NAPLES_CATTRIP,
-                                                "Naples CATTRIP");
+    operd::alerts::alert_recorder::get()->alert(operd::alerts::NAPLES_CATTRIP_INTERRUPT,
+                                                "DSC temperature crossed the "
+                                                "fatal threshold and will "
+                                                "reset");
 }
 
 void
@@ -166,6 +168,37 @@ memory_event_cb (system_memory_t *system_memory)
     sdk::metrics::metrics_update(g_pds_state.memory_metrics_handle(),
                                  *(sdk::metrics::key_t *)uuid_from_objid(0).id,
                                  (uint64_t *)system_memory);
+}
+
+void
+panic_event_cb (void)
+{
+    operd::alerts::alert_recorder::get()->alert(operd::alerts::NAPLES_PANIC,
+                                                "Panic occurred on DSC "
+                                                "on the previous boot");
+}
+
+void
+postdiag_event_cb (void)
+{
+    operd::alerts::alert_recorder::get()->alert(operd::alerts::NAPLES_POST_DIAG_FAILURE_EVENT,
+                                                "DSC post diag failed in "
+                                                "this boot");
+}
+
+void
+pciehealth_event_cb (sysmon_pciehealth_severity_t sev, const char *reason)
+{
+    if (sev == SYSMON_PCIEHEALTH_INFO) {
+        operd::alerts::alert_recorder::get()->alert(operd::alerts::NAPLES_INFO_PCIEHEALTH_EVENT,
+                                                    reason);
+    } else if (sev == SYSMON_PCIEHEALTH_WARN){
+        operd::alerts::alert_recorder::get()->alert(operd::alerts::NAPLES_WARN_PCIEHEALTH_EVENT,
+                                                    reason);
+    } else if (sev == SYSMON_PCIEHEALTH_ERROR){
+        operd::alerts::alert_recorder::get()->alert(operd::alerts::NAPLES_ERR_PCIEHEALTH_EVENT,
+                                                    reason);
+    }
 }
 
 }    // namespace api

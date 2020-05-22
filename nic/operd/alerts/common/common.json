@@ -42,9 +42,39 @@
         "description": "DSC memory temperature has fallen below the critical threshold"
     },
     {
-        "name": "NAPLES_CATTRIP",
+        "name": "NAPLES_CATTRIP_INTERRUPT",
         "category": "System",
         "severity": "CRITICAL",
-        "description": "DSC temperature crossed the fatal threshold and will reset"
+        "description": "DSC temperature crossed the fatal threshold and cattrip is triggered, resetting the system"
+    },
+    {
+        "name": "NAPLES_PANIC",
+        "category": "System",
+        "severity": "CRITICAL",
+        "description": "DSC panic occurred on previous boot"
+    },
+    {
+        "name": "NAPLES_POST_DIAG_FAILURE_EVENT",
+        "category": "System",
+        "severity": "WARN",
+        "description": "DSC post diag test failed"
+    },
+    {
+        "name": "NAPLES_INFO_PCIEHEALTH_EVENT",
+        "category": "System",
+        "severity": "INFO",
+        "description": "DSC has detected a pcie link health event"
+    },
+    {
+        "name": "NAPLES_WARN_PCIEHEALTH_EVENT",
+        "category": "System",
+        "severity": "WARN",
+        "description": "DSC has detected a pcie link health warning"
+    },
+    {
+        "name": "NAPLES_ERR_PCIEHEALTH_EVENT",
+        "category": "System",
+        "severity": "CRITICAL",
+        "description": "DSC has detected a pcie link health error"
     }
 ]
