@@ -86,7 +86,10 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
 	    if(h2s_session_rewrite_id != 0) {
 	      metadata.cntrl.session_rewrite_id_valid = TRUE;      
 	      metadata.cntrl.session_rewrite_id = h2s_session_rewrite_id;      					     
-	    } 
+	    } else {
+	      metadata.cntrl.flow_miss = TRUE;
+	      return;
+	    }
 	    if(hdr.p4i_to_p4e_header.l2_index != 0) {
 	      metadata.cntrl.session_encap_id_valid = TRUE;      
 	      metadata.cntrl.session_encap_id = hdr.p4i_to_p4e_header.l2_index[21:0];      
@@ -179,7 +182,11 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
 	    if(s2h_session_rewrite_id != 0) {
 	      metadata.cntrl.session_rewrite_id_valid = TRUE;      
 	      metadata.cntrl.session_rewrite_id = s2h_session_rewrite_id;      					     
-	    } 
+	    } else {
+	      metadata.cntrl.flow_miss = TRUE;
+	      return;
+	    }
+
 	    if(hdr.p4i_to_p4e_header.l2_index != 0) {
 	      metadata.cntrl.session_encap_id_valid = TRUE;      
 	      metadata.cntrl.session_encap_id = hdr.p4i_to_p4e_header.l2_index[21:0];      
@@ -748,7 +755,10 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
 	 //Setup UDP
 	 hdr.l4_0.udp.setValid();
 	 if(udp_sport == 0) {
-	   hdr.l4_0.udp.srcPort = hdr.p4i_to_p4e_header.flow_hash[15:0];
+	   //	   hdr.l4_0.udp.srcPort = ((bit<16>)(0x3 << 14)) & ((bit<16>) hdr.p4i_to_p4e_header.flow_hash[13:0]);
+	   hdr.l4_0.udp.srcPort[15:14] = 0x3;
+	   hdr.l4_0.udp.srcPort[13:0] = hdr.p4i_to_p4e_header.flow_hash[13:0];
+
 	 } else {
 	   hdr.l4_0.udp.srcPort = udp_sport;
 	 }
@@ -778,11 +788,12 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
       session_rewrite_encap_l2_common(add_vlan_tag_flag, dmac, smac, vlan, ETHERTYPE_IPV4);     
       //    metadata.csum.ip_hdr_len_0        = PKT_IPV4_HDRLEN_0;
       // ipv4HdrCsumDepEg_0.enable_update();
+      bit<6> geneve_optlen = 0;
       hdr.geneve_0.setValid();
       hdr.geneve_0.oam = 0; //TODO
       hdr.geneve_0.protoType = ETHERTYPE_ETHERNET;
       hdr.geneve_0.vni = vni;
-      hdr.geneve_0.optLen = 0;
+      //      hdr.geneve_0.optLen = 0;
 
       if(source_slot_id != 0) {
 	hdr.geneve_option_srcSlotId.setValid();
@@ -790,7 +801,8 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
 	hdr.geneve_option_srcSlotId.type = GENEVE_OPTION_SRC_SLOT_ID;
 	hdr.geneve_option_srcSlotId.Lenght = 1;
 	hdr.geneve_option_srcSlotId.srcSlotId = source_slot_id;
-	hdr.geneve_0.optLen = hdr.geneve_0.optLen + 2;	
+	geneve_optlen = geneve_optlen + 2;	
+	//	hdr.geneve_0.optLen = hdr.geneve_0.optLen + 2;	
       } 
 
       if(destination_slot_id != 0) {
@@ -799,7 +811,8 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
 	hdr.geneve_option_dstSlotId.type = GENEVE_OPTION_DST_SLOT_ID;
 	hdr.geneve_option_dstSlotId.Lenght = 1;
 	hdr.geneve_option_dstSlotId.dstSlotId = destination_slot_id;	
-	hdr.geneve_0.optLen = hdr.geneve_0.optLen + 2;	
+	geneve_optlen = geneve_optlen + 2;	
+	//	hdr.geneve_0.optLen = hdr.geneve_0.optLen + 2;	
       } 
 
       if(originator_physical_ip != 0) {
@@ -808,7 +821,8 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
 	hdr.geneve_option_origPhysicalIp.type = GENEVE_OPTION_ORIGINATOR_PHYSICAL_IP;
 	hdr.geneve_option_origPhysicalIp.Lenght = 1;
 	hdr.geneve_option_origPhysicalIp.origPhysicalIp = originator_physical_ip;	
-	hdr.geneve_0.optLen = hdr.geneve_0.optLen + 2;	
+	geneve_optlen = geneve_optlen + 2;	
+	//	hdr.geneve_0.optLen = hdr.geneve_0.optLen + 2;	
       } 
 
       if(sg_id6 != 0 || sg_id5 != 0) {
@@ -826,7 +840,8 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
 	hdr.geneve_option_srcSecGrpList_3.srcSecGrp3 = sg_id4;	
 	hdr.geneve_option_srcSecGrpList_3.srcSecGrp4 = sg_id5;	
 	hdr.geneve_option_srcSecGrpList_3.srcSecGrp5 = sg_id6;	
-	hdr.geneve_0.optLen = hdr.geneve_0.optLen + 4;	
+	geneve_optlen = geneve_optlen + 4;	
+	//	hdr.geneve_0.optLen = hdr.geneve_0.optLen + 4;	
       } else if (sg_id4 != 0 || sg_id3 != 0) {
 	hdr.geneve_option_srcSecGrpList_2.setValid();
 	hdr.geneve_option_srcSecGrpList_2.optionClass = GENEVE_OPTION_OPTION_CLASS;
@@ -840,7 +855,8 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
 	hdr.geneve_option_srcSecGrpList_2.srcSecGrp1 = sg_id2;	
 	hdr.geneve_option_srcSecGrpList_2.srcSecGrp2 = sg_id3;	
 	hdr.geneve_option_srcSecGrpList_2.srcSecGrp3 = sg_id4;	
-	hdr.geneve_0.optLen = hdr.geneve_0.optLen + 3;	
+	geneve_optlen = geneve_optlen + 3;	
+	//	hdr.geneve_0.optLen = hdr.geneve_0.optLen + 3;	
       } else if (sg_id2 != 0 || sg_id1 != 0) {
 	hdr.geneve_option_srcSecGrpList_1.setValid();
 	hdr.geneve_option_srcSecGrpList_1.optionClass = GENEVE_OPTION_OPTION_CLASS;
@@ -852,15 +868,20 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
 	hdr.geneve_option_srcSecGrpList_1.Lenght = 1;
 	hdr.geneve_option_srcSecGrpList_1.srcSecGrp0 = sg_id1;	
 	hdr.geneve_option_srcSecGrpList_1.srcSecGrp1 = sg_id2;	
-	hdr.geneve_0.optLen = hdr.geneve_0.optLen + 2;	
+	geneve_optlen = geneve_optlen + 2;	
+	//	hdr.geneve_0.optLen = hdr.geneve_0.optLen + 2;	
       } 
 
-      hdr.l4_0.udp.len = hdr.p4i_to_p4e_header.packet_len + 12 + ((bit<16>)(hdr.geneve_0.optLen) << 2); // packet -4 CTAG + 8 UDP + 8 GENEVE + OPTLEN
+      hdr.geneve_0.optLen = geneve_optlen;
+      hdr.l4_0.udp.len = hdr.p4i_to_p4e_header.packet_len + 12 + ((bit<16>)(geneve_optlen) << 2); // packet -4 CTAG + 8 UDP + 8 GENEVE + OPTLEN
+      //      hdr.l4_0.udp.len = hdr.p4i_to_p4e_header.packet_len + 12 + ((bit<16>)(hdr.geneve_0.optLen) << 2); // packet -4 CTAG + 8 UDP + 8 GENEVE + OPTLEN
       hdr.ip_0.ipv4.totalLen = hdr.l4_0.udp.len + 20;
       //Setup UDP
       hdr.l4_0.udp.setValid();
       if(udp_sport == 0) {
-	hdr.l4_0.udp.srcPort = hdr.p4i_to_p4e_header.flow_hash[15:0];
+	//	hdr.l4_0.udp.srcPort = ((bit<16>)(0x3 << 14)) & ((bit<16>) hdr.p4i_to_p4e_header.flow_hash[13:0]);
+	hdr.l4_0.udp.srcPort[15:14] = 0x3;
+	hdr.l4_0.udp.srcPort[13:0] = hdr.p4i_to_p4e_header.flow_hash[13:0];
       } else {
 	hdr.l4_0.udp.srcPort = udp_sport;
       }   
@@ -896,15 +917,16 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
 	//}
 
       }
-      if(metadata.cntrl.session_rewrite_id_valid == TRUE) {
-        table_session_rewrite.apply();
-	//	table_session_encap.apply();
+      if(metadata.cntrl.flow_miss == FALSE) {
+	if(metadata.cntrl.session_rewrite_id_valid == TRUE) {
+	  table_session_rewrite.apply();
+	  //	table_session_encap.apply();
+	}
+	if(metadata.cntrl.session_encap_id_valid == TRUE) {
+	  // table_session_rewrite.apply();
+	  table_session_encap.apply();
+	}
       }
-      if(metadata.cntrl.session_encap_id_valid == TRUE) {
-	// table_session_rewrite.apply();
-	table_session_encap.apply();
-      }
-      
     }
 }
 

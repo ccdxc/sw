@@ -39,7 +39,7 @@ control update_checksums(inout cap_phv_intr_global_h capri_intrinsic,
         metadata.csum.ip_hdr_len_1        = PKT_IPV4_HDRLEN_1;
         metadata.csum.icmp_len_1           = PKT_IPV4_TOTAL_LEN_1 - PKT_IPV4_HDRLEN_1;
 	ipv4HdrCsumDepEg_1.enable_update();
-	//icmpv4CsumDepEg_1.enable_update();
+	icmpv4CsumDepEg_1.enable_update();
 
     }
 

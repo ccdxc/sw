@@ -21,8 +21,10 @@ control vnic(inout cap_phv_intr_global_h capri_intrinsic,
       } else {		
 	metadata.cntrl.vnic_type = vnic_type;
 	hdr.p4i_to_p4e_header.l2_vnic = vnic_type;
-	metadata.cntrl.skip_l2_flow_lkp = ~vnic_type;
-	hdr.ingress_recirc_header.l2_flow_done = ~vnic_type;
+	if(vnic_type == P4_VNIC_TYPE_L3) {
+	  metadata.cntrl.skip_l2_flow_lkp = TRUE;
+	  hdr.ingress_recirc_header.l2_flow_done = TRUE;
+	}
 	metadata.key.vnic_id = vnic_id;
 	//	metadata.l2_key.vnic_id16 = (bit<16>)vnic_id;
       }
@@ -66,8 +68,10 @@ control vnic(inout cap_phv_intr_global_h capri_intrinsic,
       } else {
 		
 	metadata.cntrl.vnic_type = vnic_type;
-	metadata.cntrl.skip_l2_flow_lkp = ~vnic_type;
-	hdr.ingress_recirc_header.l2_flow_done = ~vnic_type;
+	if(vnic_type == P4_VNIC_TYPE_L3) {
+	  metadata.cntrl.skip_l2_flow_lkp = TRUE;
+	  hdr.ingress_recirc_header.l2_flow_done = TRUE;
+	}
 	hdr.p4i_to_p4e_header.l2_vnic = vnic_type;
 	metadata.key.vnic_id = vnic_id;
 	//	metadata.l2_key.vnic_id16 = (bit<16>)vnic_id;
