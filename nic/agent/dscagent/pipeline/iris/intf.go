@@ -34,7 +34,7 @@ func createInterfaceHandler(infraAPI types.InfraAPI, client halapi.InterfaceClie
 	intfReqMsg := convertInterface(intf, nil, collectorMap)
 	resp, err := client.InterfaceCreate(context.Background(), intfReqMsg)
 	if resp != nil {
-		if err := utils.HandleErr(types.Create, resp.Response[0].ApiStatus, err, fmt.Sprintf("Create Failed for %s | %s", intf.GetKind(), intf.GetKey())); err != nil {
+		if err := utils.HandleErr(types.Create, resp.GetResponse()[0].GetApiStatus(), err, fmt.Sprintf("Create Failed for %s | %s", intf.GetKind(), intf.GetKey())); err != nil {
 			return err
 		}
 	}
@@ -59,7 +59,7 @@ func updateInterfaceHandler(infraAPI types.InfraAPI, client halapi.InterfaceClie
 
 	getResp, err := client.InterfaceGet(context.Background(), intfGetReq)
 	if getResp != nil || err != nil {
-		if err := utils.HandleErr(types.Get, getResp.Response[0].ApiStatus, err, fmt.Sprintf("Interface: %s", intf.GetKey())); err != nil {
+		if err := utils.HandleErr(types.Get, getResp.GetResponse()[0].GetApiStatus(), err, fmt.Sprintf("Interface: %s", intf.GetKey())); err != nil {
 			return err
 		}
 	}
@@ -67,7 +67,7 @@ func updateInterfaceHandler(infraAPI types.InfraAPI, client halapi.InterfaceClie
 	intfReqMsg := convertInterface(intf, getResp.Response[0].Spec, collectorMap)
 	resp, err := client.InterfaceUpdate(context.Background(), intfReqMsg)
 	if resp != nil {
-		if err := utils.HandleErr(types.Update, resp.Response[0].ApiStatus, err, fmt.Sprintf("Update Failed for %s | %s", intf.GetKind(), intf.GetKey())); err != nil {
+		if err := utils.HandleErr(types.Update, resp.GetResponse()[0].GetApiStatus(), err, fmt.Sprintf("Update Failed for %s | %s", intf.GetKind(), intf.GetKey())); err != nil {
 			return err
 		}
 	}
@@ -92,7 +92,7 @@ func deleteInterfaceHandler(infraAPI types.InfraAPI, client halapi.InterfaceClie
 
 	resp, err := client.InterfaceDelete(context.Background(), intfDelReq)
 	if resp != nil {
-		if err := utils.HandleErr(types.Delete, resp.Response[0].ApiStatus, err, fmt.Sprintf("Interface: %s", intf.GetKey())); err != nil {
+		if err := utils.HandleErr(types.Delete, resp.GetResponse()[0].GetApiStatus(), err, fmt.Sprintf("Interface: %s", intf.GetKey())); err != nil {
 			return err
 		}
 	}

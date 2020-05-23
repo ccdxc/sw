@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime/debug"
+	"runtime/pprof"
 	"syscall"
 	"time"
 
@@ -46,9 +47,6 @@ func main() {
 		},
 	}
 
-	doGracefulShutdown := make(chan os.Signal)
-	signal.Notify(doGracefulShutdown, os.Interrupt, syscall.SIGTERM)
-
 	logger := log.SetConfig(logConfig)
 	tsdb.Init(context.Background(), &tsdb.Opts{
 		ClientName:              types.Netagent,
@@ -58,6 +56,9 @@ func main() {
 		ConnectionRetryInterval: types.StatsRetryInterval,
 	})
 	defer tsdb.Cleanup()
+	signalHandler := make(chan os.Signal)
+	// Handle SIGINT, SIGTERM, SIGABRT
+	signal.Notify(signalHandler, os.Interrupt, syscall.SIGTERM, syscall.SIGABRT)
 
 	ag, err := dscagent.NewDSCAgent(logger, types.Npm, types.Tpm, types.Tsm, types.DefaultAgentRestURL)
 	if err != nil {
@@ -70,9 +71,15 @@ func main() {
 	defer ag.Stop()
 	log.Infof("Agent up and running: %v", ag)
 	select {
-	case <-doGracefulShutdown:
-		log.Info("Agent undergoing a graceful shutdown.")
-		ag.Stop()
-		os.Exit(0)
+	case sig := <-signalHandler:
+		switch sig {
+		case syscall.SIGABRT:
+			log.Error("Agent received ABORT")
+			pprof.Lookup("goroutine").WriteTo(os.Stderr, 2)
+		default:
+			log.Info("Agent undergoing a graceful shutdown.")
+			ag.Stop()
+			os.Exit(0)
+		}
 	}
 }
