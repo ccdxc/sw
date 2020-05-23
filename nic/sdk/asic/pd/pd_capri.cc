@@ -477,6 +477,12 @@ asicpd_scheduler_stats_get (scheduler_stats_t *sch_stats)
     return SDK_RET_OK;
 }
 
+bool
+asicpd_scheduler_timer_all_complete (void)
+{
+    return capri_txs_timer_all_complete();
+}
+
 sdk_ret_t
 asicpd_qstate_map_clear (uint32_t lif_id)
 {

@@ -89,8 +89,8 @@ typedef struct pds_flow_iter_cb_arg_s {
     bool               force_read;
     pds_flow_key_t     flow_key;
     pds_flow_data_t    flow_appdata;
-    uint32_t           cache_id;
-    bool               primary;
+    uint64_t           handle;
+    void               *appctx;
 } pds_flow_iter_cb_arg_t;
 
 /// \brief Flow statistics

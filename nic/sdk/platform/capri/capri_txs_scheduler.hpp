@@ -113,6 +113,8 @@ typedef struct capri_txs_scheduler_stats_s {
 
 sdk_ret_t capri_txs_scheduler_stats_get(capri_txs_scheduler_stats_t *scheduler_stats);
 
+bool capri_txs_timer_all_complete(void);
+
 uint32_t capri_get_coreclk_freq(platform_type_t platform_type);
 
 }    // namespace capri

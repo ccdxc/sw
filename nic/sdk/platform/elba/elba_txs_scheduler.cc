@@ -313,6 +313,13 @@ elba_txs_scheduler_stats_get (elba_txs_scheduler_stats_t *scheduler_stats)
     return SDK_RET_OK;
 }
 
+bool
+elba_txs_timer_all_complete (void)
+{
+    // still TODO
+    return true;
+}
+
 }    // namespace elba
 }    // namespace platform
 }    // namespace sdk

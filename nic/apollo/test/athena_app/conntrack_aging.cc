@@ -307,7 +307,7 @@ conntrack_aging_init(test_vparam_ref_t vparam)
 
         ret = pds_flow_age_sw_pollers_poll_control(true, conntrack_aging_expiry_fn);
     }
-    if (CONNTRACK_RET_VALIDATE(ret)) {
+    if (!hw() && CONNTRACK_RET_VALIDATE(ret)) {
         ret = pds_flow_age_hw_scanners_start();
     }
     return CONNTRACK_RET_VALIDATE(ret) && pollers_qcount && 
@@ -336,7 +336,8 @@ conntrack_aging_fini(test_vparam_ref_t vparam)
     test_vparam_t   sim_vparam;
     pds_ret_t       ret;
 
-    ret = pds_flow_age_hw_scanners_stop(true);
+    ret = !hw() ? pds_flow_age_hw_scanners_stop(true) :
+                  PDS_RET_OK;
     if (CONNTRACK_RET_VALIDATE(ret)) {
         ret = pds_flow_age_sw_pollers_poll_control(false, NULL);
     }
@@ -472,9 +473,11 @@ conntrack_aging_metrics_show(test_vparam_ref_t vparam)
 {
     aging_metrics_t scanner_metrics(ftl_dev_if::FTL_QTYPE_SCANNER_CONNTRACK);
     aging_metrics_t poller_metrics(ftl_dev_if::FTL_QTYPE_POLLER);
+    aging_metrics_t timestamp_metrics(ftl_dev_if::FTL_QTYPE_MPU_TIMESTAMP);
 
     scanner_metrics.show();
     poller_metrics.show();
+    timestamp_metrics.show();
     return true;
 }
 

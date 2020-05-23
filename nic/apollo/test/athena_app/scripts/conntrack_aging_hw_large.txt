@@ -6,7 +6,9 @@ skip_fte_flow_prog_set TRUE
 conntrack_table_clear_full 8388608
 
 conntrack_aging_init
-#conntrack_aging_force_expired_ts true
+conntrack_aging_force_expired_ts false
+conntrack_aging_accel_control false
+conntrack_aging_tolerance_secs_set 0
 
 conntrack_aging_normal_tmo_set {ICMP unestablished 6} {icmp established 6} {others unestablished 6} {others established 6}
 conntrack_aging_normal_tmo_set {udp unestablished 6} {UDP ESTABLISHED 6}
@@ -40,7 +42,6 @@ conntrack_aging_test
 conntrack_aging_metrics_show
 conntrack_aging_accel_control false
 conntrack_aging_fini
-conntrack_aging_force_expired_ts false
 
 skip_fte_flow_prog_set false
 

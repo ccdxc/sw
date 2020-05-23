@@ -108,6 +108,8 @@ typedef struct elba_txs_scheduler_stats_s {
 
 sdk_ret_t elba_txs_scheduler_stats_get(elba_txs_scheduler_stats_t *scheduler_stats);
 
+bool elba_txs_timer_all_complete(void);
+
 uint32_t elba_get_coreclk_freq(platform_type_t platform_type);
 
 }    // namespace elba

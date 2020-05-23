@@ -3,33 +3,29 @@
 #automatically reduce it to the actual table size as needed.
 
 skip_fte_flow_prog_set TRUE
-session_table_clear_full 262555
+session_table_clear_full 8388608
+flow_cache_table_clear_full
 
 session_aging_init
 session_aging_force_expired_ts false
 session_aging_accel_control false
-session_aging_tolerance_secs_set 0
+session_aging_tolerance_secs_set 20
 
-session_aging_normal_tmo_set 6
-session_aging_accel_tmo_set 4
+session_aging_normal_tmo_set 15
+session_aging_accel_tmo_set 5
 
-session_populate_full 138972
-session_aging_test
-session_populate_full 262555
-session_aging_test
-
-session_populate_random 192641 84119
-session_aging_test
-session_populate_random
+session_and_cache_populate tcp {vnic 657 10} {sip 97.39.207.133 10} {dip 52.150.88.64 11} {sport 45 5} {dport 61823 2}
 session_aging_test
 
 #switch to accelerated aging
 session_aging_accel_control true
-session_populate_random 8362 173947
+
+session_and_cache_populate udp {vnic 1323 1} {sip 85.184.211.90 20} {dip 163.92.163.77 20} {sport 29347 100} {dport 8363 10}
 session_aging_test
 
 session_aging_metrics_show
-session_aging_accel_control False
+session_aging_accel_control FALSE
+session_aging_tolerance_secs_set 0
 session_aging_fini
 
 skip_fte_flow_prog_set false

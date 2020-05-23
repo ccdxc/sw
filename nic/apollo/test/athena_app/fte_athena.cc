@@ -441,13 +441,16 @@ dump_single_flow(pds_flow_iter_cb_arg_t *iter_cb_arg)
 {
     pds_flow_key_t *key = &iter_cb_arg->flow_key;
     pds_flow_data_t *data = &iter_cb_arg->flow_appdata;
+    sdk::table::handle_t handle(iter_cb_arg->handle);
+    int prmry = handle.pvalid() ? handle.pindex() : -1;
+    int scdry = handle.svalid() ? handle.sindex() : -1;
 
     if (key->key_type == KEY_TYPE_IPV6) {
         CACHE_DUMP_LOG("SrcIP:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x "
                         "DstIP:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x "
                         "Dport:%u Sport:%u Proto:%u "
                         "Ktype:%u VNICID:%u "
-                        "index:%u index_type:%u cacheID:%u prim:%u\n",
+                        "index:%u index_type:%u prmry:%d scdry:%d\n",
                         key->ip_saddr[0], key->ip_saddr[1], key->ip_saddr[2], key->ip_saddr[3],
                         key->ip_saddr[4], key->ip_saddr[5], key->ip_saddr[6], key->ip_saddr[7],
                         key->ip_saddr[8], key->ip_saddr[9], key->ip_saddr[10], key->ip_saddr[11],
@@ -459,19 +462,19 @@ dump_single_flow(pds_flow_iter_cb_arg_t *iter_cb_arg)
                         key->l4.tcp_udp.dport, key->l4.tcp_udp.sport,
                         key->ip_proto, (uint8_t)key->key_type, key->vnic_id,
                         data->index, (uint8_t)data->index_type,
-                        iter_cb_arg->cache_id, iter_cb_arg->primary);
+                        prmry, scdry);
     } else {
         CACHE_DUMP_LOG("SrcIP:%d.%d.%d.%d "
                         "DstIP:%d.%d.%d.%d "
                         "Dport:%u Sport:%u Proto:%u "
                         "Ktype:%u VNICID:%u "
-                        "index:%u index_type:%u cacheID:%u prim:%u\n",
+                        "index:%u index_type:%u prmry:%d scdry:%d\n",
                         key->ip_saddr[3], key->ip_saddr[2], key->ip_saddr[1], key->ip_saddr[0],
                         key->ip_daddr[3], key->ip_daddr[2], key->ip_daddr[1], key->ip_daddr[0],
                         key->l4.tcp_udp.dport, key->l4.tcp_udp.sport,
                         key->ip_proto, (uint8_t)key->key_type, key->vnic_id,
                         data->index, (uint8_t)data->index_type,
-                        iter_cb_arg->cache_id, iter_cb_arg->primary);
+                        prmry, scdry);
     }
     return;
 }

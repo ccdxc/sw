@@ -4,8 +4,12 @@
 
 skip_fte_flow_prog_set TRUE
 session_table_clear_full 8388608
+flow_cache_table_clear_full
 
 session_aging_init
+session_aging_force_expired_ts false
+session_aging_accel_control false
+session_aging_tolerance_secs_set 0
 
 session_aging_normal_tmo_set 6
 session_aging_accel_tmo_set 2

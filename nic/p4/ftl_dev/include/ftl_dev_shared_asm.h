@@ -440,11 +440,19 @@
  * reflects bits [40:23] of the system time.
  */
 #define MPU_SESSION_TIMESTAMP_SELECT MPU_SESSION_TIMESTAMP_MSB:MPU_SESSION_TIMESTAMP_LSB
+#define MPU_CONNTRACK_TIMESTAMP_SELECT MPU_CONNTRACK_TIMESTAMP_MSB:MPU_CONNTRACK_TIMESTAMP_LSB
 
-#define SCANNER_TS_CALC(_timestamp_data)                                        \
+#define SESSION_TS_CALC(_timestamp_data)                                        \
     add         r_timestamp, r_timestamp[MPU_SESSION_TIMESTAMP_SELECT], r0;     \
     slt         c1, r_timestamp, _timestamp_data;                               \
     add.c1      r_timestamp, r_timestamp, 1, MPU_SESSION_TIMESTAMP_BITS;        \
+    sub         r_timestamp, r_timestamp, _timestamp_data;                      \
+    divi        r_timestamp, r_timestamp, 100;                                  \
+
+#define CONNTRACK_TS_CALC(_timestamp_data)                                      \
+    add         r_timestamp, r_timestamp[MPU_CONNTRACK_TIMESTAMP_SELECT], r0;   \
+    slt         c1, r_timestamp, _timestamp_data;                               \
+    add.c1      r_timestamp, r_timestamp, 1, MPU_CONNTRACK_TIMESTAMP_BITS;      \
     sub         r_timestamp, r_timestamp, _timestamp_data;                      \
     divi        r_timestamp, r_timestamp, 100;                                  \
 
@@ -596,15 +604,16 @@
  * Common code macros to be used per round per session.
  *
  * NOTE: This code macro is deliberately written with a gap between the call
- * to SCANNER_TS_CALC() and the one to SESSION_EXPIRY_CHECK_KIVEC() to reduce
+ * to SESSION_TS_CALC() and the one to SESSION_EXPIRY_CHECK_KIVEC() to reduce
  * MPU stalls in referencing the result of the divide instruction.
  */
 #define SESSION_ROUND_EXEC_e(_next_tbl, _next_round, _next_pc,                  \
                              _inner_label0, _inner_label1, _inner_label2,       \
                              _no_more_session_alt, _expiry_kivec_check_e)       \
     seq         c2, d.valid_flag, r0;                                           \
+    sne.!c2     c2, d.conntrack_id, r0;                                         \
     bcf         [c2], _inner_label0;                                            \
-    SCANNER_TS_CALC(d.timestamp)                                                \
+    SESSION_TS_CALC(d.timestamp)                                                \
 _inner_label0:;                                                                 \
     SESSION_INFO_NUM_SCANNABLES_CHECK_CF(c3, _next_tbl, _next_round,            \
                                          SESSION_KIVEC0_NUM_SCANNABLES)         \
@@ -621,8 +630,9 @@ _inner_label2:;                                                                 
 #define SESSION_LAST_ROUND_EXEC_e(_inner_label0, _no_more_session_alt,          \
                                   _expiry_kivec_check_e)                        \
     seq         c2, d.valid_flag, r0;                                           \
+    sne.!c2     c2, d.conntrack_id, r0;                                         \
     bcf         [c2], _inner_label0;                                            \
-    SCANNER_TS_CALC(d.timestamp)                                                \
+    SESSION_TS_CALC(d.timestamp)                                                \
 _inner_label0:;                                                                 \
     _no_more_session_alt                                                        \
     nop.c2.e;                                                                   \
@@ -633,7 +643,7 @@ _inner_label0:;                                                                 
  * Common code macros to be used per round per conntrack entry.
  *
  * NOTE: This code macro is deliberately written with a gap between the call
- * to SCANNER_TS_CALC() and the one to CONNTRACK_EXPIRY_CHECK_KIVEC() to reduce
+ * to CONNTRACK_TS_CALC() and the one to CONNTRACK_EXPIRY_CHECK_KIVEC() to reduce
  * MPU stalls in referencing the result of the divide instruction.
  */
  #define CONNTRACK_ROUND_EXEC_e(_next_tbl, _next_round, _next_pc,               \
@@ -642,7 +652,7 @@ _inner_label0:;                                                                 
     seq         c2, d.valid_flag, r0;                                           \
     bcf         [c2], _inner_label0;                                            \
     add         r_flow_type, d.flow_type, r0;                                   \
-    SCANNER_TS_CALC(d.timestamp)                                                \
+    CONNTRACK_TS_CALC(d.timestamp)                                              \
 _inner_label0:;                                                                 \
     CONNTRACK_INFO_NUM_SCANNABLES_CHECK_CF(c3, _next_tbl, _next_round,          \
                                            SESSION_KIVEC0_NUM_SCANNABLES)       \
@@ -661,7 +671,7 @@ _inner_label2:;                                                                 
     seq         c2, d.valid_flag, r0;                                           \
     bcf         [c2], _inner_label0;                                            \
     add         r_flow_type, d.flow_type, r0;                                   \
-    SCANNER_TS_CALC(d.timestamp)                                                \
+    CONNTRACK_TS_CALC(d.timestamp)                                              \
 _inner_label0:;                                                                 \
     _no_more_conntrack_alt                                                      \
     nop.c2.e;                                                                   \
@@ -811,6 +821,9 @@ _inner_label0:;                                                                 
 
 #define SCANNER_DB_DATA(_qid)                                                   \
     add         r_db_data, r0, _qid, DB_QID_SHFT;                               \
+
+#define SCANNER_DB_DATA_WITH_RING(_qid, _ring)                                  \
+    add         r_db_data, (_ring) << DB_RING_SHFT, _qid, DB_QID_SHFT;          \
 
 #define SCANNER_DB_ADDR(_lif, _qtype, _sched_wr, _upd)                          \
     addi        r_db_addr, r0, DB_ADDR_BASE +                                   \

@@ -353,7 +353,7 @@ public:
 
     enum ftl_qtype qtype(void) { return qtype_; }
     uint32_t qcount(void) { return qcount_; }
-    uint32_t qid_high(void) { return qid_high_; }
+    uint32_t qcount_actual(void) { return qcount_actual_; }
     uint32_t quiesce_qid(void) { return quiesce_qid_; }
     int64_t qid_qstate_addr(uint32_t qid);
     const mem_access_t *qid_qstate_access(uint32_t qid);
@@ -380,7 +380,7 @@ private:
     uint32_t                qcount_;
     uint32_t                qdepth;
     uint32_t                qdepth_mask;
-    uint32_t                qid_high_;
+    uint32_t                qcount_actual_;
     uint32_t                quiesce_qid_;
     uint32_t                quiescing   : 1,
                             unused      : 31;

@@ -137,6 +137,7 @@ int asicpd_hbm_table_entry_read(uint32_t tableid, uint32_t index,
 int asicpd_hbm_table_entry_write(uint32_t tableid, uint32_t index,
                                  uint8_t *hwentry, uint16_t entry_size);
 sdk_ret_t asicpd_scheduler_stats_get(scheduler_stats_t *sch_stats);
+bool asicpd_scheduler_timer_all_complete(void);
 sdk_ret_t asicpd_hbm_bw_get(hbm_bw_samples_t *hbm_bw_samples);
 sdk_ret_t asicpd_llc_setup(llc_counters_t *llc);
 sdk_ret_t asicpd_llc_get(llc_counters_t *llc);

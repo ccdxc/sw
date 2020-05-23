@@ -4,8 +4,12 @@ conntrack_table_clear_full 262555
 
 session_aging_init
 conntrack_aging_init
-#session_aging_force_expired_ts true
-#conntrack_aging_force_expired_ts true
+session_aging_force_expired_ts false
+conntrack_aging_force_expired_ts false
+session_aging_accel_control false
+conntrack_aging_accel_control false
+session_aging_tolerance_secs_set 0
+conntrack_aging_tolerance_secs_set 0
 
 session_aging_normal_tmo_set 9
 session_aging_accel_tmo_set 1
@@ -43,7 +47,5 @@ conntrack_aging_accel_control false
 
 conntrack_aging_fini
 session_aging_fini
-session_aging_force_expired_ts false
-conntrack_aging_force_expired_ts false
 
 skip_fte_flow_prog_set false

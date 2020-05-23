@@ -517,6 +517,37 @@ capri_txs_scheduler_stats_get (capri_txs_scheduler_stats_t *scheduler_stats)
     return SDK_RET_OK;
 }
 
+bool
+capri_txs_timer_all_complete (void)
+{
+#define TIMER_ALL_COMPLETE(push, pop, not_push, out_of_wheel)   \
+    ((uint64_t)(push) == ((uint64_t)(pop) +                     \
+                          (uint64_t)(not_push) +                \
+                          (uint64_t)(out_of_wheel)))            \
+
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
+    cap_txs_csr_t &txs_csr = cap0.txs.txs;
+
+    txs_csr.cnt_ftmr_push.read();
+    txs_csr.cnt_ftmr_pop.read();
+    txs_csr.cnt_ftmr_key_not_push.read();
+    txs_csr.cnt_ftmr_push_out_of_wheel.read();
+
+    txs_csr.cnt_stmr_push.read();
+    txs_csr.cnt_stmr_pop.read();
+    txs_csr.cnt_stmr_key_not_push.read();
+    txs_csr.cnt_stmr_push_out_of_wheel.read();
+
+    return TIMER_ALL_COMPLETE(txs_csr.cnt_ftmr_push.val().convert_to<uint64_t>(),
+                              txs_csr.cnt_ftmr_pop.val().convert_to<uint32_t>(),
+                              txs_csr.cnt_ftmr_key_not_push.val().convert_to<uint32_t>(),
+                              txs_csr.cnt_ftmr_push_out_of_wheel.val().convert_to<uint32_t>()) &&
+           TIMER_ALL_COMPLETE(txs_csr.cnt_stmr_push.val().convert_to<uint64_t>(),
+                              txs_csr.cnt_stmr_pop.val().convert_to<uint32_t>(),
+                              txs_csr.cnt_stmr_key_not_push.val().convert_to<uint32_t>(),
+                              txs_csr.cnt_stmr_push_out_of_wheel.val().convert_to<uint32_t>());
+}
+
 }    // namespace capri
 }    // namespace platform
 }    // namespace sdk

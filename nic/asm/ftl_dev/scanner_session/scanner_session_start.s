@@ -38,22 +38,37 @@ struct s0_tbl_session_start_d           d;
 
 scanner_session_start:
 
-    seq         c1, r7[0], r0
-    bcf         [c1], _scanner_ring_empty
+    SCANNER_DB_ADDR_SCHED_EVAL(HW_MPU_INTRINSIC_LIF,
+                               HW_MPU_TXDMA_INTRINSIC_QTYPE)
+.brbegin
+    brpri       r7[SCANNER_RING_MAX-1:0], [1, 0]
     add         r_qid, HW_MPU_TXDMA_INTRINSIC_QID, r0            // delay slot
     
+.brcase SCANNER_RING_NORMAL
+    
+    /*
+     * Consume ring slot and issue scheduler update eval
+     */                          
+    tblwr.f     d.ci_0, d.pi_0
+    SCANNER_DB_DATA_WITH_RING(r_qid, SCANNER_RING_NORMAL) 
+
+_session_start:
+    
+    memwr.dx    r_db_addr, r_db_data
+    phvwr       p.db_data_no_index_data, r_db_data.dx
+
     phvwrpair   p.session_kivec0_qstate_addr, HW_MPU_TXDMA_INTRINSIC_QSTATE_ADDR, \
                 p.session_kivec0_qtype, HW_MPU_TXDMA_INTRINSIC_QTYPE[0]
     phvwr       p.session_kivec7_lif, HW_MPU_INTRINSIC_LIF
-    SCANNER_DB_DATA(r_qid) 
-    phvwr       p.db_data_no_index_data, r_db_data.dx
     
-    SCANNER_DB_DATA_TIMER(HW_MPU_TXDMA_INTRINSIC_QTYPE,
-                          r_qid, SCANNER_POLLER_QFULL_REPOST_TICKS)
+    SCANNER_DB_DATA_TIMER_WITH_RING(HW_MPU_TXDMA_INTRINSIC_QTYPE,
+                                    r_qid, SCANNER_RING_TIMER,
+                                    SCANNER_POLLER_QFULL_REPOST_TICKS)
     phvwr       p.db_data_qfull_repost_ticks_data, r_db_data.dx
     
-    SCANNER_DB_DATA_TIMER(HW_MPU_TXDMA_INTRINSIC_QTYPE,
-                          r_qid, SCANNER_RANGE_EMPTY_RESCHED_TICKS)
+    SCANNER_DB_DATA_TIMER_WITH_RING(HW_MPU_TXDMA_INTRINSIC_QTYPE,
+                                    r_qid, SCANNER_RING_TIMER,
+                                    SCANNER_RANGE_EMPTY_RESCHED_TICKS)
     phvwr       p.db_data_range_empty_ticks_data, r_db_data.dx
     
     phvwr       p.poller_slot_data_scanner_qid, r_qid.wx
@@ -61,8 +76,9 @@ scanner_session_start:
     bcf         [c1], _scanner_cb_cfg_discard
     phvwr       p.poller_slot_data_scanner_qtype, HW_MPU_TXDMA_INTRINSIC_QTYPE // delay slot
     
-    SCANNER_DB_DATA_TIMER(HW_MPU_TXDMA_INTRINSIC_QTYPE,
-                          r_qid, d.scan_resched_ticks)
+    SCANNER_DB_DATA_TIMER_WITH_RING(HW_MPU_TXDMA_INTRINSIC_QTYPE,
+                                    r_qid, SCANNER_RING_TIMER,
+                                    d.scan_resched_ticks)
     phvwr       p.db_data_burst_ticks_data, r_db_data.dx
     phvwr       p.session_kivec8_resched_uses_slow_timer, \
                 d.resched_uses_slow_timer
@@ -89,10 +105,6 @@ scanner_session_start:
                           session_accel_tmo_load)
 _metrics_launch:
                           
-    /*
-     * Consume ring slot
-     */                          
-    tblwr.f     d.ci_0, d.pi_0
     DMA_CMD_PTR_INIT(dma_p2m_0)
     
     /*
@@ -103,23 +115,33 @@ _metrics_launch:
     SESSION_METRICS_SET(scan_invocations)
     SESSION_METRICS0_TABLE3_COMMIT_LAUNCH_e(HW_MPU_TXDMA_INTRINSIC_QSTATE_ADDR)
     
-/*
- * Discard due to control block configuration
- */
 _scanner_cb_cfg_discard:
  
+    /*
+     * Discard due to control block configuration
+     */
     SESSION_METRICS_SET(cb_cfg_discards)
     SESSION_SUMMARIZE_LAUNCH(0, HW_MPU_TXDMA_INTRINSIC_QSTATE_ADDR,
                              session_summarize)
     b           _metrics_launch
-    phvwr       p.session_kivec0_cb_cfg_discard, 1          // delay slot
+    phvwr       p.session_kivec0_cb_cfg_discard, 1      // delay slot
      
- 
-/*
- * Early exit: ring empty when entered
- */
-_scanner_ring_empty:
-
+.brcase SCANNER_RING_TIMER
+    
+    /*
+     * Consume ring slot and issue schedulder update eval (on branch)
+     */                          
+    SCANNER_DB_DATA_WITH_RING(r_qid, SCANNER_RING_TIMER) 
+    b           _session_start
+    tblwr.f     d.ci_1, d.pi_1                          // delay slot
+    
+.brcase SCANNER_RING_MAX
+    
+    /*
+     * Early exit: rings empty when entered
+     */
     phvwr.e     p.p4_intr_global_drop, 1
     CLEAR_TABLE0                                        // delay slot
+    
+.brend
     

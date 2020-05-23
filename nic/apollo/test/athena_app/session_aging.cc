@@ -60,7 +60,6 @@ flow_session_spec_init(pds_flow_session_spec_t *spec)
 {
     memset(spec, 0, sizeof(*spec));
     flow_session_key_init(&spec->key);
-    spec->data.conntrack_id = 1;
 }
 
 bool
@@ -199,6 +198,59 @@ session_populate_full(test_vparam_ref_t vparam)
     TEST_LOG_INFO("Session entries created: %u\n",
                   session_tolerance.create_id_map_size());
     return SESSION_CREATE_RET_VALIDATE(ret);
+}
+
+static void
+flow_cache_entry_clear(pds_flow_iter_cb_arg_t *arg)
+{
+    if (SESSION_RET_VALIDATE(pds_flow_cache_entry_delete(&arg->flow_key))) {
+        *((uint32_t *)arg->appctx) += 1;
+    }
+}
+
+bool
+flow_cache_table_clear_full(test_vparam_ref_t vparam)
+{
+    pds_flow_iter_cb_arg_t  arg = {0};
+    uint32_t                clear_count = 0;
+    pds_ret_t               ret;
+
+    arg.appctx = (void *)&clear_count;
+    ret = pds_flow_cache_entry_iterate(flow_cache_entry_clear, &arg);
+
+    TEST_LOG_INFO("Flow cache entries deleted: %u\n", clear_count);
+    return SESSION_RET_VALIDATE(ret);
+}
+
+bool
+session_and_cache_clear_full(test_vparam_ref_t vparam)
+{
+    pds_flow_session_key_t  key;
+    pds_flow_info_t         info = {0};
+    uint32_t                depth;
+    pds_ret_t               ret = PDS_RET_OK;
+
+    depth = vparam.expected_num(session_table_depth());
+    depth = std::min(depth, session_table_depth());
+
+    info.spec.data.index_type = PDS_FLOW_SPEC_INDEX_SESSION;
+    flow_session_key_init(&key);
+    for (key.session_info_id = 1;
+         key.session_info_id < depth;
+         key.session_info_id++) {
+
+        info.spec.data.index = key.session_info_id;
+        ret = pds_flow_cache_entry_delete_by_flow_info(&info);
+        if (!SESSION_DELETE_RET_VALIDATE(ret)) {
+            break;
+        }
+        ret = pds_flow_session_info_delete(&key);
+        if (!SESSION_DELETE_RET_VALIDATE(ret)) {
+            break;
+        }
+    }
+    TEST_LOG_INFO("Cleared %u entries\n", key.session_info_id);
+    return SESSION_DELETE_RET_VALIDATE(ret);
 }
 
 bool
@@ -426,7 +478,7 @@ session_aging_init(test_vparam_ref_t vparam)
 
         ret = pds_flow_age_sw_pollers_poll_control(true, session_aging_expiry_fn);
     }
-    if (SESSION_RET_VALIDATE(ret)) {
+    if (!hw() && SESSION_RET_VALIDATE(ret)) {
         ret = pds_flow_age_hw_scanners_start();
     }
     return SESSION_RET_VALIDATE(ret) && pollers_qcount && 
@@ -456,7 +508,8 @@ session_aging_fini(test_vparam_ref_t vparam)
     test_vparam_t   sim_vparam;
     pds_ret_t       ret;
 
-    ret = pds_flow_age_hw_scanners_stop(true);
+    ret = !hw() ? pds_flow_age_hw_scanners_stop(true) :
+                  PDS_RET_OK;
     if (SESSION_RET_VALIDATE(ret)) {
         ret = pds_flow_age_sw_pollers_poll_control(false, NULL);
     }

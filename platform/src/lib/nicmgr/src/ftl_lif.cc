@@ -37,6 +37,25 @@ hw_coreclk_ticks_to_time_ns(uint64_t ticks)
 }
 
 /*
+ * Workaround for txs scheduler bug #2: skip one qid for every 
+ * 512 consecutive queues.
+ */
+#define SCHED_WORKAROUND2_QCOUNT                    512
+
+static inline bool
+sched_workaround2_qid_exclude(uint32_t qcount,
+                              uint32_t qid)
+{
+#ifndef ELBA
+    if ((qcount >= SCHED_WORKAROUND2_QCOUNT) &&
+        ((qid % SCHED_WORKAROUND2_QCOUNT) == 0)) {
+        return true;
+    }
+#endif
+    return false;
+}
+
+/*
  * rounded up log2
  */
 static uint32_t
@@ -524,10 +543,13 @@ static ftl_lif_ordered_event_t lif_ordered_ev_table[FTL_LIF_ST_MAX][FTL_LIF_EV_M
 static bool ftl_lif_fsm_verbose;
 
 static void ftl_lif_state_machine_build(void);
+static bool poller_cb_activated(const mem_access_t *access);
 static void poller_cb_activate(const mem_access_t *access);
 static void poller_cb_deactivate(const mem_access_t *access);
+static bool scanner_session_cb_activated(const mem_access_t *access);
 static void scanner_session_cb_activate(const mem_access_t *access);
 static void scanner_session_cb_deactivate(const mem_access_t *access);
+static bool mpu_timestamp_cb_activated(const mem_access_t *access);
 static void mpu_timestamp_cb_activate(const mem_access_t *access);
 static void mpu_timestamp_cb_deactivate(const mem_access_t *access);
 static const char *lif_state_str(ftl_lif_state_t state);
@@ -649,15 +671,15 @@ FtlLif::FtlLif(FtlDev& ftl_dev,
 
 FtlLif::~FtlLif()
 {
-    ftl_lif_devcmd_ctx_t    devcmd_ctx;
-    lif_reset_cmd_t         devcmd_reset = {0};
+    ftl_devcmd_t            req = {0};
+    ftl_devcmd_cpl_t        rsp = {0};
+    ftl_status_code_t       status;
 
-    devcmd_ctx.req = (ftl_devcmd_t *)&devcmd_reset;
-    devcmd_reset.quiesce_check = true;
-    devcmd_ctx.status = FTL_RC_EAGAIN;
-    while (devcmd_ctx.status == FTL_RC_EAGAIN) {
-        ftl_lif_state_machine(FTL_LIF_EV_DESTROY, devcmd_ctx);
-    }
+    req.lif_reset.opcode = FTL_DEVCMD_OPCODE_LIF_RESET;
+    req.lif_reset.quiesce_check = true;
+    do {
+        status = CmdHandler(&req, nullptr, &rsp, nullptr);
+    } while (status == FTL_RC_EAGAIN);
 }
 
 void
@@ -1103,14 +1125,15 @@ FtlLif::ftl_lif_reset_action(ftl_lif_event_t event,
      * Special handling for the case where lif_reset is
      * called before scanners are initialized.
      */
-    if (session_scanners_ctl.empty_qstate_access()      ||
-        conntrack_scanners_ctl.empty_qstate_access()    ||
+    if (session_scanners_ctl.empty_qstate_access()      &&
+        conntrack_scanners_ctl.empty_qstate_access()    &&
         mpu_timestamp_ctl.empty_qstate_access()) {
         return FTL_LIF_EV_QUEUES_STOP_COMPLETE;
     }
     session_scanners_ctl.stop();
     conntrack_scanners_ctl.stop();
     mpu_timestamp_ctl.stop();
+    pollers_ctl.stop();
 
     if (cmd->quiesce_check) {
         fsm_ctx.ts.time_expiry_set(FTL_LIF_SCANNERS_QUIESCE_TIME_US);
@@ -1254,24 +1277,29 @@ FtlLif::ftl_lif_scanners_quiesce_action(ftl_lif_event_t event,
     FTL_LIF_FSM_VERBOSE_LOG();
 
     devcmd_ctx.status = FTL_RC_EAGAIN;
-    if (session_scanners_ctl.quiesce() && conntrack_scanners_ctl.quiesce()) {
+    if (session_scanners_ctl.quiesce()      &&
+        conntrack_scanners_ctl.quiesce()    &&
+        mpu_timestamp_ctl.quiesce()         &&
+        sdk::asic::pd::asicpd_scheduler_timer_all_complete()) {
         quiesce_complete = true;
     }
 
     if (!quiesce_complete && fsm_ctx.ts.time_expiry_check()) {
         NIC_LOG_DEBUG("{}: scanners quiesce timed out", LifNameGet());
-        NIC_LOG_DEBUG("    last session qid quiesced: {} qid_high: {}",
+        NIC_LOG_DEBUG("    last session qid quiesced: {} qcount_actual: {}",
                       session_scanners_ctl.quiesce_qid(),
-                      session_scanners_ctl.qid_high());
-        NIC_LOG_DEBUG("    last conntrack qid quiesced: {} qid_high: {}",
+                      session_scanners_ctl.qcount_actual());
+        NIC_LOG_DEBUG("    last conntrack qid quiesced: {} qcount_actual: {}",
                       conntrack_scanners_ctl.quiesce_qid(),
-                      conntrack_scanners_ctl.qid_high());
+                      conntrack_scanners_ctl.qcount_actual());
         quiesce_complete = true;
     }
 
     if (quiesce_complete) {
+        pollers_ctl.stop();
         session_scanners_ctl.quiesce_idle();
         conntrack_scanners_ctl.quiesce_idle();
+        mpu_timestamp_ctl.quiesce_idle();
         return FTL_LIF_EV_QUEUES_STOP_COMPLETE;
     }
 
@@ -1671,7 +1699,7 @@ ftl_lif_queues_ctl_t::ftl_lif_queues_ctl_t(FtlLif& lif,
     qcount_(qcount),
     qdepth(0),
     qdepth_mask(0),
-    qid_high_(0),
+    qcount_actual_(0),
     quiescing(false)
 {
 }
@@ -1685,6 +1713,8 @@ ftl_lif_queues_ctl_t::init(const scanners_init_cmd_t *cmd)
 {
     scanner_init_single_cmd_t   single_cmd = {0};
     uint32_t                    curr_scan_table_sz;
+    uint32_t                    single_scan_range_sz;
+    uint32_t                    running_scan_sz = 0;
     ftl_status_code_t           status;
 
     NIC_LOG_DEBUG("{}: qtype {} qcount {} cos_override {} cos {}",
@@ -1701,7 +1731,7 @@ ftl_lif_queues_ctl_t::init(const scanners_init_cmd_t *cmd)
 
     qstate_access.clear();
     wring_access.clear();
-    qid_high_ = 0;
+    qcount_actual_ = cmd->qcount;
 
     single_cmd.cos = cmd->cos;
     single_cmd.cos_override = cmd->cos_override;
@@ -1719,23 +1749,32 @@ ftl_lif_queues_ctl_t::init(const scanners_init_cmd_t *cmd)
     /*
      * poller queue depth must be a power of 2
      */
-    assert(is_power_of_2(cmd->poller_qdepth));
+    assert(is_power_of_2(cmd->poller_qdepth)    &&
+           is_power_of_2(qcount_actual_)        &&
+           cmd->poller_qcount);
     single_cmd.poller_qdepth_shft = log_2(cmd->poller_qdepth);
 
     /*
-     * Partition out the entire table space to
-     * the available number of queues
+     * Partition out the entire table space to the available number of queues.
      */
-    assert(cmd->qcount && cmd->poller_qcount);
-    single_cmd.scan_range_sz = std::max((uint32_t)1,
-                                        cmd->scan_table_sz / cmd->qcount);
+    single_scan_range_sz = std::max((uint32_t)1,
+                                    cmd->scan_table_sz / cmd->qcount);
     curr_scan_table_sz = cmd->scan_table_sz;
 
     single_cmd.index = 0;
     single_cmd.poller_qid = 0;
     while ((single_cmd.index < cmd->qcount) && curr_scan_table_sz) {
         single_cmd.scan_range_sz = std::min(curr_scan_table_sz,
-                                            single_cmd.scan_range_sz);
+                                            single_scan_range_sz);
+        if (sched_workaround2_qid_exclude(cmd->qcount, single_cmd.index)) {
+            single_cmd.scan_range_sz = 0;
+        } else if (single_cmd.index == (cmd->qcount - 1)) {
+
+            /*
+             * The last queue gets all the left over entries.
+             */
+            single_cmd.scan_range_sz = cmd->scan_table_sz - running_scan_sz;
+        }
         status = scanner_init_single(&single_cmd);
         if (status != FTL_RC_SUCCESS) {
             return status;
@@ -1743,6 +1782,7 @@ ftl_lif_queues_ctl_t::init(const scanners_init_cmd_t *cmd)
 
         curr_scan_table_sz -= single_cmd.scan_range_sz;
         single_cmd.scan_id_base += single_cmd.scan_range_sz;
+        running_scan_sz += single_cmd.scan_range_sz;
 
         single_cmd.index++;
         single_cmd.poller_qid++;
@@ -1751,8 +1791,8 @@ ftl_lif_queues_ctl_t::init(const scanners_init_cmd_t *cmd)
         }
     }
 
-    NIC_LOG_DEBUG("{}: qtype {} qid_high {}", lif.LifNameGet(),
-                  cmd->qtype, qid_high_);
+    NIC_LOG_DEBUG("{}: qtype {} qcount_actual {} running_scan_sz {}",
+                  lif.LifNameGet(), cmd->qtype, qcount_actual_, running_scan_sz);
     return FTL_RC_SUCCESS;
 }
 
@@ -1768,7 +1808,7 @@ ftl_lif_queues_ctl_t::init(const pollers_init_cmd_t *cmd)
                   cmd->wrings_total_sz);
     qstate_access.clear();
     wring_access.clear();
-    qid_high_ = 0;
+    qcount_actual_ = cmd->qcount;
     wrings_base_addr = cmd->wrings_base_addr;
     slot_data_sz = POLLER_SLOT_DATA_BYTES;
     qdepth = cmd->qdepth;
@@ -1808,8 +1848,8 @@ ftl_lif_queues_ctl_t::init(const pollers_init_cmd_t *cmd)
         single_cmd.index++;
     }
 
-    NIC_LOG_DEBUG("{}: qtype {} qid_high {}", lif.LifNameGet(),
-                  cmd->qtype, qid_high_);
+    NIC_LOG_DEBUG("{}: qtype {} qcount_actual {}", lif.LifNameGet(),
+                  cmd->qtype, qcount_actual_);
     return FTL_RC_SUCCESS;
 }
 
@@ -1826,7 +1866,7 @@ ftl_lif_queues_ctl_t::init(const mpu_timestamp_init_cmd_t *cmd)
                   lif.LifNameGet(), cmd->qtype, cmd->cos_override, cmd->cos);
     qstate_access.clear();
     wring_access.clear();
-    qid_high_ = 0;
+    qcount_actual_ = 1;
 
     qstate_addr = qid_qstate_addr(0);
     if (qstate_addr < 0) {
@@ -1856,12 +1896,12 @@ ftl_lif_queues_ctl_t::init(const mpu_timestamp_init_cmd_t *cmd)
             return status;
         }
 
-        qstate.qstate_1ring.pc_offset = pc_offset;
-        qstate.qstate_1ring.eval_last = 1 << 0;
-        qstate.qstate_1ring.cosB = cmd->cos_override ? cmd->cos : lif.cosB;
-        qstate.qstate_1ring.host_wrings = 0;
-        qstate.qstate_1ring.total_wrings = 1;
-        qstate.qstate_1ring.pid = cmd->pid;
+        qstate.qstate_2ring.pc_offset = pc_offset;
+        qstate.qstate_2ring.eval_last = 1 << MPU_TIMESTAMP_RING_TIMER;
+        qstate.qstate_2ring.cosB = cmd->cos_override ? cmd->cos : lif.cosB;
+        qstate.qstate_2ring.host_wrings = 0;
+        qstate.qstate_2ring.total_wrings = MPU_TIMESTAMP_RING_MAX;
+        qstate.qstate_2ring.pid = cmd->pid;
         qs_access.small_write(0, (uint8_t *)&qstate, sizeof(qstate));
         qs_access.cache_invalidate();
     }
@@ -1874,6 +1914,7 @@ ftl_lif_queues_ctl_t::init(const mpu_timestamp_init_cmd_t *cmd)
 ftl_status_code_t
 ftl_lif_queues_ctl_t::start(void)
 {
+    bool                (*cb_activated)(const mem_access_t *access);
     void                (*cb_activate)(const mem_access_t *access);
     const mem_access_t  *qstate_access;
 
@@ -1881,32 +1922,41 @@ ftl_lif_queues_ctl_t::start(void)
 
     case FTL_QTYPE_SCANNER_SESSION:
     case FTL_QTYPE_SCANNER_CONNTRACK:
+        cb_activated = &scanner_session_cb_activated;
         cb_activate = &scanner_session_cb_activate;
         break;
 
     case FTL_QTYPE_MPU_TIMESTAMP:
+        cb_activated = &mpu_timestamp_cb_activated;
         cb_activate = &mpu_timestamp_cb_activate;
         break;
 
     case FTL_QTYPE_POLLER:
+        cb_activated = &poller_cb_activated;
         cb_activate = &poller_cb_activate;
         break;
 
     default:
+        cb_activated = nullptr;
         cb_activate = nullptr;
         break;
     }
 
-    if (cb_activate && qcount_) {
+    if (cb_activated && cb_activate && qcount_actual_) {
 
-        for (uint32_t qid = 0; qid <= qid_high_; qid++) {
+        for (uint32_t qid = 0; qid < qcount_actual_; qid++) {
+            if (sched_workaround2_qid_exclude(qcount_actual_, qid)) {
+                continue;
+            }
             qstate_access = qid_qstate_access(qid);
             if (!qstate_access) {
                 return FTL_RC_EFAULT;
             }
 
-            (*cb_activate)(qstate_access);
-            sched_start_single(qid);
+            if (!(*cb_activated)(qstate_access)) {
+                (*cb_activate)(qstate_access);
+                sched_start_single(qid);
+            }
         }
     }
 
@@ -1918,9 +1968,9 @@ ftl_lif_queues_ctl_t::sched_start_single(uint32_t qid)
 {
     uint32_t        db_data;
 
-    if (qid >= qcount()) {
+    if (qid >= qcount_actual_) {
         NIC_LOG_ERR("{}:qid {} exceeds qcount {}",
-                    lif.LifNameGet(), qid, qcount());
+                    lif.LifNameGet(), qid, qcount_actual_);
         return FTL_RC_EQID;
     }
 
@@ -1977,7 +2027,10 @@ ftl_lif_queues_ctl_t::stop(void)
 
     if (cb_deactivate && qcount_) {
 
-        for (uint32_t qid = 0; qid <= qid_high_; qid++) {
+        for (uint32_t qid = 0; qid < qcount_actual_; qid++) {
+            if (sched_workaround2_qid_exclude(qcount_actual_, qid)) {
+                continue;
+            }
             qstate_access = qid_qstate_access(qid);
             if (!qstate_access) {
 
@@ -2006,9 +2059,9 @@ ftl_lif_queues_ctl_t::sched_stop_single(uint32_t qid)
 {
     uint32_t        db_data;
 
-    if (qid >= qcount()) {
+    if (qid >= qcount_actual_) {
         NIC_LOG_ERR("{}:qid {} exceeds qcount {}",
-                    lif.LifNameGet(), qid, qcount());
+                    lif.LifNameGet(), qid, qcount_actual_);
         return FTL_RC_EQID;
     }
 
@@ -2116,7 +2169,7 @@ bool
 ftl_lif_queues_ctl_t::quiesce(void)
 {
     const mem_access_t  *qstate_access;
-    qstate_1ring_cb_t   qstate_1ring_cb;
+    qstate_2ring_cb_t   qstate_2ring_cb;
 
     if (!quiescing) {
         quiescing = true;
@@ -2129,19 +2182,25 @@ ftl_lif_queues_ctl_t::quiesce(void)
     case FTL_QTYPE_SCANNER_CONNTRACK:
     case FTL_QTYPE_MPU_TIMESTAMP:
 
-        for (; qid_high_ && (quiesce_qid_ <= qid_high_); quiesce_qid_++) {
+        for (; quiesce_qid_ < qcount_actual_; quiesce_qid_++) {
+            if (sched_workaround2_qid_exclude(qcount_actual_, quiesce_qid_)) {
+                continue;
+            }
             qstate_access = qid_qstate_access(quiesce_qid_);
             if (!qstate_access) {
                 continue;
             }
-            qstate_access->small_read(offsetof(qstate_1ring_cb_t, p_ndx0),
-                                      (uint8_t *)&qstate_1ring_cb.p_ndx0,
-                                      sizeof(qstate_1ring_cb.p_ndx0) +
-                                      sizeof(qstate_1ring_cb.c_ndx0));
+            qstate_access->small_read(offsetof(qstate_2ring_cb_t, p_ndx0),
+                                      (uint8_t *)&qstate_2ring_cb.p_ndx0,
+                                      sizeof(qstate_2ring_cb.p_ndx0) +
+                                      sizeof(qstate_2ring_cb.c_ndx0) +
+                                      sizeof(qstate_2ring_cb.p_ndx1) +
+                                      sizeof(qstate_2ring_cb.c_ndx1));
             /*
              * As part of deactivate, MPU would set c_ndx = p_ndx
              */
-            if (qstate_1ring_cb.c_ndx0 != qstate_1ring_cb.p_ndx0) {
+            if ((qstate_2ring_cb.c_ndx0 != qstate_2ring_cb.p_ndx0) ||
+                (qstate_2ring_cb.c_ndx1 != qstate_2ring_cb.p_ndx1)) {
                 return false;
             }
         }
@@ -2181,7 +2240,10 @@ ftl_lif_queues_ctl_t::metrics_get(lif_attr_metrics_t *metrics)
         curr_range_sz = 0;
         avg_count = 0;
 
-        for (uint32_t qid = 0; qid <= qid_high_; qid++) {
+        for (uint32_t qid = 0; qid < qcount_actual_; qid++) {
+            if (sched_workaround2_qid_exclude(qcount_actual_, qid)) {
+                continue;
+            }
             qstate_access = qid_qstate_access(qid);
             if (!qstate_access) {
 
@@ -2290,9 +2352,9 @@ ftl_lif_queues_ctl_t::scanner_init_single(const scanner_init_single_cmd_t *cmd)
     ftl_status_code_t       status;
     uint8_t                 pc_offset;
 
-    if (qid >= qcount()) {
+    if (qid >= qcount_actual_) {
         NIC_LOG_ERR("{}: qid {} exceeds max {}", lif.LifNameGet(),
-                    qid, qcount());
+                    qid, qcount_actual_);
         return FTL_RC_EQID;
     }
 
@@ -2324,18 +2386,17 @@ ftl_lif_queues_ctl_t::scanner_init_single(const scanner_init_single_cmd_t *cmd)
      */
     qs_access.reset(qstate_addr, sizeof(scanner_session_qstate_t));
 
-    qid_high_ = std::max(qid_high_, qid);
     if (sdk::asic::asic_is_hard_init()) {
         status = pgm_pc_offset_get("scanner_session_stage0", &pc_offset);
         if (status != FTL_RC_SUCCESS) {
             return status;
         }
-        qstate.cb.qstate_1ring.pc_offset = pc_offset;
-        qstate.cb.qstate_1ring.eval_last = 1 << 0;
-        qstate.cb.qstate_1ring.cosB = cmd->cos_override ? cmd->cos : lif.cosB;
-        qstate.cb.qstate_1ring.host_wrings = 0;
-        qstate.cb.qstate_1ring.total_wrings = 1;
-        qstate.cb.qstate_1ring.pid = cmd->pid;
+        qstate.cb.qstate_2ring.pc_offset = pc_offset;
+        qstate.cb.qstate_2ring.eval_last = 1 << SCANNER_RING_TIMER;
+        qstate.cb.qstate_2ring.cosB = cmd->cos_override ? cmd->cos : lif.cosB;
+        qstate.cb.qstate_2ring.host_wrings = 0;
+        qstate.cb.qstate_2ring.total_wrings = SCANNER_RING_MAX;
+        qstate.cb.qstate_2ring.pid = cmd->pid;
 
         qstate.cb.normal_tmo_cb_addr = lif.normal_age_access().pa();
         qstate.cb.accel_tmo_cb_addr = lif.accel_age_access().pa();
@@ -2345,7 +2406,6 @@ ftl_lif_queues_ctl_t::scanner_init_single(const scanner_init_single_cmd_t *cmd)
         /*
          * burst size may be zero but range size must be > 0
          */
-        assert(cmd->scan_range_sz);
         qstate.fsm.scan_range_sz = cmd->scan_range_sz;
         if (cmd->scan_burst_sz) {
 
@@ -2389,9 +2449,9 @@ ftl_lif_queues_ctl_t::poller_init_single(const poller_init_single_cmd_t *cmd)
     mem_access_t            wr_access(lif);
     poller_qstate_t         qstate = {0};
 
-    if (qid >= qcount()) {
+    if (qid >= qcount_actual_) {
         NIC_LOG_ERR("{}: qid {} exceeds max {}", lif.LifNameGet(),
-                    qid, qcount());
+                    qid, qcount_actual_);
         return FTL_RC_EQID;
     }
 
@@ -2406,7 +2466,6 @@ ftl_lif_queues_ctl_t::poller_init_single(const poller_init_single_cmd_t *cmd)
      */
     qs_access.reset(qstate_addr, sizeof(poller_qstate_t));
 
-    qid_high_ = std::max(qid_high_, qid);
     if (sdk::asic::asic_is_hard_init()) {
         qstate.qstate_1ring.host_wrings = 0;
         qstate.qstate_1ring.total_wrings = 1;
@@ -2432,7 +2491,7 @@ ftl_lif_queues_ctl_t::qid_qstate_addr(uint32_t qid)
 {
     int64_t     qstate_addr;
 
-    qstate_addr = qid < qcount() ?
+    qstate_addr = qid < qcount_actual_ ?
                   lif.pd->lm_->get_lif_qstate_addr(lif.LifIdGet(), qtype(), qid) :
                   -1;
     if (qstate_addr < 0) {
@@ -2489,6 +2548,15 @@ ftl_lif_queues_ctl_t::pgm_pc_offset_get(const char *pc_jump_label,
 /*
  * Miscelaneous utility functions
  */
+static bool
+poller_cb_activated(const mem_access_t *access)
+{
+    /*
+     * SW queues don't use cb_activate
+     */
+    return true;
+}
+
 static void
 poller_cb_activate(const mem_access_t *access)
 {
@@ -2515,6 +2583,17 @@ poller_cb_deactivate(const mem_access_t *access)
                         (uint8_t *)&qstate_1ring_cb.c_ndx0,
                         sizeof(qstate_1ring_cb.c_ndx0));
     access->cache_invalidate();
+}
+
+static bool
+scanner_session_cb_activated(const mem_access_t *access)
+{
+    scanner_session_qstate_t    qstate = {0};
+
+    access->small_read(0, (uint8_t *)&qstate, sizeof(qstate));
+    return (qstate.cb.cb_activate == SCANNER_SESSION_CB_ACTIVATE) &&
+           (qstate.fsm.cb_activate == SCANNER_SESSION_CB_ACTIVATE) &&
+           (qstate.summarize.cb_activate == SCANNER_SESSION_CB_ACTIVATE);
 }
 
 static void
@@ -2558,10 +2637,20 @@ scanner_session_cb_deactivate(const mem_access_t *access)
     access->cache_invalidate();
 }
 
+static bool
+mpu_timestamp_cb_activated(const mem_access_t *access)
+{
+    mpu_timestamp_qstate_t  qstate = {0};
+
+    access->small_read(offsetof(mpu_timestamp_qstate_t, cb_activate),
+                       (uint8_t *)&qstate.cb_activate, sizeof(qstate.cb_activate));
+    return qstate.cb_activate == MPU_TIMESTAMP_CB_ACTIVATE;
+}
+
 static void
 mpu_timestamp_cb_activate(const mem_access_t *access)
 {
-    scanner_session_cb_activate_t   activate = SCANNER_SESSION_CB_ACTIVATE;
+    scanner_session_cb_activate_t   activate = MPU_TIMESTAMP_CB_ACTIVATE;
 
     access->small_write(offsetof(mpu_timestamp_qstate_t, cb_activate),
                         (uint8_t *)&activate, sizeof(activate));
@@ -2572,7 +2661,7 @@ static void
 mpu_timestamp_cb_deactivate(const mem_access_t *access)
 {
     scanner_session_cb_activate_t   deactivate =
-            (scanner_session_cb_activate_t)~SCANNER_SESSION_CB_ACTIVATE;
+            (scanner_session_cb_activate_t)~MPU_TIMESTAMP_CB_ACTIVATE;
 
     access->small_write(offsetof(mpu_timestamp_qstate_t, cb_activate),
                         (uint8_t *)&deactivate, sizeof(deactivate));

@@ -9,6 +9,7 @@ header_type scanner_session_cb_t {
     fields {
         CAPRI_QSTATE_HEADER_COMMON
         CAPRI_QSTATE_HEADER_RING(0)
+        CAPRI_QSTATE_HEADER_RING(1)
 
         /*
          * NOTE: cb is programmed by nicmgr and would work best when
@@ -18,19 +19,19 @@ header_type scanner_session_cb_t {
         normal_tmo_cb_addr              : 64;
         accel_tmo_cb_addr               : 64;
         resched_uses_slow_timer         : 8;
-        pad                             : 232;
+        pad                             : 200;
         cb_activate                     : 16;  // must be last in CB
     }
 }
 
 #define SCANNER_SESSION_CB_DATA                                                 \
     rsvd, cosA, cosB, cos_sel, eval_last,                                       \
-    host, total, pid, pi_0, ci_0,                                               \
+    host, total, pid, pi_0, ci_0, pi_1, ci_1,                                   \
     scan_resched_ticks, normal_tmo_cb_addr, accel_tmo_cb_addr,                  \
     resched_uses_slow_timer, pad, cb_activate                                   \
     
 #define SCANNER_SESSION_CB_PRAGMA                                               \
-@pragma little_endian pi_0 ci_0                                                 \
+@pragma little_endian pi_0 ci_0 pi_1 ci_1                                       \
     scan_resched_time normal_tmo_cb_addr accel_tmo_cb_addr cb_activate          \
 
 #define SCANNER_SESSION_CB_USE(scratch)                                         \
@@ -44,6 +45,8 @@ header_type scanner_session_cb_t {
     modify_field(scratch.pid, pid);                                             \
     modify_field(scratch.pi_0, pi_0);                                           \
     modify_field(scratch.ci_0, ci_0);                                           \
+    modify_field(scratch.pi_1, pi_1);                                           \
+    modify_field(scratch.ci_1, ci_1);                                           \
     modify_field(scratch.scan_resched_ticks, scan_resched_ticks);               \
     modify_field(scratch.normal_tmo_cb_addr, normal_tmo_cb_addr);               \
     modify_field(scratch.accel_tmo_cb_addr, accel_tmo_cb_addr);                 \
@@ -182,21 +185,22 @@ header_type mpu_timestamp_cb_t {
     fields {
         CAPRI_QSTATE_HEADER_COMMON
         CAPRI_QSTATE_HEADER_RING(0)
+        CAPRI_QSTATE_HEADER_RING(1)
         timestamp                       : 64;
         num_updates                     : 64;
-        pad                             : 272;
+        pad                             : 240;
         cb_activate                     : 16;  // must be last in CB
     }
 }
 
 #define MPU_TIMESTAMP_CB_DATA                                                   \
     rsvd, cosA, cosB, cos_sel, eval_last,                                       \
-    host, total, pid, pi_0, ci_0,                                               \
+    host, total, pid, pi_0, ci_0, pi_1, ci_1,                                   \
     timestamp, num_updates,                                                     \
     pad, cb_activate                                                            \
     
 #define MPU_TIMESTAMP_CB_PRAGMA                                                 \
-@pragma little_endian pi_0 ci_0                                                 \
+@pragma little_endian pi_0 ci_0 pi_1 ci_1                                       \
     timestamp num_updates cb_activate                                           \
 
 #define MPU_TIMESTAMP_CB_USE(scratch)                                           \
@@ -210,6 +214,8 @@ header_type mpu_timestamp_cb_t {
     modify_field(scratch.pid, pid);                                             \
     modify_field(scratch.pi_0, pi_0);                                           \
     modify_field(scratch.ci_0, ci_0);                                           \
+    modify_field(scratch.pi_1, pi_1);                                           \
+    modify_field(scratch.ci_1, ci_1);                                           \
     modify_field(scratch.timestamp, timestamp);                                 \
     modify_field(scratch.num_updates, num_updates);                             \
     modify_field(scratch.pad, pad);                                             \
@@ -440,7 +446,7 @@ header_type conntrack_info_d {
         valid_flag                      : 1;
         flow_type                       : 2;
         flow_state                      : 4;
-        timestamp                       : 18;
+        timestamp                       : 24;
     }
 }
 

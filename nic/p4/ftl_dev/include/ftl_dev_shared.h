@@ -49,6 +49,13 @@
 #define FTL_DEV_QTYPE_MPU_TIMESTAMP             3
 
 /*
+ * Scanner queue rings
+ */
+#define SCANNER_RING_NORMAL                     0
+#define SCANNER_RING_TIMER                      1
+#define SCANNER_RING_MAX                        2
+ 
+/*
  * Session Info (P4 session_info_t)
  */
 #define SESSION_INFO_BYTES                      64     // in bytes
@@ -84,6 +91,13 @@
 #define MPU_TIMESTAMP_CB_TABLE_BYTES_SHFT       6
 #define MPU_TIMESTAMP_CB_TABLE_MULTIPLE         (MPU_TIMESTAMP_CB_TABLE_BYTES_SHFT - \
                                                 HW_CB_SINGLE_BYTES_SHFT + 1)
+
+#define MPU_TIMESTAMP_RING_NORMAL               0
+#define MPU_TIMESTAMP_RING_TIMER                1
+#define MPU_TIMESTAMP_RING_MAX                  2
+
+#define MPU_TIMESTAMP_CB_ACTIVATE               0x1eda
+
 /*
  * Poller Control Block size
  */
@@ -189,7 +203,7 @@
  * 0.5 sec or less.
  */
 #define SCANNER_RANGE_EMPTY_RESCHED_TIMER       ASIC_MEM_SLOW_TIMER_START
-#define SCANNER_RANGE_EMPTY_RESCHED_TICKS       200  // 200 x 1.2ms
+#define SCANNER_RANGE_EMPTY_RESCHED_TICKS       50   // 50 x 1.2ms
 
 /*
  * Timestamp is in clock ticks with clock speed of 833Mhz (Capri), or
@@ -206,7 +220,15 @@
 #define MPU_SESSION_TIMESTAMP_BITS              18
 #define MPU_SESSION_TIMESTAMP_MSB               (MPU_SESSION_TIMESTAMP_LSB + \
                                                  MPU_SESSION_TIMESTAMP_BITS - 1)
-#define MPU_SESSION_TIMESTAMP_MASK              ((1 << MPU_SESSION_TIMESTAMP_BITS) - 1)
+#define MPU_SESSION_TIMESTAMP_MAX               (1 << MPU_SESSION_TIMESTAMP_BITS)
+#define MPU_SESSION_TIMESTAMP_MASK              (MPU_SESSION_TIMESTAMP_MAX - 1)
+
+#define MPU_CONNTRACK_TIMESTAMP_LSB             23
+#define MPU_CONNTRACK_TIMESTAMP_BITS            24
+#define MPU_CONNTRACK_TIMESTAMP_MSB             (MPU_CONNTRACK_TIMESTAMP_LSB + \
+                                                 MPU_CONNTRACK_TIMESTAMP_BITS - 1)
+#define MPU_CONNTRACK_TIMESTAMP_MAX             (1 << MPU_CONNTRACK_TIMESTAMP_BITS)
+#define MPU_CONNTRACK_TIMESTAMP_MASK            (MPU_CONNTRACK_TIMESTAMP_MAX - 1)
 
 /*
  * MPU timestamp rescheduling interval and undervalue, i.e., number of ticks
@@ -241,25 +263,36 @@ static inline uint32_t
 scanner_session_timestamp_diff(uint32_t session_ts_end,
                                uint32_t session_ts_start)
 {
-    return (session_ts_end - session_ts_start) &
-           MPU_SESSION_TIMESTAMP_MASK;
+    session_ts_end &= MPU_SESSION_TIMESTAMP_MASK;
+    session_ts_start &= MPU_SESSION_TIMESTAMP_MASK;
+
+    return session_ts_end < session_ts_start ?
+           MPU_SESSION_TIMESTAMP_MAX - session_ts_start + session_ts_end :
+           session_ts_end - session_ts_start;
 }
-/*
- * For the time being, conntrack timestamp uses the same format as
- * session timestamp.
- */
+
 static inline uint32_t
 scanner_conntrack_timestamp(uint64_t mpu_timestamp,
                             bool underage_adjust = false)
 {
-    return scanner_session_timestamp(mpu_timestamp, underage_adjust);
+    uint32_t ts = (uint32_t)(mpu_timestamp >> MPU_CONNTRACK_TIMESTAMP_LSB);
+
+    if (underage_adjust) {
+        ts += MPU_TIMESTAMP_UNDERVALUE_TICKS;
+    }
+    return ts & MPU_CONNTRACK_TIMESTAMP_MASK;
 }
 
 static inline uint32_t
 scanner_conntrack_timestamp_diff(uint32_t conntrack_ts_end,
                                  uint32_t conntrack_ts_start)
 {
-    return scanner_session_timestamp_diff(conntrack_ts_end, conntrack_ts_start);
+    conntrack_ts_end &= MPU_CONNTRACK_TIMESTAMP_MASK;
+    conntrack_ts_start &= MPU_CONNTRACK_TIMESTAMP_MASK;
+
+    return conntrack_ts_end < conntrack_ts_start ?
+           MPU_CONNTRACK_TIMESTAMP_MAX - conntrack_ts_start + conntrack_ts_end :
+           conntrack_ts_end - conntrack_ts_start;
 }
 
 /**
@@ -281,17 +314,37 @@ typedef struct {
 } __attribute__((packed)) qstate_1ring_cb_t;
 
 /**
+ * qstate_2ring_cb_t - Standard qstate control block, with 2 set of
+ *                     ring inddices
+ */
+typedef struct {
+    uint8_t                 pc_offset;
+    uint8_t                 rsvd0;
+    uint8_t                 cosA            : 4,
+                            cosB            : 4;
+    uint8_t                 cos_sel;
+    uint8_t                 eval_last;
+    uint8_t                 host_wrings     : 4,
+                            total_wrings    : 4;
+    uint16_t                pid;
+    uint16_t                p_ndx0;
+    uint16_t                c_ndx0;
+    uint16_t                p_ndx1;
+    uint16_t                c_ndx1;
+} __attribute__((packed)) qstate_2ring_cb_t;
+
+/**
  * scanner_session_cb_t - Scanner Session control block for stage 0
  */
 typedef uint16_t            scanner_session_cb_activate_t;
 
 typedef struct {
-    qstate_1ring_cb_t       qstate_1ring;
+    qstate_2ring_cb_t       qstate_2ring;
     uint32_t                scan_resched_ticks;
     uint64_t                normal_tmo_cb_addr;
     uint64_t                accel_tmo_cb_addr;
     uint8_t                 resched_uses_slow_timer;
-    uint8_t                 pad[29];
+    uint8_t                 pad[25];
     scanner_session_cb_activate_t cb_activate;  // must be last in CB
 } __attribute__((packed)) scanner_session_cb_t;
 
@@ -358,10 +411,10 @@ typedef struct {
  * mpu_timestamp_qstate_t - MPU Timestamp queue state
  */
 typedef struct {
-    qstate_1ring_cb_t       qstate_1ring;
+    qstate_2ring_cb_t       qstate_2ring;
     uint64_t                timestamp;
     uint64_t                num_updates;
-    uint8_t                 pad[34];
+    uint8_t                 pad[30];
     scanner_session_cb_activate_t cb_activate;  // must be last in CB
 } __attribute__((packed)) mpu_timestamp_qstate_t;
 
