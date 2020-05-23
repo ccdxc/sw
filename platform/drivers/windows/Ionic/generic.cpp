@@ -2774,7 +2774,7 @@ queue_workitem(struct ionic *ionic,
     work_item->context = Context;
 
 	if( ionic != NULL) {
-	    ref_request( ionic);
+	    ref_request( ionic->master_lif);
 	}
 
     NdisQueueIoWorkItem( work_handle,
@@ -2827,7 +2827,7 @@ process_work_item(PVOID   WorkItemContext,
     NdisFreeIoWorkItem( work_handle);
 
 	if( ionic != NULL) {
-	    deref_request( ionic, 1);
+	    deref_request( ionic->master_lif, 1);
 	}
 
     return;
@@ -3269,37 +3269,37 @@ get_perfmon_stats(AdapterCB *cb, ULONG maxlen, struct _PERF_MON_CB **perfmon_sta
 }
 
 void
-ref_request(struct ionic *ionic)
+ref_request(struct lif *lif)
 {
-    if (InterlockedIncrement(&ionic->outstanding_request_count) == 1) {
-        KeClearEvent( &ionic->outstanding_complete_event);
+    if (InterlockedIncrement(&lif->outstanding_request_count) == 1) {
+        KeClearEvent( &lif->outstanding_complete_event);
     }
 
     return;
 }
 
 void
-deref_request(struct ionic *ionic, LONG count)
+deref_request(struct lif *lif, LONG count)
 {
 
-    ASSERT( ionic->outstanding_request_count != 0);
+    ASSERT( lif->outstanding_request_count != 0);
 
-    if (InterlockedAdd(&ionic->outstanding_request_count, -count) == 0) {
-        KeSetEvent( &ionic->outstanding_complete_event, 0, FALSE);
+    if (InterlockedAdd(&lif->outstanding_request_count, -count) == 0) {
+        KeSetEvent( &lif->outstanding_complete_event, 0, FALSE);
     }
 
     return;
 }
 
 void
-wait_on_requests(struct ionic *ionic)
+wait_on_requests(struct lif *lif)
 {
     NTSTATUS status = STATUS_SUCCESS;
     LARGE_INTEGER time_out;
 
     time_out.QuadPart = -(30 * IONIC_ONE_SEC_WAIT);
 
-    status = KeWaitForSingleObject( &ionic->outstanding_complete_event,
+    status = KeWaitForSingleObject( &lif->outstanding_complete_event,
                                     Executive,
                                     KernelMode,
                                     FALSE,

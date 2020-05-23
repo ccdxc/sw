@@ -430,13 +430,13 @@ NDIS_STATUS
 get_perfmon_stats(AdapterCB *cb, ULONG maxlen, struct _PERF_MON_CB **perfmon_stats, ULONG *len, ULONGLONG counter_mask, ULONGLONG last_call_time);
 
 void
-ref_request(struct ionic *ionic);
+ref_request(struct lif *lif);
 
 void
-deref_request(struct ionic *ionic, LONG count);
+deref_request(struct lif *lif, LONG count);
 
 void
-wait_on_requests(struct ionic *ionic);
+wait_on_requests(struct lif *lif);
 
 void *
 NdisAllocateMemoryWithTagPriority_internal(NDIS_HANDLE      NdisHandle,
@@ -1314,7 +1314,7 @@ bool ionic_tx_service(struct cq *cq, struct cq_info *cq_info,
 NDIS_STATUS ionic_queue_txq_pkt(struct ionic *ionic,
     struct qcq *qcq, PNET_BUFFER packet_orig);
 
-void ionic_send_complete(struct ionic *ionic,
+void ionic_send_complete(struct lif *lif,
     struct txq_nbl_list *list, KIRQL irql);
 
 void ionic_txq_nbl_list_push_tail(struct txq_nbl_list *list,

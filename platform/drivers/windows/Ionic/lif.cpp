@@ -402,6 +402,8 @@ ionic_lif_alloc(struct ionic *ionic, unsigned int index)
     RtlInitializeBitMap(&lif->state, (PULONG)lif->state_buffer, LIF_STATE_SIZE);
     KeInitializeEvent(&lif->state_change, SynchronizationEvent, TRUE);
 
+    KeInitializeEvent(&lif->outstanding_complete_event, NotificationEvent, TRUE);
+
     lif->ionic = ionic;
     lif->index = index;
     lif->ntxq_descs = ionic->ntx_buffers;
@@ -2299,6 +2301,7 @@ ionic_lif_stop(struct lif *lif)
 
     ionic_txrx_disable(lif);
     ionic_lif_quiesce(lif);
+    wait_on_requests(lif);
 
     ionic_reset_rxq_pkts( lif);
 
@@ -2330,9 +2333,6 @@ ionic_stop(struct ionic *ionic)
 
     ionic->hardware_status = NdisHardwareStatusNotReady;
     ionic_indicate_status(ionic, NDIS_STATUS_MEDIA_DISCONNECT, 0, 0);
-
-    // Wait for any outstanding requests
-    wait_on_requests( ionic);
 
     ionic_slaves_stop(lif->ionic);
 

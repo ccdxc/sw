@@ -551,25 +551,25 @@ ionic_msi_dpc_handler(NDIS_HANDLE miniport_interrupt_context,
     UNREFERENCED_PARAMETER(receive_throttle_params);
     UNREFERENCED_PARAMETER(ndis_reserved2);
    
-	ref_request(ionic);
-
     check_intr_msg_affinity(ionic, message_id);
 
     int_tbl = get_intr_msg(ionic, message_id);
     if (int_tbl == NULL) {
         IoPrint("%s invalid msg_id %d\n", __FUNCTION__, message_id);
-        goto exit;
+        return;
     }
+    if (int_tbl->lif == NULL || int_tbl->qcq == NULL) {
+		IoPrint("%s unbound msg_id %d\n", __FUNCTION__, message_id);
+        return;
+    }
+
 #ifdef DBG
     InterlockedIncrement64(&int_tbl->dpc_cnt);
 #endif
 
-    if (int_tbl->lif == NULL || int_tbl->qcq == NULL) {
-		IoPrint("%s unbound msg_id %d\n", __FUNCTION__, message_id);
-        goto exit;
-    }
-
     lif = int_tbl->lif;
+
+    ref_request(lif);
 
     DbgTrace((TRACE_COMPONENT_INTERRUPT, TRACE_LEVEL_VERBOSE,
          "%s Enter Adapter %p Lif %p ionic_msi_dpc_handler msg_id: 0x%08lX\n",
@@ -611,11 +611,7 @@ ionic_msi_dpc_handler(NDIS_HANDLE miniport_interrupt_context,
 								NULL);
 	}
 
-exit:
-    
-	deref_request(ionic, 1);
-
-    return;
+	deref_request(lif, 1);
 }
 
 VOID

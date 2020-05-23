@@ -478,6 +478,9 @@ struct lif {
 	CACHE_ALIGN SLIST_HEADER   rx_pkts_list;
 	CACHE_ALIGN NDIS_SPIN_LOCK dbid_inuse_lock;	/* lock the dbid bit list */
 	CACHE_ALIGN NDIS_SPIN_LOCK adminq_lock;		/* lock for AdminQ operations */
+
+	LONG            outstanding_request_count;
+	KEVENT          outstanding_complete_event;
 };
 
 #define lif_to_txqcq(lif, i)	((lif)->txqcqs[i].qcq)
@@ -786,9 +789,6 @@ struct ionic {
 	ULONG						tx_frag_pool_count;
 
 	PSCATTER_GATHER_LIST		tx_frag_pool_sg_list;
-
-    LONG            outstanding_request_count;
-    KEVENT          outstanding_complete_event;
 
     LONG            core_redirect_count;
 

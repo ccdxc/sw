@@ -1091,11 +1091,11 @@ ionic_rx_clean(struct queue *q,
         if (*packets_to_indicate == NULL) {
             *packets_to_indicate = rxq_pkt->parent_nbl;
             *last_packet = rxq_pkt->parent_nbl;
-            ref_request(ionic);
+            ref_request(lif);
         } else  {
             NET_BUFFER_LIST_NEXT_NBL(*last_packet) = rxq_pkt->parent_nbl;
             *last_packet = rxq_pkt->parent_nbl;
-            ref_request(ionic);
+            ref_request(lif);
         }
 
         indicate_nbl = true;
@@ -1570,9 +1570,10 @@ ionic_return_packet(NDIS_HANDLE adapter_context,
                       __FUNCTION__, ionic, packet, rxq_pkt->parent_nbl));
 			
             ionic_return_rxq_pkt(qcq->q.lif, rxq_pkt);
+
+	    // deref the adapter
+	    deref_request(qcq->q.lif, 1);
         }
-        // deref the adapter
-        deref_request( ionic, 1);
 
         nbl = nbl_next;
         num_nbls++;

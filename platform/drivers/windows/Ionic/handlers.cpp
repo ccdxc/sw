@@ -74,7 +74,7 @@ HaltEx(NDIS_HANDLE MiniportAdapterContext, NDIS_HALT_ACTION HaltAction)
 		}
 
         // Wait for any outstanding requests
-        wait_on_requests( ionic);
+        wait_on_requests(ionic->master_lif);
         
         ionic_lifs_free(ionic);
 

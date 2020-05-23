@@ -121,7 +121,7 @@ ionic_service_nbl_requests(struct ionic *ionic, struct qcq *qcq, bool cleanup)
 
     NdisDprReleaseSpinLock(&qcq->txq_nbl_lock);
 
-	ionic_send_complete(ionic, &failed_list, DISPATCH_LEVEL);
+    ionic_send_complete(qcq->q.lif, &failed_list, DISPATCH_LEVEL);
 
     return;
 }
@@ -196,7 +196,7 @@ ionic_service_nb_requests(struct qcq *qcq, bool exiting)
 
 	NdisDprReleaseSpinLock( &qcq->txq_nb_lock);
 
-	ionic_send_complete(ionic, &completed_list, NDIS_CURRENT_IRQL());
+	ionic_send_complete(qcq->q.lif, &completed_list, NDIS_CURRENT_IRQL());
 
     DbgTrace((TRACE_COMPONENT_IO, TRACE_LEVEL_VERBOSE,
               "%s Exit Service Pending NB adapter %p\n", __FUNCTION__, ionic));
@@ -455,7 +455,7 @@ ionic_txq_complete_pkt(struct queue *q,
                     ionic->adapterhandle, parent_nbl,
                     NDIS_SEND_COMPLETE_FLAGS_DISPATCH_LEVEL);
                 InterlockedIncrement( (LONG *)&qcq->tx_stats->nbl_count);
-                deref_request(ionic, 1);
+                deref_request(qcq->q.lif, 1);
             } else {
 
                 DbgTrace((TRACE_COMPONENT_IO, TRACE_LEVEL_VERBOSE,
@@ -1306,8 +1306,9 @@ cleanup:
 }
 
 void
-ionic_send_complete(struct ionic *ionic, struct txq_nbl_list *list, KIRQL irql)
+ionic_send_complete(struct lif *lif, struct txq_nbl_list *list, KIRQL irql)
 {
+    struct ionic *ionic = lif->ionic;
     ULONG flags = 0;
 
     if (list->head) {
@@ -1322,7 +1323,7 @@ ionic_send_complete(struct ionic *ionic, struct txq_nbl_list *list, KIRQL irql)
         NdisMSendNetBufferListsComplete(ionic->adapterhandle, list->head,
                                         flags);
 
-        deref_request( ionic, list->count);
+        deref_request(lif, list->count);
     }
 }
 
@@ -1497,7 +1498,6 @@ ionic_send_packets(NDIS_HANDLE adapter_context,
     ULONG filter_id = 0;
     NDIS_TCP_IP_CHECKSUM_NET_BUFFER_LIST_INFO csum_info = {0};
     ULONG tx_queue = 0;
-	txq_nbl_list failed_list;
     PNET_BUFFER nb, next_nb;
     ULONG nb_ref;
 	struct txq_pkt_private * txq_pkt_private = NULL;
@@ -1505,15 +1505,7 @@ ionic_send_packets(NDIS_HANDLE adapter_context,
 
     UNREFERENCED_PARAMETER(port_number);
 
-    ionic_txq_nbl_list_init(&failed_list);
-    
 	filter_id = NET_BUFFER_LIST_RECEIVE_FILTER_ID(pnetlist);
-
-    for (nbl = pnetlist; nbl != NULL; nbl = next_nbl, ++num_nbls) {
-        next_nbl = NET_BUFFER_LIST_NEXT_NBL(nbl);
-        // Ref count the adapter for an outstanding io
-        ref_request(ionic);
-    }
 
     //
     // Are we running in srvio mode?
@@ -1560,7 +1552,6 @@ ionic_send_packets(NDIS_HANDLE adapter_context,
             NdisMSendNetBufferListsComplete(
                 ionic->adapterhandle, nbl,
                 is_dispatch ? NDIS_SEND_COMPLETE_FLAGS_DISPATCH_LEVEL : 0);
-            deref_request(ionic, 1);
         }
         DbgTrace((TRACE_COMPONENT_IO, TRACE_LEVEL_VERBOSE,
                   "%s Send Packets adapter %p Hardware Not Ready\n",
@@ -1573,12 +1564,14 @@ ionic_send_packets(NDIS_HANDLE adapter_context,
               ionic, num_nbls, pnetlist));        
 
     for (nbl = pnetlist; nbl; nbl = next_nbl) {
-       
-		status = validate_nbl( ionic,
-							   nbl);
+		next_nbl = NET_BUFFER_LIST_NEXT_NBL(nbl);
+		NET_BUFFER_LIST_NEXT_NBL(nbl) = NULL;
+
+		status = validate_nbl(ionic, nbl);
 
 		if (status != NDIS_STATUS_SUCCESS) {
-			ionic_txq_nbl_list_push_tail( &failed_list, nbl);
+			NdisMSendNetBufferListsComplete(ionic->adapterhandle, nbl,
+							is_dispatch ? NDIS_SEND_COMPLETE_FLAGS_DISPATCH_LEVEL : 0);
 		}
 		else {
 
@@ -1609,9 +1602,6 @@ ionic_send_packets(NDIS_HANDLE adapter_context,
 			nbl_private = (struct txq_nbl_private *)NET_BUFFER_LIST_MINIPORT_RESERVED( nbl);
 			nbl_private->nb_processed_cnt = 0;
 
-			next_nbl = NET_BUFFER_LIST_NEXT_NBL(nbl);
-			NET_BUFFER_LIST_NEXT_NBL(nbl) = NULL;
-
 			if (BooleanFlagOn(ionic->ConfigStatus, IONIC_SRIOV_MODE)) {
 				lif_id = NET_BUFFER_LIST_RECEIVE_FILTER_VPORT_ID(nbl);
 				lif = ionic->SriovSwitch.Ports[lif_id].lif;
@@ -1619,6 +1609,8 @@ ionic_send_packets(NDIS_HANDLE adapter_context,
 				lif_id = NET_BUFFER_LIST_RECEIVE_QUEUE_ID(nbl);
 				lif = ionic->vm_queue[lif_id].lif;
 			}
+
+			ref_request(lif);
 
 			tx_queue = get_tx_queue_id( lif, nbl, NET_BUFFER_LIST_FIRST_NB(nbl));
 
@@ -1633,8 +1625,6 @@ ionic_send_packets(NDIS_HANDLE adapter_context,
 				NULL);
 		}
 	}
-
-	ionic_send_complete(ionic, &failed_list, DISPATCH_LEVEL);
     
 	DbgTrace((TRACE_COMPONENT_IO, TRACE_LEVEL_VERBOSE,
               "%s Exit Send Packets adapter %p num_nbls %d\n", __FUNCTION__,
