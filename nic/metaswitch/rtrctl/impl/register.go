@@ -65,14 +65,9 @@ func RegisterShowNodes(params *CLIParams, base *cobra.Command) {
 
 	evpnShowCmd.AddCommand(evpnBdShowCmd)
 	evpnBdShowCmd.AddCommand(evpnBdMacIPShowCmd)
-	evpnBdShowCmd.AddCommand(evpnBdStatusShowCmd)
-	evpnBdShowCmd.AddCommand(evpnBdIntfShowCmd)
 
 	//routing commands
 	base.AddCommand(routingShowCmd)
-	routingShowCmd.AddCommand(interfaceShowCmd)
-	interfaceShowCmd.AddCommand(intfStatusShowCmd)
-	interfaceShowCmd.PersistentFlags().Bool("json", false, "output in json")
 	routingShowCmd.AddCommand(staticTableShowCmd)
 	staticTableShowCmd.PersistentFlags().Bool("json", false, "output in json")
 	interfaceShowCmd.AddCommand(intfAddrShowCmd)
@@ -81,13 +76,19 @@ func RegisterShowNodes(params *CLIParams, base *cobra.Command) {
 	routeTableShowCmd.PersistentFlags().Bool("json", false, "output in json")
 	routingShowCmd.AddCommand(vrfStatusShowCmd)
 	vrfStatusShowCmd.PersistentFlags().Bool("json", false, "output in json")
-	routingShowCmd.AddCommand(redistTableShowCmd)
-	redistTableShowCmd.PersistentFlags().Bool("json", false, "output in json")
 
 	//debug commands
-	base.AddCommand(internalShowCmd)
-	internalShowCmd.AddCommand(intRoutingShowCmd)
-	intRoutingShowCmd.AddCommand(osTableShowCmd)
-	osTableShowCmd.AddCommand(osRouteTableShowCmd)
-	osRouteTableShowCmd.PersistentFlags().Bool("json", false, "output in json")
+	routingShowCmd.AddCommand(internalShowCmd)
+	internalShowCmd.AddCommand(activeRouteTableShowCmd)
+	activeRouteTableShowCmd.PersistentFlags().Bool("json", false, "output in json")
+	internalShowCmd.AddCommand(interfaceShowCmd)
+	interfaceShowCmd.AddCommand(intfStatusShowCmd)
+	interfaceShowCmd.PersistentFlags().Bool("json", false, "output in json")
+	internalShowCmd.AddCommand(redistTableShowCmd)
+	redistTableShowCmd.PersistentFlags().Bool("json", false, "output in json")
+
+	evpnShowCmd.AddCommand(internalEvpnShowCmd)
+	internalEvpnShowCmd.AddCommand(intEvpnBdShowCmd)
+	intEvpnBdShowCmd.AddCommand(evpnBdStatusShowCmd)
+	intEvpnBdShowCmd.AddCommand(evpnBdIntfShowCmd)
 }

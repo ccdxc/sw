@@ -161,31 +161,17 @@ func staticTableShowCmdHandler(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-var osTableShowCmd = &cobra.Command{
-	Use:   "os",
-	Short: "show os information",
-	Long:  "show os information",
+var activeRouteTableShowCmd = &cobra.Command{
+	Use:   "active-route-table",
+	Short: "show active routing route-table information",
+	Long:  "show active routing route-table information",
 	Args:  cobra.NoArgs,
-}
-
-var intRoutingShowCmd = &cobra.Command{
-	Use:   "routing",
-	Short: "show Routing related information",
-	Long:  "show Routing related information",
-	Args:  cobra.NoArgs,
-}
-
-var osRouteTableShowCmd = &cobra.Command{
-	Use:   "route-table",
-	Short: "show os routing route-table information",
-	Long:  "show os routing route-table information",
-	Args:  cobra.NoArgs,
-	RunE:  osRouteTableShowCmdHandler,
+	RunE:  activeRouteTableShowCmdHandler,
 }
 
 const (
-	osRouteTableGlobalStr = `-----------------------------------
-OS Route Table
+	activeRouteTableGlobalStr = `-----------------------------------
+Active Route Table
 -----------------------------------
 RouteTableId               : %v
 DestAddr                   : %v
@@ -202,7 +188,7 @@ AdminDistance              : %v
 `
 )
 
-func osRouteTableShowCmdHandler(cmd *cobra.Command, args []string) error {
+func activeRouteTableShowCmdHandler(cmd *cobra.Command, args []string) error {
 	c, err := utils.CreateNewGRPCClient(cliParams.GRPCPort)
 	if err != nil {
 		return errors.New("Could not connect to the PDS. Is PDS Running?")
@@ -228,7 +214,7 @@ func osRouteTableShowCmdHandler(cmd *cobra.Command, args []string) error {
 		if doJSON {
 			cpars = append(cpars, cpar)
 		} else {
-			fmt.Printf(osRouteTableGlobalStr,
+			fmt.Printf(activeRouteTableGlobalStr,
 				cpar.Status.RouteTableId,
 				cpar.Status.DestAddr,
 				cpar.Status.DestPrefixLen,

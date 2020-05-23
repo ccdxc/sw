@@ -16,6 +16,14 @@ var internalShowCmd = &cobra.Command{
 	Hidden: true,
 }
 
+var internalEvpnShowCmd = &cobra.Command{
+	Use:    "internal",
+	Short:  "show internal related information",
+	Long:   "show internal related information",
+	Args:   cobra.NoArgs,
+	Hidden: true,
+}
+
 func init() {
 
 }

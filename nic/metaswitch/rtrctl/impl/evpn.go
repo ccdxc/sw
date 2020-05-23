@@ -92,6 +92,13 @@ var evpnBdShowCmd = &cobra.Command{
 	Args:  cobra.NoArgs,
 }
 
+var intEvpnBdShowCmd = &cobra.Command{
+	Use:   "bd",
+	Short: "show EVPN BD information",
+	Long:  "show EVPN BD information",
+	Args:  cobra.NoArgs,
+}
+
 var evpnBdMacIPShowCmd = &cobra.Command{
 	Use:   "mac-ip",
 	Short: "show EVPN BD MAC-IP Status information",
