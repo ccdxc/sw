@@ -559,7 +559,7 @@ asicpd_p4plus_invalidate_cache (mpartition_region_t *reg,
 uint32_t
 asicpd_clock_freq_get(void)
 {
-    return capri_freq_get();
+    return cap_top_sbus_get_core_freq(0,0);
 }
 
 sdk_ret_t
