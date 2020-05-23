@@ -321,6 +321,7 @@ func (w *watchedPrefixes) addOne(path, peer string, mpath *watchEventQ) WatchEve
 				log.Fatalf("attempt to add a multipath watcher to a multipath queue [%v]/[%v]/[%v]", path, mpath.paths, q.path)
 			}
 			q.mpathQueues.Insert(mpath)
+			log.Infof("adding multipath Queue for path [%v][%v]", path, mpath.paths)
 		}
 		q.refCount++
 		return q
@@ -334,6 +335,7 @@ func (w *watchedPrefixes) addOne(path, peer string, mpath *watchEventQ) WatchEve
 	ret.config = w.watchConfig
 	if mpath != nil {
 		ret.mpathQueues.Insert(mpath)
+		log.Infof("adding multipath Queue for path [%v][%v]", path, mpath.paths)
 	}
 	w.trie.Insert(prefix, ret)
 
@@ -462,14 +464,6 @@ func (w *watchEventQ) Enqueue(evType kvstore.WatchEventType, obj, prev runtime.O
 	}
 	w.eventList.Insert(i)
 	w.notify()
-	mpathInsertFn := func(in interface{}) bool {
-		q := in.(*watchEventQ)
-		q.eventList.Insert(i)
-		q.notify()
-		q.stats.enqueues.Add(1)
-		return true
-	}
-	w.mpathQueues.Iterate(mpathInsertFn)
 	w.stats.enqueues.Add(1)
 	histogram.Record("watch.Enqueue", time.Since(start))
 	return nil
@@ -495,18 +489,21 @@ func (w *watchEventQ) Dequeue(ctx context.Context,
 	}()
 	var wg sync.WaitGroup
 	var startVer uint64
-
+	mpath := "false"
+	if w.multiPath {
+		mpath = "true"
+	}
 	sendevent := func(e *list.Element) {
 		sendCh := make(chan error)
 		obj := e.Value.(*watchEvent)
 		if obj.version != 0 && obj.version < startVer && startVer != math.MaxUint64 {
-			w.log.InfoLog("oper", "WatchEventQDequeue", "msg", "SendDrop", "type", obj.evType, "path", w.path, "startVer", startVer, "ResVersion", obj.version, "peer", peer)
+			w.log.InfoLog("oper", "WatchEventQDequeue", "msg", "SendDrop", "type", obj.evType, "path", w.path, "startVer", startVer, "ResVersion", obj.version, "peer", peer, "multipath", mpath)
 			return
 		}
 
 		histogram.Record("watch.DequeueLatency", time.Since(obj.enqts))
 		go func() {
-			w.log.InfoLog("oper", "WatchEventQDequeue", "msg", "Send", "type", obj.evType, "path", w.path, "ResVersion", obj.version, "peer", peer)
+			w.log.InfoLog("oper", "WatchEventQDequeue", "msg", "Send", "type", obj.evType, "path", w.path, "ResVersion", obj.version, "peer", peer, "multipath", mpath, "kind", obj.item.GetObjectKind())
 			cb(tracker.ctx, obj.evType, obj.item, obj.prev, nil)
 			close(sendCh)
 		}()
@@ -524,7 +521,7 @@ func (w *watchEventQ) Dequeue(ctx context.Context,
 		sendCh := make(chan error)
 
 		go func() {
-			w.log.InfoLog("oper", "WatchEventQDequeue", "msg", "Send", "type", "Control", "path", w.path, "Code", control.Code, "ControlMessage", control.Message, "peer", peer)
+			w.log.InfoLog("oper", "WatchEventQDequeue", "msg", "Send", "type", "Control", "path", w.path, "Code", control.Code, "ControlMessage", control.Message, "peer", peer, "multipath", mpath)
 			cb(tracker.ctx, kvstore.WatcherControl, nil, nil, control)
 			close(sendCh)
 		}()
@@ -543,7 +540,7 @@ func (w *watchEventQ) Dequeue(ctx context.Context,
 	w.janitorVerMu.Unlock()
 	tracker.lastUpd = time.Now()
 	tracker.Unlock()
-	w.log.InfoLog("oper", "WatchEventQDequeue", "msg", "Start", "path", w.path, "fromVer", fromver, "peer", peer)
+	w.log.InfoLog("oper", "WatchEventQDequeue", "msg", "Start", "path", w.path, "fromVer", fromver, "peer", peer, "multipath", mpath)
 	var lopts api.ListWatchOptions
 	if opts != nil {
 		lopts = *opts
@@ -590,7 +587,7 @@ func (w *watchEventQ) Dequeue(ctx context.Context,
 					// This should never happen. Recovery is undefined, hence panic.
 					panic("could not retrieve object version")
 				}
-				w.log.InfoLog("oper", "WatchEventQDequeue", "msg", "Send", "reason", "list", "type", kvstore.Created, "path", w.path, "peer", peer, "ResVersion", ver)
+				w.log.InfoLog("oper", "WatchEventQDequeue", "msg", "Send", "reason", "list", "type", kvstore.Created, "path", w.path, "peer", peer, "ResVersion", ver, "multipath", mpath)
 				cb(tracker.ctx, kvstore.Created, obj, nil, nil)
 				tracker.Lock()
 				tracker.version = ver
@@ -618,7 +615,7 @@ func (w *watchEventQ) Dequeue(ctx context.Context,
 			}
 			sendControl(control)
 			startVer = snapVer + 1
-			w.log.InfoLog("oper", "WatchEventQDequeue", "startVer", startVer, "path", fmt.Sprintf("%v", w.paths), "fromVer", fromver, "peer", peer)
+			w.log.InfoLog("oper", "WatchEventQDequeue", "startVer", startVer, "path", fmt.Sprintf("%v", w.paths), "fromVer", fromver, "peer", peer, "multipath", mpath)
 		} else {
 			kind := ""
 			k, ok := apiutils.GetVar(ctx, apiutils.CtxKeyObjKind)
@@ -634,7 +631,7 @@ func (w *watchEventQ) Dequeue(ctx context.Context,
 			if qver+1 > startVer {
 				startVer = qver + 1
 			}
-			w.log.InfoLog("oper", "WatchEventQDequeue", "startVer", startVer, "path", w.path, "fromVer", fromver, "peer", peer)
+			w.log.InfoLog("oper", "WatchEventQDequeue", "startVer", startVer, "path", w.path, "fromVer", fromver, "peer", peer, "multipath", mpath)
 		}
 
 	} else {
@@ -642,7 +639,7 @@ func (w *watchEventQ) Dequeue(ctx context.Context,
 	}
 
 	// Scan the current eventList
-	w.log.InfoLog("oper", "WatchEventQDequeue", "msg", "Catchup", "path", w.path, "fromVer", fromver, "peer", peer)
+	w.log.InfoLog("oper", "WatchEventQDequeue", "msg", "Catchup", "path", w.path, "fromVer", fromver, "peer", peer, "multipath", mpath)
 	var prev, item *list.Element
 	item = w.eventList.Front()
 	prev = item
@@ -655,7 +652,7 @@ func (w *watchEventQ) Dequeue(ctx context.Context,
 				Message: []string{fmt.Sprintf("version too old")},
 				Code:    http.StatusGone,
 			}
-			w.log.InfoLog("oper", "WatchEventQDequeueSend", "type", kvstore.WatcherError, "path", w.path, "reason", "catch up", "peer", peer)
+			w.log.InfoLog("oper", "WatchEventQDequeueSend", "type", kvstore.WatcherError, "path", w.path, "reason", "catch up", "peer", peer, "multipath", mpath)
 			cb(tracker.ctx, kvstore.WatcherError, &errmsg, nil, nil)
 			return
 		}
@@ -687,7 +684,7 @@ func (w *watchEventQ) Dequeue(ctx context.Context,
 				Message: []string{fmt.Sprintf("version not in cache history, retry without specifying version")},
 				Code:    http.StatusGone,
 			}
-			w.log.InfoLog("oper", "WatchEventQDequeueSend", "type", kvstore.WatcherError, "path", w.path, "reason", "catch up", "peer", peer)
+			w.log.InfoLog("oper", "WatchEventQDequeueSend", "type", kvstore.WatcherError, "path", w.path, "reason", "catch up", "peer", peer, "multipath", mpath)
 			cb(tracker.ctx, kvstore.WatcherError, &errmsg, nil, nil)
 			return
 		}
@@ -721,7 +718,7 @@ func (w *watchEventQ) Dequeue(ctx context.Context,
 	<-deferCh
 	// Kickstart the dequeue monitor
 	w.notify()
-	w.log.InfoLog("oper", "WatchEventQDequeue", "prefix", w.path, "msg", "starting dequeue monitor", "peer", peer)
+	w.log.InfoLog("oper", "WatchEventQDequeue", "prefix", w.path, "msg", "starting dequeue monitor", "peer", peer, "multipath", mpath)
 	for {
 		select {
 		case <-condCh:
