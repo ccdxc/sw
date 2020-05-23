@@ -199,12 +199,12 @@ export class NetworkinterfacesComponent extends DataComponent implements OnInit 
   watchNetworkInterfaces() {
     const dscSubscription = this.networkService.ListNetworkInterfaceCache().subscribe(
       (response) => {
-        this.tableLoading = false;
         if (response.connIsErrorState) {
           return;
         }
         this.dataObjects = response.data;
         this.handleDataReady();
+        this.tableLoading = false;
       },
       (error) => {
         this.tableLoading = false;
@@ -408,7 +408,7 @@ export class NetworkinterfacesComponent extends DataComponent implements OnInit 
   }
 
   // advance search APIs
-  onCancelSearch($event) {
+  onCancelSearch() {
     this.controllerService.invokeInfoToaster('Information', 'Cleared search criteria, Table refreshed.');
     this.dataObjects = this.dataObjectsBackUp;
   }
@@ -419,7 +419,7 @@ export class NetworkinterfacesComponent extends DataComponent implements OnInit 
   * @param order
   */
   onSearchNetworkInterfaces(field = this.networkInterfaceTable.sortField, order = this.networkInterfaceTable.sortOrder) {
-    const searchResults = this.onSearchDataObjects(field, order, 'NetworkInterface', this.maxSearchRecords, this.advSearchCols, this.dataObjectsBackUp, this.advancedSearchComponent);
+    const searchResults = this.onSearchDataObjects(field, order, 'NetworkInterface', this.maxSearchRecords, this.advSearchCols, this.dataObjectsBackUp, this.networkInterfaceTable.advancedSearchComponent);
     if (searchResults && searchResults.length > 0) {
       this.dataObjects = [];
       this.dataObjects = searchResults;

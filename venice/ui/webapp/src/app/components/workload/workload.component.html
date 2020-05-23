@@ -172,9 +172,10 @@
   <div *ngIf="!tableLoading" class="workloads-action-template" fxLayout="row">
     <div fxFlex="1 0 50%">
       <div *ngIf="dataObjects.length !== dataObjectsBackUp.length"
-           class="workloads-table-header-title-append"
-           matTooltip="Total workloads">
-        | System has ({{ dataObjectsBackUp.length }})
+           class="workloads-table-header-title-append">
+        <span matTooltip="Total workloads">
+          | System has ({{ dataObjectsBackUp.length }})
+        </span>
       </div>
     </div>
     <div *roleGuard="'workloadworkload_update'" fxFlex="1 0 50%">

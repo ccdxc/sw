@@ -53,7 +53,9 @@ $table-headercontentheight: 25px;
 
 .workloads-table-header-title-append {
   @include primary-font(20px, #484848);
+  margin-right: 5px;
   text-align: left;
+  white-space: nowrap;
 }
 
 .workload-table-icon {
