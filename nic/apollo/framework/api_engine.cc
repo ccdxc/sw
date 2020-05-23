@@ -17,6 +17,7 @@
 #include "nic/apollo/core/core.hpp"
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/core/trace.hpp"
+#include "nic/apollo/core/event.hpp"
 #include "nic/apollo/core/msg.h"
 #include "nic/apollo/core/msg.hpp"
 
@@ -1304,6 +1305,22 @@ error:
 }
 
 sdk_ret_t
+api_engine::send_ntfn_msgs_(void) {
+    for (auto it = batch_ctxt_.msg_map.begin();
+         it != batch_ctxt_.msg_map.end(); it++) {
+        if (it->second.ntfn_msgs) {
+            // this IPC peer is interested in notification msgs
+            // NOTE: we ned to define one event per recipient, otherwise
+            //       all IPC endpoints get all notifications !!!
+            sdk::ipc::broadcast(EVENT_ID_PDS_CFG_OBJ_SET,
+                                it->second.ntfn_msgs,
+                                core::pds_msg_list_size(it->second.ntfn_msgs));
+        }
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 api_engine::batch_commit_phase2_(void) {
     sdk_ret_t ret;
 
@@ -1338,6 +1355,9 @@ api_engine::batch_commit_phase2_(void) {
         PDS_TRACE_ERR("Transaction end API failure, err %u", ret);
         // fall thru
     }
+
+    // send API notification msgs to IPC peers interested in this batch
+    send_ntfn_msgs_();
 
     // update the epoch to current epoch
     PDS_TRACE_INFO("Advancing from epoch %u to epoch %u",

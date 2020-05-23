@@ -37,6 +37,7 @@ typedef enum event_id_e {
     EVENT_ID_IP_MOVE_L2R        = (PDS_IPC_EVENT_ID_HAL_MIN + 14),
     EVENT_ID_MAC_MOVE_R2L       = (PDS_IPC_EVENT_ID_HAL_MIN + 15),
     EVENT_ID_IP_MOVE_R2L        = (PDS_IPC_EVENT_ID_HAL_MIN + 16),
+    EVENT_ID_PDS_CFG_OBJ_SET    = (PDS_IPC_EVENT_ID_HAL_MIN + 17),
 } event_id_t;
 
 namespace core {

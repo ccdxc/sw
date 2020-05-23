@@ -694,11 +694,15 @@ private:
 
     /// \brief    helper function to send batch of config messages to other
     ///           components (e.g., VPP) and receive a response
-    /// \param[in] msgs    batched msg to be sent
-    static sdk_ret_t pds_msg_send_(pds_msg_list_t *msgs);
-
+    /// \param[in] api_msg_info    config msg subscription information
+    /// \return    #SDK_RET_OK on success, failure status code on error
     static sdk_ret_t send_req_rsp_msgs_(pds_ipc_id_t ipc_id,
                                         ipc_peer_api_msg_info_t *api_msg_info);
+
+    /// \brief    helper function to send batch of config notification messages
+    ///           to other components (e.g., VPP) and receive a response
+    /// \return    #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t send_ntfn_msgs_(void);
 
 private:
     friend api_obj_ctxt_t;
@@ -721,9 +725,9 @@ private:
 };
 
 /// \brief    initialize the API engine
-/// \return #SDK_RET_OK on success, failure status code on error
 /// \param[in] state    pointer to application specific state (base) class
 ///                     instance
+/// \return #SDK_RET_OK on success, failure status code on error
 sdk_ret_t api_engine_init(state_base *state);
 
 /// \brief    return the API engine instance
