@@ -2608,7 +2608,7 @@ ionic_setup_qos_stats(struct ionic_lif *lif, struct sysctl_ctx_list *ctx,
 
 	/* Show TC level stats for mgmt interfaces only. */
 	if (!lif->ionic->is_mgmt_nic) {
-		for (i = 0; i < IONIC_QOS_TC_MAX; i++) {
+		for (i = 0; i < lif->ionic->qos.max_tcs; i++) {
 			snprintf(namebuf, QUEUE_NAME_LEN, "tc%d", i);
 			queue_node1 = SYSCTL_ADD_NODE(ctx, queue_list, OID_AUTO, namebuf,
 						CTLFLAG_RD, NULL, "QoS per class stats");
@@ -3006,7 +3006,6 @@ ionic_qos_class_type_sysctl(SYSCTL_HANDLER_ARGS)
 
 		lif->ionic->qos.class_type = value;
 	}
-	lif->ionic->qos.class_type = value;
 
 	ionic_qos_init(lif->ionic);
 
@@ -3544,7 +3543,7 @@ ionic_qos_dscp_to_tc_sysctl(SYSCTL_HANDLER_ARGS)
 	error = ionic_qos_verify_dscp_to_tc(lif, dscp_to_tc, start);
 	if (error) {
 		goto err_out;
- 	}
+	}
 
 	/* Make a copy of the existing config to the temporary array */
 	memcpy(new_dscp_to_tc, ionic->qos.dscp_to_tc, sizeof(new_dscp_to_tc));
@@ -3559,6 +3558,7 @@ ionic_qos_dscp_to_tc_sysctl(SYSCTL_HANDLER_ARGS)
 	}
 
 	ionic_qos_init(ionic);
+
 err_out:
 	IONIC_LIF_UNLOCK(lif);
 

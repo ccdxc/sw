@@ -1987,7 +1987,7 @@ union ionic_qos_config {
 				u8      ip_dscp[IONIC_QOS_DSCP_MAX];
 			};
 		};
-	};
+	} __attribute__((packed));
 	__le32  words[64];
 };
 
