@@ -11,9 +11,11 @@ IPXE_TAR = ipxe-1cdf56f.tar.gz
 IPXEORG = $(TOP)/platform/drivers/pxe/ipxe-org
 IPXEMOD = $(TOP)/platform/drivers/pxe/ipxe-mod
 
-all: ionic-oprom ionic-efiapp
+all: ionic-oprom ionic-efiapp ionic-efidrv
 
 ionic-efiapp: $(IPXEGENDIR)/ionic.efi
+
+ionic-efidrv: $(IPXEGENDIR)/ionic.efidrv
 
 ionic-oprom: $(BLD_BIN_DIR)/ionic.efirom
 
@@ -24,6 +26,9 @@ $(IPXEGENDIR):
 
 $(IPXEGENDIR)/ionic.efi: $(IPXEMOD)/src/bin-x86_64-efi/ionic.efi $(IPXEGENDIR)
 	cp $(IPXEMOD)/src/bin-x86_64-efi/ionic.efi $@
+
+$(IPXEGENDIR)/ionic.efidrv: $(IPXEMOD)/src/bin-x86_64-efi/ionic.efidrv $(IPXEGENDIR)
+	cp $(IPXEMOD)/src/bin-x86_64-efi/ionic.efidrv $@
 
 $(BLD_BIN_DIR)/ionic.efirom: $(IPXEMOD)/src/bin-x86_64-efi/ionic.efirom
 	cp $(IPXEMOD)/src/bin-x86_64-efi/ionic.efirom $@
