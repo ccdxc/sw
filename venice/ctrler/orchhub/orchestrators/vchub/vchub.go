@@ -55,6 +55,8 @@ type VCHub struct {
 	watchStarted      bool
 	discoveredDCsLock sync.Mutex
 	discoveredDCs     []string
+	// Timestamp of when orchhub was created. Useful when looking at age of go-routines
+	launchTime string
 	// whether to act upon venice network events
 	// When we are disconnected, we do not want to act upon network events
 	// until we are reconnected and sync has finished.
@@ -81,6 +83,13 @@ type Option func(*VCHub)
 // WithMockProbe uses a probe interceptor to handle issues with vcsim
 func WithMockProbe(v *VCHub) {
 	v.useMockProbe = true
+}
+
+// WithVcReadCh replaces the readCh
+func WithVcReadCh(ch chan defs.Probe2StoreMsg) Option {
+	return func(v *VCHub) {
+		v.vcReadCh = ch
+	}
 }
 
 // WithVcEventsCh listens to the supplied channel for vC notifcation events
@@ -169,6 +178,7 @@ func (v *VCHub) setupVCHub(stateMgr *statemgr.Statemgr, config *orchestration.Or
 	v.opts = opts
 	v.discoveredDCs = []string{}
 	v.tagSyncInitializedMap = map[string]bool{}
+	v.launchTime = time.Now().String()
 
 	v.setupPCache()
 
@@ -204,7 +214,7 @@ func (v *VCHub) setupVCHub(stateMgr *statemgr.Statemgr, config *orchestration.Or
 }
 
 func (v *VCHub) overrideCheckFn() {
-	v.verifyOverrides()
+	v.verifyOverrides(false)
 	v.TimerQ.Add(v.overrideCheckFn, retryDelay)
 }
 
@@ -452,7 +462,7 @@ func (v *VCHub) reconcileNamespaces(config *orchestration.Orchestrator) error {
 						return
 					}
 
-					v.vcReadCh <- defs.Probe2StoreMsg{
+					msg := defs.Probe2StoreMsg{
 						MsgType: defs.VCEvent,
 						Val: defs.VCEventMsg{
 							VcObject:   defs.Datacenter,
@@ -466,6 +476,11 @@ func (v *VCHub) reconcileNamespaces(config *orchestration.Orchestrator) error {
 								},
 							},
 						},
+					}
+					select {
+					case <-v.Ctx.Done():
+						return
+					case v.vcReadCh <- msg:
 					}
 				}
 				v.Log.Info("Creating state for DC %s failed, pushing to retry queue", dc.Name)

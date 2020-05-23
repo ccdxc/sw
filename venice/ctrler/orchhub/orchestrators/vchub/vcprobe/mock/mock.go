@@ -137,7 +137,7 @@ func (v *ProbeMock) ListDVS(dcRef *types.ManagedObjectReference) []mo.VmwareDist
 }
 
 // UpdateDVSPortsVlan stores the changes locally since vcsim does not support reconfigureDVS
-func (v *ProbeMock) UpdateDVSPortsVlan(dcName, dvsName string, portsSetting vcprobe.PenDVSPortSettings, retry int) error {
+func (v *ProbeMock) UpdateDVSPortsVlan(dcName, dvsName string, portsSetting vcprobe.PenDVSPortSettings, forceWrite bool, retry int) error {
 	v.DvsStateMapLock.Lock()
 	defer v.DvsStateMapLock.Unlock()
 	dc := v.DvsStateMap[dcName]

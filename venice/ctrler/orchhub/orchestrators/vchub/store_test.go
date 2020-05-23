@@ -20,6 +20,7 @@ import (
 	"github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
 	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
 	"github.com/pensando/sw/venice/ctrler/orchhub/utils/pcache"
+	"github.com/pensando/sw/venice/ctrler/orchhub/utils/timerqueue"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	mockevtsrecorder "github.com/pensando/sw/venice/utils/events/recorder/mock"
 	"github.com/pensando/sw/venice/utils/log"
@@ -88,6 +89,7 @@ func runStoreTC(t *testing.T, testCases []storeTC) {
 			ForceDCNames: map[string]bool{utils.ManageAllDcs: true},
 			DcIDMap:      map[string]types.ManagedObjectReference{},
 			DvsIDMap:     map[string]types.ManagedObjectReference{},
+			TimerQ:       timerqueue.NewQueue(),
 		}
 
 		vchub := &VCHub{

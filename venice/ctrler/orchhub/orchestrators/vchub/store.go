@@ -73,7 +73,9 @@ func (v *VCHub) startEventsListener() {
 
 				v.Log.Infof("Updating orchestrator connection status to %v", connStatus.State)
 
+				var evt eventtypes.EventType
 				var msg string
+				var evtMsg string
 				if connStatus.State == orchestration.OrchestratorStatus_Success.String() {
 					// Degraded -> Success should not resync
 					if previousState == orchestration.OrchestratorStatus_Degraded.String() ||
@@ -92,9 +94,9 @@ func (v *VCHub) startEventsListener() {
 					v.watchStarted = true
 
 				} else if connStatus.State == orchestration.OrchestratorStatus_Failure.String() {
-					evt := eventtypes.ORCH_CONNECTION_ERROR
+					evt = eventtypes.ORCH_CONNECTION_ERROR
 					msg = connStatus.Err.Error()
-					evtMsg := fmt.Sprintf("%v : Connection issues with orchestrator. %s", v.OrchConfig.Name, msg)
+					evtMsg = fmt.Sprintf("%v : Connection issues with orchestrator. %s", v.OrchConfig.Name, msg)
 					// Generate event depending on error type
 					if strings.HasPrefix(msg, utils.UnsupportedVersionMsg) {
 						evt = eventtypes.ORCH_UNSUPPORTED_VERSION
@@ -108,23 +110,17 @@ func (v *VCHub) startEventsListener() {
 							evt = eventtypes.ORCH_LOGIN_FAILURE
 						}
 					}
-					if v.Ctx.Err() == nil {
-						recorder.Event(evt, evtMsg, v.State.OrchConfig)
-					}
 					// Stop acting on network events from venice until reconnect sync
 					// Lock must be taken in case periodic sync runs
 					v.processVeniceEventsLock.Lock()
 					v.processVeniceEvents = false
 					v.processVeniceEventsLock.Unlock()
 				} else if connStatus.State == orchestration.OrchestratorStatus_Degraded.String() {
-					evt := eventtypes.ORCH_CONNECTION_ERROR
+					evt = eventtypes.ORCH_CONNECTION_ERROR
 					msg = connStatus.Err.Error()
-					evtMsg := fmt.Sprintf("%v : Connection issues with the orchestrator. %s", v.OrchConfig.Name, msg)
+					evtMsg = fmt.Sprintf("%v : Connection issues with the orchestrator. %s", v.OrchConfig.Name, msg)
 					if v.probe.IsREST401(connStatus.Err) {
 						evt = eventtypes.ORCH_LOGIN_FAILURE
-					}
-					if v.Ctx.Err() == nil {
-						recorder.Event(evt, evtMsg, v.State.OrchConfig)
 					}
 				}
 
@@ -132,6 +128,10 @@ func (v *VCHub) startEventsListener() {
 					// Duplicate event, nothing to do
 					v.Log.Debugf("Duplicate connection event, nothing to do.")
 					break
+				}
+
+				if len(evtMsg) != 0 && v.Ctx.Err() == nil {
+					recorder.Event(evt, evtMsg, v.State.OrchConfig)
 				}
 
 				v.orchUpdateLock.Lock()
@@ -303,10 +303,14 @@ func (v *VCHub) handleDC(m defs.VCEventMsg) {
 						v.Log.Infof("Retry event: DC %s no longer exists, nothing to do", name)
 						return
 					}
-
-					v.vcReadCh <- defs.Probe2StoreMsg{
+					msg := defs.Probe2StoreMsg{
 						MsgType: defs.VCEvent,
 						Val:     m,
+					}
+					select {
+					case <-v.Ctx.Done():
+						return
+					case v.vcReadCh <- msg:
 					}
 				}
 				v.TimerQ.Add(retryFn, retryDelay)

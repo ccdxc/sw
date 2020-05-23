@@ -263,7 +263,7 @@ func TestWorkloads(t *testing.T) {
 				}, nil).AnyTimes()
 				mockProbe.EXPECT().TagObjAsManaged(gomock.Any()).Return(nil).AnyTimes()
 				mockProbe.EXPECT().TagObjWithVlan(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-				mockProbe.EXPECT().UpdateDVSPortsVlan(dcName, dvsName, gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+				mockProbe.EXPECT().UpdateDVSPortsVlan(dcName, dvsName, gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 				// Setup state for DC1
 				addDCState(t, vchub, dcName)
@@ -532,7 +532,7 @@ func TestWorkloads(t *testing.T) {
 				}, nil).AnyTimes()
 				mockProbe.EXPECT().TagObjAsManaged(gomock.Any()).Return(nil).AnyTimes()
 				mockProbe.EXPECT().TagObjWithVlan(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-				mockProbe.EXPECT().UpdateDVSPortsVlan(dcName, dvsName, gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+				mockProbe.EXPECT().UpdateDVSPortsVlan(dcName, dvsName, gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 				// Setup state for DC1
 				addDCState(t, vchub, dcName)
 				orchInfo := []*network.OrchestratorInfo{
@@ -744,7 +744,7 @@ func TestWorkloads(t *testing.T) {
 				}, nil).AnyTimes()
 				mockProbe.EXPECT().TagObjAsManaged(gomock.Any()).Return(nil).AnyTimes()
 				mockProbe.EXPECT().TagObjWithVlan(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-				mockProbe.EXPECT().UpdateDVSPortsVlan(dcName, dvsName, gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+				mockProbe.EXPECT().UpdateDVSPortsVlan(dcName, dvsName, gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 				// Setup state for DC1
 				addDCState(t, vchub, dcName)
 
@@ -922,7 +922,7 @@ func TestWorkloads(t *testing.T) {
 				}, nil).AnyTimes()
 				mockProbe.EXPECT().TagObjAsManaged(gomock.Any()).Return(nil).AnyTimes()
 				mockProbe.EXPECT().TagObjWithVlan(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-				mockProbe.EXPECT().UpdateDVSPortsVlan(dcName, dvsName, gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+				mockProbe.EXPECT().UpdateDVSPortsVlan(dcName, dvsName, gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 				// Setup state for DC1
 				addDCState(t, vchub, dcName)
 				orchInfo := []*network.OrchestratorInfo{
@@ -1077,7 +1077,7 @@ func TestWorkloads(t *testing.T) {
 				}, nil).AnyTimes()
 				mockProbe.EXPECT().TagObjAsManaged(gomock.Any()).Return(nil).AnyTimes()
 				mockProbe.EXPECT().TagObjWithVlan(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-				mockProbe.EXPECT().UpdateDVSPortsVlan(dcName, dvsName, gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+				mockProbe.EXPECT().UpdateDVSPortsVlan(dcName, dvsName, gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 				// Setup state for DC1
 				addDCState(t, vchub, dcName)
 				orchInfo := []*network.OrchestratorInfo{

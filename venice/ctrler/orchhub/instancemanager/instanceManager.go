@@ -49,6 +49,7 @@ type syncFlag struct {
 
 const (
 	maxOrchSupported = 64
+	debugLogLevel    = "logLevel"
 )
 
 type orchIDMgr struct {
@@ -102,7 +103,7 @@ func (w *InstanceManager) stop() {
 func (w *InstanceManager) Debug(action string, params map[string]string) (interface{}, error) {
 	// Occasionally setting log level through diag module doesn't work.
 	// Adding a second way to change the log level.
-	if action == "logLevel" {
+	if action == debugLogLevel {
 		level, ok := params["level"]
 		if !ok {
 			return nil, fmt.Errorf("level is a required param")
@@ -164,6 +165,7 @@ func NewInstanceManager(stateMgr *statemgr.Statemgr, logger log.Logger, instance
 	diagSvc.RegisterCustomAction(vchub.DebugState, instance.Debug)
 	diagSvc.RegisterCustomAction(vchub.DebugSync, instance.Debug)
 	diagSvc.RegisterCustomAction(vchub.DebugVlanSpace, instance.Debug)
+	diagSvc.RegisterCustomAction(debugLogLevel, instance.Debug)
 
 	return instance, nil
 }

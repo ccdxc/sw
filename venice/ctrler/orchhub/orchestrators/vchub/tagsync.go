@@ -116,7 +116,7 @@ func (v *VCHub) tagSync() {
 				managed = true
 			} else if strings.HasPrefix(tag, defs.VCTagManagedDefault) {
 				objName := idToName[obj.Value]
-				v.Log.Errorf("Found tag %s from another PSM on our object %s %s, raising event...", tag, objName, obj.Value)
+				v.Log.Errorf("Found tag %s from another PSM on our object %s %s", tag, objName, obj.Value)
 				// Cleanup ourselves first time we see this.
 				// If we see this tag again, we know that there is an active
 				// Venice writing back the tag
@@ -125,6 +125,7 @@ func (v *VCHub) tagSync() {
 					toDel[tag] = append(toDel[tag], obj)
 				} else {
 					// Another Venice is/has managed this DC
+					v.Log.Infof("Raising event ORCH_ALREADY_MANAGED")
 					evt := eventtypes.ORCH_ALREADY_MANAGED
 					msg := fmt.Sprintf("%v : Object %v is managed by multiple PSMs. Found tag %s on object.", v.State.OrchConfig.Name, objName, tag)
 					recorder.Event(evt, msg, v.State.OrchConfig)

@@ -109,7 +109,7 @@ func (t *tagsProbe) SetupBaseTags() bool {
 		if ctx == nil {
 			return false
 		}
-		t.Log.Info("Creating tags category....")
+		t.Log.Debugf("Creating tags category....")
 		err = t.ReserveClient()
 		if err != nil {
 			return false
@@ -140,7 +140,7 @@ func (t *tagsProbe) SetupBaseTags() bool {
 		}
 		t.Log.Errorf("Failed to create default category: %s", err)
 		if t.IsREST401(err) {
-			t.Log.Errorf("CHECK TAG SESSION", err)
+			t.Log.Errorf("tag client received 401 error", err)
 			t.CheckTagSession = true
 		}
 		return false
@@ -154,7 +154,7 @@ func (t *tagsProbe) SetupBaseTags() bool {
 	completed = retryUntilSuccessful(func() bool {
 		t.writeLock.Lock()
 		defer t.writeLock.Unlock()
-		t.Log.Info("Getting tags in category....")
+		t.Log.Debugf("Getting tags in category....")
 		err = t.ReserveClient()
 		if err != nil {
 			return false
@@ -165,7 +165,7 @@ func (t *tagsProbe) SetupBaseTags() bool {
 		var err error
 		tagObjs, err = tc.GetTagsForCategory(t.ClientCtx, tagCategory.ID)
 		if err == nil {
-			t.Log.Infof("Got tags in Pensando category")
+			t.Log.Debugf("Got tags in Pensando category")
 			return true
 		}
 		t.Log.Errorf("Failed to get tags for category %s: %s", tagCategory.ID, err)
@@ -192,7 +192,7 @@ func (t *tagsProbe) SetupBaseTags() bool {
 	completed = retryUntilSuccessful(func() bool {
 		t.writeLock.Lock()
 		defer t.writeLock.Unlock()
-		t.Log.Info("Creating tag managed....")
+		t.Log.Debugf("Creating tag managed....")
 		err := t.ReserveClient()
 		if err != nil {
 			return false
@@ -201,7 +201,7 @@ func (t *tagsProbe) SetupBaseTags() bool {
 		tc := t.GetTagClient()
 
 		if _, ok := t.writeTagInfo[t.managedTagName]; ok {
-			t.Log.Infof("Pensando managed tag already exists")
+			t.Log.Debugf("Pensando managed tag already exists")
 			return true
 		}
 		tag := &tags.Tag{
@@ -688,21 +688,25 @@ func (t *tagsProbe) fetchTags() {
 }
 
 // ResyncVMTags resends tag events to the probeCh for the given vm
-func (t *tagsProbe) ResyncVMTags(vmID string) {
+func (t *tagsProbe) ResyncVMTags(vmID string) (defs.Probe2StoreMsg, error) {
 	t.vmTagMapLock.Lock()
 	oldTags, ok := t.vmTagMap[vmID]
 	t.vmTagMapLock.Unlock()
 	if !ok {
-		return
+		return defs.Probe2StoreMsg{}, fmt.Errorf("No tag entry for VM %s", vmID)
 	}
 	tagObj := tags.AttachedTags{
 		TagIDs: oldTags.Items(),
 	}
-	t.generateTagEvent(vmID, tagObj)
+	return t.generateTagEvent(vmID, tagObj)
 }
 
 func (t *tagsProbe) processTags(tags []tags.AttachedTags) {
 	// For each object generate its diff
+	ctx := t.ClientCtx
+	if ctx == nil {
+		return
+	}
 	for _, tagObj := range tags {
 		t.Log.Debugf("processing %d tags", len(tagObj.TagIDs))
 		vm := tagObj.ObjectID.Reference().Value
@@ -722,12 +726,26 @@ func (t *tagsProbe) processTags(tags []tags.AttachedTags) {
 		}
 		t.vmTagMapLock.Unlock()
 		if writeTags {
-			t.generateTagEvent(vm, tagObj)
+			m, err := t.generateTagEvent(vm, tagObj)
+			if err == nil && t.outbox != nil {
+				t.Log.Debugf("Sending tag message to store, key: %s, changes: %+v", vm, m.Val)
+				select {
+				case <-ctx.Done():
+					return
+				case t.outbox <- m:
+				}
+			}
 		}
 	}
 }
 
-func (t *tagsProbe) generateTagEvent(vm string, tagObj tags.AttachedTags) {
+func (t *tagsProbe) generateTagEvent(vm string, tagObj tags.AttachedTags) (defs.Probe2StoreMsg, error) {
+	ctx := t.ClientCtx
+	if ctx == nil {
+		// If ctx is nil, client will be recreated soon and all vm tag events
+		// will be sent again
+		return defs.Probe2StoreMsg{}, fmt.Errorf("Client ctx cancelled")
+	}
 	t.vmTagMapLock.Lock()
 	t.vmTagMap[vm] = NewDeltaStrSet(tagObj.TagIDs)
 	t.vmTagMapLock.Unlock()
@@ -738,7 +756,7 @@ func (t *tagsProbe) generateTagEvent(vm string, tagObj tags.AttachedTags) {
 	res := make(chan []defs.TagEntry, 100)
 	workerFn := func() {
 		defer workWg.Done()
-		if t.ClientCtx.Err() != nil {
+		if ctx.Err() != nil {
 			return
 		}
 		var entries []defs.TagEntry
@@ -827,11 +845,7 @@ func (t *tagsProbe) generateTagEvent(vm string, tagObj tags.AttachedTags) {
 			Originator: t.VcID,
 		},
 	}
-	t.Log.Debugf("Sending tag message to store, key: %s, changes: %v", vm, tagEntries)
-	if t.outbox != nil {
-		t.outbox <- m
-	}
-
+	return m, nil
 }
 
 func (t *tagsProbe) retry(fn func() (interface{}, error), operName string, delay time.Duration, count int) (interface{}, error) {

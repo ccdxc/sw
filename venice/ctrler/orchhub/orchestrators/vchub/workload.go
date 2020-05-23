@@ -75,6 +75,8 @@ var (
 	statusDone     = workload.WorkloadMigrationStatus_DONE.String()
 	statusFailed   = workload.WorkloadMigrationStatus_FAILED.String()
 	statusTimedOut = workload.WorkloadMigrationStatus_TIMED_OUT.String()
+
+	overrideRewriteDelay = 10 * time.Second
 )
 
 func (v *VCHub) handleWorkloadEvent(evtType kvstore.WatchEventType, obj *workload.Workload) {
@@ -584,7 +586,10 @@ func (v *VCHub) resyncWorkload(wlObj *workload.Workload) {
 
 	m = v.convertWorkloadToEvent(dc.dcRef.Value, dc.Name, vm)
 	v.handleVM(m)
-	v.probe.ResyncVMTags(vm.Self.Value)
+	// ResyncVMTags emits a store event. Don't call from store thread
+	if m, err := v.probe.ResyncVMTags(vm.Self.Value); err == nil {
+		v.handleVM(m.Val.(defs.VCEventMsg))
+	}
 }
 
 func (v *VCHub) convertWorkloadToEvent(dcID, dcName string, vm mo.VirtualMachine) defs.VCEventMsg {
@@ -749,12 +754,53 @@ func (v *VCHub) setVlanOverride(dcID string, wlObj *workload.Workload) error {
 		}
 		// TODO: Handle retries if it fails
 		v.Log.Infof("setVlanOverride on dvs %s port %s vlan %d", dvs.DvsName, entry.Port, inf.MicroSegVlan)
-		if err := dvs.SetVlanOverride(entry.Port, int(inf.MicroSegVlan), wlObj.Name, inf.MACAddress); err != nil {
+		err := dvs.SetVlanOverride(entry.Port, int(inf.MicroSegVlan), wlObj.Name, inf.MACAddress)
+		// vCenter has an issue although the config is correct, the proxy switch on the host is not correctly programmed
+		// Schedule a task to rewrite the same config 10s later
+		v.scheduleOverrideRewrite(dvs)
+
+		if err != nil {
 			v.Log.Errorf("Override vlan failed for workload %s, %s", wlObj.Name, err)
 			return err
 		}
 	}
 	return nil
+}
+
+func (v *VCHub) scheduleOverrideRewriteHelper(dvs *PenDVS, count int) {
+	// Verify dvs still exists
+	dvsName := dvs.DvsName
+	dc := v.GetDC(dvs.DcName)
+	dvs = dc.GetDVS(dvsName)
+	if dvs == nil {
+		v.Log.Infof("DVS %s no longer exists, rewrite overrides exiting..", dvsName)
+		return
+	}
+	v.Log.Infof("Rewriting overrides for dvs %s", dvsName)
+
+	v.verifyOverridesOnDVS(dvs, true)
+	count--
+	if count == 0 {
+		dvs.Lock()
+		dvs.writeTaskScheduled = false
+		dvs.Unlock()
+	} else {
+		v.TimerQ.Add(func() {
+			v.scheduleOverrideRewriteHelper(dvs, count)
+		}, overrideRewriteDelay)
+	}
+}
+
+func (v *VCHub) scheduleOverrideRewrite(dvs *PenDVS) {
+	dvs.Lock()
+	if !dvs.writeTaskScheduled {
+		v.Log.Infof("scheduling override...")
+		dvs.writeTaskScheduled = true
+		v.TimerQ.Add(func() {
+			v.scheduleOverrideRewriteHelper(dvs, defaultRetryCount)
+		}, overrideRewriteDelay)
+	}
+	dvs.Unlock()
 }
 
 func (v *VCHub) reassignUsegs(dcName string, wlObj *workload.Workload) error {
@@ -979,6 +1025,7 @@ func (v *VCHub) assignUsegs(workload *workload.Workload) {
 
 			// TODO: Handle retries if it fails
 			err = dvs.SetVlanOverride(entry.Port, vlan, workload.Name, inf.MACAddress)
+			v.scheduleOverrideRewrite(dvs)
 			if err != nil {
 				v.Log.Errorf("Override vlan failed for workload %s, %s", workload.Name, err)
 			} else {

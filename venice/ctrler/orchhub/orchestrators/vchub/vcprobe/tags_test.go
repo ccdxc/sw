@@ -176,7 +176,9 @@ func TestTags(t *testing.T) {
 	th.verifyTags(expMap)
 
 	// resyncVMtags should trigger all events again
-	th.tp.ResyncVMTags(vm1.Self.Value)
+	evt, err := th.tp.ResyncVMTags(vm1.Self.Value)
+	AssertOk(t, err, "Failed to resync tags")
+	th.tp.outbox <- evt
 	expMap = map[string][]string{
 		vm1.Self.Value: []string{"default:tagZone11", "default:tagZone3"},
 	}

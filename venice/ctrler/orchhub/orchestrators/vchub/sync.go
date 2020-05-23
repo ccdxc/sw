@@ -274,6 +274,10 @@ func (v *VCHub) syncNetwork(networks []*ctkit.Network, dc mo.Datacenter, dvsObjs
 
 		for _, nw := range networks {
 			v.Log.Debugf("Checking nw %s", nw.Network.Name)
+			if nw.Status.OperState != network.OperState_Active.String() {
+				v.Log.Infof("Skipping network %s since it is not active", nw.Name)
+				continue
+			}
 			for _, orch := range nw.Network.Spec.Orchestrators {
 				if orch.Name == v.VcID &&
 					(orch.Namespace == dcName || orch.Namespace == utils.ManageAllDcs) {

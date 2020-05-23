@@ -3,6 +3,7 @@ package vchub
 import (
 	"context"
 	"encoding/json"
+	"strings"
 	"testing"
 	"time"
 
@@ -86,7 +87,8 @@ func TestDebug(t *testing.T) {
 		AssertOk(t, err, "Failed to get debug info")
 		retJSON, err := json.Marshal(ret)
 		AssertOk(t, err, "Failed to marshal debug info")
-		AssertEquals(t, exp, string(retJSON), "debug strings were not equal")
+
+		Assert(t, strings.Contains(string(retJSON), exp), "debug strings were not equal, got:  %v, expected to contain: %v", string(retJSON), exp)
 	}
 
 	params := map[string]string{

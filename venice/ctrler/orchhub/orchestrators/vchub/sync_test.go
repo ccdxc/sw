@@ -29,6 +29,7 @@ import (
 	"github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
 	smmock "github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
 	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
+	"github.com/pensando/sw/venice/ctrler/orchhub/utils/timerqueue"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	mockevtsrecorder "github.com/pensando/sw/venice/utils/events/recorder/mock"
@@ -550,7 +551,7 @@ func TestVCSyncVM(t *testing.T) {
 			VlanId: int32(3000),
 		},
 	}
-	mockProbe.UpdateDVSPortsVlan(dc1.Obj.Name, dvs.Obj.Name, portUpdate, retryCount)
+	mockProbe.UpdateDVSPortsVlan(dc1.Obj.Name, dvs.Obj.Name, portUpdate, false, retryCount)
 
 	time.Sleep(1 * time.Second)
 
@@ -622,7 +623,7 @@ func TestVCSyncVM(t *testing.T) {
 			VlanId: int32(3002),
 		},
 	}
-	mockProbe.UpdateDVSPortsVlan(dc1.Obj.Name, dvs.Obj.Name, portUpdate, retryCount)
+	mockProbe.UpdateDVSPortsVlan(dc1.Obj.Name, dvs.Obj.Name, portUpdate, false, retryCount)
 
 	vchub.Sync()
 
@@ -1129,7 +1130,7 @@ func TestHostDeleteFromDVS(t *testing.T) {
 	}
 
 	// SETTING UP LOGGER
-	config := log.GetDefaultConfig("scale_test-Host")
+	config := log.GetDefaultConfig("sync_host-delete")
 	config.LogToStdout = true
 	config.Filter = log.AllowAllFilter
 	logger := log.SetConfig(config)
@@ -1394,6 +1395,7 @@ func setupTestVCHub(vcURL *url.URL, stateMgr *statemgr.Statemgr, config *orchest
 		ForceDCNames: map[string]bool{utils.ManageAllDcs: true},
 		DcIDMap:      map[string]types.ManagedObjectReference{},
 		DvsIDMap:     map[string]types.ManagedObjectReference{},
+		TimerQ:       timerqueue.NewQueue(),
 	}
 	vchub := &VCHub{}
 	vchub.State = &state

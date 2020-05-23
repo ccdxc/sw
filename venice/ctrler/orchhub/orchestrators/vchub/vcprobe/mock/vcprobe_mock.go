@@ -12,6 +12,7 @@ import (
 	mo "github.com/vmware/govmomi/vim25/mo"
 	types "github.com/vmware/govmomi/vim25/types"
 
+	defs "github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	vcprobe "github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/vcprobe"
 )
 
@@ -74,8 +75,11 @@ func (mr *MockTagsProbeInfMockRecorder) GetPensandoTagsOnObjects(refs interface{
 }
 
 // ResyncVMTags mocks base method
-func (m *MockTagsProbeInf) ResyncVMTags(arg0 string) {
-	m.ctrl.Call(m, "ResyncVMTags", arg0)
+func (m *MockTagsProbeInf) ResyncVMTags(arg0 string) (defs.Probe2StoreMsg, error) {
+	ret := m.ctrl.Call(m, "ResyncVMTags", arg0)
+	ret0, _ := ret[0].(defs.Probe2StoreMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // ResyncVMTags indicates an expected call of ResyncVMTags
@@ -534,15 +538,15 @@ func (mr *MockProbeInfMockRecorder) GetPenDVS(dcName, dvsName, retry interface{}
 }
 
 // UpdateDVSPortsVlan mocks base method
-func (m *MockProbeInf) UpdateDVSPortsVlan(dcName, dvsName string, portsSetting vcprobe.PenDVSPortSettings, retry int) error {
-	ret := m.ctrl.Call(m, "UpdateDVSPortsVlan", dcName, dvsName, portsSetting, retry)
+func (m *MockProbeInf) UpdateDVSPortsVlan(dcName, dvsName string, portsSetting vcprobe.PenDVSPortSettings, forceWrite bool, retry int) error {
+	ret := m.ctrl.Call(m, "UpdateDVSPortsVlan", dcName, dvsName, portsSetting, forceWrite, retry)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateDVSPortsVlan indicates an expected call of UpdateDVSPortsVlan
-func (mr *MockProbeInfMockRecorder) UpdateDVSPortsVlan(dcName, dvsName, portsSetting, retry interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateDVSPortsVlan", reflect.TypeOf((*MockProbeInf)(nil).UpdateDVSPortsVlan), dcName, dvsName, portsSetting, retry)
+func (mr *MockProbeInfMockRecorder) UpdateDVSPortsVlan(dcName, dvsName, portsSetting, forceWrite, retry interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateDVSPortsVlan", reflect.TypeOf((*MockProbeInf)(nil).UpdateDVSPortsVlan), dcName, dvsName, portsSetting, forceWrite, retry)
 }
 
 // GetPenDVSPorts mocks base method
@@ -618,8 +622,11 @@ func (mr *MockProbeInfMockRecorder) GetPensandoTagsOnObjects(refs interface{}) *
 }
 
 // ResyncVMTags mocks base method
-func (m *MockProbeInf) ResyncVMTags(arg0 string) {
-	m.ctrl.Call(m, "ResyncVMTags", arg0)
+func (m *MockProbeInf) ResyncVMTags(arg0 string) (defs.Probe2StoreMsg, error) {
+	ret := m.ctrl.Call(m, "ResyncVMTags", arg0)
+	ret0, _ := ret[0].(defs.Probe2StoreMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // ResyncVMTags indicates an expected call of ResyncVMTags

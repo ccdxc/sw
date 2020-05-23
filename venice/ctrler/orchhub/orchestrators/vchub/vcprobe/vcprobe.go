@@ -57,7 +57,7 @@ type TagsProbeInf interface {
 	StartWatch()
 	SetupBaseTags() bool
 	GetPensandoTagsOnObjects(refs []types.ManagedObjectReference) (map[string]KindTagMapEntry, error)
-	ResyncVMTags(string)
+	ResyncVMTags(string) (defs.Probe2StoreMsg, error)
 
 	// Write methods
 	TagObjsAsManaged(refs []types.ManagedObjectReference) error
@@ -117,7 +117,7 @@ type ProbeInf interface {
 	AddPenDVS(dcName string, dvsCreateSpec *types.DVSCreateSpec, equalFn DVSConfigDiff, retry int) error
 	RenameDVS(dcName, oldName string, newName string, retry int) error
 	GetPenDVS(dcName, dvsName string, retry int) (*object.DistributedVirtualSwitch, error)
-	UpdateDVSPortsVlan(dcName, dvsName string, portsSetting PenDVSPortSettings, retry int) error
+	UpdateDVSPortsVlan(dcName, dvsName string, portsSetting PenDVSPortSettings, forceWrite bool, retry int) error
 	GetPenDVSPorts(dcName, dvsName string, criteria *types.DistributedVirtualSwitchPortCriteria, retry int) ([]types.DistributedVirtualPort, error)
 	RemovePenDVS(dcName, dvsName string, retry int) error
 

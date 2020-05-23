@@ -113,7 +113,8 @@ type debugPG struct {
 
 func (v *VCHub) debugState(params map[string]string) (interface{}, error) {
 	// DC -> DVS -> PG
-	ret := map[string]debugDC{}
+	// Also contains launch time of vchub
+	dcRet := map[string]debugDC{}
 	v.DcMapLock.Lock()
 	defer v.DcMapLock.Unlock()
 	for dcName, dc := range v.DcMap {
@@ -139,7 +140,14 @@ func (v *VCHub) debugState(params map[string]string) (interface{}, error) {
 			dcObj.DVS[dvsName] = dvsObj
 		}
 		dc.Unlock()
-		ret[dcName] = dcObj
+		dcRet[dcName] = dcObj
+	}
+	ret := struct {
+		DcInfo     map[string]debugDC
+		LaunchTime string
+	}{
+		DcInfo:     dcRet,
+		LaunchTime: v.launchTime,
 	}
 
 	return ret, nil

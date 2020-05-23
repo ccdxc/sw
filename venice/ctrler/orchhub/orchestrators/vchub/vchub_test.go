@@ -1106,8 +1106,11 @@ func TestRapidEvents(t *testing.T) {
 	orchConfig.Spec.URI = defaultTestParams.TestHostName
 
 	err = sm.Controller().Orchestrator().Create(orchConfig)
+	// Make channels really small to verify there are no deadlocks from channel issues
+	evCh := make(chan defs.Probe2StoreMsg, 2)
+	readCh := make(chan defs.Probe2StoreMsg, 2)
 
-	vchub = LaunchVCHub(sm, orchConfig, logger, WithMockProbe)
+	vchub = LaunchVCHub(sm, orchConfig, logger, WithMockProbe, WithVcEventsCh(evCh), WithVcReadCh(readCh))
 
 	// Wait for it to come up
 	AssertEventually(t, func() (bool, interface{}) {
@@ -3014,6 +3017,7 @@ func TestVerifyOverride(t *testing.T) {
 	}
 	smmock.CreateNetwork(sm, "default", "pg1", "11.1.1.0/24", "11.1.1.1", 500, nil, orchInfo1)
 
+	overrideRewriteDelay = 500 * time.Millisecond
 	vchub = LaunchVCHub(sm, orchConfig, logger, WithMockProbe)
 
 	// Wait for it to come up
@@ -3048,7 +3052,38 @@ func TestVerifyOverride(t *testing.T) {
 
 	probe.DvsStateMapLock.Unlock()
 
-	vchub.verifyOverrides()
+	AssertEventually(t, func() (bool, interface{}) {
+		probe.DvsStateMapLock.Lock()
+		defer probe.DvsStateMapLock.Unlock()
+		overrides := probe.DvsStateMap[dcName][dvsName]
+		if len(overrides) != 2 {
+			return false, fmt.Errorf("overrides length was %d", len(overrides))
+		}
+		// Check override is present
+		return true, nil
+	}, "Failed to find overrides", "10ms", "1s")
+
+	probe.DvsStateMapLock.Lock()
+
+	overrides = probe.DvsStateMap[dcName][dvsName]
+	for port, config := range overrides {
+		vlan := config.Config.Setting.(*types.VMwareDVSPortSetting).Vlan.(*types.VmwareDistributedVirtualSwitchVlanIdSpec).VlanId
+		AssertEquals(t, currOverrides[port], vlan, "Vlan was not reset for port %s", port)
+	}
+	probe.DvsStateMapLock.Unlock()
+
+	// Wait for rewrites to pass
+	time.Sleep(2 * time.Second)
+
+	probe.DvsStateMapLock.Lock()
+
+	// Modify overrides
+	delete(overrides, "11")
+	overrides["12"].Config.Setting.(*types.VMwareDVSPortSetting).Vlan.(*types.VmwareDistributedVirtualSwitchVlanIdSpec).VlanId = 1
+
+	probe.DvsStateMapLock.Unlock()
+
+	vchub.verifyOverrides(false)
 
 	AssertEventually(t, func() (bool, interface{}) {
 		probe.DvsStateMapLock.Lock()
@@ -3068,6 +3103,7 @@ func TestVerifyOverride(t *testing.T) {
 		vlan := config.Config.Setting.(*types.VMwareDVSPortSetting).Vlan.(*types.VmwareDistributedVirtualSwitchVlanIdSpec).VlanId
 		AssertEquals(t, currOverrides[port], vlan, "Vlan was not reset for port %s", port)
 	}
+	probe.DvsStateMapLock.Unlock()
 
 }
 

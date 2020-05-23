@@ -226,7 +226,7 @@ func TestListAndWatch(t *testing.T) {
 		},
 	}
 	// Call will fail, added to increase coverage
-	err = vcp.UpdateDVSPortsVlan(testParams.TestDCName, testParams.TestDVSName, ports, retryCount)
+	err = vcp.UpdateDVSPortsVlan(testParams.TestDCName, testParams.TestDVSName, ports, false, retryCount)
 	// Don't check err since it is
 	// ServerFaultCode: DistributedVirtualSwitch:dvs-28 does not implement: ReconfigureDVPort_Task
 

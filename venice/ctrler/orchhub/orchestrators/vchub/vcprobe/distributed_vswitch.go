@@ -284,7 +284,7 @@ func (v *VCProbe) isOverrideEqual(portsSetting PenDVSPortSettings, ports []types
 }
 
 // UpdateDVSPortsVlan updates the port settings
-func (v *VCProbe) UpdateDVSPortsVlan(dcName, dvsName string, portsSetting PenDVSPortSettings, retry int) error {
+func (v *VCProbe) UpdateDVSPortsVlan(dcName, dvsName string, portsSetting PenDVSPortSettings, forceWrite bool, retry int) error {
 	v.Log.Debugf("UpdateDVSPortsVlan called with %s %s %v", dcName, dvsName, portsSetting)
 	getAndCheck := func(client *govmomi.Client) ([]types.DVPortConfigSpec, bool, error) {
 		numPorts := len(portsSetting)
@@ -315,7 +315,7 @@ func (v *VCProbe) UpdateDVSPortsVlan(dcName, dvsName string, portsSetting PenDVS
 			portSpecs[i].Setting = setting
 		}
 
-		return portSpecs, v.isOverrideEqual(portsSetting, ports), nil
+		return portSpecs, !forceWrite && v.isOverrideEqual(portsSetting, ports), nil
 	}
 
 	fn := func() (interface{}, error) {
