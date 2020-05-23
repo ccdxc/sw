@@ -20,24 +20,26 @@
 
 // event identifiers
 typedef enum event_id_e {
-    EVENT_ID_NONE               = PDS_IPC_EVENT_ID_HAL_MIN,
-    EVENT_ID_PDS_HAL_UP         = (PDS_IPC_EVENT_ID_HAL_MIN + 1),
-    EVENT_ID_PORT_STATUS        = (PDS_IPC_EVENT_ID_HAL_MIN + 2),
-    EVENT_ID_XCVR_STATUS        = (PDS_IPC_EVENT_ID_HAL_MIN + 3),
-    EVENT_ID_UPLINK_STATUS      = (PDS_IPC_EVENT_ID_HAL_MIN + 4),
-    EVENT_ID_HOST_LIF_CREATE    = (PDS_IPC_EVENT_ID_HAL_MIN + 5),
-    EVENT_ID_LIF_STATUS         = (PDS_IPC_EVENT_ID_HAL_MIN + 6),
-    EVENT_ID_MAC_LEARN          = (PDS_IPC_EVENT_ID_HAL_MIN + 7),
-    EVENT_ID_IP_LEARN           = (PDS_IPC_EVENT_ID_HAL_MIN + 8),
-    EVENT_ID_MAC_AGE            = (PDS_IPC_EVENT_ID_HAL_MIN + 9),
-    EVENT_ID_IP_AGE             = (PDS_IPC_EVENT_ID_HAL_MIN + 10),
-    EVENT_ID_IP_DELETE          = (PDS_IPC_EVENT_ID_HAL_MIN + 11),
-    EVENT_ID_MAC_DELETE         = (PDS_IPC_EVENT_ID_HAL_MIN + 12),
-    EVENT_ID_MAC_MOVE_L2R       = (PDS_IPC_EVENT_ID_HAL_MIN + 13),
-    EVENT_ID_IP_MOVE_L2R        = (PDS_IPC_EVENT_ID_HAL_MIN + 14),
-    EVENT_ID_MAC_MOVE_R2L       = (PDS_IPC_EVENT_ID_HAL_MIN + 15),
-    EVENT_ID_IP_MOVE_R2L        = (PDS_IPC_EVENT_ID_HAL_MIN + 16),
-    EVENT_ID_PDS_CFG_OBJ_SET    = (PDS_IPC_EVENT_ID_HAL_MIN + 17),
+    EVENT_ID_NONE                 = PDS_IPC_EVENT_ID_HAL_MIN,
+    EVENT_ID_PDS_HAL_UP           = (PDS_IPC_EVENT_ID_HAL_MIN + 1),
+    EVENT_ID_PORT_STATUS          = (PDS_IPC_EVENT_ID_HAL_MIN + 2),
+    EVENT_ID_XCVR_STATUS          = (PDS_IPC_EVENT_ID_HAL_MIN + 3),
+    EVENT_ID_UPLINK_STATUS        = (PDS_IPC_EVENT_ID_HAL_MIN + 4),
+    EVENT_ID_HOST_LIF_CREATE      = (PDS_IPC_EVENT_ID_HAL_MIN + 5),
+    EVENT_ID_LIF_STATUS           = (PDS_IPC_EVENT_ID_HAL_MIN + 6),
+    EVENT_ID_MAC_LEARN            = (PDS_IPC_EVENT_ID_HAL_MIN + 7),
+    EVENT_ID_IP_LEARN             = (PDS_IPC_EVENT_ID_HAL_MIN + 8),
+    EVENT_ID_MAC_AGE              = (PDS_IPC_EVENT_ID_HAL_MIN + 9),
+    EVENT_ID_IP_AGE               = (PDS_IPC_EVENT_ID_HAL_MIN + 10),
+    EVENT_ID_IP_DELETE            = (PDS_IPC_EVENT_ID_HAL_MIN + 11),
+    EVENT_ID_MAC_DELETE           = (PDS_IPC_EVENT_ID_HAL_MIN + 12),
+    EVENT_ID_MAC_MOVE_L2R         = (PDS_IPC_EVENT_ID_HAL_MIN + 13),
+    EVENT_ID_IP_MOVE_L2R          = (PDS_IPC_EVENT_ID_HAL_MIN + 14),
+    EVENT_ID_MAC_MOVE_R2L         = (PDS_IPC_EVENT_ID_HAL_MIN + 15),
+    EVENT_ID_IP_MOVE_R2L          = (PDS_IPC_EVENT_ID_HAL_MIN + 16),
+    EVENT_ID_PDS_CFG_OBJ_SET      = (PDS_IPC_EVENT_ID_HAL_MIN + 17),
+    EVENT_ID_PDS_API_BATCH_COMMIT = (PDS_IPC_EVENT_ID_HAL_MIN + 18),
+    EVENT_ID_PDS_API_BATCH_ABORT  = (PDS_IPC_EVENT_ID_HAL_MIN + 19),
 } event_id_t;
 
 namespace core {
@@ -82,15 +84,22 @@ typedef struct learn_event_info_s {
     mac_addr_t      mac_addr;
 } learn_event_info_t;
 
+// API batch commit/abort event information
+typedef struct api_batch_event_info_s {
+    // epoch being committed or aborted
+    pds_epoch_t epoch;
+} api_batch_event_info_t;
+
 // event structure that gets passed around for every event
 typedef struct event_s {
-    event_id_t              event_id;
+    event_id_t                 event_id;
     union {
-        port_event_info_t   port;
-        xcvr_event_info_t   xcvr;
-        uplink_event_info_t uplink;
-        lif_event_info_t    lif;
-        learn_event_info_t  learn;
+        port_event_info_t      port;
+        xcvr_event_info_t      xcvr;
+        uplink_event_info_t    uplink;
+        lif_event_info_t       lif;
+        learn_event_info_t     learn;
+        api_batch_event_info_t batch;
     };
 } event_t;
 

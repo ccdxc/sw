@@ -1149,10 +1149,11 @@ api_engine::rollback_config_(dirty_obj_list_t::iterator it, api_base *api_obj,
 
 sdk_ret_t
 api_engine::batch_abort_(void) {
-    sdk_ret_t                     ret = SDK_RET_OK;
-    dirty_obj_list_t::iterator    next_it;
-    dep_obj_list_t::iterator     aol_next_it;
-    api_obj_ctxt_t                *octxt;
+    ::core::event_t event;
+    api_obj_ctxt_t *octxt;
+    sdk_ret_t ret = SDK_RET_OK;
+    dirty_obj_list_t::iterator next_it;
+    dep_obj_list_t::iterator aol_next_it;
 
     PDS_API_ABORT_COUNTER_INC(abort, 1);
     PDS_TRACE_DEBUG("Initiating batch abort for epoch %u", batch_ctxt_.epoch);
@@ -1162,6 +1163,13 @@ api_engine::batch_abort_(void) {
     batch_ctxt_.stage = API_BATCH_STAGE_ABORT;
 
     PDS_TRACE_INFO("Starting config rollback stage");
+
+    // send a notification announcing that the API batch is being aborted
+    event.event_id = EVENT_ID_PDS_API_BATCH_ABORT;
+    event.batch.epoch = batch_ctxt_.epoch;
+    sdk::ipc::broadcast(EVENT_ID_PDS_API_BATCH_ABORT,
+                        &event, sizeof(event));
+
     // rollback objects in dirty list
     for (auto it = batch_ctxt_.dol.begin(), next_it = it;
          it != batch_ctxt_.dol.end(); it = next_it) {
@@ -1323,6 +1331,7 @@ api_engine::send_ntfn_msgs_(void) {
 sdk_ret_t
 api_engine::batch_commit_phase2_(void) {
     sdk_ret_t ret;
+    ::core::event_t event;
 
     // walk over the dirty object list, performe the de-duped operation on
     // each object including allocating resources and h/w programming (with the
@@ -1358,6 +1367,12 @@ api_engine::batch_commit_phase2_(void) {
 
     // send API notification msgs to IPC peers interested in this batch
     send_ntfn_msgs_();
+    
+    // send a notification announcing that the API batch is committed now
+    event.event_id = EVENT_ID_PDS_API_BATCH_COMMIT;
+    event.batch.epoch = batch_ctxt_.epoch;
+    sdk::ipc::broadcast(EVENT_ID_PDS_API_BATCH_COMMIT,
+                        &event, sizeof(event));
 
     // update the epoch to current epoch
     PDS_TRACE_INFO("Advancing from epoch %u to epoch %u",
