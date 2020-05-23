@@ -185,6 +185,10 @@ export class PentableComponent extends BaseComponent implements AfterViewInit, O
     return this.creatingMode || this.showRowExpand;
   }
 
+  isShowRowExpand(): boolean {
+    return this.showRowExpand;
+  }
+
   onColumnResize() {
     const $ = Utility.getJQuery();
     const resizerHelper = $('.ui-column-resizer-helper');

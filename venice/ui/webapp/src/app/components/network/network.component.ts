@@ -70,6 +70,7 @@ export class NetworkComponent extends DataComponent implements OnInit {
 
   subscriptions: Subscription[] = [];
   dataObjects: ReadonlyArray<NetworkNetwork> = [];
+  dataObjectsBackup: ReadonlyArray<NetworkNetwork> = [];
   networkEventUtility: HttpEventUtility<NetworkNetwork>;
 
   disableTableWhenRowExpanded: boolean = true;
@@ -101,7 +102,10 @@ export class NetworkComponent extends DataComponent implements OnInit {
         if (response.connIsErrorState) {
           return;
         }
-        this.dataObjects = this.buildNetworkWorkloadsMap(response.data);
+        this.dataObjectsBackup = this.buildNetworkWorkloadsMap(response.data);
+        if (!this.networkTable.isShowRowExpand()) {
+          this.dataObjects = Utility.getLodash().cloneDeepWith(this.dataObjectsBackup);
+        }
         this.tableLoading = false;
       },
       (error) => {
@@ -142,7 +146,10 @@ export class NetworkComponent extends DataComponent implements OnInit {
           return;
         }
         this.workloadList = response.data as WorkloadWorkload[];
-        this.dataObjects = this.buildNetworkWorkloadsMap(this.dataObjects);
+        this.dataObjectsBackup = this.buildNetworkWorkloadsMap(this.dataObjects);
+        if (!this.networkTable.isShowRowExpand()) {
+          this.dataObjects = Utility.getLodash().cloneDeepWith(this.dataObjectsBackup);
+        }
       }
     );
     this.subscriptions.push(workloadSubscription);
@@ -216,6 +223,7 @@ export class NetworkComponent extends DataComponent implements OnInit {
     if (this.networkTable.showRowExpand) {
       this.networkTable.toggleRow(rowData);
     }
+    this.dataObjects = Utility.getLodash().cloneDeepWith(this.dataObjectsBackup);
   }
 
   expandRowRequest(event, rowData) {
