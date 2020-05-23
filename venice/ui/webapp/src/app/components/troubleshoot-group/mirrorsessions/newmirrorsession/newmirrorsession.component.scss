@@ -105,7 +105,7 @@ $dary-grey: #a9a9a9;
       margin-bottom: 10px;
 
       .newmirrorsession-interface-box {
-        width: 170px;
+        width: 200px;
       }
 
       .newmirrorsession-interface-box.requiredField :first-child {
@@ -120,12 +120,24 @@ $dary-grey: #a9a9a9;
         height: 30px;
         font-size: 14px;
         width: 100%;
+
+        input {
+          height: 28px;
+        }
+
+        input:hover,
+        input:focus {
+          border: 0px !important;
+        }
       }
 
-      .newmirrorsession-interface-and {
-        &:hover {
-          cursor: pointer;
-          color: black;
+      .newmirrorsession-labelvalues-boxes {
+        ul {
+          width: 200px;
+          white-space: nowrap;
+          overflow: hidden !important;
+          font-size: 16px !important;
+          height: 30px !important;
         }
       }
 

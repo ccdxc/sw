@@ -147,56 +147,11 @@
     </div>
     <div fxFlex="auto"
          class="newmirrorsession-section-div newmirrorsession-section-workloadlabels-div">
-      <div fxFlex="none" fxLayout="column" fxLayoutGap="15px"
-           [formGroup]="newObject.$formGroup.get(['spec', 'interfaces', 'selectors', 0, 'requirements'])">
-        <div fxFlex="nogrow" [formGroupName]="index" [@fastSlideInOut]
-             *ngFor="let selector of controlAsFormArray(newObject.$formGroup.get(['spec', 'interfaces', 'selectors', 0, 'requirements'])).controls; first as first; last as last; index as index;">
-          <div fxFlex="none" fxLayout="row" fxLayoutAlign="start end">
-            <div fxFlex="10px"></div>
-            <span fxFlex="none" fxLayout="row" [ngClass]="{
-                'newmirrorsession-interface-box': true,
-                'selectboxWithValue': true,
-                'requiredField': isFieldEmpty(selector.get(['key']))
-              }">
-              <p-dropdown formControlName="key" appFloatLabel="Label Key" appendTo="body"
-                          class="newmirrorsession-interface-selectbox" [options]="labelKeyOptions"
-                          (onChange)="onInterfaceKeyChange(selector)">
-                <ng-template let-item pTemplate="item">
-                  <span *ngIf="item.value">{{item.label}}</span>
-                </ng-template>
-              </p-dropdown>
-            </span>
-            <div fxFlex="15px"></div>
-            <span fxFlex="none" fxLayout="row" class="newmirrorsession-interface-operator-box">
-              <p-dropdown appFloatLabel="Operator" appendTo="body"
-                          class="newmirrorsession-interface-selectbox"
-                          [options]="labelOperatorOptions" formControlName="operator">
-              </p-dropdown>
-            </span>
-            <div fxFlex="15px"></div>
-            <span fxFlex="none" fxLayout="row" [ngClass]="{
-                'newmirrorsession-interface-box': true,
-                'selectboxWithValue': true,
-                'requiredField': isFieldEmpty(selector.get(['values']))
-              }">
-              <p-multiSelect appFloatLabel="Label Values" appendTo="body"
-                             formControlName="values" class="newmirrorsession-interface-selectbox"
-                             [options]="labelValueOptionsMap[selector.get(['key']).value] || []"
-                             [filter]="false" [showHeader]="false" [showToggleAll]="false">
-              </p-multiSelect>
-            </span>
-            <div fxFlex="10px"></div>
-            <div fxFlex="nogrow" *ngIf="last">
-              <span class="newmirrorsession-interface-and" (click)="addInterfaceSelector()">+
-                AND</span>
-            </div>
-            <div fxFlex="10px"></div>
-            <mat-icon fxFlex="nogrow" class="global-trash-button newmirrorsession-delete"
-                      *ngIf="controlAsFormArray(newObject.$formGroup.get(['spec', 'interfaces', 'selectors', 0, 'requirements'])).length > 1"
-                      (click)="removeInterfaceSelector(index)">delete</mat-icon>
-          </div>
-        </div>
-      </div>
+      <app-listcontainer
+                         [formGroup]="newObject.$formGroup.get(['spec', 'interfaces', 'selectors', 0, 'requirements'])"
+                         [itemTemplate]="interfaceRowTemplate" (addItem)="addInterfaceSelector()"
+                         (deleteItem)="removeInterfaceSelector($event)">
+      </app-listcontainer>
     </div>
     <div fxFlex="auto" class="newmirrorsession-label-match-count"
          *ngIf="getAllInterfaceSelectorsValues()">
@@ -207,6 +162,55 @@
       </ng-container>
     </div>
   </app-fieldcontainer>
+</ng-template>
+
+<ng-template #interfaceRowTemplate let-selector="item" let-index="index">
+  <div fxFlex="540px" fxLayout="row" [formGroup]="selector">
+    <span fxFlex="none" fxLayout="row" [ngClass]="{
+        'newmirrorsession-interface-box': true,
+        'selectboxWithValue': true,
+        'requiredField': isFieldEmpty(selector.get(['key']))
+    }">
+      <p-dropdown formControlName="key" appFloatLabel="Label Key" editable="true" appendTo="body"
+                  class="newmirrorsession-interface-selectbox" [options]="labelKeyOptions"
+                  (onChange)="onInterfaceKeyChange(selector)">
+        <ng-template let-item pTemplate="item">
+          <span *ngIf="item.value">{{item.label}}</span>
+        </ng-template>
+      </p-dropdown>
+    </span>
+    <div fxFlex="15px"></div>
+    <span fxFlex="none" fxLayout="row" class="newmirrorsession-interface-operator-box">
+      <p-dropdown appFloatLabel="Operator" appendTo="body"
+                  class="newmirrorsession-interface-selectbox"
+                  [options]="labelOperatorOptions" formControlName="operator">
+      </p-dropdown>
+    </span>
+    <div fxFlex="15px"></div>
+    <span *ngIf="!labelValueOptionsMap[selector.get(['key']).value] as labelValueOptions"
+          [ngClass]="{
+            'newmirrorsession-interface-box': true,
+            'app-formchips-requiredField': isFieldEmpty(selector.get(['values'])) && labelValueOptions
+    }">
+      <app-formchips fxFlex="none" [chipsLabel]="'Label Values'"
+                     [formControl]="selector.get('values')" [toolTip]="LABELVALUES_TOOLTIP"
+                     [itemValidator]="isValidLabelValue"
+                     boxStyleClass="newmirrorsession-labelvalues-boxes">
+      </app-formchips>
+    </span>
+    <span *ngIf="labelValueOptionsMap[selector.get(['key']).value] as labelValueOptions"
+          fxFlex="none" fxLayout="row" [ngClass]="{
+        'newmirrorsession-interface-box': true,
+        'selectboxWithValue': true,
+        'requiredField': isFieldEmpty(selector.get(['values'])) && labelValueOptions
+    }">
+      <p-multiSelect appFloatLabel="Label Values" appendTo="body"
+                     formControlName="values" class="newmirrorsession-interface-selectbox"
+                     [options]="labelValueOptions || []"
+                     [filter]="false" [showHeader]="false" [showToggleAll]="false">
+      </p-multiSelect>
+    </span>
+  </div>
 </ng-template>
 
 <ng-template #match_rules>
