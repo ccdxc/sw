@@ -1218,21 +1218,22 @@ def validateErspanPackets(tc, lif_flow_collector, lif_flow_collector_idx):
                 break
             pkt_count += 1
 
-            if pkt.haslayer(ERSPAN_II) == False and\
-               pkt.haslayer(ERSPAN_III) == False:
-                continue
-            pkt_erspan_count += 1
-
             if pkt.haslayer(IP):
                 # Collector-IP validation
                 collector = pkt[IP].dst
                 if collector != tc.collector_ip_address[idx]:
-                    api.Logger.error("ERROR: Collector-ip {} {}"\
+                    api.Logger.error("ERROR: [IGNORE] Collector-ip {} {}"\
                                .format(collector, tc.collector_ip_address[idx]))
                     pkt.show()
-                    #tc.result[c] = api.types.status.FAILURE
-                    #break
-                    continue
+
+                    #
+                    # In Windows environment, sometimes gre filter doesn't
+                    # effect for tcpdump, so ignore and continue
+                    #
+                    if api.GetNodeOs(tc.naples.node_name) == "windows":
+                        continue
+                    tc.result[c] = api.types.status.FAILURE
+                    break
 
                 # ERSPAN-Pkt-Size validation
                 iplen = pkt[IP].len
@@ -1241,6 +1242,11 @@ def validateErspanPackets(tc, lif_flow_collector, lif_flow_collector_idx):
                     api.Logger.error("ERROR: Packet-Size {} {}"\
                                      .format(pkt_size, tc.iterators.pktsize))
                     tc.result[c] = api.types.status.FAILURE
+
+            if pkt.haslayer(ERSPAN_II) == False and\
+               pkt.haslayer(ERSPAN_III) == False:
+                continue
+            pkt_erspan_count += 1
 
             # GRE-Sequence-number validation (errors are ignored in
             # in classic-mode until code-fix is in)
@@ -1282,8 +1288,8 @@ def validateErspanPackets(tc, lif_flow_collector, lif_flow_collector_idx):
                     tstmp_msb = pkt[ERSPAN_III][ERSPAN_PlatformSpecific].info2
                     tstmp_lsb = pkt[ERSPAN_III].timestamp
                     tstmp = (tstmp_msb << 32) | tstmp_lsb
-                    if utils.VerifyTimeStamp(pkt) != api.types.status.SUCCESS\
-                       or (pkt_count > 1 and tstmp <= tc.collector_tstmp[c]):
+                    if utils.VerifyTimeStamp(pkt) != api.types.status.SUCCESS:
+                       #or (pkt_count > 1 and tstmp <= tc.collector_tstmp[c]):
                         api.Logger.error("ERROR: TSTMP curr {} TSTMP last {}"\
                         .format(tstmp, tc.collector_tstmp[c]))
                         tc.result[c] = api.types.status.FAILURE
@@ -1451,7 +1457,7 @@ def validateErspanPackets(tc, lif_flow_collector, lif_flow_collector_idx):
                     tc.result[c] = api.types.status.FAILURE
 
         if tc.collector_tcp_pkts[c] == 0 and tc.collector_udp_pkts[c] == 0 and\
-           tc.collector_icmp_pkts[c] == 0:
+           tc.collector_icmp_pkts[c] == 0 and pkt_erspan_count == 0:
             api.Logger.error("ERROR: No ERSPAN packets to {}"\
                              .format(tc.collector_ip_address[idx]))
             result = api.types.status.FAILURE
