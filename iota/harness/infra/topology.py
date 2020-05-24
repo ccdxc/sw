@@ -10,6 +10,7 @@ import time
 import traceback
 import ipaddress
 
+from iota.harness.infra.apc import ApcControl
 from iota.harness.infra.utils.logger import Logger as Logger
 from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
 from iota.harness.infra.utils.console import Console
@@ -103,15 +104,6 @@ class Node(object):
         def GetPassword(self):
             return self.__password
 
-    class PciInfo:
-        def __init__(self, nic, bus, device, function):
-            self.__nic = nic
-            self.__bus = bus
-            self.__device = device
-            self.__function = function
-
-        def GetInfo(self):
-            return {'nic':self.__nic, 'bus':self.__bus, 'device':self.__device, 'function':self.__function}
 
     class NicDevice:
         def __init__(self, name, nic_type):
@@ -374,8 +366,6 @@ class Node(object):
                     device.SetNaplesPipeline(defaultPipeline)
 
         self.__role = self.__get_instance_role(spec.role, getattr(spec, "mode", None))
-        self.__nic_pci_info = {}  # not used
-        self.__nic_info = {}  # not used
         self.__vmUser = getattr(self.__inst, "Username", "vm")
         self.__vmPassword = getattr(self.__inst, "Password", "vm")
         self.ssh_host = "%s@%s" % (self.__vmUser, self.__ip_address) 
@@ -387,7 +377,7 @@ class Node(object):
         self.__cimc_ncsi_ip = getattr(self.__inst, "NodeCimcNcsiIP", None)
         self.__cimc_username = getattr(self.__inst, "NodeCimcUsername", None)
         self.__cimc_password = getattr(self.__inst, "NodeCimcPassword", None)
-        self.__data_intfs = [ "eth2", "eth3" ]
+        self.__data_intfs = []
         self.__host_intfs = []
         self.__host_if_alloc_idx = 0
         self.__tb_params = store.GetTestbed().GetProvisionParams()
@@ -447,7 +437,7 @@ class Node(object):
         if not len(personalities):
             os.system("cp /warmd.json '%s/iota/logs" % GlobalOptions.topdir)
             os.system("cat /warmd.json")
-            Logger.error("Unknown NIC Type : %s %s" % (nic_type, role))
+            Logger.error("Unknown NIC Type : %s %s" % (dev.NicType(), role))
             sys.exit(1)
         return personalities[0] # FIXME - review for multi-nic
 
@@ -513,40 +503,6 @@ class Node(object):
                                 password=apcInfo.GetPassword())
         apcctrl.portOn(apcInfo.GetPort())
 
-    # not used function
-    def GetNicPciInfo(self,nic):
-        if nic not in self.__nic_pci_info:
-            raise Exception('nic {0} not found on node {1}'.format(nic, self.__name))
-        return self.__nic_pci_info[nic].GetInfo()
-
-    def DetermineNicPciInfo(self,nic):
-        bus = 'na'
-        device = 'na'
-        function = 'na'
-        cmd = ''
-        reText = ''
-        if self.__os == 'linux':
-            cmd = "ethtool -i " + nic + " | awk -F ' ' '/bus-info/ { print $2}'"
-            reText = '([\d]+):([\d]+):([\d]+\.([\d]+))'
-        elif self.__os == 'freebsd':
-            cmd = ''
-            reText = ''
-        elif self.__os == 'windows':
-            cmd = ''
-            reText = ''
-        if not cmd == '':
-            try:
-                Logger.debug('sending cmd to get pci info: {0}'.format(cmd))
-                output = self.RunSshCmd(cmd)
-                Logger.debug('cmd returned: {0}'.format(output))
-                found = re.search(reText, output)
-                if found:
-                    domain,bus,device,function = found.groups()
-            except:
-                Logger.debug('failed to run determine pci info. error was: {0}'.format(traceback.format_exc()))
-        Logger.debug('pci info for node {0}: nic={1}, bus={2}, device={3}, function={4}'.format(self.__name, nic, bus, device, function))
-        self.__nic_pci_info[nic] = Node.PciInfo(nic=nic, bus=bus, device=device, function=function)
-        return self.__nic_pci_info[nic]
 
     def GetNicType(self, index=0):
         if hasattr(self.__inst, 'Nics'):
@@ -796,10 +752,6 @@ class Node(object):
                         naples_config.venice_ips.append(str(n.ControlIpAddress()))
                     for data_intf in self.__data_intfs:
                         naples_config.data_intfs.append(data_intf)
-                    try:
-                        self.DetermineNicPciInfo(data_intf)
-                    except:
-                        Logger.debug('failed to get pci info for node {0} nic {1}. error was: {2}'.format(self.__name, data_intf, traceback.format_exc()))
 
             host_entity = msg.entities.add()
             host_entity.type = topo_pb2.ENTITY_TYPE_HOST
