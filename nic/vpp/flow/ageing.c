@@ -571,19 +571,19 @@ always_inline uint8_t
 pds_flow_get_ctr_idx (uint8_t proto, bool isv4)
 {
     switch(proto) {
-    case PDS_FLOW_PROTO_TCP:
+    case IP_PROTOCOL_TCP:
         if (isv4) {
             return FLOW_TYPE_COUNTER_TCPV4;
         } else {
             return FLOW_TYPE_COUNTER_TCPV6;
         }
-    case PDS_FLOW_PROTO_UDP:
+    case IP_PROTOCOL_UDP:
         if (isv4) {
             return FLOW_TYPE_COUNTER_UDPV4;
         } else {
             return FLOW_TYPE_COUNTER_UDPV6;
         }
-    case PDS_FLOW_PROTO_ICMP:
+    case IP_PROTOCOL_ICMP:
         if (isv4) {
             return FLOW_TYPE_COUNTER_ICMPV4;
         } else {

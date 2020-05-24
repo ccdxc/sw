@@ -57,7 +57,6 @@ flow_monitor_process (vlib_main_t * vm,
     uint32_t publish_time = PDS_FLOW_STATS_PUBLISH_INTERVAL;
     uint32_t monitor_time = fm->monitor_interval;
     uint32_t sleep_time;
-    uint32_t ses_id;
 
     while(1) {
         sleep_time = MIN(publish_time, monitor_time);
@@ -73,19 +72,19 @@ flow_monitor_process (vlib_main_t * vm,
         }
 
         if (monitor_time == 0) {
-            for (ses_id = 1; ses_id <= fm->max_sessions; ses_id++) {
-                session = pds_flow_get_hw_ctx(ses_id);
-                if (session == NULL) {
+            pds_flow_prog_lock();
+            pool_foreach(session, fm->session_index_pool, ({
+                if (!session->is_in_use) {
                     continue;
                 }
-                pds_flow_hw_ctx_lock(session);
-                if (PREDICT_FALSE(session->monitor_seen)) {
+                if (session->monitor_seen) {
+                    /* log session */
                     flow_monitor_export_session(session);
                 } else {
                     session->monitor_seen = 1;
                 }
-                pds_flow_hw_ctx_unlock(session);
-            }
+            }));
+            pds_flow_prog_unlock();
             monitor_time = fm->monitor_interval;
         }
     }
