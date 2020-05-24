@@ -144,7 +144,6 @@ ionic_notifyq_clean(struct lif *lif, unsigned int budget)
     struct ionic_dev *idev = &lif->ionic->idev;
     struct cq *cq = &lif->notifyqcq->cq;
     u32 work_done;
-    NDIS_HANDLE workItem = NULL;
 
     work_done =
         ionic_cq_service(cq, budget, ionic_notifyq_service, NULL, NULL, NULL);
@@ -166,13 +165,8 @@ ionic_notifyq_clean(struct lif *lif, unsigned int budget)
      */
     if (RtlCheckBit(&lif->state, LIF_LINK_CHECK_NEEDED)) {
 
-        workItem = NdisAllocateIoWorkItem(lif->ionic->adapterhandle);
+        KeSetEvent(&lif->ionic->LinkCheckWorker.evThreadDoWork, IO_NO_INCREMENT, FALSE);
 
-        if (workItem != NULL) {
-
-            NdisQueueIoWorkItem(workItem, CheckLinkStatusCb,
-                                (void *)lif->ionic);
-        }
     }
 
 return_to_napi:

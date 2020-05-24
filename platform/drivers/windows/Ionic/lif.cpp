@@ -1627,35 +1627,62 @@ ionic_napi(struct lif *lif,
     return work_done;
 }
 
-void
-CheckLinkStatusCb(PVOID WorkItemContext, NDIS_HANDLE NdisIoWorkItemHandle)
-{
-    struct ionic *ionic = (struct ionic *)WorkItemContext;
+#define DELAY_LINKCHECK_WORKER_THREAD   100LL      // 10us
+#define TIMEOUT_LINKCHECK_WORKER_THREAD 10000000LL // 1 sec
+VOID LinkCheckWorkerThreadProc(PVOID Context) {
+    struct ionic *  ionic = (struct ionic*)Context;
+    NTSTATUS        WaitStatus;
+    PVOID           WaitObjects[2];
+    LARGE_INTEGER   Timeout;
+    BOOLEAN         bExitThread = FALSE;
 
-    ionic_link_status_check(ionic->master_lif, PORT_OPER_STATUS_NONE);
+    WaitObjects[0] = (PVOID)&ionic->LinkCheckWorker.evStopThread;
+    WaitObjects[1] = (PVOID)&ionic->LinkCheckWorker.evThreadDoWork;
 
-    NdisFreeIoWorkItem(NdisIoWorkItemHandle);
+    Timeout.QuadPart = -(DELAY_LINKCHECK_WORKER_THREAD);
 
-    return;
-}
+    DbgTrace((TRACE_COMPONENT_WORKER_THREAD, TRACE_LEVEL_VERBOSE, "%s Irql Level: %u\n", __FUNCTION__, KeGetCurrentIrql()));
 
-void
-CheckLinkStatusTimerCb(void *SystemContext,
-                       void *FunctionContext,
-                       void *Context1,
-                       void *Context2)
-{
-    struct ionic *ionic = (struct ionic *)FunctionContext;
-    NDIS_HANDLE workItem = NULL;
+    while (!bExitThread) {
+        WaitStatus = KeWaitForMultipleObjects(2, WaitObjects, WaitAny, Executive, KernelMode, FALSE, &Timeout, NULL);
+        if (!NT_SUCCESS(WaitStatus)) {
+            DbgTrace((TRACE_COMPONENT_WORKER_THREAD, TRACE_LEVEL_VERBOSE, "%s KeWaitForSingleObject failed status %x\n", __FUNCTION__, WaitStatus));
+            break;
+        }
+        if (WaitStatus == STATUS_WAIT_0) {
+            DbgTrace((TRACE_COMPONENT_WORKER_THREAD, TRACE_LEVEL_VERBOSE, "%s evStopThread: Time to stop the thread\n", __FUNCTION__));
+            break;
+        }
+        if (WaitStatus == STATUS_WAIT_1) {
+            DbgTrace((TRACE_COMPONENT_WORKER_THREAD, TRACE_LEVEL_VERBOSE, "%s evThreadDoWork signaled \n"));
+            // do stuff
+            ionic_link_status_check(ionic->master_lif, PORT_OPER_STATUS_NONE);
 
-    UNREFERENCED_PARAMETER(SystemContext);
-    UNREFERENCED_PARAMETER(Context1);
-    UNREFERENCED_PARAMETER(Context2);
-
-    workItem = NdisAllocateIoWorkItem(ionic->adapterhandle);
-    if (workItem != NULL) {
-        NdisQueueIoWorkItem(workItem, CheckLinkStatusCb, ionic);
+            // if the stuff we do takes a long time, it could be helpful to read the evStopThread
+            // and break out of the long processing
+#if 0
+                if (KeReadStateEvent(&ionic->LinkCheckWorker.evStopThread)) {
+                    DbgTrace((TRACE_COMPONENT_WORKER_THREAD, TRACE_LEVEL_VERBOSE, "%s evStopThread signaled: Time to exit the thread\n", __FUNCTION__));
+                    bExitThread = TRUE;
+                }
+                if (bExitThread) {
+                    break;
+                }
+#endif
+            // set next link check timeout
+            Timeout.QuadPart = -(TIMEOUT_LINKCHECK_WORKER_THREAD);
+        }
+        else if (WaitStatus == STATUS_TIMEOUT) {
+            DbgTrace((TRACE_COMPONENT_WORKER_THREAD, TRACE_LEVEL_VERBOSE, "%s TIMEOUT_LINKCHECK_WORKER_THREAD expired.\n", __FUNCTION__));
+            // do timeout stuff
+            ionic_link_status_check(ionic->master_lif, PORT_OPER_STATUS_NONE);
+            // set next link check timeout
+            Timeout.QuadPart = -(TIMEOUT_LINKCHECK_WORKER_THREAD);
+        }
     }
+    DbgTrace((TRACE_COMPONENT_WORKER_THREAD, TRACE_LEVEL_VERBOSE, "%s: terminating thread.\n", __FUNCTION__));
+    PsTerminateSystemThread(STATUS_SUCCESS);
+
 }
 
 NDIS_STATUS

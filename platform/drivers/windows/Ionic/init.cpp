@@ -611,25 +611,9 @@ InitializeEx(NDIS_HANDLE AdapterHandle,
 
     NDIS_INIT_MUTEX(&adapter->LinkCheckMutex);
 
-    NDIS_TIMER_CHARACTERISTICS stTimer;
-    stTimer.Header.Revision = NDIS_TIMER_CHARACTERISTICS_REVISION_1;
-    stTimer.Header.Size = NDIS_SIZEOF_TIMER_CHARACTERISTICS_REVISION_1;
-    stTimer.Header.Type = NDIS_OBJECT_TYPE_TIMER_CHARACTERISTICS;
-    stTimer.AllocationTag = IONIC_TIMER_TAG;
-    stTimer.TimerFunction = CheckLinkStatusTimerCb;
-    stTimer.FunctionContext = (void *)adapter;
-    status = NdisAllocateTimerObject(adapter->adapterhandle, &stTimer,
-                                     &adapter->LinkCheckTimer);
-    if (status != NDIS_STATUS_SUCCESS) {
-        DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
-                  "%s Failed allocate link check timer Status 0x%08lX\n",
-                  __FUNCTION__, status));
-        goto err_out_stop_ionic;
-    }
-
-    LARGE_INTEGER liDelay;
-    liDelay.QuadPart = -(100);
-    NdisSetTimerObject(adapter->LinkCheckTimer, liDelay, 1000, (void *)adapter);
+    InitWorkerThread(&adapter->LinkCheckWorker);
+    
+    StartWorkerThread(&adapter->LinkCheckWorker, LinkCheckWorkerThreadProc, adapter);
 
     adapter->hardware_status = NdisHardwareStatusReady;
 

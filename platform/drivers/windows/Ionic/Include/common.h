@@ -18,6 +18,8 @@ extern "C"
 
 #include "IonicEventLog.h"
 
+#include "IonicWorkerThread.h"
+
 #ifndef NO_EXTERNS
 #include "externs.h"
 #endif
@@ -729,8 +731,7 @@ NDIS_STATUS ionic_lif_addr(struct lif *lif, const u8 *addr, bool add);
 int ionic_napi(struct lif *lif, unsigned int budget, ionic_cq_cb cb,
 	       ionic_cq_done_cb done_cb, void *done_arg);
 
-NDIS_IO_WORKITEM_FUNCTION CheckLinkStatusCb;
-NDIS_TIMER_FUNCTION CheckLinkStatusTimerCb;
+VOID LinkCheckWorkerThreadProc(PVOID Context);
 
 NDIS_STATUS
 ionic_lif_rx_mode(struct lif *lif, unsigned int rx_mode);

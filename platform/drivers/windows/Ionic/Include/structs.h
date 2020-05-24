@@ -682,8 +682,8 @@ struct ionic {
 	char			lifbits_buffer[BITS_TO_LONGS( IONIC_LIFS_MAX)];
 	
 	NDIS_HANDLE		WatchDogTimer;
-	NDIS_HANDLE		LinkCheckTimer;
 	NDIS_MUTEX      LinkCheckMutex;
+	IONIC_WORKER_THREAD LinkCheckWorker;
 
 	ULONG			sgl_size_in_bytes;
 	ULONG			max_sgl_elements;

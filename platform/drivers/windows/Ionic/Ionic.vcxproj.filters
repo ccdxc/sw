@@ -94,6 +94,9 @@
     <ClCompile Include="perf_counter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="IonicWorkerThread.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\common.h">
@@ -139,6 +142,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Include\IonicEventLog.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IonicWorkerThread.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
