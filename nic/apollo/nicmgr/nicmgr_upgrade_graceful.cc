@@ -378,6 +378,22 @@ nicmgr_upg_ev_hostdev_reset_hdlr (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
 }
 
 static void
+nicmgr_upg_ev_pre_respawn_hdlr (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
+{
+    upg_ev_info_s *info = new upg_ev_info_t();
+    sdk_ret_t ret;
+
+    PDS_TRACE_DEBUG("Upgrade nicmgr IPC request pre respawn");
+    info->msg_in = msg;
+    ret = nicmgr::upg::upg_failed_handler(info);
+
+    // work is going to be the same in case of pre respawn or respawn
+    // it is just json way of differentiating, sysmgr respawn from rest of the
+    // services
+    return nicmgr_upg_process_response(ret, info);
+}
+
+static void
 nicmgr_upg_ev_respawn_hdlr (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
 {
     upg_ev_info_s *info = new upg_ev_info_t();
@@ -403,6 +419,8 @@ nicmgr_upg_graceful_init (void)
                                   nicmgr_upg_ev_link_down_hdlr, NULL);
     sdk::ipc::reg_request_handler(UPG_MSG_ID_HOSTDEV_RESET,
                                   nicmgr_upg_ev_hostdev_reset_hdlr, NULL);
+    sdk::ipc::reg_request_handler(UPG_MSG_ID_PRE_RESPAWN,
+                                  nicmgr_upg_ev_pre_respawn_hdlr, NULL);
     sdk::ipc::reg_request_handler(UPG_MSG_ID_RESPAWN,
                                   nicmgr_upg_ev_respawn_hdlr, NULL);
 
@@ -496,7 +514,7 @@ upg_ev_ready (upg_ev_params_t *params)
 }
 
 static sdk_ret_t
-upg_ev_prep_switchover (upg_ev_params_t *params)
+upg_ev_pre_switchover (upg_ev_params_t *params)
 {
     return SDK_RET_OK;
 }
@@ -515,6 +533,12 @@ upg_ev_link_down (upg_ev_params_t *params)
 
 static sdk_ret_t
 upg_ev_hostdev_reset (upg_ev_params_t *params)
+{
+    return nicmgr_send_ipc(params);
+}
+
+static sdk_ret_t
+upg_ev_pre_respawn (upg_ev_params_t *params)
 {
     return nicmgr_send_ipc(params);
 }
@@ -545,9 +569,10 @@ nicmgr_upg_graceful_init (void)
     ev_hdlr.linkdown_hdlr = upg_ev_link_down;
     ev_hdlr.hostdev_reset_hdlr = upg_ev_hostdev_reset;
     ev_hdlr.ready_hdlr = upg_ev_ready;
+    ev_hdlr.pre_respawn_hdlr = upg_ev_pre_respawn;
     ev_hdlr.respawn_hdlr = upg_ev_respawn;
     ev_hdlr.quiesce_hdlr = upg_ev_quiesce;
-    ev_hdlr.prep_switchover_hdlr = upg_ev_prep_switchover;
+    ev_hdlr.pre_switchover_hdlr = upg_ev_pre_switchover;
     ev_hdlr.pipeline_quiesce_hdlr = upg_ev_pipeline_quiesce;
     ev_hdlr.repeal_hdlr = upg_ev_repeal;
     ev_hdlr.finish_hdlr = upg_ev_finish;

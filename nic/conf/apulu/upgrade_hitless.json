@@ -76,27 +76,40 @@
               "discovery": "yes"
             },
             "events": [
-                { "name": "svc_rsp_ok",   "next_stage": "sync"   },
+                { "name": "svc_rsp_ok",   "next_stage": "config_replay"   },
                 { "name": "svc_rsp_fail", "next_stage": "repeal" },
                 { "name": "svc_rsp_crit", "next_stage": "repeal" },
                 { "name": "svc_no_rsp",   "next_stage": "repeal" }
             ]
         },
 
-        "sync": {
-            "//": "config replay and opearational states are synced",
+        "config_replay": {
+            "//": "config replay",
             "svc": {
               "domain": "B"
             },
             "events": [
-                { "name": "svc_rsp_ok",   "next_stage": "prepare_switchover" },
+                { "name": "svc_rsp_ok",   "next_stage": "sync" },
                 { "name": "svc_rsp_fail", "next_stage": "repeal"             },
                 { "name": "svc_rsp_crit", "next_stage": "repeal"             },
                 { "name": "svc_no_rsp",   "next_stage": "repeal"             }
             ]
         },
 
-        "prepare_switchover": {
+        "sync": {
+            "//": "opearational states syncing",
+            "svc": {
+              "domain": "B"
+            },
+            "events": [
+                { "name": "svc_rsp_ok",   "next_stage": "pre_switchover" },
+                { "name": "svc_rsp_fail", "next_stage": "repeal"             },
+                { "name": "svc_rsp_crit", "next_stage": "repeal"             },
+                { "name": "svc_no_rsp",   "next_stage": "repeal"             }
+            ]
+        },
+
+        "pre_switchover": {
             "//" : "quiescing",
             "svc": {
               "domain": "A"

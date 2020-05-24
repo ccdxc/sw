@@ -58,7 +58,7 @@
                 "names": [ "svc1", "svc2" ]
             },
             "events": [
-                { "name": "svc_rsp_ok",   "next_stage": "prepare_switchover" },
+                { "name": "svc_rsp_ok",   "next_stage": "pre_switchover" },
                 { "name": "svc_rsp_fail", "next_stage": "respawn"            },
                 { "name": "svc_rsp_crit", "next_stage": "respawn"            },
                 { "name": "svc_no_rsp",   "next_stage": "respawn"            }
@@ -67,7 +67,7 @@
             "post_hooks" : ["test_script_2.sh"]
         },
 
-        "prepare_switchover": {
+        "pre_switchover": {
             "//" : "quiescing",
             "events": [
                 { "name": "svc_rsp_ok",   "next_stage": "switchover" },

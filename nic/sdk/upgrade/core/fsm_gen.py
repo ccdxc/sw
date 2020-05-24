@@ -157,9 +157,10 @@ class GenerateStateMachine(object):
         self.valid_event_rsp = ["svc_rsp_ok", "svc_rsp_fail",
                                 "svc_rsp_crit", "svc_no_rsp"]
         self.valid_stage = ["compatcheck", "start", "prepare", "backup",
-                            "repeal", "rollback", "sync", "prepare_switchover",
-                            "switchover", "ready", "respawn", "finish",
-                            "finish", "exit"]
+                            "repeal", "rollback", "config_replay", "sync",
+                            "pre_switchover", "switchover", "ready",
+                            "pre_respawn", "respawn", "finish", "finish",
+                            "exit"]
 
     def to_strings(self, key):
         """!@brief  Return the string value of a given json key
@@ -345,11 +346,13 @@ class GenerateStateMachine(object):
         self.stage_name_to_id["backup"] = self.__wrap_quote__("backup")
         self.stage_name_to_id["repeal"] = self.__wrap_quote__("repeal")
         self.stage_name_to_id["rollback"] = self.__wrap_quote__("rollback")
+        self.stage_name_to_id["config_replay"] = self.__wrap_quote__("config_replay")
         self.stage_name_to_id["sync"] = self.__wrap_quote__("sync")
-        self.stage_name_to_id["prepare_switchover"] = \
-            self.__wrap_quote__("prepare_switchover")
+        self.stage_name_to_id["pre_switchover"] = \
+            self.__wrap_quote__("pre_switchover")
         self.stage_name_to_id["switchover"] = self.__wrap_quote__("switchover")
         self.stage_name_to_id["ready"] = self.__wrap_quote__("ready")
+        self.stage_name_to_id["pre_respawn"] = self.__wrap_quote__("pre_respawn")
         self.stage_name_to_id["respawn"] = self.__wrap_quote__("respawn")
         self.stage_name_to_id["finish"] = self.__wrap_quote__("finish")
         self.stage_name_to_id["exit"] = self.__wrap_quote__("exit")
@@ -698,7 +701,7 @@ def main(input_json, output_json):
     except:
         frame_info = inspect.getframeinfo(inspect.currentframe())
         file = str(frame_info.filename) + str(frame_info.lineno)
-        Log(file, "ERROR", message(16), call_stack=False)
+        Log(file, "ERROR", message(16), call_stack=True)
 
     else:
         frame = inspect.getframeinfo(inspect.currentframe())

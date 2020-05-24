@@ -113,7 +113,7 @@ upg_ev_quiesce (upg_ev_params_t *params)
 }
 
 static sdk_ret_t
-upg_ev_prep_switchover (upg_ev_params_t *params)
+upg_ev_pre_switchover (upg_ev_params_t *params)
 {
     return SDK_RET_OK;
 }
@@ -131,6 +131,12 @@ upg_ev_pipeline_quiesce (upg_ev_params_t *params)
 
 static sdk_ret_t
 upg_ev_repeal (upg_ev_params_t *params)
+{
+    return SDK_RET_OK;
+}
+
+static sdk_ret_t
+upg_ev_pre_respawn (upg_ev_params_t *params)
 {
     return SDK_RET_OK;
 }
@@ -162,9 +168,10 @@ upg_graceful_init (pds_init_params_t *params)
     ev_hdlr.backup_hdlr = upg_ev_backup;
     ev_hdlr.ready_hdlr = upg_ev_ready;
     ev_hdlr.quiesce_hdlr = upg_ev_quiesce;
-    ev_hdlr.prep_switchover_hdlr = upg_ev_prep_switchover;
+    ev_hdlr.pre_switchover_hdlr = upg_ev_pre_switchover;
     ev_hdlr.pipeline_quiesce_hdlr = upg_ev_pipeline_quiesce;
     ev_hdlr.repeal_hdlr = upg_ev_repeal;
+    ev_hdlr.pre_respawn_hdlr = upg_ev_pre_respawn;
     ev_hdlr.respawn_hdlr = upg_ev_respawn;
     ev_hdlr.finish_hdlr = upg_ev_finish;
 

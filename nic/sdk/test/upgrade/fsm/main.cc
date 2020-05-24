@@ -46,7 +46,7 @@ init_stage_names (void)
     upg_stages.insert("UPG_STAGE_BACKUP");
     upg_stages.insert("UPG_STAGE_PREPARE");
     upg_stages.insert("UPG_STAGE_SYNC");
-    upg_stages.insert("UPG_STAGE_PREP_SWITCHOVER");
+    upg_stages.insert("UPG_STAGE_PRE_SWITCHOVER");
     upg_stages.insert("UPG_STAGE_SWITCHOVER");
     upg_stages.insert("UPG_STAGE_READY");
     upg_stages.insert("UPG_STAGE_RESPAWN");
@@ -129,11 +129,11 @@ upg_ev_fill (sdk::upg::upg_ev_t *ev)
         ev->prepare_hdlr = test_upgrade;
     }
 
-    if (fsm_stage.compare("UPG_STAGE_PREP_SWITCHOVER") == 0) {
-        printf("\nSetting fault injection in stage UPG_STAGE_PREP_SWITCHOVER\n");
-        ev->prepare_switchover_hdlr = fault_injection;
+    if (fsm_stage.compare("UPG_STAGE_PRE_SWITCHOVER") == 0) {
+        printf("\nSetting fault injection in stage UPG_STAGE_PRE_SWITCHOVER\n");
+        ev->pre_switchover_hdlr = fault_injection;
     } else {
-        ev->prepare_switchover_hdlr = test_upgrade;
+        ev->pre_switchover_hdlr = test_upgrade;
     }
 
     if (fsm_stage.compare("UPG_STAGE_SWITCHOVER") == 0) {
@@ -279,7 +279,7 @@ print_usage (char **argv)
             "UPG_STAGE_BACKUP, "
             "UPG_STAGE_PREPARE, "
             "UPG_STAGE_SYNC, "
-            "UPG_STAGE_PREP_SWITCHOVER, "
+            "UPG_STAGE_PRE_SWITCHOVER, "
             "UPG_STAGE_SWITCHOVER, "
             "UPG_STAGE_READY, "
             "UPG_STAGE_RESPAWN, "

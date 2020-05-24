@@ -70,7 +70,7 @@ upg_graceful_additional_ev_send (sdk::upg::upg_ev_params_t *params)
         api::g_upg_state->set_ev_more(false);
     }
 
-    if (id == UPG_MSG_ID_PREP_SWITCHOVER) {
+    if (id == UPG_MSG_ID_PRE_SWITCHOVER) {
         INVOKE_EV_THREAD_HDLR(ev, pipeline_quiesce_hdlr, UPG_MSG_ID_PIPELINE_QUIESCE);
         if (ret != SDK_RET_OK && ret != SDK_RET_IN_PROGRESS) {
             PDS_TRACE_ERR("Upgrade event %s failed",
@@ -116,11 +116,14 @@ upg_graceful_ev_send (sdk::upg::upg_ev_params_t *params)
         // on all threads
         api::g_upg_state->set_ev_more(true);
         break;
-    case UPG_EV_PREP_SWITCHOVER:
-        INVOKE_EV_THREAD_HDLR(ev, prep_switchover_hdlr, UPG_MSG_ID_PREP_SWITCHOVER);
+    case UPG_EV_PRE_SWITCHOVER:
+        INVOKE_EV_THREAD_HDLR(ev, pre_switchover_hdlr, UPG_MSG_ID_PRE_SWITCHOVER);
         // have additional events to send when the first operation completes
         // on all threads
         api::g_upg_state->set_ev_more(true);
+        break;
+    case UPG_EV_PRE_RESPAWN:
+        INVOKE_EV_THREAD_HDLR(ev, pre_respawn_hdlr, UPG_MSG_ID_PRE_RESPAWN);
         break;
     case UPG_EV_RESPAWN:
         INVOKE_EV_THREAD_HDLR(ev, respawn_hdlr, UPG_MSG_ID_RESPAWN);
@@ -164,6 +167,13 @@ upg_hitless_ev_send (sdk::upg::upg_ev_params_t *params)
         break;
     case UPG_EV_BACKUP:
         INVOKE_EV_THREAD_HDLR(ev, backup_hdlr, UPG_MSG_ID_BACKUP);
+        ret = SDK_RET_OK;
+        break;
+    case UPG_EV_CONFIG_REPLAY:
+        ret = SDK_RET_OK;
+        break;
+    case UPG_EV_SYNC:
+        ret = SDK_RET_OK;
         break;
     default:
         // TODO

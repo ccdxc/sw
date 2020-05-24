@@ -55,25 +55,25 @@
                 "names": [ "vpp", "pciemgr", "pdsagent" ]
             },
             "events": [
-                { "name": "svc_rsp_ok",   "next_stage": "prepare_switchover" },
-                { "name": "svc_rsp_fail", "next_stage": "respawn"            },
-                { "name": "svc_rsp_crit", "next_stage": "respawn"            },
-                { "name": "svc_no_rsp",   "next_stage": "respawn"            }
+                { "name": "svc_rsp_ok",   "next_stage": "pre_switchover" },
+                { "name": "svc_rsp_fail", "next_stage": "pre_respawn"    },
+                { "name": "svc_rsp_crit", "next_stage": "pre_respawn"    },
+                { "name": "svc_no_rsp",   "next_stage": "pre_respawn"    }
             ],
             "post_hooks" : ["upgmgr_graceful.sh"]
         },
 
-        "prepare_switchover": {
+        "pre_switchover": {
             "//" : "quiescing",
             "svc": {
                 "event_sequence": "serial",
                 "names": [ "pdsagent" ]
             },
             "events": [
-                { "name": "svc_rsp_ok",   "next_stage": "switchover" },
-                { "name": "svc_rsp_fail", "next_stage": "respawn"    },
-                { "name": "svc_rsp_crit", "next_stage": "respawn"    },
-                { "name": "svc_no_rsp",   "next_stage": "respawn"    }
+                { "name": "svc_rsp_ok",   "next_stage": "switchover"   },
+                { "name": "svc_rsp_fail", "next_stage": "pre_respawn"  },
+                { "name": "svc_rsp_crit", "next_stage": "pre_respawn"  },
+                { "name": "svc_no_rsp",   "next_stage": "pre_respawn"  }
             ],
             "post_hooks" : ["upgmgr_graceful.sh"]
         },
@@ -85,10 +85,10 @@
                 "names": [ "sysmgr" ]
             },
             "events": [
-                { "name": "svc_rsp_ok",   "next_stage": "exit"   },
-                { "name": "svc_rsp_fail", "next_stage": "respawn" },
-                { "name": "svc_rsp_crit", "next_stage": "respawn" },
-                { "name": "svc_no_rsp",   "next_stage": "respawn" }
+                { "name": "svc_rsp_ok",   "next_stage": "exit" },
+                { "name": "svc_rsp_fail", "next_stage": "exit" },
+                { "name": "svc_rsp_crit", "next_stage": "exit" },
+                { "name": "svc_no_rsp",   "next_stage": "exit" }
             ],
             "pre_hooks" : ["upgmgr_graceful.sh"]
         },
@@ -126,18 +126,28 @@
            ]
         },
 
-        "respawn": {
-            "svc": {
-                "names": [ "pdsagent" ],
-                "event_sequence": "serial",
-                "rsp_timeout": "2000ms"
-            },
+        "pre_respawn": {
             "events": [
-                { "name": "svc_rsp_ok",   "next_stage": "finish" },
+                { "name": "svc_rsp_ok",   "next_stage": "respawn"   },
                 { "name": "svc_rsp_fail", "next_stage": "exit"   },
                 { "name": "svc_rsp_crit", "next_stage": "exit"   },
                 { "name": "svc_no_rsp",   "next_stage": "exit"   }
            ]
+        },
+
+        "respawn": {
+            "svc": {
+                "names": [ "sysmgr" ],
+                "event_sequence": "serial",
+                "rsp_timeout": "5000ms"
+            },
+            "events": [
+                { "name": "svc_rsp_ok",   "next_stage": "exit"   },
+                { "name": "svc_rsp_fail", "next_stage": "exit"   },
+                { "name": "svc_rsp_crit", "next_stage": "exit"   },
+                { "name": "svc_no_rsp",   "next_stage": "exit"   }
+           ],
+           "pre_hooks" : ["upgmgr_graceful.sh"]
         },
 
        "finish": {

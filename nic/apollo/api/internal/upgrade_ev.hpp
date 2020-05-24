@@ -25,14 +25,17 @@ namespace api {
     E(UPG_MSG_ID_LINK_DOWN,        SDK_IPC_MSG_ID_MAX + 5,  "linkdown")        \
     E(UPG_MSG_ID_HOSTDEV_RESET,    SDK_IPC_MSG_ID_MAX + 6,  "hostdevreset")    \
     E(UPG_MSG_ID_QUIESCE,          SDK_IPC_MSG_ID_MAX + 7,  "quiesce")         \
-    E(UPG_MSG_ID_PREP_SWITCHOVER,  SDK_IPC_MSG_ID_MAX + 8,  "prep_switchover") \
+    E(UPG_MSG_ID_PRE_SWITCHOVER,   SDK_IPC_MSG_ID_MAX + 8,  "pre_switchover") \
     E(UPG_MSG_ID_PIPELINE_QUIESCE, SDK_IPC_MSG_ID_MAX + 9,  "pipeline_quiesce")\
     E(UPG_MSG_ID_SWITCHOVER,       SDK_IPC_MSG_ID_MAX + 10, "switchover")      \
-    E(UPG_MSG_ID_RESPAWN,          SDK_IPC_MSG_ID_MAX + 11, "respawn")          \
-    E(UPG_MSG_ID_READY,            SDK_IPC_MSG_ID_MAX + 12, "ready")           \
-    E(UPG_MSG_ID_REPEAL,           SDK_IPC_MSG_ID_MAX + 13, "repeal")          \
-    E(UPG_MSG_ID_FINISH,           SDK_IPC_MSG_ID_MAX + 14, "finish")          \
-    E(UPG_MSG_ID_MAX,              SDK_IPC_MSG_ID_MAX + 15, "max-invalid")
+    E(UPG_MSG_ID_PRE_RESPAWN,      SDK_IPC_MSG_ID_MAX + 11, "pre_respawn")     \
+    E(UPG_MSG_ID_RESPAWN,          SDK_IPC_MSG_ID_MAX + 12, "respawn")         \
+    E(UPG_MSG_ID_READY,            SDK_IPC_MSG_ID_MAX + 13, "ready")           \
+    E(UPG_MSG_ID_CONFIG_REPLAY,    SDK_IPC_MSG_ID_MAX + 14, "config_replay")   \
+    E(UPG_MSG_ID_SYNC,             SDK_IPC_MSG_ID_MAX + 15, "sync")            \
+    E(UPG_MSG_ID_REPEAL,           SDK_IPC_MSG_ID_MAX + 16, "repeal")          \
+    E(UPG_MSG_ID_FINISH,           SDK_IPC_MSG_ID_MAX + 17, "finish")          \
+    E(UPG_MSG_ID_MAX,              SDK_IPC_MSG_ID_MAX + 18, "max-invalid")
 
 SDK_DEFINE_ENUM(upg_ev_msg_id_t, UPG_EV_MSG_ID_ENTRIES)
 SDK_DEFINE_ENUM_TO_STR(upg_ev_msg_id_t, UPG_EV_MSG_ID_ENTRIES)
@@ -74,11 +77,14 @@ using api::upg_ev_msg_id_t::UPG_MSG_ID_BACKUP;
 using api::upg_ev_msg_id_t::UPG_MSG_ID_LINK_DOWN;
 using api::upg_ev_msg_id_t::UPG_MSG_ID_HOSTDEV_RESET;
 using api::upg_ev_msg_id_t::UPG_MSG_ID_QUIESCE;
-using api::upg_ev_msg_id_t::UPG_MSG_ID_PREP_SWITCHOVER;
+using api::upg_ev_msg_id_t::UPG_MSG_ID_PRE_SWITCHOVER;
 using api::upg_ev_msg_id_t::UPG_MSG_ID_PIPELINE_QUIESCE;
 using api::upg_ev_msg_id_t::UPG_MSG_ID_SWITCHOVER;
 using api::upg_ev_msg_id_t::UPG_MSG_ID_READY;
+using api::upg_ev_msg_id_t::UPG_MSG_ID_CONFIG_REPLAY;
+using api::upg_ev_msg_id_t::UPG_MSG_ID_SYNC;
 using api::upg_ev_msg_id_t::UPG_MSG_ID_REPEAL;
+using api::upg_ev_msg_id_t::UPG_MSG_ID_PRE_RESPAWN;
 using api::upg_ev_msg_id_t::UPG_MSG_ID_RESPAWN;
 using api::upg_ev_msg_id_t::UPG_MSG_ID_FINISH;
 using api::upg_ev_msg_id_t::UPG_MSG_ID_MAX;

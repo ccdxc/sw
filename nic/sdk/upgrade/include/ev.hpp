@@ -37,9 +37,11 @@ namespace upg {
     E(UPG_EV_BACKUP,          EV_ID_UPGMGR(UPG_STAGE_BACKUP),          "")  \
     E(UPG_EV_PREPARE,         EV_ID_UPGMGR(UPG_STAGE_PREPARE),         "")  \
     E(UPG_EV_SYNC,            EV_ID_UPGMGR(UPG_STAGE_SYNC),            "")  \
-    E(UPG_EV_PREP_SWITCHOVER, EV_ID_UPGMGR(UPG_STAGE_PREP_SWITCHOVER), "")  \
+    E(UPG_EV_CONFIG_REPLAY,   EV_ID_UPGMGR(UPG_STAGE_CONFIG_REPLAY),   "")  \
+    E(UPG_EV_PRE_SWITCHOVER,  EV_ID_UPGMGR(UPG_STAGE_PRE_SWITCHOVER), "")   \
     E(UPG_EV_SWITCHOVER,      EV_ID_UPGMGR(UPG_STAGE_SWITCHOVER),      "")  \
     E(UPG_EV_READY,           EV_ID_UPGMGR(UPG_STAGE_READY),           "")  \
+    E(UPG_EV_PRE_RESPAWN,     EV_ID_UPGMGR(UPG_STAGE_PRE_RESPAWN),     "")  \
     E(UPG_EV_RESPAWN,         EV_ID_UPGMGR(UPG_STAGE_RESPAWN),         "")  \
     E(UPG_EV_ROLLBACK,        EV_ID_UPGMGR(UPG_STAGE_ROLLBACK),        "")  \
     E(UPG_EV_REPEAL,          EV_ID_UPGMGR(UPG_STAGE_REPEAL),          "")  \
@@ -201,7 +203,7 @@ typedef struct upg_ev_s {
     upg_ev_hdlr_t prepare_hdlr;
 
     /// hardware quiescing should be done here (on A)
-    upg_ev_hdlr_t prepare_switchover_hdlr;
+    upg_ev_hdlr_t pre_switchover_hdlr;
 
     /// switching to B (on B)
     upg_ev_hdlr_t switchover_hdlr;
@@ -209,8 +211,17 @@ typedef struct upg_ev_s {
     /// rollback if there is failure (on B)
     upg_ev_hdlr_t rollback_hdlr;
 
-    /// config replay, operational table syncing (on B)
+    /// config replay (on B)
+    upg_ev_hdlr_t config_replay_hdlr;
+
+    /// operational table syncing (on B)
     upg_ev_hdlr_t sync_hdlr;
+
+    /// respawn processes (on A)
+    /// used in graceful to restart the processes with previously
+    /// saved states, used for separating sysmgr and rest of teh services
+    // respawn
+    upg_ev_hdlr_t pre_respawn_hdlr;
 
     /// respawn processes (on A)
     /// used in graceful to restart the processes with previously
@@ -244,11 +255,14 @@ using sdk::upg::upg_ev_id_t::UPG_EV_COMPAT_CHECK;
 using sdk::upg::upg_ev_id_t::UPG_EV_START;
 using sdk::upg::upg_ev_id_t::UPG_EV_BACKUP;
 using sdk::upg::upg_ev_id_t::UPG_EV_PREPARE;
-using sdk::upg::upg_ev_id_t::UPG_EV_PREP_SWITCHOVER;
+using sdk::upg::upg_ev_id_t::UPG_EV_PRE_SWITCHOVER;
 using sdk::upg::upg_ev_id_t::UPG_EV_SWITCHOVER;
 using sdk::upg::upg_ev_id_t::UPG_EV_READY;
+using sdk::upg::upg_ev_id_t::UPG_EV_CONFIG_REPLAY;
+using sdk::upg::upg_ev_id_t::UPG_EV_SYNC;
 using sdk::upg::upg_ev_id_t::UPG_EV_ROLLBACK;
 using sdk::upg::upg_ev_id_t::UPG_EV_REPEAL;
+using sdk::upg::upg_ev_id_t::UPG_EV_PRE_RESPAWN;
 using sdk::upg::upg_ev_id_t::UPG_EV_RESPAWN;
 using sdk::upg::upg_ev_id_t::UPG_EV_FINISH;
 using sdk::upg::upg_ev_id_t::UPG_EV_MAX;

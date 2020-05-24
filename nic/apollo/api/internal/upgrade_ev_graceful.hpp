@@ -47,13 +47,17 @@ typedef struct upg_ev_graceful_s {
     upg_ev_hdlr_t quiesce_hdlr;
 
     /// prepare for switching to B
-    upg_ev_hdlr_t prep_switchover_hdlr;
+    upg_ev_hdlr_t pre_switchover_hdlr;
 
     /// pipeline quiesce handler
     upg_ev_hdlr_t pipeline_quiesce_hdlr;
 
     /// making sure B bringup is successful
     upg_ev_hdlr_t ready_hdlr;
+
+    /// pre respawn an upgrade (on A)
+    /// to respawn rest of the processes apart from sysmgr
+    upg_ev_hdlr_t pre_respawn_hdlr;
 
     /// respawn an upgrade (on A)
     ///   after link-down, requires the thread to link-down and respawn

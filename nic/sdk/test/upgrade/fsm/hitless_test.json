@@ -88,14 +88,14 @@
               "domain": "B"
             },
             "events": [
-                { "name": "svc_rsp_ok",   "next_stage": "prepare_switchover" },
+                { "name": "svc_rsp_ok",   "next_stage": "pre_switchover" },
                 { "name": "svc_rsp_fail", "next_stage": "repeal"             },
                 { "name": "svc_rsp_crit", "next_stage": "repeal"             },
                 { "name": "svc_no_rsp",   "next_stage": "repeal"             }
             ]
         },
 
-        "prepare_switchover": {
+        "pre_switchover": {
             "//" : "quiescing",
             "svc": {
               "domain": "A"

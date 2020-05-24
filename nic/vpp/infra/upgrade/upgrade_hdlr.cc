@@ -18,10 +18,12 @@ vpp_upg_ev_fill (sdk::upg::upg_ev_t &ev)
     ev.start_hdlr = vpp_upg_ev_hdlr;
     ev.backup_hdlr = vpp_upg_ev_hdlr;
     ev.prepare_hdlr = vpp_upg_ev_hdlr;
-    ev.prepare_switchover_hdlr = vpp_upg_ev_hdlr;
+    ev.pre_switchover_hdlr = vpp_upg_ev_hdlr;
     ev.switchover_hdlr = vpp_upg_ev_hdlr;
     ev.rollback_hdlr = vpp_upg_ev_hdlr;
+    ev.config_replay_hdlr = vpp_upg_ev_hdlr;
     ev.sync_hdlr = vpp_upg_ev_hdlr;
+    ev.pre_respawn_hdlr = vpp_upg_ev_hdlr;
     ev.respawn_hdlr = vpp_upg_ev_hdlr;
     ev.ready_hdlr = vpp_upg_ev_hdlr;
     ev.repeal_hdlr = vpp_upg_ev_hdlr;

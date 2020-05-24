@@ -43,7 +43,10 @@ typedef struct upg_ev_hitless_s {
     /// below functions should check the bringup status of A
     upg_ev_hdlr_t ready_hdlr;
 
-    /// oper state syncing, config replay should be done here (on B)
+    /// config replay (on B)
+    upg_ev_hdlr_t config_replay_hdlr;
+
+    /// operational state syncing (on B)
     upg_ev_hdlr_t sync_hdlr;
 
     /// threads should be paused here to a safe point for switchover (on A)

@@ -329,6 +329,18 @@ upg_ev_switchover (upg_ev_params_t *params)
 }
 
 static sdk_ret_t
+upg_ev_config_replay (upg_ev_params_t *params)
+{
+    return SDK_RET_OK;
+}
+
+static sdk_ret_t
+upg_ev_sync (upg_ev_params_t *params)
+{
+    return SDK_RET_OK;
+}
+
+static sdk_ret_t
 upg_ev_repeal (upg_ev_params_t *params)
 {
     return SDK_RET_OK;
@@ -347,6 +359,8 @@ upg_hitless_init (pds_init_params_t *params)
     ev_hdlr.start_hdlr = upg_ev_start;
     ev_hdlr.backup_hdlr = upg_ev_backup;
     ev_hdlr.ready_hdlr = upg_ev_ready;
+    ev_hdlr.config_replay_hdlr = upg_ev_config_replay;
+    ev_hdlr.sync_hdlr = upg_ev_sync;
     ev_hdlr.quiesce_hdlr = upg_ev_quiesce;
     ev_hdlr.switchover_hdlr = upg_ev_switchover;
     ev_hdlr.repeal_hdlr = upg_ev_repeal;

@@ -40,10 +40,12 @@ upg_event2hdlr (upg_ev_id_t ev_id)
     case UPG_EV_BACKUP          : return upg_ev.backup_hdlr;
     case UPG_EV_PREPARE         : return upg_ev.prepare_hdlr;
     case UPG_EV_SYNC            : return upg_ev.sync_hdlr;
-    case UPG_EV_PREP_SWITCHOVER : return upg_ev.prepare_switchover_hdlr;
+    case UPG_EV_PRE_SWITCHOVER  : return upg_ev.pre_switchover_hdlr;
     case UPG_EV_SWITCHOVER      : return upg_ev.switchover_hdlr;
     case UPG_EV_READY           : return upg_ev.ready_hdlr;
+    case UPG_EV_PRE_RESPAWN     : return upg_ev.pre_respawn_hdlr;
     case UPG_EV_RESPAWN         : return upg_ev.respawn_hdlr;
+    case UPG_EV_CONFIG_REPLAY   : return upg_ev.config_replay_hdlr;
     case UPG_EV_ROLLBACK        : return upg_ev.rollback_hdlr;
     case UPG_EV_REPEAL          : return upg_ev.repeal_hdlr;
     case UPG_EV_FINISH          : return upg_ev.finish_hdlr;

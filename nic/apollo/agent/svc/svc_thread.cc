@@ -100,12 +100,15 @@ upg_ev_fill (sdk::upg::upg_ev_t *ev)
     ev->start_hdlr = pds_upgrade;
     ev->backup_hdlr = pds_upgrade;
     ev->prepare_hdlr = pds_upgrade;
-    ev->prepare_switchover_hdlr = pds_upgrade;
+    ev->pre_switchover_hdlr = pds_upgrade;
     ev->switchover_hdlr = pds_upgrade;
     ev->rollback_hdlr = pds_upgrade;
     ev->ready_hdlr = pds_upgrade;
+    ev->config_replay_hdlr = pds_upgrade;
+    ev->sync_hdlr = pds_upgrade;
     ev->repeal_hdlr = pds_upgrade;
     ev->respawn_hdlr = pds_upgrade;
+    ev->pre_respawn_hdlr = pds_upgrade;
     ev->finish_hdlr = pds_upgrade;
 }
 

@@ -42,6 +42,18 @@ upg_ev_ready (upg_ev_params_t *params)
 }
 
 static sdk_ret_t
+upg_ev_config_replay (upg_ev_params_t *params)
+{
+    return SDK_RET_OK;
+}
+
+static sdk_ret_t
+upg_ev_sync (upg_ev_params_t *params)
+{
+    return SDK_RET_OK;
+}
+
+static sdk_ret_t
 upg_ev_backup (upg_ev_params_t *params)
 {
     return SDK_RET_OK;
@@ -75,6 +87,8 @@ nicmgr_upg_hitless_init (void)
     strncpy(ev_hdlr.thread_name, "nicmgr", sizeof(ev_hdlr.thread_name));
     ev_hdlr.compat_check_hdlr = upg_ev_compat_check;
     ev_hdlr.ready_hdlr = upg_ev_ready;
+    ev_hdlr.config_replay_hdlr = upg_ev_config_replay;
+    ev_hdlr.sync_hdlr = upg_ev_sync;
     ev_hdlr.backup_hdlr = upg_ev_backup;
     ev_hdlr.repeal_hdlr = upg_ev_repeal;
     ev_hdlr.quiesce_hdlr = upg_ev_quiesce;

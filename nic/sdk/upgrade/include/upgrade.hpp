@@ -34,26 +34,30 @@
     E(UPG_STAGE_BACKUP,             3,      "backup")               \
     /** prepare for an upgrade */                                   \
     E(UPG_STAGE_PREPARE,            4,      "prepare")              \
-    /** config replay and operational state sync */                 \
-    E(UPG_STAGE_SYNC,               5,      "sync")                 \
+    /** config replay */                                            \
+    E(UPG_STAGE_CONFIG_REPLAY,      5,      "config_replay")        \
+    /** operational state sync */                                   \
+    E(UPG_STAGE_SYNC,               6,      "sync")                 \
     /** quiescing before switch to the new version */               \
-    E(UPG_STAGE_PREP_SWITCHOVER,    6,      "prepare_switchover")   \
+    E(UPG_STAGE_PRE_SWITCHOVER,     7,      "pre_switchover")        \
     /** switch to the new version   */                              \
-    E(UPG_STAGE_SWITCHOVER,         7,      "switchover")           \
+    E(UPG_STAGE_SWITCHOVER,         8,      "switchover")           \
     /** readiness check of new version */                           \
-    E(UPG_STAGE_READY,              8,      "ready")                \
+    E(UPG_STAGE_READY,              9,      "ready")                \
     /** respawn the existing version */                             \
-    E(UPG_STAGE_RESPAWN,            9,      "respawn")              \
+    E(UPG_STAGE_PRE_RESPAWN,        10,      "pre_respawn")         \
+    /** respawn the existing version */                             \
+    E(UPG_STAGE_RESPAWN,            11,      "respawn")             \
     /** rollback to the previous version */                         \
-    E(UPG_STAGE_ROLLBACK,           10,     "rollback")             \
+    E(UPG_STAGE_ROLLBACK,           12,     "rollback")             \
     /** abort the on-going upgrade by undoing */                    \
-    E(UPG_STAGE_REPEAL,             11,     "repeal")               \
+    E(UPG_STAGE_REPEAL,             13,     "repeal")               \
     /** completion of an upgrade */                                 \
-    E(UPG_STAGE_FINISH,             12,     "finish")               \
+    E(UPG_STAGE_FINISH,             14,     "finish")               \
     /** exit from upgrade */                                        \
-    E(UPG_STAGE_EXIT,               13,     "exit")                 \
+    E(UPG_STAGE_EXIT,               15,     "exit")                 \
     /** invalid */                                                  \
-    E(UPG_STAGE_MAX,                14,     "max-invalid")
+    E(UPG_STAGE_MAX,                16,     "max-invalid")
 
 SDK_DEFINE_ENUM(upg_stage_t, UPG_STAGE_ENTRIES)
 SDK_DEFINE_ENUM_TO_STR(upg_stage_t, UPG_STAGE_ENTRIES)

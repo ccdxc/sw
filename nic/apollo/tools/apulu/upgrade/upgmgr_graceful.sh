@@ -30,9 +30,13 @@ elif [[ $STAGE_NAME == "UPG_STAGE_START" && $STAGE_TYPE == "POST" ]]; then
 elif [[ $STAGE_NAME == "UPG_STAGE_PREPARE" && $STAGE_TYPE == "POST" ]]; then
     echo "Skipping prepare"
 
-elif [[ $STAGE_NAME == "UPG_STAGE_PREP_SWITCHOVER" && $STAGE_TYPE == "POST" ]]; then
+elif [[ $STAGE_NAME == "UPG_STAGE_PRE_SWITCHOVER" && $STAGE_TYPE == "POST" ]]; then
     upgmgr_backup
     [[ $? -ne 0 ]] && echo "Files backup failed!" && exit 1
+
+elif [[ $STAGE_NAME == "UPG_STAGE_PRE_RESPAWN" && $STAGE_TYPE == "PRE" ]]; then
+    reload_drivers
+    upgmgr_set_init_mode "graceful"
 
 elif [[ $STAGE_NAME == "UPG_STAGE_RESPAWN" && $STAGE_TYPE == "PRE" ]]; then
     reload_drivers
