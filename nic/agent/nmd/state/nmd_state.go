@@ -566,7 +566,13 @@ func NaplesFileUploadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fileNameSlice := strings.Split(fileHeader.Filename, "/")
+	termChar := r.FormValue("terminateChar")
+	if termChar == "" {
+		renderError(w, "termChar not  Specified\n", http.StatusBadRequest)
+		return
+	}
+
+	fileNameSlice := strings.Split(fileHeader.Filename, termChar)
 
 	newPath := uploadPath + fileNameSlice[len(fileNameSlice)-1]
 

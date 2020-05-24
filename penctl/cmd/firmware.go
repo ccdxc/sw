@@ -180,8 +180,9 @@ func setFirmwareCmdHandler(cmd *cobra.Command, args []string) error {
 	}
 	//prepare the reader instances to encode
 	values := map[string]io.Reader{
-		"uploadFile": mustOpen(uploadFile),
-		"uploadPath": strings.NewReader("/update/"),
+		"uploadFile":    mustOpen(uploadFile),
+		"uploadPath":    strings.NewReader("/update/"),
+		"terminateChar": strings.NewReader(getTerminatingChar()),
 	}
 	resp, err := restPostForm("update/", values)
 	if err != nil {
