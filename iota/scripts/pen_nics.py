@@ -185,7 +185,7 @@ def __get_devices_windows(mac_hint):
         return devs
 
     devs = []
-    proc = subprocess.Popen(['/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe', 'Get-NetAdapter -InterfaceDescription "Pensando*" | Select-Object Name, ifIndex, MacAddress, ifDesc | Convertto-Json'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    proc = subprocess.Popen(['/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe', 'Get-NetAdapter -InterfaceDescription "*DSC*" | Select-Object Name, ifIndex, MacAddress, ifDesc | Convertto-Json'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     try:
         ifInfo, errs = proc.communicate(timeout=30)
     except subprocess.TimeoutExpired:
@@ -211,7 +211,7 @@ def __get_devices_windows(mac_hint):
         intfMap[intf["Name"]] = intf
  
     # powershell path: /mnt/c/Windows/System32/WindowsPowerShell/v1.0/
-    proc = subprocess.Popen(['/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe', 'Get-NetAdapterHardwareInfo -InterfaceDescription "Pensando*" | Select-Object Name, Bus | Convertto-Json'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    proc = subprocess.Popen(['/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe', 'Get-NetAdapterHardwareInfo -InterfaceDescription "*DSC*" | Select-Object Name, Bus | Convertto-Json'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     try:
         busInfo, errs = proc.communicate(timeout=30)
     except subprocess.TimeoutExpired:

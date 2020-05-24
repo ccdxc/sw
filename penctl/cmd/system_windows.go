@@ -26,7 +26,7 @@ func getNaplesInfo(cmd *cobra.Command, args []string) error {
 	defer shell.Exit()
 
 	// powershell commands to get network hardware with respective slot no
-	command := "Get-NetAdapterHardwareInfo -InterfaceDescription 'Pensando*' | Group-Object Slot | convertto-json -depth 1"
+	command := "Get-NetAdapterHardwareInfo -InterfaceDescription '*DSC*' | Group-Object Slot | convertto-json -depth 1"
 	stdout, _, err := shell.Execute(command)
 
 	if strings.HasPrefix(stdout, "{") {
@@ -40,7 +40,7 @@ func getNaplesInfo(cmd *cobra.Command, args []string) error {
 
 	for _, val := range netAdapterHardwareInfo {
 		slot := val["Name"].(string)
-		command := fmt.Sprintf("Get-NetAdapterHardwareInfo -InterfaceDescription 'Pensando*' | Where-Object {$_.Slot -eq '%s'} | Sort-Object 'Bus' -Descending | Select-Object -first 1 | convertto-json -depth 1", slot)
+		command := fmt.Sprintf("Get-NetAdapterHardwareInfo -InterfaceDescription '*DSC*' | Where-Object {$_.Slot -eq '%s'} | Sort-Object 'Bus' -Descending | Select-Object -first 1 | convertto-json -depth 1", slot)
 		stdout, _, err = shell.Execute(command)
 		managementInterface := make(map[string]interface{})
 		if len(stdout) > 0 {

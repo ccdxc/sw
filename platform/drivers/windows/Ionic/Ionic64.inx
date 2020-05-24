@@ -37,35 +37,35 @@ ExcludeFromSelect = *
 ; Models section 
 ; -----------------------------------
 [Pensando.NT$ARCH$]
-%DeviceDesc-2p.40/100%      = IonicMini,    PCI\VEN_1DD8&DEV_1002&SUBSYS_40001DD8
-%DeviceDesc-2p.40/100%      = IonicMini,    PCI\VEN_1DD8&DEV_1002&SUBSYS_40011DD8
-%DeviceDesc-2p.10/25%       = IonicMini,    PCI\VEN_1DD8&DEV_1002&SUBSYS_40021DD8
-%DeviceDesc-2p.10/25%       = IonicMini,    PCI\VEN_1DD8&DEV_1002&SUBSYS_40051DD8
-%DeviceDesc-2p.10/25%       = IonicMini,    PCI\VEN_1DD8&DEV_1002&SUBSYS_40071DD8
-%DeviceDesc-2p.10/25-1%     = IonicMini,    PCI\VEN_1DD8&DEV_1002&SUBSYS_40081DD8
-%DeviceDesc-2p.40/100%      = IonicMini,    PCI\VEN_1DD8&DEV_1002&SUBSYS_40091DD8
-%DeviceDesc-2p.40/100%      = IonicMini,    PCI\VEN_1DD8&DEV_1002&SUBSYS_400a1DD8
-%DeviceDescGeneric%         = IonicMini,    PCI\VEN_1DD8&DEV_1002
+%DeviceDesc-4000%      = IonicMini,    PCI\VEN_1DD8&DEV_1002&SUBSYS_40001DD8
+%DeviceDesc-4001%      = IonicMini,    PCI\VEN_1DD8&DEV_1002&SUBSYS_40011DD8
+%DeviceDesc-4002%      = IonicMini,    PCI\VEN_1DD8&DEV_1002&SUBSYS_40021DD8
+%DeviceDesc-4005%      = IonicMini,    PCI\VEN_1DD8&DEV_1002&SUBSYS_40051DD8
+%DeviceDesc-4007%      = IonicMini,    PCI\VEN_1DD8&DEV_1002&SUBSYS_40071DD8
+%DeviceDesc-4008%      = IonicMini,    PCI\VEN_1DD8&DEV_1002&SUBSYS_40081DD8
+%DeviceDesc-4009%      = IonicMini,    PCI\VEN_1DD8&DEV_1002&SUBSYS_40091DD8
+%DeviceDesc-400A%      = IonicMini,    PCI\VEN_1DD8&DEV_1002&SUBSYS_400a1DD8
+%DeviceDescGeneric%    = IonicMini,    PCI\VEN_1DD8&DEV_1002
 
-%DeviceDesc-2p.40/100-m%    = IonicMini,    PCI\VEN_1DD8&DEV_1004&SUBSYS_40001DD8
-%DeviceDesc-2p.40/100-m%    = IonicMini,    PCI\VEN_1DD8&DEV_1004&SUBSYS_40011DD8
-%DeviceDesc-2p.10/25-m%     = IonicMini,    PCI\VEN_1DD8&DEV_1004&SUBSYS_40021DD8
-%DeviceDesc-2p.10/25-m%     = IonicMini,    PCI\VEN_1DD8&DEV_1004&SUBSYS_40051DD8
-%DeviceDesc-2p.10/25-m%     = IonicMini,    PCI\VEN_1DD8&DEV_1004&SUBSYS_40071DD8
-%DeviceDesc-2p.10/25-m%     = IonicMini,    PCI\VEN_1DD8&DEV_1004&SUBSYS_40081DD8
-%DeviceDesc-2p.40/100-m%    = IonicMini,    PCI\VEN_1DD8&DEV_1004&SUBSYS_40091DD8
-%DeviceDesc-2p.40/100-m%    = IonicMini,    PCI\VEN_1DD8&DEV_1004&SUBSYS_400a1DD8
-%DeviceDescGeneric%         = IonicMini,    PCI\VEN_1DD8&DEV_1004
+%DeviceDesc-mnic%      = IonicMini,    PCI\VEN_1DD8&DEV_1004&SUBSYS_40001DD8
+%DeviceDesc-mnic%      = IonicMini,    PCI\VEN_1DD8&DEV_1004&SUBSYS_40011DD8
+%DeviceDesc-mnic%      = IonicMini,    PCI\VEN_1DD8&DEV_1004&SUBSYS_40021DD8
+%DeviceDesc-mnic%      = IonicMini,    PCI\VEN_1DD8&DEV_1004&SUBSYS_40051DD8
+%DeviceDesc-mnic%      = IonicMini,    PCI\VEN_1DD8&DEV_1004&SUBSYS_40071DD8
+%DeviceDesc-mnic%      = IonicMini,    PCI\VEN_1DD8&DEV_1004&SUBSYS_40081DD8
+%DeviceDesc-mnic%      = IonicMini,    PCI\VEN_1DD8&DEV_1004&SUBSYS_40091DD8
+%DeviceDesc-mnic%      = IonicMini,    PCI\VEN_1DD8&DEV_1004&SUBSYS_400a1DD8
+%DeviceDescGeneric%    = IonicMini,    PCI\VEN_1DD8&DEV_1004
 
-%DeviceDesc-2p.40/100%      = IonicMiniVF,  PCI\VEN_1DD8&DEV_1003&SUBSYS_40001DD8
-%DeviceDesc-2p.40/100%      = IonicMiniVF,  PCI\VEN_1DD8&DEV_1003&SUBSYS_40011DD8
-%DeviceDesc-2p.10/25%       = IonicMiniVF,  PCI\VEN_1DD8&DEV_1003&SUBSYS_40021DD8
-%DeviceDesc-2p.10/25%       = IonicMiniVF,  PCI\VEN_1DD8&DEV_1003&SUBSYS_40051DD8
-%DeviceDesc-2p.10/25%       = IonicMiniVF,  PCI\VEN_1DD8&DEV_1003&SUBSYS_40071DD8
-%DeviceDesc-2p.10/25-1%     = IonicMiniVF,  PCI\VEN_1DD8&DEV_1003&SUBSYS_40081DD8
-%DeviceDesc-2p.40/100%      = IonicMiniVF,  PCI\VEN_1DD8&DEV_1003&SUBSYS_40091DD8
-%DeviceDesc-2p.40/100%      = IonicMiniVF,  PCI\VEN_1DD8&DEV_1003&SUBSYS_400a1DD8
-%DeviceDescGeneric%         = IonicMiniVF,  PCI\VEN_1DD8&DEV_1003
+%DeviceDesc-4000%      = IonicMiniVF,  PCI\VEN_1DD8&DEV_1003&SUBSYS_40001DD8
+%DeviceDesc-4001%      = IonicMiniVF,  PCI\VEN_1DD8&DEV_1003&SUBSYS_40011DD8
+%DeviceDesc-4002%      = IonicMiniVF,  PCI\VEN_1DD8&DEV_1003&SUBSYS_40021DD8
+%DeviceDesc-4005%      = IonicMiniVF,  PCI\VEN_1DD8&DEV_1003&SUBSYS_40051DD8
+%DeviceDesc-4007%      = IonicMiniVF,  PCI\VEN_1DD8&DEV_1003&SUBSYS_40071DD8
+%DeviceDesc-4008%      = IonicMiniVF,  PCI\VEN_1DD8&DEV_1003&SUBSYS_40081DD8
+%DeviceDesc-4009%      = IonicMiniVF,  PCI\VEN_1DD8&DEV_1003&SUBSYS_40091DD8
+%DeviceDesc-400A%      = IonicMiniVF,  PCI\VEN_1DD8&DEV_1003&SUBSYS_400a1DD8
+%DeviceDescGeneric%    = IonicMiniVF,  PCI\VEN_1DD8&DEV_1003
 
 
 [IonicMini.nt$ARCH$]
@@ -431,11 +431,17 @@ HKR, Ndi\Params\PromiscMode,                     type,                   0, "enu
 [Strings]
 ProviderString               = "Pensando Systems"
 ManufacturerName             = "Pensando Systems"
-DeviceDesc-2p.40/100         = "Pensando DSC 2p 40/100G Services Card"
-DeviceDesc-2p.10/25          = "Pensando DSC 2p 10/25G Services Card"
-DeviceDesc-2p.10/25-1        = "Pensando DSP DSC-25 10/25G 2p SFP28 Card"
-DeviceDesc-2p.40/100-m       = "Pensando DSC 2p Management Interface"
-DeviceDesc-2p.10/25-m        = "Pensando DSC 2p Management Interface"
+
+DeviceDesc-4002              = "DSC-25 10/25G 2-port 4G RAM 8G eMMC G1 Services Card"
+DeviceDesc-4008              = "Pensando DSP DSC-25 10/25G 2p SFP28 Card"
+DeviceDesc-4005              = "DSC-25 10/25G 2-port 8G RAM 8G eMMC G1 Services Card"
+DeviceDesc-4007              = "DSC-25-OCP 10/25G 2-port 4G RAM 8G eMMC G1 Services Card"
+DeviceDesc-4001              = "DSC-100 40/100G 2-port 4G RAM 8G eMMC G1 Services Card"
+DeviceDesc-4000              = "DSC-100 40/100G 2-port 8G RAM 8G eMMC G1 Services Card"
+DeviceDesc-400A              = "DSC-100 40/100G 2-port 8G RAM 16G eMMC G1 Services Card"
+DeviceDesc-4006              = "DSC-100V 40/100G 2-port 4G RAM 8G eMMC G1 Services Card"
+DeviceDesc-4009              = "DSC-100V 50/100G 2-port 8G RAM 64G eMMC G1 Services Card"
+DeviceDesc-mnic              = "DSC Management Interface"
 DeviceDescGeneric            = "Pensando DSC Services Card"
 IonicMini.Service.DispName   = "Pensando Ionic NDIS Miniport Driver"
 IonicMiniVF.Service.DispName = "Pensando Ionic NDIS Miniport Driver - Virtual Function"

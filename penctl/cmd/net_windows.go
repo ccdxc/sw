@@ -30,7 +30,7 @@ func getBusNumber() (bus string, err error) {
 	defer shell.Exit()
 
 	// Powershell commands to get highest bus no of pensando nic
-	command := "Get-NetAdapterHardwareInfo -InterfaceDescription 'Pensando*' | Sort-Object 'Bus' -Descending | Select-Object -first 1 | select Name,Slot,Bus | convertto-json"
+	command := "Get-NetAdapterHardwareInfo -InterfaceDescription '*DSC*' | Sort-Object 'Bus' -Descending | Select-Object -first 1 | select Name,Slot,Bus | convertto-json"
 	stdout, _, err := shell.Execute(command)
 
 	netAdapterHardwareInfo := make(map[string]interface{}, 0)

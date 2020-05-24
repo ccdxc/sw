@@ -35,7 +35,7 @@ while($args.Count -gt 0 -and $loop -eq $true) {
 
 function Enable-Interface {
 	echo "Enable Interface"
-	$netAdapters = Get-NetAdapter -InterfaceDescription 'Pensando*' | ? Virtual -eq $false | select Name,Status,ifIndex
+	$netAdapters = Get-NetAdapter -InterfaceDescription '*DSC*' | ? Virtual -eq $false | select Name,Status,ifIndex
 	echo $netAdapters
 	foreach ($netAdapter in $netAdapters){
 		 Enable-NetAdapter -Name $netAdapter.Name -Confirm:$false
@@ -45,10 +45,10 @@ function Enable-Interface {
 
 function Get-Management-Interface {
 	$mgmtIFs = @()
-	# Get Pensando devices
-	$hardwareInfo = Get-NetAdapterHardwareInfo -InterfaceDescription 'Pensando*'
+	# Get DSC devices
+	$hardwareInfo = Get-NetAdapterHardwareInfo -InterfaceDescription '*DSC*'
 	
-	# Collect all Pensando slots
+	# Collect all DSC slots
 	$slots = $hardwareInfo | Group-Object Slot | Foreach {"$($_.Name)"}
 	
 	# Collecting all management Interfaces
@@ -63,7 +63,7 @@ function Get-Management-Interface {
 
 function Disable-DHCP {
 	echo "Disable-DHCP"
-	$netAdapters = Get-NetAdapter -InterfaceDescription 'Pensando*' | ? Virtual -eq $false | select Name,Status,ifIndex
+	$netAdapters = Get-NetAdapter -InterfaceDescription '*DSC*' | ? Virtual -eq $false | select Name,Status,ifIndex
 	echo $netAdapters
 	foreach ($netAdapter in $netAdapters){
 		Set-NetIPInterface -InterfaceIndex $netAdapter.ifIndex -Dhcp Disabled
@@ -120,7 +120,7 @@ if ($skipInstall) {
 	if($cleanUp){
 		Uninstall-Driver
 	}else{
-		$netAdapters = Get-NetAdapter -InterfaceDescription 'Pensando*' | ? Virtual -eq $false | select Name,Status,ifIndex
+		$netAdapters = Get-NetAdapter -InterfaceDescription '*DSC*' | ? Virtual -eq $false | select Name,Status,ifIndex
 		$numPorts = @($netAdapters).count
 		if ($numPorts -gt 0) {
 			Uninstall-Driver
@@ -163,7 +163,7 @@ if ($skipInstall) {
 		# https://docs.microsoft.com/en-us/windows-hardware/drivers/devtest/devcon-drivernodes
 		& 'C:\Program Files (x86)\Windows Kits\10\Tools\x64\devcon.exe' drivernodes 'PCI\VEN_1DD8&DEV_1002*' 'PCI\VEN_1DD8&DEV_1004*'
 
-		$netAdapters = Get-NetAdapter -InterfaceDescription 'Pensando*' | ? Virtual -eq $false | select Name,Status,ifIndex
+		$netAdapters = Get-NetAdapter -InterfaceDescription '*DSC*' | ? Virtual -eq $false | select Name,Status,ifIndex
 		echo $netAdapters
 		$numPorts = @($netAdapters).count
 
