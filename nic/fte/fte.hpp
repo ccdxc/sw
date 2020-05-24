@@ -123,6 +123,9 @@ void set_fte_max_sessions(uint8_t fte_id, uint64_t max_session);
 // Get max session per fte
 uint64_t get_fte_max_sessions(uint8_t fte_id);
 
+// Check for the presence of fte
+bool has_fte_started(uint8_t fte_id);
+
 // Set Quisce on FTE
 void fte_set_quiesce(uint8_t fte_id, bool quiesce);
 

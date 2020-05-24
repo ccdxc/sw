@@ -1207,6 +1207,12 @@ get_fte_max_sessions (uint8_t fte_id)
     return max_sessions;
 }
 
+bool
+has_fte_started (uint8_t fte_id)
+{
+    return (g_inst_list[fte_id] != NULL);
+}
+
 void
 fte_set_quiesce (uint8_t fte_id, bool quiesce)
 {

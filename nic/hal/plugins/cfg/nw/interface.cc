@@ -6346,6 +6346,7 @@ if_cpu_lif_interface_create (void)
 {
     hal_ret_t ret = HAL_RET_OK;
     static bool cpu_if_done = false;
+    bool rx_enable = false;
 
     if (cpu_if_done) {
         goto end;
@@ -6360,8 +6361,10 @@ if_cpu_lif_interface_create (void)
         goto end;
     }
 
+
+    rx_enable = fte::has_fte_started(0);
     // Create cpu if
-    ret = hal_cpu_if_create(HAL_LIF_CPU, false);
+    ret = hal_cpu_if_create(HAL_LIF_CPU, rx_enable);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Unable to create cpu if. err: {}", ret);
         goto end;
