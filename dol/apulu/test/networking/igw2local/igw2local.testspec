@@ -107,6 +107,10 @@ session:
                 - packet        :
                     object      : ref://testcase/packets/id=FROM_SWITCH_PKT
                     port        : ref://testcase/config/switchport
+            configs             :
+                - object        : ref://testcase/config/localmapping/VNIC
+                  method        : Read
+
         expect                  :
             delay               : 1
             descriptors         :
@@ -114,3 +118,7 @@ session:
                     negtest     : callback://networking/packets/IsNegativeTestCase
                     object      : ref://testcase/descriptors/id=DESC2
                     ring        : callback://networking/packets/GetRingFromMapping/type=local,qid=RX
+            configs             :
+                - object        : ref://testcase/config/localmapping/VNIC
+                  method        : VerifyVnicStats
+                  fields        : callback://common/config/GetExpectedStats/dir=RX,npkts=1,pkt=TO_HOST_PKT

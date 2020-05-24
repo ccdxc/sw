@@ -1350,7 +1350,6 @@ vnic_impl::fill_stats_(pds_vnic_stats_t *stats) {
 
 sdk_ret_t
 vnic_impl::fill_spec_(pds_vnic_spec_t *spec) {
-    device_entry *device;
     sdk_ret_t ret;
     nexthop_info_entry_t nh_data;
 
@@ -1363,14 +1362,6 @@ vnic_impl::fill_spec_(pds_vnic_spec_t *spec) {
         return sdk::SDK_RET_HW_READ_ERR;
     }
 
-    device = device_find();
-    if (!device) {
-        return SDK_RET_ERR;
-    }
-    if (device->oper_mode() == PDS_DEV_OPER_MODE_BITW) {
-        spec->vnic_encap.val.vlan_tag = nh_data.get_vlan();
-        spec->vnic_encap.type = PDS_ENCAP_TYPE_DOT1Q;
-    }
     MAC_UINT64_TO_ADDR(spec->mac_addr, nh_data.get_dmaci());
     return SDK_RET_OK;
 }

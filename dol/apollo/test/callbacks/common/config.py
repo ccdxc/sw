@@ -3,6 +3,7 @@
 import pdb
 
 from infra.common.logging import logger
+import apollo.test.callbacks.networking.packets as packets
 
 def __get_module_args_value(modargs, attr):
     if modargs is not None:
@@ -64,3 +65,25 @@ def GetCfgOperFn(tc):
 
 def GetCfgFields(tc):
     return __get_cfg_fields_selector(tc.module.args)
+
+def GetExpectedStats(tc, args):
+    spec = dict()
+    pktdir = getattr(args, 'dir', None)
+    pktid = getattr(args, 'pkt', None)
+    npkts = getattr(args, 'npkts', None)
+    if pktdir == "TX":
+        spec['txpackets'] = npkts
+        spec['txbytes'] = tc.packets.Get(pktid).spktobj.GetSize()
+        spec['rxpackets'] = 0
+        spec['rxbytes'] = 0
+    else:
+        spec['rxpackets'] = npkts
+        spec['rxbytes'] = tc.packets.Get(pktid).spktobj.GetSize()
+        spec['txpackets'] = 0
+        spec['txbytes'] = 0
+    if packets.IsNegativeTestCase(tc) == True:
+        spec['txpackets'] = 0
+        spec['txbytes'] = 0
+        spec['rxpackets'] = 0
+        spec['rxbytes'] = 0
+    return spec

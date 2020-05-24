@@ -12,6 +12,7 @@ import apollo.config.agent.api as api
 import apollo.config.objects.base as base
 import apollo.config.objects.lmapping as lmapping
 import apollo.config.objects.mirror as mirror
+import apollo.test.utils.pdsctl as pdsctl
 from apollo.config.objects.interface import client as InterfaceClient
 from apollo.config.objects.meter  import client as MeterClient
 from apollo.config.objects.policy import client as PolicyClient
@@ -197,7 +198,24 @@ class VnicObject(base.ConfigObjectBase):
         if vnicSelector:
             return super().IsFilterMatch(vnicSelector.filters)
         return True
-        
+
+    def VerifyVnicStats(self, spec):
+        if utils.IsDryRun(): return True
+        cmd = "vnic statistics --id " + self.UUID.String()
+        status, op = pdsctl.ExecutePdsctlShowCommand(cmd, None)
+        entries = op.split("---")
+        yamlOp = utils.LoadYaml(entries[0])
+        if not yamlOp: return False
+        statAttrs = ['RxPackets', 'RxBytes', 'TxPackets', 'TxBytes']
+        for statAttr in statAttrs:
+            lstatAttr = statAttr.lower()
+            if yamlOp['stats'][lstatAttr] != getattr(self.Stats, statAttr) + spec[lstatAttr]:
+                preStat = getattr(self.Stats, statAttr)
+                expStat = preStat + spec[lstatAttr]
+                output = yamlOp['stats'][lstatAttr]
+                logger.info(f"{statAttr} mismatch. PreStat: %d, ExpStat: %d, Output: %d" % (preStat, expStat, output))
+                return False
+        return True
 
     def UpdateAttributes(self, spec):
         if self.Dot1Qenabled:
@@ -345,7 +363,6 @@ class VnicObject(base.ConfigObjectBase):
         self.Generate_vnic_security_policies()
         super().DeriveOperInfo()
         return
-
 
     def RestoreNotify(self, cObj):
         logger.info("Notify %s for %s creation" % (self, cObj))

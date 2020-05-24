@@ -92,6 +92,9 @@ session:
                 - descriptor:
                     object  : ref://testcase/descriptors/id=DESC1
                     ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
+            configs:
+                - object        : ref://testcase/config/localmapping/VNIC
+                  method        : Read
 
         expect:
             delay    :    1
@@ -99,8 +102,11 @@ session:
                 - packet:
                     object  : callback://networking/packets/GetExpectedPacket/pkt=TO_SWITCH_PKT
                     port    : callback://networking/packets/GetExpectedEgressUplinkPort
-
             descriptors:
                 - descriptor:
                     object  : ref://testcase/descriptors/id=DESC2
                     ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
+            configs:
+                - object    : ref://testcase/config/localmapping/VNIC
+                  method    : VerifyVnicStats
+                  fields    : callback://common/config/GetExpectedStats/dir=TX,npkts=1,pkt=FROM_HOST_PKT

@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import pdb
+import types_pb2 as types_pb2
 from infra.common.logging import logger
 import infra.common.objects as objects
 
@@ -27,7 +28,7 @@ class SecurityProfileObject(base.ConfigObjectBase):
         self.GID('SecurityProfile%d'%self.SecurityProfileId)
         self.UUID = utils.PdsUuid(self.SecurityProfileId, self.ObjType)
         self.ConnTrackEn = getattr(spec, 'conntrack', False)
-        self.DefaultFWAction = getattr(spec, 'deffwaction', 
+        self.DefaultFWAction = getattr(spec, 'deffwaction',
                                        topo.SecurityRuleActionType.ALLOW)
         self.TCPIdleTimeout = getattr(spec, 'tcpidletimeout', 600)
         self.UDPIdleTimeout = getattr(spec, 'udpidletimeout', 120)
@@ -92,8 +93,12 @@ class SecurityProfileObject(base.ConfigObjectBase):
             return False
         if spec.ConnTrackEn != self.ConnTrackEn:
             return False
-        if spec.DefaultFWAction != self.DefaultFWAction:
-            return False
+        if self.DefaultFWAction == types_pb2.SECURITY_RULE_ACTION_NONE:
+            if spec.DefaultFWAction != types_pb2.SECURITY_RULE_ACTION_DENY:
+                return False
+        else:
+            if spec.DefaultFWAction != self.DefaultFWAction:
+                return False
         if spec.TCPIdleTimeout != self.TCPIdleTimeout:
             return False
         if spec.UDPIdleTimeout != self.UDPIdleTimeout:
@@ -123,8 +128,12 @@ class SecurityProfileObject(base.ConfigObjectBase):
             return False
         if spec[ 'conntracken' ] != self.ConnTrackEn:
             return False
-        if spec[ 'defaultfwaction' ] != self.DefaultFWAction:
-            return False
+        if self.DefaultFWAction == types_pb2.SECURITY_RULE_ACTION_NONE:
+            if spec[ 'defaultfwaction' ] != types_pb2.SECURITY_RULE_ACTION_DENY:
+                return False
+        else:
+            if spec[ 'defaultfwaction' ] != self.DefaultFWAction:
+                return False
         if spec[ 'tcpidletimeout' ] != self.TCPIdleTimeout:
             return False
         if spec[ 'udpidletimeout' ] != self.UDPIdleTimeout:

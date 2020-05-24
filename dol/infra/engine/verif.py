@@ -36,7 +36,7 @@ class DolVerifEngineObject(VerifEngineObject):
         super().__init__()
         # Pending testcase database
         self.ptcdb = objects.ObjectDatabase()
-        # Completed testcase database 
+        # Completed testcase database
         self.ctcdb = objects.ObjectDatabase()
         return
 
@@ -300,12 +300,12 @@ class DolVerifEngineObject(VerifEngineObject):
         if dstatus == defs.status.ERROR:
             verify_pass = False
 
-        if verify_pass == False:
-            return defs.status.ERROR
-
         cstatus = self.__verify_configs(step, tc)
         if cstatus == defs.status.ERROR:
             verify_pass = False
+
+        if verify_pass == False:
+            return defs.status.ERROR
 
         return defs.status.SUCCESS
 
@@ -338,7 +338,7 @@ class E2EVerifEngineObject(VerifEngineObject):
             cmd_status = defs.status.SUCCESS
             if not cmd.status:
                 logger.error("Command Failed %s" % cmd.command)
-                cmd_status = defs.status.SUCCESS if cmd.ignore_error else defs.status.ERROR 
+                cmd_status = defs.status.SUCCESS if cmd.ignore_error else defs.status.ERROR
             else:
                 logger.info("Command Success %s" % cmd.command)
             all_status.append(cmd_status)
