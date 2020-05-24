@@ -6,6 +6,7 @@ package pipeline
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"strings"
@@ -182,6 +183,17 @@ func (a *ApuluAPI) PipelineInit() error {
 			time.Sleep(time.Minute)
 		}
 	}()
+
+	// Attempt setting up interfaces before replaying configs
+	var obj types.DistributedServiceCardStatus
+	if dat, err := a.InfraAPI.Read(types.VeniceConfigKind, types.VeniceConfigKey); err == nil {
+		if err := json.Unmarshal(dat, &obj); err != nil {
+			log.Error(errors.Wrapf(types.ErrUnmarshal, "Err: %v", err))
+		} else {
+			a.InfraAPI.StoreConfig(obj)
+			a.HandleDSCInterfaceInfo(obj)
+		}
+	}
 
 	// Replay stored configs. This is a best-effort replay. Not marking errors as fatal since controllers will
 	// eventually get the configs to a cluster-wide consistent state
@@ -1949,8 +1961,25 @@ func (a *ApuluAPI) HandleCPRoutingConfig(obj types.DSCStaticRoute) error {
 	return nil
 }
 
-// HandleDSCL3Interface handles configuring L3 interface on DSC interfaces
-func (a *ApuluAPI) HandleDSCL3Interface(obj types.DSCInterfaceIP) error {
+// HandleDSCInterfaceInfo handles configuring DSC interfaces served from the DB
+func (a *ApuluAPI) HandleDSCInterfaceInfo(obj types.DistributedServiceCardStatus) {
+	// Note: If handleDSCL3Interface fails for one of the IPs in obj.DSCInterfaceIPs,
+	// we log error and continue.
+	if strings.Contains(strings.ToLower(obj.DSCMode), "network") {
+		log.Infof("Pipeline API: handleDSCInterfaceInfo | Obj: %v", obj)
+		if len(obj.DSCInterfaceIPs) != 0 {
+			for _, intf := range obj.DSCInterfaceIPs {
+				if err := handleDSCL3Interface(a, intf); err != nil {
+					log.Error(err)
+				}
+			}
+		}
+	}
+	return
+}
+
+// handleDSCL3Interface handles configuring L3 interface on DSC interfaces
+func handleDSCL3Interface(a *ApuluAPI, obj types.DSCInterfaceIP) error {
 	iDat, err := a.InfraAPI.List("Interface")
 	if err != nil {
 		log.Error(errors.Wrapf(types.ErrBadRequest, "Err: %v", types.ErrObjNotFound))

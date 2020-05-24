@@ -140,8 +140,8 @@ type PipelineAPI interface {
 	// HandleCPRoutingConfig handles creation of control plane route objects
 	HandleCPRoutingConfig(obj DSCStaticRoute) error
 
-	// HandleDSCL3Interface handles configuring L3 interfaces on DSC interfaces
-	HandleDSCL3Interface(obj DSCInterfaceIP) error
+	// HandleDSCInterfaceInfo handles configuring DSC interfaces served from the DB
+	HandleDSCInterfaceInfo(obj DistributedServiceCardStatus)
 
 	// HandleTechSupport captures tech support from DSC and uploads it to Venice
 	HandleTechSupport(obj tsproto.TechSupportRequest) (techSupportArtifact string, err error)

@@ -2225,9 +2225,10 @@ func (i *IrisAPI) isLocalEP(nodeuuid string) bool {
 	return epNodeUUID.String() == selfNodeUUID.String()
 }
 
-// HandleDSCL3Interface handles configuring L3 interfaces on DSC interfaces
-func (i *IrisAPI) HandleDSCL3Interface(obj types.DSCInterfaceIP) error {
-	return errors.Wrapf(types.ErrNotImplemented, "Handle CP Routing Config not implemented by Iris Pipeline")
+// HandleDSCInterfaceInfo handles configuring DSC interfaces served from the DB
+func (i *IrisAPI) HandleDSCInterfaceInfo(obj types.DistributedServiceCardStatus) {
+	log.Info("Handle CP Routing Config not implemented by Iris Pipeline")
+	return
 }
 
 // TODO Move this into InfraAPI to avoid code duplication

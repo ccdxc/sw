@@ -153,6 +153,8 @@ func (c *API) newRestServer(url string, pipelineAPI types.PipelineAPI) *http.Ser
 func (c *API) HandleVeniceCoordinates(obj types.DistributedServiceCardStatus) error {
 	log.Infof("Controller API: %s | Obj: %v", types.InfoHandlingVeniceCoordinates, obj)
 	if strings.Contains(strings.ToLower(obj.DSCMode), "network") && len(obj.Controllers) != 0 {
+		// Setup L3 interfaces for Venice connectivity before doing any controller stuff
+		c.PipelineAPI.HandleDSCInterfaceInfo(obj)
 		// restore the Loopback IP if it is set.
 		cfg := c.InfraAPI.GetConfig()
 		if cfg.LoopbackIP != "" {
@@ -698,10 +700,9 @@ func (c *API) postConfigHandler(r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 
-	c.handleDSCInterfaceInfo(o)
+	err = c.HandleVeniceCoordinates(o)
 
 	var resp restapi.Response
-	err = c.HandleVeniceCoordinates(o)
 	if err != nil {
 		resp.StatusCode = http.StatusInternalServerError
 		resp.Error = err.Error()
@@ -742,19 +743,4 @@ func (c *API) getMappingHandler(r *http.Request) (interface{}, error) {
 	resp.StatusCode = http.StatusNotFound
 	resp.Error = fmt.Sprintf("Interface: %d not found", intfID)
 	return resp, err
-}
-
-func (c *API) handleDSCInterfaceInfo(obj types.DistributedServiceCardStatus) {
-	//Handle DSC Interface Info
-	if strings.Contains(strings.ToLower(obj.DSCMode), "network") {
-		log.Infof("Controller API: handleDSCInterfaceInfo | Obj: %v", obj)
-
-		if len(obj.DSCInterfaceIPs) != 0 {
-			for _, intf := range obj.DSCInterfaceIPs {
-				if err := c.PipelineAPI.HandleDSCL3Interface(intf); err != nil {
-					log.Error(err)
-				}
-			}
-		}
-	}
 }
