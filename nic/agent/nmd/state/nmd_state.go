@@ -1052,9 +1052,17 @@ func naplesExecCmd(req *nmd.DistributedServiceCardCmdExecute) (string, error) {
 		req.Executable = "fwupdate"
 		req.Opts = "-s altfw"
 	} else if req.Executable == "eraseConfig" {
+		err := rebootSWMCard()
+		if err != nil {
+			log.Errorf("Failed to set reboot for SWM card. Err : %v", err)
+		}
 		req.Executable = "clear_nic_config.sh"
 		req.Opts = "remove-config"
 	} else if req.Executable == "factoryDefault" {
+		err := rebootSWMCard()
+		if err != nil {
+			log.Errorf("Failed to set reboot for SWM card. Err : %v", err)
+		}
 		req.Executable = "clear_nic_config.sh"
 		req.Opts = "factory-default"
 	} else if req.Executable == "sethwclock" {
