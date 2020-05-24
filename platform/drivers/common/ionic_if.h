@@ -492,13 +492,13 @@ struct ionic_lif_init_comp {
 };
 
 /**
- * struct q_identify_cmd - queue identify command
+ * struct ionic_q_identify_cmd - queue identify command
  * @opcode:     opcode
  * @lif_type:   LIF type (enum ionic_lif_type)
  * @type:       Logical queue type (enum ionic_logical_qtype)
  * @ver:        Highest queue type version that the driver supports
  */
-struct q_identify_cmd {
+struct ionic_q_identify_cmd {
 	u8     opcode;
 	u8     rsvd;
 	__le16 lif_type;
@@ -508,12 +508,12 @@ struct q_identify_cmd {
 };
 
 /**
- * struct q_identify_comp - queue identify command completion
+ * struct ionic_q_identify_comp - queue identify command completion
  * @status:     Status of the command (enum ionic_status_code)
  * @comp_index: Index in the descriptor ring for which this is the completion
  * @ver:        Queue type version that can be used with FW
  */
-struct q_identify_comp {
+struct ionic_q_identify_comp {
 	u8     status;
 	u8     rsvd;
 	__le16 comp_index;
@@ -2695,7 +2695,7 @@ union ionic_dev_cmd {
 	struct ionic_qos_reset_cmd qos_reset;
 	struct ionic_qos_clear_stats_cmd qos_clear_stats;
 
-	struct q_identify_cmd q_identify;
+	struct ionic_q_identify_cmd q_identify;
 	struct ionic_q_init_cmd q_init;
 	struct ionic_q_control_cmd q_control;
 };
@@ -2729,7 +2729,7 @@ union ionic_dev_cmd_comp {
 	ionic_qos_init_comp qos_init;
 	ionic_qos_reset_comp qos_reset;
 
-	struct q_identify_comp q_identify;
+	struct ionic_q_identify_comp q_identify;
 	struct ionic_q_init_comp q_init;
 };
 
@@ -2799,7 +2799,7 @@ union ionic_dev_regs {
 union ionic_adminq_cmd {
 	struct ionic_admin_cmd cmd;
 	struct ionic_nop_cmd nop;
-	struct q_identify_cmd q_identify;
+	struct ionic_q_identify_cmd q_identify;
 	struct ionic_q_init_cmd q_init;
 	struct ionic_q_control_cmd q_control;
 	struct ionic_lif_setattr_cmd lif_setattr;
@@ -2816,7 +2816,7 @@ union ionic_adminq_cmd {
 union ionic_adminq_comp {
 	struct ionic_admin_comp comp;
 	struct ionic_nop_comp nop;
-	struct q_identify_comp q_identify;
+	struct ionic_q_identify_comp q_identify;
 	struct ionic_q_init_comp q_init;
 	struct ionic_lif_setattr_comp lif_setattr;
 	struct ionic_lif_getattr_comp lif_getattr;

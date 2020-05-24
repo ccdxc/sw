@@ -1270,7 +1270,7 @@ status_code_t
 EthLif::_CmdQIdentify(void *req, void *req_data, void *resp, void *resp_data)
 {
     status_code_t ret = IONIC_RC_ERROR;
-    struct q_identify_cmd *cmd = (struct q_identify_cmd *)req;
+    struct ionic_q_identify_cmd *cmd = (struct ionic_q_identify_cmd *)req;
 
     NIC_LOG_DEBUG("{}: {} lif_type {} qtype {} ver {}", spec->name, opcode_to_str(cmd->opcode),
                   cmd->lif_type, cmd->type, cmd->ver);
@@ -1301,8 +1301,8 @@ status_code_t
 EthLif::AdminQIdentify(void *req, void *req_data, void *resp, void *resp_data)
 {
     union ionic_q_identity *ident = (union ionic_q_identity *)resp_data;
-    // struct q_identify_cmd *cmd = (struct q_identify_cmd *)req;
-    struct q_identify_comp *comp = (struct q_identify_comp *)resp;
+    // struct ionic_q_identify_cmd *cmd = (struct ionic_q_identify_cmd *)req;
+    struct ionic_q_identify_comp *comp = (struct ionic_q_identify_comp *)resp;
 
     memset(ident, 0, sizeof(union ionic_q_identity));
 
@@ -1321,8 +1321,8 @@ status_code_t
 EthLif::NotifyQIdentify(void *req, void *req_data, void *resp, void *resp_data)
 {
     union ionic_q_identity *ident = (union ionic_q_identity *)resp_data;
-    // struct q_identify_cmd *cmd = (struct q_identify_cmd *)req;
-    struct q_identify_comp *comp = (struct q_identify_comp *)resp;
+    // struct ionic_q_identify_cmd *cmd = (struct ionic_q_identify_cmd *)req;
+    struct ionic_q_identify_comp *comp = (struct ionic_q_identify_comp *)resp;
 
     memset(ident, 0, sizeof(union ionic_q_identity));
 
@@ -1340,8 +1340,8 @@ status_code_t
 EthLif::RxQIdentify(void *req, void *req_data, void *resp, void *resp_data)
 {
     union ionic_q_identity *ident = (union ionic_q_identity *)resp_data;
-    struct q_identify_cmd *cmd = (struct q_identify_cmd *)req;
-    struct q_identify_comp *comp = (struct q_identify_comp *)resp;
+    struct ionic_q_identify_cmd *cmd = (struct ionic_q_identify_cmd *)req;
+    struct ionic_q_identify_comp *comp = (struct ionic_q_identify_comp *)resp;
 
     memset(ident, 0, sizeof(union ionic_q_identity));
 
@@ -1372,8 +1372,8 @@ status_code_t
 EthLif::TxQIdentify(void *req, void *req_data, void *resp, void *resp_data)
 {
     union ionic_q_identity *ident = (union ionic_q_identity *)resp_data;
-    struct q_identify_cmd *cmd = (struct q_identify_cmd *)req;
-    struct q_identify_comp *comp = (struct q_identify_comp *)resp;
+    struct ionic_q_identify_cmd *cmd = (struct ionic_q_identify_cmd *)req;
+    struct ionic_q_identify_comp *comp = (struct ionic_q_identify_comp *)resp;
 
     memset(ident, 0, sizeof(union ionic_q_identity));
 

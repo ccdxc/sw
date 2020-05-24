@@ -100,8 +100,8 @@ static_assert(sizeof(struct ionic_lif_getattr_comp) == 16);
 static_assert(sizeof(struct ionic_lif_setattr_cmd) == 64);
 static_assert(sizeof(struct ionic_lif_setattr_comp) == 16);
 
-static_assert(sizeof(struct q_identify_cmd) == 64);
-static_assert(sizeof(struct q_identify_comp) == 16);
+static_assert(sizeof(struct ionic_q_identify_cmd) == 64);
+static_assert(sizeof(struct ionic_q_identify_comp) == 16);
 static_assert(sizeof(struct ionic_q_init_cmd) == 64);
 static_assert(sizeof(struct ionic_q_init_comp) == 16);
 static_assert(sizeof(struct ionic_q_control_cmd) == 64);
