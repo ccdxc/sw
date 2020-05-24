@@ -31,6 +31,7 @@ var clearCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(showCmd)
 	rootCmd.AddCommand(clearCmd)
+	rootCmd.AddCommand(impl.GenDocsCmd)
 	impl.RegisterShowNodes(&impl.CLIParams{GRPCPort: pegasusGRPCDefaultPort}, showCmd)
 	impl.RegisterClearNodes(&impl.CLIParams{GRPCPort: pegasusGRPCDefaultPort}, clearCmd)
 }
