@@ -48,9 +48,9 @@ rolloutrela-nightly: tot-upgrade-bundle
 
 rollout-bminus2b: tot-upgrade-bundle
 	mkdir -p ${GOPATH}/src/github.com/pensando/sw/relbminus-bundle
-	asset-pull bundle_image 1.8.0-E-21 ${GOPATH}/src/github.com/pensando/sw/relbminus-bundle/bundle.tar
+	asset-pull bundle_image 1.8.0-E-34 ${GOPATH}/src/github.com/pensando/sw/relbminus-bundle/bundle.tar
 	cd ${GOPATH}/src/github.com/pensando/sw/relbminus-bundle && tar -xvf bundle.tar
-	asset-pull esx_driver 1.8.0-E-21 ${GOPATH}/src/github.com/pensando/sw/platform/esxdriver.tgz
+	asset-pull esx_driver 1.8.0-E-34 ${GOPATH}/src/github.com/pensando/sw/platform/esxdriver.tgz
 	cd ${GOPATH}/src/github.com/pensando/sw/platform && tar -zxvf esxdriver.tgz
 	cd ${GOPATH}/src/github.com/pensando/sw/relbminus-bundle && tar -xvf bundle.tar && ls -al && mv venice.tgz ${GOPATH}/src/github.com/pensando/sw/bin/ && mv naples_fw.tar ${GOPATH}/src/github.com/pensando/sw/nic/
 	mkdir -p ${GOPATH}/src/github.com/pensando/sw/iota/bin/penctl

@@ -21,8 +21,8 @@ def __get_nics_output_esx():
     return output
 
 esx_interface_types = {
-    "int-mnic" : "Management Controller",
-    "data-nic" : "Ethernet Controller"
+    "int-mnic" : "Management",
+    "data-nic" : "Ethernet"
 }
 
 
