@@ -26,7 +26,9 @@ enum {
 
 static const char ionic_priv_flags_strings[][ETH_GSTRING_LEN] = {
 #define IONIC_PRIV_F_SW_DBG_STATS	BIT(0)
+#ifdef IONIC_DEBUG_STATS
 	"sw-dbg-stats",
+#endif
 #define IONIC_PRIV_F_RDMA_SNIFFER	BIT(1)
 	"rdma-sniffer",
 #define IONIC_PRIV_F_SPLIT_INTR		BIT(2)

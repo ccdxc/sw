@@ -44,9 +44,13 @@ def __checkDebugStatsDefault(wl):
         api.Logger.error("Bad exit code %d on interface %s" % (cmd.exit_code, wl.interface))
         api.Logger.info(cmd.stderr)
         return api.types.status.FAILURE
-    if "sw-dbg-stats: off" not in cmd.stdout:
+
+    if "sw-dbg-stats: on" in cmd.stdout:
         api.Logger.error("sw-dbg-stats on by default interface %s" % wl.interface)
         return api.types.status.FAILURE
+    elif "sw-dbg-stats: off" not in cmd.stdout:
+        api.Logger.info("sw-dbg-stats not available on interface %s" % wl.interface)
+        return api.types.status.UNAVAIL
 
     cmd = resp.commands[1]
     #api.PrintCommandResults(cmd)
@@ -159,6 +163,10 @@ def Trigger(tc):
         if wl.interface_type == topo_svc.INTERFACE_TYPE_VSS:
            continue
         ret = __checkDebugStatsDefault(wl)
+        if ret == api.types.status.UNAVAIL:
+            ret = api.types.status.SUCCESS
+            continue
+
         if ret == api.types.status.SUCCESS:
             ret = __checkDebugStatsOn(wl)
         if ret == api.types.status.SUCCESS:
