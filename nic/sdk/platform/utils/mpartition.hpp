@@ -215,7 +215,11 @@ static inline std::string get_mpart_file_path(std::string cfg_path,
     std::transform(profile_name.begin(), profile_name.end(),
             profile_name.begin(), ::tolower);
 
+#ifdef ELBA
+    return cfg_path + "/" + feature_set + "/hbm_mem_elba" + profile_name + ".json";
+#else
     return cfg_path + "/" + feature_set + "/hbm_mem" + profile_name + ".json";
+#endif
 }
 
 private:

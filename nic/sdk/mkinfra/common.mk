@@ -101,21 +101,12 @@ COMMON_P4C_OPTS             :=
 ifeq ($(ASIC),elba)
      NAME_CAPAS     := "[ ELBAS  ]"
      COMMON_CMD_CAPAS            := ${SDKDIR}/third-party/asic/ip/verif/pensim/gen/x86_64/bin/elbas
-     ifeq ($(PLATFORM),haps)
-        COMMON_NCC_OPTS             := --asic elba --fe-flags="-DELBA -DPLATFORM_HAPS"
-     else
-        COMMON_NCC_OPTS             := --asic elba --fe-flags="-DELBA"
-     endif
+     COMMON_NCC_OPTS             := --asic "elba"
 else
      NAME_CAPAS     := "[ CAPAS  ]"
      COMMON_CMD_CAPAS            := ${SDKDIR}/third-party/asic/capri/model/capsim-gen/bin/capas
-     ifeq ($(PLATFORM),haps)
-        COMMON_NCC_OPTS             := --fe-flags="-DPLATFORM_HAPS"
-     else
-        COMMON_NCC_OPTS             :=
-	 endif
+     COMMON_NCC_OPTS             :=
 endif
-
 
 COMMON_CAPAS_OPTS           := -t
 

@@ -31,7 +31,7 @@
 #include "third-party/asic/elba/model/elb_wa/elb_wa_csr_define.h"
 #include "third-party/asic/elba/model/elb_prd/elb_prd_csr.h"
 #include "third-party/asic/elba/model/utils/elb_csr_py_if.h"
-#include "third-party/asic/elba/verif/apis/elb_txs_api.h"
+#include "third-party/asic/elba/verif/apis/elb_txs_sw_api.h"
 
 using namespace sdk::asic;
 
@@ -43,6 +43,38 @@ class elba_state_pd *g_elba_state_pd;
 /* elba_default_config_init
  * Load any bin files needed for initializing default configs
  */
+sdk_ret_t
+elba_default_config_init (asic_cfg_t *cfg)
+{
+    sdk_ret_t   ret = SDK_RET_OK;
+    std::string hbm_full_path;
+    std::string full_path;
+    int         num_phases = 2;
+    int         i;
+
+    for (i = 0; i < num_phases; i++) {
+        full_path =  std::string(cfg->cfg_path) + "/init_bins/" +
+            cfg->default_config_dir + "/init_" + std::to_string(i) + "_bin" + "/elba";
+
+        SDK_TRACE_DEBUG("Init phase %d Binaries dir: %s", i, full_path.c_str());
+
+        // Check if directory is present
+        if (access(full_path.c_str(), R_OK) < 0) {
+            SDK_TRACE_DEBUG("Skipping init binaries");
+            return SDK_RET_OK;
+        }
+
+        ret = sdk::asic::asic_load_config((char *)full_path.c_str());
+        SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
+                                "Error loading init phase %d binaries ret %d",
+                                i, ret);
+
+        // Now do any polling for init complete for this phase
+        elba_tm_hw_config_load_poll(i);
+    }
+
+    return ret;
+}
 
 
 static sdk_ret_t
@@ -217,7 +249,7 @@ block_info_t blocks_info[MAX_INIT_BLOCKS];
 static void
 elba_block_info_init(void)
 {
-    blocks_info[0].inst_count = 1;
+    blocks_info[0].inst_count = 2;
     blocks_info[0].soft_reset = elb_npv_soft_reset;
     blocks_info[0].init_start = elb_npv_init_start;
     blocks_info[0].init_done  = elb_npv_init_done;
@@ -252,7 +284,7 @@ elba_block_info_init(void)
     blocks_info[6].init_start = elb_psp_init_start;
     blocks_info[6].init_done  = elb_psp_init_done;
 
-    blocks_info[7].inst_count = 1;
+    blocks_info[7].inst_count = 2;
     blocks_info[7].soft_reset = elb_ptd_soft_reset;
     blocks_info[7].init_start = elb_ptd_init_start;
     blocks_info[7].init_done  = elb_ptd_init_done;
@@ -377,6 +409,7 @@ elba_init (asic_cfg_t *cfg)
 {
     sdk_ret_t ret;
     int sxdma_lifs[] = {35};
+    char *tm_binary_init = getenv("ELBA_TM_BINARY_INIT");
 
     SDK_ASSERT_TRACE_RETURN((cfg != NULL), SDK_RET_INVALID_ARG, "Invalid cfg");
     SDK_TRACE_DEBUG("Initializing Elba");
@@ -430,23 +463,29 @@ elba_init (asic_cfg_t *cfg)
                                 "PXB/PCIE init failure, err : %d", ret);
     }
 
-#if 0 /* TBD-ELBA-REBASE */
-    ret = elba_tm_init(cfg->catalog,
-                       &cfg->device_profile->qos_profile);
-    SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
-                            "Elba TM init failure, err : %d", ret);
-#endif
+    if(tm_binary_init) {
+      SDK_TRACE_DEBUG("Elba TM Binary Init ");
+      ret = elba_default_config_init(cfg);
+      SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
+                            "Elba default config init failure, err: %d", ret);
 
-#if 0 /* TBD-ELBA-REBASE */
-    ret = elba_pf_init();
-    SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
+    } /* else */ {
+      SDK_TRACE_DEBUG("Elba TM Real Init ");
+      ret = elba_tm_init(cfg->catalog,
+                       &cfg->device_profile->qos_profile);
+      SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
+                            "Elba TM init failure, err : %d", ret);
+#if 0
+      /* TBD-ELBA-REBASE */
+      ret = elba_pf_init();
+      SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
         "Error intializing pbc ret %d", ret);
 
-    ret = elba_tm_port_program_uplink_byte_count();
-    SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
+      ret = elba_tm_port_program_uplink_byte_count();
+      SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
                             "Elba TM port program defaults, err : %d", ret);
 #endif
-
+    }
     ret = elba_repl_init(cfg);
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
                             "Elba replication init failure, err : %d", ret);
