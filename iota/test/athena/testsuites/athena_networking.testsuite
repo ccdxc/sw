@@ -24,7 +24,6 @@ setup:
     topology: test/athena/topologies/classic_2baremetal_2Naples/classic_baremetal.topology
     config  :
         - step  : config.athena_app_config
-
 common:
     verifs:
         #-   step    : verif.utils.verify_links
