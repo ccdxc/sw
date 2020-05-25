@@ -81,6 +81,21 @@ struct pds_obj_key_s {
     }
 } __PACK__;
 
+static inline bool operator < (const pds_obj_key_t& a, const pds_obj_key_t& b) {
+    static_assert (PDS_MAX_KEY_LEN % 4 == 0);
+
+    // comparing 4 bytes at a time
+    for (int i = 0; i < PDS_MAX_KEY_LEN/4; ++i) {
+        uint32_t a1 = ntohl(*((uint32_t *)(&a.id[i * 4])) & 0xFFFFFFFF);
+        uint32_t b1 = ntohl(*((uint32_t *)(&b.id[i * 4])) & 0xFFFFFFFF);
+        if (a1 == b1) {
+            continue;
+        }
+        return (a1 < b1);
+    }
+    return false;
+}
+
 // helper class for hash computation of the object key
 class pds_obj_key_hash {
 public:

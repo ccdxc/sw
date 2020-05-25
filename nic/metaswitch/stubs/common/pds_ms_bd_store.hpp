@@ -14,6 +14,7 @@
 #include "nic/apollo/api/include/pds_subnet.hpp"
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/sdk/lib/slab/slab.hpp"
+#include <unordered_set>
 
 namespace pds_ms {
 
@@ -25,7 +26,6 @@ public:
         pds_obj_key_t      vpc;
         pds_obj_key_t      subnet;
         pds_encap_t        fabric_encap;
-        if_index_t         host_ifindex = 0;
         properties_t(ms_bd_id_t b, const pds_obj_key_t& k,
                      const pds_obj_key_t& s)
             : bd_id(b), vpc(k), subnet(s) {};
@@ -38,13 +38,29 @@ public:
     ms_bd_id_t key(void) const {return prop_.bd_id;}
     void update_store(state_t* state, bool op_delete) override;
     void print_debug_str(void) override {};
+
     mac_store_t& mac_store(void) {return mac_store_;}
     void walk_macs(std::function<bool(const mac_addr_t& mac)>);
     bool has_macs(void) {return !mac_store_.empty();}
 
+    void add_host_ifindex(if_index_t host_ifindex) {
+        host_ifs_.insert(host_ifindex);
+    }
+    void del_host_ifindex(if_index_t host_ifindex) {
+        host_ifs_.erase(host_ifindex);
+    }
+    void walk_host_ifindex(std::function<bool(if_index_t host_ifindex)> cb) {
+        for (auto host_ifindex: host_ifs_) {
+            if (!cb(host_ifindex)) {
+                return;
+            }
+        }
+    }
+
 private:
     properties_t   prop_;
     mac_store_t    mac_store_;
+    std::unordered_set<if_index_t> host_ifs_;
 };
 
 class bd_store_t : public obj_store_t <ms_bd_id_t, bd_obj_t> {

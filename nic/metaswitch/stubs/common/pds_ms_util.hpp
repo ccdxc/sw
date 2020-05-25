@@ -300,6 +300,24 @@ static inline bool mgmt_state_locked(bool set, bool lock=false) {
     return mgmt_state_lock_;
 }
 
+template <class InputIt>
+static inline std::string objkey_list_str(InputIt first, InputIt last) {
+    std::string str;
+    bool found = false;
+    for (auto it = first; it < last; ++it) {
+        pds_obj_key_t& key = *it;
+        str.append(key.str()).append(", ");
+        found = true;
+    }
+    if (found) {
+        str.erase(str.end()-2);
+    } else {
+        str = "<>";
+    }
+    return str;
+}
+
+
 } // End namespace
 
 static inline bool operator==(const ip_addr_t& a,

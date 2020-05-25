@@ -136,9 +136,9 @@ static void config_evpn_bd_if_bind (const pds_subnet_spec_t* subnet_spec,
     auto ms_ifindex = pds_to_ms_ifindex(lif_ifindex, IF_TYPE_LIF);
 
     bool del_if = (row_status == AMB_ROW_DESTROY);
-    PDS_TRACE_DEBUG("%s Subnet %s BD %d LIF UUID %s PDS IfIndex 0x%x"
-                    " MS IfIndex 0x%x",
-                    (del_if) ? "detach" : "attach",
+    PDS_TRACE_DEBUG("%s Subnet %s BD %d HostIf %s PDSIfIndex 0x%x"
+                    " MSIfIndex 0x%x",
+                    (del_if) ? "Detach" : "Attach",
                     subnet_spec->key.str(), bd_id, host_if.str(),
                     lif_ifindex, ms_ifindex);
 
@@ -168,9 +168,9 @@ static void config_evpn_bd_if_bind (const pds_subnet_spec_t* subnet_spec,
 }
 
 static types::ApiStatus
-process_subnet_update (pds_subnet_spec_t *subnet_spec,
-                       uint32_t          bd_id,
-                       NBB_LONG          row_status)
+process_subnet_create_del (pds_subnet_spec_t *subnet_spec,
+                           uint32_t          bd_id,
+                           NBB_LONG          row_status)
 {
     PDS_MS_START_TXN(PDS_MS_CTM_GRPC_CORRELATOR);
 
@@ -184,8 +184,12 @@ process_subnet_update (pds_subnet_spec_t *subnet_spec,
     pds_ms_set_evpnbdspec_amb_evpn_bd (evpn_bd_spec, row_status,
                                        PDS_MS_CTM_GRPC_CORRELATOR, FALSE);
     create_irb_if(subnet_spec, bd_id, row_status);
-    if (!is_pds_obj_key_invalid(subnet_spec->host_if[0])) {
-        config_evpn_bd_if_bind(subnet_spec, bd_id, subnet_spec->host_if[0],
+
+    // In case of subnet delete, the subnet_spec is the cached prev spec
+    // and is used to detach each hostif bound to this subnet previously
+    for (int i = 0; i < subnet_spec->num_host_if; ++i) {
+        config_evpn_bd_if_bind(subnet_spec, bd_id,
+                               subnet_spec->host_if[i],
                                row_status, PDS_MS_CTM_GRPC_CORRELATOR);
     }
 
@@ -202,9 +206,20 @@ struct subnet_upd_flags_t {
     operator bool() {
         return (bd || bd_if || irb);
     }
-    pds_obj_key_t prev_host_if;
+    std::vector<pds_obj_key_t> added_host_if;
+    std::vector<pds_obj_key_t> deleted_host_if;
 };
 
+std::string hostif_list_str(std::vector<pds_obj_key_t>& hostif_list) {
+    std::string str;
+    bool found = false;
+    for (auto& hostif: hostif_list) {
+        str.append(hostif.str()).append(", ");
+        found = true;
+    }
+    if (found) str.erase(str.end()-2);
+    return str;
+}
 
 static types::ApiStatus
 process_subnet_field_update (pds_subnet_spec_t   *subnet_spec,
@@ -227,14 +242,20 @@ process_subnet_field_update (pds_subnet_spec_t   *subnet_spec,
     // corresponding to this PF in Metaswitch and bind this IfIndex
     // to the BD
     if (ms_upd_flags.bd_if) {
-        if (!is_pds_obj_key_invalid(ms_upd_flags.prev_host_if)) {
-            // First delete the previous Host If
-            config_evpn_bd_if_bind(subnet_spec, bd_id, ms_upd_flags.prev_host_if,
-                                   AMB_ROW_DESTROY, PDS_MS_CTM_GRPC_CORRELATOR);
+        // Unbind removed hostifs
+        for (auto& prev_host_if: ms_upd_flags.deleted_host_if) {
+            if (!is_pds_obj_key_invalid(prev_host_if)) {
+                config_evpn_bd_if_bind(subnet_spec, bd_id, prev_host_if,
+                                       AMB_ROW_DESTROY, PDS_MS_CTM_GRPC_CORRELATOR);
+            }
         }
-        if (!is_pds_obj_key_invalid(subnet_spec->host_if[0])) {
-            config_evpn_bd_if_bind(subnet_spec, bd_id, subnet_spec->host_if[0],
-                                  AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
+
+        // Bind added hostifs
+        for (auto& new_host_if: ms_upd_flags.added_host_if) {
+            if (!is_pds_obj_key_invalid(new_host_if)) {
+                config_evpn_bd_if_bind(subnet_spec, bd_id, new_host_if,
+                                       AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
+            }
         }
     }
 
@@ -386,9 +407,11 @@ subnet_create (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
                             bd_id, spec->key)) {
             return SDK_RET_INVALID_ARG;
         }
+        // Sort HostIf list before caching in store
+        std::sort(spec->host_if, spec->host_if + spec->num_host_if);
         cache_subnet_spec (spec, bd_id, pds_ms_subnet_cache_op_t::CREATE);
 
-        ret_status = process_subnet_update (spec, bd_id, AMB_ROW_ACTIVE);
+        ret_status = process_subnet_create_del (spec, bd_id, AMB_ROW_ACTIVE);
         if (ret_status != types::ApiStatus::API_STATUS_OK) {
             PDS_TRACE_ERR ("Failed to process subnet %s bd %d create (error=%d)",
                            spec->key.str(), bd_id, ret_status);
@@ -445,7 +468,7 @@ subnet_delete (pds_obj_key_t &key, pds_batch_ctxt_t bctxt)
         cache_subnet_spec (spec, bd_id, pds_ms_subnet_cache_op_t::MARK_DEL);
         marked_for_del = true;
 
-        ret_status = process_subnet_update (spec, bd_id, AMB_ROW_DESTROY);
+        ret_status = process_subnet_create_del (spec, bd_id, AMB_ROW_DESTROY);
         if (ret_status != types::ApiStatus::API_STATUS_OK) {
             cache_subnet_spec (spec, bd_id,
                                pds_ms_subnet_cache_op_t::REVERT_MARK_DEL);
@@ -501,29 +524,65 @@ parse_subnet_update (pds_subnet_spec_t *old_spec, ms_bd_id_t bd_id,
                     .append(std::to_string(bd_id)), SDK_RET_ENTRY_NOT_FOUND);
     }
 
-    // Make a copy to identify diff
-    auto state_pds_spec = subnet_obj->spec();
+    // New spec is already copied to subnet store
+    auto new_spec = &subnet_obj->spec();
+    auto new_num_hostif = new_spec->num_host_if;
 
-    if (memcmp (&state_pds_spec.fabric_encap, &old_spec->fabric_encap,
-                sizeof(state_pds_spec.fabric_encap)) != 0) {
+    // Verify there are no duplicate Host IFs
+    std::vector<pds_obj_key_t> host_iflist_unique;
+    std::unique_copy(new_spec->host_if, new_spec->host_if + new_num_hostif,
+                     std::back_inserter(host_iflist_unique));
+    if (host_iflist_unique.size() < new_num_hostif) {
+        std::vector<pds_obj_key_t> hostif_list_dup;
+        std::set_difference(new_spec->host_if, new_spec->host_if + new_num_hostif,
+                            host_iflist_unique.begin(), host_iflist_unique.end(),
+                            std::back_inserter(hostif_list_dup));
+        throw Error(std::string("Duplicate Host IFs in Subnet spec ")
+                    .append(objkey_list_str(hostif_list_dup.begin(),
+                                            hostif_list_dup.end())));
+    }
+
+    // Make a copy of Spec to identify diff in fastpath fields
+    auto new_spec_fp_only = *new_spec;
+
+    // Compare slowpath field - VNI
+    if (memcmp (&new_spec->fabric_encap, &old_spec->fabric_encap,
+                sizeof(new_spec->fabric_encap)) != 0) {
         ms_upd_flags.bd = true;
         PDS_TRACE_INFO("Subnet %s BD %d VNI change - New %d Old %d",
                        old_spec->key.str(), bd_id,
-                       state_pds_spec.fabric_encap.val.vnid,
+                       new_spec->fabric_encap.val.vnid,
                        old_spec->fabric_encap.val.vnid);
-        state_pds_spec.fabric_encap = old_spec->fabric_encap;
+        new_spec_fp_only.fabric_encap = old_spec->fabric_encap;
     }
-    if (state_pds_spec.host_if[0] != old_spec->host_if[0]) {
+
+    // Compare slowpath field - HostIf list
+    auto old_num_hostif = old_spec->num_host_if;
+    std::set_difference(new_spec->host_if, new_spec->host_if + new_num_hostif,
+                        old_spec->host_if, old_spec->host_if + old_num_hostif,
+                        std::back_inserter(ms_upd_flags.added_host_if));
+    std::set_difference(old_spec->host_if, old_spec->host_if + old_num_hostif,
+                        new_spec->host_if, new_spec->host_if + new_num_hostif,
+                        std::back_inserter(ms_upd_flags.deleted_host_if));
+
+    if (! (ms_upd_flags.added_host_if.empty() &&
+           ms_upd_flags.deleted_host_if.empty()) ) {
+
         ms_upd_flags.bd_if = true;
-        PDS_TRACE_INFO("Subnet %s BD %d Host If change - New %s Old %s",
-                       old_spec->key.str(), bd_id, state_pds_spec.host_if[0].str(),
-                       old_spec->host_if[0].str());
-        ms_upd_flags.prev_host_if = old_spec->host_if[0];
-        state_pds_spec.host_if[0] = old_spec->host_if[0];
+        PDS_TRACE_INFO("Subnet %s BD %d Host If change - Added %s Deleted %s",
+                       old_spec->key.str(), bd_id,
+                       objkey_list_str(ms_upd_flags.added_host_if.begin(),
+                                       ms_upd_flags.added_host_if.end()).c_str(),
+                       objkey_list_str(ms_upd_flags.deleted_host_if.begin(),
+                                       ms_upd_flags.deleted_host_if.end()).c_str());
+
+        memcpy(new_spec_fp_only.host_if, old_spec->host_if,
+               sizeof(new_spec_fp_only.host_if));
+        new_spec_fp_only.num_host_if = old_spec->num_host_if;
     }
 
     // Diff in any other property needs to be driven through fastpath
-    if (memcmp(&state_pds_spec, old_spec, sizeof(*old_spec)) != 0) {
+    if (memcmp(&new_spec_fp_only, old_spec, sizeof(*old_spec)) != 0) {
         PDS_TRACE_INFO("Subnet %s BD %d fastpath parameter change",
                        old_spec->key.str(), bd_id);
         fastpath = true;
@@ -591,6 +650,8 @@ subnet_update (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
 
         // Update subnet spec in cache before fastpath commit
         // or MS CTM transaction commit
+        // Sort HostIf list before caching in store
+        std::sort(spec->host_if, spec->host_if + spec->num_host_if);
         old_subnet_spec = cache_update_subnet_spec_(*spec, bd_id);
         cache_updated = true;
 

@@ -101,14 +101,18 @@ pds_subnet_spec_t l2f_bd_t::make_pds_subnet_spec_(void) {
     spec = store_info_.subnet_obj->spec();
     // Spec contains MS + PDS owned fields. Overwrite the MS owned fields only
     spec.fabric_encap = store_info_.bd_obj->properties().fabric_encap;
-    auto lif_ifindex = store_info_.bd_obj->properties().host_ifindex;
-    if (lif_ifindex != 0) {
-        spec.host_if[0] = api::uuid_from_objid(lif_ifindex);
-    }
-    PDS_TRACE_INFO ("MS BD %d: Using VNI %d Host IfIndex 0x%x LIF UUID %s",
+
+    uint8_t count = 0;
+    store_info_.bd_obj->walk_host_ifindex(
+        [&spec, &count] (if_index_t host_ifindex) -> bool {
+        spec.host_if[count] = api::uuid_from_objid(host_ifindex);
+        ++count;
+        return true;
+    });
+    spec.num_host_if = count;
+    PDS_TRACE_INFO ("Subnet spec MS-BD %d VNI %d HostIfs %s",
                     ips_info_.bd_id, spec.fabric_encap.val.vnid,
-                    store_info_.bd_obj->properties().host_ifindex,
-                    spec.host_if[0].str());
+                    objkey_list_str(spec.host_if, spec.host_if+count).c_str());
 
     return spec;
 }
@@ -442,11 +446,11 @@ void l2f_bd_t::handle_add_if(NBB_ULONG bd_id, ms_ifindex_t ifindex) {
                             bd_id, ifindex);
             return;
         }
-        store_info_.bd_obj->properties().host_ifindex = ms_to_pds_ifindex(ifindex);
+        auto host_ifindex = ms_to_pds_ifindex(ifindex);
+        store_info_.bd_obj->add_host_ifindex(host_ifindex);
 
         PDS_TRACE_INFO ("MS BD %d If 0x%x: Bind IPS PDS IfIndex 0x%x",
-                        bd_id, ifindex,
-                        store_info_.bd_obj->properties().host_ifindex);
+                        bd_id, ifindex, host_ifindex);
 
         // Empty cookie to force async PDS.
         cookie_uptr_.reset (new cookie_t);
@@ -509,8 +513,9 @@ void l2f_bd_t::handle_del_if(NBB_ULONG bd_id, ms_ifindex_t ifindex) {
                             bd_id, ifindex);
             return;
         }
-        store_info_.bd_obj->properties().host_ifindex = 0;
-        PDS_TRACE_INFO ("MS BD %d If 0x%x: Unbind IPS", bd_id, ifindex);
+        auto host_ifindex = ms_to_pds_ifindex(ifindex);
+        store_info_.bd_obj->del_host_ifindex(host_ifindex);
+        PDS_TRACE_INFO ("MS BD %d If 0x%x: Unbind IPS", bd_id, host_ifindex);
 
         // Empty cookie to force async PDS.
         cookie_uptr_.reset (new cookie_t);
