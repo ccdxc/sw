@@ -86,37 +86,45 @@ func (n *NLRIPrefix) AttrString() string {
 }
 
 func NewNLRIPrefix(afi int, safi int, in []byte) *NLRIPrefix {
-	if len(in) < 3 {
-		return nil
-	}
-	ret := &NLRIPrefix{
-		Afi:    afi,
-		Safi:   safi,
-		Type:   int(in[0]),
-		Length: int(in[1]),
-	}
+    if afi == 1 {
+        ret := &NLRIPrefix{
+            Afi:    afi,
+            Safi:   safi,
+            Type:   0,
+            Length: 0,
+        }
+        ret.Prefix = newIPv4Route(in[0:])
+        return ret
+    } else if afi == 25 {
+        if len(in) < 3 {
+           return nil
+        }
+        ret := &NLRIPrefix{
+            Afi:    afi,
+            Safi:   safi,
+            Type:   int(in[0]),
+            Length: int(in[1]),
+        }
+        switch ret.Type {
+        case 2:
+            p := &EVPNType2Route{}
+            p.parseBytes(in[2:])
+            ret.Prefix = newEVPNType2Route(p)
 
-	if afi == 1 {
-		ret.Prefix = newIPv4Route(in[0:])
-	} else {
-		switch ret.Type {
-		case 2:
-			p := &EVPNType2Route{}
-			p.parseBytes(in[2:])
-			ret.Prefix = newEVPNType2Route(p)
+        case 3:
+            p := &EVPNType3Route{}
+            p.parseBytes(in[2:])
+            ret.Prefix = newEVPNType3Route(p)
 
-		case 3:
-			p := &EVPNType3Route{}
-			p.parseBytes(in[2:])
-			ret.Prefix = newEVPNType3Route(p)
-
-		case 5:
-			p := &EVPNType5Route{}
-			p.parseBytes(in[2:])
-			ret.Prefix = newEVPNType5Route(p)
-		}
-	}
-	return ret
+        case 5:
+            p := &EVPNType5Route{}
+            p.parseBytes(in[2:])
+            ret.Prefix = newEVPNType5Route(p)
+        }
+        return ret
+    } else {
+        return nil
+    }
 }
 
 type EVPNType2Route struct {
@@ -156,7 +164,7 @@ func (s *ShadowEVPNType2Route) String() string {
 
 // String returns a user friendly string
 func (s *ShadowEVPNType2Route) attrString() string {
-	return fmt.Sprintf("      ESI %v L2VNI %v L3VNI %v", s.ESI, s.MPLSLabel1, s.MPLSLabel2)
+	return fmt.Sprintf("        ESI %v L2VNI %v L3VNI %v", s.ESI, s.MPLSLabel1, s.MPLSLabel2)
 }
 func (a *EVPNType2Route) parseBytes(in []byte) {
 	if len(in) < type2MinLen {
@@ -301,7 +309,7 @@ func (s *ShadowEVPNType5Route) String() string {
 
 // String returns a user friendly string
 func (s *ShadowEVPNType5Route) attrString() string {
-	return fmt.Sprintf("      ESI %v GW-IP %v L3VNI %v", s.ESI, s.GWIPAddress, s.MPLSLabel1)
+	return fmt.Sprintf("        ESI %v GW-IP %v L3VNI %v", s.ESI, s.GWIPAddress, s.MPLSLabel1)
 }
 func (a *EVPNType5Route) parseBytes(in []byte) {
 	if len(in) < type5MinLen {

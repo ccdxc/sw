@@ -345,22 +345,19 @@ func bgpPeersAfShowCmdHandler(cmd *cobra.Command, args []string) error {
 }
 
 const (
-	bgpNLRI = `-----------------------------------
-        %s 
-	NextHop            : %v 
-	AS Path            : %v
-	RouteSource        : %s 
-	Originator ID      : %v 
-	FlapStatsFlapcnt   : %v
-	FlapStatsSupprsd   : %v 
-	IsActive           : %v 
-	Stale              : %v
-	FlapStartTime      : %v
-	ReasonNotBest      : %v 
-	EcmpRoute          : %v
-	PeerAddr           : %v
-	ExtComm            : %v
------------------------------------
+	bgpNLRI = `      %s NextHop            : %v
+        AS Path            : %v
+        RouteSource        : %s
+        Originator ID      : %v
+        FlapStatsFlapcnt   : %v
+        FlapStatsSupprsd   : %v
+        IsActive           : %v
+        Stale              : %v
+        FlapStartTime      : %v
+        ReasonNotBest      : %v
+        EcmpRoute          : %v
+        PeerAddr           : %v
+        ExtComm            : %v
 `
 )
 
@@ -418,7 +415,7 @@ func bgpNlriShowCmdHandler(cmd *cobra.Command, _afisafi string, args []string) e
 				fmt.Printf("%s\n", network)
 			}
 			var best string
-			if nlri.BestRoute {
+			if nlri.BestRoute || nlri.EcmpRoute {
 				best = ">"
 			} else {
 				best = " "
@@ -430,6 +427,7 @@ func bgpNlriShowCmdHandler(cmd *cobra.Command, _afisafi string, args []string) e
 			if nlri.Prefix != nil && nlri.Prefix.AttrString() != "" {
 				fmt.Println(nlri.Prefix.AttrString())
 			}
+			fmt.Println()
 		}
 	}
 
