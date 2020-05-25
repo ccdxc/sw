@@ -1,13 +1,14 @@
 #!/bin/sh
 
-NICDIR=$1
-PIPELINE=$2
+CMDS=("hardware" "interface" "error" "trace" "logging")
+LOGFILE=$LOG_DIR/vpp.log
 
-$NICDIR/vpp/tools/vppctl-sim.sh show hardware >> $NICDIR/vpp.log
-$NICDIR/vpp/tools/vppctl-sim.sh show interface >> $NICDIR/vpp.log
-$NICDIR/vpp/tools/vppctl-sim.sh show error >> $NICDIR/vpp.log
-$NICDIR/vpp/tools/vppctl-sim.sh show trace >> $NICDIR/vpp.log
-$NICDIR/vpp/tools/vppctl-sim.sh show logging >> $NICDIR/vpp.log
-pstack `pgrep vpp_main` &> $NICDIR/vpp_bt.log
-pkill -9 vpp_main
-rm -f $NICDIR/conf/vpp_startup.conf
+# TODO: move to techsupport & remove this file
+function collect_vpp_logs () {
+    for cmd in ${CMDS[@]}; do
+        $PDSPKG_TOPDIR/vpp/tools/vppctl-sim.sh show $cmd >> $LOGFILE 2>&1
+    done
+}
+collect_vpp_logs
+rm -f $CONFIG_PATH/vpp_startup.conf
+

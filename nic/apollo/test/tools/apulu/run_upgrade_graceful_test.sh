@@ -23,8 +23,7 @@ upg_wait_for_pdsagent
 function trap_finish () {
     rm -rf /update/*     # upgrade init mode
     rm -rf /root/.pcie*  # pciemgrd saves here in sim mode
-    pkill fsm_test
-    stop_process
+    stop_processes
     pkill pciemgrd
     stop_model
     upg_finish upgmgr
@@ -37,9 +36,6 @@ trap trap_finish EXIT
 $DOLDIR/main.py $CMDARGS 2>&1 | tee dol.log
 status=${PIPESTATUS[0]}
 
-# create a dummy instance from test service for easy validations which sends
-# ok for all events
-$BUILD_DIR/bin/fsm_test -s sysmgr -i 62 > upgrade_service.log 2>&1 &
 sleep 2
 
 # start upgrade manager
@@ -54,7 +50,7 @@ echo "upgrade command successful"
 
 # kill testing services
 echo "stopping processes including upgrademgr"
-stop_process
+stop_processes
 pkill pciemgrd
 sleep 2
 
@@ -70,7 +66,7 @@ mv ./nicmgr.log ./nicmgr_old.log
 # respawn the services
 echo "starting new"
 $BUILD_DIR/bin/pciemgrd -d &
-start_process
+start_processes
 upg_wait_for_pdsagent
 
 # spawn upgrade mgr to continue the post restart states

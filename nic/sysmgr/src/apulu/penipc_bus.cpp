@@ -28,6 +28,7 @@ init_bus (bus_api_t *api)
     return std::make_shared<PenIPCBus>(api);
 }
 
+#ifndef SIM
 static sdk_ret_t
 upg_respawn_cb (sdk::upg::upg_ev_params_t *params)
 {
@@ -45,6 +46,7 @@ upg_switchover_cb (sdk::upg::upg_ev_params_t *params)
 
     return SDK_RET_OK;
 }
+#endif
 
 PenIPCBus::PenIPCBus(bus_api_t *api) {
     this->api_ = api;
@@ -55,8 +57,10 @@ PenIPCBus::PenIPCBus(bus_api_t *api) {
 
     snprintf(upg_ev.svc_name, SDK_MAX_NAME_LEN, "sysmgr");
     upg_ev.svc_ipc_id = PDS_IPC_ID_SYSMGR;
+#ifndef SIM
     upg_ev.switchover_hdlr = upg_switchover_cb;
     upg_ev.respawn_hdlr = upg_respawn_cb;
+#endif
     upg_ev.svc_ctx = this;
     sdk::upg::upg_ev_hdlr_register(upg_ev);
 }

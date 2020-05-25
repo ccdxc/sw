@@ -7,21 +7,7 @@ export COVFILE=${NICDIR}/coverage/sim_bullseye_hal.cov
 export CONFIG_PATH=$NICDIR/conf
 TIMEOUT_SCALE=1
 
-argc=$#
-argv=($@)
-for (( j=0; j<argc; j++ )); do
-    if [ ${argv[j]} == '--pipeline' ];then
-        PIPELINE=${argv[j+1]}
-    fi
-    if [ ${argv[j]} == '--coverage-run' ];then
-        export COVFILE=${NICDIR}/coverage/sim_bullseye_hal.cov
-        #Coverage makes vpp slower
-        TIMEOUT_SCALE=2
-    fi
-done
-
 #set -x
-#echo $NICDIR
 
 if [[ $PIPELINE != 'apollo' && $PIPELINE != 'apulu' ]];then
     echo "Not starting VPP for pipeline - $PIPELINE"
@@ -43,12 +29,10 @@ else
     APP_ID=1
 fi
 
-NICMGR_FILE="$NICDIR/nicmgr.log"
-VPPLOG_FILE="$NICDIR/vpp.log"
+NICMGR_FILE="$LOG_DIR/nicmgr.log"
+VPPLOG_FILE="$LOG_DIR/vpp.log"
 command rm -f $VPPLOG_FILE
 counter=$((600*TIMEOUT_SCALE))
-#echo "$NICMGR_FILE"
-#echo "$VPPLOG_FILE"
 while [ $counter -gt 0 ]
 do
     if [ -f "$NICMGR_FILE" ]; then
