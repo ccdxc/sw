@@ -20,6 +20,7 @@
 #include "nic/apollo/api/if.hpp"
 #include "nic/apollo/api/port.hpp"
 #include "nic/apollo/api/internal/metrics.hpp"
+#include "nic/apollo/api/impl/lif_impl.hpp"
 #include "nic/operd/alerts/alerts.hpp"
 
 namespace api {
@@ -34,6 +35,42 @@ typedef struct port_shutdown_walk_cb_ctxt_s {
     bool port_pb_shutdown;
     bool err;
 } port_shutdown_walk_cb_ctxt_t;
+
+static bool
+port_event_lif_cb (void *entry, void *ctxt)
+{
+    api::impl::lif_impl *lif = (api::impl::lif_impl *)entry;
+    event_id_t event_id = *(event_id_t *)ctxt;
+    ::core::event_t event;
+
+    memset(&event, 0, sizeof(event));
+    event.event_id = event_id;
+    event.host_dev.id = lif->id();
+    sdk::ipc::broadcast(event_id, &event, sizeof(event));
+    return false;
+}
+
+static void
+port_event_lif_notif (sdk_ipc_event_id_t event_id)
+{
+    lif_db()->walk(port_event_lif_cb, &event_id);
+}
+
+static void
+port_event_lif_handle (port_event_info_t *port_event_info)
+{
+    // if this is a link up event and the number of uplinks link up is 1,
+    // then send host dev up notification
+    if ((port_event_info->event == port_event_t::PORT_EVENT_LINK_UP) &&
+            (sdk::linkmgr::num_uplinks_link_up() == 1)) {
+        PDS_TRACE_DEBUG("Sending host dev up notification");
+        port_event_lif_notif(SDK_IPC_EVENT_ID_HOST_DEV_UP);
+    } else if (sdk::linkmgr::num_uplinks_link_up() == 0) {
+        // if all uplinks are link down, then send host dev down notification
+        PDS_TRACE_DEBUG("All uplinks down, sending host dev down notification");
+        port_event_lif_notif(SDK_IPC_EVENT_ID_HOST_DEV_DOWN);
+    }
+}
 
 /**
  * @brief        Handle link UP/Down events
@@ -102,6 +139,8 @@ port_event_cb (port_event_info_t *port_event_info)
     pds_event.port_info.info.port_an_args = (port_an_args_t *)&key;
     // notify the agent
     g_pds_state.event_notify(&pds_event);
+
+    port_event_lif_handle(port_event_info);
 
     // Raise an event
     operd::alerts::operd_alerts_t alert = operd::alerts::LINK_DOWN;
@@ -304,7 +343,7 @@ static sdk_ret_t
 populate_port_info (if_index_t ifindex, uint32_t phy_port,
                     port_args_t *port_args)
 {
-    uint32_t    logical_port;
+    uint32_t logical_port;
 
     logical_port = port_args->port_num =
         sdk::lib::catalog::ifindex_to_logical_port(ifindex);

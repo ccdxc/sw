@@ -105,6 +105,10 @@ nicmgrapi::nicmgr_thread_init(void *ctxt) {
         sdk::ipc::subscribe(EVENT_ID_PORT_STATUS, port_event_handler_, NULL);
         sdk::ipc::subscribe(EVENT_ID_XCVR_STATUS, xcvr_event_handler_, NULL);
         sdk::ipc::subscribe(EVENT_ID_PDS_HAL_UP, hal_up_event_handler_, NULL);
+        sdk::ipc::subscribe(SDK_IPC_EVENT_ID_HOST_DEV_UP,
+                            host_dev_up_event_handler_, NULL);
+        sdk::ipc::subscribe(SDK_IPC_EVENT_ID_HOST_DEV_DOWN,
+                            host_dev_down_event_handler_, NULL);
         sdk::event_thread::prepare_init(&g_ev_prepare, prepare_callback, NULL);
         sdk::event_thread::prepare_start(&g_ev_prepare);
 
@@ -168,6 +172,22 @@ nicmgrapi::xcvr_event_handler_(sdk::ipc::ipc_msg_ptr msg, const void *ctxt) {
     g_devmgr->XcvrEventHandler(&st);
     PDS_TRACE_DEBUG("Rcvd xcvr event for ifidx 0x%x, state %u, cable type %u"
                     "pid %u", st.id, st.xcvr.state, st.xcvr.phy, st.xcvr.pid);
+}
+
+void
+nicmgrapi::host_dev_up_event_handler_(sdk::ipc::ipc_msg_ptr msg,
+                                      const void *ctxt) {
+    core::event_t *event = (core::event_t *)msg->data();
+
+    PDS_TRACE_DEBUG("Rcvd host dev up event for lif %u", event->host_dev.id);
+}
+
+void
+nicmgrapi::host_dev_down_event_handler_(sdk::ipc::ipc_msg_ptr msg,
+                                        const void *ctxt) {
+    core::event_t *event = (core::event_t *)msg->data();
+
+    PDS_TRACE_DEBUG("Rcvd host dev down event for lif %u", event->host_dev.id);
 }
 
 DeviceManager *

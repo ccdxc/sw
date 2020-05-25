@@ -90,6 +90,11 @@ typedef struct api_batch_event_info_s {
     pds_epoch_t epoch;
 } api_batch_event_info_t;
 
+// host dev information
+typedef struct host_dev_event_info_s {
+    pds_lif_id_t id;
+} host_dev_event_info_t;
+
 // event structure that gets passed around for every event
 typedef struct event_s {
     event_id_t                 event_id;
@@ -100,6 +105,7 @@ typedef struct event_s {
         lif_event_info_t       lif;
         learn_event_info_t     learn;
         api_batch_event_info_t batch;
+        host_dev_event_info_t host_dev;
     };
 } event_t;
 

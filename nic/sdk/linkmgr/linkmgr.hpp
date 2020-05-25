@@ -108,6 +108,10 @@ void port_store_user_config(port_args_t *port_args);
 sdk_ret_t port_shutdown (void *port_p);
 sdk_ret_t port_pb_shutdown (void *port_p);
 
+/// \brief  returns the number of uplinks with physical link up
+/// \return number of uplinks with physical link up
+uint16_t num_uplinks_link_up(void);
+
 // \@brief     get the stats base address
 // \@param[in] ifindex ifindex of the port
 // \@return    on success, returns stats base address for port,

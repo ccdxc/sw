@@ -6,6 +6,7 @@
 #include "linkmgr_internal.hpp"
 #include "linkmgr.hpp"
 #include "linkmgr_types.hpp"
+#include "linkmgr_state.hpp"
 #include "asic/pd/pd.hpp"
 #include "platform/drivers/xcvr.hpp"
 #include "platform/fru/fru.hpp"
@@ -1617,12 +1618,16 @@ sdk_ret_t
 port::port_event_notify(port_event_t port_event)
 {
     port_event_info_t port_event_info;
+    uint64_t mask = 1 << (port_num() - 1);
 
     switch(port_event) {
     case port_event_t::PORT_EVENT_LINK_UP:
+        g_linkmgr_state->set_port_bmap(g_linkmgr_state->port_bmap() | mask);
         break;
 
     case port_event_t::PORT_EVENT_LINK_DOWN:
+        g_linkmgr_state->set_port_bmap(g_linkmgr_state->port_bmap() & ~mask);
+
         // increment the link down counter
         set_num_link_down(num_link_down() + 1);
 

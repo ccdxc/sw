@@ -71,6 +71,18 @@ private:
     /// \param[in]    ctxt callback context
     static void xcvr_event_handler_(sdk::ipc::ipc_msg_ptr msg,
                                     const void *ctxt);
+
+    /// \brief    Host Dev UP event handler
+    /// \param[in]    msg the message of the event
+    /// \param[in]    ctxt callback context
+    static void host_dev_up_event_handler_(sdk::ipc::ipc_msg_ptr msg,
+                                           const void *ctxt);
+
+    /// \brief    Host Dev DOWN event handler
+    /// \param[in]    msg the message of the event
+    /// \param[in]    ctxt callback context
+    static void host_dev_down_event_handler_(sdk::ipc::ipc_msg_ptr msg,
+                                             const void *ctxt);
 };
 
 sdk_ret_t nicmgr_upg_graceful_init(void);

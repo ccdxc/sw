@@ -13,6 +13,7 @@
 #include "linkmgr_internal.hpp"
 #include "port.hpp"
 #include "include/sdk/port_utils.hpp"
+#include "lib/utils/utils.hpp"
 
 using namespace sdk::event_thread;
 using namespace sdk::ipc;
@@ -929,9 +930,9 @@ port_init_defaults (port_args_t *args)
 void *
 port_create (port_args_t *args)
 {
-    sdk_ret_t    ret = SDK_RET_OK;
-    void         *mem = NULL;
-    port         *port_p = NULL;
+    sdk_ret_t ret = SDK_RET_OK;
+    void      *mem = NULL;
+    port      *port_p = NULL;
 
     port_init_num_lanes(args);
     if (validate_port_create (args) == false) {
@@ -979,8 +980,11 @@ port_create (port_args_t *args)
     port_p->set_mac_fns(&mac_fns);
     port_p->set_serdes_fns(&serdes_fns);
 
-    if(args->port_type == sdk::types::port_type_t::PORT_TYPE_MGMT) {
+    if(args->port_type == port_type_t::PORT_TYPE_MGMT) {
         port_p->set_mac_fns(&mac_mgmt_fns);
+    } else {
+        g_linkmgr_state->set_port_bmap_mask(g_linkmgr_state->port_bmap_mask() |
+                                            (1 << (args->port_num - 1)));
     }
 
     // use the configured num_lanes for setting sbus_addr
@@ -1015,7 +1019,6 @@ port_create (port_args_t *args)
             SDK_TRACE_ERR("port %u enable failed", args->port_num);
         }
     }
-
     return port_p;
 }
 
@@ -1537,6 +1540,13 @@ port_pb_shutdown (void *pd_p)
     port *port_p = (port *)pd_p;
 
     return port_p->port_pb_enable(false);
+}
+
+uint16_t
+num_uplinks_link_up (void)
+{
+    return sdk::lib::count_bits_set(g_linkmgr_state->port_bmap() &
+                                    g_linkmgr_state->port_bmap_mask());
 }
 
 }    // namespace linkmgr
