@@ -91,8 +91,11 @@ public:
     /// \return   pointer to the LOCAL_MAPPING table instance
     mem_hash *local_mapping_tbl(void) { return local_mapping_tbl_; }
 
-private:
+    /// \brief return instance of MAPPING table
+    /// \return   pointer to the MAPPING table instance
     mem_hash *mapping_tbl(void) { return mapping_tbl_; }
+
+private:
     mem_hash *rxdma_mapping_tbl(void) { return rxdma_mapping_tbl_; }
     rte_indexer *ip_mac_binding_idxr(void) { return ip_mac_binding_idxr_; }
     rte_indexer *local_mapping_tag_idxr(void) { return local_mapping_tag_idxr_; }

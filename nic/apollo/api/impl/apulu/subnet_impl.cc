@@ -19,6 +19,7 @@
 #include "nic/apollo/api/subnet.hpp"
 #include "nic/apollo/api/impl/apulu/subnet_impl.hpp"
 #include "nic/apollo/api/impl/apulu/vpc_impl.hpp"
+#include "nic/apollo/api/impl/apulu/vnic_impl.hpp"
 #include "nic/apollo/api/impl/apulu/apulu_impl.hpp"
 #include "nic/apollo/api/impl/apulu/pds_impl_state.hpp"
 
@@ -786,37 +787,61 @@ subnet_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
 static void
 local_mapping_dhcp_binding_upd_cb_ (sdk_table_api_params_t *params)
 {
-    uint16_t bd_id;
-    vnic_impl *vnic;
+    sdk_ret_t ret;
+    vpc_entry *vpc;
+    vnic_entry *vnic;
     subnet_entry *subnet;
     ip_addr_t mapping_ip;
+    pds_obj_key_t obj_key;
+    vnic_impl *vnic_impl_obj;
+    uint16_t vpc_hw_id, bd_id;
     local_mapping_swkey_t *key;
+    mapping_swkey_t mapping_key;
     subnet_impl *subnet_impl_obj;
     local_mapping_appdata_t *data;
+    mapping_appdata_t mapping_data;
+    sdk_table_api_params_t tparams;
 
     subnet = (subnet_entry *)api_framework_obj((api_base *)(params->cbdata));
     SDK_ASSERT(subnet != NULL);
     bd_id = ((subnet_impl *)subnet->impl())->hw_id();
+    obj_key = subnet->vpc();
+    vpc = vpc_find(&obj_key);
+    vpc_hw_id = ((vpc_impl *)vpc->impl())->hw_id();
     key = (local_mapping_swkey_t *)(params->key);
     if (key->key_metadata_local_mapping_lkp_type != KEY_TYPE_IPV4) {
         // not interested in non-IPv4 entries
         return;
     }
-    if (key->key_metadata_local_mapping_lkp_id != bd_id) {
-        // this mapping doesn't belong to this affected subnet
+    if (key->key_metadata_local_mapping_lkp_id != vpc_hw_id) {
+        // this mapping doesn't belong to this vpc
         return;
     }
+    data = (local_mapping_appdata_t *)(params->appdata);
     if (data->ip_type != MAPPING_TYPE_OVERLAY) {
         // not interested in public IPs
         return;
     }
-    data = (local_mapping_appdata_t *)(params->appdata);
-    vnic = vnic_impl_db()->find(data->vnic_id);
-    SDK_ASSERT(vnic != NULL);
+    // get the subnet of this local overlay mapping entry
     memset(&mapping_ip, 0, sizeof(mapping_ip));
     mapping_ip.af = IP_AF_IPV4;
     mapping_ip.addr.v4_addr =
         *(uint32_t *)key->key_metadata_local_mapping_lkp_addr;
+    PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key, vpc_hw_id, &mapping_ip);
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &mapping_key, NULL, &mapping_data,
+                                   0, handle_t::null());
+    ret = mapping_impl_db()->mapping_tbl()->get(&tparams);
+    SDK_ASSERT(ret == SDK_RET_OK);
+
+    // and check if this is subnet of interest
+    if (mapping_data.egress_bd_id != bd_id) {
+        return;
+    }
+    // get the vnic details
+    vnic_impl_obj = vnic_impl_db()->find(data->vnic_id);
+    SDK_ASSERT(vnic_impl_obj != NULL);
+    vnic = vnic_db()->find(vnic_impl_obj->key());
+    SDK_ASSERT(vnic != NULL);
 
     // TODO:
     // now we have MAC, IP, subnet etc. all details

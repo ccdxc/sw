@@ -1367,7 +1367,7 @@ api_engine::batch_commit_phase2_(void) {
 
     // send API notification msgs to IPC peers interested in this batch
     send_ntfn_msgs_();
-    
+
     // send a notification announcing that the API batch is committed now
     event.event_id = EVENT_ID_PDS_API_BATCH_COMMIT;
     event.batch.epoch = batch_ctxt_.epoch;
