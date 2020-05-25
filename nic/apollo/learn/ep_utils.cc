@@ -27,8 +27,11 @@ namespace event = sdk::event_thread;
 namespace learn {
 
 typedef struct ep_mac_clear_args_s {
-    pds_obj_key_t subnet;
     sdk_ret_t retcode;
+    pds_obj_key_t subnet;
+    pds_obj_key_t *lifs;
+    uint8_t num_lifs;
+    bool (*filter) (ep_mac_entry *mac_entry, struct ep_mac_clear_args_s *args);
 } ep_mac_clear_args_t;
 
 sdk_ret_t
@@ -255,9 +258,8 @@ ep_mac_entry_clear_cb (void *entry, void *ctxt)
     ep_mac_entry *mac_entry = (ep_mac_entry *)entry;
     ep_mac_clear_args_t *args = (ep_mac_clear_args_t *)ctxt;
 
-    if (args->subnet != k_pds_obj_key_invalid &&
-        args->subnet != mac_entry->key()->subnet) {
-        // MAC belongs to a different subnet, skip this
+    if (args->filter && !args->filter(mac_entry, args)) {
+        // this entry does not match the filter, skip it
         return false;
     }
     mac_entry->walk_ip_list(ep_ip_entry_clear_cb, &args->retcode);
@@ -294,8 +296,8 @@ ep_mac_entry_clear_all (void)
 {
     ep_mac_clear_args_t args;
 
-    args.subnet = k_pds_obj_key_invalid;
     args.retcode = SDK_RET_OK;
+    args.filter = nullptr;
     learn_db()->ep_mac_db()->walk(ep_mac_entry_clear_cb, &args);
     return args.retcode;
 }
@@ -321,13 +323,55 @@ ep_ip_entry_clear_all (void)
     return ret;
 }
 
+static bool
+mac_entry_filter_subnet (ep_mac_entry *mac_entry, ep_mac_clear_args_t *args)
+{
+    return mac_entry->key()->subnet == args->subnet;
+}
+
 sdk_ret_t
 clear_all_eps_in_subnet (pds_obj_key_t key)
 {
     ep_mac_clear_args_t args;
 
-    args.subnet = key;
     args.retcode = SDK_RET_OK;
+    args.subnet = key;
+    args.filter = mac_entry_filter_subnet;
+    learn_db()->ep_mac_db()->walk(ep_mac_entry_clear_cb, &args);
+    return args.retcode;
+}
+
+static bool
+mac_entry_filter_lifs (ep_mac_entry *mac_entry, ep_mac_clear_args_t *args)
+{
+    pds_obj_key_t vnic_key;
+    vnic_entry *vnic;
+    pds_obj_key_t host_if;
+
+    vnic_key = api::uuid_from_objid(mac_entry->vnic_obj_id());
+    vnic = vnic_db()->find(&vnic_key);
+    if (unlikely(vnic == nullptr)) {
+        PDS_TRACE_ERR("Failed to look up vnic with key %s", vnic_key.str());
+        return false;
+    }
+    host_if = vnic->host_if();
+    for (int i = 0; i < args->num_lifs; i++) {
+        if (host_if == args->lifs[i]) {
+            return true;
+        }
+    }
+    return false;
+}
+
+sdk_ret_t
+clear_all_eps_on_lifs (pds_obj_key_t *lifs, uint8_t num_lifs)
+{
+    ep_mac_clear_args_t args;
+
+    args.retcode = SDK_RET_OK;
+    args.lifs = lifs;
+    args.num_lifs = num_lifs;
+    args.filter = mac_entry_filter_lifs;
     learn_db()->ep_mac_db()->walk(ep_mac_entry_clear_cb, &args);
     return args.retcode;
 }

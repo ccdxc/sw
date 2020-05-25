@@ -104,6 +104,9 @@ sdk_ret_t ep_mac_entry_clear_all(void);
 /// \brief clear all MAC and IP entries belonging to a subnet
 sdk_ret_t clear_all_eps_in_subnet(pds_obj_key_t key);
 
+/// \brief clear all MAC and IP entries attached to any of the given lifs
+sdk_ret_t clear_all_eps_on_lifs(pds_obj_key_t *lifs, uint8_t num_lifs);
+
 }    // namespace learn
 
 #endif    // __LEARN_EP_LEARN_UTILS_HPP__

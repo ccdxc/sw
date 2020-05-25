@@ -214,6 +214,8 @@ process_subnet_update (pds_subnet_spec_t *spec)
 {
     sdk_ret_t ret;
     subnet_entry  *subnet;
+    pds_obj_key_t detach_host_ifs[PDS_MAX_SUBNET_HOST_IF];
+    uint8_t num_detach_host_ifs = 0;
 
     subnet = subnet_db()->find(&spec->key);
     if (subnet == nullptr) {
@@ -221,14 +223,33 @@ process_subnet_update (pds_subnet_spec_t *spec)
         return SDK_RET_ENTRY_NOT_FOUND;
     }
 
-    // if subnet is being attached to a different host if, clear the
-    // VNICs and mappings learnt on old host if
-    // TODO: this needs to be fixed for multiple host if per subnet case
-    if (subnet->host_if(0) != spec->host_if[0])  {
-        ret = clear_all_eps_in_subnet(spec->key);
+    // find host ifs that are disassociated from the subnet
+    // since max host ifs per subnet is small (8), it is OK to use a nested
+    // loop below instead of using sets or other containers to do this
+    // efficiently
+    for (int i = 0; i < subnet->num_host_if(); i++) {
+        bool detached = true;
+        pds_obj_key_t host_if = subnet->host_if(i);
+
+        for (int j = 0; j < spec->num_host_if; j++) {
+            if (host_if == spec->host_if[j]) {
+                detached = false;
+                break;
+            }
+        }
+        if (detached) {
+            detach_host_ifs[num_detach_host_ifs++] = host_if;
+        }
+    }
+
+    // delete endpoints learnt on each host if that is disassociated
+    // from the subnet
+    if (num_detach_host_ifs > 0) {
+        ret = clear_all_eps_on_lifs(detach_host_ifs, num_detach_host_ifs);
         if (ret != SDK_RET_OK) {
-            PDS_TRACE_ERR("Failed to clear endpoints for subnet %s, error code "
-                          "%u", spec->key.str(), ret);
+            PDS_TRACE_ERR("Failed to clear endpoints learnt on host interfaces "
+                          "being detached from subnet %s, error code %u",
+                          spec->key.str(), ret);
             return ret;
         }
     }
