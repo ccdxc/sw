@@ -762,8 +762,6 @@ e2e-telemetry:
 	#./test/e2e/dind/do.py -delete
 
 e2e-naples: 
-	$(MAKE) ws-tools
-	$(MAKE) pull-assets
 	$(MAKE) -C nic
 	$(MAKE) -C nic release
 
@@ -780,7 +778,6 @@ naples-firmware:
 	$(MAKE) -C nic PLATFORM=hw ARCH=aarch64 ASIC=${ASIC} package-drivers
 
 naples-firmware-iterative:
-	$(MAKE) ws-tools
 	$(MAKE) -C nic PLATFORM=hw ARCH=aarch64 firmware
 	$(MAKE) -C nic PLATFORM=hw ARCH=aarch64 package-drivers
 
