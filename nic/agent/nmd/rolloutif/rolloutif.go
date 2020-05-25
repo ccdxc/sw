@@ -83,7 +83,8 @@ func (client *RoClient) statusUpdater() {
 			if !ok {
 				return
 			}
-			for numRetries := 0; numRetries < 10; numRetries++ {
+			// Retry for 6 minutes
+			for numRetries := 0; numRetries < 120; numRetries++ {
 				client.Lock()
 				rpcClient := client.smartNICRPCClient
 				client.Unlock()

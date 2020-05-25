@@ -22,7 +22,6 @@ import (
 const (
 	//value taken from nic/sim/naples/start-naples.sh
 	simSerialNumber = "SIM18440000"
-	retryCount      = 30
 )
 
 // CreateUpdateDSCRollout as requested by Rollout Controller
@@ -459,7 +458,6 @@ func (n *NMD) updateOpStatus(op protos.DSCOp, version string, status string, mes
 
 // sendUpdateToPSM tries to send update to PSM with retries
 func (n *NMD) sendUpdateToPSM() error {
-	retries := 0
 	st := protos.DSCRolloutStatusUpdate{
 		ObjectMeta: n.ro.ObjectMeta,
 		Status: protos.DSCRolloutStatus{
@@ -467,21 +465,16 @@ func (n *NMD) sendUpdateToPSM() error {
 		},
 	}
 
-	// Try to send update to PSM for 30 seconds
-	for retries < retryCount {
+	for i := 0; i < 10; i++ {
 		if n.rollout != nil {
-			err := n.rollout.UpdateDSCRolloutStatus(&st)
-			if err == nil {
-				log.Infof("Successfully updated status to PSM.")
-				return nil
-			}
-			log.Errorf("Failed to send update to PSM. Err : %v. Retrying...", err)
+			break
 		}
 
-		retries++
-		time.Sleep(time.Second)
+		time.Sleep(3 * time.Second)
 	}
 
-	return fmt.Errorf("failed to send update to PSM after retries")
-
+	if n.rollout == nil {
+		return fmt.Errorf("failed to initialize rollout client")
+	}
+	return n.rollout.UpdateDSCRolloutStatus(&st)
 }
