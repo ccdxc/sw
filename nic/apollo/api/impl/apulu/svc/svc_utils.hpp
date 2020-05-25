@@ -11,7 +11,7 @@
 #define __APULU_SVC_UTILS_HPP__
 
 #include "nic/sdk/include/sdk/base.hpp"
-#include "nic/apollo/api/internal/upg_ctxt.hpp"
+#include "nic/apollo/api/internal/upgrade_ctxt.hpp"
 #include "gen/proto/types.pb.h"
 
 namespace api {

@@ -46,7 +46,7 @@ upg_ev_repeal_hdlr (sdk::upg::upg_ev_params_t *params)
 }
 
 static sdk_ret_t
-upg_ev_respawn_hdlr (sdk::upg::upg_ev_params_t *params)
+upg_ev_pre_respawn_hdlr (sdk::upg::upg_ev_params_t *params)
 {
     pciesys_loginfo("Upgrade handler, event %s mode %u\n",
                     sdk::upg::upg_event2str(params->id), params->mode);
@@ -91,7 +91,7 @@ upg_ev_fill (sdk::upg::upg_ev_t &ev)
     ev.ready_hdlr = upg_ev_ready_hdlr;
     ev.backup_hdlr = upg_ev_backup_hdlr;
     ev.repeal_hdlr = upg_ev_repeal_hdlr;
-    ev.respawn_hdlr = upg_ev_respawn_hdlr;
+    ev.pre_respawn_hdlr = upg_ev_pre_respawn_hdlr;
     ev.finish_hdlr = upg_ev_finish_hdlr;
 }
 

@@ -909,12 +909,10 @@ apulu_impl::pipeline_upgrade_hitless_init(void) {
     //
     // during A to B upgrade and the service lif id of A(g_upg_state->service_lif_id)
     // matches with B(APULU_SERVICE_LIF), verify the configs are perfectly matching
-    if (api::g_upg_state->service_lif_id() != APULU_SERVICE_LIF) {
-        ret = init_service_lif(APULU_SERVICE_LIF, p4pd_cfg.cfg_path);
-    } else {
-        // on upgrade boot, verify the config
-        ret = service_lif_upg_verify(APULU_SERVICE_LIF, p4pd_cfg.cfg_path);
-    }
+    // TODO: if (initp->service_lif_id() != APULU_SERVICE_LIF)
+    //            ret = init_service_lif(APULU_SERVICE_LIF, p4pd_cfg.cfg_path);
+    //       else // below code
+    ret = service_lif_upg_verify(APULU_SERVICE_LIF, p4pd_cfg.cfg_path);
     SDK_ASSERT(ret == SDK_RET_OK);
     ret = table_init_();
     SDK_ASSERT(ret == SDK_RET_OK);

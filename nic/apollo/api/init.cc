@@ -30,7 +30,6 @@
 #include "nic/apollo/api/debug.hpp"
 #include "nic/apollo/api/include/pds_if.hpp"
 #include "nic/apollo/api/upgrade_state.hpp"
-#include "nic/apollo/api/upgrade.hpp"
 #include "nic/apollo/api/internal/metrics.hpp"
 #include "nic/apollo/nicmgr/nicmgr.hpp"
 #include "platform/src/lib/nicmgr/include/nicmgr_shm.hpp"

@@ -16,7 +16,7 @@
 #include "nic/apollo/framework/api.hpp"
 #include "nic/apollo/framework/api_ctxt.hpp"
 #include "nic/apollo/api/include/pds.hpp"
-#include "nic/apollo/api/internal/upg_ctxt.hpp"
+#include "nic/apollo/api/internal/upgrade_ctxt.hpp"
 
 using std::string;
 

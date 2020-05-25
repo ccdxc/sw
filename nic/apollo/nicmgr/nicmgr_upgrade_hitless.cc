@@ -6,7 +6,6 @@
 #include "nic/apollo/core/event.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/internal/upgrade_ev.hpp"
-#include "nic/apollo/api/upgrade.hpp"
 
 namespace nicmgr {
 

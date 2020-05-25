@@ -38,6 +38,11 @@ echo "|/nic/bin/coremgr -P /data/core -p %p -e %e -m $CORE_MIN_DISK" > /proc/sys
 # start memtun
 /nic/bin/memtun &
 
+#Huge-pages for DPDK
+echo 64 > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
+mkdir /dev/hugepages
+mount -t hugetlbfs nodev /dev/hugepages
+
 # start sysmgr
 PENLOG_LOCATION=/obfl $NIC_DIR/bin/sysmgr &
 

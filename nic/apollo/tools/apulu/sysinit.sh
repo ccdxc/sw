@@ -64,6 +64,12 @@ if [[ -f $PDSPKG_TOPDIR/tools/bflog_sync.sh ]]; then
     $PDSPKG_TOPDIR/tools/bflog_sync.sh &
 fi
 
+#Huge-pages for DPDK
+echo 64 > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
+mkdir /dev/hugepages
+mount -t hugetlbfs nodev /dev/hugepages
+
+
 # start sysmgr
 PENLOG_LOCATION=$PERSISTENT_LOG_DIR $PDSPKG_TOPDIR/bin/sysmgr &
 

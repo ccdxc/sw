@@ -13,7 +13,7 @@
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/api/upgrade_state.hpp"
-#include "nic/apollo/api/internal/upg_ctxt.hpp"
+#include "nic/apollo/api/internal/upgrade_ctxt.hpp"
 
 namespace api {
 
@@ -21,16 +21,19 @@ namespace api {
 #define PDS_UPGRADE_STORE_OBJ_OFFSET (OBJ_ID_MAX * sizeof(upg_obj_stash_meta_t))
 
 sdk_ret_t
-upg_ctxt::init(const char *obj_store_name, size_t obj_store_size,
-               bool obj_store_create) {
-    shmmgr *shm_mmgr_;
+upg_ctxt::init(const char *obj_store_name, size_t obj_store_size, bool backup) {
+    upg_shm *shm;
+    shmmgr *shm_mmgr;
+    bool obj_store_create = backup;
 
-    SDK_ASSERT(api::g_upg_state->shm_mgr() != NULL);
-    shm_mmgr_ = api::g_upg_state->shm_mgr();
+    shm = backup ? api::g_upg_state->backup_shm() : api::g_upg_state->restore_shm();
+    SDK_ASSERT(shm != NULL);
+    shm_mmgr = shm->shm_mgr();
+    SDK_ASSERT(shm_mmgr != NULL);
 
     try {
-        mem_ = (char *)shm_mmgr_->segment_find(obj_store_name, obj_store_create,
-                                               obj_store_create ? obj_store_size: 0);
+        mem_ = (char *)shm_mmgr->segment_find(obj_store_name, obj_store_create,
+                                              obj_store_create ? obj_store_size: 0);
         if (!mem_) {
             PDS_TRACE_ERR("Failed to init shared memory segment for:%s",
                           obj_store_create == true ? "backup" : "restore");

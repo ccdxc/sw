@@ -251,7 +251,7 @@ backup_objs (void)
     std::map<uint32_t, uplink_t*> up_links;
     pds::nicmgr::EthDevice proto_dev;
     pds::Port proto_port;
-    api::upg_ctxt *ctx = api::g_upg_state->nicmgr_upg_ctx();
+    api::upg_ctxt *ctx = api::g_upg_state->backup_shm()->nicmgr_upg_ctx();
     upg_obj_stash_meta_t *meta = (upg_obj_stash_meta_t *)ctx->mem();
     sdk_ret_t ret;
 
@@ -297,7 +297,7 @@ restore_objs (void)
     sdk_ret_t ret = SDK_RET_OK;
     pds::nicmgr::EthDevice proto_dev;
     pds::Port proto_port;
-    api::upg_ctxt *ctx = api::g_upg_state->nicmgr_upg_ctx();
+    api::upg_ctxt *ctx = api::g_upg_state->restore_shm()->nicmgr_upg_ctx();
 
     PDS_TRACE_DEBUG("Retrieving saved objects");
 
@@ -393,18 +393,6 @@ nicmgr_upg_ev_pre_respawn_hdlr (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
     return nicmgr_upg_process_response(ret, info);
 }
 
-static void
-nicmgr_upg_ev_respawn_hdlr (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
-{
-    upg_ev_info_s *info = new upg_ev_info_t();
-    sdk_ret_t ret;
-
-    PDS_TRACE_DEBUG("Upgrade nicmgr IPC request respawn");
-    info->msg_in = msg;
-    ret = nicmgr::upg::upg_failed_handler(info);
-    return nicmgr_upg_process_response(ret, info);
-}
-
 sdk_ret_t
 nicmgr_upg_graceful_init (void)
 {
@@ -421,8 +409,6 @@ nicmgr_upg_graceful_init (void)
                                   nicmgr_upg_ev_hostdev_reset_hdlr, NULL);
     sdk::ipc::reg_request_handler(UPG_MSG_ID_PRE_RESPAWN,
                                   nicmgr_upg_ev_pre_respawn_hdlr, NULL);
-    sdk::ipc::reg_request_handler(UPG_MSG_ID_RESPAWN,
-                                  nicmgr_upg_ev_respawn_hdlr, NULL);
 
     // register the async handlers to nicmgr library
     nicmgr::upg::upg_ev_init(nicmgr_device_reset_status_cb,
@@ -480,14 +466,11 @@ static sdk_ret_t
 upg_ev_backup (upg_ev_params_t *params)
 {
     sdk_ret_t ret;
-    bool create = true;
+    api::upg_ctxt *ctx = api::g_upg_state->backup_shm()->nicmgr_upg_ctx();
 
-    // TODO save the existing one for future use
-
-    // get and initialize a segment from shread memory for write
-    ret = g_upg_state->nicmgr_upg_ctx()->init(PDS_UPGRADE_NICMGR_OBJ_STORE_NAME,
-                                              PDS_UPGRADE_NICMGR_OBJ_STORE_SIZE,
-                                              create);
+    // initialize a segment from shared memory for write
+    ret = ctx->init(PDS_UPGRADE_NICMGR_OBJ_STORE_NAME,
+                    PDS_UPGRADE_NICMGR_OBJ_STORE_SIZE, true);
     if (ret != SDK_RET_OK) {
         return ret;
     }
@@ -546,7 +529,7 @@ upg_ev_pre_respawn (upg_ev_params_t *params)
 static sdk_ret_t
 upg_ev_respawn (upg_ev_params_t *params)
 {
-    return nicmgr_send_ipc(params);
+    return SDK_RET_OK;
 }
 
 static sdk_ret_t
@@ -582,12 +565,11 @@ nicmgr_upg_graceful_init (void)
 
     // if it is upgrade mode, open the nicmgr object store for reading
     if (sdk::platform::upgrade_mode_graceful(g_upg_state->upg_init_mode())) {
-        bool create = false;
         sdk_ret_t ret;
+        api::upg_ctxt *ctx = api::g_upg_state->restore_shm()->nicmgr_upg_ctx();
 
-        ret = g_upg_state->nicmgr_upg_ctx()->init(PDS_UPGRADE_NICMGR_OBJ_STORE_NAME,
-                                                  PDS_UPGRADE_NICMGR_OBJ_STORE_SIZE,
-                                                  create);
+        ret = ctx->init(PDS_UPGRADE_NICMGR_OBJ_STORE_NAME,
+                        PDS_UPGRADE_NICMGR_OBJ_STORE_SIZE, false);
         if (ret != SDK_RET_OK) {
             return ret;
         }

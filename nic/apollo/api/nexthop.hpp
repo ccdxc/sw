@@ -15,7 +15,6 @@
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/api/include/pds_nexthop.hpp"
-#include "nic/apollo/api/internal/upg_ctxt.hpp"
 
 namespace api {
 

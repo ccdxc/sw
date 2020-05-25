@@ -7,7 +7,9 @@ source $PDSPKG_TOPDIR/tools/upgmgr_core_base.sh
 UPGRADE_STATUS_FILE='/update/pds_upg_status.txt'
 
 function upgmgr_set_upgrade_status() {
-    echo "success" > $UPGRADE_STATUS_FILE
+    time_stamp="$(date +"%Y-%m-%d %H:%M:%S")"
+    status=$1
+    echo "$time_stamp::$status" > $UPGRADE_STATUS_FILE
 }
 
 function upgmgr_clear_upgrade_status() {
@@ -17,9 +19,6 @@ function upgmgr_clear_upgrade_status() {
 function upgmgr_setup() {
     FW_UPDATE_TOOL=$PDSPKG_TOPDIR/tools/fwupdate
     SYS_UPDATE_TOOL=$PDSPKG_TOPDIR/tools/sysupdate.sh
-
-    # clear the status from previous run
-    upgmgr_clear_upgrade_status
 
     if [[ -f "$FW_PKG_NAME" ]];then
         FW_PATH=$FW_PKG_NAME

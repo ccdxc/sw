@@ -11,12 +11,9 @@
 #ifndef __TEST_UTILS_WORKFLOW_HPP__
 #define __TEST_UTILS_WORKFLOW_HPP__
 
-#include "nic/sdk/upgrade/include/ev.hpp"
 #include "nic/apollo/test/api/utils/api_base.hpp"
 #include "nic/apollo/test/api/utils/batch.hpp"
-#include "nic/apollo/api/internal/upgrade_ev.hpp"
-
-using namespace api;
+#include "nic/apollo/test/upgrade/hitless/api/helper.hpp"
 
 namespace test {
 namespace api {

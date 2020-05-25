@@ -17,6 +17,7 @@ upgmgr_parse_inputs $*
 echo "Starting commands for $STAGE_NAME"
 
 if [[ $STAGE_NAME = "UPG_STAGE_COMPAT_CHECK" && $STAGE_TYPE == "PRE" ]];then
+    upgmgr_set_upgrade_status  "in-progress"
     upgmgr_setup
     upgmgr_pkgcheck
     [[ $? -ne 0 ]] && echo "Package check failed!" && exit 1
@@ -49,7 +50,9 @@ elif [[ $STAGE_NAME == "UPG_STAGE_READY" && $STAGE_TYPE == "POST" ]]; then
     # post ready below is no more in use
     upgmgr_clear_init_mode
     if [[ $STAGE_STATUS == "ok" ]]; then
-        upgmgr_set_upgrade_status
+        upgmgr_set_upgrade_status "success"
+    else
+        upgmgr_set_upgrade_status "failed"
     fi
 else
     echo "Unknown stage name given"

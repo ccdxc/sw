@@ -4,7 +4,7 @@
 //----------------------------------------------------------------------------
 ///
 /// \file
-/// This module defines event handlers during process upgrade
+/// This module defines hitless event handlers during process upgrade
 ///
 //----------------------------------------------------------------------------
 
@@ -13,8 +13,8 @@
 /// @{
 ///
 
-#ifndef __API_UPGRADE_EV_HITLESS_HPP__
-#define __API_UPGRADE_EV_HITLESS_HPP__
+#ifndef __API_UPGRADE_HITLESS_HPP__
+#define __API_UPGRADE_HITLESS_HPP__
 
 namespace api {
 
@@ -82,4 +82,4 @@ using api::upg_ev_hitless_t;
 
 /// @}
 
-#endif   // __API_UPGRADE_EV_HITLESS_HPP__
+#endif   // __API_UPGRADE_HITLESS_HPP__

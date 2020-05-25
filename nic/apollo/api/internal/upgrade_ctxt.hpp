@@ -86,8 +86,7 @@ public:
     char *mem(void) const { return mem_; }
 
     /// \brief get segment from shared memory
-    sdk_ret_t init(const char *obj_store_name, size_t obj_store_size,
-                   bool obj_store_create);
+    sdk_ret_t init(const char *obj_store_name, size_t obj_store_size, bool backup);
 
 private:
     /// \brief constructor

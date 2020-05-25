@@ -1,10 +1,5 @@
 #!/bin/sh
 
-#Huge-pages for DPDK
-echo 64 > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
-mkdir /dev/hugepages
-mount -t hugetlbfs nodev /dev/hugepages
-
 #VPP Partial init env variables
 export NIC_DIR=/nic/
 export HAL_CONFIG_PATH=$NIC_DIR/conf/

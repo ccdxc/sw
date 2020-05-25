@@ -13,8 +13,8 @@
 /// @{
 ///
 
-#ifndef __API_UPGRADE_EV_GRACEFUL_HPP__
-#define __API_UPGRADE_EV_GRACEFUL_HPP__
+#ifndef __API_UPGRADE_GRACEFUL_HPP__
+#define __API_UPGRADE_GRACEFUL_HPP__
 
 namespace api {
 
@@ -60,7 +60,6 @@ typedef struct upg_ev_graceful_s {
     upg_ev_hdlr_t pre_respawn_hdlr;
 
     /// respawn an upgrade (on A)
-    ///   after link-down, requires the thread to link-down and respawn
     upg_ev_hdlr_t respawn_hdlr;
 
     /// repeal an upgrade (on A)
@@ -86,4 +85,4 @@ using api::upg_ev_graceful_t;
 
 /// @}
 
-#endif   // __API_UPGRADE_EV_GRACEFUL_HPP__
+#endif   // __API_UPGRADE_GRACEFUL_HPP__

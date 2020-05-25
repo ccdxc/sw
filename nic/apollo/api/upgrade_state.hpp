@@ -14,22 +14,12 @@
 #include <list>
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/asic/pd/pd.hpp"
-#include "nic/sdk/lib/shmmgr/shmmgr.hpp"
 #include "nic/apollo/api/include/pds_upgrade.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/apollo/api/internal/upgrade_ev.hpp"
-#include "nic/apollo/api/internal/upg_ctxt.hpp"
+#include "nic/apollo/api/internal/upgrade_shm.hpp"
 
 namespace api {
-
-/// \brief upgrade preserved
-/// saved in shared memory to access after process restart.
-/// as this is used across upgrades, all the modifications should be
-/// done to the end
-typedef struct __attribute__((packed)) upg_pstate_s {
-    pds_memory_profile_t memory_profile; ///< running profile
-    uint32_t service_lif_id;           ///< running service lif id
-} upg_pstate_t;
 
 /// \brief qstate info
 typedef struct qstate_cfg_s {
@@ -68,25 +58,17 @@ public:
     ~upg_state() {}
 
     /// \brief singleton factory method to instantiate the upgrade state
-    /// \param[in] shm_create create/open the shared memory instance based on this
     /// \return NULL if there is a failure, pointer to state if success
-    static upg_state *factory(bool shm_create = true);
+    static upg_state *factory(pds_init_params_t *params);
 
     /// \brief destroy the upgrade state
     /// \param[in] state destroy the upgrade state
     static void destroy(upg_state *state);
 
-    // shared memory manager. all the states are saved on this during upgrade
-    shmmgr *shm_mgr(void) { return shm_mmgr_; }
-    // compare the profile of the running with the new by saving it in shared memory
-    void set_memory_profile(pds_memory_profile_t profile) {pstate_->memory_profile = profile; }
-    pds_memory_profile_t memory_profile(void) { return pstate_->memory_profile; }
-    // table engine configuration. will be extracted during pre-upgrade and will be
+  // table engine configuration. will be extracted during pre-upgrade and will be
     // applied during the final stage of the upgrade.
     uint32_t tbl_eng_cfg(p4pd_pipeline_t pipe, p4_tbl_eng_cfg_t **cfg, uint32_t *max_cfgs);
     void incr_tbl_eng_cfg_count(p4pd_pipeline_t pipe, uint32_t ncfgs);
-    // service lif id. will be saved in shared memory and compared during upgrade
-    uint32_t service_lif_id(void) { return pstate_->service_lif_id; }
     // qstate config info. only pc_offset will be modified during upgrade
     // pc_offset will be exctracted during pre_upgrade and will be applied during
     // the final stage of the upgrade
@@ -131,21 +113,20 @@ public:
     }
     void set_upg_init_mode(upg_mode_t mode) { upg_init_mode_ = mode; }
     upg_mode_t upg_init_mode(void) { return upg_init_mode_; }
+    void set_upg_init_domain(sdk::upg::upg_dom_t dom) { upg_init_dom_ = dom; }
+    sdk::upg::upg_dom_t upg_init_domain(void) { return upg_init_dom_; }
     void set_upg_req_mode(upg_mode_t mode) { upg_req_mode_ = mode; }
     upg_mode_t upg_req_mode(void) { return upg_req_mode_; }
     /// \brief set backup/restore  status
     void set_backup_status(bool status) { backup_status_ = status; }
     /// \brief get backup/restore status
     bool backup_status(void) { return backup_status_; }
-    /// \brief get upg ctxt within upgrade state
-    upg_ctxt *api_upg_ctx(void) { return api_upg_ctx_; }
-    upg_ctxt *nicmgr_upg_ctx(void) { return nicmgr_upg_ctx_; }
-
+    /// \brief get upgrade shared memory instance
+    upg_shm *backup_shm(void) { return backup_shm_; };
+    void set_backup_shm(upg_shm *shm) { backup_shm_ = shm; }
+    upg_shm *restore_shm(void) { return restore_shm_; };
+    void set_restore_shm(upg_shm *shm) { restore_shm_ = shm; }
 private:
-    /// shared memory manager
-    shmmgr           *shm_mmgr_;
-    /// preserved state
-    upg_pstate_t     *pstate_;
     /// lif qstate mpu program offset map
     std::list<qstate_cfg_t> qstate_cfgs_;
     /// table engine configs. saved during upgrade init and applied during switch
@@ -163,20 +144,16 @@ private:
     upg_mode_t upg_req_mode_;
     ///  initialization mode during process bringup
     upg_mode_t upg_init_mode_;
+    ///  upgrade init domain
+    sdk::upg::upg_dom_t upg_init_dom_;
     /// backup status
-    bool            backup_status_;
-    /// api upg obj context
-    upg_ctxt        *api_upg_ctx_;
-    /// api upg obj context
-    upg_ctxt        *nicmgr_upg_ctx_;
-
+    bool backup_status_;
+    /// upgrade shared memory instance for backup
+    upg_shm *backup_shm_;
+    /// upgrade shared memory instance for restore
+    upg_shm *restore_shm_;
 private:
-    sdk_ret_t init_(bool create);
-    /// \brief     instantiate upg ctxt within upgrade state
-    /// \param[in] upg_ctxt
-    void set_api_upg_ctx(upg_ctxt *ctxt) { api_upg_ctx_ = ctxt; }
-    void set_nicmgr_upg_ctx(upg_ctxt *ctxt) { nicmgr_upg_ctx_ = ctxt; }
-
+    void init_(pds_init_params_t *params);
 };
 
 extern upg_state *g_upg_state;

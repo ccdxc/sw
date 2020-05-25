@@ -13,7 +13,6 @@
 #include "nic/apollo/api/include/pds_upgrade.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/api/upgrade_state.hpp"
-#include "nic/apollo/api/upgrade.hpp"
 
 
 sdk_ret_t
