@@ -69,9 +69,9 @@ public:
 
     friend void slab_delay_delete_cb(void *timer, uint32_t slab_id,
                                      void *elem);
+    ht *tep_ht(void) const { return tep_ht_; }
 
 private:
-    ht *tep_ht(void) const { return tep_ht_; }
     slab *tep_slab(void) const { return tep_slab_; }
     friend class tep_entry;    ///< tep_entry class is friend of tep_state
 

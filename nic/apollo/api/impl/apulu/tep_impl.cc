@@ -14,11 +14,14 @@
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/framework/api_params.hpp"
 #include "nic/apollo/api/tep.hpp"
+#include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/api/internal/pds_route.hpp"
 #include "nic/apollo/api/impl/apulu/tep_impl.hpp"
 #include "nic/apollo/api/impl/apulu/nexthop_impl.hpp"
 #include "nic/apollo/api/impl/apulu/nexthop_group_impl.hpp"
 #include "nic/apollo/api/impl/apulu/pds_impl_state.hpp"
+#include "nic/apollo/api/impl/apulu/svc/tunnel_svc.hpp"
+#include "nic/apollo/api/impl/apulu/svc/svc_utils.hpp"
 
 #define PDS_NUM_NH_NO_ECMP                 1
 #define tunnel_action                      action_u.tunnel_tunnel_info
@@ -97,6 +100,12 @@ tep_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
                 return SDK_RET_INVALID_ARG;
             }
         }
+        // if this object is restored from persistent storage
+        // resources are reserved already
+        if (api_obj->in_restore_list()) {
+            return SDK_RET_OK;
+        }
+
         if (spec->type == PDS_TEP_TYPE_INTER_DC) {
             // allocate a resource in TUNNEL2 table
             ret = tep_impl_db()->tunnel2_idxr()->alloc(&idx1);
@@ -615,7 +624,8 @@ tep_impl::activate_hw(api_base *api_obj, api_base *orig_obj, pds_epoch_t epoch,
 
 void
 tep_impl::fill_status_(pds_tep_status_t *status) {
-    status->hw_id = hw_id1_;
+    status->hw_id1_ = hw_id1_;
+    status->hw_id2_ = hw_id2_;
 }
 
 sdk_ret_t
@@ -671,6 +681,103 @@ tep_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
 
     fill_status_(&tep_info->status);
     return SDK_RET_OK;
+}
+
+sdk_ret_t
+tep_impl::backup(obj_info_t *info, upg_obj_info_t *upg_info) {
+    sdk_ret_t ret;
+    pds_tep_info_t *tep_info;
+    upg_obj_tlv_t *tlv;
+    pds::TunnelGetResponse proto_msg;
+
+    tlv = (upg_obj_tlv_t *)upg_info->mem;
+    tep_info = (pds_tep_info_t *)info;
+
+    ret = fill_spec_(&tep_info->spec);
+    if (unlikely(ret != SDK_RET_OK)) {
+        return ret;
+    }
+    fill_status_(&tep_info->status);
+    // convert api info to proto
+    pds_tep_api_info_to_proto(tep_info, (void *)&proto_msg);
+    ret = pds_svc_serialize_proto_msg(upg_info, tlv, &proto_msg);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to serialize tep %s err %u",
+                      tep_info->spec.key.str(), ret);
+    }
+    return ret;
+}
+
+sdk_ret_t
+tep_impl::restore_resources(obj_info_t *info) {
+    sdk_ret_t ret;
+    pds_tep_info_t *tep_info;
+    pds_tep_spec_t *spec;
+    pds_tep_status_t *status;
+
+    tep_info = (pds_tep_info_t *)info;
+    spec = &tep_info->spec;
+    status = &tep_info->status;
+
+    if (spec->type == PDS_TEP_TYPE_INTER_DC) {
+        // restore a resource in TUNNEL2 table
+        ret = tep_impl_db()->tunnel2_idxr()->alloc(status->hw_id1_);
+    } else {
+        // restore a resource in TUNNEL and TUNNEL2 tables
+        ret = tep_impl_db()->tunnel_idxr()->alloc(status->hw_id1_);
+        if (likely(ret == SDK_RET_OK)) {
+            ret = tep_impl_db()->tunnel2_idxr()->alloc(status->hw_id2_);
+            if (ret != SDK_RET_OK) {
+                PDS_TRACE_ERR("Failed to restore entry in TUNNEL2 table, "
+                              " err %u hw id %u", ret, status->hw_id2_);
+                return ret;
+            }
+        }
+    }
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to restore entry in %s table err %u "
+                      " hw id-1 %u hw id-2 %u",
+                      (spec->type == PDS_TEP_TYPE_INTER_DC) ?
+                      "TUNNEL2" : "TUNNEL", ret, status->hw_id1_, status->hw_id2_);
+        return ret;
+    }
+    hw_id1_ = status->hw_id1_;
+    hw_id2_ = status->hw_id2_;
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+tep_impl::restore(obj_info_t *info, upg_obj_info_t *upg_info) {
+    sdk_ret_t ret;
+    pds::TunnelGetResponse proto_msg;
+    pds_tep_info_t *tep_info;
+    upg_obj_tlv_t *tlv;
+    uint32_t obj_size, meta_size;
+
+    tlv = (upg_obj_tlv_t *)upg_info->mem;
+    tep_info = (pds_tep_info_t *)info;
+    obj_size = tlv->len;
+    meta_size = sizeof(upg_obj_tlv_t);
+    // fill up the size, even if it fails later. to try and restore next obj
+    upg_info->size = obj_size + meta_size;
+    // de-serialize proto msg
+    if (proto_msg.ParseFromArray(tlv->obj, tlv->len) == false) {
+        PDS_TRACE_ERR("Failed to de-serialize tep");
+        return SDK_RET_OOM;
+    }
+    // convert proto msg to tep info
+    ret = pds_tep_proto_to_api_info(tep_info, &proto_msg);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to convert tep proto msg to info, err %u", ret);
+        return ret;
+    }
+    // now restore hw resources
+    ret = restore_resources((obj_info_t *)tep_info);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to restore hw resources for tep %s err %u",
+                      tep_info->spec.key.str(), ret);
+    }
+    return ret;
 }
 
 /// \@}

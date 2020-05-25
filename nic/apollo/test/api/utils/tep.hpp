@@ -24,12 +24,14 @@ extern const uint16_t k_max_tep;
 class tep_feeder : public feeder {
 public:
     pds_tep_spec_t spec;
+    vector<pds_tep_info_t *> vec;
 
     // Constructor
     tep_feeder() { };
     tep_feeder(const tep_feeder& feeder) {
         memcpy(&this->spec, &feeder.spec, sizeof(pds_tep_spec_t));
         this->num_obj = feeder.num_obj;
+        this->stash_  = feeder.stash();
     }
 
     // Initialize feeder with the base set of values for apollo & artemis
@@ -43,7 +45,8 @@ public:
               uint32_t num_tep=k_max_tep,
               pds_nh_type_t nh_type=PDS_NH_TYPE_UNDERLAY,
               pds_obj_key_t nh=k_base_nh_key,
-              pds_obj_key_t base_nh_group=k_base_nh_group_key);
+              pds_obj_key_t base_nh_group=k_base_nh_group_key,
+              bool stash_ = false);
 
     // Iterate helper routines
     void iter_next(int width = 1);
@@ -89,7 +92,8 @@ operator<<(std::ostream& os, const pds_tep_spec_t *spec) {
 
 inline std::ostream&
 operator<<(std::ostream& os, const pds_tep_status_t *status) {
-    os << " HW id: " << status->hw_id
+    os << " HW id1: " << status->hw_id1_
+       << " HW id2: " << status->hw_id2_
        << " NH id: " << status->nh_id
        << " DMAC: " << macaddr2str(status->dmac);
     return os;
@@ -113,6 +117,7 @@ operator<<(std::ostream& os, const tep_feeder& obj) {
 // CRUD prototypes
 API_CREATE(tep);
 API_READ(tep);
+API_READ_CMP(tep);
 API_UPDATE(tep);
 API_DELETE(tep);
 

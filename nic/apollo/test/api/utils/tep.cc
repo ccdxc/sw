@@ -43,7 +43,7 @@ void
 tep_feeder::init(uint32_t id, uint64_t dmac, std::string ip_str,
                  uint32_t num_tep, pds_nh_type_t nh_type,
                  pds_obj_key_t base_nh,
-                 pds_obj_key_t base_nh_group) {
+                 pds_obj_key_t base_nh_group, bool stash) {
     memset(&this->spec, 0, sizeof(pds_tep_spec_t));
     this->spec.key = int2pdsobjkey(id);
     extract_ip_addr(ip_str.c_str(), &this->spec.remote_ip);
@@ -60,6 +60,7 @@ tep_feeder::init(uint32_t id, uint64_t dmac, std::string ip_str,
         break;
     }
     this->num_obj = num_tep;
+    stash_ = stash;
 }
 
 void
@@ -173,6 +174,7 @@ tep_feeder::spec_compare(const pds_tep_spec_t *spec) const {
 bool
 tep_feeder::status_compare(const pds_tep_status_t *status1,
                            const pds_tep_status_t *status2) const {
+    return (!memcmp(status1, status2, sizeof(pds_tep_status_t)));
     return true;
 }
 

@@ -13,6 +13,7 @@
 #include "nic/apollo/api/include/pds_upgrade.hpp"
 #include "nic/apollo/api/nexthop.hpp"
 #include "nic/apollo/api/nexthop_group.hpp"
+#include "nic/apollo/api/tep.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/api/upgrade_state.hpp"
 #include "nic/apollo/api/port.hpp"
@@ -43,6 +44,11 @@ backup_stateful_obj_cb (void *obj, void *info)
     case OBJ_ID_NEXTHOP:
         keystr = ((nexthop *)obj)->key2str();
         ret = ((nexthop *)obj)->backup(upg_info);
+        break;
+
+    case OBJ_ID_TEP:
+        keystr = ((tep_entry *)obj)->key2str();
+        ret = ((tep_entry *)obj)->backup(upg_info);
         break;
 
     default:
@@ -91,7 +97,7 @@ backup_statless_obj_cb (void *key, void *val, void *info)
     }
 
     if (ret == SDK_RET_OK &&
-        upg_info->size  == PDS_UPGRADE_API_OBJ_RSRVD_SIZE ) {
+        upg_info->size  == PDS_UPGRADE_API_OBJ_RSRVD_SIZE) {
         PDS_TRACE_VERBOSE("Stateless obj id %u key %s intentionally skipped",
                           obj_id, pkey->str());
         return;
@@ -109,6 +115,20 @@ backup_statless_obj_cb (void *key, void *val, void *info)
         upg_info->backup.stashed_obj_count += 1;
     }
     return;
+}
+
+static inline sdk_ret_t
+backup_tep (upg_obj_info_t *info)
+{
+    sdk_ret_t ret;
+    ht *tep_ht;
+    upg_shm *shm = api::g_upg_state->backup_shm();
+
+    tep_ht = tep_db()->tep_ht();
+    ret = (tep_ht->walk(backup_stateful_obj_cb, (void *)info));
+    // adjust the offset in persistent storage in the end of walk
+    shm->api_upg_ctx()->incr_obj_offset(info->backup.total_size);
+    return ret;
 }
 
 static inline sdk_ret_t
@@ -213,6 +233,13 @@ upg_ev_backup (upg_ev_params_t *params)
             // update total number of nexthop objs stashed
             hdr[id].obj_count = info.backup.stashed_obj_count;
             PDS_TRACE_INFO("Stashed %u nexthop objs", hdr[id].obj_count);
+            break;
+
+        case OBJ_ID_TEP:
+            ret = backup_tep(&info);
+            // update total number of tep objs stashed
+            hdr[id].obj_count = info.backup.stashed_obj_count;
+            PDS_TRACE_INFO("Stashed %u tep objs", hdr[id].obj_count);
             break;
 
         default:

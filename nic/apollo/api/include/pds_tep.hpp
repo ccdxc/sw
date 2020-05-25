@@ -80,7 +80,8 @@ typedef struct pds_tep_spec_s {
 /// \brief TEP status
 typedef struct pds_tep_status_s {
     uint16_t nh_id;                 ///< next hop id for this TEP
-    uint16_t hw_id;                 ///< hardware id
+    uint16_t hw_id1_;               ///< hardware id for this TEP in TUNNEL table
+    uint16_t hw_id2_;               ///< hardware id for this TEP in TUNNEL2 table
     uint8_t  dmac[ETH_ADDR_LEN];    ///< outer destination MAC
 } __PACK__ pds_tep_status_t;
 
