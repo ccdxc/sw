@@ -129,22 +129,22 @@ init_service_lif (uint32_t lif_id, const char *cfg_path)
 sdk_ret_t
 service_lif_upg_verify (uint32_t lif_id, const char *cfg_path)
 {
-    uint8_t pgm_offset = 0;
     int32_t rv;
-    std::string prog_info_file;
+    uint8_t pgm_offset = 0;
     lifqstate_t lif_qstate;
+    std::string prog_info_file;
+    sdk::platform::utils::LIFQState qstate = { 0 };
 
     prog_info_file = std::string(cfg_path) + std::string("/") +
         std::string(LDD_INFO_FILE_RPATH) +
         std::string("/") + std::string(LDD_INFO_FILE_NAME);
-
     program_info *pginfo = program_info::factory(prog_info_file.c_str());
     SDK_ASSERT(pginfo != NULL);
     api::g_pds_state.set_prog_info(pginfo);
 
-    sdk::platform::utils::LIFQState qstate = { 0 };
     qstate.lif_id = lif_id;
-    qstate.hbm_address = api::g_pds_state.mempartition()->start_addr(JLIF2QSTATE_MAP_NAME);
+    qstate.hbm_address =
+        api::g_pds_state.mempartition()->start_addr(JLIF2QSTATE_MAP_NAME);
     if (qstate.hbm_address == INVALID_MEM_ADDRESS) {
         PDS_TRACE_ERR("LIF map not found");
         return SDK_RET_ERR;
@@ -157,7 +157,7 @@ service_lif_upg_verify (uint32_t lif_id, const char *cfg_path)
         return SDK_RET_ERR;
     }
 
-    rv = sdk::asic::read_qstate(qstate.hbm_address, (uint8_t *) &lif_qstate,
+    rv = sdk::asic::read_qstate(qstate.hbm_address, (uint8_t *)&lif_qstate,
                                 sizeof(lifqstate_t));
     if (rv != 0) {
         PDS_TRACE_ERR("RXDMA qstate read failed");
@@ -165,9 +165,12 @@ service_lif_upg_verify (uint32_t lif_id, const char *cfg_path)
     }
     // compare the ring configuration done by A with B config
     // it should be matching in address and size
-    if ((lif_qstate.ring0_base != api::g_pds_state.mempartition()->start_addr(JRXDMA_TO_TXDMA_BUF_NAME)) ||
-        (lif_qstate.ring1_base != api::g_pds_state.mempartition()->start_addr(JRXDMA_TO_TXDMA_DESC_NAME)) ||
-        (lif_qstate.ring_size != log2((api::g_pds_state.mempartition()->size(JRXDMA_TO_TXDMA_BUF_NAME) >> 10) / 10))) {
+    if ((lif_qstate.ring0_base !=
+         api::g_pds_state.mempartition()->start_addr(JRXDMA_TO_TXDMA_BUF_NAME)) ||
+        (lif_qstate.ring1_base !=
+         api::g_pds_state.mempartition()->start_addr(JRXDMA_TO_TXDMA_DESC_NAME)) ||
+        (lif_qstate.ring_size !=
+         log2((api::g_pds_state.mempartition()->size(JRXDMA_TO_TXDMA_BUF_NAME) >> 10) / 10))) {
         PDS_TRACE_ERR("RXDMA qstate config mismatch found");
         return SDK_RET_ERR;
     }
@@ -183,23 +186,29 @@ service_lif_upg_verify (uint32_t lif_id, const char *cfg_path)
     }
     // compare the ring configuration done by A with B config
     // it should be matching in address and size
-    if ((lif_qstate.ring0_base != api::g_pds_state.mempartition()->start_addr(JRXDMA_TO_TXDMA_BUF_NAME)) ||
-        (lif_qstate.ring1_base != api::g_pds_state.mempartition()->start_addr(JRXDMA_TO_TXDMA_DESC_NAME)) ||
-        (lif_qstate.ring_size != log2((api::g_pds_state.mempartition()->size(JRXDMA_TO_TXDMA_BUF_NAME) >> 10) / 10))) {
+    if ((lif_qstate.ring0_base !=
+         api::g_pds_state.mempartition()->start_addr(JRXDMA_TO_TXDMA_BUF_NAME)) ||
+        (lif_qstate.ring1_base !=
+         api::g_pds_state.mempartition()->start_addr(JRXDMA_TO_TXDMA_DESC_NAME)) ||
+        (lif_qstate.ring_size !=
+         log2((api::g_pds_state.mempartition()->size(JRXDMA_TO_TXDMA_BUF_NAME) >> 10) / 10))) {
         PDS_TRACE_ERR("TXDMA qstate config mismatch found");
         return SDK_RET_ERR;
     }
 
     PDS_TRACE_DEBUG("Moving qstate addr 0x%lx, pc offset %lu, to offset %u",
-                    qstate.hbm_address + sizeof(lifqstate_t), lif_qstate.pc, pgm_offset);
+                    qstate.hbm_address + sizeof(lifqstate_t),
+                    lif_qstate.pc, pgm_offset);
 
     // save the qstate hbm address
     // this will be applied during switchover stage from A to B
     if (pgm_offset != lif_qstate.pc) {
         lif_qstate.pc = pgm_offset;
-        api::g_upg_state->set_qstate_cfg(qstate.hbm_address, sizeof(lifqstate_t), pgm_offset);
-        api::g_upg_state->set_qstate_cfg(qstate.hbm_address + sizeof(lifqstate_t),
+        api::g_upg_state->set_qstate_cfg(qstate.hbm_address,
                                          sizeof(lifqstate_t), pgm_offset);
+        api::g_upg_state->set_qstate_cfg(
+                 qstate.hbm_address + sizeof(lifqstate_t),
+                 sizeof(lifqstate_t), pgm_offset);
     }
     return SDK_RET_OK;
 }

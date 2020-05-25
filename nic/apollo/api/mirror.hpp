@@ -178,10 +178,6 @@ public:
     /// \return    ERSPAN destination TEP
     const pds_obj_key_t& erspan_dest_tep(void) const { return erspan_.tep_; }
 
-    /// \brief     return the ERSPAN destination mapping
-    /// \return    ERSPAN destination mapping
-    const pds_obj_key_t& erspan_dest_mapping(void) const { return erspan_.mapping_; }
-
     /// \brief     return impl instance of this vnic object
     /// \return    impl instance of the vnic object
     impl_base *impl(void) { return impl_; }
@@ -219,8 +215,8 @@ private:
             union {
                 /// Tunnel IP, in case ERSPAN destination is in underlay VPC
                 pds_obj_key_t tep_;
-                /// mapping key, in case ERSPAN destination is in overlay VPC
-                pds_obj_key_t mapping_;
+                /// mapping IP or underlay collector IP
+                ip_addr_t ip_;
             };
         } erspan_;
     };

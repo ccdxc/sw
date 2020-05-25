@@ -9,7 +9,6 @@ package pds;
 
 import "meta/meta.proto";
 import "types.proto";
-import "mapping.proto";
 
 service MirrorSvc {
   rpc MirrorSessionCreate (MirrorSessionRequest) returns (MirrorSessionResponse) {}
@@ -51,17 +50,20 @@ message ERSpanSpec {
   // VPC id
   bytes               VPCId    = 2 [(gogoproto.moretags) = "meta:mandatory"];
   oneof erspandst {
-      // tunnel (aka. TEP) as the ERSPAN destination
-      bytes           TunnelId = 3;
-      // local/remote mapping as the ERSPAN destination
-      MappingKey      Mapping  = 4;
-      // Destination IP address to be used for ERSPAN
-      types.IPAddress DstIP    = 5;
+      // Destination/Collector IP address to be used for ERSPAN
+      // NOTE: currently DstIP is supported
+      // 1. when vpc is underlay VPC or
+      // 2. if it the IP address of a local/remote mapping in the overlay
+      //    if this IP is in the overlay but reachable via route and not a
+      //    local/remote mapping, then an error is returned
+      types.IPAddress DstIP    = 3;
+      // tunnel (aka. TEP) as the ERSPAN collector
+      bytes           TunnelId = 4;
   }
   // DSCP value to use in the packet
-  uint32              Dscp     = 6;
+  uint32              Dscp     = 5;
   // Span ID to use in the packet
-  uint32              SpanId   = 7;
+  uint32              SpanId   = 6;
 }
 
 // MirrorSessionSpec captures configuration of Mirror session

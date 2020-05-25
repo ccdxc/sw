@@ -27,20 +27,42 @@ typedef struct pds_rspan_spec_s {
     pds_encap_t encap;          ///< encap details
 } __PACK__ pds_rspan_spec_t;
 
+/// \brief ERSPAN packet formats
+typedef enum pds_erspan_type_s {
+    PDS_ERSPAN_TYPE_NONE = 0,
+    PDS_ERSPAN_TYPE_1    = 1,
+    PDS_ERSPAN_TYPE_2    = 2,
+    PDS_ERSPAN_TYPE_3    = 3,
+} pds_erspan_type_t;
+
+typedef enum pds_erspan_dst_type_e {
+    PDS_ERSPAN_DST_TYPE_NONE    = 0,
+    ///< ERSPAN collector is a configured/discovered tunnel in the underlay
+    PDS_ERSPAN_DST_TYPE_TEP     = 1,
+    ///< ERSPAN collector is an IP address in the given VPC
+    PDS_ERSPAN_DST_TYPE_IP      = 2,
+} pds_erspan_dst_type_t;
+
 /// \brief    ERSPAN configuration
 /// \remark    source IP used in the ERSPAN packet is either:
 ///            1. subnet VR IP in case DstIP is in a VPC of type VPC_TYPE_TENANT
 ///            2. local TEP (MyTEP) IP in case DstIP is in VPC  of type
 ///               VPC_TYPE_UNDERLAY
 typedef struct pds_erspan_spec_s {
+    pds_erspan_type_t type;           ///< ERSPAN type
     pds_obj_key_t vpc;                ///< vpc of the destination IP
+    pds_erspan_dst_type_t dst_type;   ///< ERSPAN destination/collect type
     union {
+		///< ip_addr is the ERSPAN collector IP
+		///< NOTE: currently ip_addr is supported
+		///< 1. when vpc is underlay VPC or
+		///< 2. if it the IP address of a local/remote mapping in the overlay
+		///<    if this IP is in the overlay but reachable via route and not a
+		///<    local/remote mapping, then an error is returned
+        ip_addr_t ip_addr;
         ///< ERSPAN destination is underlay TEP (vpc is underlay VPC in
         ///< this case)
         pds_obj_key_t tep;
-        ///< ERSPAN destination is local or remote mapping IP (vpc is
-        ///< overlay IP in this case)
-        pds_obj_key_t mapping;
     };
     uint32_t dscp;                    ///< DSCP value to use in the packet
     uint32_t span_id;                 ///< SPAN ID used in ERSPAN header
@@ -56,8 +78,8 @@ typedef enum pds_mirror_session_type_e {
 /// \brief    mirror session configuration
 typedef struct pds_mirror_session_spec_s {
     pds_obj_key_t key;                    ///< key of the mirror session
-    pds_mirror_session_type_t type;       ///< mirror session type
     uint16_t snap_len;                    ///< max len. of pkt mirrored
+    pds_mirror_session_type_t type;       ///< mirror session type
     union {
         pds_rspan_spec_t rspan_spec;      ///< RSPAN configuration
         pds_erspan_spec_t erspan_spec;    ///< ERSPAN configuration

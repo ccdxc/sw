@@ -176,6 +176,7 @@ mirror_impl::activate_create_(pds_epoch_t epoch, mirror_session *ms,
                 // TODO: route lookup in the underlay route table
             }
         } else {
+#if 0
             // mirror destination is either local or remote mapping
             mapping = mapping_entry::build(&spec->erspan_spec.mapping);
             if (mapping == NULL) {
@@ -194,6 +195,7 @@ mirror_impl::activate_create_(pds_epoch_t epoch, mirror_session *ms,
             }
             // TODO:
             // we need to soft delete mapping thats built
+#endif
         }
         mirror_data.erspan_action.truncate_len = spec->snap_len;
         mirror_data.erspan_action.span_id = spec->erspan_spec.span_id;
