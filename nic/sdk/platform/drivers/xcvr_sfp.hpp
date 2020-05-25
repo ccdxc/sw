@@ -64,7 +64,13 @@ sfp_sprom_parse (int port, uint8_t *data)
         break;
     }
 
-    if (data[3] & (1 << 4)) {
+    if (data[2] == 0x21) {
+        // 10G Base CU
+        xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_SFP_10GBASE_CU);
+        xcvr_set_an_args(port, AN_USER_CAP_10GBKR, false, 0x0);
+        set_cable_type(port, cable_type_t::CABLE_TYPE_CU);
+        xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_10G);
+    } else if (data[3] & (1 << 4)) {
         // 10G Base SR
         xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_SFP_10GBASE_SR);
         set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
