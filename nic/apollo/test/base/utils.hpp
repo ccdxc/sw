@@ -267,6 +267,18 @@ uuid_from_objid (uint32_t id)
     return key;
 }
 
+static inline pds_obj_key_t
+uuid_from_objid (uint32_t id, const mac_addr_t& mac)
+{
+    pds_obj_key_t key = { 0 };
+
+    memcpy(&key.id[0], &id, sizeof(id));
+    memset(&key.id[PDS_UUID_MAGIC_BYTE_OFFSET], PDS_UUID_MAGIC_BYTE,
+           PDS_UUID_MAGIC_BYTE_LEN);
+    memcpy(&key.id[PDS_UUID_SYSTEM_MAC_OFFSET], mac, ETH_ADDR_LEN);
+    return key;
+}
+
 // extract integer id from given 'sticky' uuid
 static inline uint32_t
 objid_from_uuid (const pds_obj_key_t& key) {

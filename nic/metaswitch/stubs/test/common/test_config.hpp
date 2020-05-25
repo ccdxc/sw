@@ -29,6 +29,7 @@ typedef struct test_config_s {
     uint8_t     manual_rt;
     uint8_t     rt[2][8];
     uint8_t     rd[8];
+    std::string mac_address;
 }test_config_t;
 
 int parse_json_config (test_config_t *conf, uint8_t node);

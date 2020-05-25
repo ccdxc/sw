@@ -51,6 +51,7 @@ using namespace std;
 using namespace pds;
 using namespace types;
 
+mac_addr_t g_system_mac_addr;
 static test_config_t g_test_conf_;
 static unique_ptr<pds::DeviceSvc::Stub> g_device_stub_;
 static unique_ptr<pds::IfSvc::Stub>     g_if_stub_;
@@ -114,11 +115,13 @@ static void create_intf_proto_grpc (bool lo=false, bool second=false) {
         if (second) {
             pds_if.key = pds_ms::msidx2pdsobjkey(k_l3_if_id_2);
             pds_if.l3_if_info.ip_prefix.addr.addr.v4_addr = g_test_conf_.local_ip_addr_2;
-            pds_if.l3_if_info.port = test::uuid_from_objid(g_test_conf_.eth_if_index_2);
+            pds_if.l3_if_info.port =
+                test::uuid_from_objid(g_test_conf_.eth_if_index_2, g_system_mac_addr);
         } else {
             pds_if.key = pds_ms::msidx2pdsobjkey(k_l3_if_id);
             pds_if.l3_if_info.ip_prefix.addr.addr.v4_addr = g_test_conf_.local_ip_addr;
-            pds_if.l3_if_info.port = test::uuid_from_objid(g_test_conf_.eth_if_index);
+            pds_if.l3_if_info.port =
+                test::uuid_from_objid(g_test_conf_.eth_if_index, g_system_mac_addr);
         }
         pds_if.type = ::IF_TYPE_L3;
         pds_if.admin_state = PDS_IF_STATE_UP;
@@ -412,7 +415,8 @@ static void create_subnet_proto_grpc (uint32_t subnet_id) {
 
     // TODO: Host IfIndex needs to refer to an actual LIF Index in HAL
     //       Else failure in non-mock PDS mode.
-    //proto_spec->set_hostif(test::uuid_from_objid(g_test_conf_.lif_if_index).id,
+    //proto_spec->set_hostif(test::uuid_from_objid(g_test_conf_.lif_if_index,
+    //                                             g_system_mac_addr).id,
     //                       PDS_MAX_KEY_LEN);
     proto_spec->set_ipv4virtualrouterip(g_test_conf_.local_gwip_addr[subnet_id-1]);
     proto_spec->set_virtualroutermac((uint64_t)0x001122334455);
@@ -626,6 +630,8 @@ int main(int argc, char** argv)
     g_subnet_stub_  = SubnetSvc::NewStub (channel);
     g_route_stub_   = CPRouteSvc::NewStub (channel);
     g_cp_test_stub_   = pds_ms::CPTestSvc::NewStub (channel);
+
+    mac_str_to_addr(g_test_conf_.mac_address.c_str(), g_system_mac_addr);
 
     if (argc == 1)
     {

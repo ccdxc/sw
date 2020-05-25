@@ -65,6 +65,7 @@ parse_json_config (test_config_t *conf, uint8_t node) {
     try {
     value                   = pt.get <std::string>("local.ip");
     conf->local_ip_addr     = inet_network (value.c_str());
+    conf->mac_address       = pt.get <std::string>("mac-address");
     value                   = pt.get <std::string>("local.ip2");
     conf->local_ip_addr_2   = inet_network (value.c_str());
     value                   = pt.get <std::string>("local.lo-ip");

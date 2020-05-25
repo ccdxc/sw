@@ -50,6 +50,7 @@ using namespace std;
 using namespace pds;
 using namespace types;
 
+mac_addr_t g_system_mac_addr;
 static bool underlay_only = false;
 static test_config_t g_test_conf_;
 static unique_ptr<pds::DeviceSvc::Stub> g_device_stub_;
@@ -129,17 +130,19 @@ static void create_intf_proto_grpc (bool lo=false, bool second=false, bool updat
         }
     } else {
         if (second) {
-            pds_if.key = test::uuid_from_objid(k_l3_if_id_2);
+            pds_if.key = test::uuid_from_objid(k_l3_if_id_2, g_system_mac_addr);
             pds_if.l3_if_info.ip_prefix.addr.addr.v4_addr = g_test_conf_.local_ip_addr_2;
-            pds_if.l3_if_info.port = test::uuid_from_objid(g_test_conf_.eth_if_index_2);
+            pds_if.l3_if_info.port = test::uuid_from_objid(g_test_conf_.eth_if_index_2,
+                                                           g_system_mac_addr);
         } else {
-            pds_if.key = test::uuid_from_objid(k_l3_if_id);
+            pds_if.key = test::uuid_from_objid(k_l3_if_id, g_system_mac_addr);
             if (update) {
                 pds_if.l3_if_info.ip_prefix.addr.addr.v4_addr = ipv4;
             } else {
                 pds_if.l3_if_info.ip_prefix.addr.addr.v4_addr = g_test_conf_.local_ip_addr;
             }
-            pds_if.l3_if_info.port = test::uuid_from_objid(g_test_conf_.eth_if_index);
+            pds_if.l3_if_info.port = test::uuid_from_objid(g_test_conf_.eth_if_index,
+                                                           g_system_mac_addr);
         }
         pds_if.type = ::IF_TYPE_L3;
         pds_if.admin_state = PDS_IF_STATE_UP;
@@ -1038,6 +1041,7 @@ int main(int argc, char** argv)
     g_rr_bgp_stub_     = BGPSvc::NewStub (rr_channel);
     g_rr_route_stub_   = CPRouteSvc::NewStub (rr_channel);
 
+    mac_str_to_addr(g_test_conf_.mac_address.c_str(), g_system_mac_addr);
 
     if (argc == 2 && !strcmp(argv[1], "underlay")) {
         cout << "Underlay only test" << std::endl;
