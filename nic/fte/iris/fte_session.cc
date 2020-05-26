@@ -613,8 +613,10 @@ session_update_ep_in_fte (hal_handle_t session_handle)
     session->dep_handle  = ctx.dep_handle(); 
     session->iflow->config.dir = (ctx.sep() && (ctx.sep()->ep_flags & EP_FLAGS_LOCAL)) ?
             FLOW_DIR_FROM_DMA : FLOW_DIR_FROM_UPLINK;
-    session->rflow->config.dir = (ctx.dep() && (ctx.dep()->ep_flags & EP_FLAGS_LOCAL)) ?
+    if (session->rflow) {
+        session->rflow->config.dir = (ctx.dep() && (ctx.dep()->ep_flags & EP_FLAGS_LOCAL)) ?
             FLOW_DIR_FROM_DMA : FLOW_DIR_FROM_UPLINK;
+    }
    
     ctx.flow_log()->sfw_action = (nwsec::SecurityAction)ctx.session()->sfw_action;
     ctx.flow_log()->rule_id = ctx.session()->sfw_rule_id;
