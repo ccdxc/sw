@@ -248,6 +248,12 @@ class Node(object):
            else:
               print("No static routes to configure on naples")
 
+        def SetNicFirewallRules(self):
+            if GlobalOptions.dryrun:
+                return
+            if self.GetNaplesPipeline() == "apulu":
+                self.__console_hdl.RunCmdGetOp("iptables -D tcp_inbound -p tcp -m tcp --dport 11357:11360 -j DROP")
+
         def GetDataNetworks(self):
             return self.__data_networks
 
@@ -342,6 +348,7 @@ class Node(object):
                     device.read_from_console()       
                     device.SetMode(defaultMode)
                     device.SetNaplesPipeline(defaultPipeline)
+                    device.SetNicFirewallRules()
 
                     device.SetPorts(getattr(nic, 'Ports', []))
                     if not GlobalOptions.enable_multi_naples:
@@ -364,6 +371,7 @@ class Node(object):
                     device.read_from_console()
                     device.SetMode(defaultMode)
                     device.SetNaplesPipeline(defaultPipeline)
+                    device.SetNicFirewallRules()
 
         self.__role = self.__get_instance_role(spec.role, getattr(spec, "mode", None))
         self.__vmUser = getattr(self.__inst, "Username", "vm")

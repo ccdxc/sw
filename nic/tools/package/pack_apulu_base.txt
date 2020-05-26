@@ -219,6 +219,7 @@ nic/conf/captrace/sample-conf.json                                /nic/conf/capt
 # PDS agent specific files
 nic/apollo/tools/$PIPELINE/start-agent.sh                         /nic/tools/
 nic/apollo/tools/store_agent_log.sh                               /nic/tools/
+nic/apollo/tools/$PIPELINE/firewall.sh                            /nic/tools/
 nic/build/$ARCH/$PIPELINE/lib/libsvc.so                           /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpdsagentcore.so                  /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpdsproto.so                      /nic/lib/

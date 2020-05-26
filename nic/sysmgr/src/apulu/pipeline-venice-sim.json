@@ -43,5 +43,14 @@
         "cpu-max-percentage": 75,
         "timeout": 0.0,
         "cpu-affinity": "0x3"
+     },
+     {
+        "name": "firewall",
+        "command": "/bin/sh /nic/tools/firewall.sh",
+        "kind": "oneshot",
+        "dependencies": [],
+        "flags": [],
+        "timeout": 0.0,
+        "cpu-affinity": "0x2"
      }
 ]
