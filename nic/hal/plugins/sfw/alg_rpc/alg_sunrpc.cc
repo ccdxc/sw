@@ -810,7 +810,7 @@ hal_ret_t alg_sunrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
             } else {
                 flow_update_t  flowupd = {type: FLOWUPD_SFW_INFO};
                 flowupd.sfw_info.skip_sfw_reval = 1;
-                flowupd.sfw_info.sfw_is_alg     = 1;
+                flowupd.sfw_info.alg     = (uint8_t)nwsec::APP_SVC_SUN_RPC;
                 flowupd.sfw_info.sfw_rule_id    = ctx.session()->sfw_rule_id;
                 flowupd.sfw_info.sfw_action     = (uint8_t)nwsec::SECURITY_RULE_ACTION_ALLOW;
                 ctx.update_flow(flowupd);

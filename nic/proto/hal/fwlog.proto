@@ -11,6 +11,7 @@ option go_package="halproto";
 enum FlowLogEventType {
   FLOW_LOG_EVENT_TYPE_CREATE  = 0;
   FLOW_LOG_EVENT_TYPE_DELETE  = 1;
+  FLOW_LOG_EVENT_TYPE_UPDATE  = 2;
 };
 
 // On receiver side, the enums can be converted back to strings using the

@@ -451,13 +451,13 @@ typedef struct session_state_s {
 } __PACK__ session_state_t;
 
 typedef struct session_cfg_s {
-    uint8_t             tcp_ts_option:1;
-    uint8_t             tcp_sack_perm_option:1;
-    uint8_t             conn_track_en:1;          // enable connection tracking
-    uint8_t             skip_sfw_reval:1;         // skip firewall reval
-    uint8_t             sfw_is_alg:1;             // Its ALG session
-    uint8_t             sfw_action:3;             // sfw action
-    uint8_t             syncing_session:1;        // Session in midst of syncing by vMotion
+    uint16_t             tcp_ts_option:1;
+    uint16_t             tcp_sack_perm_option:1;
+    uint16_t             conn_track_en:1;          // enable connection tracking
+    uint16_t             skip_sfw_reval:1;         // skip firewall reval
+    uint16_t             alg:3;                    // ALG
+    uint16_t             sfw_action:3;             // sfw action
+    uint16_t             syncing_session:1;        // Session in midst of syncing by vMotion
 
     session_id_t        session_id;               // unique session id
     uint32_t            idle_timeout;             // Session idle timeout
@@ -496,16 +496,16 @@ typedef struct session_args_s {
 //------------------------------------------------------------------------------
 struct session_s {
     sdk_spinlock_t      slock;                    // lock to protect this structure
-    uint16_t            fte_id:4;                 // FTE that created this session
-    uint16_t            conn_track_en:1;          // enable connection tracking
-    uint16_t            skip_sfw_reval:1;         // do not reeval session
-    uint16_t            sfw_is_alg:1;             // ALG Session
-    uint16_t            sfw_action:3;             // sfw action to log
-    uint16_t            deleting:1;               // is session queued up for deletion 
-    uint16_t            aging_enqueued:1;         // is session aging action taken already
-    uint16_t            syncing_session:1;        // Session getting synced by vMotion in New host
-    uint16_t            sync_sent:1;              // Session Sync has been sent to New host (in old host).
-    uint16_t            is_in_half_open_state:1;  // TCP Session is in Half-open state
+    uint32_t            fte_id:4;                 // FTE that created this session
+    uint32_t            conn_track_en:1;          // enable connection tracking
+    uint32_t            skip_sfw_reval:1;         // do not reeval session
+    uint32_t            alg:3;                    // ALG set in session
+    uint32_t            sfw_action:3;             // sfw action to log
+    uint32_t            deleting:1;               // is session queued up for deletion 
+    uint32_t            aging_enqueued:1;         // is session aging action taken already
+    uint32_t            syncing_session:1;        // Session getting synced by vMotion in New host
+    uint32_t            sync_sent:1;              // Session Sync has been sent to New host (in old host).
+    uint32_t            is_in_half_open_state:1;  // TCP Session is in Half-open state
     uint64_t            sfw_rule_id;              // sfw rule id
 
     flow_t              *iflow;                   // initiator flow
@@ -520,7 +520,6 @@ struct session_s {
 
     // meta data maintained for session
     hal_handle_t        hal_handle;               // hal handle for this session
-    ht_ctxt_t           hal_telemetry_ht_ctxt;    // hal telemetry based hash table ctxt
     ht_ctxt_t           hal_handle_ht_ctxt;       // hal handle based hash table ctxt
     ht_ctxt_t           hal_iflow_ht_ctxt;        // hal iflow based hash table ctxt
     ht_ctxt_t           hal_rflow_ht_ctxt;        // hal rflow based hash table ctxt

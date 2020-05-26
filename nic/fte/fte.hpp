@@ -69,6 +69,7 @@ hal_ret_t session_delete(hal::session_t *session, bool force_delete=false);
 hal_ret_t session_delete_async(hal::session_t *session, bool force_delete=false);
 hal_ret_t session_update_async(hal::session_t *session, uint64_t bitmap);
 hal_ret_t session_update_in_fte(hal_handle_t session_handle, uint64_t bitmap);
+hal_ret_t session_update_ep_in_fte(hal_handle_t session_handle);
 
 // Find if a feature is enabled on a session or not
 bool session_is_feature_enabled(hal::session_t *session, const char *feature);

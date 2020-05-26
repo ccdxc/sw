@@ -1218,8 +1218,8 @@ end:
 
 typedef struct ep_session_upd_args_ {
     uint8_t         fte_id;
-    uint32_t        num_list;
-    hal_handle_t  **session_hdl_list;
+    uint32_t        count;
+    hal_handle_t  *session_hdl_list;
 } ep_session_upd_args_t;
 
 // Runs in FTE Context to walk a batch
@@ -1227,15 +1227,13 @@ void
 fte_session_update_list (void *data)
 {
     hal_handle_t *session_list = (hal_handle_t *)data;
-    // Set the feature id to run update on
-    uint64_t      bitmap = (uint64_t)(1 << fte::feature_id("pensando.io/network:fwding"));
 
     HAL_TRACE_DEBUG("FTE session update");
 
     for (uint8_t i=0; i<HAL_MAX_SESSIONS_PER_UPDATE; i++) {
         if (session_list[i]) {
             HAL_TRACE_DEBUG("FTE: updating session: {}", session_list[i]);
-            fte::session_update_in_fte(session_list[i], bitmap);
+            fte::session_update_ep_in_fte(session_list[i]);
         }
     }
     HAL_FREE(HAL_MEM_ALLOC_SESS_UPD_LIST, session_list);
@@ -1264,7 +1262,7 @@ ep_get_session_info (ep_t *ep, SessionGetResponseMsg *rsp, uint64_t ts)
                     // For ALG sessions, irrespective of whatever type it is, sync it as long as
                     // TS is modified
                     if ((!session_modified_after_timestamp(session, ts)) &&
-                        (!session->sfw_is_alg)) {
+                        (!session->alg)) {
                         if (!session->conn_track_en) {
                             // If its UDP session, no term sync send
                             continue;
@@ -2371,7 +2369,14 @@ typedef struct ep_session_delete_args_ {
 static void
 ep_session_delete_cb(void *timer, uint32_t timer_id, void *ctxt)
 {
+    hal_handle_t                   *sess_hdl_list = NULL;
     ep_session_delete_args_t       *args = (ep_session_delete_args_t *)ctxt;
+    uint32_t                        count = 0;
+    hal_ret_t                       ret = HAL_RET_OK;
+
+    sess_hdl_list =
+        (hal_handle_t *)HAL_CALLOC(HAL_MEM_ALLOC_SESS_UPD_LIST,
+                                   sizeof(hal_handle_t)*HAL_MAX_SESSIONS_PER_UPDATE);
 
     HAL_TRACE_VERBOSE("Ep Session delete walk cb");
     // delete all sessions
@@ -2395,6 +2400,27 @@ ep_session_delete_cb(void *timer, uint32_t timer_id, void *ctxt)
                     del = false;
                 }
             }
+            if (del == false) {
+                sess_hdl_list[count] = session->hal_handle;
+                count++;
+
+                // Batch session updates.
+                if (count == HAL_MAX_SESSIONS_PER_UPDATE) {
+                    ret = fte::fte_softq_enqueue(0, /* FTE ID */
+                                                fte_session_update_list,
+                                                (void *)sess_hdl_list);
+                    if (ret != HAL_RET_OK) {
+                        HAL_TRACE_ERR("Failed to post update to FTE");
+                    }
+
+                    count = 0;
+                    sess_hdl_list =
+                           (hal_handle_t *)HAL_CALLOC(HAL_MEM_ALLOC_SESS_UPD_LIST,
+                                           sizeof(hal_handle_t)*HAL_MAX_SESSIONS_PER_UPDATE);
+
+                } 
+            }
+
             HAL_TRACE_VERBOSE("ep delete: Ep:{} Sess:{} Sep:{} Dep:{} Del:{}", args->ep_handle,
                                entry->handle_id, session->sep_handle, session->dep_handle, del);
 
@@ -2412,6 +2438,18 @@ ep_session_delete_cb(void *timer, uint32_t timer_id, void *ctxt)
         dllist_del(&entry->dllist_ctxt);
         g_hal_state->hal_handle_id_list_entry_slab()->free(entry);
     }
+
+    if (count != 0) {
+        ret = fte::fte_softq_enqueue(0, /* FTE ID */
+                                     fte_session_update_list,
+                                     (void *)sess_hdl_list);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to post update to FTE");
+        }
+    } else {
+        HAL_FREE(HAL_MEM_ALLOC_EP_SESS_UPD_LIST, sess_hdl_list);
+    }
+
     HAL_FREE(HAL_MEM_ALLOC_EP_SESS_DELETE_CTXT, args);
     return;
 }

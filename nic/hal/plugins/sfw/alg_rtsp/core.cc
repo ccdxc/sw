@@ -348,7 +348,7 @@ expected_flow_handler(fte::ctx_t &ctx, alg_utils::expected_flow_t *entry)
 
     flow_update_t flowupd = {type: FLOWUPD_SFW_INFO};
     flowupd.sfw_info.skip_sfw_reval = 1;
-    flowupd.sfw_info.sfw_is_alg     = 1;
+    flowupd.sfw_info.alg  = exp_flow->alg;
     flowupd.sfw_info.sfw_rule_id = exp_flow->rule_id;
     flowupd.sfw_info.sfw_action = (uint8_t)nwsec::SECURITY_RULE_ACTION_ALLOW;
     ret = ctx.update_flow(flowupd);

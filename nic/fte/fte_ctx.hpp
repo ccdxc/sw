@@ -291,7 +291,7 @@ std::ostream& operator<<(std::ostream& os, const aging_info_t& val);
 
 typedef struct sfw_flow_info_s {
     uint8_t   skip_sfw_reval;
-    uint8_t   sfw_is_alg;
+    uint8_t   alg;
     uint8_t   sfw_action;
     uint64_t  sfw_rule_id;
 } sfw_flow_info_t;
@@ -770,7 +770,7 @@ public:
             return &rflow_log_[rstage_];
         }
     }
-    inline void add_flow_logging(hal::flow_key_t key, hal_handle_t sess_hdl,
+    void add_flow_logging(hal::flow_key_t key, hal_handle_t sess_hdl,
                           fte_flow_log_info_t *fwlog, hal::flow_direction_t direction);
     void set_ipc_logging_disable(bool val) { ipc_logging_disable_ = val; }
     bool ipc_logging_disable(void) { return ipc_logging_disable_; }
@@ -779,6 +779,8 @@ public:
     void set_featureid_bitmap(uint64_t bitmap) { featureid_bitmap_ = bitmap; }
     uint64_t featureid_bitmap(void) { return featureid_bitmap_; }
     uint16_t get_feature_id(void) { return feature_id_; }
+    void set_ipc_logger(ipc_logger *log) { logger_ = log; }
+    ipc_logger *get_ipc_logger(void) { return logger_; }
 
     // protected methods accessed by gtest
 protected:

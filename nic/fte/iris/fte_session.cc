@@ -548,4 +548,70 @@ fte_inject_eth_pkt (const lifqid_t &lifq,
     return fte_inject_pkt(&cpu_rxhdr, buffs, buff_size, copied_pkt);
 }
 
+hal_ret_t
+session_update_ep_in_fte (hal_handle_t session_handle)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    ctx_t ctx = {};
+    uint16_t num_features;
+    size_t fstate_size = feature_state_size(&num_features);
+    feature_state_t *feature_state = NULL;
+    flow_t iflow[ctx_t::MAX_STAGES], rflow[ctx_t::MAX_STAGES];
+    hal::session_t *session;
+
+    session = hal::find_session_by_handle(session_handle);
+    if (session == NULL) {
+        HAL_TRACE_VERBOSE("Invalid session handle {}", session_handle);
+        return  HAL_RET_HANDLE_INVALID;
+    }
+
+    // Bail if its already getting deleted
+    if (session->deleting) {
+        return HAL_RET_OK;
+    }
+
+    HAL_TRACE_DEBUG("fte:: Received session update for session id {}",
+                    session->hal_handle);
+
+    HAL_TRACE_VERBOSE("num features: {} feature state size: {}", num_features, fstate_size);
+
+    feature_state = (feature_state_t*)HAL_MALLOC(hal::HAL_MEM_ALLOC_FTE, fstate_size);
+    if (!feature_state) {
+        ret = HAL_RET_OOM;
+        goto end;
+    }
+
+    //Init context
+    ret = ctx.init(session, iflow, rflow, feature_state, num_features);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("fte: failed to init context, ret={}", ret);
+        goto end;
+    }
+    ctx.set_pipeline_event(FTE_SESSION_UPDATE);
+    // Set the logger instance
+    if (!ctx.ipc_logging_disable()) {
+        ctx.set_ipc_logger(get_current_ipc_logger_inst());
+    } 
+
+    HAL_TRACE_VERBOSE("Sep: {} Dep: {} Sep Dir: {} Dep Dir: {}", 
+                      ctx.sep_handle(), ctx.dep_handle(), 
+                      ((ctx.sep() && (ctx.sep()->ep_flags & EP_FLAGS_LOCAL)) ?FLOW_DIR_FROM_DMA : FLOW_DIR_FROM_UPLINK),
+                      ((ctx.dep() && (ctx.dep()->ep_flags & EP_FLAGS_LOCAL)) ?FLOW_DIR_FROM_DMA : FLOW_DIR_FROM_UPLINK));
+    session->sep_handle  = ctx.sep_handle();
+    session->dep_handle  = ctx.dep_handle(); 
+    session->iflow->config.dir = (ctx.sep() && (ctx.sep()->ep_flags & EP_FLAGS_LOCAL)) ?
+            FLOW_DIR_FROM_DMA : FLOW_DIR_FROM_UPLINK;
+    session->rflow->config.dir = (ctx.dep() && (ctx.dep()->ep_flags & EP_FLAGS_LOCAL)) ?
+            FLOW_DIR_FROM_DMA : FLOW_DIR_FROM_UPLINK;
+   
+    ctx.flow_log()->sfw_action = (nwsec::SecurityAction)ctx.session()->sfw_action;
+    ctx.flow_log()->rule_id = ctx.session()->sfw_rule_id;
+    ctx.flow_log()->alg = (nwsec::ALGName)ctx.session()->alg; 
+    ctx.add_flow_logging(ctx.key(), session->hal_handle, ctx.flow_log(), 
+                         (hal::flow_direction_t)session->iflow->config.dir);
+
+end:
+    return ret;
+}
+
 } // namespace fte

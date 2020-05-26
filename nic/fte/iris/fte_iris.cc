@@ -424,7 +424,7 @@ static inline void fw_log(ipc_logger *logger, fwlog::FWEvent ev)
 //------------------------------------------------------------------------------
 // Add FTE Flow logging information in logging infra
 //------------------------------------------------------------------------------
-inline void
+void
 ctx_t::add_flow_logging (hal::flow_key_t key, hal_handle_t sess_hdl,
                   fte_flow_log_info_t *log, hal::flow_direction_t direction) {
     timespec_t      ctime;
@@ -467,7 +467,10 @@ ctx_t::add_flow_logging (hal::flow_key_t key, hal_handle_t sess_hdl,
         t_fwlg.set_flowaction(fwlog::FLOW_LOG_EVENT_TYPE_DELETE);
         t_fwlg.set_iflow_bytes(session_state.iflow_state.bytes);
         t_fwlg.set_rflow_bytes(session_state.rflow_state.bytes);
+    } else if (pipeline_event() == FTE_SESSION_UPDATE) {
+        t_fwlg.set_flowaction(fwlog::FLOW_LOG_EVENT_TYPE_UPDATE);
     }
+
     sdk::timestamp_to_nsecs(&ctime, &ctime_ns);
     t_fwlg.set_timestamp(ctime_ns);
     t_fwlg.set_session_id(sess_hdl);
@@ -604,7 +607,7 @@ ctx_t::update_flow_table()
         }
         if (iflow->valid_sfw_info()) {
             session_cfg.skip_sfw_reval = (iflow->sfw_info().skip_sfw_reval&0x1);
-            session_cfg.sfw_is_alg = (iflow->sfw_info().sfw_is_alg&0x1);
+            session_cfg.alg = (iflow->sfw_info().alg&0x7);
             session_cfg.sfw_rule_id = iflow->sfw_info().sfw_rule_id;
             session_cfg.sfw_action = (iflow->sfw_info().sfw_action&0x7);
         }
@@ -643,7 +646,7 @@ ctx_t::update_flow_table()
                         ether_ntoa((struct ether_addr*)&iflow_cfg.l2_info.smac),
                         ether_ntoa((struct ether_addr*)&iflow_cfg.l2_info.dmac),
                         iflow_cfg.l2_info.l2seg_id, session_cfg.skip_sfw_reval, session_cfg.sfw_rule_id,
-                        session_cfg.sfw_action, session_cfg.syncing_session, session_cfg.sfw_is_alg);
+                        session_cfg.sfw_action, session_cfg.syncing_session, session_cfg.alg);
         }
     }
 

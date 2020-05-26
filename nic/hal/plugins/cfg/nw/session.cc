@@ -2732,7 +2732,7 @@ session_create (const session_args_t *args, hal_handle_t *session_handle,
     session->syncing_session = args->session->syncing_session;
     session->idle_timeout = args->session->idle_timeout;
     session->skip_sfw_reval = args->session->skip_sfw_reval;
-    session->sfw_is_alg = args->session->sfw_is_alg;
+    session->alg = args->session->alg;
     session->sfw_rule_id = args->session->sfw_rule_id;
     session->sfw_action = args->session->sfw_action;
     session->aging_enqueued = 0;
