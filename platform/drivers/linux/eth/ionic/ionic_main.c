@@ -16,6 +16,7 @@ MODULE_DESCRIPTION(IONIC_DRV_DESCRIPTION);
 MODULE_AUTHOR("Pensando Systems, Inc");
 MODULE_LICENSE("GPL");
 MODULE_VERSION(IONIC_DRV_VERSION);
+MODULE_INFO(supported, "external");
 
 unsigned int max_slaves = 0;
 module_param(max_slaves, uint, 0400);
