@@ -37,6 +37,7 @@ extern "C" {
 #include "nic/metaswitch/stubs/mgmt/gen/mgmt/pds_ms_internal_bgp_utils_gen.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/mgmt/pds_ms_internal_evpn_utils_gen.hpp"
 #include "gen/proto/cp_test.pb.h"
+#include "gen/proto/debugpdsms.pb.h"
 #include "nic/metaswitch/stubs/mgmt/gen/mgmt/pds_ms_internal_utils_gen.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_tbl_idx.hpp"
 #include "nic/apollo/api/include/pds.hpp"
@@ -303,6 +304,9 @@ types::ApiStatus ip_track_add (const CPIPTrackTestCreateSpec   *req,
                                CPIPTrackTestResponse *resp);
 types::ApiStatus ip_track_del (const CPIPTrackTestDeleteSpec   *req,
                                CPIPTrackTestResponse *resp);
+types::ApiStatus amx_control (const AMXPortSpec   *req,
+                              AMXControlResponse     *resp);
+
 NBB_VOID lim_l3_if_addr_pre_set(LimInterfaceAddrSpec &req,
                                 NBB_LONG row_status,
                                 NBB_ULONG correlator,

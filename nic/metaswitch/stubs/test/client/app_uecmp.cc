@@ -26,6 +26,7 @@
 #include <gen/proto/evpn.grpc.pb.h>
 #include <gen/proto/cp_route.grpc.pb.h>
 #include <gen/proto/cp_test.grpc.pb.h>
+#include <gen/proto/debugpdsms.grpc.pb.h>
 #include "nic/apollo/agent/svc/specs.hpp"
 #include "nic/apollo/agent/svc/interface_svc.hpp"
 #include "nic/apollo/agent/svc/device_svc.hpp"
@@ -61,6 +62,7 @@ static unique_ptr<pds::SubnetSvc::Stub> g_subnet_stub_;
 static unique_ptr<pds::VPCSvc::Stub>    g_vpc_stub_;
 static unique_ptr<pds::CPRouteSvc::Stub> g_route_stub_;
 static unique_ptr<pds_ms::CPTestSvc::Stub>  g_cp_test_stub_;
+static unique_ptr<pds_ms::DebugPdsMsSvc::Stub>  g_debug_stub_;
 
 // Simulate random UUIDs
 static constexpr int k_underlay_vpc_id = 10;
@@ -612,6 +614,26 @@ static void get_evpn_mac_ip_all () {
     }
 }
 
+static void set_amx_control (bool open) {
+    pds_ms::AMXPortSpec  request;
+    pds_ms::AMXControlResponse  response;
+    ClientContext   context;
+    Status          ret_status;
+
+    auto proto_spec = &request;
+    proto_spec->set_open (open);
+
+    printf ("Pushing AMX proto...\n");
+    ret_status = g_debug_stub_->AMXControl(&context, request, &response);
+
+    if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
+        printf("%s failed! ret_status=%d (%s) response.status=%d\n",
+                __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
+                response.apistatus());
+        exit(1);
+    }
+}
+
 int main(int argc, char** argv)
 {
     // parse json config file
@@ -630,6 +652,7 @@ int main(int argc, char** argv)
     g_subnet_stub_  = SubnetSvc::NewStub (channel);
     g_route_stub_   = CPRouteSvc::NewStub (channel);
     g_cp_test_stub_   = pds_ms::CPTestSvc::NewStub (channel);
+    g_debug_stub_   = pds_ms::DebugPdsMsSvc::NewStub (channel);
 
     mac_str_to_addr(g_test_conf_.mac_address.c_str(), g_system_mac_addr);
 
@@ -641,6 +664,7 @@ int main(int argc, char** argv)
         if (g_node_id != 3) {
             create_intf_proto_grpc(true /*loopback*/);
             if (g_node_id == 2) {
+                set_amx_control(true);
                 // On C2, Delete the RTM redistribute rule to advertise specific TEP IP to DUT
                 // Instead BGP default originate is setup on C2 to simulate default route
                 // advertised from ToR to Naples
@@ -650,6 +674,8 @@ int main(int argc, char** argv)
                 if (!fp) {
                     std::cout << "ERROR deleting RTM Redist rule for loopback on container 2" << std::endl;
                 }
+                sleep(3);
+                set_amx_control(false);
             }
             create_intf_proto_grpc(false, true /* second interface */);
         }
@@ -709,6 +735,12 @@ int main(int argc, char** argv)
             }
 #endif
             delete_subnet_proto_grpc(1);
+            return 0;
+        } else if (!strcmp(argv[1], "amx-open")) {
+            set_amx_control(true);
+            return 0;
+        } else if (!strcmp(argv[1], "amx-close")) {
+            set_amx_control(false);
             return 0;
         }
     }

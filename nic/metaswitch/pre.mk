@@ -37,6 +37,7 @@ MS_INCLPATH = \
 	code/comn/aall           \
 	code/stubs/sms           \
 	code/stubs/qcft          \
+	code/stubs/amx           \
 	code/comn/nbase/unix     \
 	code/comn/nbase/unixmt   \
 	code/comn/nbase/portable \

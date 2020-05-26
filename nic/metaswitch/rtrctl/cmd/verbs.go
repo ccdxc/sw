@@ -28,10 +28,21 @@ var clearCmd = &cobra.Command{
 	Long:  "Clear commands",
 }
 
+var debugCmd = &cobra.Command{
+	Use:   "debug",
+	Short: "Debug commands",
+	Long:  "Debug commands",
+	Args:  cobra.NoArgs,
+	// Hide this as there are no external cmds under this tree currently
+	Hidden: true,
+}
+
 func init() {
 	rootCmd.AddCommand(showCmd)
 	rootCmd.AddCommand(clearCmd)
+	rootCmd.AddCommand(debugCmd)
 	rootCmd.AddCommand(impl.GenDocsCmd)
 	impl.RegisterShowNodes(&impl.CLIParams{GRPCPort: pegasusGRPCDefaultPort}, showCmd)
 	impl.RegisterClearNodes(&impl.CLIParams{GRPCPort: pegasusGRPCDefaultPort}, clearCmd)
+	impl.RegisterDebugNodes(&impl.CLIParams{GRPCPort: pegasusGRPCDefaultPort}, debugCmd)
 }

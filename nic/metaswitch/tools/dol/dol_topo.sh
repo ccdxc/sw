@@ -45,6 +45,46 @@ for (( j=0; j<argc; j++ )); do
     fi
 done
 
+if [ $DOL_RUN == 1 ]; then
+   DUTDIR=$NICDIR
+else
+   DUTDIR=$NICDIR/metaswitch/config/dol_ctr1
+fi
+
+if [ $RR = 1 ]; then
+    CLIENTAPP='/sw/nic/build/x86_64/apulu/capri/bin/pds_ms_uecmp_rr_grpc_test'
+    CLIENTARG=''
+elif [ $UNDERLAY = 1 ]; then
+    CLIENTAPP='/sw/nic/build/x86_64/apulu/capri/bin/pds_ms_uecmp_rr_grpc_test'
+    CLIENTARG='underlay'
+else
+    CLIENTAPP='/sw/nic/build/x86_64/apulu/capri/bin/pds_ms_uecmp_grpc_test'
+    CLIENTARG=''
+fi
+
+function amx-open {
+   docker exec -it -e CONFIG_PATH="$DOL_CFG"$1 "$CONTAINER"$1 sh -c "$CLIENTAPP amx-open"
+}
+function amx-close {
+   docker exec -it -e CONFIG_PATH="$DOL_CFG"$1 "$CONTAINER"$1 sh -c "$CLIENTAPP amx-close"
+}
+
+# Function to configure nodes using gRPC Client App
+function client-app-cfg {
+    if [ $UNDERLAY == 1 ] && [ "$1" = "3" ]; then
+        echo "Skip configuring CTR3 in Underlay mode"
+        return
+    fi
+    ret=0
+
+    echo "push "$DOL_CFG"$1/evpn.json config to "$CONTAINER"$1"
+    docker exec -it -e CONFIG_PATH="$DOL_CFG"$1  "$CONTAINER"$1 sh -c "$CLIENTAPP $CLIENTARG" || ret=$?
+
+    if [ $ret -ne 0 ]; then
+        echo "failed to push config to "$CONTAINER"$1: $ret"
+    fi
+}
+
 if [ $DOL_TEST == 1 ]; then
     # Setup already made - just run DOL
     docker exec -it "$CONTAINER"1 sh -c "sudo ./apollo/tools/rundol.sh --pipeline apulu --topo overlay --feature overlay_networking --sub underlay_trig $CMDARGS" || ret=$?
@@ -122,27 +162,7 @@ docker exec -dit "$CONTAINER"1 ip addr del 11.1.1.1/24 dev eth1
 docker exec -dit "$CONTAINER"2 ip addr del 10.1.1.2/24 dev eth0
 docker exec -dit "$CONTAINER"2 ip addr del 11.1.1.2/24 dev eth1
 
-if [ $RR == 1 ]; then
-    echo "RR testing mode"
-fi
-
-if [ $DOL_RUN == 0 ]; then
-    echo "start pdsagent in "$CONTAINER"1"
-    ret=0
-    docker exec -dit -w "$DOL_CFG"1 "$CONTAINER"1 sh -c "IPC_MOCK_MODE=1 $PDSAGENT --log-dir ${DOL_CFG}1" || ret=$?
-
-    if [ $ret -ne 0 ]; then
-        echo "failed to start pdsagent in "$CONTAINER"1: $ret"
-    fi
-    echo "sleep 30 seconds to let n-base to start in containers"
-    t_s=30
-    while [ $t_s -gt 0 ]; do
-       echo -ne "$t_s\033[0K\r"
-       sleep 1
-       : $((t_s--))
-    done
-fi
-
+# First start PDS-Agent on nodes 2 and 3
 for i in {2..3}
 do
     ret=0
@@ -160,8 +180,8 @@ do
     if [ $ret -ne 0 ]; then
         echo "failed to start pdsagent in "$CONTAINER"$i: $ret"
     fi
-    echo "sleep 25 seconds to let n-base to start in containers"
-    t_s=25
+    echo "sleep 10 seconds to let n-base to start in containers"
+    t_s=10
     while [ $t_s -gt 0 ]; do
        echo -ne "$t_s\033[0K\r"
        sleep 1
@@ -170,43 +190,52 @@ do
 done
 
 if [ $UNDERLAY == 0 ] && [ $RR == 0 ]; then
+    # 3 TEP node topology - configure EVPN TEP IP for node 3 even though it doesn't have lo
+    amx-open 3
     docker exec -it "$CONTAINER"3 python $MIB_PY set localhost evpnEntTable evpnEntEntityIndex=2 evpnEntLocalRouterAddressType=inetwkAddrTypeIpv4 evpnEntLocalRouterAddress='0xd2 0xd2 0x3 0x3'
+    amx-close 3
 fi
 
-if [ $RR = 1 ]; then
-    cmd='/sw/nic/build/x86_64/apulu/capri/bin/pds_ms_uecmp_rr_grpc_test'
-elif [ $UNDERLAY = 1 ]; then
-    cmd='/sw/nic/build/x86_64/apulu/capri/bin/pds_ms_uecmp_rr_grpc_test underlay'
-else
-    cmd='/sw/nic/build/x86_64/apulu/capri/bin/pds_ms_uecmp_grpc_test'
-fi
-
-for i in {1..3}
+# Configure underlay and overlay on nodes 2 and 3 using gRPC Client App
+for i in {2..3}
 do
-    if [ $DOL_RUN == 1 ] && [ "$i" = "1" ]; then
-        echo "Skip configuring DUT in DOL_RUN mode"
-        continue
-    fi
-    if [ $UNDERLAY == 1 ] && [ "$i" = "3" ]; then
-        echo "Skip configuring CTR3 in Underlay mode"
-        continue
-    fi
-    ret=0
-
-    echo "push "$DOL_CFG"$i/evpn.json config to "$CONTAINER"$i"
-    docker exec -it -e CONFIG_PATH="$DOL_CFG"$i  "$CONTAINER"$i sh -c "$cmd" || ret=$?
-
-    if [ $ret -ne 0 ]; then
-        echo "failed to push config to "$CONTAINER"$i: $ret"
-    fi
+    client-app-cfg $i
 done
 
+# Finally start Pds-Agent on the DUT of this is not the DOL run
+# and configure underlay and overlay using gRPC Client App
+if [ $DOL_RUN == 0 ]; then
+    echo "start pdsagent in "$CONTAINER"1"
+    ret=0
+    docker exec -dit -w "$DOL_CFG"1 "$CONTAINER"1 sh -c "IPC_MOCK_MODE=1 $PDSAGENT --log-dir ${DOL_CFG}1" || ret=$?
+
+    if [ $ret -ne 0 ]; then
+        echo "failed to start pdsagent in "$CONTAINER"1: $ret"
+    fi
+    echo "sleep 10 seconds to let n-base to start in containers"
+    t_s=10
+    while [ $t_s -gt 0 ]; do
+       echo -ne "$t_s\033[0K\r"
+       sleep 1
+       : $((t_s--))
+    done
+    client-app-cfg 1
+fi
+
 if [ $UNDERLAY == 1 ]; then
+    grep ++++ $DUTDIR/pds-agent.log
+    if grep -q "++++ Underlay Pathset.* Num NH 2.*Async reply Success" $DUTDIR/pds-agent.log; then
+       echo Underlay ECMP found PASS
+    else
+       echo Underlay ECMP not found FAIL
+       ret=1
+    fi
     exit
 fi
 
 echo "Originate EVPN Type 5 route from "$CONTAINER"2"
 
+amx-open 2
 docker exec -it "$CONTAINER"2 sh -c "python /sw/nic/third-party/metaswitch/code/comn/tools/mibapi/metaswitch/cam/mib.py set localhost rtmRedistTable rtmRedistFteIndex=2 rtmRedistEntryId=10 rtmRedistRowStatus=createAndGo rtmRedistAdminStat=adminStatusUp  rtmRedistInfoSrc=atgQcProtStatic  rtmRedistInfoDest=atgQcProtBgp rtmRedistDestInstFlt=true rtmRedistDestInst=2  rtmRedistRedistFlag=true"
 docker exec -it "$CONTAINER"2 sh -c "python /sw/nic/third-party/metaswitch/code/comn/tools/mibapi/metaswitch/cam/mib.py set localhost limL3InterfaceAddressTable \
                                      limEntEntityIndex=1 \
@@ -218,10 +247,12 @@ docker exec -it "$CONTAINER"2 sh -c "python /sw/nic/third-party/metaswitch/code/
                                      limL3InterfaceAddressPrefixLen=24"
 
 docker exec -it "$CONTAINER"2 sh -c "python /sw/nic/third-party/metaswitch/code/comn/tools/mibapi/metaswitch/cam/mib.py set localhost rtmStaticRtTable rtmStaticRtFteIndex=2 rtmStaticRtDestAddrType=inetwkAddrTypeIpv4 rtmStaticRtDestAddr=0x80100000 rtmStaticRtDestLen=16 rtmStaticRtNextHopType=inetwkAddrTypeIpv4 rtmStaticRtNextHop=0x0c00000f rtmStaticRtIfIndex=0 rtmStaticRtRowStatus=createAndGo rtmStaticRtAdminStat=adminStatusUp rtmStaticRtOverride=true rtmStaticRtAdminDist=150"
+amx-close 2
 
 if [ $RR == 0 ]; then
     echo "Originate EVPN Type 5 route from "$CONTAINER"3"
 
+    amx-open 3
     docker exec -it "$CONTAINER"3 sh -c "python /sw/nic/third-party/metaswitch/code/comn/tools/mibapi/metaswitch/cam/mib.py set localhost rtmRedistTable rtmRedistFteIndex=2 rtmRedistEntryId=10 rtmRedistRowStatus=createAndGo rtmRedistAdminStat=adminStatusUp  rtmRedistInfoSrc=atgQcProtStatic  rtmRedistInfoDest=atgQcProtBgp rtmRedistDestInstFlt=true rtmRedistDestInst=2  rtmRedistRedistFlag=true"
     docker exec -it "$CONTAINER"3 sh -c "python /sw/nic/third-party/metaswitch/code/comn/tools/mibapi/metaswitch/cam/mib.py set localhost limL3InterfaceAddressTable \
                                      limEntEntityIndex=1 \
@@ -233,6 +264,7 @@ if [ $RR == 0 ]; then
                                      limL3InterfaceAddressPrefixLen=24"
 
     docker exec -it "$CONTAINER"3 sh -c "python /sw/nic/third-party/metaswitch/code/comn/tools/mibapi/metaswitch/cam/mib.py set localhost rtmStaticRtTable rtmStaticRtFteIndex=2 rtmStaticRtDestAddrType=inetwkAddrTypeIpv4 rtmStaticRtDestAddr=0x80100000 rtmStaticRtDestLen=16 rtmStaticRtNextHopType=inetwkAddrTypeIpv4 rtmStaticRtNextHop=0x0c00000e rtmStaticRtIfIndex=0 rtmStaticRtRowStatus=createAndGo rtmStaticRtAdminStat=adminStatusUp rtmStaticRtOverride=true rtmStaticRtAdminDist=150"
+    amx-close 3
 fi
 
 if [ $DOL_RUN == 1 ]; then
@@ -274,7 +306,6 @@ if [ $DOL_RUN == 1 ]; then
 else
     sleep 5
     ret=0
-    DUTDIR=$NICDIR/metaswitch/config/dol_ctr1
     grep ++++ $DUTDIR/pds-agent.log
     if grep -q "++++ Underlay Pathset.* Num NH 2.*Async reply Success" $DUTDIR/pds-agent.log; then
        echo Underlay ECMP found PASS

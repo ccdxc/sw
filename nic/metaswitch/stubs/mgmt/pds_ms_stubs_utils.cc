@@ -5,6 +5,9 @@
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_utils.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_ctm.hpp"
+extern "C" {
+#include <amxpenapi.h>
+}
 
 namespace pds_ms {
 extern NBB_VOID
@@ -16,6 +19,14 @@ void pds_ms_stubs_create ()
     pds_ms_config_t   conf = {0};
     
     PDS_TRACE_DEBUG ("Start all Metaswitch components and Stubs");
+
+#ifdef AMX_DEFAULT_OPEN
+    PDS_TRACE_DEBUG ("Opening AMX port by default");
+    auto ret = amx_pen_open_socket();
+    if (ret == 1) {
+        mgmt_state_t::thread_context().state()->set_amx_open(true);
+    }
+#endif
 
     /***************************************************************************/
     /* Get the lock for the SHARED LOCAL data.                                 */

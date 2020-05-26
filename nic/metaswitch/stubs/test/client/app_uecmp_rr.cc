@@ -26,6 +26,7 @@
 #include <gen/proto/evpn.grpc.pb.h>
 #include <gen/proto/cp_route.grpc.pb.h>
 #include <gen/proto/cp_test.grpc.pb.h>
+#include <gen/proto/debugpdsms.grpc.pb.h>
 #include "nic/apollo/agent/svc/specs.hpp"
 #include "nic/apollo/agent/svc/interface_svc.hpp"
 #include "nic/apollo/agent/svc/device_svc.hpp"
@@ -61,11 +62,13 @@ static unique_ptr<pds::SubnetSvc::Stub> g_subnet_stub_;
 static unique_ptr<pds::VPCSvc::Stub>    g_vpc_stub_;
 static unique_ptr<pds::CPRouteSvc::Stub> g_route_stub_;
 static unique_ptr<pds_ms::CPTestSvc::Stub>  g_cp_test_stub_;
+static unique_ptr<pds_ms::DebugPdsMsSvc::Stub>  g_debug_stub_;
 
 static unique_ptr<pds::DeviceSvc::Stub> g_rr_device_stub_;
 static unique_ptr<pds::IfSvc::Stub>     g_rr_if_stub_;
 static unique_ptr<pds::BGPSvc::Stub>    g_rr_bgp_stub_;
 static unique_ptr<pds::CPRouteSvc::Stub> g_rr_route_stub_;
+static unique_ptr<pds_ms::DebugPdsMsSvc::Stub>  g_rr_debug_stub_;
 
 // Simulate random UUIDs
 static constexpr int k_underlay_vpc_id = 10;
@@ -212,6 +215,29 @@ static void create_bgp_global_proto_grpc () {
         ret_status = g_rr_bgp_stub_->BGPCreate(&context, request, &response);
     } else {
         ret_status = g_bgp_stub_->BGPCreate(&context, request, &response);
+    }
+    if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
+        printf("%s failed! ret_status=%d (%s) response.status=%d\n",
+                __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
+                response.apistatus());
+        exit(1);
+    }
+}
+
+static void set_amx_control (bool open) {
+    pds_ms::AMXPortSpec  request;
+    pds_ms::AMXControlResponse  response;
+    ClientContext   context;
+    Status          ret_status;
+
+    auto proto_spec = &request;
+    proto_spec->set_open (open);
+
+    printf ("Pushing AMX proto...\n");
+    if (g_node_id == 3) {
+        ret_status = g_rr_debug_stub_->AMXControl(&context, request, &response);
+    } else {
+        ret_status = g_debug_stub_->AMXControl(&context, request, &response);
     }
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s failed! ret_status=%d (%s) response.status=%d\n",
@@ -1032,6 +1058,7 @@ int main(int argc, char** argv)
     g_subnet_stub_  = SubnetSvc::NewStub (channel);
     g_route_stub_   = CPRouteSvc::NewStub (channel);
     g_cp_test_stub_   = pds_ms::CPTestSvc::NewStub (channel);
+    g_debug_stub_   = pds_ms::DebugPdsMsSvc::NewStub (channel);
 
     // TODO: Change channel port to 50057 when connecting to Pegasus
     std::shared_ptr<Channel> rr_channel = grpc::CreateChannel("localhost:50057",
@@ -1040,6 +1067,7 @@ int main(int argc, char** argv)
     g_rr_if_stub_      = IfSvc::NewStub (rr_channel);
     g_rr_bgp_stub_     = BGPSvc::NewStub (rr_channel);
     g_rr_route_stub_   = CPRouteSvc::NewStub (rr_channel);
+    g_rr_debug_stub_   = pds_ms::DebugPdsMsSvc::NewStub (rr_channel);
 
     mac_str_to_addr(g_test_conf_.mac_address.c_str(), g_system_mac_addr);
 
@@ -1054,12 +1082,13 @@ int main(int argc, char** argv)
             create_device_proto_grpc(underlay_only ? false : true);
             create_underlay_vpc_proto_grpc();
         }
-        if (!underlay_only) {
+        if (!underlay_only || g_node_id == 1) {
             // Create loopback intf for TEP IP on PDSA
             // Create dummy interface in Pegasus as well to use as Nexthop for Static default route
             create_intf_proto_grpc(true /*loopback*/);
         }
-        if (g_node_id == 2) {
+        if (g_node_id == 2 && !underlay_only) {
+            set_amx_control(true);
             // On C2, Delete the RTM redistribute rule to advertise specific TEP IP to DUT
             // Instead BGP default originate is setup on C2 to simulate default route
             // advertised from ToR to Naples
@@ -1069,6 +1098,8 @@ int main(int argc, char** argv)
             if (!fp) {
                 std::cout << "ERROR deleting RTM Redist rule for loopback on container 2" << std::endl;
             }
+            sleep(3);
+            set_amx_control(false);
         }
         if (g_node_id != 3) {
             create_intf_proto_grpc();
@@ -1285,10 +1316,16 @@ int main(int argc, char** argv)
             std::cout << "Update HostIf "; 
             for (int i=2; i<argc; ++i) {
                 hostifs.push_back(strtoul(argv[i], nullptr, 0));
-                std::cout << argv[i];
+                std::cout << argv[i] << " ";
             } 
             std::cout << std::endl;
             upd_subnet_hostif_proto_grpc(hostifs);
+        } else if (!strcmp(argv[1], "amx-open")) {
+            set_amx_control(true);
+            return 0;
+        } else if (!strcmp(argv[1], "amx-close")) {
+            set_amx_control(false);
+            return 0;
         }
         return 0;
     }

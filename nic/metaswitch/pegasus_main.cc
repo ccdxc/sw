@@ -15,6 +15,7 @@
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_init.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/svc/internal_cp_route_gen.hpp"
+#include "nic/metaswitch/stubs/mgmt/gen/svc/debugpdsms_gen.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/svc/epoch_gen.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_interface.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_utils.hpp"
@@ -133,7 +134,7 @@ svc_reg (void)
     LimSvcImpl            lim_svc;
     CPRouteSvcImpl        route_svc;
     EpochSvcImpl          epoch_svc;
-
+    DebugPdsMsSvcImpl     debug_svc;
 
     grpc_init();
     g_grpc_server_addr =
@@ -150,6 +151,7 @@ svc_reg (void)
     server_builder->RegisterService(&evpn_svc);
     server_builder->RegisterService(&lim_svc);
     server_builder->RegisterService(&epoch_svc);
+    server_builder->RegisterService(&debug_svc);
 
     std::unique_ptr<Server> server(server_builder->BuildAndStart());
     server->Wait();

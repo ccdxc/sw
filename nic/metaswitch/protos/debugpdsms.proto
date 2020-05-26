@@ -12,7 +12,19 @@ import "types.proto";
 // debug service definition
 service DebugPdsMsSvc
 {
+  rpc AMXControl (AMXPortSpec) returns (AMXControlResponse) {}
   rpc CPActiveRouteGet (CPActiveRouteGetRequest) returns (CPActiveRouteGetResponse) {}
+}
+
+message AMXPortSpec {
+  option (venice.pdsaSetGlobOpts) = {
+    ActionFn: "amx_control"
+  };
+  bool            Open = 1;
+}
+
+message AMXControlResponse {
+    types.ApiStatus ApiStatus = 1;
 }
 
 // control plane active route table

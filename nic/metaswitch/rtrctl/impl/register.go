@@ -25,6 +25,16 @@ func RegisterClearNodes(params *CLIParams, base *cobra.Command) {
 	bgpClearCmd.MarkFlagRequired("option")
 }
 
+// RegisterDebugNodes registers the routing command tree under debug node
+func RegisterDebugNodes(params *CLIParams, base *cobra.Command) {
+	cliParams = params
+
+	//routing debug commands
+	base.AddCommand(routingDebugCmd)
+	routingDebugCmd.AddCommand(routingOpenDebugCmd)
+	routingDebugCmd.AddCommand(routingCloseDebugCmd)
+}
+
 // RegisterShowNodes registers all the CLI nodes
 func RegisterShowNodes(params *CLIParams, base *cobra.Command) {
 	cliParams = params
