@@ -11,6 +11,7 @@ __RANDOM_MTU = -1
 __MIN_MTU_FREEBSD = 72
 __MIN_MTU_WINDOWS_IPv4 = 576  # MS05-019 security update
 __MIN_MTU_WINDOWS_IPv6 = 1280
+__MAX_MTU_WINDOWS = 9186
 __MIN_MTU = 68
 __MAX_MTU = 9194
 __DEF_MTU = 1500
@@ -134,6 +135,7 @@ def Setup(tc):
     result = api.types.status.SUCCESS
     global __OS_TYPE
     global __MIN_MTU
+    global __MAX_MTU
 
     if not api.RunningOnSameSwitch():
         tc.skip = True
@@ -160,6 +162,7 @@ def Setup(tc):
             __MIN_MTU = __MIN_MTU_FREEBSD
         elif __OS_TYPE == "windows":
             __MIN_MTU = __MIN_MTU_WINDOWS_IPv4
+            __MAX_MTU = __MAX_MTU_WINDOWS
         break
 
     tc.new_mtu = getMTUconfigs(tc)
