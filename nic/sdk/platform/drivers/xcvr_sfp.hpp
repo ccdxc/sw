@@ -6,8 +6,32 @@
 namespace sdk {
 namespace platform {
 
+#define SFP_OFFSET_NOMINAL_BR                12
 #define SFP_OFFSET_LENGTH_CU                 18
 #define SFP_OFFSET_EXT_SPEC_COMPLIANCE_CODES 36
+#define SFP_OFFSET_MAX_BR                    66
+#define SFP_OFFSET_MAX_BR_UNITS              250
+
+typedef enum sfp_bitrate_e {
+    SFP_BITRATE_10G,
+    SFP_BITRATE_25G
+} sfp_bitrate_t;
+
+static inline sfp_bitrate_t
+sfp_bitrate (uint8_t *data)
+{
+    switch (data[SFP_OFFSET_NOMINAL_BR]) {
+    case 0xFF:
+        if ((data[SFP_OFFSET_MAX_BR] * SFP_OFFSET_MAX_BR_UNITS == 25750) ||
+                (data[SFP_OFFSET_MAX_BR] * SFP_OFFSET_MAX_BR_UNITS == 25500)) {
+            return SFP_BITRATE_25G;
+        }
+        break;
+    default:
+        break;
+    }
+    return SFP_BITRATE_10G;
+}
 
 static inline void
 sfp_25g_an_params (int port, uint32_t *tech_ability, uint32_t *fec_request)
@@ -65,6 +89,9 @@ sfp_sprom_parse (int port, uint8_t *data)
     }
 
     if (data[2] == 0x21) {
+        // HPE 10G DAC cables has byte3=0x81, byte8=0x0 and hence were being
+        // detected as 10G ER.
+        // Add byte2=0x21 check for it.
         // 10G Base CU
         xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_SFP_10GBASE_CU);
         xcvr_set_an_args(port, AN_USER_CAP_10GBKR, false, 0x0);
@@ -94,7 +121,19 @@ sfp_sprom_parse (int port, uint8_t *data)
 
     switch (data[SFP_OFFSET_EXT_SPEC_COMPLIANCE_CODES]) {
     case 0x0:
-        SDK_TRACE_DEBUG("Xcvr port %d SFP ext spec unspecified compliance code 0x0", port);
+        SDK_TRACE_DEBUG("Xcvr port %d SFP ext spec unspecified compliance code "
+                        "0x0", port);
+        // MOLEX 25G cables has byte2=0x21, byte8=0x4 and hence were being
+        // detected as 10G.
+        // Add bitrate check for 25G
+        if (sfp_bitrate(data) == SFP_BITRATE_25G) {
+            // 25GBASE-CR CA-L
+            xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_SFP_25GBASE_CR_L);
+            sfp_25g_an_params(port, &tech_ability, &fec_request);
+            xcvr_set_an_args(port, tech_ability, true, fec_request);
+            xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_25G);
+            xcvr_set_fec_type(port, port_fec_type_t::PORT_FEC_TYPE_FC);
+        }
         break;
     case 0x1:
         // 25GAUI C2M AOC - BER 5x10^(-5)
