@@ -25,7 +25,7 @@ run_gtest vnic
 run_gtest tep
 run_gtest if
 run_gtest mapping
-run_gtest mirror_session
+#run_gtest mirror_session
 run_gtest svc_mapping
 run_gtest ftl
 run_gtest dhcp_relay

@@ -175,7 +175,7 @@ public:
 
     /// \brief  return the device's IP address
     /// \return IP address of the device
-    ip_addr_t ip_addr(void) const { return ip_addr_; }
+    const ip_addr_t& ip_addr(void) const { return ip_addr_; }
 
     /// \brief  return the device's MAC addresss
     /// \return MAC address of the device

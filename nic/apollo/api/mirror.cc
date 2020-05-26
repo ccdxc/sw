@@ -119,36 +119,54 @@ mirror_session::init_config(api_ctxt_t *api_ctxt) {
     spec = &api_ctxt->api_params->mirror_session_spec;
     switch (spec->type) {
     case PDS_MIRROR_SESSION_TYPE_ERSPAN:
+        if (spec->erspan_spec.ip_addr.af != IP_AF_IPV4) {
+            PDS_TRACE_ERR("Only IPv4 ERSPAN collector is supported");
+            return SDK_RET_INVALID_ARG;
+        }
         vpc = vpc_find(&spec->erspan_spec.vpc);
-        if (vpc == NULL) {
+        if (unlikely(vpc == NULL)) {
             PDS_TRACE_ERR("Failed to initialize mirror session %s, vpc %s "
                           "not found", spec->key.str(),
                           spec->erspan_spec.vpc.str());
             return SDK_RET_INVALID_ARG;
         }
+        erspan_.type_ = spec->erspan_spec.type;
         erspan_.vpc_ = spec->erspan_spec.vpc;
-        if (vpc->type() == PDS_VPC_TYPE_UNDERLAY) {
-            // if this underlay VPC, make sure we know the destination (as a
-            // tunnel)
-            if (tep_find(&spec->erspan_spec.tep) == NULL) {
-                PDS_TRACE_ERR("Failed to initialize mirror session %s, "
-                              "tunnel %s not found", spec->key.str(),
-                              spec->erspan_spec.tep.str());
+        erspan_.dst_type_ = spec->erspan_spec.dst_type;
+        if (erspan_.dst_type_ == PDS_ERSPAN_DST_TYPE_TEP) {
+            if (unlikely(vpc->type() != PDS_VPC_TYPE_UNDERLAY)) {
+                PDS_TRACE_ERR("ERSPAN session %s has tunnel type dst, but "
+                              "vpc %s type %u is not underlay",
+                              spec->key.str(), spec->erspan_spec.vpc.str(),
+                              vpc->type());
                 return SDK_RET_INVALID_ARG;
             }
             erspan_.tep_ = spec->erspan_spec.tep;
-        } else {
-            erspan_.ip_ = spec->erspan_spec.ip_addr;
-            PDS_TRACE_ERR("ERSPAN to a overlay mapping is not supported");
-            return SDK_RET_INVALID_ARG;
+        } else if (erspan_.dst_type_ == PDS_ERSPAN_DST_TYPE_IP) {
+            if (vpc->type() == PDS_VPC_TYPE_UNDERLAY) {
+                // make sure the underlay IP is not our own TEP IP
+                auto mytep_ip = device_db()->find()->ip_addr();
+                if (unlikely(spec->erspan_spec.ip_addr.addr.v4_addr ==
+                                 mytep_ip.addr.v4_addr)) {
+                    PDS_TRACE_ERR("Mirror session %s ERSPAN collector IP can't "
+                                  "be local TEP IP %s", spec->key.str(),
+                                  ipaddr2str(&mytep_ip));
+                    return SDK_RET_INVALID_ARG;
+                }
+            } else {
+                // TODO: make sure the mapping is known
+                erspan_.ip_ = spec->erspan_spec.ip_addr;
+                PDS_TRACE_ERR("ERSPAN to a overlay mapping is not supported");
+                return SDK_RET_INVALID_ARG;
+            }
         }
         break;
 
     case PDS_MIRROR_SESSION_TYPE_RSPAN:
         intf = if_find(&spec->rspan_spec.interface);
-        if (intf) {
-            if ((intf->type() != IF_TYPE_ETH) &&
-                (intf->type() != IF_TYPE_UPLINK)) {
+        if (likely(intf)) {
+            if (unlikely((intf->type() != IF_TYPE_ETH) &&
+                         (intf->type() != IF_TYPE_UPLINK))) {
                 PDS_TRACE_ERR("Invalid interface type %s in RSPAN config %s, "
                               "only eth and uplink interfaces are supported",
                               spec->rspan_spec.interface.str(),
@@ -164,8 +182,8 @@ mirror_session::init_config(api_ctxt_t *api_ctxt) {
                 return SDK_RET_INVALID_ARG;
             }
         }
-        if ((spec->rspan_spec.encap.type != PDS_ENCAP_TYPE_NONE) &&
-            (spec->rspan_spec.encap.type != PDS_ENCAP_TYPE_DOT1Q)) {
+        if (unlikely((spec->rspan_spec.encap.type != PDS_ENCAP_TYPE_NONE) &&
+                     (spec->rspan_spec.encap.type != PDS_ENCAP_TYPE_DOT1Q))) {
             PDS_TRACE_ERR("Unsupported encap %s in RSPAN config %s",
                           pds_encap2str(&spec->rspan_spec.encap),
                           spec->key.str());

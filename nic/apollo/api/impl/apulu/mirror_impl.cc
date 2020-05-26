@@ -95,20 +95,21 @@ mirror_impl::nuke_resources(api_base *api_obj) {
     return SDK_RET_OK;
 }
 
-#define nexthop_info    action_u.nexthop_nexthop_info
-#define rspan_action     action_u.mirror_rspan
-#define erspan_action    action_u.mirror_erspan
-#define lspan_action     action_u.mirror_lspan
+#define nexthop_info         action_u.nexthop_nexthop_info
+#define rspan_action         action_u.mirror_rspan
+#define erspan_action        action_u.mirror_erspan
+#define lspan_action         action_u.mirror_lspan
 sdk_ret_t
 mirror_impl::activate_create_(pds_epoch_t epoch, mirror_session *ms,
                               pds_mirror_session_spec_t *spec) {
+    sdk_ret_t ret;
     lif_impl *lif;
     if_entry *intf;
     vpc_entry *vpc;
     tep_entry *tep;
     uint32_t oport;
+    ip_addr_t mytep_ip;
     p4pd_error_t p4pd_ret;
-    sdk_ret_t ret;
     mapping_entry *mapping;
     nexthop_info_entry_t nh_data;
     mirror_actiondata_t mirror_data = { 0 };
@@ -163,18 +164,26 @@ mirror_impl::activate_create_(pds_epoch_t epoch, mirror_session *ms,
     case PDS_MIRROR_SESSION_TYPE_ERSPAN:
         mirror_data.action_id = MIRROR_ERSPAN_ID;
         vpc = vpc_find(&spec->erspan_spec.vpc);
-        if (vpc->type() == PDS_VPC_TYPE_UNDERLAY) {
-            // lookup the destination TEP
+        if (spec->erspan_spec.dst_type == PDS_ERSPAN_DST_TYPE_TEP) {
             tep = tep_find(&spec->erspan_spec.tep);
+            mirror_data.erspan_action.nexthop_type = NEXTHOP_TYPE_TUNNEL;
+            mytep_ip = device_db()->find()->ip_addr();
+            mirror_data.erspan_action.sip = mytep_ip.addr.v4_addr;
             if (tep) {
-                // TODO: what if this TEP is local TEP itself ?
-                //       - check this in init_config()
-                mirror_data.erspan_action.nexthop_type = NEXTHOP_TYPE_TUNNEL;
                 mirror_data.erspan_action.nexthop_id =
                     ((tep_impl *)(tep->impl()))->hw_id1();
+                mirror_data.erspan_action.dip = tep->ip().addr.v4_addr;
+                //mirror_data.erspan_action.dmac;
+                //mirror_data.erspan_action.smac;
             } else {
-                // TODO: route lookup in the underlay route table
+                // when TEP is created, we will get update for IP reachability
+                // of this ERSPAN collector from BGP and we will update the
+                // mirror session at that time
+                mirror_data.erspan_action.nexthop_id =
+                    PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID;
             }
+        } else if (vpc->type() == PDS_VPC_TYPE_UNDERLAY) {
+            // lookup the destination TEP
         } else {
 #if 0
             // mirror destination is either local or remote mapping

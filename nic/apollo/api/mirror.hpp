@@ -210,8 +210,12 @@ private:
             pds_encap_t encap_;
         } rspan_;
         struct {
+            /// ERSPAN packet format type
+            pds_erspan_type_t type_;
             /// vpc where ERSPAN destination is (and the
             pds_obj_key_t vpc_;
+            /// ERSPAN collection/destination type
+            pds_erspan_dst_type_t dst_type_;
             union {
                 /// Tunnel IP, in case ERSPAN destination is in underlay VPC
                 pds_obj_key_t tep_;
