@@ -1,6 +1,7 @@
 package vchub
 
 import (
+	"context"
 	"fmt"
 	"sort"
 	"strings"
@@ -80,15 +81,37 @@ func (v *VCHub) startEventsListener() {
 					// Degraded -> Success should not resync
 					if previousState == orchestration.OrchestratorStatus_Degraded.String() ||
 						previousState == orchestration.OrchestratorStatus_Success.String() {
-						break
+						if v.IsSyncDone() {
+							break
+						}
+						// Sync was not completed on last connection event.
 					}
 					// sync and start watchers, network event watcher
 					// will not start until after sync finishes (blocked on processVeniceEvents flag)
 					v.discoveredDCsLock.Lock()
 					v.discoveredDCs = []string{}
 					v.discoveredDCsLock.Unlock()
-					v.sync()
 
+					// Sync is guaranteed to be the first function to run after connection success
+					// Connection will not be torn down before this point.
+					// We keep attempting to sync until successful or until the session
+					// is being torn down, in which case another connection event will be
+					// sent, triggering sync
+					_, err := v.probe.WithSession(func(ctx context.Context) (interface{}, error) {
+						synced := v.sync()
+						for !synced && ctx.Err() == nil {
+							select {
+							case <-ctx.Done():
+							case <-time.After(5 * time.Second):
+								synced = v.sync()
+							}
+						}
+						return synced, ctx.Err()
+					})
+					if err != nil {
+						// Session is being rebuilt now.
+						return
+					}
 					v.probe.StartWatchers()
 
 					v.watchStarted = true
@@ -115,6 +138,9 @@ func (v *VCHub) startEventsListener() {
 					v.processVeniceEventsLock.Lock()
 					v.processVeniceEvents = false
 					v.processVeniceEventsLock.Unlock()
+					v.syncLock.Lock()
+					v.syncDone = false
+					v.syncLock.Unlock()
 				} else if connStatus.State == orchestration.OrchestratorStatus_Degraded.String() {
 					evt = eventtypes.ORCH_CONNECTION_ERROR
 					msg = connStatus.Err.Error()
@@ -134,6 +160,7 @@ func (v *VCHub) startEventsListener() {
 					recorder.Event(evt, evtMsg, v.State.OrchConfig)
 				}
 
+				v.Log.Infof("Writing status update")
 				v.orchUpdateLock.Lock()
 				o.Orchestrator.Status.Status = connStatus.State
 				o.Orchestrator.Status.LastTransitionTime = &api.Timestamp{}
@@ -289,29 +316,7 @@ func (v *VCHub) handleDC(m defs.VCEventMsg) {
 			} else {
 				// Verify DC still exists
 				retryFn := func() {
-					v.Log.Infof("Retry Event: Create DC running")
-					dcs := v.probe.ListDC()
-					found := false
-					for _, dc := range dcs {
-						if name == dc.Name {
-							found = true
-							break
-						}
-					}
-
-					if !found {
-						v.Log.Infof("Retry event: DC %s no longer exists, nothing to do", name)
-						return
-					}
-					msg := defs.Probe2StoreMsg{
-						MsgType: defs.VCEvent,
-						Val:     m,
-					}
-					select {
-					case <-v.Ctx.Done():
-						return
-					case v.vcReadCh <- msg:
-					}
+					v.retryDCEvent(name, m)
 				}
 				v.TimerQ.Add(retryFn, retryDelay)
 			}
@@ -319,6 +324,40 @@ func (v *VCHub) handleDC(m defs.VCEventMsg) {
 
 		// update discovered list
 		v.addDiscoveredDC(name)
+	}
+}
+
+func (v *VCHub) retryDCEvent(name string, m defs.VCEventMsg) {
+	v.Log.Infof("Retry Event: Create DC running")
+	dcs, err := v.probe.ListDC()
+	if err != nil {
+		v.Log.Errorf("Failed to get a list of DCs, %s", err)
+		retryFn := func() {
+			v.retryDCEvent(name, m)
+		}
+		v.TimerQ.Add(retryFn, retryDelay)
+		return
+	}
+	found := false
+	for _, dc := range dcs {
+		if name == dc.Name {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		v.Log.Infof("Retry event: DC %s no longer exists, nothing to do", name)
+		return
+	}
+	msg := defs.Probe2StoreMsg{
+		MsgType: defs.VCEvent,
+		Val:     m,
+	}
+	select {
+	case <-v.Ctx.Done():
+		return
+	case v.vcReadCh <- msg:
 	}
 }
 

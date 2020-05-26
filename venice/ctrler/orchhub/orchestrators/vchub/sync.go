@@ -1,6 +1,7 @@
 package vchub
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/vmware/govmomi/vim25/mo"
@@ -23,7 +24,6 @@ func (v *VCHub) sync() bool {
 	v.syncLock.Lock()
 	v.syncDone = false
 	defer func() {
-		v.syncDone = true
 		v.syncLock.Unlock()
 	}()
 
@@ -80,7 +80,11 @@ func (v *VCHub) sync() bool {
 	**/
 	vmkMap := map[string]bool{}
 
-	dcs := v.probe.ListDC()
+	dcs, err := v.probe.ListDC()
+	if err != nil {
+		v.Log.Errorf("Failed to list DCs, %s", err)
+		return false
+	}
 	for _, dc := range dcs {
 		// TODO: Remove
 		if !v.isManagedNamespace(dc.Name) {
@@ -95,10 +99,26 @@ func (v *VCHub) sync() bool {
 		}
 		v.Log.Debugf("Created DC %s", dc.Name)
 		dcRef := dc.Reference()
-		dvsObjs := v.probe.ListDVS(&dcRef)
-		pgs := v.probe.ListPG(&dcRef)
-		vms := v.probe.ListVM(&dcRef)
-		vcHosts := v.ListPensandoHosts(&dcRef)
+		dvsObjs, err := v.probe.ListDVS(&dcRef)
+		if err != nil {
+			v.Log.Errorf("Failed to list dvs, %s", err)
+			return false
+		}
+		pgs, err := v.probe.ListPG(&dcRef)
+		if err != nil {
+			v.Log.Errorf("Failed to list PGs, %s", err)
+			return false
+		}
+		vms, err := v.probe.ListVM(&dcRef)
+		if err != nil {
+			v.Log.Errorf("Failed to list vms, %s", err)
+			return false
+		}
+		vcHosts, err := v.ListPensandoHosts(&dcRef)
+		if err != nil {
+			v.Log.Errorf("Failed to list hosts, %s", err)
+			return false
+		}
 
 		v.syncNetwork(nw, dc, dvsObjs, pgs)
 		v.syncNewHosts(dc, vcHosts, vmkMap)
@@ -115,6 +135,7 @@ func (v *VCHub) sync() bool {
 	}
 
 	v.Log.Infof("Sync done for VCHub. %v", v)
+	v.syncDone = true
 	return true
 }
 
@@ -178,7 +199,7 @@ func (v *VCHub) syncStaleHosts(dc mo.Datacenter, vcHosts []mo.HostSystem, hosts 
 			v.deleteWorkloadByName(wlName)
 
 			v.Log.Infof("Deleting stale host %s", host.Name)
-			v.deleteHost(host)
+			v.deleteHostState(host, true)
 		}
 	}
 }
@@ -321,7 +342,7 @@ func (v *VCHub) syncNetwork(networks []*ctkit.Network, dc mo.Datacenter, dvsObjs
 	}
 }
 
-func (v *VCHub) fetchVMs(penDC *PenDC) {
+func (v *VCHub) fetchVMs(penDC *PenDC) error {
 	v.Log.Infof("VCHub sync VMs only called")
 	v.syncLock.Lock()
 	defer func() {
@@ -335,22 +356,27 @@ func (v *VCHub) fetchVMs(penDC *PenDC) {
 	for !v.probe.IsSessionReady() && count > 0 {
 		select {
 		case <-v.Ctx.Done():
-			return
+			return fmt.Errorf("Ctx cancelled")
 		case <-time.After(1 * time.Second):
 			count--
 		}
 	}
 	if count == 0 {
-		v.Log.Infof("Probe session isn't connected, exiting sync...")
-		return
+		errMsg := "Probe session isn't connected"
+		v.Log.Infof(errMsg)
+		return fmt.Errorf(errMsg)
 	}
 
-	vms := v.probe.ListVM(&penDC.dcRef)
+	vms, err := v.probe.ListVM(&penDC.dcRef)
+	if err != nil {
+		return err
+	}
 
 	for _, vm := range vms {
 		m := v.convertWorkloadToEvent(penDC.dcRef.Value, penDC.Name, vm)
 		v.handleVM(m)
 	}
+	return nil
 }
 
 func (v *VCHub) syncVMs(workloads []*ctkit.Workload, dc mo.Datacenter, vms []mo.VirtualMachine, pgs []mo.DistributedVirtualPortgroup, vmkMap map[string]bool) {

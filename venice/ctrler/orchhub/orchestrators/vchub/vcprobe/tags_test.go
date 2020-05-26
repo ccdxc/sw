@@ -426,6 +426,13 @@ func TestTagWriting(t *testing.T) {
 	Assert(t, ok, "isVlanTag utility function failed")
 	AssertEquals(t, 1000, vlan, "isVlanTag utility function failed")
 
+	err = vcp.DestroyTags()
+	AssertOk(t, err, "Failed to destroy tags")
+
+	cats, err := th.tp.GetTagClient().GetCategories(context.Background())
+	AssertOk(t, err, "failed to get categories")
+	AssertEquals(t, 0, len(cats), "expected no categories but found %v", cats)
+
 }
 
 type testHelper struct {

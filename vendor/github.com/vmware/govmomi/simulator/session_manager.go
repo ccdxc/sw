@@ -22,6 +22,7 @@ import (
 	"net/http"
 	"reflect"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -34,6 +35,7 @@ import (
 
 type SessionManager struct {
 	mo.SessionManager
+	sync.Mutex
 
 	ServiceHostName string
 	TLSCert         func() string
@@ -145,7 +147,9 @@ func (s *SessionManager) LoginByToken(ctx *Context, req *types.LoginByToken) soa
 
 func (s *SessionManager) Logout(ctx *Context, _ *types.Logout) soap.HasFault {
 	session := ctx.Session
+	s.Lock()
 	delete(s.sessions, session.Key)
+	s.Unlock()
 	pc := Map.content().PropertyCollector
 
 	for ref, obj := range ctx.Session.Registry.objects {
@@ -361,9 +365,11 @@ func (s *Session) Get(ref types.ManagedObjectReference) mo.Reference {
 		m.CurrentSession = &s.UserSession
 
 		// TODO: we could maintain SessionList as part of the SessionManager singleton
+		m.Lock()
 		for _, session := range m.sessions {
 			m.SessionList = append(m.SessionList, session.UserSession)
 		}
+		m.Unlock()
 
 		return &m
 	case "PropertyCollector":

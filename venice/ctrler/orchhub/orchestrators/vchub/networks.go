@@ -75,16 +75,24 @@ func (v *VCHub) handleNetworkEvent(evtType kvstore.WatchEventType, nw *network.N
 				errs := penDC.AddPG(pgName, nw.ObjectMeta, "")
 				if len(errs) == 0 && resync {
 					v.syncLock.RUnlock()
-					v.fetchVMs(penDC)
+					err := v.fetchVMs(penDC)
 					v.syncLock.RLock()
+					if err != nil {
+						errs = append(errs, err)
+						goto checkErrors
+					}
 
 					dcRef := penDC.dcRef
-					vcHosts := v.ListPensandoHosts(&dcRef)
+					vcHosts, err := v.ListPensandoHosts(&dcRef)
+					if errs != nil {
+						errs = append(errs, err)
+					}
 					for _, host := range vcHosts {
 						evt := v.convertHostToEvent(host, dcRef.Value, penDC.Name)
 						v.handleHost(evt)
 					}
 				}
+			checkErrors:
 				if len(errs) != 0 {
 					// add to queue to retry later
 					v.Log.Infof("Failed to add PG, adding to retry queue")

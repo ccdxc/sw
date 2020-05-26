@@ -89,15 +89,16 @@ type ProbeInf interface {
 	Stop()
 	IsSessionReady() bool
 	StartWatchers()
-	ListVM(dcRef *types.ManagedObjectReference) []mo.VirtualMachine
-	ListDC() []mo.Datacenter
-	GetDCMap() map[string]mo.Datacenter
-	ListDVS(dcRef *types.ManagedObjectReference) []mo.VmwareDistributedVirtualSwitch
-	ListPG(dcRef *types.ManagedObjectReference) []mo.DistributedVirtualPortgroup
-	ListHosts(dcRef *types.ManagedObjectReference) []mo.HostSystem
+	ListVM(dcRef *types.ManagedObjectReference) ([]mo.VirtualMachine, error)
+	ListDC() ([]mo.Datacenter, error)
+	GetDCMap() (map[string]mo.Datacenter, error)
+	ListDVS(dcRef *types.ManagedObjectReference) ([]mo.VmwareDistributedVirtualSwitch, error)
+	ListPG(dcRef *types.ManagedObjectReference) ([]mo.DistributedVirtualPortgroup, error)
+	ListHosts(dcRef *types.ManagedObjectReference) ([]mo.HostSystem, error)
 	StopWatchForDC(dcName, dcID string)
 	StartWatchForDC(dcName, dcID string)
 	GetVM(vmID string, retry int) (mo.VirtualMachine, error)
+	WithSession(func(context.Context) (interface{}, error)) (interface{}, error)
 
 	// datacenter.go functions
 	AddPenDC(dcName string, retry int) error
@@ -208,7 +209,7 @@ func (v *VCProbe) StartWatchers() {
 	if !v.Started || !v.IsSessionReady() {
 		return
 	}
-	v.Log.Debugf("Start Watchers starting")
+	v.Log.Infof("Start Watchers starting")
 
 	// Adding to watcher group so that clientCtx will be valid when accessed
 	v.WatcherWg.Add(1)
@@ -243,6 +244,17 @@ func (v *VCProbe) StartWatchers() {
 	}()
 
 	return
+}
+
+// WithSession ensures the given function runs till completion before
+// tearing down the session.
+func (v *VCProbe) WithSession(fn func(ctx context.Context) (interface{}, error)) (interface{}, error) {
+	if !v.Started || !v.IsSessionReady() {
+		return nil, fmt.Errorf("Session is not ready")
+	}
+	v.WatcherWg.Add(1)
+	defer v.WatcherWg.Done()
+	return fn(v.ClientCtx)
 }
 
 // StopWatchForDC terminates DC level watchers
@@ -481,6 +493,7 @@ func (v *VCProbe) ListObj(vcKind defs.VCObject, props []string, dst interface{},
 	kinds := []string{}
 	cView, err := viewMgr.CreateContainerView(v.probeCtx, *container, kinds, true)
 	if err != nil {
+		v.CheckSession = true
 		return err
 	}
 	defer cView.Destroy(v.probeCtx)
@@ -489,51 +502,54 @@ func (v *VCProbe) ListObj(vcKind defs.VCObject, props []string, dst interface{},
 }
 
 // ListVM returns a list of vms
-func (v *VCProbe) ListVM(dcRef *types.ManagedObjectReference) []mo.VirtualMachine {
+func (v *VCProbe) ListVM(dcRef *types.ManagedObjectReference) ([]mo.VirtualMachine, error) {
 	var vms []mo.VirtualMachine
-	v.ListObj(defs.VirtualMachine, vmProps, &vms, dcRef)
-	return vms
+	err := v.ListObj(defs.VirtualMachine, vmProps, &vms, dcRef)
+	return vms, err
 }
 
 // ListDC returns a list of DCs
-func (v *VCProbe) ListDC() []mo.Datacenter {
+func (v *VCProbe) ListDC() ([]mo.Datacenter, error) {
 	var dcs []mo.Datacenter
-	v.ListObj(defs.Datacenter, []string{"name"}, &dcs, nil)
-	return dcs
+	err := v.ListObj(defs.Datacenter, []string{"name"}, &dcs, nil)
+	return dcs, err
 }
 
 // GetDCMap returns a DC Name to DC map
-func (v *VCProbe) GetDCMap() map[string]mo.Datacenter {
+func (v *VCProbe) GetDCMap() (map[string]mo.Datacenter, error) {
 	dcMap := make(map[string]mo.Datacenter)
 
-	dcList := v.ListDC()
+	dcList, err := v.ListDC()
+	if err != nil {
+		return dcMap, err
+	}
 	for _, dc := range dcList {
 		dcMap[dc.Name] = dc
 	}
 
-	return dcMap
+	return dcMap, nil
 }
 
 // ListDVS returns a list of DVS objects
-func (v *VCProbe) ListDVS(dcRef *types.ManagedObjectReference) []mo.VmwareDistributedVirtualSwitch {
+func (v *VCProbe) ListDVS(dcRef *types.ManagedObjectReference) ([]mo.VmwareDistributedVirtualSwitch, error) {
 	var dcs []mo.VmwareDistributedVirtualSwitch
 	// any properties changed here need to be changed in probe's mock.go
-	v.ListObj(defs.VmwareDistributedVirtualSwitch, []string{"name", "config"}, &dcs, dcRef)
-	return dcs
+	err := v.ListObj(defs.VmwareDistributedVirtualSwitch, []string{"name", "config"}, &dcs, dcRef)
+	return dcs, err
 }
 
 // ListPG returns a list of PGs
-func (v *VCProbe) ListPG(dcRef *types.ManagedObjectReference) []mo.DistributedVirtualPortgroup {
+func (v *VCProbe) ListPG(dcRef *types.ManagedObjectReference) ([]mo.DistributedVirtualPortgroup, error) {
 	var dcs []mo.DistributedVirtualPortgroup
-	v.ListObj(defs.DistributedVirtualPortgroup, []string{"config", "name", "tag"}, &dcs, dcRef)
-	return dcs
+	err := v.ListObj(defs.DistributedVirtualPortgroup, []string{"config", "name", "tag"}, &dcs, dcRef)
+	return dcs, err
 }
 
 // ListHosts returns a list of Hosts
-func (v *VCProbe) ListHosts(dcRef *types.ManagedObjectReference) []mo.HostSystem {
+func (v *VCProbe) ListHosts(dcRef *types.ManagedObjectReference) ([]mo.HostSystem, error) {
 	var hosts []mo.HostSystem
-	v.ListObj(defs.HostSystem, []string{"config", "name"}, &hosts, dcRef)
-	return hosts
+	err := v.ListObj(defs.HostSystem, []string{"config", "name"}, &hosts, dcRef)
+	return hosts, err
 }
 
 // GetVM fetches the given VM by ID

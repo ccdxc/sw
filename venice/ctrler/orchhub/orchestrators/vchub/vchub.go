@@ -309,9 +309,11 @@ func (v *VCHub) isCredentialChanged(config *orchestration.Orchestrator) bool {
 // UpdateConfig handles if the Orchestrator config has changed
 func (v *VCHub) UpdateConfig(config *orchestration.Orchestrator) {
 	v.Log.Infof("VCHub config updated. : Orch : %v", config.ObjectMeta)
-	v.reconcileNamespaces(config)
+	err := v.reconcileNamespaces(config)
+	// If we are unable to reconcile namespaces, we should restart vchub
+	// to make sure we are managing the correct DCs
 
-	if v.isCredentialChanged(config) {
+	if v.isCredentialChanged(config) || err != nil {
 		v.Log.Infof("Credentials were updated. Restarting VCHub")
 		v.Destroy(false)
 		v.setupVCHub(v.StateMgr, config, v.Log, v.opts...)
@@ -382,9 +384,12 @@ func (v *VCHub) Reconnect(kind string) {
 }
 
 // ListPensandoHosts List only Pensando Hosts from vCenter
-func (v *VCHub) ListPensandoHosts(dcRef *types.ManagedObjectReference) []mo.HostSystem {
-	hosts := v.probe.ListHosts(dcRef)
+func (v *VCHub) ListPensandoHosts(dcRef *types.ManagedObjectReference) ([]mo.HostSystem, error) {
 	var penHosts []mo.HostSystem
+	hosts, err := v.probe.ListHosts(dcRef)
+	if err != nil {
+		return penHosts, err
+	}
 	for _, host := range hosts {
 		if !isPensandoHost(host.Config) {
 			v.Log.Debugf("Skipping non-Pensando Host %s", host.Name)
@@ -392,7 +397,7 @@ func (v *VCHub) ListPensandoHosts(dcRef *types.ManagedObjectReference) []mo.Host
 		}
 		penHosts = append(penHosts, host)
 	}
-	return penHosts
+	return penHosts, nil
 }
 
 func (v *VCHub) reconcileNamespaces(config *orchestration.Orchestrator) error {
@@ -407,13 +412,32 @@ func (v *VCHub) reconcileNamespaces(config *orchestration.Orchestrator) error {
 	v.syncLock.RLock()
 	defer v.syncLock.RUnlock()
 
-	managedNamespaces := v.getManagedNamespaceList()
+	dcMap, err := v.probe.GetDCMap()
+	if err != nil {
+		v.Log.Errorf("Failed to get dc mapping during reconcileNamepsace, %s", err)
+		return err
+	}
+
 	newManagedNamespaces := []string{}
+	// Get currently managed namespaces
+	managedNamespaces := []string{}
+	v.ForceDCNamesLock.RLock()
+	defer v.ForceDCNamesLock.RUnlock()
+
+	if ok := v.ForceDCNames[utils.ManageAllDcs]; ok {
+		for k := range dcMap {
+			managedNamespaces = append(managedNamespaces, k)
+		}
+	} else {
+		for k := range v.ForceDCNames {
+			managedNamespaces = append(managedNamespaces, k)
+		}
+	}
 
 	// If url is different, then we have all deletes.
 	if config.Spec.URI == v.OrchConfig.Spec.URI {
 		if len(config.Spec.ManageNamespaces) == 1 && config.Spec.ManageNamespaces[0] == utils.ManageAllDcs {
-			for k := range v.probe.GetDCMap() {
+			for k := range dcMap {
 				newManagedNamespaces = append(newManagedNamespaces, k)
 			}
 		} else {
@@ -438,7 +462,6 @@ func (v *VCHub) reconcileNamespaces(config *orchestration.Orchestrator) error {
 	}
 
 	if len(addedNs) > 0 {
-		dcMap := v.probe.GetDCMap()
 		for _, ns := range addedNs {
 			dc, ok := dcMap[ns]
 			if !ok {
@@ -455,8 +478,7 @@ func (v *VCHub) reconcileNamespaces(config *orchestration.Orchestrator) error {
 				retryFn := func() {
 					v.Log.Infof("Retry Event: Create DC running")
 					name := dc.Name
-					dcs := v.probe.GetDCMap()
-					dcObj, ok := dcs[name]
+					dcObj, ok := dcMap[name]
 					if !ok {
 						v.Log.Infof("Retry event: DC %s no longer exists, nothing to do", name)
 						return
@@ -490,24 +512,6 @@ func (v *VCHub) reconcileNamespaces(config *orchestration.Orchestrator) error {
 	}
 
 	return nil
-}
-
-func (v *VCHub) getManagedNamespaceList() []string {
-	nsList := []string{}
-	v.ForceDCNamesLock.RLock()
-	defer v.ForceDCNamesLock.RUnlock()
-
-	if ok := v.ForceDCNames[utils.ManageAllDcs]; ok {
-		for k := range v.probe.GetDCMap() {
-			nsList = append(nsList, k)
-		}
-	} else {
-		for k := range v.ForceDCNames {
-			nsList = append(nsList, k)
-		}
-	}
-
-	return nsList
 }
 
 // Check if the given DC(namespace) is managed by this vchub
@@ -546,7 +550,7 @@ func (v *VCHub) parseVMKeyFromWorkloadName(workloadName string) (vmKey string) {
 	return fmt.Sprintf("%s", utils.ParseGlobalKey(v.OrchID, "", workloadName))
 }
 
-// IsSyncDone return status of the sync - used by test programs only
+// IsSyncDone return status of the sync
 func (v *VCHub) IsSyncDone() bool {
 	v.syncLock.RLock()
 	syncDone := v.syncDone

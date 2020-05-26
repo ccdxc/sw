@@ -40,6 +40,11 @@ func (v *VCHub) tagSync() {
 		v.Log.Errorf("Probe session isn't connected")
 		return
 	}
+	if !v.IsSyncDone() {
+		// Wait for sync to complete
+		v.Log.Errorf("Sync has not completed")
+		return
+	}
 	// Verify base tags are written
 	done := v.probe.SetupBaseTags() // Should this function be here?
 	v.Log.Debugf("VCHub setup base tags returned %v", done)

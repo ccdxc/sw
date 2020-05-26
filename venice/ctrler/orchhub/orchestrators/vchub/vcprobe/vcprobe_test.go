@@ -134,6 +134,8 @@ func TestListAndWatch(t *testing.T) {
 	// Start test
 	vcp.StartWatchers()
 	vcp.StartWatchForDC(testParams.TestDCName, dc.Obj.Reference().Value)
+	// duplicate call shouldn't have an effect
+	vcp.StartWatchForDC(testParams.TestDCName, dc.Obj.Reference().Value)
 
 	eventMap := make(map[defs.VCObject][]defs.Probe2StoreMsg)
 	doneCh := make(chan bool)
@@ -170,20 +172,25 @@ func TestListAndWatch(t *testing.T) {
 	// Testing list
 	s.AddDC("DC2")
 
-	dcMap := vcp.GetDCMap()
+	dcMap, err := vcp.GetDCMap()
+	AssertOk(t, err, "DcMap failed")
 	AssertEquals(t, 2, len(dcMap), "Get DC Map response length did not match exp")
-	dcs := vcp.ListDC()
+	dcs, err := vcp.ListDC()
+	AssertOk(t, err, "list dc failed")
 	AssertEquals(t, 2, len(dcs), "List DC response length did not match exp")
-	vms := vcp.ListVM(nil)
+	vms, err := vcp.ListVM(nil)
+	AssertOk(t, err, "list vm failed")
 	AssertEquals(t, 1, len(vms), "List VM response length did not match exp")
 	// Listing in DC2 should be 0
 	for _, dc := range dcs {
 		ref := dc.Reference()
 		if dc.Name == "DC2" {
-			vms := vcp.ListVM(&ref)
+			vms, err := vcp.ListVM(&ref)
+			AssertOk(t, err, "list vm failed")
 			AssertEquals(t, 0, len(vms), "List VM response length did not match exp")
 		} else {
-			vms := vcp.ListVM(&ref)
+			vms, err := vcp.ListVM(&ref)
+			AssertOk(t, err, "list vm failed")
 			AssertEquals(t, 1, len(vms), "List VM response length did not match exp")
 		}
 	}
@@ -192,7 +199,8 @@ func TestListAndWatch(t *testing.T) {
 	AssertEquals(t, vm1, vms[0], "VMs were not equal")
 
 	// Test host list
-	hosts := vcp.ListHosts(nil)
+	hosts, err := vcp.ListHosts(nil)
+	AssertOk(t, err, "list host failed")
 	AssertEquals(t, 1, len(hosts), "List Host response length did not match exp")
 
 	// Create DVS for listing
@@ -235,13 +243,14 @@ func TestListAndWatch(t *testing.T) {
 
 	// List PGs
 
-	pgs := vcp.ListPG(nil)
+	pgs, err := vcp.ListPG(nil)
+	AssertOk(t, err, "list PG failed")
 	// 1 extra PG for the uplink PG
 	AssertEquals(t, testParams.TestNumPG+1, len(pgs), "List PG response length did not match exp")
 
 	// This method doesn't work with sim unless using mockprobe
 	// Calling to increase coverage
-	_ = vcp.ListDVS(nil)
+	_, _ = vcp.ListDVS(nil)
 
 	vcp.StopWatchForDC(testParams.TestDCName, dc.Obj.Reference().Value)
 

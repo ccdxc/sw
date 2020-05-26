@@ -62,12 +62,15 @@ func extractPvlanID(spec *types.DVPortgroupConfigSpec) (int32, error) {
 }
 
 // ListPG lists PGs
-func (v *ProbeMock) ListPG(dcRef *types.ManagedObjectReference) []mo.DistributedVirtualPortgroup {
-	pgs := v.VCProbe.ListPG(dcRef)
-
-	err := v.ReserveClient()
+func (v *ProbeMock) ListPG(dcRef *types.ManagedObjectReference) ([]mo.DistributedVirtualPortgroup, error) {
+	pgs, err := v.VCProbe.ListPG(dcRef)
 	if err != nil {
-		return []mo.DistributedVirtualPortgroup{}
+		return pgs, err
+	}
+
+	err = v.ReserveClient()
+	if err != nil {
+		return pgs, err
 	}
 	client := v.GetClient()
 	finder := v.CreateFinder(client)
@@ -75,7 +78,7 @@ func (v *ProbeMock) ListPG(dcRef *types.ManagedObjectReference) []mo.Distributed
 	if err != nil {
 		v.Log.Errorf("Mock Probe failed to list datacenters, %s", err)
 		v.ReleaseClient()
-		return []mo.DistributedVirtualPortgroup{}
+		return pgs, err
 	}
 	v.ReleaseClient()
 
@@ -100,7 +103,7 @@ func (v *ProbeMock) ListPG(dcRef *types.ManagedObjectReference) []mo.Distributed
 			}
 		}
 	}
-	return pgs
+	return pgs, nil
 }
 
 // GetPGConfig gets PG configuration
@@ -124,16 +127,19 @@ func (v *ProbeMock) GetPGConfig(dcName string, pgName string, ps []string, retry
 }
 
 // ListDVS lists DVS objects
-func (v *ProbeMock) ListDVS(dcRef *types.ManagedObjectReference) []mo.VmwareDistributedVirtualSwitch {
+func (v *ProbeMock) ListDVS(dcRef *types.ManagedObjectReference) ([]mo.VmwareDistributedVirtualSwitch, error) {
 	var dvsObjs []mo.DistributedVirtualSwitch
 	var ret []mo.VmwareDistributedVirtualSwitch
-	v.VCProbe.ListObj("DistributedVirtualSwitch", []string{"name", "config"}, &dvsObjs, dcRef)
+	err := v.VCProbe.ListObj("DistributedVirtualSwitch", []string{"name", "config"}, &dvsObjs, dcRef)
+	if err != nil {
+		return ret, err
+	}
 	for _, obj := range dvsObjs {
 		ret = append(ret, mo.VmwareDistributedVirtualSwitch{
 			DistributedVirtualSwitch: obj,
 		})
 	}
-	return ret
+	return ret, nil
 }
 
 // UpdateDVSPortsVlan stores the changes locally since vcsim does not support reconfigureDVS

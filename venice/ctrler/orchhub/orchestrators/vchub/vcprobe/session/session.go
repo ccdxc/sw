@@ -238,11 +238,7 @@ func (s *Session) PeriodicSessionCheck(wg *sync.WaitGroup) {
 				versionErr = s.checkSupportedVersion(c)
 			}
 			if err == nil && versionErr == nil {
-				evt := ConnectionState{
-					orchestration.OrchestratorStatus_Success.String(),
-					nil,
-				}
-				s.sendConnEvent(evt)
+				// Success event is sent after for loop
 				s.logger.Infof("Connection success")
 				break
 			}
@@ -288,6 +284,13 @@ func (s *Session) PeriodicSessionCheck(wg *sync.WaitGroup) {
 		// Watchers will now be able to use the session
 		s.SessionReady = true
 
+		// Send the connection success event
+		evt := ConnectionState{
+			orchestration.OrchestratorStatus_Success.String(),
+			nil,
+		}
+		s.sendConnEvent(evt)
+
 		s.logger.Infof("Tags session check starting...")
 
 		// Start tag session check
@@ -323,6 +326,7 @@ func (s *Session) PeriodicSessionCheck(wg *sync.WaitGroup) {
 							}
 							s.sendConnEvent(evt)
 						} else {
+							s.logger.Infof("Tags client is connected")
 							s.CheckTagSession = false
 							evt := ConnectionState{
 								orchestration.OrchestratorStatus_Success.String(),
@@ -371,7 +375,7 @@ func (s *Session) PeriodicSessionCheck(wg *sync.WaitGroup) {
 		}
 		// Set status to unknown
 		// Status will be updated to either success or failure after login attempt
-		evt := ConnectionState{
+		evt = ConnectionState{
 			orchestration.OrchestratorStatus_Unknown.String(),
 			nil,
 		}

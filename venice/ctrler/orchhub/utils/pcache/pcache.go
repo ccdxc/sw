@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/pensando/sw/api"
+	apierrors "github.com/pensando/sw/api/errors"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/api/generated/workload"
@@ -72,7 +73,7 @@ type PCache struct {
 
 // NewPCache creates a new instance of pcache
 func NewPCache(stateMgr *statemgr.Statemgr, logger log.Logger) *PCache {
-	logger.Debugf("Creating pcache")
+	logger.Infof("Creating pcache")
 	return &PCache{
 		stateMgr:      stateMgr,
 		Log:           logger,
@@ -258,7 +259,8 @@ func (p *PCache) validateAndPush(kindMap *kindEntry, in interface{}, validateFn 
 			//   5xx should retry?
 			//   Unsupported object error
 			// Update in map for now
-			p.Log.Errorf("%s write to stateMgr failed, err:%s", key, err.Error())
+			apiErr := apierrors.FromError(err)
+			p.Log.Errorf("%s write to stateMgr failed, err: %v", key, apiErr)
 			kindMap.entries[key] = in
 		} else if _, ok := kindMap.entries[key]; ok {
 			p.Log.Debugf("%s write successful, removing from cache", key)
@@ -269,7 +271,7 @@ func (p *PCache) validateAndPush(kindMap *kindEntry, in interface{}, validateFn 
 			p.Log.Debugf("%s object passed validation but shouldCommit was false, putting in cache", key)
 		} else if shouldCommit {
 			// not valid but commit, means remove from apiserver if previously committed
-			p.Log.Debugf("%s object failed  validation but shouldCommit was true, remove from stateMgr and put it in cache", key)
+			p.Log.Infof("%s object failed  validation but shouldCommit was true, remove from stateMgr and put it in cache", key)
 			p.deleteStatemgr(in)
 		} else {
 			p.Log.Debugf("%s object failed validation, putting in cache", key)
@@ -293,23 +295,28 @@ func (p *PCache) IsValid(kind string, meta *api.ObjectMeta) bool {
 	return false
 }
 
-// Set adds the object to stateMgr if the object is valid and changed, and stores it in the cache otherwise
-func (p *PCache) Set(kind string, in interface{}) error {
-	p.Log.Infof("Set called for kind : %v and Object : %v", kind, in)
-
-	// Get entries for the kind
+func (p *PCache) getKind(kind string) (*kindEntry, ValidatorFn) {
 	p.RLock()
 	kindMap, ok := p.kinds[kind]
 	validateFn := p.validators[kind]
 	p.RUnlock()
 	if !ok {
+		p.Lock()
 		kindMap = &kindEntry{
 			entries: make(map[string]interface{}),
 		}
-		p.Lock()
 		p.kinds[kind] = kindMap
 		p.Unlock()
 	}
+	return kindMap, validateFn
+}
+
+// Set adds the object to stateMgr if the object is valid and changed, and stores it in the cache otherwise
+func (p *PCache) Set(kind string, in interface{}) error {
+	p.Log.Infof("Set called for kind : %v and Object : %v", kind, in)
+
+	// Get entries for the kind
+	kindMap, validateFn := p.getKind(kind)
 
 	kindMap.Lock()
 	defer kindMap.Unlock()
@@ -480,7 +487,33 @@ func (p *PCache) deleteStatemgr(in interface{}) error {
 		if _, err := ctrler.Host().Find(meta); err == nil {
 			// Object exists
 			p.Log.Debugf("%s %s deleting from statemgr", HostKind, meta.GetKey())
+			// Delete workloads on the host first
+			workloadMap, _ := p.getKind(WorkloadKind)
+			// Don't want other operations on workloads happening at the same time
+			workloadMap.Lock()
+			opts := api.ListWatchOptions{}
+			p.Log.Infof("removing workloads on host %s from statemgr", meta.GetKey())
+			wlList, err := ctrler.Workload().List(context.Background(), &opts)
+			if err == nil {
+				dummyValidate := func(in interface{}) (bool, bool) {
+					// Keep in pcache but remove from apiserver
+					return false, true
+				}
+				for _, wl := range wlList {
+					if wl.Spec.HostName != obj.Name {
+						continue
+					}
+					p.Log.Infof("removing workload %s on host %s from statemgr", wl.Name, meta.GetKey())
+					p.validateAndPush(workloadMap, &wl.Workload, dummyValidate)
+				}
+			} else {
+				p.Log.Errorf("Workload list failed %s", err)
+			}
+
 			writeErr = ctrler.Host().Delete(obj)
+			// Unlock after host delete so that any calls to validateWorkload happen after this host is removed
+			// from statemgr
+			workloadMap.Unlock()
 			p.Log.Debugf("%s %s deleting from statemgr returned %v", HostKind, meta.GetKey(), writeErr)
 		}
 		return writeErr

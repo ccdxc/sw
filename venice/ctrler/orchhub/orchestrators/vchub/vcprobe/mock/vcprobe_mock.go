@@ -5,6 +5,7 @@
 package mock
 
 import (
+	context "context"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -298,10 +299,11 @@ func (mr *MockProbeInfMockRecorder) StartWatchers() *gomock.Call {
 }
 
 // ListVM mocks base method
-func (m *MockProbeInf) ListVM(dcRef *types.ManagedObjectReference) []mo.VirtualMachine {
+func (m *MockProbeInf) ListVM(dcRef *types.ManagedObjectReference) ([]mo.VirtualMachine, error) {
 	ret := m.ctrl.Call(m, "ListVM", dcRef)
 	ret0, _ := ret[0].([]mo.VirtualMachine)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // ListVM indicates an expected call of ListVM
@@ -310,10 +312,11 @@ func (mr *MockProbeInfMockRecorder) ListVM(dcRef interface{}) *gomock.Call {
 }
 
 // ListDC mocks base method
-func (m *MockProbeInf) ListDC() []mo.Datacenter {
+func (m *MockProbeInf) ListDC() ([]mo.Datacenter, error) {
 	ret := m.ctrl.Call(m, "ListDC")
 	ret0, _ := ret[0].([]mo.Datacenter)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // ListDC indicates an expected call of ListDC
@@ -322,10 +325,11 @@ func (mr *MockProbeInfMockRecorder) ListDC() *gomock.Call {
 }
 
 // GetDCMap mocks base method
-func (m *MockProbeInf) GetDCMap() map[string]mo.Datacenter {
+func (m *MockProbeInf) GetDCMap() (map[string]mo.Datacenter, error) {
 	ret := m.ctrl.Call(m, "GetDCMap")
 	ret0, _ := ret[0].(map[string]mo.Datacenter)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // GetDCMap indicates an expected call of GetDCMap
@@ -334,10 +338,11 @@ func (mr *MockProbeInfMockRecorder) GetDCMap() *gomock.Call {
 }
 
 // ListDVS mocks base method
-func (m *MockProbeInf) ListDVS(dcRef *types.ManagedObjectReference) []mo.VmwareDistributedVirtualSwitch {
+func (m *MockProbeInf) ListDVS(dcRef *types.ManagedObjectReference) ([]mo.VmwareDistributedVirtualSwitch, error) {
 	ret := m.ctrl.Call(m, "ListDVS", dcRef)
 	ret0, _ := ret[0].([]mo.VmwareDistributedVirtualSwitch)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // ListDVS indicates an expected call of ListDVS
@@ -346,10 +351,11 @@ func (mr *MockProbeInfMockRecorder) ListDVS(dcRef interface{}) *gomock.Call {
 }
 
 // ListPG mocks base method
-func (m *MockProbeInf) ListPG(dcRef *types.ManagedObjectReference) []mo.DistributedVirtualPortgroup {
+func (m *MockProbeInf) ListPG(dcRef *types.ManagedObjectReference) ([]mo.DistributedVirtualPortgroup, error) {
 	ret := m.ctrl.Call(m, "ListPG", dcRef)
 	ret0, _ := ret[0].([]mo.DistributedVirtualPortgroup)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // ListPG indicates an expected call of ListPG
@@ -358,10 +364,11 @@ func (mr *MockProbeInfMockRecorder) ListPG(dcRef interface{}) *gomock.Call {
 }
 
 // ListHosts mocks base method
-func (m *MockProbeInf) ListHosts(dcRef *types.ManagedObjectReference) []mo.HostSystem {
+func (m *MockProbeInf) ListHosts(dcRef *types.ManagedObjectReference) ([]mo.HostSystem, error) {
 	ret := m.ctrl.Call(m, "ListHosts", dcRef)
 	ret0, _ := ret[0].([]mo.HostSystem)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // ListHosts indicates an expected call of ListHosts
@@ -400,6 +407,19 @@ func (m *MockProbeInf) GetVM(vmID string, retry int) (mo.VirtualMachine, error) 
 // GetVM indicates an expected call of GetVM
 func (mr *MockProbeInfMockRecorder) GetVM(vmID, retry interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVM", reflect.TypeOf((*MockProbeInf)(nil).GetVM), vmID, retry)
+}
+
+// WithSession mocks base method
+func (m *MockProbeInf) WithSession(arg0 func(context.Context) (interface{}, error)) (interface{}, error) {
+	ret := m.ctrl.Call(m, "WithSession", arg0)
+	ret0, _ := ret[0].(interface{})
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// WithSession indicates an expected call of WithSession
+func (mr *MockProbeInfMockRecorder) WithSession(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WithSession", reflect.TypeOf((*MockProbeInf)(nil).WithSession), arg0)
 }
 
 // AddPenDC mocks base method

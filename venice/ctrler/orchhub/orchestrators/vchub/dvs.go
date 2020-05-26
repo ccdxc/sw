@@ -361,6 +361,11 @@ func (v *VCHub) verifyOverrides(forceWrite bool) {
 		v.Log.Errorf("Probe session isn't connected")
 		return
 	}
+	if !v.IsSyncDone() {
+		// Wait for sync to complete
+		v.Log.Errorf("Sync has not completed")
+		return
+	}
 
 	processDC := func(dc *PenDC) {
 		dc.Lock()

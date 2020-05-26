@@ -3107,6 +3107,182 @@ func TestVerifyOverride(t *testing.T) {
 
 }
 
+func TestHostUplinkModification(t *testing.T) {
+	logger := setupLogger("vchub_test_uplinkMod")
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	var vchub *VCHub
+	var s *sim.VcSim
+	var err error
+	var vcp *mock.ProbeMock
+
+	defer func() {
+		logger.Infof("Tearing Down")
+		if vchub != nil {
+			vchub.Destroy(false)
+		}
+
+		cancel()
+		vcp.Wg.Wait()
+
+		if s != nil {
+			s.Destroy()
+		}
+	}()
+	u := createURL(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+
+	s, err = sim.NewVcSim(sim.Config{Addr: u.String()})
+	AssertOk(t, err, "Failed to create vcsim")
+	dcName := defaultTestParams.TestDCName
+	dc1, err := s.AddDC(dcName)
+	AssertOk(t, err, "failed dc create")
+
+	vcp = createProbe(ctx, defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+
+	AssertEventually(t, func() (bool, interface{}) {
+		if !vcp.IsSessionReady() {
+			return false, fmt.Errorf("Session not ready")
+		}
+		return true, nil
+	}, "Session is not Ready", "1s", "10s")
+
+	// Create DVS
+	pvlanConfigSpecArray := testutils.GenPVLANConfigSpecArray(defaultTestParams, "add")
+	dvsCreateSpec := testutils.GenDVSCreateSpec(defaultTestParams, pvlanConfigSpecArray)
+
+	err = vcp.AddPenDVS(dcName, dvsCreateSpec, nil, retryCount)
+	dvsName := CreateDVSName(dcName)
+	dvs, ok := dc1.GetDVS(dvsName)
+	Assert(t, ok, "failed dvs create")
+
+	hostSystem1, err := dc1.AddHost("host1")
+	AssertOk(t, err, "failed host1 create")
+	err = dvs.AddHost(hostSystem1)
+	AssertOk(t, err, "failed to add Host to DVS")
+
+	pNicMac := append(createPenPnicBase(), 0xaa, 0x00, 0x00)
+	// Make it Pensando host
+	err = hostSystem1.AddNic("vmnic0", conv.MacString(pNicMac))
+
+	sm, _, err := smmock.NewMockStateManager()
+	if err != nil {
+		t.Fatalf("Failed to create state manager. Err : %v", err)
+		return
+	}
+
+	spec := testutils.GenPGConfigSpec(CreatePGName("pg1"), 2, 3)
+	err = vcp.AddPenPG(dc1.Obj.Name, dvs.Obj.Name, &spec, nil, retryCount)
+	AssertOk(t, err, "failed to create pg")
+	pg, err := vcp.GetPenPG(dc1.Obj.Name, CreatePGName("pg1"), retryCount)
+	AssertOk(t, err, "failed to get pg")
+
+	// Create VM on this PG
+	_, err = dc1.AddVM("vm1", "host1", []sim.VNIC{
+		sim.VNIC{
+			MacAddress:   "aa:aa:bb:bb:dd:dd",
+			PortgroupKey: pg.Reference().Value,
+			PortKey:      "11",
+		},
+		sim.VNIC{
+			MacAddress:   "aa:aa:bb:bb:dd:ee",
+			PortgroupKey: pg.Reference().Value,
+			PortKey:      "12",
+		},
+	})
+
+	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	orchConfig.Spec.ManageNamespaces = []string{utils.ManageAllDcs}
+
+	err = sm.Controller().Orchestrator().Create(orchConfig)
+
+	// Add network, workload should appear
+	orchInfo1 := []*network.OrchestratorInfo{
+		{
+			Name:      orchConfig.Name,
+			Namespace: defaultTestParams.TestDCName,
+		},
+	}
+	smmock.CreateNetwork(sm, "default", "pg1", "11.1.1.0/24", "11.1.1.1", 500, nil, orchInfo1)
+
+	overrideRewriteDelay = 500 * time.Millisecond
+	vchub = LaunchVCHub(sm, orchConfig, logger, WithMockProbe)
+
+	// Wait for it to come up
+	AssertEventually(t, func() (bool, interface{}) {
+		return vchub.IsSyncDone(), nil
+	}, "VCHub sync never finished")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		wl, err := sm.Controller().Workload().List(context.Background(), &api.ListWatchOptions{})
+		if err != nil {
+			return false, err
+		}
+		if len(wl) != 1 {
+			return false, fmt.Errorf("Found %d workloads", len(wl))
+		}
+
+		hosts, err := sm.Controller().Host().List(context.Background(), &api.ListWatchOptions{})
+		if err != nil {
+			return false, err
+		}
+		if len(hosts) != 1 {
+			return false, fmt.Errorf("Found %d hosts", len(wl))
+		}
+
+		return true, nil
+	}, "Failed to get wl and host")
+
+	// Remove uplinks
+	err = dvs.RemoveHost(hostSystem1)
+	AssertOk(t, err, "Failed to remove host")
+
+	// Host and workload should be gone from statemgr
+	AssertEventually(t, func() (bool, interface{}) {
+		wl, err := sm.Controller().Workload().List(context.Background(), &api.ListWatchOptions{})
+		if err != nil {
+			return false, err
+		}
+		if len(wl) != 0 {
+			return false, fmt.Errorf("Found %d workloads", len(wl))
+		}
+
+		hosts, err := sm.Controller().Host().List(context.Background(), &api.ListWatchOptions{})
+		if err != nil {
+			return false, err
+		}
+		if len(hosts) != 0 {
+			return false, fmt.Errorf("Found %d hosts", len(wl))
+		}
+
+		return true, nil
+	}, "Failed to get wl and host")
+
+	// Adding uplink back should re-add hosts
+	dvs.AddHost(hostSystem1)
+
+	AssertEventually(t, func() (bool, interface{}) {
+		wl, err := sm.Controller().Workload().List(context.Background(), &api.ListWatchOptions{})
+		if err != nil {
+			return false, err
+		}
+		if len(wl) != 1 {
+			return false, fmt.Errorf("Found %d workloads", len(wl))
+		}
+
+		hosts, err := sm.Controller().Host().List(context.Background(), &api.ListWatchOptions{})
+		if err != nil {
+			return false, err
+		}
+		if len(hosts) != 1 {
+			return false, fmt.Errorf("Found %d hosts", len(wl))
+		}
+
+		return true, nil
+	}, "Failed to get wl and host")
+
+}
+
 func setupLogger(logName string) log.Logger {
 	config := log.GetDefaultConfig(logName)
 	config.LogToStdout = true

@@ -47,6 +47,11 @@ func (v *VCHub) handleHost(m defs.VCEventMsg) {
 	meta := &api.ObjectMeta{
 		Name: v.createHostName(m.DcID, m.Key),
 	}
+	stateMgrHost, err := v.StateMgr.Controller().Host().Find(meta)
+	if err != nil {
+		stateMgrHost = nil
+	}
+
 	existingHost := v.pCache.GetHost(meta)
 	var hostObj *cluster.Host
 
@@ -71,7 +76,7 @@ func (v *VCHub) handleHost(m defs.VCEventMsg) {
 			// Don't have object we received delete for
 			return
 		}
-		v.deleteHost(hostObj)
+		v.deleteHostState(hostObj, true)
 		return
 	}
 
@@ -114,7 +119,7 @@ func (v *VCHub) handleHost(m defs.VCEventMsg) {
 		v.updateVmkWorkloadLabels(hostObj.Name, m.DcName, dispName)
 	}
 
-	if existingHost == nil {
+	if stateMgrHost == nil {
 		v.Log.Infof("Creating host %s", hostObj.Name)
 		// Check if there are any stale hosts with the same DSC
 		v.fixStaleHost(hostObj)
@@ -126,7 +131,7 @@ func (v *VCHub) handleHost(m defs.VCEventMsg) {
 
 	v.syncHostVmkNics(penDC, penDVS, dispName, m.Key, hConfig)
 
-	if existingHost != nil {
+	if stateMgrHost != nil {
 		v.Log.Infof("Updating host %s", hostObj.Name)
 		v.pCache.Set(string(cluster.KindHost), hostObj)
 		// Revalidate kind call is not needed here.
@@ -142,7 +147,7 @@ func (v *VCHub) validateHost(in interface{}) (bool, bool) {
 	}
 	if len(obj.Spec.DSCs) == 0 {
 		v.Log.Errorf("host %s has no DSC", obj.GetObjectMeta().Name)
-		return false, false
+		return false, true
 	}
 	return true, true
 }
@@ -260,26 +265,16 @@ searchHosts:
 		// Host we found matches our state. Nothing to do.
 		return nil
 	}
-	v.deleteHost(hostFound)
+	v.deleteHostState(hostFound, true)
 	return nil
 }
 
 func (v *VCHub) hostRemovedFromDVS(host *cluster.Host) {
 	v.Log.Infof("Host %s Removed from Pen-DVS", host.Name)
-	opts := api.ListWatchOptions{}
-	wlList, err := v.StateMgr.Controller().Workload().List(v.Ctx, &opts)
-	if err == nil {
-		for _, wl := range wlList {
-			if wl.Spec.HostName != host.Name {
-				continue
-			}
-			v.deleteWorkload(&wl.Workload)
-		}
-	}
-	v.deleteHost(host)
+	v.deleteHostState(host, false)
 }
 
-func (v *VCHub) deleteHost(obj *cluster.Host) {
+func (v *VCHub) deleteHostState(obj *cluster.Host, deleteObj bool) {
 	if obj.Labels == nil {
 		// all hosts created from orchhub will have labels
 		v.Log.Debugf("deleteHost - no lables")
@@ -291,12 +286,12 @@ func (v *VCHub) deleteHost(obj *cluster.Host) {
 		return
 	}
 	penDC := v.GetDC(dcName)
-	v.deleteHostFromDc(obj, penDC)
+	v.deleteHostStateFromDc(obj, penDC, deleteObj)
 
 	return
 }
 
-func (v *VCHub) deleteHostFromDc(obj *cluster.Host, penDC *PenDC) {
+func (v *VCHub) deleteHostStateFromDc(obj *cluster.Host, penDC *PenDC, deleteObj bool) {
 	if obj.Labels == nil {
 		// all hosts created from orchhub will have labels
 		v.Log.Debugf("deleteHostFromDc - no lables")
@@ -311,11 +306,12 @@ func (v *VCHub) deleteHostFromDc(obj *cluster.Host, penDC *PenDC) {
 			penDC.delHostNameKey(hostName)
 		}
 	}
-	v.Log.Infof("Deleting host %s", obj.Name)
-	// Delete from apiserver, but not from pcache so that we still have
-	// display name in case it is re-added to dvs
-	if err := v.StateMgr.Controller().Host().Delete(obj); err != nil {
-		v.Log.Errorf("Could not delete host from Venice %s", obj.Name)
+	if deleteObj {
+		v.Log.Infof("Deleting host %s", obj.Name)
+		// Delete from apiserver, but not from pcache so that we still have
+		if err := v.pCache.Delete(string(cluster.KindHost), obj); err != nil {
+			v.Log.Errorf("Could not delete host from Venice %s", obj.Name)
+		}
 	}
 }
 
@@ -330,7 +326,7 @@ func (v *VCHub) DeleteHosts() {
 			continue
 		}
 		// Delete host
-		v.deleteHost(host)
+		v.deleteHostState(host, true)
 	}
 }
 
