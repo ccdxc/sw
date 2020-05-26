@@ -385,6 +385,9 @@
                                     fxFlex="glow" fxLayout="column"
                                     [interfaceStats]="interfaceStats"
                                     [mouseOverInterface]="mouseOverInterface"
+                                    [counterStarted]="interfaceStats_counting"
+                                    (startCount)="startInterfaceStatsCounter()"
+                                    (stopCount)="stopInterfaceStatsCounter()"
                                     (collapseExpandClickEmit)="onCollapseExpandClick($event)"
                                     class="naplesdetail-interface-table">
           </app-naplesdetail-iftable>

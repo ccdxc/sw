@@ -9,15 +9,13 @@ import { Utility } from '@app/common/Utility';
   encapsulation: ViewEncapsulation.None
 })
 
-export class NaplesdetailIftableComponent implements OnInit {
+export class NaplesdetailIftableComponent {
   @Input() interfaceStats: InterfaceStats[] = [];
   @Input() mouseOverInterface: string = '';
+  @Input() counterStarted: boolean = false;
   @Output() collapseExpandClickEmit: EventEmitter<string> = new EventEmitter();
-
-  constructor() { }
-
-  ngOnInit() {
-  }
+  @Output() startCount: EventEmitter<string> = new EventEmitter();
+  @Output() stopCount: EventEmitter<string> = new EventEmitter();
 
   showStatsNumber (num: number): string {
     if (num === -1) {
@@ -43,6 +41,14 @@ export class NaplesdetailIftableComponent implements OnInit {
 
   collapseInterfaceTable() {
     this.collapseExpandClickEmit.emit('collapse');
+  }
+
+  toggleCounterButton() {
+    if (this.counterStarted) {
+      this.stopCount.emit();
+    } else {
+      this.startCount.emit();
+    }
   }
 }
 

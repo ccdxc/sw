@@ -62,6 +62,20 @@ export interface InterfaceStats {
     tx2: number,
     rxDrop2: number,
     txDrop2: number
+    // third set for bandwidth
+    rxBandwidth: number,
+    txBandwidth: number,
+    rxBandwidth2: number,
+    txBandwidth2: number,
+    // differ
+    rx_dif: number,
+    tx_dif: number,
+    rxDrop_dif: number,
+    txDrop_dif: number,
+    rx2_dif: number,
+    tx2_dif: number,
+    rxDrop2_dif: number,
+    txDrop2_dif: number
   };
 }
 
@@ -179,6 +193,8 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
   dscprofileOptions: SelectItem[] = [];
 
   maxium_number_displayedWorkloads: number = 10;
+
+  interfaceStats_counting: boolean = false;
 
   constructor(protected _controllerService: ControllerService,
     private _route: ActivatedRoute,
@@ -376,7 +392,16 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
     }
   }
 
-  updateInterfacesStats() {
+  startInterfaceStatsCounter() {
+    this.interfaceStats_counting = true;
+  }
+
+  stopInterfaceStatsCounter() {
+    this.interfaceStats_counting = false;
+    this.updateInterfacesStats(true);
+  }
+
+  updateInterfacesStats(isClean: boolean = false) {
     const lifStats = this.lifInterfacePollingStats;
     const pifStats = this.pifInterfacePollingStats;
     const interfaceStats = this.interfaceStats;
@@ -389,14 +414,47 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
           return interf.shortname === tagsName.substring(tagsName.length - 10);
         });
         if (itf) {
-          itf.stats.rx = item.values[0][1];
-          itf.stats.tx = item.values[0][2];
-          itf.stats.rx2 = item.values[0][3];
-          itf.stats.tx2 = item.values[0][4];
-          itf.stats.rxDrop = -1000;
-          itf.stats.txDrop = -1000;
-          itf.stats.rxDrop2 = -1000;
-          itf.stats.txDrop2 = -1000;
+          if (isClean) {
+            itf.stats.rx_dif = 0;
+            itf.stats.tx_dif = 0;
+            itf.stats.rx2_dif = 0;
+            itf.stats.tx2_dif = 0;
+          } else {
+            if (this.interfaceStats_counting && itf.stats.rx !== -1) {
+              itf.stats.rx_dif = item.values[0][1] - itf.stats.rx;
+            }
+            itf.stats.rx = item.values[0][1];
+
+            if (this.interfaceStats_counting && itf.stats.tx !== -1) {
+              itf.stats.tx_dif = item.values[0][2] - itf.stats.tx;
+            }
+            itf.stats.tx = item.values[0][2];
+
+            if (this.interfaceStats_counting && itf.stats.rx2 !== -1) {
+              itf.stats.rx2_dif = item.values[0][3] - itf.stats.rx2;
+            }
+            itf.stats.rx2 = item.values[0][3];
+
+            if (this.interfaceStats_counting && itf.stats.tx2 !== -1) {
+              itf.stats.tx2_dif = item.values[0][4] - itf.stats.tx2;
+            }
+            itf.stats.tx2 = item.values[0][4];
+
+            itf.stats.rxDrop = -1000;
+            itf.stats.txDrop = -1000;
+            itf.stats.rxDrop2 = -1000;
+            itf.stats.txDrop2 = -1000;
+
+            itf.stats.rxDrop_dif = -1000;
+            itf.stats.txDrop_dif = -1000;
+            itf.stats.rxDrop2_dif = -1000;
+            itf.stats.txDrop2_dif = -1000;
+
+            itf.stats.rxBandwidth = item.values[0][5];
+            itf.stats.txBandwidth = item.values[0][6];
+            itf.stats.rxBandwidth2 = item.values[0][7];
+            itf.stats.txBandwidth2 = item.values[0][8];
+          }
         }
       });
     }
@@ -410,17 +468,69 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
           return interf.ifname === tags.name;
         });
         if (itf) {
-          itf.stats.rx = item.values[0][7];
-          itf.stats.tx = item.values[0][8];
-          itf.stats.rxDrop = item.values[0][1] + item.values[0][2] + item.values[0][3];
-          itf.stats.txDrop = item.values[0][4] + item.values[0][5] + item.values[0][6];
-          itf.stats.rxDrop2 = item.values[0][9] + item.values[0][10] + item.values[0][11];
-          itf.stats.txDrop2 = item.values[0][12] + item.values[0][13] + item.values[0][14];
-          itf.stats.rx2 = item.values[0][15] + item.values[0][16] + item.values[0][17];
-          itf.stats.tx2 = item.values[0][18] + item.values[0][19] + item.values[0][20];
+          if (isClean) {
+            itf.stats.rx_dif = 0;
+            itf.stats.tx_dif = 0;
+            itf.stats.rx2_dif = 0;
+            itf.stats.tx2_dif = 0;
+            itf.stats.rxDrop_dif = 0;
+            itf.stats.txDrop_dif = 0;
+            itf.stats.rxDrop2_dif = 0;
+            itf.stats.txDrop2_dif = 0;
+          } else {
+            if (this.interfaceStats_counting && itf.stats.rx !== -1) {
+              itf.stats.rx_dif = item.values[0][7] - itf.stats.rx;
+            }
+            itf.stats.rx = item.values[0][7];
+
+            if (this.interfaceStats_counting && itf.stats.tx !== -1) {
+              itf.stats.tx_dif = item.values[0][8] - itf.stats.tx;
+            }
+            itf.stats.tx = item.values[0][8];
+
+            if (this.interfaceStats_counting && itf.stats.rx2 !== -1) {
+              itf.stats.rx2_dif = item.values[0][15] - itf.stats.rx2;
+            }
+            itf.stats.rx2 = item.values[0][15];
+
+            if (this.interfaceStats_counting && itf.stats.tx2 !== -1) {
+              itf.stats.tx2_dif = item.values[0][16] - itf.stats.tx2;
+            }
+            itf.stats.tx2 = item.values[0][16];
+
+            const newRxDrop = item.values[0][1] + item.values[0][2] + item.values[0][3];
+            if (this.interfaceStats_counting && itf.stats.rxDrop !== -1) {
+              itf.stats.rxDrop_dif = newRxDrop - itf.stats.rxDrop;
+            }
+            itf.stats.rxDrop = newRxDrop;
+
+            const newTxDrop = item.values[0][4] + item.values[0][5] + item.values[0][6];
+            if (this.interfaceStats_counting && itf.stats.txDrop !== -1) {
+              itf.stats.txDrop_dif = newTxDrop - itf.stats.txDrop;
+            }
+            itf.stats.txDrop = newTxDrop;
+
+            const newRxDrop2 = item.values[0][9] + item.values[0][10] + item.values[0][11];
+            if (this.interfaceStats_counting && itf.stats.rxDrop2 !== -1) {
+              itf.stats.rxDrop2_dif = newRxDrop2 - itf.stats.rxDrop2;
+            }
+            itf.stats.rxDrop2 = newRxDrop2;
+
+            const newTxDrop2 = item.values[0][12] + item.values[0][13] + item.values[0][14];
+            if (this.interfaceStats_counting && itf.stats.txDrop2 !== -1) {
+              itf.stats.txDrop2_dif = newTxDrop2 - itf.stats.txDrop2;
+            }
+            itf.stats.txDrop2 = newTxDrop2;
+
+            itf.stats.rxBandwidth = item.values[0][17];
+            itf.stats.txBandwidth = item.values[0][18];
+            itf.stats.rxBandwidth2 = item.values[0][19];
+            itf.stats.txBandwidth2 = item.values[0][20];
+          }
         }
       });
     }
+
     // if current selected interfac having not stats, then  move to one having stats
     const selectedInterfaceStats: InterfaceStats = this.interfaceStats.find(
         (inf: InterfaceStats) => inf.ifname === this.mouseOverInterface);
@@ -449,7 +559,19 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
             rx2: -1,
             tx2: -1,
             rxDrop2: -1,
-            txDrop2: -1
+            txDrop2: -1,
+            rxBandwidth: -1,
+            txBandwidth: -1,
+            rxBandwidth2: -1,
+            txBandwidth2: -1,
+            rx_dif: 0,
+            tx_dif: 0,
+            rxDrop_dif: 0,
+            txDrop_dif: 0,
+            rx2_dif: 0,
+            tx2_dif: 0,
+            rxDrop2_dif: 0,
+            txDrop2_dif: 0
           }
         });
       }
@@ -661,16 +783,16 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
       };
       const query1: MetricsPollingQuery = this.topologyInterfaceQuery(
         'LifMetrics', ['RxDropBroadcastBytes', 'RxDropMulticastBytes', 'RxDropUnicastBytes',
-        'TxDropBroadcastBytes', 'TxDropMulticastBytes', 'TxDropUnicastBytes', 'RxTotalBytes',
-        'TxTotalBytes', 'RxDropBroadcastPackets', 'RxDropMulticastPackets', 'RxDropUnicastPackets',
+        'TxDropBroadcastBytes', 'TxDropMulticastBytes', 'TxDropUnicastBytes', 'RxBytes',
+        'TxBytes', 'RxDropBroadcastPackets', 'RxDropMulticastPackets', 'RxDropUnicastPackets',
         'TxDropBroadcastPackets', 'TxDropMulticastPackets', 'TxDropUnicastPackets',
-        'RxBroadcastPackets', 'RxMulticastPackets', 'RxUnicastPackets', 'TxBroadcastPackets',
-        'TxMulticastPackets', 'TxUnicastPackets'],
+        'RxPkts', 'TxPkts', 'RxBytesps', 'TxBytesps', 'RxPps', 'TxPps'],
         MetricsUtility.createReporterIDSelector(this.selectedId));
       queryList.queries.push(query1);
 
       const query2: MetricsPollingQuery = this.topologyInterfaceQuery(
-        'MacMetrics', ['OctetsRxOk', 'OctetsTxOk', 'FramesRxOk', 'FramesTxOk'],
+        'MacMetrics', ['OctetsRxOk', 'OctetsTxOk', 'FramesRxOk', 'FramesTxOk',
+        'RxBytesps', 'TxBytesps', 'RxPps', 'TxPps'],
         MetricsUtility.createReporterIDSelector(this.selectedId));
       queryList.queries.push(query2);
 
@@ -693,8 +815,8 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
              ["2020-04-24T06:26:33.000000001Z",68674314086022,2743570971019
       */
 
-      // refresh every 5 minutes
-      const sub = this.metricsqueryService.pollMetrics('topologyInterfaces', queryList, MetricsUtility.FIVE_MINUTES).subscribe(
+      // refresh every 35 seconds
+      const sub = this.metricsqueryService.pollMetrics('topologyInterfaces', queryList, MetricsUtility.THIRTYFIVE_SECONDS).subscribe(
         (data: ITelemetry_queryMetricsQueryResponse) => {
           if (data && data.results && data.results.length === queryList.queries.length) {
             this.lifInterfacePollingStats = data.results[0];

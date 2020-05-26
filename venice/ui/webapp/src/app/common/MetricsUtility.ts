@@ -104,6 +104,8 @@ export class MetricsUtility {
 
   public static FIVE_MINUTES: number = 5 * 60 * 1000;
 
+  public static THIRTYFIVE_SECONDS: number = 35 * 1000;
+
   public static getStatArrowDirection(prev: number, curr: number): StatArrowDirection {
     if (prev < curr) {
       return StatArrowDirection.UP;

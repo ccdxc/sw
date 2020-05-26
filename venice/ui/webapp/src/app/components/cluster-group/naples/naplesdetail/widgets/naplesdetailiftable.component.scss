@@ -9,6 +9,18 @@
     cursor: pointer;
   }
 
+  .naplesdetail-interface-table-button-counter {
+    font-size: 14px;
+    font-weight: 400;
+    color: #676763 !important;
+    background-color: #f4f4f4 !important;
+    border: 1px solid #ddd !important;
+    box-shadow: 0 2px 3px 0 rgba(0, 0, 0, 0.15) !important;
+    cursor: pointer;
+    height: 25px;
+    padding: 0 10px;
+  }
+
   p-table {
     margin: 5px;
 
@@ -28,7 +40,7 @@
     }
 
     tr.selected {
-      background-color: rgb(234, 231, 224) !important;
+      background-color: rgb(238, 231, 224) !important;
     }
 
     th,
@@ -46,11 +58,25 @@
       border-top: 1px solid transparent;
     }
 
+    tr.naplesdetail-interface-row-notopborder th {
+      border-top: 0px solid transparent;
+    }
+
+    th.naplesdetail-interface-cell-noborder,
+    td.naplesdetail-interface-cell-noborder {
+      border-bottom: 1px solid transparent;
+    }
+
     th {
       background-color: #e7e7e3;
-      font-size: 14px;
+      font-size: 12px;
       border-right: 1px solid #fff;
-      border-top: 1px solid #D5D5D5
+      border-top: 1px solid #D5D5D5;
+      vertical-align: middle;
+    }
+
+    th.naplesdetail-interface-col-textmiddle {
+      text-align: center;
     }
 
     th:last-of-type {

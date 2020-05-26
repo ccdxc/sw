@@ -1,78 +1,118 @@
 <div fxFlex="none" class="naplesdetail-interface-table" fxLayout="column"
      fxLayoutAlign="start flex-end">
-  <div class="detail-card-header-actions">
+  <div class="detail-card-header-actions" fxLayout="row"
+       fxLayoutAlign="space-between center">
+    <button pButton type="button" fxFlex="none" (click)="toggleCounterButton()"
+            class="naplesdetail-interface-table-button-counter">
+      {{ counterStarted ? 'Stop Counter' : 'Start Counter' }}
+    </button>
     <div class="naplesdetail-interface-table-collapseicon" title="collapse"
          (click)="collapseInterfaceTable()"></div>
   </div>
   <p-table [value]="interfaceStats">
     <ng-template pTemplate="header">
       <tr>
-        <th class="naplesdetail-interface-col-doublefixwidth" colspan="2"></th>
-        <th colspan="2">TX</th>
-        <th colspan="2">RX</th>
-        <th colspan="2">TX Drop</th>
-        <th colspan="2">RX Drop</th>
+        <th
+            class="naplesdetail-interface-col-fixwidth naplesdetail-interface-col-textmiddle naplesdetail-interface-cell-noborder">
+          Interface</th>
+        <th
+            class="naplesdetail-interface-col-fixwidth naplesdetail-interface-col-textmiddle naplesdetail-interface-cell-noborder">
+          Status</th>
+        <th class="naplesdetail-interface-col-textmiddle" colspan="2">Bandwidth</th>
+        <th class="naplesdetail-interface-col-textmiddle" colspan="2">Total</th>
+        <th class="naplesdetail-interface-col-textmiddle" colspan="2">Drop</th>
       </tr>
-      <tr>
-        <th class="naplesdetail-interface-col-fixwidth">Interface</th>
-        <th class="naplesdetail-interface-col-fixwidth">Status</th>
-        <th class="naplesdetail-interface-col-bytes">Bytes</th>
-        <th>Packets</th>
-        <th class="naplesdetail-interface-col-bytes">Bytes</th>
-        <th>Packets</th>
-        <th class="naplesdetail-interface-col-bytes">Bytes</th>
-        <th>Packets</th>
-        <th class="naplesdetail-interface-col-bytes">Bytes</th>
-        <th>Packets</th>
+      <tr class="naplesdetail-interface-row-notopborder">
+        <th class="naplesdetail-interface-col-fixwidth naplesdetail-interface-cell-noborder"></th>
+        <th class="naplesdetail-interface-col-fixwidth naplesdetail-interface-cell-noborder"></th>
+        <th>TX Bytes/s</th>
+        <th>RX Bytes/s</th>
+        <th>TX Bytes</th>
+        <th>RX Bytes</th>
+        <th>TX Bytes</th>
+        <th>RX Bytes</th>
+      </tr>
+      <tr class="naplesdetail-interface-row-notopborder">
+        <th class="naplesdetail-interface-col-fixwidth"></th>
+        <th class="naplesdetail-interface-col-fixwidth"></th>
+        <th>TX Packets/s</th>
+        <th>RX Packets/s</th>
+        <th>TX Packets</th>
+        <th>RX Packets</th>
+        <th>TX Packets</th>
+        <th>RX Packets</th>
       </tr>
     </ng-template>
     <ng-template pTemplate="body" let-itf>
       <tr [ngClass]="{'selected': itf.ifname === mouseOverInterface}">
-        <td class="naplesdetail-interface-col-fixwidth">
+        <td class="naplesdetail-interface-col-fixwidth naplesdetail-interface-cell-noborder">
           <div class="ellipsisText">{{itf.shortname}}</div>
         </td>
-        <td class="naplesdetail-interface-col-fixwidth">
+        <td class="naplesdetail-interface-col-fixwidth naplesdetail-interface-cell-noborder">
           <div class="ellipsisText">{{itf.stats.status}}</div>
         </td>
-        <td class="naplesdetail-interface-col-bytes">
+        <td>
+          <div class="ellipsisText" [title]="showStatsNumber(itf.stats.txBandwidth)">
+            {{showStatsBytes(itf.stats.txBandwidth)}}
+          </div>
+        </td>
+        <td>
+          <div class="ellipsisText" [title]="showStatsNumber(itf.stats.rxBandwidth)">
+            {{showStatsBytes(itf.stats.rxBandwidth)}}
+          </div>
+        </td>
+        <td>
           <div class="ellipsisText" [title]="showStatsNumber(itf.stats.tx)">
-            {{showStatsBytes(itf.stats.tx)}}
+            {{showStatsBytes(counterStarted ? itf.stats.tx_dif : itf.stats.tx)}}
+          </div>
+        </td>
+        <td>
+          <div class="ellipsisText" [title]="showStatsNumber(itf.stats.rx)">
+            {{showStatsBytes(counterStarted ? itf.stats.rx_dif : itf.stats.rx)}}
+          </div>
+        </td>
+        <td>
+          <div class="ellipsisText" [title]="showStatsNumber(itf.stats.txDrop)">
+            {{showStatsBytes(counterStarted ? itf.stats.txDrop_dif : itf.stats.txDrop)}}
+          </div>
+        </td>
+        <td>
+          <div class="ellipsisText" [title]="showStatsNumber(itf.stats.rxDrop)">
+            {{showStatsBytes(counterStarted ? itf.stats.rxDrop_dif : itf.stats.rxDrop)}}
+          </div>
+        </td>
+      </tr>
+      <tr [ngClass]="{'selected': itf.ifname === mouseOverInterface}">
+        <td class="naplesdetail-interface-col-fixwidth"></td>
+        <td class="naplesdetail-interface-col-fixwidth"></td>
+        <td>
+          <div class="ellipsisText" [title]="showStatsNumber(itf.stats.txBandwidth2)">
+            {{showStatsNumber(itf.stats.txBandwidth2)}}
+          </div>
+        </td>
+        <td>
+          <div class="ellipsisText" [title]="showStatsNumber(itf.stats.rxBandwidth2)">
+            {{showStatsNumber(itf.stats.rxBandwidth2)}}
           </div>
         </td>
         <td>
           <div class="ellipsisText" [title]="showStatsNumber(itf.stats.tx2)">
-            {{showStatsNumber(itf.stats.tx2)}}
-          </div>
-        </td>
-        <td class="naplesdetail-interface-col-bytes">
-          <div class="ellipsisText" [title]="showStatsNumber(itf.stats.rx)">
-            {{showStatsBytes(itf.stats.rx)}}
+            {{showStatsNumber(counterStarted ? itf.stats.tx2_dif : itf.stats.tx2)}}
           </div>
         </td>
         <td>
           <div class="ellipsisText" [title]="showStatsNumber(itf.stats.rx2)">
-            {{showStatsNumber(itf.stats.rx2)}}
-          </div>
-        </td>
-
-        <td class="naplesdetail-interface-col-bytes">
-          <div class="ellipsisText" [title]="showStatsNumber(itf.stats.txDrop)">
-            {{showStatsBytes(itf.stats.txDrop)}}
+            {{showStatsNumber(counterStarted ? itf.stats.rx2_dif : itf.stats.rx2)}}
           </div>
         </td>
         <td>
           <div class="ellipsisText" [title]="showStatsNumber(itf.stats.txDrop2)">
-            {{showStatsNumber(itf.stats.txDrop2)}}
-          </div>
-        </td>
-        <td class="naplesdetail-interface-col-bytes">
-          <div class="ellipsisText" [title]="showStatsNumber(itf.stats.rxDrop)">
-            {{showStatsBytes(itf.stats.rxDrop)}}
+            {{showStatsNumber(counterStarted ? itf.stats.txDrop2_dif : itf.stats.txDrop2)}}
           </div>
         </td>
         <td>
           <div class="ellipsisText" [title]="showStatsNumber(itf.stats.rxDrop2)">
-            {{showStatsNumber(itf.stats.rxDrop2)}}
+            {{showStatsNumber(counterStarted ? itf.stats.rxDrop2_dif : itf.stats.rxDrop2)}}
           </div>
         </td>
       </tr>
