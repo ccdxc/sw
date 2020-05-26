@@ -59,7 +59,7 @@ def Trigger(tc):
             if tc.os == naples_host.OS_TYPE_WINDOWS:
                 intf = ionic_utils.winHalIntfName(host.node_name, intf)
                 # HAL yaml o/p is Pen..Adapter, halctl cli op/ is pen..adap.
-                intf = intf.lower();
+                intf = intf.lower()
 
             if lif_info.find(intf) == -1:
                 api.Logger.error("interface %s not found" % intf)

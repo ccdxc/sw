@@ -1,7 +1,6 @@
 #! /usr/bin/python3
 import iota.harness.api as api
 import iota.test.utils.naples_host as host
-import iota.test.iris.utils.address as address_utils
 import yaml
 
 def GetHALShowOutput(naples_node, show_cmd, args=None, yaml=True):
@@ -81,10 +80,11 @@ def GetLifId_intfName_mapping(naples_node):
             # eg., inb_mnic0/lif67
             # so until that is fixed, temp hack to strip the "/lif<lif_id>" suffix
             intfName = intfName.split("/")[0]
-            if os == host.OS_TYPE_WINDOWS and intfName[:4] =="Pen~":
+            if os == host.OS_TYPE_WINDOWS and intfName[3] == "~":
                 found = False
                 for intf in mapping.values():
-                    if intfName[4:] == intf["ifDesc"][4 - len(intfName):]:
+                    fullName = intf["ifDesc"]
+                    if intfName[4:] == fullName[4 - len(intfName):] and intfName[:3] == fullName[:3]:
                         intfName = intf["LinuxName"]
                         found = True
                         break
@@ -118,10 +118,11 @@ def GetIntfName2LifId_mapping(naples_node):
             # eg., inb_mnic0/lif67
             # so until that is fixed, temp hack to strip the "/lif<lif_id>" suffix
             intfName = intfName.split("/")[0]
-            if os == host.OS_TYPE_WINDOWS and intfName[:4] =="Pen~":
+            if os == host.OS_TYPE_WINDOWS and intfName[3] == "~":
                 found = False
                 for intf in mapping.values():
-                    if intfName[4:] == intf["ifDesc"][4 - len(intfName):]:
+                    fullName = intf["ifDesc"]
+                    if intfName[4:] == fullName[4 - len(intfName):] and intfName[:3] == fullName[:3]:
                         intfName = intf["LinuxName"]
                         found = True
                         break

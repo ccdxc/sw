@@ -246,7 +246,7 @@ def winIntfJson(node, intf, key):
     if resp is None:
         api.Logger.error("Failed to run host cmd: %s on host: %s"
                          %(hostCmd, node))
-        return api.types.status.FAILURE
+        return ""
 
     cmd = resp.commands[0]
     if cmd.exit_code != 0:
@@ -254,13 +254,13 @@ def winIntfJson(node, intf, key):
                          " exit code: %d" %
                          (hostCmd, node, cmd.exit_code))
         api.PrintCommandResults(cmd)
-        return api.types.status.FAILURE
+        return ""
 
     try:
         jsonOut = json.loads(cmd.stdout)
     except:
         api.Logger.error("Failed to parse iperf json output :", cmd.stdout)
-        return api.types.status.FAILURE
+        return ""
     
     value = jsonOut[key]
     api.Logger.debug("%s[%s]: %s" %(intf, key, value))
@@ -273,21 +273,21 @@ def winIntfGuid(node, intf):
 
 #
 # Windows interface name translation from Linux ethX name
-# ethX is Windows "Pensando DSC 2p 40/100G Services Adapter #""
-# same in HAL -yaml name is "Pen~ Adapeter" 
+# ethX is Windows "Pensando DSC 2p 40/100G Services Adapter"
+# same in HAL -yaml name is "Pen~ Adaptor"
 #
 def winHalIntfName(node, intf):
     winName = winIntfJson(node, intf, "ifDesc")
-    # HAL name is trimmed for Windows so
+    # HAL name is trimmed for Windows due to length limited to 15 char
     # Pensando -> Pen~
-    # First interface missing "#"
-    if winName.find('Interface') == -1:
-        halName = re.sub("Pensando.*Interface", "Pen~t Interface", winName)
+    if len(winName) > 15:
+        halName = winName[:3] + '~' + winName[len(winName) - 11:]
     else:
-        halName = re.sub("Pensando.*Card", "Pen~ces Card", winName)
+        halName = winName
     api.Logger.info("(Win Name): Linux: %s -> Windows name: %s -> Hal name: %s" % (intf, winName, halName))
     return halName
-                
+
+
 # Use Interface GUID to get tcpdump -D index value for tcpdump -i input
 def winTcpDumpIdx(node, intfGuid):
     hostCmd = ("/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe "
@@ -299,7 +299,7 @@ def winTcpDumpIdx(node, intfGuid):
     if resp is None:
         api.Logger.error("Failed to run host cmd: %s on host: %s"
                          %(hostCmd, node))
-        return api.types.status.FAILURE
+        return -1
 
     cmd = resp.commands[0]
     if cmd.exit_code != 0:
@@ -307,13 +307,13 @@ def winTcpDumpIdx(node, intfGuid):
                          " exit code: %d" %
                          (hostCmd, node, cmd.exit_code))
         api.PrintCommandResults(cmd)
-        return api.types.status.FAILURE
+        return -1
 
     try:
         jsonOut = json.loads(cmd.stdout)
     except:
         api.Logger.error("Failed to parse iperf json output :", cmd.stdout)
-        return api.types.status.FAILURE
+        return -1
     
     for line in jsonOut:
         if line.find(str(intfGuid)) != -1:
