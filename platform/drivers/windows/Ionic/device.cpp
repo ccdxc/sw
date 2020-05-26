@@ -300,6 +300,9 @@ ionic_init(struct ionic *ionic)
 
     NdisAllocateSpinLock(&ionic->tx_frag_pool_lock);
 
+    NDIS_INIT_MUTEX(&ionic->LinkCheckMutex);
+    InitWorkerThread(&ionic->LinkCheckWorker);
+
     if (ionic->tx_frag_pool_count != 0) {
 
         buffer_len =

@@ -1539,29 +1539,7 @@ oid_set_information(struct ionic *ionic,
     }
 
     case OID_GEN_NETWORK_LAYER_ADDRESSES: {
-
-        NETWORK_ADDRESS_LIST *pNetAddr = (NETWORK_ADDRESS_LIST *)info_buffer;
-        NETWORK_ADDRESS *pAddr = NULL;
-        ULONG ulIndex = 0;
-
-        DbgTrace((TRACE_COMPONENT_OID, TRACE_LEVEL_VERBOSE,
-                  "%s (OID_GEN_NETWORK_LAYER_ADDRESSES) Address Count %d\n",
-                  __FUNCTION__, pNetAddr->AddressCount));
-
-        pAddr = pNetAddr->Address;
-
-        while (ulIndex < (ULONG)pNetAddr->AddressCount) {
-
-            DbgTrace((TRACE_COMPONENT_OID, TRACE_LEVEL_VERBOSE, "\tType %d\n",
-                      pAddr->AddressType));
-
-            pAddr =
-                (NETWORK_ADDRESS *)((char *)pAddr + sizeof(NETWORK_ADDRESS) +
-                                    pAddr->AddressLength - 1);
-
-            ulIndex++;
-        }
-
+	// No-op
         break;
     }
 

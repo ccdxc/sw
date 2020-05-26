@@ -609,10 +609,6 @@ InitializeEx(NDIS_HANDLE AdapterHandle,
         goto err_out_stop_ionic;
     }
 
-    NDIS_INIT_MUTEX(&adapter->LinkCheckMutex);
-
-    InitWorkerThread(&adapter->LinkCheckWorker);
-    
     StartWorkerThread(&adapter->LinkCheckWorker, LinkCheckWorkerThreadProc, adapter);
 
     adapter->hardware_status = NdisHardwareStatusReady;
