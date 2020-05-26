@@ -53,40 +53,71 @@ func NewSynchAuditor(elasticServer string, rslver resolver.Interface, logger log
 }
 
 func (a *synchAuditor) ProcessEvents(events ...*auditapi.AuditEvent) error {
-	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(30*time.Second))
-	defer cancel()
-	_, err := utils.ExecuteWithContext(ctx, func(nctx context.Context) (interface{}, error) {
-		// index single audit event; it is costly to perform bulk operation for a single event (doc)
-		if len(events) == 1 {
-			event := events[0]
-			if err := a.elasticClient.Index(ctx,
-				elastic.GetIndex(globals.AuditLogs, event.GetTenant()),
-				elastic.GetDocType(globals.AuditLogs), event.GetUUID(), event); err != nil {
-				a.logger.Errorf("error logging audit event to elastic, err: %v", err)
-				return false, err
-			}
-		} else {
-			// index multiple audit events; construct bulk audit events request
-			requests := make([]*elastic.BulkRequest, len(events))
-			for i, evt := range events {
-				requests[i] = &elastic.BulkRequest{
-					RequestType: "index",
-					IndexType:   elastic.GetDocType(globals.AuditLogs),
-					ID:          evt.GetUUID(),
-					Obj:         evt,
-					Index:       elastic.GetIndex(globals.AuditLogs, evt.GetTenant()),
+	var err error
+	// index single audit event; it is costly to perform bulk operation for a single event (doc)
+	if len(events) == 1 {
+		ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(30*time.Second))
+		defer cancel()
+		_, err = utils.ExecuteWithContext(ctx, func(nctx context.Context) (interface{}, error) {
+			if _, err := utils.ExecuteWithRetry(func(mctx context.Context) (interface{}, error) {
+				event := events[0]
+				if err := a.elasticClient.Index(ctx,
+					elastic.GetIndex(globals.AuditLogs, event.GetTenant()),
+					elastic.GetDocType(globals.AuditLogs), event.GetUUID(), event); err != nil {
+					a.logger.Errorf("error logging audit event to elastic, err: %v", err)
+					return false, err
 				}
-			}
-			if bulkResp, err := a.elasticClient.Bulk(ctx, requests); err != nil {
-				a.logger.Errorf("error logging bulk audit events to elastic, err: %v", err)
-				return false, err
-			} else if len(bulkResp.Failed()) > 0 {
-				a.logger.Errorf("bulk audit events logging failed on elastic")
+				return true, nil
+			}, 2*time.Second, 6); err != nil {
 				return false, err
 			}
-		}
-		return true, nil
-	})
+			return true, nil
+		})
+	} else {
+		ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(90*time.Second))
+		defer cancel()
+		_, err = utils.ExecuteWithContext(ctx, func(nctx context.Context) (interface{}, error) {
+			if _, err := utils.ExecuteWithRetry(func(mctx context.Context) (interface{}, error) {
+				// index multiple audit events; construct bulk audit events request
+				requests := make([]*elastic.BulkRequest, len(events))
+				for i, evt := range events {
+					requests[i] = &elastic.BulkRequest{
+						RequestType: "index",
+						IndexType:   elastic.GetDocType(globals.AuditLogs),
+						ID:          evt.GetUUID(),
+						Obj:         evt,
+						Index:       elastic.GetIndex(globals.AuditLogs, evt.GetTenant()),
+					}
+				}
+				fn := func(requests []*elastic.BulkRequest) (bool, error) {
+					if bulkResp, err := a.elasticClient.Bulk(ctx, requests); err != nil {
+						a.logger.Errorf("error logging bulk audit events to elastic, err: %v", err)
+						return false, err
+					} else if len(bulkResp.Failed()) > 0 {
+						a.logger.Errorf("bulk audit events logging failed on elastic")
+						return false, err
+					}
+					return true, nil
+				}
+				j := len(events) / 100
+				for i := 0; i <= j; i++ {
+					if i == j {
+						if len(events) > j*100 {
+							return fn(requests[j*100:])
+						}
+						return true, nil
+					}
+					if ok, err := fn(requests[i*100 : (i+1)*100]); err != nil {
+						return ok, err
+					}
+				}
+				return true, nil
+			}, 5*time.Second, 6); err != nil {
+				return false, err
+			}
+			return true, nil
+		})
+	}
 	return err
 }
 

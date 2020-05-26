@@ -1395,3 +1395,81 @@ func TestStagingBufferBulkeditAuditLogs(t *testing.T) {
 		}
 	}
 }
+
+func TestBulkProcessEvents(t *testing.T) {
+	ti := TestInfo{Name: t.Name()}
+	err := ti.SetupElastic()
+	if err != nil {
+		panic(fmt.Sprintf("setupElastic failed with error: %v", err))
+	}
+	defer ti.TeardownElastic()
+	auditor := auditmgr.WithAuditors(elasticauditor.NewSynchAuditor(ti.ElasticSearchAddr, ti.Rslvr, ti.Logger, elasticauditor.WithElasticClient(ti.ESClient)))
+	err = auditor.Run()
+	if err != nil {
+		panic(fmt.Sprintf("error starting elastic auditor: %v", err))
+	}
+	defer auditor.Shutdown()
+
+	ts, _ := types.TimestampProto(time.Now())
+	ts1 := api.Timestamp{Timestamp: *ts}
+
+	tests := []struct {
+		name    string
+		numEvts int
+		query   es.Query
+	}{
+		{
+			name:    "101events",
+			numEvts: 101,
+			query:   es.NewBoolQuery().Must(es.NewTermQuery("resource.kind.keyword", "Alert"), es.NewTermQuery("resource.name.keyword", "101events")),
+		},
+		{
+			name:    "99events",
+			numEvts: 99,
+			query:   es.NewBoolQuery().Must(es.NewTermQuery("resource.kind.keyword", "Alert"), es.NewTermQuery("resource.name.keyword", "99events")),
+		},
+		{
+			name:    "1000events",
+			numEvts: 1000,
+			query:   es.NewBoolQuery().Must(es.NewTermQuery("resource.kind.keyword", "Alert"), es.NewTermQuery("resource.name.keyword", "1000events")),
+		},
+	}
+	for _, test := range tests {
+		var evts []*auditapi.AuditEvent
+		for i := 0; i < test.numEvts; i++ {
+			evt := &auditapi.AuditEvent{
+				TypeMeta:   api.TypeMeta{Kind: "AuditEvent"},
+				ObjectMeta: api.ObjectMeta{Name: fmt.Sprintf("%s-auditevent-%d", test.name, i), UUID: uuid.NewV4().String(), Tenant: "default", CreationTime: ts1, ModTime: ts1},
+				EventAttributes: auditapi.EventAttributes{
+					Stage:         "requestauthorization",
+					Level:         "request",
+					User:          &api.ObjectRef{Kind: "User", Namespace: "default", Tenant: "default", Name: "admin", URI: "/configs/auth/v1/tenant/default/users/admin"},
+					ClientIPs:     []string{"192.168.32.3"},
+					Resource:      &api.ObjectRef{Kind: "Alert", Namespace: "default", Tenant: "default", Name: test.name, URI: "/configs/monitoring/v1/tenant/default/alerts/3398731d-2e5d-4b57-8d82-9be9e3d975b0"},
+					Action:        "Update",
+					Outcome:       "success",
+					RequestURI:    "/configs/monitoring/v1/tenant/default/alerts/3398731d-2e5d-4b57-8d82-9be9e3d975b0",
+					RequestObject: "{\"kind\":\"Alert\",\"api-version\":\"v1\",\"meta\":{\"name\":\"3398731d-2e5d-4b57-8d82-9be9e3d975b0\",\"tenant\":\"default\",\"namespace\":\"default\",\"generation-id\":\"1\",\"resource-version\":\"366070\",\"uuid\":\"afd22586-4378-4349-8217-58df041efc20\",\"creation-time\":\"\",\"mod-time\":\"\"},\"spec\":{\"state\":\"resolved\"},\"status\":{\"severity\":\"critical\",\"source\":{\"component\":\"pen-orchhub\",\"node-name\":\"20.0.0.108\"},\"event-uri\":\"/events/v1/events/1aa564bc-9a98-4678-828d-94eca36d077b\",\"object-ref\":{\"kind\":\"Orchestrator\",\"name\":\"Vcenter6.7-broken\",\"uri\":\"/configs/orchestration/v1/orchestrator/Vcenter6.7-broken\"},\"message\":\"Vcenter6.7-broken : Connection issues with orchestrator. 503 Service Unavailable (Failed to connect to endpoint: [N7Vmacore4Http16LocalServiceSpecE:0x00007f180c01e0f0] _serverNamespace = /sdk action = Allow _port = 8085)\",\"reason\":{\"matched-requirements\":[{\"key\":\"Severity\",\"operator\":\"equals\",\"values\":[\"critical\"],\"observed-value\":\"critical\"}],\"alert-policy-id\":\"default-event-based-alerts/5ec7bda4-73b3-45a2-848f-d3b67cc637b7\"},\"acknowledged\":null,\"resolved\":null,\"total-hits\":1}}",
+					GatewayNode:   "venice-vm-3",
+					GatewayIP:     "[::]:443",
+					ServiceName:   "pen-apiserver",
+				},
+			}
+			evts = append(evts, evt)
+		}
+		err = auditor.ProcessEvents(evts...)
+		AssertOk(t, err, fmt.Sprintf("[%v] test failed, error in processing [%d] bulk requests", test.name, test.numEvts))
+		AssertEventually(t, func() (bool, interface{}) {
+			resp, err := ti.ESClient.Search(context.Background(),
+				elastic.GetIndex(globals.AuditLogs, globals.DefaultTenant), elastic.GetDocType(globals.AuditLogs), test.query, nil, 0, 10000, "", true)
+			if err != nil {
+				return false, err
+			}
+			hits := len(resp.Hits.Hits)
+			if test.numEvts != hits {
+				return false, fmt.Errorf("expected [%d] hits, got [%d]", test.numEvts, hits)
+			}
+			return true, nil
+		}, fmt.Sprintf("[%v] test failed", test.name), "1s", "60s")
+	}
+}

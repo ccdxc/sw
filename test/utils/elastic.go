@@ -22,6 +22,7 @@ import (
 	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/elastic"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/resolver"
 )
 
@@ -241,7 +242,9 @@ func createElasticClient(elasticsearchAddr string, resolverClient resolver.Inter
 		}
 
 		tlsConfig.ServerName = globals.ElasticSearch + "-https"
-		transport := &http.Transport{TLSClientConfig: tlsConfig}
+		transport := netutils.CopyHTTPDefaultTransport()
+		transport.MaxIdleConnsPerHost = 300
+		transport.TLSClientConfig = tlsConfig
 		opts = append(opts, elastic.WithHTTPClient(&http.Client{Transport: transport}))
 	}
 
