@@ -25,6 +25,9 @@ session_create_in_fte (SessionSpec *spec, SessionResponse *rsp)
         goto end;
     }
 
+    // Process pkt with db open
+    fte::impl::cfg_db_open();
+
     //Init context
     ret = ctx.init(spec, rsp,  iflow, rflow, feature_state, num_features);
     if (ret != HAL_RET_OK) {
@@ -33,6 +36,9 @@ session_create_in_fte (SessionSpec *spec, SessionResponse *rsp)
     }
 
     ret = ctx.process();
+
+    // close the config db
+    fte::impl::cfg_db_close();
 
  end:
     rsp->set_api_status(hal::hal_prepare_rsp(ret));
@@ -263,6 +269,9 @@ session_update_in_fte (hal_handle_t session_handle, uint64_t featureid_bitmap)
         goto end;
     }
 
+    // Process pkt with db open
+    fte::impl::cfg_db_open();
+
     //Init context
     ret = ctx.init(session, iflow, rflow, feature_state, num_features);
     if (ret != HAL_RET_OK) {
@@ -273,6 +282,9 @@ session_update_in_fte (hal_handle_t session_handle, uint64_t featureid_bitmap)
     ctx.set_featureid_bitmap(featureid_bitmap);
 
     ret = ctx.process();
+
+    // close the config db
+    fte::impl::cfg_db_close();
 
 end:
     if (feature_state) {
