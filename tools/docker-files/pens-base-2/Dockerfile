@@ -8,4 +8,4 @@ RUN apk update
 RUN apk add libtool blkid
 RUN echo http://dl-cdn.alpinelinux.org/alpine/v3.10/main > /etc/apk/repositories
 RUN echo http://dl-cdn.alpinelinux.org/alpine/v3.10/community >> /etc/apk/repositories
-
+ENV GODEBUG=madvdontneed=1

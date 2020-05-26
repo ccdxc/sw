@@ -1,4 +1,4 @@
-FROM registry.test.pensando.io:5000/pens-base-2:v0.5
+FROM registry.test.pensando.io:5000/pens-base-2:v0.6
 MAINTAINER "Barun Halder"
 COPY vtsa /bin
 COPY vtsa.json /bin

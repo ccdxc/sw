@@ -1,4 +1,4 @@
-FROM registry.test.pensando.io:5000/pens-base-2:v0.5
+FROM registry.test.pensando.io:5000/pens-base-2:v0.6
 MAINTAINER "Abhi Mahagaonkar" <abhi@pensando.io>
 RUN echo http://package-mirror.test.pensando.io/alpine/v3.10/main > /etc/apk/repositories
 RUN echo http://package-mirror.test.pensando.io/alpine/v3.10/community >> /etc/apk/repositories
