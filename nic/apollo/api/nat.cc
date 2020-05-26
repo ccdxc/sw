@@ -130,27 +130,29 @@ nat_port_block::read(pds_nat_port_block_info_t *info) {
 
 sdk_ret_t
 nat_port_block::read_all(nat_port_block_read_cb_t cb, void *ctxt) {
-    pds_cfg_get_all_rsp_t reply;
+    pds_cmd_msg_t request;
+    pds_cmd_rsp_t reply;
     pds_cfg_get_all_rsp_t *payload;
     size_t payloadsz;
     sdk_ret_t ret;
 
-    // first call to retrieve object count
-    ret = api::pds_ipc_cfg_get_all(PDS_IPC_ID_VPP, OBJ_ID_NAT_PORT_BLOCK,
-                                   &reply, sizeof(reply));
+    // send a cmd to VPP to retrieve object count
+    request.id = PDS_CMD_MSG_OBJ_COUNT_GET;
+    request.obj_count_get.obj_id = OBJ_ID_NAT_PORT_BLOCK;
+    sdk::ipc::request(PDS_IPC_ID_VPP, PDS_MSG_TYPE_CMD, &request,
+                            sizeof(request), api::pds_cmd_response_handler_cb,
+                            &reply);
     // abort on error
-    if (ret != SDK_RET_OK) {
-        return ret;
-    } else if (reply.status != (uint32_t )SDK_RET_OK) {
+    if (reply.status != (uint32_t )SDK_RET_OK) {
         return (sdk_ret_t )reply.status;
     }
-    if (reply.count == 0) {
+    if (reply.obj_count == 0) {
         // no configured instances, we're done
         return SDK_RET_OK;
     }
     // allocate as much space as necessary
     payloadsz = sizeof(pds_cfg_get_all_rsp_t) +
-        (reply.count * sizeof(pds_nat_port_block_info_t));
+                (reply.obj_count * sizeof(pds_nat_port_block_info_t));
     payload = (pds_cfg_get_all_rsp_t *)SDK_CALLOC(PDS_MEM_ALLOC_NAT_PORT_BLOCK,
                                                   payloadsz);
     ret = api::pds_ipc_cfg_get_all(PDS_IPC_ID_VPP, OBJ_ID_NAT_PORT_BLOCK,

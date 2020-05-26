@@ -161,6 +161,10 @@ typedef struct pds_vnic_stats_get_cmd_msg_s {
     uint16_t vnic_hw_id;
 } pds_vnic_stats_get_cmd_msg_t;
 
+typedef struct pds_obj_count_get_cmd_msg_s {
+    obj_id_t obj_id;
+} pds_obj_count_get_cmd_msg_t;
+
 /// command message sent or received
 typedef struct pds_cmd_msg_s {
     pds_cmd_msg_id_t   id;            ///< unique id of the msg
@@ -168,6 +172,7 @@ typedef struct pds_cmd_msg_s {
     union {
         pds_flow_clear_cmd_msg_t flow_clear;         ///< FLOW_CLEAR
         pds_vnic_stats_get_cmd_msg_t vnic_stats_get; ///< VNIC_STATS_GET
+        pds_obj_count_get_cmd_msg_t obj_count_get;   ///< OBJ_COUNT_GET
     };
 } pds_cmd_msg_t;
 
@@ -176,6 +181,7 @@ typedef struct pds_cmd_rsp_s {
     uint32_t status;   ///< sdk::sdk_ret_t cast as u32
     union {
         pds_vnic_stats_t vnic_stats; ///< cmd id: PDS_CMD_MSG_VNIC_STATS_GET
+        uint32_t obj_count; ///< cmd id: PDS_CMD_MSG_OBJ_COUNT_GET
     };
 } pds_cmd_rsp_t;
 

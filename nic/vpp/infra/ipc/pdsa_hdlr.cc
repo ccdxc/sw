@@ -327,6 +327,24 @@ error:
     free(response);
 }
 
+static sdk::sdk_ret_t
+pds_obj_count_get_cb (const pds_cmd_msg_t *msg, pds_cmd_rsp_t *response)
+{
+    vpp_config_data &config_data = vpp_config_data::get();
+
+    switch(msg->obj_count_get.obj_id) {
+    case OBJ_ID_DHCP_POLICY:
+    case OBJ_ID_NAT_PORT_BLOCK:
+    case OBJ_ID_SECURITY_PROFILE:
+        response->obj_count = config_data.size(msg->obj_count_get.obj_id);
+        return sdk::SDK_RET_OK;
+
+    default:
+        break;
+    }
+    return sdk::SDK_RET_INVALID_ARG;
+}
+
 
 // VPP IPC initialization. Register VPP with IPC infra, and install callbacks
 // for handling base message types
@@ -362,6 +380,11 @@ pds_ipc_init (void)
 
     // register handler for command messages
     sdk::ipc::reg_request_handler(PDS_MSG_TYPE_CMD, pds_ipc_cmd_msg_cb, NULL);
+
+
+    // register callback for obj count command
+    pds_ipc_register_cmd_callbacks(PDS_CMD_MSG_OBJ_COUNT_GET,
+                                   pds_obj_count_get_cb);
 
     ipc_log_notice("Registered callbacks for IPC messages");
 }

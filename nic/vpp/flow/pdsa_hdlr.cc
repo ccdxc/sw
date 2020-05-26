@@ -117,7 +117,7 @@ pdsa_flow_cfg_clear (const pds_cfg_msg_t *msg)
 }
 
 static sdk::sdk_ret_t
-pdsa_flow_clear_cmd(const pds_cmd_msg_t *msg, pds_cmd_rsp_t *response)
+pdsa_flow_clear_cmd (const pds_cmd_msg_t *msg, pds_cmd_rsp_t *response)
 {
     int ret;
     pds_flow_key_t key = msg->flow_clear.key;

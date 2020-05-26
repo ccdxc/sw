@@ -39,6 +39,8 @@ typedef enum pds_cmd_msg_id_s {
     PDS_CMD_MSG_FLOW_CLEAR,
     /// get statistics of specified VNIC
     PDS_CMD_MSG_VNIC_STATS_GET,
+    /// get number of configured objects
+    PDS_CMD_MSG_OBJ_COUNT_GET,
     PDS_MSG_ID_MAX,
 } pds_cmd_msg_id_t;
 

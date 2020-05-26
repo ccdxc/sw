@@ -246,27 +246,28 @@ sdk_ret_t
 pds_security_profile_read (_In_ pds_security_profile_read_cb_t cb,
                            _Out_ void *ctxt)
 {
-    pds_cfg_get_all_rsp_t reply;
+    pds_cmd_msg_t request;
+    pds_cmd_rsp_t response;
     pds_cfg_get_all_rsp_t *payload;
     size_t payloadsz;
-    sdk_ret_t ret;
+    sdk::sdk_ret_t ret;
 
-    // first call to retrieve object count
-    ret = api::pds_ipc_cfg_get_all(PDS_IPC_ID_VPP, OBJ_ID_SECURITY_PROFILE,
-                                   &reply, sizeof(reply));
-    // abort on error
-    if (ret != SDK_RET_OK) {
-        return ret;
-    } else if (reply.status != (uint32_t )SDK_RET_OK) {
-        return (sdk_ret_t )reply.status;
+    // send a cmd to VPP to retrieve object count
+    request.id = PDS_CMD_MSG_OBJ_COUNT_GET;
+    request.obj_count_get.obj_id = OBJ_ID_SECURITY_PROFILE;
+    sdk::ipc::request(PDS_IPC_ID_VPP, PDS_MSG_TYPE_CMD, &request,
+                      sizeof(request), api::pds_cmd_response_handler_cb,
+                      &response);
+    if (response.status != (uint32_t )sdk::SDK_RET_OK) {
+        return (sdk::sdk_ret_t )response.status;
     }
-    if (reply.count == 0) {
+    if (response.obj_count == 0) {
         // no configured instances, we're done
         return SDK_RET_OK;
     }
     // allocate as much space as necessary
     payloadsz = sizeof(pds_cfg_get_all_rsp_t) +
-        (reply.count * sizeof(pds_security_profile_info_t));
+                (response.obj_count * sizeof(pds_security_profile_info_t));
     payload = (pds_cfg_get_all_rsp_t *)SDK_CALLOC(PDS_MEM_ALLOC_SECURITY_POLICY,
                                                   payloadsz);
     ret = api::pds_ipc_cfg_get_all(PDS_IPC_ID_VPP, OBJ_ID_SECURITY_PROFILE,
