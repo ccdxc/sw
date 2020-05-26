@@ -514,6 +514,9 @@ class TestSuite:
         return node[0]
 
     def UpdateNaplesPipelines(self, pipelines=[]):
+        if GlobalOptions.skip_firmware_upgrade:
+            Logger.debug("user requested to skip firmware upgrade so skipping naples pipeline install")
+            return
         if not pipelines:
             pipelines = self.GetNaplesPipelines()
             if not pipelines:
