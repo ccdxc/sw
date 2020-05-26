@@ -68,7 +68,7 @@ func (a *synchAuditor) ProcessEvents(events ...*auditapi.AuditEvent) error {
 					return false, err
 				}
 				return true, nil
-			}, 2*time.Second, 6); err != nil {
+			}, 4*time.Second, 5); err != nil {
 				return false, err
 			}
 			return true, nil
