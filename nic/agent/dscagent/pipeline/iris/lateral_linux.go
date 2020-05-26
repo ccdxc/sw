@@ -362,6 +362,17 @@ func startRefreshLoop(infraAPI types.InfraAPI, intfClient halapi.InterfaceClient
 			case <-refreshCtx.Done():
 				log.Infof("Cancelling ARP refresh loop for %v ", IP)
 				destIPToMAC.Delete(destIP)
+				if gIP != "" {
+					_, dest, _ := net.ParseCIDR(IP + "/32")
+					log.Infof("Removing route for %v via %s", dest, gIP)
+					route := &netlink.Route{
+						Dst: dest,
+						Gw:  net.ParseIP(gIP),
+					}
+					if err := netlink.RouteDel(route); err != nil {
+						log.Errorf("Failed to configure static route %v. Err: %v", route, err)
+					}
+				}
 				return
 			}
 		}
@@ -755,6 +766,17 @@ func generateLateralEP(infraAPI types.InfraAPI, intfClient halapi.InterfaceClien
 		refreshCtx, done := context.WithCancel(context.Background())
 		doneCache[destIP] = done
 
+		if gwIP != "" {
+			_, dest, _ := net.ParseCIDR(destIP + "/32")
+			log.Infof("Installing route for %v via %s", dest, gwIP)
+			route := &netlink.Route{
+				Dst: dest,
+				Gw:  net.ParseIP(gwIP),
+			}
+			if err := netlink.RouteAdd(route); err != nil {
+				log.Errorf("Failed to configure static route %v. Err: %v", route, err)
+			}
+		}
 		go startRefreshLoop(infraAPI, intfClient, epClient, vrfID, owner, refreshCtx, destIP, gwIP)
 		// Give the routine a chance to run
 		time.Sleep(time.Second * 3)
