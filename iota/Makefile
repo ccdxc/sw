@@ -108,7 +108,7 @@ docker/install_box:
 	if [ "x${NO_PULL}" = "x" ]; then docker pull $(REGISTRY)/pensando/nic:${NIC_CONTAINER_VERSION}; fi
 
 docker/build-runtime-image: docker/install_box
-	cd .. && BOX_INCLUDE_ENV="NO_COPY USER USER_UID USER_GID GROUP_NAME" NO_COPY=1 USER_UID=$$(id -u) USER_GID=$$(id -g) GROUP_NAME=$$(id -gn) box -t pensando/nic nic/box.rb
+	cd .. && BOX_INCLUDE_ENV="NO_COPY USER USER_UID USER_GID GROUP_NAME" NO_COPY=1 USER_UID=$$(id -u) USER_GID=$$(id -g) GROUP_NAME=$$(id -gn) box -t pensando/nic box.rb
 
 docker/build-iota-runtime-image: docker/install_box
 	cd .. && BOX_INCLUDE_ENV="NO_COPY USER USER_UID USER_GID GROUP_NAME" NO_COPY=1 USER_UID=$$(id -u) USER_GID=$$(id -g) GROUP_NAME=$$(id -gn) box -t pensando/nic iota/box.rb
