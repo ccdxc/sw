@@ -166,7 +166,6 @@ func (sm *Statemgr) OnWorkloadUpdate(w *ctkit.Workload, nwrk *workload.Workload)
 	log.Infof("Updating workload: %+v", nwrk)
 
 	recreate := false
-
 	// check if host parameter has changed or migration has been initiated
 	if nwrk.Spec.HostName != w.Spec.HostName {
 		log.Infof("Workload %v host changed from %v to %v.", nwrk.Name, w.Spec.HostName, nwrk.Spec.HostName)
@@ -186,68 +185,14 @@ func (sm *Statemgr) OnWorkloadUpdate(w *ctkit.Workload, nwrk *workload.Workload)
 		return ws.handleMigration()
 	}
 
-	sliceEqual := func(X, Y []string) bool {
-		m := make(map[string]int)
-
-		for _, y := range Y {
-			m[y]++
-		}
-
-		for _, x := range X {
-			if m[x] > 0 {
-				m[x]--
-				if m[x] == 0 {
-					delete(m, x)
-				}
-				continue
-			}
-			//not present or execess
-			return false
-		}
-
-		return len(m) == 0
-	}
-
-	// check interface params changed
-	if len(nwrk.Spec.Interfaces) != len(w.Spec.Interfaces) {
-		// number of interfaces changed, delete old ones
-		recreate = true
-	} else {
-		for idx, intf := range nwrk.Spec.Interfaces {
-			// check what changed
-			if w.Spec.Interfaces[idx].Network != intf.Network {
-				// network changed delete old endpoints
-				recreate = true
-			}
-			if w.Spec.Interfaces[idx].ExternalVlan != intf.ExternalVlan {
-				// external VLAN changed delete old endpoints
-				recreate = true
-			}
-			if w.Spec.Interfaces[idx].MicroSegVlan != intf.MicroSegVlan {
-				// useg vlan changed, delete old endpoint
-				recreate = true
-			}
-
-			if w.Spec.Interfaces[idx].MACAddress != intf.MACAddress {
-				// mac address changed, delete old endpoints
-				recreate = true
-			}
-
-			if !sliceEqual(w.Spec.Interfaces[idx].IpAddresses, intf.IpAddresses) {
-				// IP addresses changed
-				recreate = true
-			}
-		}
-	}
-
-	// if we dont need to recreate endpoints, we are done
-	if !recreate {
-		return nil
-	}
-
 	ws, err := sm.FindWorkload(w.Tenant, w.Name)
 	if err != nil {
 		return err
+	}
+
+	// if we dont need to recreate endpoints, we are done
+	if !ws.isInterfaceChanged(nwrk) && !recreate {
+		return nil
 	}
 
 	// delete old endpoints
@@ -1021,4 +966,68 @@ func (ws *WorkloadState) getOrchestrationLabels() (vmName, dcName, orchName stri
 	}
 
 	return
+}
+
+func (ws *WorkloadState) isInterfaceChanged(nwrk *workload.Workload) bool {
+
+	sliceEqual := func(X, Y []string) bool {
+		m := make(map[string]int)
+
+		for _, y := range Y {
+			m[y]++
+		}
+
+		for _, x := range X {
+			if m[x] > 0 {
+				m[x]--
+				if m[x] == 0 {
+					delete(m, x)
+				}
+				continue
+			}
+			//not present or execess
+			return false
+		}
+
+		return len(m) == 0
+	}
+
+	if len(nwrk.Spec.Interfaces) != len(ws.Workload.Spec.Interfaces) {
+		// number of interfaces changed, delete old ones
+		return true
+	}
+
+	for _, curIntf := range ws.Workload.Spec.Interfaces {
+		found := false
+		for _, newIntf := range nwrk.Spec.Interfaces {
+			if curIntf.MACAddress != newIntf.MACAddress {
+				continue
+			}
+
+			found = true
+			// check what changed
+			if curIntf.Network != newIntf.Network {
+				// network changed delete old endpoints
+				return true
+			}
+			if curIntf.ExternalVlan != newIntf.ExternalVlan {
+				// external VLAN changed delete old endpoints
+				return true
+			}
+			if curIntf.MicroSegVlan != newIntf.MicroSegVlan {
+				// useg vlan changed, delete old endpoint
+				return true
+			}
+
+			if !sliceEqual(curIntf.IpAddresses, newIntf.IpAddresses) {
+				return true
+			}
+		}
+
+		if !found {
+			return true
+		}
+	}
+
+	return false
 }

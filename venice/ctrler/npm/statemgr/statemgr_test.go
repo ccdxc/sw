@@ -10362,6 +10362,130 @@ func TestWatcherWithFlowExportCreateDelete(t *testing.T) {
 
 }
 
+func TestWorkloadInterfaceUpdate(t *testing.T) {
+	// create a workload
+	wr := workload.Workload{
+		TypeMeta: api.TypeMeta{Kind: "Workload"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "testWorkload",
+			Namespace: "default",
+			Tenant:    "default",
+		},
+		Spec: workload.WorkloadSpec{
+			HostName: "testHost",
+			Interfaces: []workload.WorkloadIntfSpec{
+				{
+					MACAddress:   "0001.0203.0405",
+					MicroSegVlan: 100,
+					ExternalVlan: 1,
+				},
+				{
+					MACAddress:   "2001.0203.0405",
+					MicroSegVlan: 200,
+					ExternalVlan: 2,
+				},
+			},
+		},
+	}
+
+	wrCtkit := ctkit.Workload{
+		Workload: wr,
+	}
+
+	wrState := &WorkloadState{
+		Workload: &wrCtkit,
+	}
+
+	Assert(t, !wrState.isInterfaceChanged(&wr), "Interfaces were not changed")
+
+	wr.Spec.Interfaces = []workload.WorkloadIntfSpec{}
+	Assert(t, wrState.isInterfaceChanged(&wr), "Interfaces were changed")
+
+	wr.Spec.Interfaces = []workload.WorkloadIntfSpec{
+		{
+			MACAddress:   "0001.0203.0406",
+			MicroSegVlan: 100,
+			ExternalVlan: 1,
+		},
+	}
+	Assert(t, wrState.isInterfaceChanged(&wr), "Interfaces were changed")
+
+	wr.Spec.Interfaces = []workload.WorkloadIntfSpec{
+		{
+			MACAddress:   "2001.0203.0405",
+			MicroSegVlan: 200,
+			ExternalVlan: 2,
+		},
+		{
+			MACAddress:   "0001.0203.0405",
+			MicroSegVlan: 100,
+			ExternalVlan: 1,
+		},
+	}
+	Assert(t, !wrState.isInterfaceChanged(&wr), "Interfaces were not changed")
+
+	wr.Spec.Interfaces = []workload.WorkloadIntfSpec{
+		{
+			MACAddress:   "2001.0203.0405",
+			MicroSegVlan: 201,
+			ExternalVlan: 2,
+		},
+		{
+			MACAddress:   "0001.0203.0405",
+			MicroSegVlan: 100,
+			ExternalVlan: 1,
+		},
+	}
+	Assert(t, wrState.isInterfaceChanged(&wr), "Interfaces were changed")
+
+	wr.Spec.Interfaces = []workload.WorkloadIntfSpec{
+		{
+			MACAddress:   "2001.0203.0405",
+			MicroSegVlan: 200,
+			ExternalVlan: 3,
+		},
+		{
+			MACAddress:   "0001.0203.0405",
+			MicroSegVlan: 100,
+			ExternalVlan: 1,
+		},
+	}
+	Assert(t, wrState.isInterfaceChanged(&wr), "Interfaces were changed")
+
+	wr.Spec.Interfaces = []workload.WorkloadIntfSpec{
+		{
+			MACAddress:   "2001.0203.0405",
+			MicroSegVlan: 100,
+			ExternalVlan: 2,
+		},
+		{
+			MACAddress:   "0001.0203.0405",
+			MicroSegVlan: 200,
+			ExternalVlan: 1,
+		},
+	}
+	Assert(t, wrState.isInterfaceChanged(&wr), "Interfaces were changed")
+
+	wr.Spec.Interfaces = []workload.WorkloadIntfSpec{
+		{
+			MACAddress:   "2001.0203.0405",
+			MicroSegVlan: 200,
+			ExternalVlan: 2,
+		},
+		{
+			MACAddress:   "0001.0203.0405",
+			MicroSegVlan: 100,
+			ExternalVlan: 1,
+		},
+		{
+			MACAddress:   "0006.0203.0405",
+			MicroSegVlan: 600,
+			ExternalVlan: 6,
+		},
+	}
+	Assert(t, wrState.isInterfaceChanged(&wr), "Interfaces were changed")
+}
+
 /*
 func TestEndpointUpdate(t *testing.T) {
 	// create network state manager
