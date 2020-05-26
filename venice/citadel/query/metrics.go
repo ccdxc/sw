@@ -21,9 +21,10 @@ import (
 )
 
 const (
-	oneDay     = time.Hour * 24
-	fiveDays   = time.Hour * 24 * 5
-	thirtyDays = time.Hour * 24 * 30
+	oneDay                   = time.Hour * 24
+	fiveDays                 = time.Hour * 24 * 5
+	thirtyDays               = time.Hour * 24 * 30
+	autoSelectTableTimeDelta = time.Second * 30
 )
 
 // validateMetricsQueryList validates a query list request
@@ -221,11 +222,11 @@ func selectContinuousQueryTable(start time.Time) string {
 	}
 	delta = time.Now().Sub(start)
 
-	if delta <= oneDay {
+	if delta <= oneDay+autoSelectTableTimeDelta {
 		return ""
-	} else if delta <= fiveDays {
+	} else if delta <= fiveDays+autoSelectTableTimeDelta {
 		return "5minutes"
-	} else if delta <= thirtyDays {
+	} else if delta <= thirtyDays+autoSelectTableTimeDelta {
 		return "1hour"
 	}
 	return "1day"

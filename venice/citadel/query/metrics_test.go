@@ -420,7 +420,7 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 				StartTime: cqTestStartTimeOneDay,
 				EndTime:   cqTestEndTime,
 			},
-			resp: `SELECT mean("cpu") FROM test-db_5minutes WHERE time > '` + cqStartOneDayString + `' AND time < '` + cqEndString + `' GROUP BY time(30s) ORDER BY time ASC LIMIT 10 OFFSET 10`,
+			resp: `SELECT mean("cpu") FROM test-db WHERE time > '` + cqStartOneDayString + `' AND time < '` + cqEndString + `' GROUP BY time(30s) ORDER BY time ASC LIMIT 10 OFFSET 10`,
 			pass: true,
 		},
 		{
