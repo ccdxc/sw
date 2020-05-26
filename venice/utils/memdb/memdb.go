@@ -1170,6 +1170,7 @@ func (md *Memdb) MarshalJSON() ([]byte, error) {
 
 	contents := map[string]struct {
 		Object   map[string]Object
+		Kind     string
 		Watchers []int
 	}{}
 
@@ -1186,8 +1187,23 @@ func (md *Memdb) MarshalJSON() ([]byte, error) {
 
 		contents[kind] = struct {
 			Object   map[string]Object
+			Kind     string
 			Watchers []int
-		}{Object: o, Watchers: watchers}
+		}{Object: o, Watchers: watchers, Kind: "PubDB"}
+
+	}
+
+	for kind, objs := range md.pushdb.pObjDB {
+		o := map[string]Object{}
+		for name, obj := range objs.objects {
+			o[name] = obj.obj
+		}
+
+		contents[kind] = struct {
+			Object   map[string]Object
+			Kind     string
+			Watchers []int
+		}{Object: o, Kind: "PushDB"}
 
 	}
 

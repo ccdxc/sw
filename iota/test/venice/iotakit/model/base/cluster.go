@@ -395,6 +395,8 @@ func (sm *SysModel) GetVeniceNode(name string) (n *cluster.Node, err error) {
 	if err != nil {
 		return nil, err
 	}
+	ctxWithTimeout, cancel := context.WithTimeout(ctx, 1*time.Minute)
+	defer cancel()
 	restcls, err := sm.VeniceRestClient()
 	if err != nil {
 		return nil, err
@@ -407,7 +409,7 @@ func (sm *SysModel) GetVeniceNode(name string) (n *cluster.Node, err error) {
 	}
 
 	for _, restcl := range restcls {
-		n, err = restcl.ClusterV1().Node().Get(ctx, &meta)
+		n, err = restcl.ClusterV1().Node().Get(ctxWithTimeout, &meta)
 		if err == nil {
 			break
 		}

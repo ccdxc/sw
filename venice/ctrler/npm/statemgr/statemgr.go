@@ -38,6 +38,13 @@ type updatable interface {
 	GetKey() string
 }
 
+// updatable is an interface all updatable objects have to implement
+type dscUpdateObj struct {
+	ev  EventType
+	dsc *cluster.DistributedServiceCard
+	obj dscUpdateIntf
+}
+
 // dscUpdateIntf
 type dscUpdateIntf interface {
 	processDSCUpdate(dsc *cluster.DistributedServiceCard) error
@@ -66,6 +73,7 @@ type Statemgr struct {
 	sync.Mutex
 	mbus                  *nimbus.MbusServer       // nimbus server
 	periodicUpdaterQueue  chan updatable           // queue for periodically writing items back to apiserver
+	dscObjUpdateQueue     chan dscUpdateObj        // queue for sending updates after DSC update
 	dscUpdateNotifObjects map[string]dscUpdateIntf // objects which are watching dsc update
 	ctrler                ctkit.Controller         // controller instance
 	topics                Topics                   // message bus topics
@@ -352,7 +360,7 @@ func (sm *Statemgr) sendDscUpdateNotification(dsc *cluster.DistributedServiceCar
 		if obj.isMarkedForDelete() {
 			delete(sm.dscUpdateNotifObjects, obj.GetKey())
 		} else {
-			obj.processDSCUpdate(dsc)
+			sm.dscObjUpdateQueue <- dscUpdateObj{ev: UpdateEvent, dsc: dsc, obj: obj}
 		}
 	}
 }
@@ -364,7 +372,7 @@ func (sm *Statemgr) sendDscDeleteNotification(dsc *cluster.DistributedServiceCar
 		if obj.isMarkedForDelete() {
 			delete(sm.dscUpdateNotifObjects, obj.GetKey())
 		} else {
-			obj.processDSCDelete(dsc)
+			sm.dscObjUpdateQueue <- dscUpdateObj{ev: DeleteEvent, dsc: dsc, obj: obj}
 		}
 	}
 }
@@ -451,6 +459,7 @@ func (sm *Statemgr) Run(rpcServer *rpckit.RPCServer, apisrvURL string, rslvr res
 	// Given that objects returned by `NewStatemgr` should live for the duration
 	// of the process, we don't have to worry about leaked go subroutines
 	sm.periodicUpdaterQueue = newPeriodicUpdater()
+	sm.dscObjUpdateQueue = newdscOpdateObjNotifier()
 
 	// init the watch reactors
 	sm.setDefaultReactors(defReactor)
@@ -743,11 +752,40 @@ func runPeriodicUpdater(queue chan updatable) {
 	}
 }
 
+// runDscObjectNotification process
+func runDscUpdateNotification(queue chan dscUpdateObj) {
+	for {
+		select {
+		case obj, ok := <-queue:
+			if ok == false {
+				log.Infof("Exiting Dsc Update notification worker")
+				return
+			}
+			switch obj.ev {
+			case UpdateEvent:
+				obj.obj.processDSCUpdate(obj.dsc)
+			case DeleteEvent:
+				obj.obj.processDSCDelete(obj.dsc)
+			default:
+				log.Fatalf("Invalid event received. %v", obj.ev)
+
+			}
+		}
+	}
+}
+
 // NewPeriodicUpdater creates a new periodic updater
 func newPeriodicUpdater() chan updatable {
 	updateChan := make(chan updatable, maxUpdateChannelSize)
 	go runPeriodicUpdater(updateChan)
 	return updateChan
+}
+
+// newdscOpdateObjUpdater creates a processes dsc update asynchronusly.
+func newdscOpdateObjNotifier() chan dscUpdateObj {
+	dscUpdateObjChan := make(chan dscUpdateObj, maxUpdateChannelSize)
+	go runDscUpdateNotification(dscUpdateObjChan)
+	return dscUpdateObjChan
 }
 
 // PeriodicUpdaterPush enqueues an object to the periodic updater
