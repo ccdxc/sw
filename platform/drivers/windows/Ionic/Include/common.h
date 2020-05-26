@@ -1061,6 +1061,8 @@ ionic_return_rxq_pkt(struct qcq *qcq,
 
 void ionic_rx_flush(struct cq *cq);
 
+void ionic_rx_fill(struct qcq *qcq);
+
 NDIS_STATUS ionic_rx_init(struct lif *lif, struct qcqst *qcqst);
 
 void ionic_rx_filters_deinit(struct lif *lif);

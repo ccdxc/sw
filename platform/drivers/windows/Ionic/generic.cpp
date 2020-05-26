@@ -1437,17 +1437,32 @@ ionic_watchdog_cb(void *SystemContext,
                   void *Context1,
                   void *Context2)
 {
+    struct ionic *ionic = (struct ionic *)FunctionContext;
+    struct lif *lif = NULL;
+    struct qcq *qcq = NULL;
+    unsigned int qcq_i = 0;
 
     UNREFERENCED_PARAMETER(SystemContext);
     UNREFERENCED_PARAMETER(Context1);
     UNREFERENCED_PARAMETER(Context2);
-	UNREFERENCED_PARAMETER(FunctionContext);
 
 #ifdef TRACK_MEMORY_BUFFER_ALLOC
     validate_memory();
 #endif
 
-    return;
+    ListForEachEntry(lif, &ionic->lifs, struct lif, list) {
+        if (!RtlCheckBit(&lif->state, LIF_UP)) {
+            continue;
+        }
+
+        for (qcq_i = 0; qcq_i < lif->nrxqs; ++qcq_i) {
+            qcq = lif->rxqcqs[qcq_i].qcq;
+
+            NdisAcquireSpinLock(&qcq->rx_ring_lock);
+            ionic_rx_fill(qcq);
+            NdisReleaseSpinLock(&qcq->rx_ring_lock);
+        }
+    }
 }
 
 void
