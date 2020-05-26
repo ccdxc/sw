@@ -9,7 +9,7 @@ import { AuthService } from '@app/services/generated/auth.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
 import { UIConfigsService, Features } from '@app/services/uiconfigs.service';
 import { MetricsqueryService } from '@app/services/metricsquery.service';
-import { ClusterDistributedServiceCard } from '@sdk/v1/models/generated/cluster';
+import { ClusterDistributedServiceCard, ClusterDistributedServiceCardStatus_admission_phase } from '@sdk/v1/models/generated/cluster';
 import { MetricMeasurement, MetricsMetadata } from '@sdk/metrics/generated/metadata';
 import { Subject, Subscription } from 'rxjs';
 import { TelemetrychartComponent } from '../telemetrychart/telemetrychart.component';
@@ -178,10 +178,14 @@ export class TelemetrycharteditComponent extends BaseComponent implements OnInit
 
   }
 
+
   getCardFieldDataForDSC(res: RepeaterData[]) {
     res[0].values = this.chart.naples.map((naple: ClusterDistributedServiceCard) => {
-      return {
-        label: naple.spec.id,
+    // VS-1600.  DSCs are in various status, we want to inform user about DSC status.  User can choose decommissioned DSCs in metrics pages, but not encouraged
+    let dscLabel =  (naple.spec.id) ? naple.spec.id : naple.meta.name ;
+    dscLabel +=  (naple.status['admission-phase'] === ClusterDistributedServiceCardStatus_admission_phase.admitted) ? '' : ' (' + naple.status['admission-phase'] +  ')';
+    return {
+        label: dscLabel,
         value: naple.status['primary-mac']
       };
     });

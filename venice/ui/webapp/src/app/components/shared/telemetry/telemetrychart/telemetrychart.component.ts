@@ -5,18 +5,18 @@ import { Utility } from '@app/common/Utility';
 import { BaseComponent } from '@app/components/base/base.component';
 import { ControllerService } from '@app/services/controller.service';
 import { MetricsqueryService, TelemetryPollingMetricQueries, MetricsPollingQuery } from '@app/services/metricsquery.service';
-import { ITelemetry_queryMetricsQueryResponse, ITelemetry_queryMetricsQueryResult } from '@sdk/v1/models/telemetry_query';
-import { ChartOptions } from 'chart.js';
+import { ITelemetry_queryMetricsQueryResponse, ITelemetry_queryMetricsQueryResult, Telemetry_queryMetricsResultSeries } from '@sdk/v1/models/telemetry_query';
+import { ChartOptions, ChartLegendLabelItem } from 'chart.js';
 import { Observer, Subject, Subscription } from 'rxjs';
 import { sourceFieldKey, getFieldData } from '../utility';
 import { MetricMeasurement, MetricsMetadata } from '@sdk/metrics/generated/metadata';
-import { ChartData, ChartDataSets, ColorTransform, DisplayLabelTransform, GroupByTransform, DataSource, MetricTransform, TransformDataset, TransformDatasets, GraphTransform } from '../transforms';
+import { ChartData, ChartDataSets, ColorTransform, DisplayLabelTransform, GroupByTransform, DataSource, MetricTransform, TransformDataset, TransformDatasets, GraphTransform, SourceMeta } from '../transforms';
 import { AxisTransform } from '../transforms/axis.transform';
 import { TimeRange } from '@app/components/shared/timerange/utility';
 import { UIChartComponent } from '@app/components/shared/primeng-chart/chart';
 import { FieldSelectorTransform } from '../transforms/fieldselector.transform';
 import { FieldValueTransform, ValueMap, QueryMap } from '../transforms/fieldvalue.transform';
-import { ClusterDistributedServiceCard, ClusterNode } from '@sdk/v1/models/generated/cluster';
+import { ClusterDistributedServiceCard, ClusterNode, ClusterDistributedServiceCardStatus_admission_phase } from '@sdk/v1/models/generated/cluster';
 import { ClusterService } from '@app/services/generated/cluster.service';
 import { ITelemetry_queryMetricsQuerySpec, Telemetry_queryMetricsQuerySpec_function } from '@sdk/v1/models/generated/telemetry_query';
 import { LabelSelectorTransform } from '../transforms/labelselector.transform';
@@ -60,6 +60,7 @@ import { NetworkNetworkInterface } from '@sdk/v1/models/generated/network';
 export class TelemetrychartComponent extends BaseComponent implements OnInit, OnChanges, OnDestroy {
   public static MAX_LEGEND_EDIT_MODE: number = 20;
   public static MAX_LEGEND_VIEW_MODE: number = 7;
+
 
   @ViewChild('pChart') chartContainer: UIChartComponent;
   @Input() chartConfig: GraphConfig;
@@ -130,8 +131,9 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
     // new DerivativeTransform(),
   ];
 
-  networkInterfacesTypeMap: {[key: string]: NetworkNetworkInterface[]} = {};
+  networkInterfacesTypeMap: { [key: string]: NetworkNetworkInterface[] } = {};
   naples: ReadonlyArray<ClusterDistributedServiceCard> = [];
+  networkInterfaces: NetworkNetworkInterface[] = [];
   nodes: ReadonlyArray<ClusterNode> = [];
 
   macAddrToName: { [key: string]: string; } = {};
@@ -140,14 +142,16 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
   // Map from object kind to map from key to map of values to object names
   // that have that label
   labelMap:
-    { [kind: string]:
-      { [labelKey: string]:
+    {
+      [kind: string]:
+      {
+        [labelKey: string]:
         { [labelValue: string]: string[] }
       }
     } = {};
 
 
-  fieldQueryMap: QueryMap =  {};
+  fieldQueryMap: QueryMap = {};
   fieldValueMap: ValueMap = {};
 
   // Flag to indicate whether we have finished loading a user's config
@@ -159,8 +163,8 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
     protected authService: AuthService,
     protected telemetryqueryService: MetricsqueryService,
     protected networkService: NetworkService,
-    ) {
-      super(controllerService);
+  ) {
+    super(controllerService);
   }
 
   ngOnInit() {
@@ -180,20 +184,20 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
       };
     }
 
-    const metricsSubjectSubscription = this.getMetricsSubject.subscribe( () => {
+    const metricsSubjectSubscription = this.getMetricsSubject.subscribe(() => {
       if (this.configLoaded) {
         this.getMetrics();
       }
     });
     this.subscriptions.push(metricsSubjectSubscription);
 
-    const reqDrawSub = this.reqRedrawSubject.subscribe( () => {
+    const reqDrawSub = this.reqRedrawSubject.subscribe(() => {
       this.drawGraph();
     });
     this.subscriptions.push(reqDrawSub);
 
     // Populating graph transform reqRedraw
-    this.graphTransforms.forEach( (t) => {
+    this.graphTransforms.forEach((t) => {
       // Casting to any so we can set private variables
       (<any>t).reqRedraw = this.reqRedrawSubject;
     });
@@ -211,9 +215,9 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
   setupValueOverrides() {
     const queryMapNaplesReporterID = (res: ITelemetry_queryMetricsQuerySpec) => {
       const field = 'reporterID';
-      res.selector.requirements.forEach( (req) => {
+      res.selector.requirements.forEach((req) => {
         if (req.key === field) {
-          req.values = req.values.map( (v) => {
+          req.values = req.values.map((v) => {
             const mac = this.nameToMacAddr[v];
             if (mac != null) {
               return mac;
@@ -224,18 +228,22 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
       });
     };
     const valueMapNaplesReporterID = (res: ITelemetry_queryMetricsQueryResult) => {
-      const field = 'reporterID';
-      res.series.forEach( (s) => {
+      const fieldDSC = 'reporterID';
+      res.series.forEach((s) => {
         if (s.tags != null) {
-          const tagVal = s.tags[field];
-          if (tagVal != null && this.macAddrToName[tagVal] != null) {
-            s.tags[field] = this.macAddrToName[tagVal];
+          const tagValDSC = s.tags[fieldDSC];
+          if (tagValDSC != null && this.macAddrToName[tagValDSC] != null) {
+            // VS-1600 FieldValueTransform.transformMetricData() call back to here.  Decorate Labels
+            const dscName = this.macAddrToName[tagValDSC];
+            const isAdmitted = this.isDSCAdmittedByDSCMac(tagValDSC);
+            const dsc = this.naples.find( (nic: ClusterDistributedServiceCard) => nic.meta.name === tagValDSC);
+            s.tags[fieldDSC] = (dsc && isAdmitted) ? dscName : dscName +  ' (' + dsc.status['admission-phase'] + ')';
           }
         }
         const fieldIndex = s.columns.findIndex((f) => {
-          return f.includes(field);
+          return f.includes(fieldDSC);
         });
-        s.values = s.values.map( (v) => {
+        s.values = s.values.map((v) => {
           const mac = v[fieldIndex];
           if (this.macAddrToName[mac] != null) {
             v[fieldIndex] = this.macAddrToName[mac];
@@ -244,9 +252,10 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
         });
       });
     };
-    Object.keys(MetricsMetadata).forEach( (m) => {
+    Object.keys(MetricsMetadata).forEach((m) => {
       const measurement = MetricsMetadata[m];
-      if (measurement.objectKind === 'DistributedServiceCard') {
+      // add DSC and NI related meta-info into maps. FieldValueTransform needs it
+      if (measurement.objectKind === 'DistributedServiceCard' || measurement.objectKind ===  'NetworkInterface') {
         this.fieldQueryMap[measurement.name] = queryMapNaplesReporterID;
         this.fieldValueMap[measurement.name] = valueMapNaplesReporterID;
       }
@@ -261,7 +270,7 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
       this.getMetrics();
     }
     if (changes.inDebugMode) {
-      this.dataSources.forEach( (s) => {
+      this.dataSources.forEach((s) => {
         s.debugMode = this.inDebugMode;
       });
     }
@@ -274,11 +283,11 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
     // if a user then cancels the graph edit the inital user
     // preference content is preserved
     const _ = Utility.getLodash();
-    this.graphTransforms.forEach( (t) => {
+    this.graphTransforms.forEach((t) => {
       t.load(_.cloneDeep(this.chartConfig.graphTransforms.transforms[t.transformName]));
     });
 
-    this.chartConfig.dataTransforms.forEach( (dataTransform) => {
+    this.chartConfig.dataTransforms.forEach((dataTransform) => {
       const source = this.addDataSource();
       source.load(_.cloneDeep(dataTransform));
     });
@@ -289,12 +298,12 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
   saveConfig() {
     // Saving graph config
     const graphTransforms = {};
-    this.graphTransforms.forEach( (t) => {
+    this.graphTransforms.forEach((t) => {
       graphTransforms[t.transformName] = t.save();
     });
     this.chartConfig.graphTransforms.transforms = graphTransforms;
     const dataSourceConfig: DataTransformConfig[] = [];
-    this.dataSources.forEach( source => {
+    this.dataSources.forEach(source => {
       if (source.measurement == null || source.fields.length === 0) {
         return; // Don't save an incomplete query
       }
@@ -323,6 +332,7 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
     this.subscriptions.push(nodeSubscription);
   }
 
+
   getNaples() {
     const dscSubscription = this.clusterService.ListDistributedServiceCardCache().subscribe(
       (response) => {
@@ -330,6 +340,7 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
           return;
         }
         this.naples = response.data as ClusterDistributedServiceCard[];
+        // For testing VS-1600, force a dsc to be decommissioned. // this.naples.find( dsc => dsc.spec.id === 'oob-esxdual-1dc0').status['admission-phase'] = ClusterDistributedServiceCardStatus_admission_phase.decommissioned;
         this.labelMap['DistributedServiceCard'] = Utility.getLabels(this.naples as any[]);
         // mac-address to name map
         this.macAddrToName = {};
@@ -347,6 +358,9 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
     this.subscriptions.push(dscSubscription);
   }
 
+ /*  hack_networkinterface() {
+    const networkInterfaces = this.networkInterfaces.find( ni => ni.meta.name === 'oob-esxdual-1dc0-uplink-1-2');
+  } */
   getNetworkInterfaces() {
     const sub = this.networkService.ListNetworkInterfaceCache().subscribe(
       (response) => {
@@ -354,8 +368,8 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
           return;
         }
         this.networkInterfacesTypeMap = {};
-        const networkInterfaces = response.data;
-        for (const i of networkInterfaces) {
+        this.networkInterfaces = response.data as NetworkNetworkInterface[];
+        for (const i of this.networkInterfaces) {
           if (!Utility.isInterfaceInValid(i)) {
             if (!this.networkInterfacesTypeMap[i.status.type]) {
               this.networkInterfacesTypeMap[i.status.type] = [];
@@ -378,13 +392,14 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
   }
 
   generateDefaultGraphOptions(): ChartOptions {
+    const self = this;
     const options: ChartOptions = {
       title: {
-          display: false,
+        display: false,
       },
       legend: {
-          display: true,
-          position: 'bottom',
+        display: true,
+        position: 'bottom'
       },
       tooltips: {
         enabled: true,
@@ -497,7 +512,7 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
   setTimeRange(timeRange: TimeRange) {
     // Pushing into next event loop so that angular's change detection
     // doesn't complain.
-    setTimeout( () => {
+    setTimeout(() => {
       if (this.selectedTimeRange == null || !timeRange.isSame(this.selectedTimeRange)) {
         this.selectedTimeRange = timeRange;
         this.getMetrics();
@@ -525,13 +540,13 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
     // Using variable so that this is not used inside updating timeSeriesQueryPolling
     // We may use an incorrect time instance if we do
     const timeRange = this.selectedTimeRange;
-    this.dataSources.forEach( (source) => {
+    this.dataSources.forEach((source) => {
       const query = source.generateQuery(timeRange);
       if (query != null) {
-         queryList.queries.push(query);
+        queryList.queries.push(query);
       }
     });
-    this.graphTransforms.forEach( (t) => {
+    this.graphTransforms.forEach((t) => {
       t.transformQueries({
         queries: queryList
       });
@@ -548,8 +563,8 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
     if (q1Input.queries.length !== q2Input.queries.length) {
       return false;
     }
-    const _  = Utility.getLodash();
-    const queryUnequal = q1Input.queries.some( (q1, index) => {
+    const _ = Utility.getLodash();
+    const queryUnequal = q1Input.queries.some((q1, index) => {
       const q2 = q2Input.queries[index];
       const q1Query = Utility.getLodash().cloneDeep(q1.query);
       const q2Query = _.cloneDeep(q2.query);
@@ -631,6 +646,97 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
     this.graphOptions = this.generateDefaultGraphOptions();
   }
 
+  getSourceMeta(s: Telemetry_queryMetricsResultSeries): SourceMeta {
+    // s.tags looks like =>  {reporterID: "HP-srividhya-3.pensando.io"}
+    return  (s.tags) ? s.tags as SourceMeta : {};
+  }
+
+   /**
+   * Compute whether to auto deselect chart legend
+
+    metricsResultSeries:
+    columns:  ["time", "NumIcmpSessions"]
+    name: "SessionSummaryMetrics_5minutes"
+
+    tags: {reporterID: "HP-srividhya-3.pensando.io"}  - DSC
+      or
+          {name: "00ae.cd01.1dc0-uplink-1-2"} - networkinterface
+    (tags is a SourceMeta)
+
+    values: [ data ... ]
+
+    const columns = s.columns;
+    const name = s.name;
+    */
+  shouldLegendBeDeselected(metricsResultSeries: Telemetry_queryMetricsResultSeries, datasource: DataSource): boolean {
+    const sourceMeta = this.getSourceMeta(metricsResultSeries);
+    return this.shouldLegendBeDeselectedFromSourceMeta(sourceMeta, datasource);
+  }
+
+  /**
+   * Learn from VS-1600, DSC/NI in existing chart may find associated DSCs are not in admitted state.
+   * Thus, chart's data may be misleading. We use ChartJS's hidden property to auto deselect chart legend.
+   * As well, we change chart legend label to inform US about DSC status.
+   *
+   * @param sourceMeta
+   * @param datasource
+   */
+  shouldLegendBeDeselectedFromSourceMeta(sourceMeta: SourceMeta, datasource: DataSource): boolean {
+    if (this.metricsMetadata[datasource.measurement].objectKind === 'DistributedServiceCard') {
+      // Check on DSC
+      const dscname = this.getDSCNameFromResultSeries(sourceMeta);
+      if (dscname) {
+        // If we find the DSC is not in admitted state, we return true --> the chart legend will be in hidden/de-select stage.
+        return !this.isDSCExist( dscname) || !this.isDSCAdmittedByDSCName(dscname);
+      }
+    }  else if (this.metricsMetadata[datasource.measurement].objectKind === 'NetworkInterface') {
+      // Check on NetworkNetworkInterface.
+      const niName = this.getNetworkInterfaceNameFromResultSeries(sourceMeta);
+      if (niName) {
+        // Find network-interface object -> get dsc-name -> see if DSC object exists and is in admitted stage
+        const networkInterface: NetworkNetworkInterface = this.networkInterfaces.find((ni: NetworkNetworkInterface) => ni.meta.name === niName);
+        const dscname = networkInterface.status['dsc-id'];
+        const isDSCbad = !this.isDSCExist( dscname) || !this.isDSCAdmittedByDSCName(dscname); // return true if non-exist or is not-admitted
+        const fieldNI = 'name';
+        const dsc = this.naples.find( (nic: ClusterDistributedServiceCard) => nic.spec.id === dscname);
+        // Update tags: { "name": "aaaa.bbbb.ccc-uplink-1-2 ( DSC-dsc_status"}
+        sourceMeta[fieldNI] = (!isDSCbad) ? niName : niName +  ' (DSC-' + dsc.status['admission-phase'] + ')';
+        return isDSCbad;
+      }
+    }
+    return false;
+  }
+
+  getDSCNameFromResultSeries(s: SourceMeta): string {
+    return this.getItemNameFromResultSeries(s, 'reporterID');
+  }
+
+  getNetworkInterfaceNameFromResultSeries(s: SourceMeta): string {
+    return this.getItemNameFromResultSeries(s, 'name');
+  }
+
+  getItemNameFromResultSeries(tags: SourceMeta, field: string): string {
+    if (tags && tags.hasOwnProperty(field)) {
+      return tags[field];
+    }
+    return null;
+  }
+
+  isDSCAdmittedByDSCName(dscname: string): boolean {
+    const naple = this.naples.find(dsc => dsc.spec.id === dscname);
+    return (naple  && naple.status['admission-phase'] === ClusterDistributedServiceCardStatus_admission_phase.admitted);
+  }
+
+  isDSCAdmittedByDSCMac(dscMac: string): boolean {
+    const naple = this.naples.find(dsc => dsc.meta.name === dscMac);
+    return (naple  && naple.status['admission-phase'] === ClusterDistributedServiceCardStatus_admission_phase.admitted);
+  }
+
+  isDSCExist(dscname: string): boolean {
+    const naple = this.naples.find(dsc => (dsc.spec.id === dscname || dsc.meta.name === dscname) );
+    return  (!!naple);
+  }
+
   drawGraph() {
     if (this.metricData == null) {
       this.resetGraph();
@@ -647,7 +753,7 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
     // User can hide a dataset by clicking it's name on the legend
     // Create a map of which datasets are currently hidden, so that we can keep it.
     const hiddenDatasets = {};
-    this.lineData.datasets.forEach( (dataset, index) => {
+    this.lineData.datasets.forEach((dataset, index) => {
       if (this.chartContainer.chart && !this.chartContainer.chart.isDatasetVisible(index)) {  // VS-745 (saw some console errror. add a check)
         const key = sourceFieldKey(dataset.sourceID, dataset.sourceMeasurement, dataset.sourceField) + dataset.label;
         hiddenDatasets[key] = true;
@@ -656,7 +762,7 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
 
     const results = this.metricData.results;
 
-    this.graphTransforms.forEach( (t) => {
+    this.graphTransforms.forEach((t) => {
       t.transformMetricData({
         results: results
       });
@@ -671,7 +777,7 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
     const allResultsDatasets = [];
 
     const resDataSets: ChartDataSets[] = [];
-    results.forEach( (res, index) => {
+    results.forEach((res, index) => {
       if (!MetricsUtility.resultHasData(res)) {
         // TODO: add only in legend
         return;
@@ -682,8 +788,8 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
       source.transformMetricData({ result: res });
 
       const singleResultDatasets: TransformDatasets = [];
-      res.series.forEach( (s) => {
-        source.fields.forEach( (field) => {
+      res.series.forEach((s) => {
+        source.fields.forEach((field) => {
           const fieldIndex = MetricsUtility.findFieldIndex(s.columns, field);
           const data = MetricsUtility.transformToChartjsTimeSeries(s, field);
           const dataset: ChartDataSets = {
@@ -695,6 +801,8 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
             sourceField: field,
             spanGaps: true,
             sourceMeasurement: source.measurement,
+            hidden: this.shouldLegendBeDeselected(s as Telemetry_queryMetricsResultSeries, source ),  // VS-1600
+            sourceMeta: this.getSourceMeta(s as Telemetry_queryMetricsResultSeries)
           };
           const opt: TransformDataset = {
             dataset: dataset,
@@ -713,13 +821,13 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
         });
       });
       source.transformDatasets(singleResultDatasets);
-      singleResultDatasets.forEach( (opt) => {
-          allResultsDatasets.push(opt);
-        }
+      singleResultDatasets.forEach((opt) => {
+        allResultsDatasets.push(opt);
+      }
       );
     });
 
-    this.graphTransforms.forEach( (t) => {
+    this.graphTransforms.forEach((t) => {
       t.transformGraphOptions({
         data: allResultsDatasets,
         graphOptions: newGraphOptions,
@@ -728,9 +836,9 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
     });
 
     // Hide any lines that are already hidden
-    resDataSets.forEach( (dataset, index) => {
+    resDataSets.forEach((dataset, index) => {
       const key = sourceFieldKey(dataset.sourceID, dataset.sourceMeasurement, dataset.sourceField) + dataset.label;
-      dataset.hidden = hiddenDatasets[key] != null ? hiddenDatasets[key] : false;
+      dataset.hidden = hiddenDatasets[key] != null ? hiddenDatasets[key] : dataset.hidden; // above line 804 - this.shouldLegendBeDeselected(). We want preserve "hidden" value
       dataset.steppedLine = (dataset.sourceMeasurement === 'Cluster') ? 'middle' : false; // VS-741 make cluster chart using stepped-line style
     });
 

@@ -31,10 +31,24 @@ export interface DatasourceOptions {
   checkTransforms?: (transformMap: {[key: string]: any}) => boolean;
 }
 
+/**
+ * Defind a interface for - 'tags'
+ *  "series": [
+                {
+                    "name": "Node",
+                    "tags": { // Grouped field is here
+                        "reporterID": "Node-node1" // or "name": "xxxx.yyyy.zzz-uplink-4"
+                    },
+ */
+export interface SourceMeta {
+  [key: string]: string;
+}
+
 export interface ChartDataSets extends ChartJSDataSets {
   sourceID: string;
   sourceMeasurement: string;
   sourceField: string;
+  sourceMeta?: SourceMeta;
 }
 
 export interface ChartData extends ChartJSData {
