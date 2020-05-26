@@ -129,10 +129,10 @@ vnic_feeder::init(pds_obj_key_t key, pds_obj_key_t subnet,
     mac_64 = mac | (pdsobjkey2int(key) << 24);
     MAC_UINT64_TO_ADDR(spec.mac_addr, mac_64);
     spec.binding_checks_en = binding_checks_en;
+#if 0
     spec.tx_mirror_session_bmap = tx_mirror_session_bmap;
     spec.rx_mirror_session_bmap = rx_mirror_session_bmap;
 
-#if 0
     // TODO: this should be under platform == HW check
     spec->host_ifindex = LIF_IFINDEX(lif_id++);
     if (lif_id > HOST_LIF_ID_MAX) {
@@ -174,8 +174,10 @@ vnic_feeder::iter_next(int width) {
     utils_encap_val_update(&spec.vnic_encap);
     if (apollo()) {
         utils_encap_val_update(&spec.fabric_encap);
+#if 0
         spec.tx_mirror_session_bmap += width;
         spec.rx_mirror_session_bmap += width;
+#endif
     }
     mac_u64 = MAC_TO_UINT64(spec.mac_addr);
     mac_u64+= width;
@@ -206,11 +208,13 @@ vnic_feeder::spec_compare(const pds_vnic_spec_t *spec) const {
     mac_addr_t mac = {0};
 
     if (apollo()) {
+#if 0
         if (this->spec.tx_mirror_session_bmap != spec->tx_mirror_session_bmap)
             return false;
 
         if (this->spec.rx_mirror_session_bmap != spec->rx_mirror_session_bmap)
             return false;
+#endif
     }
 
     if (!test::pdsencap_isequal(&this->spec.vnic_encap, &spec->vnic_encap))
@@ -316,12 +320,14 @@ vnic_attr_update (vnic_feeder& feeder, pds_vnic_spec_t *spec, uint64_t chg_bmap)
     if (bit_isset(chg_bmap, VNIC_ATTR_BINDING_CHECKS_EN)) {
         feeder.spec.binding_checks_en = spec->binding_checks_en;
     }
+#if 0
     if (bit_isset(chg_bmap, VNIC_ATTR_TX_MIRROR)) {
         feeder.spec.tx_mirror_session_bmap = spec->tx_mirror_session_bmap;
     }
     if (bit_isset(chg_bmap, VNIC_ATTR_RX_MIRROR)) {
         feeder.spec.rx_mirror_session_bmap = spec->rx_mirror_session_bmap;
     }
+#endif
     if (bit_isset(chg_bmap, VNIC_ATTR_V4_METER)) {
         feeder.spec.v4_meter = spec->v4_meter;
     }

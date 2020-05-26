@@ -755,10 +755,12 @@ create_vnics (uint32_t num_vpcs, uint32_t num_subnets,
                 } else {
                     pds_vnic.binding_checks_en = false; //(k & 0x1);
                 }
+#if 0
                 pds_vnic.tx_mirror_session_bmap =
                     g_test_params.rspan_bmap | g_test_params.erspan_bmap;
                 pds_vnic.rx_mirror_session_bmap =
                     g_test_params.rspan_bmap | g_test_params.erspan_bmap;
+#endif
                 pds_vnic.v4_meter = test::int2pdsobjkey(v4_meter_id++);
                 if (v4_meter_id > num_meter) {
                     v4_meter_id = 1;

@@ -88,8 +88,10 @@ operator<<(std::ostream& os, const pds_vnic_spec_t *spec) {
        << " fabric encap: " << pds_encap2str(&spec->fabric_encap)
        << " mac: " << macaddr2str(spec->mac_addr)
        << " IP/MAC bindings check : " << spec->binding_checks_en
+#if 0
        << " tx_mirror_session_bmap: " << +spec->tx_mirror_session_bmap
        << " rx_mirror_session_bmap: " << +spec->rx_mirror_session_bmap
+#endif
        << " v4 meter: " << spec->v4_meter.str()
        << " v6 meter: " << spec->v6_meter.str()
        << "tx policer"  << spec->tx_policer.str()

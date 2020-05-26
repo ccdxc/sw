@@ -38,9 +38,9 @@ message VnicSpec {
   // fabric encap information to be used for traffic originated from this vnic
   types.Encap     FabricEncap           = 6 [(gogoproto.moretags) = "meta:immutable"];
   // Tx/egress mirror session id list, if any
-  repeated uint32 TxMirrorSessionId     = 7;
+  repeated bytes  TxMirrorSessionId     = 7;
   // Rx/ingress mirror session id list, if any
-  repeated uint32 RxMirrorSessionId     = 8;
+  repeated bytes  RxMirrorSessionId     = 8;
   // switch vnic is router/bridge/appliance sitting behind the VLAN of this VNIC
   // and can have many MACs in the same VLAN, so SMAC check will be disabled
   bool            SwitchVnic            = 9;

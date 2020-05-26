@@ -696,8 +696,8 @@ vnic_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     vnic_data.action_id = VNIC_VNIC_INFO_ID;
     vnic_data.ing_vnic_info.epoch = epoch_;
     vnic_data.ing_vnic_info.meter_enabled = spec->meter_en;
-    vnic_data.ing_vnic_info.rx_mirror_session = spec->rx_mirror_session_bmap;
-    vnic_data.ing_vnic_info.tx_mirror_session = spec->tx_mirror_session_bmap;
+    //vnic_data.ing_vnic_info.rx_mirror_session = spec->rx_mirror_session_bmap;
+    //vnic_data.ing_vnic_info.tx_mirror_session = spec->tx_mirror_session_bmap;
     vnic_data.ing_vnic_info.binding_check_enabled =
         spec->binding_checks_en ? TRUE : FALSE;
     if (tx_policer) {

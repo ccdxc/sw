@@ -18,8 +18,9 @@
 /// \defgroup PDS_VNIC vnic API
 /// @{
 
-#define PDS_MAX_VNIC           128     ///< maximum vnics
-#define PDS_MAX_VNIC_POLICY    5       ///< max. #of security policies per vnic
+#define PDS_MAX_VNIC              128     ///< maximum vnics
+#define PDS_MAX_VNIC_POLICY       5       ///< max. #of security policies per vnic
+#define PDS_MAX_MIRROR_SESSION    8
 
 /// \brief vnic specification
 typedef struct pds_vnic_spec_s {
@@ -33,14 +34,18 @@ typedef struct pds_vnic_spec_s {
     mac_addr_t mac_addr;                       ///< vnic's overlay mac address
     bool binding_checks_en;                    ///< TRUE if MAC/IP binding
                                                ///< checks are enabled
-    uint8_t tx_mirror_session_bmap;            ///< Tx mirror sessions, if any
-    uint8_t rx_mirror_session_bmap;            ///< Rx mirror sessions, if any
-    pds_obj_key_t v4_meter;                    ///< IPv4 Metering policy to apply on
-                                               ///< Tx and Rx traffic
-    pds_obj_key_t v6_meter;                    ///< IPv6 Metering policy to apply on
-                                               ///< Tx and Rx traffic
-    bool switch_vnic;                          ///< TRUE if vnic is a switch/bridge
-                                               ///< vnic
+    /// Tx mirror sessions, if any
+    uint8_t num_tx_mirror_session;
+    pds_obj_key_t tx_mirror_session[PDS_MAX_MIRROR_SESSION];
+    /// Rx mirror sessions, if any
+    uint8_t num_rx_mirror_session;
+    pds_obj_key_t rx_mirror_session[PDS_MAX_MIRROR_SESSION];
+    /// IPv4 Metering policy to apply on Tx and Rx traffic
+    pds_obj_key_t v4_meter;
+    /// IPv6 Metering policy to apply on Tx and Rx traffic
+    pds_obj_key_t v6_meter;
+    /// TRUE if vnic is a switch/bridge vnic
+    bool switch_vnic;
     /// ingress IPv4 policy table(s)
     uint8_t num_ing_v4_policy;
     pds_obj_key_t ing_v4_policy[PDS_MAX_VNIC_POLICY];

@@ -97,14 +97,12 @@ vnic_cfg_entry_dump (pds_cfg_msg_t *msg, void *buf)
     } else {
         strcpy(switch_vnic, "FALSE");
     }
-    snprintf((char *)buf, 219, "%-40s%-40s%-14s%-20s%-14s%-20x%-20x%-11s"
-             "%-40s\n\n", msg->vnic.spec.key.str(), msg->vnic.spec.subnet.str(),
+    snprintf((char *)buf, 219, "%-40s%-40s%-14s%-20s%-14s%-11s%-40s\n\n",
+             msg->vnic.spec.key.str(), msg->vnic.spec.subnet.str(),
              pds_encap2str(&(msg->vnic.spec.vnic_encap)),
              macaddr2str(msg->vnic.spec.mac_addr),
              pds_encap2str(&(msg->vnic.spec.fabric_encap)),
-             msg->vnic.spec.rx_mirror_session_bmap,
-             msg->vnic.spec.tx_mirror_session_bmap, switch_vnic,
-             msg->vnic.spec.host_if.str());
+             switch_vnic, msg->vnic.spec.host_if.str());
 
     buf_entry_dump(buf);
 

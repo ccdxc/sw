@@ -169,6 +169,14 @@ vnic_entry::init_config(api_ctxt_t *api_ctxt) {
     for (uint8_t i = 0; i < num_egr_v6_policy_; i++) {
         egr_v6_policy_[i] = spec->egr_v6_policy[i];
     }
+    num_tx_mirror_session_ = spec->num_tx_mirror_session;
+    for (uint8_t i = 0; i < num_tx_mirror_session_; i++) {
+        tx_mirror_session_[i] = spec->tx_mirror_session[i];
+    }
+    num_rx_mirror_session_ = spec->num_rx_mirror_session;
+    for (uint8_t i = 0; i < num_rx_mirror_session_; i++) {
+        rx_mirror_session_[i] = spec->rx_mirror_session[i];
+    }
     if (is_mac_set(spec->mac_addr)) {
         memcpy(mac_, spec->mac_addr, ETH_ADDR_LEN);
     }
@@ -203,13 +211,11 @@ vnic_entry::program_create(api_obj_ctxt_t *obj_ctxt) {
     pds_vnic_spec_t *spec = &obj_ctxt->api_params->vnic_spec;
 
     PDS_TRACE_DEBUG("Programming vnic %s, subnet %s, mac %s\n"
-                    "vnic encap %s, fabric encap %s, rxmirror bitmap %x, "
-                    "tx mirror bitmap %x, binding checks %s, host if %s",
-                    key_.str(), spec->subnet.str(), macaddr2str(spec->mac_addr),
+                    "vnic encap %s, fabric encap %s, binding checks %s, "
+                    "host if %s", key_.str(), spec->subnet.str(),
+                    macaddr2str(spec->mac_addr),
                     pds_encap2str(&spec->vnic_encap),
                     pds_encap2str(&spec->fabric_encap),
-                    spec->rx_mirror_session_bmap,
-                    spec->tx_mirror_session_bmap,
                     spec->binding_checks_en ? "true" : "false",
                     spec->host_if.str());
     return impl_->program_hw(this, obj_ctxt);
@@ -257,8 +263,18 @@ vnic_entry::compute_update(api_obj_ctxt_t *obj_ctxt) {
         (memcmp(egr_v4_policy_, spec->egr_v4_policy,
                 num_egr_v4_policy_ * sizeof(egr_v4_policy_[0]))) ||
         (memcmp(egr_v6_policy_, spec->egr_v6_policy,
-                   num_egr_v6_policy_ * sizeof(egr_v6_policy_[0])))) {
+                num_egr_v6_policy_ * sizeof(egr_v6_policy_[0])))) {
         obj_ctxt->upd_bmap |= PDS_VNIC_UPD_POLICY;
+    }
+    if ((num_tx_mirror_session_ != spec->num_tx_mirror_session) ||
+        memcmp(tx_mirror_session_, spec->tx_mirror_session,
+               num_tx_mirror_session_ * sizeof(tx_mirror_session_[0]))) {
+        obj_ctxt->upd_bmap |= PDS_VNIC_UPD_TX_MIRROR_SESSION;
+    }
+    if ((num_rx_mirror_session_ != spec->num_rx_mirror_session) ||
+        memcmp(rx_mirror_session_, spec->rx_mirror_session,
+               num_rx_mirror_session_ * sizeof(rx_mirror_session_[0]))) {
+        obj_ctxt->upd_bmap |= PDS_VNIC_UPD_RX_MIRROR_SESSION;
     }
     if (host_if_ != spec->host_if) {
         obj_ctxt->upd_bmap |= PDS_VNIC_UPD_HOST_IFINDEX;

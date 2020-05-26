@@ -35,7 +35,8 @@ class vnic_state;
 #define PDS_VNIC_UPD_ROUTE_TABLE         0x80
 #define PDS_VNIC_UPD_TX_POLICER          0x100
 #define PDS_VNIC_UPD_RX_POLICER          0x200
-#define PDS_VNIC_UPD_MIRROR              0x400
+#define PDS_VNIC_UPD_TX_MIRROR_SESSION   0x400
+#define PDS_VNIC_UPD_RX_MIRROR_SESSION   0x800
 
 /// \defgroup PDS_VNIC_ENTRY - vnic functionality
 /// \ingroup PDS_VNIC
@@ -323,6 +324,32 @@ public:
         return egr_v6_policy_[n];
     }
 
+    /// \brief     return number of Tx mirror sessions on this vnic
+    /// \return    number of Tx mirror session on the vnic
+    uint8_t num_tx_mirror_session(void) const {
+        return num_tx_mirror_session_;
+    }
+
+    /// \brief          return Tx mirror session of the vnic
+    /// \param[in] n    Tx mirror session number being queried
+    /// \return         Tx mirror session of the vnic
+    pds_obj_key_t tx_mirror_session(uint32_t n) const {
+        return tx_mirror_session_[n];
+    }
+
+    /// \brief     return number of Rx mirror sessions on this vnic
+    /// \return    number of Rx mirror session on the vnic
+    uint8_t num_rx_mirror_session(void) const {
+        return num_rx_mirror_session_;
+    }
+
+    /// \brief          return Rx mirror session of the vnic
+    /// \param[in] n    Rx mirror session number being queried
+    /// \return         Rx mirror session of the vnic
+    pds_obj_key_t rx_mirror_session(uint32_t n) const {
+        return rx_mirror_session_[n];
+    }
+
     /// \brief     return whether vnic is primary or not
     /// \return    true if vnic is marked primary or else false
     bool primary(void) const { return primary_; }
@@ -376,6 +403,14 @@ private:
     uint8_t       num_egr_v6_policy_;
     /// egress IPv6 policies
     pds_obj_key_t egr_v6_policy_[PDS_MAX_VNIC_POLICY];
+    /// number of tx mirror sessions
+    uint8_t       num_tx_mirror_session_;
+    /// Tx mirror sessions
+    pds_obj_key_t tx_mirror_session_[PDS_MAX_MIRROR_SESSION];
+    /// number of Rx mirror sessions
+    uint8_t       num_rx_mirror_session_;
+    /// Rx mirror sessions
+    pds_obj_key_t rx_mirror_session_[PDS_MAX_MIRROR_SESSION];
     pds_obj_key_t tx_policer_;           ///< egress policer index
     pds_obj_key_t rx_policer_;           ///< ingress policer index
     bool          primary_;              ///< primary vnic

@@ -39,19 +39,13 @@ pds_vnic_api_spec_to_proto (pds::VnicSpec *proto_spec,
     proto_spec->set_sourceguardenable(api_spec->binding_checks_en);
     proto_spec->set_v4meterid(api_spec->v4_meter.id, PDS_MAX_KEY_LEN);
     proto_spec->set_v6meterid(api_spec->v6_meter.id, PDS_MAX_KEY_LEN);
-    if (api_spec->tx_mirror_session_bmap) {
-        for (uint8_t i = 0; i < 8; i++) {
-            if (api_spec->tx_mirror_session_bmap & (1 << i)) {
-                proto_spec->add_txmirrorsessionid(i + 1);
-            }
-        }
+    for (uint8_t i = 0; i < api_spec->num_tx_mirror_session; i++) {
+        proto_spec->add_txmirrorsessionid(api_spec->tx_mirror_session[i].id,
+                                          PDS_MAX_KEY_LEN);
     }
-    if (api_spec->rx_mirror_session_bmap) {
-        for (uint8_t i = 0; i < 8; i++) {
-            if (api_spec->rx_mirror_session_bmap & (1 << i)) {
-                proto_spec->add_rxmirrorsessionid(i + 1);
-            }
-        }
+    for (uint8_t i = 0; i < api_spec->num_rx_mirror_session; i++) {
+        proto_spec->add_rxmirrorsessionid(api_spec->rx_mirror_session[i].id,
+                                          PDS_MAX_KEY_LEN);
     }
     proto_spec->set_switchvnic(api_spec->switch_vnic);
     for (uint8_t i = 0; i < api_spec->num_ing_v4_policy; i++) {
@@ -122,8 +116,6 @@ static inline sdk_ret_t
 pds_vnic_proto_to_api_spec (pds_vnic_spec_t *api_spec,
                             const pds::VnicSpec &proto_spec)
 {
-    uint32_t msid;
-
     pds_obj_key_proto_to_api_spec(&api_spec->key, proto_spec.id());
     if (proto_spec.hostname().empty()) {
         api_spec->hostname[0] = '\0';
@@ -137,25 +129,25 @@ pds_vnic_proto_to_api_spec (pds_vnic_spec_t *api_spec,
     api_spec->fabric_encap = proto_encap_to_pds_encap(proto_spec.fabricencap());
     MAC_UINT64_TO_ADDR(api_spec->mac_addr, proto_spec.macaddress());
     api_spec->binding_checks_en = proto_spec.sourceguardenable();
-    for (int i = 0; i < proto_spec.txmirrorsessionid_size(); i++) {
-        msid = proto_spec.txmirrorsessionid(i);
-        if ((msid < 1) || (msid > 8)) {
-            PDS_TRACE_ERR("Invalid tx mirror session id {} in vnic {} spec, "
-                          "mirror session ids must be in the range [1-8]",
-                          msid, api_spec->key.id);
-            return SDK_RET_INVALID_ARG;
-        }
-        api_spec->tx_mirror_session_bmap |= (1 << (msid - 1));
+    if (proto_spec.txmirrorsessionid_size() > PDS_MAX_MIRROR_SESSION) {
+        PDS_TRACE_ERR("No. of Tx mirror sessions on vnic can't exceed {}",
+                      PDS_MAX_MIRROR_SESSION);
+        return SDK_RET_INVALID_ARG;
     }
-    for (int i = 0; i < proto_spec.rxmirrorsessionid_size(); i++) {
-        msid = proto_spec.rxmirrorsessionid(i);
-        if ((msid < 1) || (msid > 8)) {
-            PDS_TRACE_ERR("Invalid rx mirror session id {} in vnic {} spec",
-                          "mirror session ids must be in the range [1-8]",
-                          msid, api_spec->key.id);
-            return SDK_RET_INVALID_ARG;
-        }
-        api_spec->rx_mirror_session_bmap |= (1 << (msid - 1));
+    api_spec->num_tx_mirror_session = proto_spec.txmirrorsessionid_size();
+    for (uint8_t i = 0; api_spec->num_tx_mirror_session; i++) {
+        pds_obj_key_proto_to_api_spec(&api_spec->tx_mirror_session[i],
+                                      proto_spec.txmirrorsessionid(i));
+    }
+    if (proto_spec.rxmirrorsessionid_size() > PDS_MAX_MIRROR_SESSION) {
+        PDS_TRACE_ERR("No. of Rx mirror sessions on vnic can't exceed {}",
+                      PDS_MAX_MIRROR_SESSION);
+        return SDK_RET_INVALID_ARG;
+    }
+    api_spec->num_rx_mirror_session = proto_spec.rxmirrorsessionid_size();
+    for (uint8_t i = 0; api_spec->num_rx_mirror_session; i++) {
+        pds_obj_key_proto_to_api_spec(&api_spec->rx_mirror_session[i],
+                                      proto_spec.rxmirrorsessionid(i));
     }
     pds_obj_key_proto_to_api_spec(&api_spec->v4_meter, proto_spec.v4meterid());
     pds_obj_key_proto_to_api_spec(&api_spec->v6_meter, proto_spec.v6meterid());
