@@ -3,7 +3,7 @@ import { Animations } from '@app/animations';
 import { ToolbarButton } from '@app/models/frontend/shared/toolbar.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
-import { IMonitoringFwlogPolicy, MonitoringFwlogPolicy, MonitoringFwlogPolicySpec, IMonitoringPSMExportTarget, MonitoringPSMExportTarget } from '@sdk/v1/models/generated/monitoring';
+import { IMonitoringFwlogPolicy, MonitoringFwlogPolicy, MonitoringFwlogPolicySpec, IMonitoringPSMExportTarget, MonitoringPSMExportTarget, MonitoringFwlogPolicySpec_filter } from '@sdk/v1/models/generated/monitoring';
 import { SelectItem, MultiSelect } from 'primeng/primeng';
 import { SyslogComponent } from '@app/components/shared/syslog/syslog.component';
 import { Utility } from '@app/common/Utility';
@@ -20,8 +20,8 @@ import { ValidatorFn, AbstractControl } from '@angular/forms';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class NewfwlogpolicyComponent extends CreationForm<IMonitoringFwlogPolicy, MonitoringFwlogPolicy> implements OnInit, AfterViewInit {
-  public static LOGOPTIONS_ALL = 'FIREWALL_ACTION_ALL';
-  public static LOGOPTIONS_NONE = 'FIREWALL_ACTION_NONE';
+  public static LOGOPTIONS_ALL = MonitoringFwlogPolicySpec_filter.all ;
+  public static LOGOPTIONS_NONE = MonitoringFwlogPolicySpec_filter.none;
   public static PSM_TARGET = 'psm-target';
 
   @ViewChild('syslogComponent') syslogComponent: SyslogComponent;
