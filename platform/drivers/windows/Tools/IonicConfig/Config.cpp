@@ -24,6 +24,7 @@ wmain(int argc, wchar_t* argv[])
     info.cmds.push_back(CmdPerfStats());
     info.cmds.push_back(CmdRegKeys());
     info.cmds.push_back(CmdInfo());
+    info.cmds.push_back(CmdQueueInfo());
     //info.cmds.push_back(CmdOidStats());
     //info.cmds.push_back(CmdFwcmdStats());
 
@@ -300,7 +301,7 @@ DumpRxRingStats(const char *id, struct dev_rx_ring_stats *rx_stats)
 }
 
 DWORD
-DumpDevStats(void *Stats)
+DumpDevStats(void *Stats, bool per_queue)
 {
     DevStatsRespCB *resp = (DevStatsRespCB *)Stats;
     struct dev_port_stats *dev_stats = NULL;
@@ -345,8 +346,10 @@ DumpDevStats(void *Stats)
             printf("\t\tRx Count: %d\n", dev_stats->lif_stats[ ulLifCount].rx_count);
             for (ulRxCnt = 0; ulRxCnt < dev_stats->lif_stats[ulLifCount].rx_count; ++ulRxCnt)
             {
-                snprintf(id, sizeof(id), "_%lu", ulRxCnt);
-                DumpRxRingStats(id, &dev_stats->lif_stats[ulLifCount].rx_ring[ulRxCnt]);
+                if (per_queue) {
+                    snprintf(id, sizeof(id), "_%lu", ulRxCnt);
+                    DumpRxRingStats(id, &dev_stats->lif_stats[ulLifCount].rx_ring[ulRxCnt]);
+                }
 
                 rx_total.poll += dev_stats->lif_stats[ulLifCount].rx_ring[ulRxCnt].poll;
                 rx_total.arm += dev_stats->lif_stats[ulLifCount].rx_ring[ulRxCnt].arm;
@@ -382,8 +385,10 @@ DumpDevStats(void *Stats)
             printf("\t\tTx Count: %d\n", dev_stats->lif_stats[ ulLifCount].tx_count);
             for (ulTxCnt = 0; ulTxCnt < dev_stats->lif_stats[ulLifCount].tx_count; ++ulTxCnt)
             {
-                snprintf(id, sizeof(id), "_%lu", ulTxCnt);
-                DumpTxRingStats(id, &dev_stats->lif_stats[ulLifCount].tx_ring[ulTxCnt]);
+                if (per_queue) {
+                    snprintf(id, sizeof(id), "_%lu", ulTxCnt);
+                    DumpTxRingStats(id, &dev_stats->lif_stats[ulLifCount].tx_ring[ulTxCnt]);
+                }
 
                 tx_total.full += dev_stats->lif_stats[ulLifCount].tx_ring[ulTxCnt].full;
                 tx_total.wake += dev_stats->lif_stats[ulLifCount].tx_ring[ulTxCnt].wake;
@@ -943,6 +948,80 @@ DumpAdapterInfo(void *info_buffer, ULONG Size)
 	return count;
 }
 
+ULONG
+DumpQueueInfo(void *info_buffer, ULONG Size)
+{
+        struct _QUEUE_INFO_HDR *queue_info = (struct _QUEUE_INFO_HDR *)info_buffer;
+        struct _QUEUE_INFO *info = NULL;
+        ULONG	count = 0;
+        ULONG   max_info = 0;
+
+        if (Size > sizeof(*queue_info)) {
+                max_info = (Size - sizeof(*queue_info)) / sizeof(*info);
+                if (max_info >= queue_info->count) {
+                        max_info = queue_info->count;
+                }
+                else {
+                        printf("Warning: bad adapter count\n\n");
+                }
+        }
+
+	printf("Queue Info:\n");
+
+	info = (struct _QUEUE_INFO *)((char *)queue_info + sizeof( struct _QUEUE_INFO_HDR));
+
+	for( count = 0; count < max_info; count++) {
+		WCHAR name[ADAPTER_NAME_MAX_SZ] = {};
+		WCHAR index[ADAPTER_NAME_MAX_SZ] = {};
+
+		get_interface_name(name, ADAPTER_NAME_MAX_SZ,
+				   index, ADAPTER_NAME_MAX_SZ,
+				   info->name, ADAPTER_NAME_MAX_SZ);
+
+		printf("\tName: %S\n", info->name);
+		printf("\tInterface Name: %S\n", name);
+		printf("\tInterface Index: %S\n", index);
+
+		printf("\tlif: %s\n", info->lif);
+		printf("\trx queue cnt: %d\n", info->rx_queue_cnt);
+		printf("\ttx queue cnt: %d\n", info->tx_queue_cnt);
+
+		for (unsigned int queue_cnt = 0; queue_cnt < info->rx_queue_cnt; queue_cnt++) {
+			printf("\t\tRx Queue %d isr %s core %d msi %d\n",
+					info->rx_queue_info[ queue_cnt].id,
+					info->rx_queue_info[ queue_cnt].isr?"yes":"no",
+					info->rx_queue_info[ queue_cnt].core_idx,
+					info->rx_queue_info[ queue_cnt].isr?info->rx_queue_info[ queue_cnt].msi_id:-1);
+			printf("\t\tQueue head %d tail %d CompQueue head %d tail %d\n",
+					info->rx_queue_info[ queue_cnt].q_head_index,
+					info->rx_queue_info[ queue_cnt].q_tail_index,
+					info->rx_queue_info[ queue_cnt].cq_head_index,
+					info->rx_queue_info[ queue_cnt].cq_tail_index);
+		}
+		
+		printf("\n");
+
+		for (unsigned int queue_cnt = 0; queue_cnt < info->tx_queue_cnt; queue_cnt++) {
+			printf("\t\tTx Queue %d isr %s core %d msi %d\n",
+					info->tx_queue_info[ queue_cnt].id,
+					info->tx_queue_info[ queue_cnt].isr?"yes":"no",
+					info->tx_queue_info[ queue_cnt].core_idx,
+					info->tx_queue_info[ queue_cnt].isr?info->tx_queue_info[ queue_cnt].msi_id:-1);
+			printf("\t\tQueue head %d tail %d CompQueue head %d tail %d\n",
+					info->tx_queue_info[ queue_cnt].q_head_index,
+					info->tx_queue_info[ queue_cnt].q_tail_index,
+					info->tx_queue_info[ queue_cnt].cq_head_index,
+					info->tx_queue_info[ queue_cnt].cq_tail_index);
+		}
+
+		printf("\n");
+
+		info = (struct _QUEUE_INFO *)((char *)info + sizeof( struct _QUEUE_INFO));
+	};
+
+	return count;
+}
+
 //
 // TODO: move to Ioctl.cpp or something... after integration
 //
@@ -1444,6 +1523,9 @@ CmdDevStatsOpts(bool hidden)
 
     OptAddDevName(opts);
 
+    opts.add_options()
+        ("Totals,t", optype_flag(), "Suppress per-queue stats, print totals only.");
+
     return opts;
 }
 
@@ -1452,6 +1534,7 @@ int
 CmdDevStatsRun(command_info& info)
 {
     ULONG error = ERROR_SUCCESS;
+    bool per_queue;
 
     if (info.usage) {
         std::cout << info.cmd.opts(info.hidden) << info.cmd.desc << std::endl;
@@ -1460,6 +1543,8 @@ CmdDevStatsRun(command_info& info)
 
     AdapterCB cb = {};
     OptGetDevName(info, cb.AdapterName, sizeof(cb.AdapterName), false);
+
+    per_queue = !info.vm.count("Totals");
 
     DWORD Size = 10 * 1024 * 1024;
     char *pStatsBuffer = (char *)malloc(Size);
@@ -1473,7 +1558,7 @@ CmdDevStatsRun(command_info& info)
             break;
         }
 
-        cb.Skip += DumpDevStats(pStatsBuffer);
+        cb.Skip += DumpDevStats(pStatsBuffer, per_queue);
     } while (error == ERROR_MORE_DATA);
 
     free(pStatsBuffer);
@@ -1808,6 +1893,73 @@ CmdInfo()
 
     cmd.opts = CmdInfoOpts;
     cmd.run = CmdInfoRun;
+
+    return cmd;
+}
+
+//
+// -QueueInfo
+//
+
+static
+po::options_description
+CmdQueueInfoOpts(bool hidden)
+{
+    po::options_description opts("IonicConfig.exe [-h] QueueInfo");
+
+    OptAddDevName(opts);
+
+    return opts;
+}
+
+static
+int
+CmdQueueInfoRun(command_info& info)
+{
+    DWORD error = ERROR_SUCCESS;
+
+    if (info.usage) {
+        std::cout << info.cmd.opts(info.hidden) << info.cmd.desc << std::endl;
+        return info.status;
+    }
+
+    AdapterCB cb = {};
+    OptGetDevName(info, cb.AdapterName, sizeof(cb.AdapterName), false);
+
+    DWORD Size = 1024 * 1024;
+    void *pBuffer = malloc(Size);
+    if (pBuffer == NULL) {
+        info.status = 1;
+        return info.status;
+    }
+
+    do {
+        memset(pBuffer, 0, Size);
+
+        DWORD BytesReturned = 0;
+
+        error = DoIoctl(IOCTL_IONIC_GET_QUEUE_INFO, &cb, sizeof(cb), pBuffer, Size, &BytesReturned, info.dryrun);
+        if (error != ERROR_SUCCESS && error != ERROR_MORE_DATA) {
+            info.status = 1;
+            break;
+        }
+
+        cb.Skip += DumpQueueInfo(pBuffer, BytesReturned);
+    } while (error == ERROR_MORE_DATA);
+
+    return info.status;
+}
+
+command
+CmdQueueInfo()
+{
+    command cmd;
+
+    cmd.name = "QueueInfo";
+    cmd.desc = "Provide queue information";
+
+    cmd.opts = CmdQueueInfoOpts;
+    cmd.run = CmdQueueInfoRun;
 
     return cmd;
 }

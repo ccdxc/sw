@@ -488,6 +488,9 @@ MatchesAdapterNameIonic(NDIS_STRING *AdapterNameString, struct ionic *ionic)
 NTSTATUS
 IoctlAdapterInfo(PVOID buf, ULONG inlen, ULONG outlen, PULONG outbytes);
 
+NTSTATUS
+IoctlQueueInfo(PVOID buf, ULONG inlen, ULONG outlen, PULONG outbytes);
+
 NDIS_STATUS
 init_registry_config( struct ionic *adapter);
 
@@ -578,7 +581,7 @@ PPROCESSOR_NUMBER
 get_processor_number(struct ionic *ionic, ULONG node_id, ULONG proc_idx);
 
 void
-set_processor_number(struct ionic *ionic, ULONG proc_num, bool inuse);
+set_processor_number(struct ionic *ionic, ULONG proc_num, bool inuse, struct qcq *qcq);
 
 BOOLEAN 
 ionic_msi_handler(PVOID miniport_interrupt_context,
@@ -644,7 +647,7 @@ struct intr_msg*
 find_intr_msg(struct ionic *ionic, ULONG proc_idx);
 
 struct intr_msg*
-find_intr_msg_not_idx(struct ionic *ionic, ULONG proc_idx);
+find_intr_msg_not_idx(struct ionic *ionic, ULONG proc_idx, bool any_core);
 
 BOOLEAN
 sync_intr_msg(NDIS_HANDLE SynchronizeContext);
@@ -794,6 +797,9 @@ ionic_set_coalesce(struct ionic *ionic,
 
 void
 ionic_lifs_reset(struct ionic *ionic);
+
+void
+dump_queue_info(struct lif *lif);
 
 //
 // notifq.cpp prototypes

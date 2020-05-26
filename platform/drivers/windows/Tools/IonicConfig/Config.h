@@ -167,6 +167,7 @@ command CmdPortStats();
 command CmdPerfStats();
 command CmdRegKeys();
 command CmdInfo();
+command CmdQueueInfo();
 //TODO command CmdOidStats();
 //TODO command CmdFwcmdStats();
 

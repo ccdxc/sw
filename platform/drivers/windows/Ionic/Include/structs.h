@@ -63,7 +63,7 @@ struct txq_pkt {
     ULONG flags;
     PNET_BUFFER_LIST parent_nbl;
     PNET_BUFFER packet_orig;
-    PSCATTER_GATHER_LIST sg_os_list;
+    CACHE_ALIGN PSCATTER_GATHER_LIST sg_os_list;
     PSCATTER_GATHER_LIST sg_list;
 
 	struct tx_frag_pool_elem *tx_frag_elem;
@@ -641,6 +641,8 @@ struct proc_info
 	ULONG	numa_id;
 
 	PROCESSOR_NUMBER proc;
+
+	struct qcq *qcq;
 
 };
 

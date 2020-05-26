@@ -240,6 +240,14 @@ DeviceIoControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
         break;
     }
 
+    case IOCTL_IONIC_GET_QUEUE_INFO: {
+        ntStatus = IoctlQueueInfo(Irp->AssociatedIrp.SystemBuffer,
+                                    pIrpSp->Parameters.DeviceIoControl.InputBufferLength,
+                                    pIrpSp->Parameters.DeviceIoControl.OutputBufferLength,
+                                    &ulInfoLen);
+        break;
+    }
+
     default: {
         ntStatus = STATUS_INVALID_PARAMETER;
         break;

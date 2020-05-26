@@ -1993,7 +1993,8 @@ ionic_txrx_alloc(struct lif *lif,
 
 			lif->txqcqs[i].qcq->intr_msg_id = intr_tx_msg->id;
 
-			set_processor_number( lif->ionic, intr_tx_msg->proc_idx, true);
+			set_processor_number( lif->ionic, intr_tx_msg->proc_idx, true, lif->txqcqs[i].qcq);
+			lif->txqcqs[i].qcq->proc_idx = intr_tx_msg->proc_idx;
 
 			/* Need to be sure the DPC we allocated has the same affinity as the ISR*/
 			status = KeSetTargetProcessorDpcEx( &lif->txqcqs[i].qcq->tx_packet_dpc,
@@ -2124,7 +2125,9 @@ ionic_txrx_alloc(struct lif *lif,
 
 			intr_rx_msg->inuse = true;
 			ionic_intr_affinitize(lif->ionic, lif->rxqcqs[i].qcq->cq.bound_intr->index, intr_rx_msg->id);
-			set_processor_number( lif->ionic, intr_rx_msg->proc_idx, true);
+			set_processor_number( lif->ionic, intr_rx_msg->proc_idx, true, lif->rxqcqs[i].qcq);
+			lif->rxqcqs[i].qcq->proc_idx = intr_rx_msg->proc_idx;
+			lif->rxqcqs[i].qcq->intr_msg_id = intr_rx_msg->id;
 		}
 		else {
 
@@ -2140,9 +2143,11 @@ ionic_txrx_alloc(struct lif *lif,
 
 			intr_rx_msg->inuse = true;
 			ionic_intr_affinitize(lif->ionic, lif->rxqcqs[i].qcq->cq.bound_intr->index, intr_rx_msg->id);
-			set_processor_number( lif->ionic, intr_rx_msg->proc_idx, true);
+			set_processor_number( lif->ionic, intr_rx_msg->proc_idx, true, lif->rxqcqs[i].qcq);
+			lif->rxqcqs[i].qcq->proc_idx = intr_rx_msg->proc_idx;
+			lif->rxqcqs[i].qcq->intr_msg_id = intr_rx_msg->id;
 
-			DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
+			DbgTrace((TRACE_COMPONENT_QUEUE_INIT, TRACE_LEVEL_VERBOSE,
 									"%s Setting rx queue %d msi %d to core %d\n",
 									__FUNCTION__,
 									i,
@@ -2162,7 +2167,7 @@ ionic_txrx_alloc(struct lif *lif,
 
 			proc_idx = KeGetProcessorIndexFromNumber(new_proc_num);
 
-			DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
+			DbgTrace((TRACE_COMPONENT_QUEUE_INIT, TRACE_LEVEL_VERBOSE,
 									"%s Setting tx queue %d to core %d\n",
 									__FUNCTION__,
 									i,
@@ -2171,16 +2176,20 @@ ionic_txrx_alloc(struct lif *lif,
 			status = KeSetTargetProcessorDpcEx( &lif->txqcqs[i].qcq->tx_packet_dpc,
 												new_proc_num);
 			if (status != STATUS_SUCCESS) {
-				IoPrint("%s KeSetTargetProcessorDpcEx() failed status %08lX\n",
+				DbgTrace((TRACE_COMPONENT_QUEUE_INIT, TRACE_LEVEL_ERROR,
+									"%s KeSetTargetProcessorDpcEx() failed status %08lX\n",
 									__FUNCTION__,
-									status);
+									status));
 				status = NDIS_STATUS_FAILURE;
 				goto err_out_free_rxqcqs;
 			}
 			lif->txqcqs[i].qcq->proc_idx = proc_idx;
-			set_processor_number( lif->ionic, proc_idx, true);
+			set_processor_number( lif->ionic, proc_idx, true, lif->txqcqs[i].qcq);
 		}
     }
+
+	dump_intr_tbl( lif->ionic);
+	dump_queue_info( lif);
 
     DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
               "%s Ionic %p lif %p Complete\n", __FUNCTION__, lif->ionic, lif));
@@ -2821,4 +2830,28 @@ ionic_set_coalesce(struct ionic *ionic, BOOLEAN Enable)
 	}
 
     return NDIS_STATUS_SUCCESS;
+}
+
+void
+dump_queue_info(struct lif *lif)
+{
+	int q_idx = 0;
+
+    for (q_idx = 0; q_idx < (int)lif->nrxqs; ++q_idx) {
+		DbgTrace((TRACE_COMPONENT_QUEUE_INIT, TRACE_LEVEL_VERBOSE,
+						"%s Rx %d core %d\n",
+						__FUNCTION__,
+						q_idx,
+						lif->rxqcqs[q_idx].qcq->proc_idx));
+	}
+
+    for (q_idx = 0; q_idx < (int)lif->ntxqs; ++q_idx) {
+		DbgTrace((TRACE_COMPONENT_QUEUE_INIT, TRACE_LEVEL_VERBOSE,
+						"%s Tx %d core %d\n",
+						__FUNCTION__,
+						q_idx,
+						lif->txqcqs[q_idx].qcq->proc_idx));
+	}
+
+	return;
 }

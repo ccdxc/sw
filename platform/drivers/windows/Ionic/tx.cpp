@@ -146,6 +146,14 @@ ionic_service_nb_requests(struct qcq *qcq, bool exiting)
 
     while (!IsListEmpty(&qcq->txq_nb_list)) {
 
+		// Peek at the entry to see if the SG list has been allocated
+
+        txq_pkt_private =
+            CONTAINING_RECORD(qcq->txq_nb_list.Flink, struct txq_pkt_private, link);
+		if( txq_pkt_private->txq_pkt->sg_os_list == NULL) {
+			break;
+		}
+
         list_entry = RemoveHeadList(&qcq->txq_nb_list);
 
 		NdisDprReleaseSpinLock( &qcq->txq_nb_lock);
@@ -288,7 +296,7 @@ process_nbl(struct ionic *ionic,
         txq_pkt->packet_orig = nb;
         txq_pkt->sg_os_list = NULL;
 
-        txq_pkt->flags = NET_BUFFER_SG_LIST_CREATED;
+        txq_pkt->flags = 0;
 
         DbgTrace((TRACE_COMPONENT_IO, TRACE_LEVEL_VERBOSE,
                   "%s Service NBL adapter %p NBL %p NB %p\n",
@@ -314,6 +322,11 @@ process_nbl(struct ionic *ionic,
             qcq->tx_stats->dma_map_error++;
 			fail_nbl = true;
         }
+		else {
+			NdisAcquireSpinLock(&qcq->txq_nb_lock);
+			InsertTailList(&qcq->txq_nb_list, &txq_pkt_private->link);
+			NdisReleaseSpinLock(&qcq->txq_nb_lock);
+		}
     }
 
     return status;
@@ -431,15 +444,11 @@ ionic_txq_complete_pkt(struct queue *q,
                         txq_pkt_private->bytes_processed);
             }
 
-            if (txq_pkt->sg_os_list &&
-                (txq_pkt->sg_os_list != txq_pkt->sg_list)) {
+            if (txq_pkt->sg_os_list != NULL) {
                 NdisMFreeNetBufferSGList(ionic->dma_handle, txq_pkt->sg_os_list,
-                                         packet_orig);                
-            } else {
-                NdisMFreeNetBufferSGList(ionic->dma_handle, txq_pkt->sg_list,
                                          packet_orig);
+				txq_pkt->sg_os_list = NULL;
             }
-			txq_pkt->sg_os_list = NULL;
 
             ionic_return_txq_pkt(qcq, txq_pkt);
 
@@ -1389,14 +1398,11 @@ ionic_txq_complete_failed_pkt(struct ionic *ionic,
               __FUNCTION__, ionic, parent_nbl, packet));
 
     if (txq_pkt != NULL) {
-        if (txq_pkt->sg_os_list && (txq_pkt->sg_os_list != txq_pkt->sg_list)) {
+        if (txq_pkt->sg_os_list != NULL) {
             NdisMFreeNetBufferSGList(ionic->dma_handle, txq_pkt->sg_os_list,
                                      txq_pkt->packet_orig);
-        } else if( (txq_pkt->flags & NET_BUFFER_SG_LIST_CREATED) != 0) {
-            NdisMFreeNetBufferSGList(ionic->dma_handle, txq_pkt->sg_list,
-                                     txq_pkt->packet_orig);
+			txq_pkt->sg_os_list = NULL;
         }
-		txq_pkt->sg_os_list = NULL;
 
         DbgTrace((TRACE_COMPONENT_IO, TRACE_LEVEL_VERBOSE,
                   "%s Returning failed packet\n", __FUNCTION__));
@@ -2198,7 +2204,7 @@ tx_packet_dpc_callback( _KDPC *Dpc,
 
 		ionic_service_nb_requests(qcq, false);
 
-		if(ionic_tx_flush(qcq, IONIC_TX_BUDGET_DEFAULT,
+		if(ionic_tx_flush(qcq, qcq->q.num_descs,
 				false, BooleanFlagOn( StateFlags, IONIC_STATE_TX_INTERRUPT)) &&
 		   RtlCheckBit(&qcq->q.lif->state, LIF_UP) &&
 		   !BooleanFlagOn( StateFlags, IONIC_STATE_TX_INTERRUPT)) {

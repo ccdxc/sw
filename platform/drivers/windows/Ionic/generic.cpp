@@ -2733,12 +2733,13 @@ ConfigureTxMode(IN ULONG TxMode)
     //
 
     if ((TxMode & IONIC_STATE_VALID_TX_MODE_FLAGS) != current_mode) {
-		StateFlags &= ~IONIC_STATE_VALID_TX_MODE_FLAGS;
-        StateFlags |= (TxMode & IONIC_STATE_VALID_TX_MODE_FLAGS);
+		current_mode = StateFlags;
+		current_mode &= ~IONIC_STATE_VALID_TX_MODE_FLAGS;
+        current_mode |= (TxMode & IONIC_STATE_VALID_TX_MODE_FLAGS);
 
         RtlInitUnicodeString(&uniString, REG_STATE_FLAGS);
 
-        ntStatus = UpdateRegistryParameter(&uniString, REG_DWORD, &StateFlags,
+        ntStatus = UpdateRegistryParameter(&uniString, REG_DWORD, &current_mode,
                                            sizeof(ULONG));
 
         if (!NT_SUCCESS(ntStatus)) {
@@ -3706,6 +3707,106 @@ IoctlAdapterInfo(PVOID buf, ULONG inlen, ULONG outlen, PULONG outbytes)
 		else {
 			entry->Speed = le32_to_cpu(ionic->master_lif->info->status.link_speed);
 			entry->Speed *= MEGABITS_PER_SECOND;
+		}
+
+		*outbytes += sizeof(*entry);
+
+		++info_hdr->count;
+		++entry;
+	}
+
+	NDIS_RELEASE_MUTEX(&AdapterListLock);
+
+	// If specific device was requested but not found
+	if (AdapterNameString.Length != 0 && !found) {
+		status = NDIS_STATUS_INVALID_PARAMETER;
+	}
+
+	return status;
+}
+
+NTSTATUS
+IoctlQueueInfo(PVOID buf, ULONG inlen, ULONG outlen, PULONG outbytes)
+{
+	NDIS_STATUS		status = NDIS_STATUS_SUCCESS;
+	NDIS_STRING AdapterNameString = {};
+    AdapterCB cb = {};
+	struct _QUEUE_INFO_HDR *info_hdr = NULL;
+	struct _QUEUE_INFO *entry = NULL;
+	struct ionic *ionic = NULL;
+	bool found = false;
+
+	*outbytes = 0;
+
+	if (inlen < sizeof(cb)) {
+		return NDIS_STATUS_BUFFER_TOO_SHORT;
+	}
+
+	if (outlen < sizeof(*info_hdr) + sizeof(*entry)) {
+		return NDIS_STATUS_BUFFER_TOO_SHORT;
+	}
+
+	cb = *(AdapterCB *)buf;
+	InitAdapterNameString(&AdapterNameString, cb.AdapterName);
+
+	NdisZeroMemory(buf, outlen);
+
+	PAGED_CODE();
+	NDIS_WAIT_FOR_MUTEX(&AdapterListLock);
+
+	info_hdr = (struct _QUEUE_INFO_HDR *)buf;
+	*outbytes += sizeof(*info_hdr);
+
+	entry = (struct _QUEUE_INFO *)((char *)info_hdr + sizeof( _QUEUE_INFO_HDR));
+
+	ListForEachEntry(ionic, &AdapterList, struct ionic, list_entry) {
+		if (!MatchesAdapterNameIonic(&AdapterNameString, ionic)) {
+			continue;
+		}
+		found = true;
+
+		// ioctl response may be for more than one adapter, if it fits
+		if (outlen < *outbytes + sizeof(*entry)) {
+			status = NDIS_STATUS_BUFFER_OVERFLOW;
+			break;
+		}
+
+		strcpy_s( entry->lif,
+				  LIF_NAME_MAX_SZ,
+				  ionic->master_lif->name);
+		entry->rx_queue_cnt = ionic->master_lif->nrxqs;
+		entry->tx_queue_cnt = ionic->master_lif->ntxqs;
+
+		for (unsigned int queue_cnt = 0; queue_cnt < ionic->master_lif->nrxqs; queue_cnt++) {
+
+			entry->rx_queue_info[queue_cnt].id = queue_cnt;
+			entry->rx_queue_info[queue_cnt].isr = true;
+			entry->rx_queue_info[queue_cnt].core_idx = ionic->master_lif->rxqcqs[queue_cnt].qcq->proc_idx;
+			entry->rx_queue_info[queue_cnt].msi_id = ionic->master_lif->rxqcqs[queue_cnt].qcq->intr_msg_id;
+
+			NdisAcquireSpinLock(&ionic->master_lif->rxqcqs[queue_cnt].qcq->rx_ring_lock);
+			entry->rx_queue_info[queue_cnt].q_head_index = ionic->master_lif->rxqcqs[queue_cnt].qcq->q.head->index;
+			entry->rx_queue_info[queue_cnt].q_tail_index = ionic->master_lif->rxqcqs[queue_cnt].qcq->q.tail->index;
+			entry->rx_queue_info[queue_cnt].cq_head_index = ionic->master_lif->rxqcqs[queue_cnt].qcq->cq.info->index;
+			entry->rx_queue_info[queue_cnt].cq_tail_index = ionic->master_lif->rxqcqs[queue_cnt].qcq->cq.tail->index;
+			NdisReleaseSpinLock(&ionic->master_lif->rxqcqs[queue_cnt].qcq->rx_ring_lock);
+		}
+
+		for (unsigned int queue_cnt = 0; queue_cnt < ionic->master_lif->ntxqs; queue_cnt++) {
+
+			entry->tx_queue_info[queue_cnt].id = queue_cnt;
+			entry->tx_queue_info[queue_cnt].isr = BooleanFlagOn( StateFlags, IONIC_STATE_TX_INTERRUPT);
+
+			if( BooleanFlagOn( StateFlags, IONIC_STATE_TX_INTERRUPT)) {
+				entry->tx_queue_info[queue_cnt].msi_id = ionic->master_lif->txqcqs[queue_cnt].qcq->intr_msg_id;
+			}
+
+			entry->tx_queue_info[queue_cnt].core_idx = ionic->master_lif->txqcqs[queue_cnt].qcq->proc_idx;
+
+			entry->tx_queue_info[queue_cnt].q_head_index = ionic->master_lif->txqcqs[queue_cnt].qcq->q.head->index;
+			entry->tx_queue_info[queue_cnt].q_tail_index = ionic->master_lif->txqcqs[queue_cnt].qcq->q.tail->index;
+			entry->tx_queue_info[queue_cnt].cq_head_index = ionic->master_lif->txqcqs[queue_cnt].qcq->cq.info->index;
+			entry->tx_queue_info[queue_cnt].cq_tail_index = ionic->master_lif->txqcqs[queue_cnt].qcq->cq.tail->index;
 		}
 
 		*outbytes += sizeof(*entry);

@@ -8,6 +8,8 @@
 
 #define ADAPTER_NAME_MAX_SZ             64
 
+#define IONIC_MAX_RXTX_QUEUES			32
+
 //
 // IO Control codes
 //
@@ -25,6 +27,7 @@
 #define IOCTL_IONIC_PORT_GET            CTL_CODE(FILE_DEVICE_UNKNOWN, 0x1010a, METHOD_BUFFERED, FILE_ANY_ACCESS)
 #define IOCTL_IONIC_PORT_SET            CTL_CODE(FILE_DEVICE_UNKNOWN, 0x1010b, METHOD_BUFFERED, FILE_ANY_ACCESS)
 #define IOCTL_IONIC_GET_ADAPTER_INFO	CTL_CODE(FILE_DEVICE_UNKNOWN, 0x1010c, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define IOCTL_IONIC_GET_QUEUE_INFO		CTL_CODE(FILE_DEVICE_UNKNOWN, 0x1010d, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
 #define IONIC_DEV_LOC_LEN					50
 
@@ -73,6 +76,7 @@ typedef struct _ADAPTER_CB {
 #define TRACE_COMPONENT_RSS_PROCESSING          0x00040000
 #define TRACE_COMPONENT_RSC 					0x00080000
 #define TRACE_COMPONENT_WORKER_THREAD 			0x00100000
+#define TRACE_COMPONENT_QUEUE_INIT				0x00200000
 
 typedef struct _DEBUG_TRACE_CONFIG_CB
 {
@@ -251,6 +255,47 @@ struct _ADAPTER_INFO {
 };
 
 struct _ADAPTER_INFO_HDR {
+
+	ULONG			count;
+	
+};
+
+struct _QUEUE_INFO_ENTRY {
+
+	ULONG		id;
+
+	bool		isr;
+
+	ULONG		core_idx;
+
+	ULONG		msi_id;
+
+	ULONG		q_head_index;
+
+	ULONG		q_tail_index;
+
+	ULONG		cq_head_index;
+
+	ULONG		cq_tail_index;
+};
+
+struct _QUEUE_INFO {
+
+	WCHAR           name[ADAPTER_NAME_MAX_SZ];
+
+	char			lif[LIF_NAME_MAX_SZ];
+
+	ULONG			rx_queue_cnt;
+
+	ULONG			tx_queue_cnt;
+
+	struct _QUEUE_INFO_ENTRY rx_queue_info[ IONIC_MAX_RXTX_QUEUES];
+	
+	struct _QUEUE_INFO_ENTRY tx_queue_info[ IONIC_MAX_RXTX_QUEUES];
+
+};
+
+struct _QUEUE_INFO_HDR {
 
 	ULONG			count;
 	

@@ -1145,10 +1145,10 @@ ionic_rx_service(struct cq *cq,
 static u32
 ionic_rx_walk_cq(struct cq *rxcq,
                  u32 indicate_limit,
-                 PNET_BUFFER_LIST *packets_to_indicate)
+                 PNET_BUFFER_LIST *packets_to_indicate,
+                 u32 *indicate_count)
 {
     struct qcq *qcq = cq_to_qcq(rxcq);
-    u32 indicate_count = 0;
     u32 work_limit = indicate_limit * IONIC_MAX_RSC_FLOWS;
     u32 work_done = 0;
     PNET_BUFFER_LIST last_packet = NULL;
@@ -1170,7 +1170,7 @@ ionic_rx_walk_cq(struct cq *rxcq,
             break;
         }
 
-        if (indicate_nbl && ++indicate_count >= indicate_limit) {
+        if (indicate_nbl && ++*indicate_count >= indicate_limit) {
             break;
         }
     }
@@ -1187,13 +1187,14 @@ ionic_rx_flush(struct cq *cq)
 
     struct ionic_dev *idev = &cq->lif->ionic->idev;
     u32 work_done;
+    u32 rx_indicate_count = 0;
     PNET_BUFFER_LIST packets_to_indicate = NULL;
 
     DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
               "%s Entry for lif %s budget %d\n", __FUNCTION__, cq->lif->name,
               cq->num_descs));
 
-    work_done = ionic_rx_walk_cq(cq, cq->num_descs, &packets_to_indicate);
+    work_done = ionic_rx_walk_cq(cq, cq->num_descs, &packets_to_indicate, &rx_indicate_count);
 
     if (work_done) {
         ionic_intr_credits(idev->intr_ctrl, cq->bound_intr->index, work_done,
@@ -1382,6 +1383,7 @@ ionic_rx_napi(struct intr_msg *int_info,
     unsigned int qi = rxcq->bound_q->index;
     struct ionic_dev *idev = &lif->ionic->idev;
     u32 rx_work_done = 0;
+    u32 rx_indicate_count = 0;
     u32 flags = 0;
     PNET_BUFFER_LIST packets_to_indicate = NULL;
 #ifdef DBG
@@ -1406,7 +1408,7 @@ ionic_rx_napi(struct intr_msg *int_info,
         }
     }
 
-    rx_work_done = ionic_rx_walk_cq(rxcq, budget, &packets_to_indicate);
+    rx_work_done = ionic_rx_walk_cq(rxcq, budget, &packets_to_indicate, &rx_indicate_count);
 
 #ifdef DBG
 	start_time = KeQueryPerformanceCounter( NULL);
@@ -1447,7 +1449,7 @@ ionic_rx_napi(struct intr_msg *int_info,
 #ifdef DBG
 		start_time = KeQueryPerformanceCounter( NULL);
 #endif
-		ionic_rq_indicate_bufs(lif, &lif->rxqcqs[qcq->q.index], qcq, rx_work_done,
+		ionic_rq_indicate_bufs(lif, &lif->rxqcqs[qcq->q.index], qcq, rx_indicate_count,
 			packets_to_indicate);
 #ifdef DBG
 		end_time = KeQueryPerformanceCounter( NULL);

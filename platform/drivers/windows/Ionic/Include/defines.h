@@ -119,8 +119,6 @@ NTSTATUS
 #define le64_to_cpu
 #define le32_to_cpu
 
-#define NET_BUFFER_SG_LIST_CREATED      1
-
 #define NET_BUFFER_LIST_SET_REF_COUNTER(_nbl_, _count_) \
     ((struct txq_nbl_private *)&NET_BUFFER_LIST_MINIPORT_RESERVED(_nbl_))->ref_count = (_count_)
 #define NET_BUFFER_LIST_GET_REF_COUNTER(_nbl_) \

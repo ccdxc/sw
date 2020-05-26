@@ -266,7 +266,8 @@ ionic_lif_rss_init(struct lif *lif)
         IONIC_RSS_INDIR_TBL_TAG,
         NormalPoolPriority);
     if (proc_array == NULL) {
-        IoPrint("%s failed to allocate processor array\n", __FUNCTION__);
+        DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
+				"%s failed to allocate processor array\n", __FUNCTION__));
         goto err_out;
     }
 
@@ -302,7 +303,8 @@ ionic_lif_rss_init(struct lif *lif)
     // program the indirection table
     status = map_rss_cpu_ind_tbl(lif, proc_array, rss_proc_cnt);
     if (status != NDIS_STATUS_SUCCESS) {
-        IoPrint("%s failed to map indirection table\n", __FUNCTION__);
+        DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
+				"%s failed to map indirection table\n", __FUNCTION__));
         goto err_out_free_proc_array;
     }
 
@@ -541,8 +543,11 @@ map_rss_cpu_ind_tbl(struct lif *lif, PPROCESSOR_NUMBER proc_array, ULONG tbl_len
 				intr_msg = NULL;
 				if( BooleanFlagOn( StateFlags, IONIC_STATE_FLAG_TXRX_DIFF_CORE)) {
 
-					if (intr_tx_msg->proc_idx == proc_idx) {
-						intr_msg = find_intr_msg_not_idx(lif->ionic, proc_idx);
+					if (intr_tx_msg->proc_idx <= proc_idx) {
+						intr_msg = find_intr_msg_not_idx(lif->ionic, proc_idx, false);
+						if (intr_msg == NULL) {
+							intr_msg = find_intr_msg_not_idx(lif->ionic, proc_idx, true);
+						}
 					}
 				}
 				else {
@@ -562,8 +567,9 @@ map_rss_cpu_ind_tbl(struct lif *lif, PPROCESSOR_NUMBER proc_array, ULONG tbl_len
 
 					lif->txqcqs[q_idx].qcq->intr_msg_id = intr_msg->id;
 
-					set_processor_number( lif->ionic, intr_tx_msg->proc_idx, false);
-					set_processor_number( lif->ionic, intr_msg->proc_idx, true);
+					set_processor_number( lif->ionic, intr_tx_msg->proc_idx, false, NULL);
+					set_processor_number( lif->ionic, intr_msg->proc_idx, true, lif->txqcqs[q_idx].qcq);
+					lif->txqcqs[q_idx].qcq->proc_idx = intr_msg->proc_idx;
 
 					DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
 										"%s Moving tx queue %d to core %d\n",
@@ -584,45 +590,86 @@ map_rss_cpu_ind_tbl(struct lif *lif, PPROCESSOR_NUMBER proc_array, ULONG tbl_len
 					status = KeSetTargetProcessorDpcEx( &lif->txqcqs[q_idx].qcq->tx_packet_dpc,
 														&intr_msg->proc);
 					if (status != STATUS_SUCCESS) {
-						IoPrint("%s KeSetTargetProcessorDpcEx() for Tx ISR failed status %08lX\n",
+						DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
+											"%s KeSetTargetProcessorDpcEx() for Tx ISR failed status %08lX\n",
 											__FUNCTION__,
-											status);
+											status));
 					}
 				}
 			}
 			else {
 
 				if( BooleanFlagOn( StateFlags, IONIC_STATE_FLAG_TXRX_DIFF_CORE)) {
-					
-					new_proc_num = NULL;
-					new_proc_num = get_processor_number( lif->ionic, lif->ionic->numa_node, proc_idx);
 
-					if( new_proc_num != NULL &&
-						lif->txqcqs[q_idx].qcq->proc_idx != KeGetProcessorIndexFromNumber(new_proc_num)) {
-						status = KeSetTargetProcessorDpcEx( &lif->txqcqs[q_idx].qcq->tx_packet_dpc,
-															new_proc_num);
-						if (status != STATUS_SUCCESS) {
-							IoPrint("%s KeSetTargetProcessorDpcEx() failed status %08lX\n",
-												__FUNCTION__,
-												status);
+					if (lif->ionic->proc_tbl[proc_idx].inuse) {
+						new_proc_num = NULL;
+						new_proc_num = get_processor_number( lif->ionic, lif->ionic->numa_node, proc_idx);
+
+						if( new_proc_num != NULL) {
+							status = KeSetTargetProcessorDpcEx( &lif->ionic->proc_tbl[proc_idx].qcq->tx_packet_dpc,
+																new_proc_num);
+							if (status != STATUS_SUCCESS) {
+								DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
+													"%s KeSetTargetProcessorDpcEx() failed status %08lX\n",
+													__FUNCTION__,
+													status));
+							}
+							else {
+								DbgTrace((TRACE_COMPONENT_QUEUE_INIT, TRACE_LEVEL_VERBOSE,
+													"%s Shift tx queue dpc from different core %d to %d\n",
+													__FUNCTION__,
+													lif->ionic->proc_tbl[proc_idx].qcq->proc_idx,
+													KeGetProcessorIndexFromNumber(new_proc_num)));
+
+								lif->ionic->proc_tbl[proc_idx].qcq->proc_idx = KeGetProcessorIndexFromNumber(new_proc_num);
+								set_processor_number( lif->ionic, lif->ionic->proc_tbl[proc_idx].qcq->proc_idx, true, lif->ionic->proc_tbl[proc_idx].qcq);
+								set_processor_number( lif->ionic, proc_idx, false, NULL);
+							}
+						}
+					}
+					
+					if( lif->txqcqs[q_idx].qcq->proc_idx <= proc_idx) {
+						new_proc_num = NULL;
+						new_proc_num = get_processor_number( lif->ionic, lif->ionic->numa_node, proc_idx);
+
+						if( new_proc_num != NULL) {
+							status = KeSetTargetProcessorDpcEx( &lif->txqcqs[q_idx].qcq->tx_packet_dpc,
+																new_proc_num);
+							if (status != STATUS_SUCCESS) {
+								DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
+													"%s KeSetTargetProcessorDpcEx() failed status %08lX\n",
+													__FUNCTION__,
+													status));
+							}
+							else {
+								DbgTrace((TRACE_COMPONENT_QUEUE_INIT, TRACE_LEVEL_VERBOSE,
+													"%s Shift tx queue %d dpc from different core %d to %d\n",
+													__FUNCTION__,
+													q_idx,
+													lif->txqcqs[q_idx].qcq->proc_idx,
+													KeGetProcessorIndexFromNumber(new_proc_num)));
+
+								set_processor_number( lif->ionic, lif->txqcqs[q_idx].qcq->proc_idx, false, NULL);
+								lif->txqcqs[q_idx].qcq->proc_idx = KeGetProcessorIndexFromNumber(new_proc_num);
+								set_processor_number( lif->ionic, lif->txqcqs[q_idx].qcq->proc_idx, true, lif->txqcqs[q_idx].qcq);
+							}
 						}
 						else {
-							DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
-												"%s Shift tx queue %d dpc from different core %d to %d\n",
+							DbgTrace((TRACE_COMPONENT_QUEUE_INIT, TRACE_LEVEL_VERBOSE,
+												"%s No available proc entry, leaving tx queue %d dpc on core %d\n",
 												__FUNCTION__,
 												q_idx,
-												lif->txqcqs[q_idx].qcq->proc_idx,
-												KeGetProcessorIndexFromNumber(new_proc_num)));
-							set_processor_number( lif->ionic, lif->txqcqs[q_idx].qcq->proc_idx, false);
-							lif->txqcqs[q_idx].qcq->proc_idx = KeGetProcessorIndexFromNumber(new_proc_num);
+												lif->txqcqs[q_idx].qcq->proc_idx));
+							set_processor_number( lif->ionic, lif->txqcqs[q_idx].qcq->proc_idx, true, lif->txqcqs[q_idx].qcq);
 						}
 					}
 					else {
-						DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
+						DbgTrace((TRACE_COMPONENT_QUEUE_INIT, TRACE_LEVEL_VERBOSE,
 											"%s Leaving tx queue %d dpc on core %d\n",
 											__FUNCTION__,
 											q_idx,
 											lif->txqcqs[q_idx].qcq->proc_idx));
+						set_processor_number( lif->ionic, lif->txqcqs[q_idx].qcq->proc_idx, true, lif->txqcqs[q_idx].qcq);
 					}
 				}
 				else {
@@ -630,20 +677,22 @@ map_rss_cpu_ind_tbl(struct lif *lif, PPROCESSOR_NUMBER proc_array, ULONG tbl_len
 					status = KeSetTargetProcessorDpcEx( &lif->txqcqs[q_idx].qcq->tx_packet_dpc,
 														proc);
 					if (status != STATUS_SUCCESS) {
-						IoPrint("%s KeSetTargetProcessorDpcEx() failed status %08lX\n",
+						DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
+											"%s KeSetTargetProcessorDpcEx() failed status %08lX\n",
 											__FUNCTION__,
-											status);
+											status));
 					}
 					else {
 
-						DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
+						DbgTrace((TRACE_COMPONENT_QUEUE_INIT, TRACE_LEVEL_VERBOSE,
 											"%s Shift tx queue %d dpc from same core %d to %d\n",
 											__FUNCTION__,
 											q_idx,
 											lif->txqcqs[q_idx].qcq->proc_idx,
 											proc_idx));
-						set_processor_number( lif->ionic, lif->txqcqs[q_idx].qcq->proc_idx, false);
-						set_processor_number( lif->ionic, proc_idx, true);
+
+						set_processor_number( lif->ionic, lif->txqcqs[q_idx].qcq->proc_idx, false, NULL);
+						set_processor_number( lif->ionic, proc_idx, true, lif->txqcqs[q_idx].qcq);
 						lif->txqcqs[q_idx].qcq->proc_idx = proc_idx;
 					}
 				}
@@ -652,20 +701,21 @@ map_rss_cpu_ind_tbl(struct lif *lif, PPROCESSOR_NUMBER proc_array, ULONG tbl_len
             // find a message with matching cpu affinity
             intr_msg = find_intr_msg(lif->ionic, proc_idx);
             if (intr_msg == NULL) {
-                IoPrint("%s did not find interrupt message affinitized to proc %d\n",
-                        __FUNCTION__, proc_idx);
+                DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
+						"%s did not find interrupt message affinitized to proc %d\n",
+                        __FUNCTION__, proc_idx));
                 return NDIS_STATUS_INVALID_PARAMETER;
             }
 
             intr_msg->inuse = true;
 
-			DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
+			DbgTrace((TRACE_COMPONENT_QUEUE_INIT, TRACE_LEVEL_VERBOSE,
 								"%s Moving rx queue %d to core %d\n",
 								__FUNCTION__,
 								q_idx,
 								intr_msg->proc_idx));
 
-			set_processor_number( lif->ionic, intr_msg->proc_idx, true);
+			set_processor_number( lif->ionic, intr_msg->proc_idx, true, lif->rxqcqs[q_idx].qcq);
 
             // update the table for entry to use the msg
             struct intr_sync_ctx ctx = { 0 };
@@ -676,8 +726,10 @@ map_rss_cpu_ind_tbl(struct lif *lif, PPROCESSOR_NUMBER proc_array, ULONG tbl_len
             NdisMSynchronizeWithInterruptEx(lif->ionic->intr_obj,
                                             intr_msg->id, sync_intr_msg, &ctx);
 
+			lif->rxqcqs[q_idx].qcq->proc_idx = proc_idx;
+
             q_idx++;
-            RtlSetBit(&proc_used, proc_idx);
+            RtlSetBit(&proc_used, proc_idx);			
         }
     }
 
@@ -688,8 +740,9 @@ map_rss_cpu_ind_tbl(struct lif *lif, PPROCESSOR_NUMBER proc_array, ULONG tbl_len
         // find any unused message, don't care about affinity
         intr_msg = find_intr_msg(lif->ionic, ANY_PROCESSOR_INDEX);
         if (intr_msg == NULL) {
-            IoPrint("%s did not find any unused interrupt message\n",
-                    __FUNCTION__);
+            DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
+					"%s did not find any unused interrupt message\n",
+                    __FUNCTION__));
             return NDIS_STATUS_INVALID_PARAMETER;
         }
 
@@ -710,6 +763,8 @@ map_rss_cpu_ind_tbl(struct lif *lif, PPROCESSOR_NUMBER proc_array, ULONG tbl_len
     //
     // Invoke the service routine once again for each message now inuse.
     invoke_intr_msgs_rss(lif->ionic, lif);
+
+	dump_queue_info( lif);
 
     return NDIS_STATUS_SUCCESS;
 }
