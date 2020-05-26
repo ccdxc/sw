@@ -2,16 +2,9 @@
 
 MY_DIR=$( readlink -f $( dirname $0 ))
 
-# clear any upgrade specific data from previous failed run
-rm -rf /update/*     # upgrade init mode
-rm -rf /root/.pcie*  # pciemgrd saves here in sim mode
-
 # setup dol
 DOL_ARGS='--pipeline apulu --topo learn --feature learn'
 source $MY_DIR/../../../tools/setup_dol.sh $DOL_ARGS
-
-# start pciemgr
-$BUILD_DIR/bin/pciemgrd -d &
 
 # setup upgrade
 source $MY_DIR/../setup_upgrade_gtests.sh
@@ -22,9 +15,7 @@ upg_wait_for_pdsagent
 # override trap
 function trap_finish () {
     rm -rf /update/*     # upgrade init mode
-    rm -rf /root/.pcie*  # pciemgrd saves here in sim mode
     stop_processes
-    pkill pciemgrd
     stop_model
     upg_finish upgmgr
 }
@@ -51,7 +42,6 @@ echo "upgrade command successful"
 # kill testing services
 echo "stopping processes including upgrademgr"
 stop_processes
-pkill pciemgrd
 sleep 2
 
 # some of these can be moved to upgrade_graceful_mock.sh
@@ -65,7 +55,6 @@ mv ./nicmgr.log ./nicmgr_old.log
 
 # respawn the services
 echo "starting new"
-$BUILD_DIR/bin/pciemgrd -d &
 start_processes
 upg_wait_for_pdsagent
 

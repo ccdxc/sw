@@ -1,5 +1,13 @@
 [
     {
+        "name": "pciemgrd",
+        "command": "pciemgrd -d",
+        "dependencies": [],
+        "flags": ["critical"],
+        "timeout": 30.0,
+        "cpu-affinity": "0x3"
+    },
+    {
         "name": "agent",
         "command": "/sw/nic/apollo/tools/apulu/start-agent-sim.sh",
         "dependencies": [],

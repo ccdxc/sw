@@ -5,7 +5,8 @@ NO_STOP=0
 # max wait time for system to come up
 SETUP_WAIT_TIME=600
 # list of processes
-SIM_PROCESSES=("vpp_main" "operd" "pdsagent" "sysmgr" "dhcpd")
+SIM_PROCESSES=("vpp_main" "operd" "pdsagent" "pciemgrd" "sysmgr" "dhcpd")
+TS_NAME=nic_sanity_logs.tar.gz
 
 # set file size limit to 50GB so that model logs will not exceed that.
 ulimit -f $((50*1024*1024))
@@ -35,15 +36,16 @@ function stop_model() {
 }
 
 function stop_processes () {
-    echo "======> Settting Phasers to kill"
-    $PDSPKG_TOPDIR/vpp/tools/stop-vpp-sim.sh
+    echo "======> Setting Phasers to kill"
     for process in ${SIM_PROCESSES[@]}; do
         #dump backtrace of process to file, useful for debugging if process hangs
-        pstack `pgrep -x ${process}` &> $PDSPKG_TOPDIR/${process}_bt.log
-        echo " == Nuking ${process}"
-        pkill -9 ${process}
+        pstack `pgrep -x ${process}` > $PDSPKG_TOPDIR/${process}_bt.log 2>&1
+        printf "\n *** Nuking ${process}"
+        pkill -9 ${process} || { echo -n " - already dead"; }
     done
-    echo "======> Settting Phasers to stun"
+    # kill vpp scripts if DOL was interrupted in the middle
+    pkill -9 vpp || { echo ""; }
+    echo "======> Setting Phasers to stun"
 }
 
 function start_dhcp_server() {
@@ -90,6 +92,7 @@ function remove_stale_files () {
     rm -f $PDSPKG_TOPDIR/conf/pipeline.json
     rm -f $PDSPKG_TOPDIR/conf/gen/dol_agentcfg.json
     rm -f $PDSPKG_TOPDIR/conf/gen/device_info.txt
+    rm -f $CONFIG_PATH/vpp_startup.conf
     rm -f /var/run/pds_svc_server_sock
     remove_db
     remove_ipc_files
@@ -99,14 +102,22 @@ function remove_stale_files () {
 function remove_logs () {
     # NOT to be used post run
     echo "======> Incinerating logs from unknown stardate"
-    sudo rm -f ${PDSPKG_TOPDIR}/*log* ${PDSPKG_TOPDIR}/core*
+    sudo rm -rf ${PDSPKG_TOPDIR}/*log* ${PDSPKG_TOPDIR}/core* ${PDSPKG_TOPDIR}/*Techsupport*
     sudo rm -rf /var/log/pensando/ /obfl/ /data/ /sysconfig/
+    sudo rm -rf /update/*
+    # pciemgrd saves here in sim mode
+    sudo rm -rf /root/.pcie*
 }
 
-function collect_logs () {
+function collect_techsupport () {
     echo "======> Recording captain's logs, stardate `date +%x_%H:%M:%S:%N`"
-    # TODO: @param, move to techsupport instead
-    ${PDSPKG_TOPDIR}/apollo/test/tools/savelogs.sh
+    if ls ${PDSPKG_TOPDIR}/core.* 1> /dev/null 2>&1; then
+        echo " *** waiting for the core to be produced"
+        sleep 60
+    fi
+    echo " *** Collecting Techsupport ${PDSPKG_TOPDIR}/${TS_NAME} - Please wait..."
+    techsupport -c ${CONFIG_PATH}/${PIPELINE}/techsupport_dol.json -d ${PDSPKG_TOPDIR} -o ${TS_NAME} >/dev/null 2>&1
+    [[ $? -ne 0 ]] && echo "ERR: Failed to collect techsupport" && return
 }
 
 function finish () {
@@ -114,13 +125,13 @@ function finish () {
          return
     fi
     echo "======> Starting shutdown sequence"
+    collect_techsupport
     if [ $DRYRUN == 0 ]; then
         stop_processes
         stop_model
         # unmount hugetlbfs
-        umount /dev/hugepages || { echo "Failed to unmount hugetlbfs"; }
+        umount /dev/hugepages || { echo "ERR: Failed to unmount hugetlbfs"; }
     fi
-    collect_logs
     ${PDSPKG_TOPDIR}/tools/print-cores.sh
     remove_stale_files
 }
@@ -128,7 +139,7 @@ trap finish EXIT
 
 function check_health () {
     echo "======> Initiating launch sequence"
-    echo "Please wait until all processes (${SIM_PROCESSES[@]}) are up"
+    echo " *** Please wait until all processes (${SIM_PROCESSES[@]}) are up"
     # loop for SETUP_WAIT_TIME seconds and break if all processes are UP
     counter=$SETUP_WAIT_TIME
     while [ $counter -gt 0 ]; do
