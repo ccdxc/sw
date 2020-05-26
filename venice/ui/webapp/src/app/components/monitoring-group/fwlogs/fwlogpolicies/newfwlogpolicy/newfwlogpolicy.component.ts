@@ -61,9 +61,22 @@ export class NewfwlogpolicyComponent extends CreationForm<IMonitoringFwlogPolicy
       this.submitButtonTooltip = 'Policy name is required';
       return false;
     }
-    if (this.syslogComponent && this.syslogComponent.syslogRequiredOption && !this.syslogComponent.isSyLogFormValid()['valid']) {
-      this.submitButtonTooltip = this.syslogComponent.isSyLogFormValid()['errorMessage'];
-      return false;
+    if (!this.newObject.$formGroup.get(['spec', 'psm-target', 'enable']).value) {
+      if (this.syslogComponent && this.syslogComponent.syslogRequiredOption && !this.syslogComponent.isSyLogFormValid()['valid']) {
+        this.submitButtonTooltip = this.syslogComponent.isSyLogFormValid()['errorMessage'];
+        return false;
+      }
+    } else {
+      if (this.syslogComponent) {
+        for (let i = 0; i < this.syslogComponent.targets.length; i++) {
+          if (!(Utility.isEmpty(this.syslogComponent.targets[i].controls.destination.value) && Utility.isEmpty(this.syslogComponent.targets[i].controls.gateway.value))) {
+            if (!this.syslogComponent.isSyLogFormValid()['valid']) {
+              this.submitButtonTooltip = this.syslogComponent.isSyLogFormValid()['errorMessage'];
+              return false;
+            }
+          }
+        }
+      }
     }
     if (!this.isInline) {
       if (!this.newObject.$formGroup.get(['meta', 'name']).valid) {
@@ -71,6 +84,7 @@ export class NewfwlogpolicyComponent extends CreationForm<IMonitoringFwlogPolicy
         return false;
       }
     }
+    this.submitButtonTooltip = 'Ready to submit';
     return true;
   }
   setValidators(newMonitoringFwlogPolicy: MonitoringFwlogPolicy) {

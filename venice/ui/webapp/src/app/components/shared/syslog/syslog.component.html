@@ -26,9 +26,10 @@
                             *ngIf="controlAsFormArray(syslogServerForm.get(['targets'])).length > 1"
                             (click)="removeTarget(index)">
                     delete</mat-icon>
-                  <span fxFlex="nogrow" *ngIf="last && targets.length < 2" class="syslog-add"
-                        (click)="addTarget()">+
-                    ADD</span>
+                  <span fxFlex="nogrow"
+                        *ngIf="(maxTargets && targets.length < maxTargets) || (last && !maxTargets)"
+                        class="syslog-add"
+                        (click)="addTarget()">+ ADD</span>
                 </div>
               </div>
             </div>
@@ -92,7 +93,9 @@
                    class="syslog-input syslog-destination"
                    spellcheck="false" type="text" pInputText appFloatLabel="Destination">
           </span>
-          <span class="syslog-target-span" *ngIf="!syslogRequiredOption">
+          <span class="syslog-target-span" *ngIf="!syslogRequiredOption" [ngClass]="{
+            'requiredField': isFieldDestinationRequired(syslogServerForm.get(['targets', index]))
+          }">
             <input formControlName="destination" appErrorTooltip fxFlex="nogrow"
                    class="syslog-input syslog-destination"
                    spellcheck="false" type="text" pInputText appFloatLabel="Destination">
@@ -113,7 +116,9 @@
                    class="syslog-input syslog-transport"
                    spellcheck="false" type="text" pInputText appFloatLabel="Transport">
           </span>
-          <span class="syslog-target-span" *ngIf="!syslogRequiredOption">
+          <span class="syslog-target-span" *ngIf="!syslogRequiredOption" [ngClass]="{
+            'requiredField': isFieldTransportRequired(syslogServerForm.get(['targets', index]))
+          }">
             <input formControlName="transport" appErrorTooltip fxFlex="nogrow"
                    class="syslog-input syslog-transport"
                    spellcheck="false" type="text" pInputText appFloatLabel="Transport">

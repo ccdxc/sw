@@ -146,7 +146,22 @@ export class SyslogComponent extends BaseComponent implements OnInit {
   isFieldEmptySysLog(field: boolean): boolean {
     return Utility.isEmpty(field);
   }
-
+  isFieldDestinationRequired (target): boolean {
+    if (!target.controls['destination'].value && !target.controls['transport'].value) {
+      return false;
+    } else if (!target.controls['destination'].value) {
+      target.get('destination').setValidators(null);
+      return true;
+    }
+  }
+  isFieldTransportRequired (target): boolean {
+    if (!target.controls['destination'].value && !target.controls['transport'].value) {
+      return false;
+    } else if (!target.controls['transport'].value) {
+      target.get('destination').setValidators(null);
+      return true;
+    }
+  }
   isSyLogFormValid(): ReturnObjectType {
     const returnObject: ReturnObjectType = {
       errorMessage: '',
