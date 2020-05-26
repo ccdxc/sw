@@ -287,6 +287,11 @@ func (u *NaplesUpgClient) UpgSuccessful() {
 	u.nmd.UpgSuccessful()
 }
 
+//UpgInProgress from upgrade manager
+func (u *NaplesUpgClient) UpgInProgress() {
+	u.nmd.UpgInProgress()
+}
+
 // UpgAborted from upgrade manager
 func (u *NaplesUpgClient) UpgAborted(errStrList *[]string) {
 	u.nmd.UpgAborted(errStrList)

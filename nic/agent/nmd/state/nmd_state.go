@@ -529,9 +529,22 @@ func (n *NMD) NaplesRolloutGetHandler(r *http.Request) (interface{}, error) {
 	if n.metrics != nil && n.metrics.GetCalls != nil {
 		n.metrics.GetCalls.Inc()
 	}
-
+	if val, ok := os.LookupEnv("NAPLES_PIPELINE"); ok {
+		log.Infof("NAPLES_PIPELINE is %v", val)
+		if val == globals.NaplesPipelineApollo {
+			result := utils.ProcessPdsUpgStatus()
+			switch result {
+			case utils.PdsUpgStatusSuccess:
+				go n.UpgSuccessful()
+			case utils.PdsUpgStatusFail:
+				go n.UpgFailed(&[]string{fmt.Sprintf("Upgrade failed")})
+			default:
+				go n.UpgInProgress()
+			}
+		}
+	}
 	st := n.GetDSCRolloutStatus()
-	log.Debugf("Naples Rollout Get Response: %+v", st)
+	log.Infof("Naples Rollout Get Response: %+v", st)
 	return st, nil
 }
 

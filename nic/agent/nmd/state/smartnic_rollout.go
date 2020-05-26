@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pensando/sw/nic/agent/nmd/utils"
+
 	"github.com/pensando/sw/venice/globals"
 
 	"github.com/pensando/sw/venice/utils/imagestore"
@@ -169,12 +171,14 @@ func (n *NMD) issueNextPendingOp() {
 		if val, ok := os.LookupEnv("NAPLES_PIPELINE"); ok {
 			log.Infof("NAPLES_PIPELINE is %v", val)
 			if val == globals.NaplesPipelineApollo {
-				if _, err := os.Stat("/update/pds_upg_status.txt"); os.IsNotExist(err) {
-					log.Errorf("File /update/pds_upg_status.txt not found.")
-					go n.UpgFailed(&[]string{fmt.Sprintf("upgrade status not found %s", err)})
-				} else {
-					log.Infof("Found the status file from upgmgr. Upgrade successful")
+				result := utils.ProcessPdsUpgStatus()
+				switch result {
+				case utils.PdsUpgStatusSuccess:
 					go n.UpgSuccessful()
+				case utils.PdsUpgStatusFail:
+					go n.UpgFailed(&[]string{fmt.Sprintf("Upgrade failed")})
+				default:
+					go n.UpgInProgress()
 				}
 			}
 		}
@@ -339,6 +343,22 @@ func (n *NMD) issueNextPendingOp() {
 			log.Errorf("Firmware image verification failed %s", err)
 			return
 		}
+	}
+}
+
+// UpgInProgress is called after NMD restarts and for response to rest query in Apollo
+func (n *NMD) UpgInProgress() {
+	log.Infof("UpgInProgress  got called")
+	n.Lock()
+	defer n.Unlock()
+
+	message := ""
+
+	if n.ro.InProgressOp.Op != protos.DSCOp_DSCNoOp {
+		n.updateOpStatus(n.ro.InProgressOp.Op, n.ro.InProgressOp.Version, "progressing", message)
+		n.updateRolloutStatus(protos.DSCOpSpec{Op: protos.DSCOp_DSCDisruptiveUpgrade})
+	} else {
+		log.Infof("UpgInProgress got called when there is no pending Op")
 	}
 }
 
