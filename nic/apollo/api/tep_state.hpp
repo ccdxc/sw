@@ -76,8 +76,8 @@ private:
     friend class tep_entry;    ///< tep_entry class is friend of tep_state
 
 private:
-    ht      *tep_ht_;      ///< Hash table root
-    slab    *tep_slab_;    ///< slab for allocating tep entry
+    ht *tep_ht_;        ///< Hash table root
+    slab *tep_slab_;    ///< slab for allocating tep entry
 };
 
 static inline tep_entry *

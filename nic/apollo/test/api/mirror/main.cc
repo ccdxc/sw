@@ -24,16 +24,16 @@ namespace api {
 static constexpr uint32_t k_max_mirror_sessions = PDS_MAX_MIRROR_SESSION;
 static constexpr uint32_t k_base_ms = 1;
 static const uint32_t k_tep_id1 = 2;
-static const char * const k_tep_ip1 = "10.1.1.1";
+static const char *const k_tep_ip1 = "10.1.1.1";
 static const uint32_t k_tep_id2 = 100;
-static const char * const k_tep_ip2 = "10.1.2.1";
+static const char *const k_tep_ip2 = "10.1.2.1";
 static const uint32_t k_tep_id3 = 200;
-static const char * const k_tep_ip3 = "10.1.3.1";
+static const char *const k_tep_ip3 = "10.1.3.1";
 static const pds_obj_key_t k_ifindex_id1 = uuid_from_objid(0x11010001);
 static const pds_obj_key_t k_ifindex_id2 = uuid_from_objid(0x11020001);
-static const char* const k_src_ip1 = "20.1.1.1";
-static const char* const k_src_ip2 = "20.1.2.1";
-static const char* const k_src_ip3 = "20.1.3.1";
+static const char *const k_src_ip1 = "20.1.1.1";
+static const char *const k_src_ip2 = "20.1.2.1";
+static const char *const k_src_ip3 = "20.1.3.1";
 
 
 //----------------------------------------------------------------------------

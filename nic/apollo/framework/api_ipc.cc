@@ -45,6 +45,12 @@ static api_obj_ipc_peer_map_t g_api_obj_ipc_peer_map {
             { PDS_IPC_ID_VPP, false},
         }
     },
+    // IPC peers interseted in MIRROR_SESSION object
+    { OBJ_ID_MIRROR_SESSION,
+        {
+            { PDS_IPC_ID_ROUTING, false},
+        }
+    },
     // IPC peers interseted in NAT_PORT_BLOCK object
     { OBJ_ID_NAT_PORT_BLOCK,
         {

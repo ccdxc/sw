@@ -141,6 +141,12 @@ mirror_session::init_config(api_ctxt_t *api_ctxt) {
                               vpc->type());
                 return SDK_RET_INVALID_ARG;
             }
+            if (unlikely(tep_find(&spec->erspan_spec.tep) == NULL)) {
+                PDS_TRACE_ERR("Unknown TEP %s used in mirror session %s "
+                              "ERSPAN spec", spec->erspan_spec.tep.str(),
+                              spec->key.str());
+                return SDK_RET_INVALID_ARG;
+            }
             erspan_.tep_ = spec->erspan_spec.tep;
         } else if (erspan_.dst_type_ == PDS_ERSPAN_DST_TYPE_IP) {
             if (vpc->type() == PDS_VPC_TYPE_UNDERLAY) {

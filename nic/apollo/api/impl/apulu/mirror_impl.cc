@@ -164,27 +164,38 @@ mirror_impl::activate_create_(pds_epoch_t epoch, mirror_session *ms,
     case PDS_MIRROR_SESSION_TYPE_ERSPAN:
         mirror_data.action_id = MIRROR_ERSPAN_ID;
         vpc = vpc_find(&spec->erspan_spec.vpc);
-        if (spec->erspan_spec.dst_type == PDS_ERSPAN_DST_TYPE_TEP) {
-            tep = tep_find(&spec->erspan_spec.tep);
+        if (vpc->type() == PDS_VPC_TYPE_UNDERLAY) {
+            // TODO: is this correct ??
             mirror_data.erspan_action.nexthop_type = NEXTHOP_TYPE_TUNNEL;
             mytep_ip = device_db()->find()->ip_addr();
             mirror_data.erspan_action.sip = mytep_ip.addr.v4_addr;
-            if (tep) {
+            if (spec->erspan_spec.dst_type == PDS_ERSPAN_DST_TYPE_TEP) {
+                tep = tep_find(&spec->erspan_spec.tep);
+                SDK_ASSERT(tep != NULL);
                 mirror_data.erspan_action.nexthop_id =
                     ((tep_impl *)(tep->impl()))->hw_id1();
                 mirror_data.erspan_action.dip = tep->ip().addr.v4_addr;
                 //mirror_data.erspan_action.dmac;
                 //mirror_data.erspan_action.smac;
             } else {
-                // when TEP is created, we will get update for IP reachability
-                // of this ERSPAN collector from BGP and we will update the
-                // mirror session at that time
+                SDK_ASSERT(spec->erspan_spec.dst_type ==
+                               PDS_ERSPAN_DST_TYPE_IP);
+                // TODO: should we lookup for a TEP in this case first before
+                //       assuming it is a non-TEP IP ?
+                // destination is IP in the underlay, set the nexthop to point
+                // to system drop nexthop until we hear about its reachability
+                // from the routing stack
                 mirror_data.erspan_action.nexthop_id =
                     PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID;
+                mirror_data.erspan_action.dip =
+                    spec->erspan_spec.ip_addr.addr.v4_addr;
+                // TODO: set these based on the nexthop information in the
+                //       update from the routing stack
+                //mirror_data.erspan_action.dmac;
+                //mirror_data.erspan_action.smac;
             }
-        } else if (vpc->type() == PDS_VPC_TYPE_UNDERLAY) {
-            // lookup the destination TEP
         } else {
+            SDK_ASSERT(spec->erspan_spec.dst_type == PDS_ERSPAN_DST_TYPE_IP);
 #if 0
             // mirror destination is either local or remote mapping
             mapping = mapping_entry::build(&spec->erspan_spec.mapping);
