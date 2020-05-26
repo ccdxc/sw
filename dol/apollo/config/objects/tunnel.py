@@ -472,6 +472,12 @@ class TunnelObjectClient(base.ConfigClientBase):
             return count
         return super().GetNumHwObjects(node)
 
+    def IsReadSupported(self):
+        if utils.IsNetAgentMode():
+            # Netagent messes up the UUID so don't read
+            return False
+        return True
+
 client = TunnelObjectClient()
 
 def GetMatchingObjects(selectors):

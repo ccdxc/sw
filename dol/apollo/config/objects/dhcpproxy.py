@@ -119,4 +119,10 @@ class DhcpProxyObjectClient(base.ConfigClientBase):
     def GetPdsctlObjectName(self):
         return "dhcp proxy"
 
+    def IsReadSupported(self):
+        if utils.IsNetAgentMode():
+            # Netagent messes up the UUID so don't read
+            return False
+        return True
+
 client = DhcpProxyObjectClient()

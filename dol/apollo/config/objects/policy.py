@@ -530,8 +530,10 @@ class PolicyObject(base.ConfigObjectBase):
             return False
         if spec.AddrFamily != utils.GetRpcIPAddrFamily(self.AddrFamily):
             return False
-        if spec.DefaultFWAction != utils.GetRpcSecurityRuleAction(self.DefaultFWAction):
-            return False
+        # don't validate deffwaction in netagent mode
+        if not utils.IsNetAgentMode():
+            if spec.DefaultFWAction != utils.GetRpcSecurityRuleAction(self.DefaultFWAction):
+                return False
         if len(spec.Rules) != len(self.rules):
             return False
         for rrule,erule in zip(spec.Rules,self.rules):

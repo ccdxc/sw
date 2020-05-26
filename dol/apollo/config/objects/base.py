@@ -182,6 +182,7 @@ class ConfigObjectBase(base.ConfigObjectBase):
             self.Origin = topo.OriginTypes.DISCOVERED
         elif origin == 'implicitly-created':
             self.Origin = topo.OriginTypes.IMPLICITLY_CREATED
+            self.SetHwHabitant(True)
         # anything else is FIXED
         return
 

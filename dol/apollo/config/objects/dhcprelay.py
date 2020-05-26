@@ -25,8 +25,9 @@ class DhcpRelayObject(base.ConfigObjectBase):
         self.UUID = utils.PdsUuid(self.Id, self.ObjType)
         ########## PUBLIC ATTRIBUTES OF DHCPRELAY CONFIG OBJECT ##############
         self.Vpc = vpc
-        self.ServerIps.append(ipaddress.ip_address(dhcprelaySpec.serverip))
-        self.AgentIps.append(ipaddress.ip_address(dhcprelaySpec.agentip))
+        for dhcpobj in dhcprelaySpec:
+            self.ServerIps.append(ipaddress.ip_address(dhcpobj.serverip))
+            self.AgentIps.append(ipaddress.ip_address(dhcpobj.agentip))
         ########## PRIVATE ATTRIBUTES OF DHCPRELAY CONFIG OBJECT #############
         self.Show()
         return
@@ -170,8 +171,9 @@ class DhcpRelayObjectClient(base.ConfigClientBase):
             else:
                 return
 
-        for dhcpobj in dhcprelaySpec:
-            __add_dhcp_relay_config(node, dhcpobj)
+        # In netagent-IOTA mode, there is a single IPAM-Policy with all server/relay
+        # configs, which netagent will break down to individual PDS-agent gRPC objects
+        __add_dhcp_relay_config(node, dhcprelaySpec)
 
         EzAccessStoreClient[node].SetDhcpRelayObjects(self.Objects(node))
         ResmgrClient[node].CreateDHCPRelayAllocator()
@@ -179,5 +181,11 @@ class DhcpRelayObjectClient(base.ConfigClientBase):
 
     def GetPdsctlObjectName(self):
         return "dhcp relay"
+
+    def IsReadSupported(self):
+        if utils.IsNetAgentMode():
+            # Netagent messes up the UUID so don't read
+            return False
+        return True
 
 client = DhcpRelayObjectClient()

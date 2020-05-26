@@ -28,8 +28,8 @@ class SecurityProfileObject(base.ConfigObjectBase):
         self.GID('SecurityProfile%d'%self.SecurityProfileId)
         self.UUID = utils.PdsUuid(self.SecurityProfileId, self.ObjType)
         self.ConnTrackEn = getattr(spec, 'conntrack', False)
-        self.DefaultFWAction = getattr(spec, 'deffwaction',
-                                       topo.SecurityRuleActionType.ALLOW)
+        deffwaction = getattr(spec, 'deffwaction', 'allow')
+        self.DefaultFWAction = utils.GetRpcSecurityRuleAction(deffwaction)
         self.TCPIdleTimeout = getattr(spec, 'tcpidletimeout', 600)
         self.UDPIdleTimeout = getattr(spec, 'udpidletimeout', 120)
         self.ICMPIdleTimeout = getattr(spec, 'icmpidletimeout', 15)
@@ -89,7 +89,7 @@ class SecurityProfileObject(base.ConfigObjectBase):
         return
 
     def ValidateSpec(self, spec):
-        if spec.Id != self.GetKey():
+        if self.IsOriginFixed() and spec.Id != self.GetKey():
             return False
         if spec.ConnTrackEn != self.ConnTrackEn:
             return False
@@ -124,7 +124,7 @@ class SecurityProfileObject(base.ConfigObjectBase):
         return True
 
     def ValidateYamlSpec(self, spec):
-        if utils.GetYamlSpecAttr(spec) != self.GetKey():
+        if self.IsOriginFixed() and utils.GetYamlSpecAttr(spec) != self.GetKey():
             return False
         if spec[ 'conntracken' ] != self.ConnTrackEn:
             return False
@@ -213,7 +213,6 @@ class SecurityProfileObject(base.ConfigObjectBase):
             "ICMPDropTimeout", "OtherDropTimeout"]
         self.RollbackMany(attrlist)
         return
-
 
 class SecurityProfileObjectClient(base.ConfigClientBase):
     def __init__(self):
