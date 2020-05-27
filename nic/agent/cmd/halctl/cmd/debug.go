@@ -45,6 +45,7 @@ var (
 	tcpProxyCwndIdle        uint32
 	maxSession              uint64
 	isMicroSegEn            bool
+	appDetectionEn          string
 	fwdModeStr              string
 	policyModeStr           string
 	srcEpHdl                uint64
@@ -1223,6 +1224,13 @@ func fwSecProfDebugCmdHandler(cmd *cobra.Command, args []string) {
 			}
 			// Set conn tracking
 			secProf.TcpNormalizationEn = inputToConnTrack(tcpNormalization)
+		}
+		if cmd.Flags().Changed("app-detection-en") {
+			if isConnTrackValid(appDetectionEn) != true {
+				fmt.Printf("Invalid argument\n")
+				return
+			}
+			secProf.AppDetectionEn = inputToConnTrack(appDetectionEn)
 		}
 		if cmd.Flags().Changed("tcp-timeout") {
 			if isTimeoutValid("TCP", tcpTimeout) != true {
