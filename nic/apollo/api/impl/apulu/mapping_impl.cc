@@ -1879,9 +1879,9 @@ mapping_impl::activate_delete_(pds_epoch_t epoch, mapping_entry *mapping) {
             // continue cleanup !!
         }
         if (!device_find()->overlay_routing_enabled()) {
-            if (mapping->skey().type == PDS_MAPPING_TYPE_L3) {
-                ret = mapping_impl_db()->remove_dhcp_binding(
-                          mapping->key().str());
+            pds_mapping_key_t skey = mapping->skey();
+            if (skey.type == PDS_MAPPING_TYPE_L3) {
+                ret = mapping_impl_db()->remove_dhcp_binding(&skey);
            }
         }
     }

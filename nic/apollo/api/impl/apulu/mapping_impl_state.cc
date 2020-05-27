@@ -523,6 +523,25 @@ mapping_impl_state::slab_walk(state_walk_cb_t walk_cb, void *ctxt) {
     return SDK_RET_OK;
 }
 
+static void
+get_dhcp_reservation_name (pds_mapping_key_t *skey, char *buffer,
+                           size_t buffer_len) {
+    vpc_entry *vpc;
+    uint16_t vpc_hwid;
+    char *v4_addr;
+
+    // No V6 support for now
+    vpc = vpc_find(&skey->vpc);
+    vpc_hwid = ((vpc_impl *)vpc->impl())->hw_id();
+    v4_addr = (char *)(&skey->ip_addr.addr.v4_addr);
+    snprintf(buffer, buffer_len, "%u_%u.%u.%u.%u",
+             (uint32_t)vpc_hwid, (uint32_t)(v4_addr[3]), (uint32_t)(v4_addr[2]),
+             (uint32_t)(v4_addr[1]), (uint32_t)(v4_addr[0]));
+    return;
+}
+
+static int dhcp_reservation_name_len = 20;
+
 static sdk_ret_t
 do_insert_dhcp_binding (dhcpctl_handle *dhcp_connection,
                         pds_mapping_spec_t *spec) {
@@ -544,6 +563,7 @@ do_insert_dhcp_binding (dhcpctl_handle *dhcp_connection,
     vnic_entry *vnic = NULL;
     bool vnic_primary = false;
     uint32_t statements_len = dhcpctl_statements_attr_len;
+    char dhcp_reservation[dhcp_reservation_name_len];
 
     if (spec->skey.ip_addr.af != IP_AF_IPV4) {
         // No V6 support for now
@@ -578,7 +598,9 @@ do_insert_dhcp_binding (dhcpctl_handle *dhcp_connection,
     }
 
     // name
-    dhcpctl_set_string_value(host, spec->key.str(), "name");
+    get_dhcp_reservation_name(&spec->skey, dhcp_reservation,
+                              sizeof(dhcp_reservation));
+    dhcpctl_set_string_value(host, dhcp_reservation, "name");
 
     // hardware-type
     dhcpctl_set_int_value(host, 1, "hardware-type");
@@ -783,10 +805,11 @@ mapping_impl_state::insert_dhcp_binding(pds_mapping_spec_t *spec) {
 }
 
 static sdk_ret_t
-do_remove_dhcp_binding (dhcpctl_handle *dhcp_connection, const char *hostname) {
+do_remove_dhcp_binding (dhcpctl_handle *dhcp_connection, pds_mapping_key_t *skey) {
     dhcpctl_status ret = 0;
     dhcpctl_status waitstatus = 0;
     dhcpctl_handle host = NULL;
+    char dhcp_reservation[dhcp_reservation_name_len];
 
     // we enter this block in two cases to establish the connection with the
     // dhcpd server.
@@ -809,7 +832,8 @@ do_remove_dhcp_binding (dhcpctl_handle *dhcp_connection, const char *hostname) {
         return SDK_RET_OOM;
     }
 
-    ret = dhcpctl_set_string_value(host, hostname, "name");
+    get_dhcp_reservation_name(skey, dhcp_reservation, sizeof(dhcp_reservation));
+    ret = dhcpctl_set_string_value(host, dhcp_reservation, "name");
     if (ret != ISC_R_SUCCESS) {
         PDS_TRACE_ERR("Failed to allocate data string, err %u", ret);
         omapi_object_dereference(&host, MDL);
@@ -849,16 +873,16 @@ do_remove_dhcp_binding (dhcpctl_handle *dhcp_connection, const char *hostname) {
 }
 
 sdk_ret_t
-mapping_impl_state::remove_dhcp_binding(const char *hostname) {
+mapping_impl_state::remove_dhcp_binding(pds_mapping_key_t *skey) {
     sdk_ret_t ret = SDK_RET_OK;
 
     // if dhcpd restarts the omapi control channel between pds-agent
     // and dhcpd will be broken. In that case we need to clear dhcp_connection_
     // and retry so that the control channel will be re-established.
-    ret = do_remove_dhcp_binding(&dhcp_connection_, hostname);
+    ret = do_remove_dhcp_binding(&dhcp_connection_, skey);
     if (ret == SDK_RET_ERR) {
         dhcp_connection_ = NULL;
-        ret = do_remove_dhcp_binding(&dhcp_connection_, hostname);
+        ret = do_remove_dhcp_binding(&dhcp_connection_, skey);
     }
 
     return ret;

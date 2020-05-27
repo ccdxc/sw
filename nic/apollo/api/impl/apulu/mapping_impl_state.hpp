@@ -82,10 +82,10 @@ public:
     /// \return   SDK_RET_OK on success, failure status code on error
     sdk_ret_t insert_dhcp_binding(pds_mapping_spec_t *spec);
 
-    /// \brief add remove binding corresponding to this mapping
-    /// \param[in] hostnmae    hostname corresponding to the mapping
+    /// \brief remove dhcp binding corresponding to this mapping
+    /// \param[in] skey    skey corresponding to the mapping
     /// \return   SDK_RET_OK on success, failure status code on error
-    sdk_ret_t remove_dhcp_binding(const char *hostname);
+    sdk_ret_t remove_dhcp_binding(pds_mapping_key_t *skey);
 
     /// \brief return instance of LOCAL_MAPPING table
     /// \return   pointer to the LOCAL_MAPPING table instance

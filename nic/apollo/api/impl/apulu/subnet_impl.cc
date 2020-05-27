@@ -789,15 +789,15 @@ local_mapping_dhcp_binding_upd_cb_ (sdk_table_api_params_t *params)
 {
     sdk_ret_t ret;
     vpc_entry *vpc;
-    vnic_entry *vnic;
+    vnic_impl *vnic_impl;
     subnet_entry *subnet;
     ip_addr_t mapping_ip;
-    pds_obj_key_t obj_key;
-    vnic_impl *vnic_impl_obj;
+    pds_obj_key_t vpc_key;
     uint16_t vpc_hw_id, bd_id;
     local_mapping_swkey_t *key;
     mapping_swkey_t mapping_key;
     subnet_impl *subnet_impl_obj;
+    pds_mapping_spec_t spec = {0};
     local_mapping_appdata_t *data;
     mapping_appdata_t mapping_data;
     sdk_table_api_params_t tparams;
@@ -805,10 +805,14 @@ local_mapping_dhcp_binding_upd_cb_ (sdk_table_api_params_t *params)
     subnet = (subnet_entry *)api_framework_obj((api_base *)(params->cbdata));
     SDK_ASSERT(subnet != NULL);
     bd_id = ((subnet_impl *)subnet->impl())->hw_id();
-    obj_key = subnet->vpc();
-    vpc = vpc_find(&obj_key);
-    vpc_hw_id = ((vpc_impl *)vpc->impl())->hw_id();
     key = (local_mapping_swkey_t *)(params->key);
+    data = (local_mapping_appdata_t *)(params->appdata);
+
+    
+    vpc_key = subnet->vpc();
+    vpc = vpc_find(&vpc_key);
+    vpc_hw_id = ((vpc_impl *)vpc->impl())->hw_id();
+
     if (key->key_metadata_local_mapping_lkp_type != KEY_TYPE_IPV4) {
         // not interested in non-IPv4 entries
         return;
@@ -822,11 +826,13 @@ local_mapping_dhcp_binding_upd_cb_ (sdk_table_api_params_t *params)
         // not interested in public IPs
         return;
     }
+
     // get the subnet of this local overlay mapping entry
+    vnic_impl = vnic_impl_db()->find(data->vnic_id);
+    SDK_ASSERT(vnic_impl != NULL);
     memset(&mapping_ip, 0, sizeof(mapping_ip));
     mapping_ip.af = IP_AF_IPV4;
-    mapping_ip.addr.v4_addr =
-        *(uint32_t *)key->key_metadata_local_mapping_lkp_addr;
+    mapping_ip.addr.v4_addr = *(uint32_t *)key->key_metadata_local_mapping_lkp_addr;
     PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key, vpc_hw_id, &mapping_ip);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &mapping_key, NULL, &mapping_data,
                                    0, handle_t::null());
@@ -837,14 +843,19 @@ local_mapping_dhcp_binding_upd_cb_ (sdk_table_api_params_t *params)
     if (mapping_data.egress_bd_id != bd_id) {
         return;
     }
-    // get the vnic details
-    vnic_impl_obj = vnic_impl_db()->find(data->vnic_id);
-    SDK_ASSERT(vnic_impl_obj != NULL);
-    vnic = vnic_db()->find(vnic_impl_obj->key());
-    SDK_ASSERT(vnic != NULL);
 
-    // TODO:
-    // now we have MAC, IP, subnet etc. all details
+    spec.skey.type = PDS_MAPPING_TYPE_L3;
+    spec.skey.vpc = subnet->vpc();
+    spec.skey.ip_addr.af = IP_AF_IPV4;
+    spec.skey.ip_addr.addr.v4_addr = mapping_ip.addr.v4_addr;
+    spec.subnet = subnet->key();
+    spec.vnic = *(vnic_impl->key());
+    sdk::lib::memrev((uint8_t *)&spec.overlay_mac, mapping_data.dmaci, sizeof(mac_addr_t));
+
+    mapping_impl_db()->remove_dhcp_binding(&spec.skey);
+    mapping_impl_db()->insert_dhcp_binding(&spec);
+
+    return;
 }
 
 sdk_ret_t
