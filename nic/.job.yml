@@ -584,6 +584,32 @@ targets:
     build-dependencies:
     - build-iris-x86-elba
 
+# ====================== Storage Tests ===========================
+  elba_storage:
+    commands: ["make", "ASIC=elba", "jobd/dol/elba_storage"]
+    owners: ["email:vsinha@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    build-dependencies:
+    - build-iris-x86-elba
+  elba_storage/perf:
+    commands: ["make", "ASIC=elba", "jobd/dol/elba_storage/perf"]
+    owners: ["email:vsinha@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    build-dependencies:
+    - build-iris-x86-elba
+  elba_storage/nvme:
+    commands: ["make", "ASIC=elba", "jobd/dol/elba_storage/nvme"]
+    owners: ["email:vsinha@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    build-dependencies:
+    - build-iris-x86-elba
+
 image:
   bind_dir: "/sw"
   work_dir: "/sw/nic"

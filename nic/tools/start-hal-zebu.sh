@@ -5,5 +5,5 @@ export HAL_CONFIG_PATH=$NIC_DIR/conf/
 export LD_LIBRARY_PATH=$NIC_DIR/conf/sdk/external:$NIC_DIR/conf/sdk:$NIC_DIR/lib:/usr/local/lib:$LD_LIBRARY_PATH
 export MODEL_ZMQ_TYPE_TCP=1
 ulimit -c unlimited
-ldd $NIC_DIR/bin/hal
-$GDB $NIC_DIR/bin/hal -c hal.json
+ldd $NIC_DIR/build/x86_64/iris/bin
+$GDB $NIC_DIR/build/x86_64/iris/bin/hal -c hal.json

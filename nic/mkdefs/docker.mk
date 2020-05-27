@@ -113,3 +113,7 @@ docker/deps-test-build:
 
 docker/pegasus:
 	docker run --rm --sysctl net.ipv6.conf.all.disable_ipv6=1 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -v /vol/builds:/vol/builds -w /sw/nic pensando/nic su -l $(CUR_USER) -c 'make PIPELINE=apulu pegasus && cd .. && python ./nic/tools/package/package.py --target pegasus --pipeline apulu --no-strip'
+
+
+docker/asic-shell: docker/build-shell-image
+	docker run -it --rm --sysctl net.ipv6.conf.all.disable_ipv6=1 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw  -v /vol/builds:/vol/builds -v /home/asic:/home/asic -w /sw/nic pensando/nic bash

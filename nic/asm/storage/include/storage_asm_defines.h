@@ -448,6 +448,21 @@
 /*
  * Barco SGL rearranged to little-endian layout
  */
+#ifdef ELBA
+struct barco_sgl_le_t {
+    rsvd        : 64;
+    link        : 64;
+    len2        : 32;
+    rsvd2       : 32;
+    addr2       : 64;
+    len1        : 32;
+    rsvd1       : 32;
+    addr1       : 64;
+    len0        : 32;
+    rsvd0       : 32;
+    addr0       : 64;
+};
+#else
 struct barco_sgl_le_t {
     rsvd        : 64;
     link        : 64;
@@ -461,6 +476,7 @@ struct barco_sgl_le_t {
     len0        : 32;
     addr0       : 64;
 };
+#endif
 
 #define BARCO_SGL_DESC_SIZE         64
 #define BARCO_SGL_DESC_SIZE_SHIFT   6

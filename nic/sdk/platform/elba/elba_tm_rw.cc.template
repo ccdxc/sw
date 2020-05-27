@@ -3005,7 +3005,7 @@ elba_tm_get_context_stats (tm_hbm_fifo_type_e fifo_type, uint32_t context,
     SDK_SPINLOCK_UNLOCK(&tm_ctx()->stats.slock);
 }
 
-#if 0   /* TBD-ELBA-REBASE:     */
+#if 0   /* TBD-ELBA-REBASE: */
 static void
 elba_tm_reset_context_stats (tm_hbm_fifo_type_e fifo_type, uint32_t context)
 {
