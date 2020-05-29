@@ -72,6 +72,6 @@ elba_set_half_clock (int chip_id, int inst_id)
     return ;
 }
 
-} // namespace elba
-} // namespace platform
-} // namespace sdk
+}   // namespace elba
+}   // namespace platform
+}   // namespace sdk

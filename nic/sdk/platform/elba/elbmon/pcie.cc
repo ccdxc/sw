@@ -1,5 +1,5 @@
 //
-// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+// {C} Copyright 2020 Pensando Systems Inc. All rights reserved
 //
 //===----------------------------------------------------------------------===//
 ///
@@ -534,20 +534,20 @@ pxb_read_pport_err_counters(uint8_t port)
 
     pal_reg_rd32w(
         ELB_ADDR_BASE_PP_PXC_0_OFFSET +
-            ELB_PXC_CSR_SAT_C_PORT_CNT_RX_TLP_ERRS_BYTE_ADDRESS,          // TODO HEMANT .. expand sub fields 
+            ELB_PXC_CSR_SAT_C_PORT_CNT_RX_TLP_ERRS_BYTE_ADDRESS,          // TODO HEMANT .. expand sub fields
         (uint32_t *)&rx_malform_tlp, 2);
 
     pal_reg_rd32w(
         ELB_ADDR_BASE_PP_PXC_0_OFFSET +
-            ELB_PXC_CSR_SAT_C_PORT_CNT_RX_ERRS_BYTE_ADDRESS,             // TODO HEMANT .. expand sub fields 
+            ELB_PXC_CSR_SAT_C_PORT_CNT_RX_ERRS_BYTE_ADDRESS,             // TODO HEMANT .. expand sub fields
         (uint32_t *)&rx_framing_err, 2);
 
     pal_reg_rd32w(ELB_ADDR_BASE_PP_PXC_0_OFFSET +
-                      ELB_PXC_CSR_SAT_C_PORT_CNT_RX_ERRS_BYTE_ADDRESS,         // TODO HEMANT .. expand sub fields 
+                      ELB_PXC_CSR_SAT_C_PORT_CNT_RX_ERRS_BYTE_ADDRESS,         // TODO HEMANT .. expand sub fields
                   (uint32_t *)&rx_ecrc_err, 2);
 
     pal_reg_rd32w(ELB_ADDR_BASE_PP_PXC_0_OFFSET +
-                      ELB_PXC_CSR_SAT_C_PORT_CNT_RX_EVENTS_BYTE_ADDRESS,       // TODO HEMANT .. expand sub fields 
+                      ELB_PXC_CSR_SAT_C_PORT_CNT_RX_EVENTS_BYTE_ADDRESS,       // TODO HEMANT .. expand sub fields
                   (uint32_t *)&rx_nullify, 2);
 
     pal_reg_rd32w(
@@ -556,12 +556,12 @@ pxb_read_pport_err_counters(uint8_t port)
         (uint32_t *)&rx_watchdog_nullify, 2);
 
     pal_reg_rd32w(ELB_ADDR_BASE_PP_PXC_0_OFFSET +
-                      ELB_PXC_CSR_SAT_C_PORT_CNT_RX_EVENTS_BYTE_ADDRESS,  // TODO HEMANT .. expand sub fields 
+                      ELB_PXC_CSR_SAT_C_PORT_CNT_RX_EVENTS_BYTE_ADDRESS,  // TODO HEMANT .. expand sub fields
                   (uint32_t *)&rx_unsupp, 2);
 
     pal_reg_rd32w(
         ELB_ADDR_BASE_PP_PXC_0_OFFSET +
-            ELB_PXC_CSR_SAT_C_PORT_CNT_RX_ERRS_BYTE_ADDRESS,               // TODO HEMANT ... expand sub fields 
+            ELB_PXC_CSR_SAT_C_PORT_CNT_RX_ERRS_BYTE_ADDRESS,               // TODO HEMANT ... expand sub fields
         (uint32_t *)&rxbuf_ecc_err, 2);
 
     pal_reg_rd32w(ELB_ADDR_BASE_PP_PXC_0_OFFSET +

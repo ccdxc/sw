@@ -6,6 +6,7 @@
 #include "lib/p4/p4_api.hpp"
 #include "lib/pal/pal.hpp"
 #include "platform/pal/include/pal.h"
+#include "lib/utils/time_profile.hpp"
 #include "platform/elba/elba_tbl_rw.hpp"
 #include "platform/elba/csrint/csr_init.hpp"
 #include "platform/elba/elba_hbm_rw.hpp"
@@ -236,7 +237,7 @@ elba_program_hbm_table_base_addr (int tableid, int stage_tableid,
     }
 
     assert(stage_tableid < 16);
-    start_offset = get_mem_addr(tablename);
+    start_offset = elba_get_mem_addr(tablename);
     SDK_TRACE_DEBUG("===HBM Tbl Name: %s, Stage: %d, StageTblID: %u, "
                     "Addr: 0x%lx}===",
                     tablename, stage, stage_tableid, start_offset);
@@ -336,10 +337,10 @@ elba_program_p4plus_table_mpu_pc_args (int tbl_id, elb_te_csr_t *te_csr,
 }
 
 #define ELBA_P4PLUS_HANDLE         "p4plus"
-#define ELBA_P4PLUS_RXDMA_PROG		"rxdma_stage0.bin"
-#define ELBA_P4PLUS_RXDMA_EXT_PROG	"rxdma_stage0_ext.bin"
-#define ELBA_P4PLUS_TXDMA_PROG		"txdma_stage0.bin"
-#define ELBA_P4PLUS_TXDMA_EXT_PROG	"txdma_stage0_ext.bin"
+#define ELBA_P4PLUS_RXDMA_PROG      "rxdma_stage0.bin"
+#define ELBA_P4PLUS_RXDMA_EXT_PROG  "rxdma_stage0_ext.bin"
+#define ELBA_P4PLUS_TXDMA_PROG      "txdma_stage0.bin"
+#define ELBA_P4PLUS_TXDMA_EXT_PROG  "txdma_stage0_ext.bin"
 
 void
 elba_program_p4plus_sram_table_mpu_pc (int tableid, int stage_tbl_id,
@@ -556,7 +557,7 @@ elba_timer_init_helper (uint32_t key_lines)
     elb_top_csr_t & elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
     elb_txs_csr_t *txs_csr = &elb0.txs.txs;
 
-    timer_key_hbm_base_addr = get_mem_addr(MEM_REGION_TIMERS_NAME);
+    timer_key_hbm_base_addr = elba_get_mem_addr(MEM_REGION_TIMERS_NAME);
 
     txs_csr->cfg_timer_static.read();
     SDK_TRACE_DEBUG("hbm_base %lx",
@@ -618,6 +619,30 @@ static inline bool
 p4plus_invalidate_cache_aligned (uint64_t addr, uint32_t size_in_bytes,
                                  p4plus_cache_action_t action)
 {
+    assert ((addr & ~CACHE_LINE_SIZE_MASK) == addr);
+
+    while ((int)size_in_bytes > 0) {
+        uint32_t claddr = (addr >> CACHE_LINE_SIZE_SHIFT) << 1;
+        if (action & p4plus_cache_action_t::P4PLUS_CACHE_INVALIDATE_RXDMA) {
+            if (csr_cache_inval_rxdma_va) {
+                *csr_cache_inval_rxdma_va = claddr;
+            } else {
+                sdk::lib::pal_reg_write(CSR_CACHE_INVAL_RXDMA_REG_ADDR,
+                                        &claddr, 1);
+            }
+        }
+        if (action & p4plus_cache_action_t::P4PLUS_CACHE_INVALIDATE_TXDMA) {
+            if (csr_cache_inval_txdma_va) {
+                *csr_cache_inval_txdma_va = claddr;
+            } else {
+                sdk::lib::pal_reg_write(CSR_CACHE_INVAL_TXDMA_REG_ADDR,
+                                        &claddr, 1);
+            }
+        }
+        size_in_bytes -= CACHE_LINE_SIZE;
+        addr += CACHE_LINE_SIZE;
+    }
+
     return true;
 }
 
@@ -642,6 +667,20 @@ p4plus_invalidate_cache (uint64_t addr, uint32_t size_in_bytes,
 bool
 p4plus_invalidate_cache_all (p4plus_cache_action_t action)
 {
+    uint32_t val = 1;
+
+    if (action & p4plus_cache_action_t::P4PLUS_CACHE_INVALIDATE_RXDMA ||
+        action & p4plus_cache_action_t::P4PLUS_CACHE_INVALIDATE_BOTH) {
+        sdk::lib::pal_reg_write(CSR_CACHE_INVAL_RXDMA_REG_ADDR,
+                                &val, 1);
+    }
+
+    if (action & p4plus_cache_action_t::P4PLUS_CACHE_INVALIDATE_TXDMA ||
+        action & p4plus_cache_action_t::P4PLUS_CACHE_INVALIDATE_BOTH) {
+        sdk::lib::pal_reg_write(CSR_CACHE_INVAL_TXDMA_REG_ADDR,
+                                &val, 1);
+    }
+
     return true;
 }
 
@@ -650,6 +689,27 @@ p4_invalidate_cache (uint64_t addr, uint32_t size_in_bytes,
                      p4pd_table_cache_t cache)
 {
     //@@TODO - implement for elba
+    while ((int)size_in_bytes > 0) {
+        uint32_t claddr = (addr >> CACHE_LINE_SIZE_SHIFT) << 1;
+        if (cache & P4_TBL_CACHE_INGRESS) {
+            if (csr_cache_inval_ingress_va) {
+                *csr_cache_inval_ingress_va = claddr;
+            } else {
+                sdk::lib::pal_reg_write(CSR_CACHE_INVAL_INGRESS_REG_ADDR,
+                                        &claddr, 1);
+            }
+        }
+        if (cache & P4_TBL_CACHE_EGRESS) {
+            if (csr_cache_inval_egress_va) {
+                *csr_cache_inval_egress_va = claddr;
+            } else {
+                sdk::lib::pal_reg_write(CSR_CACHE_INVAL_EGRESS_REG_ADDR,
+                                        &claddr, 1);
+            }
+        }
+        size_in_bytes -= CACHE_LINE_SIZE;
+        addr += CACHE_LINE_SIZE;
+    }
 }
 
 void
@@ -677,8 +737,42 @@ elba_deparser_init(int tm_port_ingress, int tm_port_egress)
 }
 
 static void
-elba_mpu_icache_invalidate (void)
+elba_mpu_icache_dcache_invalidate (void)
 {
+    int i;
+    elb_top_csr_t & elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
+
+    for (i = 0; i < ELBA_P4_NUM_STAGES; i++) {
+          elb0.sgi.stg[i].icache.icache.all(1);
+          elb0.sgi.stg[i].icache.icache.write();
+          elb0.sge.stg[i].icache.icache.all(1);
+          elb0.sge.stg[i].icache.icache.write();
+
+          elb0.sgi.stg[i].dcache.dcache.all(1);
+          elb0.sgi.stg[i].dcache.dcache.write();
+          elb0.sge.stg[i].dcache.dcache.all(1);
+          elb0.sge.stg[i].dcache.dcache.write();
+    }
+
+    for (i = 0; i < ELBA_P4PLUS_NUM_STAGES; i++) {
+          elb0.pcr.stg[i].icache.icache.all(1);
+          elb0.pcr.stg[i].icache.icache.write();
+          elb0.pct.stg[i].icache.icache.all(1);
+          elb0.pct.stg[i].icache.icache.write();
+
+          elb0.pcr.stg[i].dcache.dcache.all(1);
+          elb0.pcr.stg[i].dcache.dcache.write();
+          elb0.pct.stg[i].dcache.dcache.all(1);
+          elb0.pct.stg[i].dcache.dcache.write();
+    }
+
+    for (i = 0; i < ELBA_P4PLUS_SXDMA_NUM_STAGES; i++) {
+          elb0.xg.stg[i].icache.icache.all(1);
+          elb0.xg.stg[i].icache.icache.write();
+
+          elb0.xg.stg[i].dcache.dcache.all(1);
+          elb0.xg.stg[i].dcache.dcache.write();
+    }
 }
 
 //
@@ -848,9 +942,9 @@ elba_table_rw_init (asic_cfg_t *elba_cfg)
     // Initialize stage id registers for p4p
     elba_p4p_stage_id_init();
 
-    hbm_mem_base_addr = get_mem_addr(MEM_REGION_P4_PROGRAM_NAME);
+    hbm_mem_base_addr = elba_get_mem_addr(MEM_REGION_P4_PROGRAM_NAME);
 
-    elba_mpu_icache_invalidate();
+    elba_mpu_icache_dcache_invalidate();
 
     // Initialize tcam memories
     elba_tcam_memory_init(elba_cfg);
@@ -1570,7 +1664,7 @@ elba_hbm_table_entry_write (uint32_t tableid, uint32_t index, uint8_t *hwentry,
     assert(index < tbl_info->tabledepth);
     uint64_t entry_start_addr = (index * entry_width);
 
-    sdk::asic::asic_mem_write(get_mem_addr(tbl_info->tablename) +
+    sdk::asic::asic_mem_write(elba_get_mem_addr(tbl_info->tablename) +
                               entry_start_addr, hwentry, (entry_size >> 3));
 
     return SDK_RET_OK;
@@ -1582,7 +1676,30 @@ elba_hbm_table_entry_cache_invalidate (p4pd_table_cache_t cache,
                                        uint16_t entry_width,
                                        mem_addr_t base_mem_pa)
 {
-    return SDK_RET_INVALID_OP;  /* TBD-ELBA-REBASE: revisit */
+    SDK_TRACE_DEBUG("Elba: Not implemented .. elba_hbm_table_entry_cache_invalidate addr=0x%lx, width=%d,base_mem_pa=0x%lx",
+                    entry_addr, entry_width, base_mem_pa);
+
+    time_profile_begin(sdk::utils::time_profile::CAPRI_HBM_TABLE_ENTRY_CACHE_INVALIDATE);
+    uint64_t addr = (base_mem_pa + entry_addr);
+    if (cache & (P4_TBL_CACHE_INGRESS | P4_TBL_CACHE_EGRESS)) {
+        p4_invalidate_cache(addr, entry_width, cache);
+    }
+
+    // Allow cache to be set for both P4 (above) and P4+ (below)
+    if ((cache & P4_TBL_CACHE_TXDMA_RXDMA) == P4_TBL_CACHE_TXDMA_RXDMA) {
+        p4plus_invalidate_cache(addr, entry_width,
+                                P4PLUS_CACHE_INVALIDATE_BOTH);
+    } else if (cache & P4_TBL_CACHE_TXDMA) {
+        p4plus_invalidate_cache(addr, entry_width,
+                                P4PLUS_CACHE_INVALIDATE_TXDMA);
+    } else if (cache & P4_TBL_CACHE_RXDMA) {
+        p4plus_invalidate_cache(addr, entry_width,
+                                P4PLUS_CACHE_INVALIDATE_RXDMA);
+    } else {
+        SDK_ASSERT(cache);
+    }
+    time_profile_end(sdk::utils::time_profile::CAPRI_HBM_TABLE_ENTRY_CACHE_INVALIDATE);
+    return SDK_RET_OK;  /* TBD-ELBA-REBASE: revisit */
 }
 
 sdk_ret_t
@@ -1594,7 +1711,7 @@ elba_hbm_table_entry_read (uint32_t tableid, uint32_t index, uint8_t *hwentry,
     assert(index < tbl_info.tabledepth);
     uint64_t entry_start_addr = (index * tbl_info.entry_width);
 
-    sdk::asic::asic_mem_read(get_mem_addr(tbl_info.tablename) +
+    sdk::asic::asic_mem_read(elba_get_mem_addr(tbl_info.tablename) +
                              entry_start_addr,
                              hwentry, tbl_info.entry_width);
     *entry_size = tbl_info.entry_width;
@@ -1738,10 +1855,18 @@ asic_csr_list_get (string path, int level)
 }
 
 sdk_ret_t
-elba_te_enable_capri_mode(void)
+elba_te_enable_capri_mode (void)
 {
     elb_top_csr_t &elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
     unsigned int stage;
+    unsigned int tab;
+
+    // do not change mpu mask if not HAPS_MPU_MASK set
+    int haps_mpu = (getenv("HAPS_MPU_MASK") ? atoi(getenv("HAPS_MPU_MASK")) : 0x0 ); // needs CFG and platform
+    if(haps_mpu) {
+      SDK_TRACE_DEBUG("Overriding mpu_vec HAPS_MPU=%d", haps_mpu);
+    }
+
     // setting capri mode for all stages in RxDMA pipeline
     for (stage = 0; stage < ELBA_P4PLUS_NUM_STAGES; stage++)
     {
@@ -1749,7 +1874,15 @@ elba_te_enable_capri_mode(void)
         te_csr.cfg_global.read();
         te_csr.cfg_global.capri_mode(1);
         te_csr.cfg_global.write();
+        for (tab = 0; tab < 16; tab++) {
+         if(haps_mpu) {
+          te_csr.cfg_table_property[tab].read();
+          te_csr.cfg_table_property[tab].mpu_vec(haps_mpu);
+          te_csr.cfg_table_property[tab].write();
+         }
+        }
     }
+
     // setting capri mode for all stages in TxDMA pipeline
     for (stage = 0; stage < ELBA_P4PLUS_NUM_STAGES; stage++)
     {
@@ -1757,6 +1890,13 @@ elba_te_enable_capri_mode(void)
         te_csr.cfg_global.read();
         te_csr.cfg_global.capri_mode(1);
         te_csr.cfg_global.write();
+        for (tab = 0; tab < 16; tab++) {
+         if(haps_mpu) {
+          te_csr.cfg_table_property[tab].read();
+          te_csr.cfg_table_property[tab].mpu_vec(haps_mpu);
+          te_csr.cfg_table_property[tab].write();
+     }
+    }
     }
     // setting capri mode for all stages in SxDMA pipeline
     for (stage = 0; stage < ELBA_P4PLUS_SXDMA_NUM_STAGES; stage++)
@@ -1765,6 +1905,35 @@ elba_te_enable_capri_mode(void)
         te_csr.cfg_global.read();
         te_csr.cfg_global.capri_mode(1);
         te_csr.cfg_global.write();
+        for (tab = 0; tab < 16; tab++) {
+         if(haps_mpu) {
+          te_csr.cfg_table_property[tab].read();
+          te_csr.cfg_table_property[tab].mpu_vec(haps_mpu);
+          te_csr.cfg_table_property[tab].write();
+     }
+    }
+    }
+    for (stage = 0; stage < ELBA_P4_NUM_STAGES; stage++)
+    {
+        elb_te_csr_t  &te_csr = elb0.sge.te[stage];
+        for (tab = 0; tab < 16; tab++) {
+         if(haps_mpu) {
+          te_csr.cfg_table_property[tab].read();
+          te_csr.cfg_table_property[tab].mpu_vec(haps_mpu);
+          te_csr.cfg_table_property[tab].write();
+     }
+    }
+    }
+    for (stage = 0; stage < ELBA_P4_NUM_STAGES; stage++)
+    {
+        elb_te_csr_t  &te_csr = elb0.sgi.te[stage];
+        for (tab = 0; tab < 16; tab++) {
+         if(haps_mpu) {
+          te_csr.cfg_table_property[tab].read();
+          te_csr.cfg_table_property[tab].mpu_vec(haps_mpu);
+          te_csr.cfg_table_property[tab].write();
+     }
+    }
     }
     SDK_TRACE_DEBUG("Elba: Enabled capri mode in TE");
 

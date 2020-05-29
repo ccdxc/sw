@@ -469,9 +469,9 @@ sdk_ret_t elba_barco_asym_write_key(int32_t key_idx,
     (ELBA_BARCO_SYM_ERR_GEN_PUSH_ERR      |   \
      ELBA_BARCO_SYM_ERR_GEN_FETCH_ERR)
 
-} // namespace elba
-} // namespace platform
-} // namespace sdk
+}   // namespace elba
+}   // namespace platform
+}   // namespace sdk
 
 using sdk::platform::elba::elba_barco_sym_alloc_key;
 using sdk::platform::elba::elba_barco_sym_alloc_key_withid;

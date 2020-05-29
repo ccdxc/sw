@@ -29,10 +29,11 @@
 #include "elbmon.hpp"
 
 static inline void
-elbmon_asic_bwmon_rd_store(bwmon_t *bwmon_data, uint64_t rd_cnt,
-                           uint32_t rd_latency_avg, uint32_t rd_latency_max,
-                           uint32_t rd_bandwidth_avg, uint32_t rd_bandwidth_max,
-                           uint32_t rd_trans, uint32_t rd_trans_no_drdy)
+elbmon_asic_bwmon_rd_store (bwmon_t *bwmon_data, uint64_t rd_cnt,
+                            uint32_t rd_latency_avg, uint32_t rd_latency_max,
+                            uint32_t rd_bandwidth_avg,
+                            uint32_t rd_bandwidth_max, uint32_t rd_trans,
+                            uint32_t rd_trans_no_drdy)
 {
     bwmon_data->rd_cnt = rd_cnt;
     bwmon_data->rd_latency_avg = rd_latency_avg;
@@ -44,10 +45,11 @@ elbmon_asic_bwmon_rd_store(bwmon_t *bwmon_data, uint64_t rd_cnt,
 }
 
 static inline void
-elbmon_asic_bwmon_wr_store(bwmon_t *bwmon_data, uint64_t wr_cnt,
-                           uint32_t wr_latency_avg, uint32_t wr_latency_max,
-                           uint32_t wr_bandwidth_avg, uint32_t wr_bandwidth_max,
-                           uint32_t wr_trans, uint32_t wr_trans_no_drdy)
+elbmon_asic_bwmon_wr_store (bwmon_t *bwmon_data, uint64_t wr_cnt,
+                            uint32_t wr_latency_avg, uint32_t wr_latency_max,
+                            uint32_t wr_bandwidth_avg,
+                            uint32_t wr_bandwidth_max, uint32_t wr_trans,
+                            uint32_t wr_trans_no_drdy)
 {
     bwmon_data->wr_cnt = wr_cnt;
     bwmon_data->wr_latency_avg = wr_latency_avg;
@@ -59,7 +61,7 @@ elbmon_asic_bwmon_wr_store(bwmon_t *bwmon_data, uint64_t wr_cnt,
 }
 
 void
-bwmon_fn(int index, uint32_t base_addr)
+bwmon_fn (int index, uint32_t base_addr)
 {
     // Use NS defines to get relative spacing between monitor regs
     // base_addr is the address of
@@ -118,32 +120,31 @@ bwmon_fn(int index, uint32_t base_addr)
 }
 
 void
-bwmon_read_counters()
+bwmon_read_counters (void)
 {
     int index = 0;
 
     bwmon_fn(index++, (ELB_ADDR_BASE_PXB_PXB_OFFSET +
-		       ELB_GL0_CSR_PX_M_MINI_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS));
+               ELB_GL0_CSR_PX_M_MINI_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS));
 
     bwmon_fn(index++, (ELB_ADDR_BASE_PR_PR_OFFSET +
-		       ELB_GL1_CSR_PR_M_MINI_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS));
+               ELB_GL1_CSR_PR_M_MINI_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS));
 
     bwmon_fn(index++, (ELB_ADDR_BASE_PT_PT_OFFSET +
-		       ELB_GL4_CSR_PT_M_MINI_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS));
+               ELB_GL4_CSR_PT_M_MINI_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS));
 
     bwmon_fn(index++, (ELB_ADDR_BASE_SSI_PICS_OFFSET +
-		       ELB_GL7_CSR_SI_M_MINI_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS));
+               ELB_GL7_CSR_SI_M_MINI_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS));
 
     bwmon_fn(index++, (ELB_ADDR_BASE_SSE_PICS_OFFSET +
-		       ELB_GL5_CSR_SE_M_MINI_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS));
+               ELB_GL5_CSR_SE_M_MINI_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS));
 
     bwmon_fn(index++, (ELB_ADDR_BASE_MS_MS_OFFSET +
-		       ELB_GL0_CSR_MS_M_MINI_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS));
+               ELB_GL0_CSR_MS_M_MINI_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS));
 
 }
 
 void
-bwmon_reset_counters()
+bwmon_reset_counters (void)
 {
 }
-

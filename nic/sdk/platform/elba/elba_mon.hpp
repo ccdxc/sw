@@ -55,8 +55,8 @@ void elba_set_half_clock(int chip_id, int inst_id);
 sdk_ret_t elba_unravel_hbm_intrs(bool *iscattrip, bool *iseccerr,
                                   bool logging);
 
-} // namespace elba
-} // namespace platform
-} // namespace sdk
+}   // namespace elba
+}   // namespace platform
+}   // namespace sdk
 
 #endif

@@ -166,8 +166,8 @@ sdk_ret_t elba_barco_asym_add_pend_req(uint32_t hw_id, uint32_t sw_id);
 sdk_ret_t elba_barco_asym_poll_pend_req(uint32_t batch_size, uint32_t* id_count,
                                         uint32_t *ids);
 
-} // namespace elba
-} // namespace platform
-} // namespace sdk
+}   // namespace elba
+}   // namespace platform
+}   // namespace sdk
 
 #endif  //   __ELBA_BARCO_ASYM_APIS_HPP__

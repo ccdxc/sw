@@ -781,12 +781,8 @@ pciehw_finalize_dev(pciehdev_t *pdev)
     /* cfg after bar above */
     pciehw_cfg_finalize(pdev);
 
-#ifdef ASIC_CAPRI
-    /* XXX ELBA-TODO - no intr regs on haps2? */
-
     /* init_intr() now that we have a parent link and cfg */
     pciehw_intr_init(phwdev);
-#endif
 
     child = pciehdev_get_child(pdev);
     if (child) {

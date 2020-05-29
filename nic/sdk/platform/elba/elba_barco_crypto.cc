@@ -316,8 +316,8 @@ elba_barco_sym_free_key (int32_t key_idx)
 sdk_ret_t
 elba_barco_crypto_init_tls_pad_table (void)
 {
-    uint8_t  tls_pad_bytes[asic_get_mem_size_kb(ASIC_HBM_REG_TLS_PROXY_PAD_TABLE) * 1024],
-        i, j;
+    uint8_t i, j;
+    uint8_t tls_pad_bytes[asic_get_mem_size_kb(ASIC_HBM_REG_TLS_PROXY_PAD_TABLE) * 1024];
     uint64_t tls_pad_base_addr = 0;
 
     SDK_TRACE_DEBUG("Initializing TLS-proxy Pad Bytes table of size 0x%lx",

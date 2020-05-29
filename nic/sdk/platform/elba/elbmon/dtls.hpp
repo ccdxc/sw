@@ -15,7 +15,6 @@
 
 #define BIT(n) (1 << n)
 
-//
 enum pipeline {
     TXDMA = 0,
     RXDMA = 1,
@@ -85,4 +84,4 @@ void crypto_read_queues(int verbose);
 void crypto_read_counters(int verbose);
 void crypto_reset_counters(int verbose);
 
-#endif /* __DTLS_HPP__ */
+#endif // __DTLS_HPP__

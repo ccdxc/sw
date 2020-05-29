@@ -261,8 +261,8 @@ elba_barco_res_allocator_init (void)
 
     for (idx = CRYPTO_BARCO_RES_MIN; idx < CRYPTO_BARCO_RES_MAX; idx++) {
        region = sdk::asic::asic_get_mem_addr(elba_barco_resources[idx].hbm_region_name);
-      //region = sdk::platform::elba::get_mem_addr(elba_barco_resources[idx].hbm_region_name);
-      //  region = get_mem_addr(elba_barco_resources[idx].hbm_region_name);
+      //region = sdk::platform::elba::elba_get_mem_addr(elba_barco_resources[idx].hbm_region_name);
+      //  region = elba_get_mem_addr(elba_barco_resources[idx].hbm_region_name);
         if (region == INVALID_MEM_ADDRESS) {
             SDK_TRACE_ERR("Failed to retrieve %s memory region",
                           elba_barco_resources[idx].allocator_name);

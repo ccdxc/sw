@@ -71,8 +71,8 @@ sdk_ret_t elba_barco_res_obj_count_get(elba_barco_res_type_t region_type,
 sdk_ret_t elba_barco_add_pend_req_to_db(uint32_t hw_id, uint32_t sw_id);
 sdk_ret_t elba_barco_del_pend_req_from_db(crypto_pend_req_t *req);
 
-} // namespace elba
-} // namespace platform
-} // namespace sdk
+}   // namespace elba
+}   // namespace platform
+}   // namespace sdk
 
 #endif  // __ELBA_BARCO_RES_HPP__

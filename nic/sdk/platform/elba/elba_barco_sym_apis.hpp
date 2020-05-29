@@ -134,8 +134,8 @@ sdk_ret_t elba_barco_sym_aes_encrypt_process_request(elba_barco_symm_enctype_e e
 
 void elba_barco_init_drbg(void);
 
-} // namespace elba
-} // namespace platform
-} // namespace sdk
+}   // namespace elba
+}   // namespace platform
+}   // namespace sdk
 
 #endif //   __ELBA_BARCO_SYM_APIS_HPP__

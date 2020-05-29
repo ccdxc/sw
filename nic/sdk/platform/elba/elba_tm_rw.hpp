@@ -27,9 +27,7 @@ namespace elba {
 #define ELBA_TM_CELL_SIZE            320
 #define ELBA_TM_HBM_FIFO_ALLOC_SIZE  64 // Min size of the HBM fifo in bytes
 #define ELBA_TM_MAX_HBM_ETH_CONTEXTS 32
-#define ELBA_TM_MAX_HBM_DMA_CONTEXTS 16
-#define ELBA_TM_MAX_HBM_CONTEXTS     (ELBA_TM_MAX_HBM_ETH_CONTEXTS > ELBA_TM_MAX_HBM_DMA_CONTEXTS ? \
-                                    ELBA_TM_MAX_HBM_ETH_CONTEXTS : ELBA_TM_MAX_HBM_DMA_CONTEXTS)
+#define ELBA_TM_MAX_HBM_CONTEXTS     ELBA_TM_MAX_HBM_ETH_CONTEXTS
 #define ELBA_TM_COUNT_L0_NODES       32
 #define ELBA_TM_COUNT_L1_NODES       16
 #define ELBA_TM_COUNT_L2_NODES       4
@@ -37,7 +35,7 @@ namespace elba {
 #define ELBA_TM_NUM_BUFFER_ISLANDS   2
 #define ELBA_TM_MAX_SCHED_NODES      16
 #define ELBA_TM_MAX_SCHED_NODE_INPUTS 32
-#define ELBA_TM_MAX_PORTS             12
+#define ELBA_TM_MAX_PORTS             8
 #define ELBA_TM_DWRR_UNIT             10000
 #define ELBA_TM_SCHED_TIMER           5000
 #define ELBA_TM_CLK_PERIOD            833
@@ -47,8 +45,8 @@ namespace elba {
 #define ELBA_TM_MAX_IQS               32
 #define ELBA_TM_MAX_OQS               32
 
-#define ELBA_TM_BUFFER_ISLAND_0_CELL_COUNT 8192
-#define ELBA_TM_BUFFER_ISLAND_1_CELL_COUNT 5120
+#define ELBA_TM_BUFFER_ISLAND_0_CELL_COUNT 16384
+#define ELBA_TM_BUFFER_ISLAND_1_CELL_COUNT 8192
 
 #define ELBA_TM_INVALID_Q            -1
 
@@ -112,8 +110,7 @@ SDK_DEFINE_ENUM(tm_port_type_e, TM_PORT_TYPES)
 
 #define TM_HBM_FIFO_TYPES(ENTRY) \
     ENTRY(TM_HBM_FIFO_TYPE_UPLINK,      0, "uplink-hbm-fifo") \
-    ENTRY(TM_HBM_FIFO_TYPE_TXDMA,       1, "txdma-hbm-fifo") \
-    ENTRY(NUM_TM_HBM_FIFO_TYPES,        2, "num-tm-hbm-fifo-types")
+    ENTRY(NUM_TM_HBM_FIFO_TYPES,        1, "num-tm-hbm-fifo-types")
 
 SDK_DEFINE_ENUM(tm_hbm_fifo_type_e, TM_HBM_FIFO_TYPES)
 #undef TM_HBM_FIFO_TYPES
@@ -363,6 +360,5 @@ sdk_ret_t elba_tm_uplink_set_cam_da(tm_port_t port, uint32_t  entry,
 }    // namespace elba
 }    // namespace platform
 }    // namespace sdk
-
 
 #endif    // __ELBA_TM_RW_HPP__

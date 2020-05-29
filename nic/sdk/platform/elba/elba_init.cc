@@ -85,7 +85,7 @@ elba_timer_hbm_init (void)
     uint64_t timer_key_hbm_addr;
     uint64_t zero_data[8] = { 0 };
 
-    timer_key_hbm_base_addr = get_mem_addr(MEM_REGION_TIMERS_NAME);
+    timer_key_hbm_base_addr = elba_get_mem_addr(MEM_REGION_TIMERS_NAME);
     SDK_TRACE_DEBUG("HBM timer key base addr %lx", timer_key_hbm_base_addr);
     timer_key_hbm_addr = timer_key_hbm_base_addr;
     while (timer_key_hbm_addr < timer_key_hbm_base_addr +
@@ -224,7 +224,8 @@ static sdk_ret_t
 elba_repl_init (asic_cfg_t *cfg)
 {
 #ifdef MEM_REGION_MCAST_REPL_NAME
-    uint64_t hbm_repl_table_offset = get_mem_offset(MEM_REGION_MCAST_REPL_NAME);
+    uint64_t hbm_repl_table_offset =
+        elba_get_mem_offset(MEM_REGION_MCAST_REPL_NAME);
     if (hbm_repl_table_offset != INVALID_MEM_ADDRESS) {
         elba_tm_repl_table_base_addr_set(hbm_repl_table_offset /
                                          SDK_ASIC_REPL_ENTRY_WIDTH);
@@ -587,6 +588,6 @@ elba_host_dbaddr (void)
     return ELB_WA_CSR_DHS_HOST_DOORBELL_BYTE_ADDRESS;
 }
 
-} // namespace elba
-} // namespace platform
-} // namespace sdk
+}   // namespace elba
+}   // namespace platform
+}   // namespace sdk

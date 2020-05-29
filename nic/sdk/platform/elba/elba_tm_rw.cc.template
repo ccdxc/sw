@@ -2,6 +2,13 @@
 // {C} Copyright 2020 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
 
+//TODO review and update alloc_cells method
+//TODO credits on DMA interfaces
+//TODO add PF csr
+//TODO fix span queue to 31
+//TODO : look at TODO_ELBA
+//TODO : look at TBD-ELBA-REBASE
+//TODO : add pinfo["supports_credits"] = True for DMA port
 
 #include <stdio.h>
 #include <string>
@@ -171,7 +178,6 @@ populate_asic_profile (elba_tm_asic_profile_t *asic_profile)
     asic_profile->port[TM_PORT_TYPE_DMA].headroom_cells = 100;
 
     asic_profile->hbm_fifo_reserved_bytes_per_context[TM_HBM_FIFO_TYPE_UPLINK] = 3*1024*1024; // 3MB
-    asic_profile->hbm_fifo_reserved_bytes_per_context[TM_HBM_FIFO_TYPE_TXDMA] = 9*1024*1024;; // 9MB
 }
 
 static inline uint32_t
@@ -212,6 +218,7 @@ hbm_chunks_to_bytes (uint32_t chunks)
     return chunks * tm_asic_profile()->hbm_fifo_alloc_units;
 }
 
+//TODO review this
 static inline uint32_t
 elba_tm_get_max_cell_chunks_for_island (uint32_t island)
 {
@@ -282,8 +289,6 @@ elba_tm_max_hbm_contexts_for_fifo (uint32_t fifo_type)
     switch (fifo_type) {
         case TM_HBM_FIFO_TYPE_UPLINK:
             return ELBA_TM_MAX_HBM_ETH_CONTEXTS;
-        case TM_HBM_FIFO_TYPE_TXDMA:
-            return ELBA_TM_MAX_HBM_DMA_CONTEXTS;
         case NUM_TM_HBM_FIFO_TYPES:
             return 0;
     }
@@ -293,7 +298,7 @@ elba_tm_max_hbm_contexts_for_fifo (uint32_t fifo_type)
 static inline bool
 port_supports_hbm_contexts (tm_port_t port)
 {
-    return is_active_uplink_port(port) || (port == ELBA_TM_PORT_DMA);
+    return is_active_uplink_port(port);
 }
 
 static inline uint32_t
@@ -346,8 +351,8 @@ elba_tm_get_island_for_port_type (tm_port_type_e port_type)
 {
     switch(port_type) {
         case TM_PORT_TYPE_UPLINK:
-        case TM_PORT_TYPE_P4EG:
             return 1;
+        case TM_PORT_TYPE_P4EG:
         case TM_PORT_TYPE_P4IG:
         case TM_PORT_TYPE_DMA:
             return 0;
@@ -365,7 +370,6 @@ elba_tm_get_fifo_type_for_port (tm_port_t port)
         case TM_PORT_TYPE_UPLINK:
             return TM_HBM_FIFO_TYPE_UPLINK;
         case TM_PORT_TYPE_DMA:
-            return TM_HBM_FIFO_TYPE_TXDMA;
         case TM_PORT_TYPE_P4EG:
         case TM_PORT_TYPE_P4IG:
         case NUM_TM_PORT_TYPES:
@@ -387,7 +391,9 @@ tm_is_high_perf_q (tm_q_t q)
 
 //:: from collections import OrderedDict
 //:: import math
-//:: TM_PORTS = 4
+//:: TM_PORTS = 8
+//:: TM_PF_PORTS = 5
+//:: TM_HBM_OVFL_PORTS = 4
 //:: QS = 32
 //:: L1_NODES = 16
 //:: L2_NODES = 4
@@ -412,17 +418,17 @@ tm_is_high_perf_q (tm_q_t q)
 //::     pinfo["l3"] = 0
 //::     pinfo["has_hbm"] = False
 //::     pinfo["supports_credits"] = False
-//::     if p < 9:
+//::     if p < 5:
 //::        pinfo["type"] = "uplink"
 //::        pinfo["pgs"] = 8
 //::        if e[p] != "ELBA_TM_PORT_NCSI":
 //::            pinfo["has_hbm"] = True
 //::        #endif
-//::     elif p < 10:
+//::     elif p < 6:
 //::        pinfo["type"] = "dma"
 //::        pinfo["pgs"] = 16
 //::        pinfo["l3"] = 1
-//::        pinfo["has_hbm"] = True
+//::        pinfo["has_hbm"] = False
 //::     else:
 //::        pinfo["type"] = "p4"
 //::        pinfo["pgs"] = 32
@@ -434,7 +440,6 @@ tm_is_high_perf_q (tm_q_t q)
 //::
 //:: hbm_fifo_info = {
 //::                'TM_HBM_FIFO_TYPE_UPLINK': {'reg_name' : 'eth', 'count' : 32 },
-//::                'TM_HBM_FIFO_TYPE_TXDMA': {'reg_name' : 'tx', 'count' : 16 },
 //::                 }
 //::
 //:: import yaml
@@ -566,35 +571,226 @@ elba_tm_is_valid_port (uint32_t port)
 {
     return ((port >= ELBA_TM_PORT_UPLINK_0) && (port <= ELBA_TM_PORT_INGRESS));
 }
-
 sdk_ret_t
 elba_tm_uplink_set_cam_type (tm_port_t port, uint32_t  entry, uint32_t  etype)
 {
-    return SDK_RET_OK; // TBD-ELBA-REBASE:: fixup
+    elb_top_csr_t &elb0 = g_elba_state_pd->elb_top();
+    elb_pf_csr_t &pf_csr = elb0.pf.pf;
+
+    uint32_t cam_compare = 1;   // 2 - compare DA, 1 - compare ethertype, 0 - reset
+
+    if(!etype)
+        cam_compare = 0;
+
+    if (!elba_tm_port_is_uplink_port(port)) {
+        SDK_TRACE_VERBOSE("%u is not a valid TM uplink port",
+                          port);
+        return sdk::SDK_RET_INVALID_ARG;
+    }
+
+    switch(port) {
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+//::    if pinfo["type"] == "uplink":
+        case ${pinfo["enum"]}:
+            {
+                pf_csr.hbm_port_${p}.cfg_hbm_parser_cam[entry].read();
+                pf_csr.hbm_port_${p}.cfg_hbm_parser_cam[entry].read();
+
+                if ( (entry >= 0) || (entry < 8) ) {
+                    pf_csr.hbm_port_${p}.cfg_hbm_parser_cam[entry].ethertype(etype);
+                    pf_csr.hbm_port_${p}.cfg_hbm_parser_cam[entry].enable(cam_compare);
+                } else {
+                    SDK_TRACE_ERR("%u is not a valid entry", entry);
+                    return sdk::SDK_RET_INVALID_ARG;
+                }
+
+                if (tm_sw_cfg_write_enabled()) {
+                    pf_csr.hbm_port_${p}.cfg_hbm_parser_cam[entry].write();
+                }
+                break;
+            }
+//::    #endif
+//:: #endfor
+        default:
+            return sdk::SDK_RET_INVALID_ARG;
+    }
+
+    return sdk::SDK_RET_OK;
 }
 
 sdk_ret_t
 elba_tm_uplink_set_cam_da (tm_port_t port, uint32_t  entry, uint64_t  dmac)
 {
-    return SDK_RET_OK; // TBD-ELBA-REBASE:: fixup
+    elb_top_csr_t &elb0 = g_elba_state_pd->elb_top();
+    elb_pf_csr_t &pf_csr = elb0.pf.pf;
+
+    uint32_t cam_compare = 2;   // 2 - compare DA, 1 - compare ethertype, 0 - reset
+
+    if(!dmac)
+        cam_compare = 0;
+
+    if (!elba_tm_port_is_uplink_port(port)) {
+        SDK_TRACE_ERR("%u is not a valid TM uplink port",
+                      port);
+        return sdk::SDK_RET_INVALID_ARG;
+    }
+
+    switch(port) {
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+//::    if pinfo["type"] == "uplink":
+        case ${pinfo["enum"]}:
+            {
+                pf_csr.hbm_port_${p}.cfg_hbm_parser_cam[entry].read();
+
+                if ( (entry < 8) ) {
+                    pf_csr.hbm_port_${p}.cfg_hbm_parser_cam[entry].da(dmac);
+                    pf_csr.hbm_port_${p}.cfg_hbm_parser_cam[entry].enable(cam_compare);
+                } else {
+                    SDK_TRACE_ERR("%u is not a valid entry", entry);
+                    return sdk::SDK_RET_INVALID_ARG;
+                }
+
+                if (tm_sw_cfg_write_enabled()) {
+                    pf_csr.hbm_port_${p}.cfg_hbm_parser_cam[entry].write();
+                }
+                break;
+            }
+//::    #endif
+//:: #endfor
+        default:
+            return sdk::SDK_RET_INVALID_ARG;
+    }
+
+    return sdk::SDK_RET_OK;
 }
 
 sdk_ret_t
 elba_tm_uplink_set_cam_cos (tm_port_t port, uint32_t  entry, uint32_t  cos)
 {
-    return SDK_RET_OK; // TBD-ELBA-REBASE:: fixup
+    elb_top_csr_t &elb0 = g_elba_state_pd->elb_top();
+    elb_pf_csr_t &pf_csr = elb0.pf.pf;
+
+    if (!elba_tm_port_is_uplink_port(port)) {
+        SDK_TRACE_ERR("%u is not a valid TM uplink port",
+                      port);
+        return sdk::SDK_RET_INVALID_ARG;
+    }
+
+    switch(port) {
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+//::    if pinfo["type"] == "uplink":
+        case ${pinfo["enum"]}:
+            {
+                pf_csr.hbm_port_${p}.cfg_hbm_parser_cam[entry].read();
+
+                if ( (entry < 8) ) {
+                     pf_csr.hbm_port_${p}.cfg_hbm_parser_cam[entry].cos(cos);
+                } else {
+                    SDK_TRACE_ERR("%u is not a valid entry", entry);
+                    return sdk::SDK_RET_INVALID_ARG;
+                }
+
+                if (tm_sw_cfg_write_enabled()) {
+                    pf_csr.hbm_port_${p}.cfg_hbm_parser_cam[entry].write();
+                }
+                break;
+            }
+//::    #endif
+//:: #endfor
+        default:
+            return sdk::SDK_RET_INVALID_ARG;
+    }
+
+    return sdk::SDK_RET_OK;
 }
 
 sdk_ret_t
 elba_tm_set_uplink_iq_to_p4_oq_map (tm_port_t  port, tm_q_t iq, tm_q_t p4_q)
 {
-    return SDK_RET_OK; // TBD-ELBA-REBASE:: fixup
+    elb_top_csr_t &elb0 = g_elba_state_pd->elb_top();
+    elb_pbc_csr_t &pbc_csr = elb0.pb.pbc;
+
+    cpp_int oq_map_val;
+
+    if (!elba_tm_port_is_uplink_port(port)) {
+        SDK_TRACE_ERR("%u is not a valid TM uplink port",
+                      port);
+        return sdk::SDK_RET_INVALID_ARG;
+    }
+
+    switch(port) {
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+//::    if pinfo["type"] == "uplink":
+        case ${pinfo["enum"]}:
+            {
+                pbc_csr.cfg_parser${p}.read();
+                oq_map_val = pbc_csr.cfg_parser${p}.oq_map();
+
+                cpp_helper.set_slc(oq_map_val, p4_q,
+                                   iq * 5,
+                                   ((iq + 1) * 5) - 1);
+
+                pbc_csr.cfg_parser${p}.oq_map(oq_map_val);
+
+                if (tm_sw_cfg_write_enabled()) {
+                    pbc_csr.cfg_parser${p}.write();
+                }
+                break;
+            }
+//::    #endif
+//:: #endfor
+        default:
+            return sdk::SDK_RET_INVALID_ARG;
+    }
+
+    return sdk::SDK_RET_OK;
 }
 
 sdk_ret_t
 elba_tm_uplink_iq_no_drop_update (tm_port_t port, tm_q_t iq, bool no_drop)
 {
-    return SDK_RET_OK; // TBD-ELBA-REBASE:: fixup
+    if (!elba_tm_port_is_uplink_port(port)) {
+        SDK_TRACE_ERR("%u is not a valid TM uplink port", port);
+        return sdk::SDK_RET_INVALID_ARG;
+    }
+
+    elb_top_csr_t &elb0 = g_elba_state_pd->elb_top();
+    elb_pf_csr_t &pf_csr = elb0.pf.pf;
+    cpp_int no_drop_val;
+
+    switch(port) {
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+//::    if pinfo["type"] == "uplink" and p<TM_HBM_OVFL_PORTS:
+        case ${pinfo["enum"]}:
+            {
+                if (port_supports_hbm_contexts(port)) {
+                    // per port no_drop config in hbm
+                    pf_csr.hbm_port_${p}.cfg_hbm_context.read();
+                    no_drop_val =
+                            pf_csr.hbm_port_${p}.cfg_hbm_context.no_drop();
+                    if (no_drop == true) {
+                        no_drop_val |= (1 << iq);
+                    } else {
+                        no_drop_val &= ~(1 << iq);
+                    }
+                    pf_csr.hbm_port_${p}.cfg_hbm_context.no_drop(no_drop_val);
+                    if (tm_sw_cfg_write_enabled()) {
+                        pf_csr.hbm_port_${p}.cfg_hbm_context.write();
+                    }
+                }
+                break;
+            }
+//::    #endif
+//:: #endfor
+        default:
+            return sdk::SDK_RET_ERR;
+    }
+    return sdk::SDK_RET_OK;
 }
 
 sdk_ret_t
@@ -688,6 +884,7 @@ elba_tm_uplink_q_params_update (tm_port_t port, tm_uplink_q_params_t *q_params)
                     pbc_csr.port_${p}.cfg_account_mtu_table.write();
                 }
 
+//::    if  p<TM_HBM_OVFL_PORTS:
                 if (port_supports_hbm_contexts(port)) {
                     // HBM Thresholds
                     pf_csr.cfg_hbm_threshold.read();
@@ -736,6 +933,7 @@ elba_tm_uplink_q_params_update (tm_port_t port, tm_uplink_q_params_t *q_params)
                         pf_csr.cfg_hbm_threshold.write();
                     }
                 }
+//::    #endif
                 break;
             }
 //::    #endif
@@ -856,17 +1054,90 @@ elba_tm_uplink_input_dscp_map_update (tm_port_t port, uint32_t tc,
     return sdk::SDK_RET_OK;
 }
 
-
+/**
+ * @brief  Enable/Disable reacting to incoming pause frames
+ * @param[in] port           PB port
+ * @param[in] reset_all_xoff reset for all cos values
+ * @param[in] set_all_xoff   set for all cos values
+ * @param[in] reset_pfc_xoff reset for pfc xoff cos
+ * @param[in] set_pfc_xoff   set for pfc xoff cos
+ * @param[in] xoff_cos       pfc xoff cos. Applicable only if
+ *                           reset_pfc_xoff/set_pfc_xoff is true
+ */
 sdk_ret_t
 elba_tm_get_uplink_mac_xoff (tm_port_t port, uint32_t *xoff_cos_bitmap)
 {
-    return SDK_RET_OK; // TBD-ELBA-REBASE:: fixup
+    elb_top_csr_t &elb0 = g_elba_state_pd->elb_top();
+    elb_pbc_csr_t &pbc_csr = elb0.pb.pbc;
+
+    if (!elba_tm_port_is_uplink_port(port)) {
+        SDK_TRACE_ERR("%u is not a valid TM uplink port",
+                      port);
+        return sdk::SDK_RET_INVALID_ARG;
+    }
+
+    switch(port) {
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+//::    if pinfo["type"] == "uplink":
+        case ${pinfo["enum"]}:
+            {
+                pbc_csr.port_${p}.cfg_mac_xoff.read();
+                *xoff_cos_bitmap = pbc_csr.port_${p}.cfg_mac_xoff.enable().
+                                                    convert_to<uint32_t>();
+                break;
+            }
+//::    #endif
+//:: #endfor
+        default:
+            return sdk::SDK_RET_INVALID_ARG;
+    }
+    return sdk::SDK_RET_OK;
 }
 
+/**
+ * @brief map OQ to xoff_cos
+ * @param[in] port      PB port
+ * @param[in] oq        PB output queue to xoff
+ * @param[in] xoff_cos  cos value of the incoming PFC
+ */
 sdk_ret_t
 elba_tm_uplink_oq_update (tm_port_t port, tm_q_t oq, uint32_t xoff_cos)
 {
-    return sdk::SDK_RET_OK; /* TBD-ELBA-REBASE: */
+    elb_top_csr_t &elb0 = g_elba_state_pd->elb_top();
+    elb_pbc_csr_t &pbc_csr = elb0.pb.pbc;
+    cpp_int xoff2oq_map_val;
+    elb_pbc_eth_oq_xoff_map_t xoff2oq_map_decoder;
+
+    if (!elba_tm_port_is_uplink_port(port)) {
+        SDK_TRACE_ERR("%u is not a valid TM uplink port",
+                      port);
+        return sdk::SDK_RET_INVALID_ARG;
+    }
+    xoff2oq_map_decoder.init();
+    switch(port) {
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+//::    if pinfo["type"] == "uplink":
+        case ${pinfo["enum"]}:
+            {
+                pbc_csr.port_${p}.cfg_oq_xoff2oq.read();
+                xoff2oq_map_val = pbc_csr.port_${p}.cfg_oq_xoff2oq.map();
+                cpp_helper.set_slc(xoff2oq_map_val, xoff_cos, oq*3, ((oq+1)*3)-1);
+                pbc_csr.port_${p}.cfg_oq_xoff2oq.map(xoff2oq_map_val);
+                xoff2oq_map_decoder.all(pbc_csr.port_${p}.cfg_oq_xoff2oq.map());
+                xoff2oq_map_decoder.set_name("elb0.pb.pbc.port_${p}.cfg_oq_xoff2oq.decoder");
+                if (tm_sw_cfg_write_enabled()) {
+                    pbc_csr.port_${p}.cfg_oq_xoff2oq.write();
+                }
+                break;
+            }
+//::    #endif
+//:: #endfor
+        default:
+            return sdk::SDK_RET_INVALID_ARG;
+    }
+    return sdk::SDK_RET_OK;
 }
 
 //:: for level in range(3):
@@ -984,10 +1255,41 @@ elba_tm_scheduler_map_update_l${level} (uint32_t port,
 
 //:: #endfor
 
+/**
+ * @brief get OQ to xoff_cos map
+ */
 sdk_ret_t
 elba_tm_get_uplink_oq_xoff_map (tm_port_t port, tm_q_t oq, uint32_t *xoff_cos)
 {
-    return SDK_RET_OK; // TBD-ELBA-REBASE:: fixup
+    elb_top_csr_t &elb0 = g_elba_state_pd->elb_top();
+    elb_pbc_csr_t &pbc_csr = elb0.pb.pbc;
+    cpp_int xoff2oq_map_val;
+    elb_pbc_eth_oq_xoff_map_t xoff2oq_map_decoder;
+
+    if (!elba_tm_port_is_uplink_port(port)) {
+        SDK_TRACE_ERR("%u is not a valid TM uplink port",
+                      port);
+        return sdk::SDK_RET_INVALID_ARG;
+    }
+    xoff2oq_map_decoder.init();
+    switch(port) {
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+//::    if pinfo["type"] == "uplink":
+        case ${pinfo["enum"]}:
+            {
+                pbc_csr.port_${p}.cfg_oq_xoff2oq.read();
+                *xoff_cos = cpp_helper.get_slc(pbc_csr.port_${p}.cfg_oq_xoff2oq.map(),
+                                               oq*3,
+                                               (((oq+1)*3)-1)).convert_to<uint32_t>();
+                break;
+            }
+//::    #endif
+//:: #endfor
+        default:
+            return sdk::SDK_RET_INVALID_ARG;
+    }
+    return sdk::SDK_RET_OK;
 }
 
 sdk_ret_t
@@ -1177,14 +1479,116 @@ elba_tm_drain_uplink_port (tm_port_t port)
 sdk_ret_t
 elba_tm_flush_uplink_port (tm_port_t port, bool enable)
 {
-    return SDK_RET_OK; // TBD-ELBA-REBASE:: fixup
+    sdk_ret_t ret = sdk::SDK_RET_OK;
+    elb_top_csr_t &elb0 = g_elba_state_pd->elb_top();
+    elb_pbc_csr_t &pbc_csr = elb0.pb.pbc;
+
+    if (!elba_tm_port_is_uplink_port(port)) {
+        SDK_TRACE_ERR("%u is not a valid TM uplink port",
+                      port);
+        return sdk::SDK_RET_INVALID_ARG;
+    }
+
+    // Mutex lock is to avoid sequencing b/w linkmgr-ctrl thread and periodic
+    // thread for now during link-down event.
+    // Ideally PB registers must be programmed by HAL cfg threads.
+    // For GS, since QOS changes are not supported, the only PB registers
+    // which are programmed after initial bootup are the ones below.
+    // This is invoked only during upgrade and link-down events.
+    pthread_mutex_lock(&tm_mutex);
+
+    stringstream data;
+    data << hex << endl;
+    switch(port) {
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+//::    if pinfo["type"] == "uplink":
+        case ${pinfo["enum"]}:
+            {
+                pbc_csr.port_${p}.cfg_oq.read();
+
+                // flush the oq for this port
+                pbc_csr.port_${p}.cfg_oq.flush(enable ? 1 : 0);
+                if (tm_sw_cfg_write_enabled()) {
+                    pbc_csr.port_${p}.cfg_oq.write();
+                    pbc_csr.port_${p}.cfg_oq.read();
+                    ${trace_register("pbc_csr.port_" + str(p) + ".cfg_oq")}
+                }
+                break;
+            }
+//::    #endif
+//:: #endfor
+        default:
+            pthread_mutex_unlock(&tm_mutex);
+            return sdk::SDK_RET_ERR;
+    }
+    SDK_TRACE_VERBOSE("%s", data.str().c_str());
+
+    pthread_mutex_unlock(&tm_mutex);
+
+    SDK_TRACE_VERBOSE("%s uplink port %u flush, ret %u",
+                      enable ? "Enable" : "Disable", port, ret);
+    return ret;
 }
 
 sdk_ret_t
 elba_tm_write_control_uplink_port (tm_port_t port, bool enable)
 {
-    return SDK_RET_OK; // TBD-ELBA-REBASE:: fixup
+    sdk_ret_t ret = sdk::SDK_RET_OK;
+    elb_top_csr_t &elb0 = g_elba_state_pd->elb_top();
+    elb_pbc_csr_t &pbc_csr = elb0.pb.pbc;
+
+    if (!elba_tm_port_is_uplink_port(port)) {
+        SDK_TRACE_ERR("%u is not a valid TM uplink port",
+                      port);
+        return sdk::SDK_RET_INVALID_ARG;
+    }
+
+    // Mutex lock is to avoid sequencing b/w linkmgr-ctrl thread and periodic
+    // thread for now during link-down event.
+    // Ideally PB registers must be programmed by HAL cfg threads.
+    // For GS, since QOS changes are not supported, the only PB registers
+    // which are programmed after initial bootup are the ones below.
+    // This is invoked only during upgrade and link-down events.
+    pthread_mutex_lock(&tm_mutex);
+
+    stringstream data;
+    data << hex << endl;
+    switch(port) {
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+//::    if pinfo["type"] == "uplink":
+        case ${pinfo["enum"]}:
+            {
+                pbc_csr.port_${p}.cfg_write_control.read();
+
+                // dont accept any packet into port
+                pbc_csr.port_${p}.cfg_write_control.enable(enable ? 1 : 0);
+
+                // flush the oq for this port
+                if (tm_sw_cfg_write_enabled()) {
+                    pbc_csr.port_${p}.cfg_write_control.write();
+                    pbc_csr.port_${p}.cfg_write_control.read();
+                    ${trace_register("pbc_csr.port_" + str(p) + ".cfg_write_control")}
+                }
+                break;
+            }
+//::    #endif
+//:: #endfor
+        default:
+            pthread_mutex_unlock(&tm_mutex);
+            return sdk::SDK_RET_ERR;
+    }
+    SDK_TRACE_VERBOSE("%s", data.str().c_str());
+
+    pthread_mutex_unlock(&tm_mutex);
+
+    SDK_TRACE_VERBOSE("%s uplink port %u write control, ret %u",
+                      enable ? "Enable" : "Disable", port, ret);
+    return ret;
 }
+
+
 
 sdk_ret_t
 elba_tm_hw_config_load_poll (int phase)
@@ -1437,7 +1841,6 @@ elba_tm_alloc_hbm_buffers (elba_tm_buf_cfg_t *buf_cfg)
     // Control needs to be 1/50th of payload
     num_hbm_contexts[TM_HBM_FIFO_TYPE_UPLINK] =
         tm_cfg_profile()->num_qs[TM_PORT_TYPE_UPLINK] * tm_cfg_profile()->num_active_uplink_ports;
-    num_hbm_contexts[TM_HBM_FIFO_TYPE_TXDMA] = tm_cfg_profile()->num_qs[TM_PORT_TYPE_DMA];
 
     total_hbm_chunks = tm_cfg_profile()->hbm_fifo_size/ELBA_TM_HBM_FIFO_ALLOC_SIZE;
 
@@ -1512,7 +1915,8 @@ elba_tm_alloc_hbm_buffers (elba_tm_buf_cfg_t *buf_cfg)
             offset += control_chunks_needed;
         }
     }
-    SDK_ASSERT(offset <= (control_chunks + payload_chunks));
+    //TODO : add this assert back after fixing MEM_REGION_QOS_FIFO_NAME
+    // SDK_ASSERT(offset <= (control_chunks + payload_chunks));
     SDK_TRACE_DEBUG("unallocated hbm chunks %lu total %lu",
                     (control_chunks + payload_chunks) - offset,
                     total_hbm_chunks);
@@ -1643,13 +2047,13 @@ static sdk_ret_t
 elba_tm_program_p4_credits (elba_tm_buf_cfg_t *buf_cfg)
 {
     sdk_ret_t ret = sdk::SDK_RET_OK;
-    //elb_top_csr_t &elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
-    //elb_pbc_csr_t &pbc_csr = elb0.pb.pbc;
-    //tm_port_type_e port_type;
-    //uint32_t credit_enable;
-    // uint32_t credits;
-    // uint32_t qs_to_flush;
-    // uint32_t recirc_q_val;
+    elb_top_csr_t &elb0 = g_elba_state_pd->elb_top();
+    elb_pbc_csr_t &pbc_csr = elb0.pb.pbc;
+    tm_port_type_e port_type;
+    uint32_t credit_enable;
+    uint32_t credits;
+    uint32_t qs_to_flush;
+    uint32_t recirc_q_val;
     cpp_int max_growth;
     elb_pbc_max_growth_map_t max_growth_decoder;
     max_growth_decoder.init();
@@ -1726,6 +2130,8 @@ elba_tm_program_p4_credits (elba_tm_buf_cfg_t *buf_cfg)
     return ret;
 }
 
+
+
 static sdk_ret_t
 elba_tm_program_hbm_buffers (elba_tm_buf_cfg_t *buf_cfg)
 {
@@ -1766,8 +2172,7 @@ elba_tm_program_hbm_buffers (elba_tm_buf_cfg_t *buf_cfg)
     stringstream data;
     data << hex << endl;
 
-//:: fifo_types = {"uplink": "TM_HBM_FIFO_TYPE_UPLINK" ,
-//::               "dma" : "TM_HBM_FIFO_TYPE_TXDMA" }
+//:: fifo_types = {"uplink": "TM_HBM_FIFO_TYPE_UPLINK"  }
 //:: for p in range(TM_PORTS):
 //::    pinfo = port_info[p]
 //::    if pinfo["has_hbm"]:
@@ -1782,9 +2187,6 @@ elba_tm_program_hbm_buffers (elba_tm_buf_cfg_t *buf_cfg)
         num_contexts = 0;
     }
     base_offset = ${p} * num_contexts;
-//::        elif pinfo["type"] == "dma":
-    num_contexts = elba_tm_max_hbm_contexts_for_fifo(TM_HBM_FIFO_TYPE_TXDMA);
-    base_offset = 0;
 //::        #endif
 
     port_type = elba_tm_get_port_type(${pinfo["enum"]});
@@ -2128,6 +2530,7 @@ elb_pb_sched_spq_pgm (uint32_t chip_id, uint32_t inst_id,
     return SDK_RET_OK; // TBD-ELBA-REBASE:: fixup
 }
 
+
 static sdk_ret_t
 elba_tm_init_pbc (elba_tm_buf_cfg_t *buf_cfg)
 {
@@ -2392,7 +2795,7 @@ elba_pf_init (void)
     def_rslt.out_pb(1);
     def_rslt.pb_port(7);
 
-//:: for p in range(TM_PORTS):
+//:: for p in range(TM_PF_PORTS):
     pf_csr.hbm_port_${p}.cfg_hbm_parser_cam_miss.all(def_rslt.all());
     pf_csr.hbm_port_${p}.cfg_hbm_parser_cam_miss.write();
 //:: #endfor
@@ -2400,7 +2803,7 @@ elba_pf_init (void)
 
 
     // On configure rate-limiter from HBM
-//:: for p in range(TM_PORTS):
+//:: for p in range(TM_PF_PORTS):
 //::    pinfo = port_info[p]
 //::    if pinfo["has_hbm"]:
 
@@ -2469,8 +2872,8 @@ elba_tm_global_init (void)
     // There are only 2 combinations valid with min_cell, max_row as either
     // 0, 4095 or 4096, 2559 . Choose one of them based on the island which
     // needs more cells
-    uint32_t min_cells[] = { 0, 4096};
-    uint32_t max_row[] = {4095, 2559};
+    uint32_t min_cells[] = { 0, 8192};
+    uint32_t max_row[] = {8191, 4095};
 //    uint32_t sched_timer;
     elb_top_csr_t &elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
     elb_pbc_csr_t &pbc_csr = elb0.pb.pbc;
@@ -2481,7 +2884,7 @@ elba_tm_global_init (void)
     def_rslt.out_pb(1);
     def_rslt.pb_port(7);
 
-//:: for p in range(TM_PORTS):
+//:: for p in range(TM_PF_PORTS):
     pf_csr.hbm_port_${p}.cfg_hbm_parser_cam_miss.all(def_rslt.all());
     pf_csr.hbm_port_${p}.cfg_hbm_parser_cam_miss.write();
 //:: #endfor
@@ -2556,6 +2959,7 @@ elba_tm_init_enable_ports (void)
     uint32_t enable;
     uint32_t rate_limiter;
     uint32_t cut_thru;
+    uint32_t recirc_q;
     bool set_rate_limiter;
     bool set_cut_thru;
     bool drop_on_error;
@@ -2569,9 +2973,7 @@ elba_tm_init_enable_ports (void)
     rate_limiter = (tm_cfg_profile()->num_active_uplink_ports * 2) - 1;
     cut_thru = 0;
 
-//::    if pinfo["type"] == "p4":
-    uint32_t recirc_q = 0;
-//::    #endif
+    recirc_q = 0;
     set_rate_limiter = false;
     set_cut_thru = false;
     drop_on_error = false;
@@ -3203,8 +3605,18 @@ elba_tm_get_xoff_threshold (uint32_t ctx)
 sdk_ret_t
 elba_tm_set_reserved_min (uint32_t reserved_min)
 {
-    return sdk::SDK_RET_OK; // TBD-ELBA-REBASE: fixup
+    elb_top_csr_t &elb0 = g_elba_state_pd->elb_top();
+    elb_pbc_csr_t &pbc_csr = elb0.pb.pbc;
+
+    pbc_csr.port_0.cfg_account_pg_0.read();
+    pbc_csr.port_0.cfg_account_pg_0.reserved_min(reserved_min);
+    pbc_csr.port_0.cfg_account_pg_0.write();
+    pbc_csr.port_1.cfg_account_pg_0.read();
+    pbc_csr.port_1.cfg_account_pg_0.reserved_min(reserved_min);
+    pbc_csr.port_1.cfg_account_pg_0.write();
+    return SDK_RET_OK;
 }
+
 
 sdk_ret_t
 elba_queue_stats_get (tm_port_t port, void *stats)

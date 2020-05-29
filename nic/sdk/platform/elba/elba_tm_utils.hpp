@@ -61,17 +61,15 @@ typedef struct elba_queue_stats_s {
     elba_output_queue_stats_t oq_stats[ELBA_TM_MAX_OQS];
 } elba_queue_stats_t;
 
-sdk_ret_t
-elba_queue_stats_get(tm_port_t port, elba_queue_stats_t *stats);
+sdk_ret_t elba_queue_stats_get(tm_port_t port, elba_queue_stats_t *stats);
 
-sdk_ret_t
-elba_populate_queue_stats(tm_port_t port,
-                           elba_queue_t iqs[ELBA_TM_MAX_IQS],
-                           elba_queue_t oqs[ELBA_TM_MAX_OQS],
-                           elba_queue_stats_t *stats);
+sdk_ret_t elba_populate_queue_stats(tm_port_t port,
+                                    elba_queue_t iqs[ELBA_TM_MAX_IQS],
+                                    elba_queue_t oqs[ELBA_TM_MAX_OQS],
+                                    elba_queue_stats_t *stats);
 
-sdk_ret_t
-elba_queue_credits_get(sdk::asic::pd::queue_credits_get_cb_t cb, void *ctxt);
+sdk_ret_t elba_queue_credits_get(sdk::asic::pd::queue_credits_get_cb_t cb,
+                                 void *ctxt);
 
 }    // namespace elba
 }    // namespace platform
