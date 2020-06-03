@@ -5,7 +5,7 @@
 ///
 /// \file
 /// This file contains the implementation for elbmon tool
-/// usage: elbmon -v[erbose] -r[eset] -q[ueues] -p[cie] -b[wmon] -s[pps]
+/// usage: elbmon -v[erbose] -r[eset] -q[ueues] -b[wmon] -s[pps]
 ///  -l[lif] -t[qtype] -i[qid] -R[ring] -p[poll]<interval>
 ///
 //===----------------------------------------------------------------------===//
@@ -223,7 +223,7 @@ main (int argc, char *argv[])
             return (0);
         } else {
             printf(
-                "usage: elbmon -v[erbose] -r[eset] -q[ueues] -p[cie] -b[wmon]"
+                "usage: elbmon -v[erbose] -r[eset] -q[ueues] -b[wmon]"
                 " -s[pps] -l[lif] -t[qtype] -i[qid] -R[ring] -p[poll]"
                 "<interval>\n\n");
             printf("Example: elbmon -q -l 1003:1005 -t 0 -i 0:5 -R 1 -p 100\n");
@@ -232,12 +232,14 @@ main (int argc, char *argv[])
         i++;
     }
 
+    /*
     if ((poll != 0) &&
         ((lif_start != lif_end) || (qtype == -1) || (qid_start != qid_end))) {
         printf("Error: -p requires just one lif, qtype and qid to be "
                "specified.\n");
         return (-1);
     }
+    */
 
     if (queue_dump == 1) {
         qstate_lif_dump(lif_start, lif_end, qtype, qid_start, qid_end, rid,

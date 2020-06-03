@@ -163,9 +163,9 @@ pcieport_set_sw_reset(pcieport_t *p, const int on)
 {
     u_int32_t val = pal_reg_rd32(PP_(CFG_PP_SW_RESET, p->port));
     if (on) {
-        val |= 0x3 << (p->port << 1);
+        val |= 0x3 << ((p->port % 4) << 1);
     } else {
-        val &= ~(0x3 << (p->port << 1));
+        val &= ~(0x3 << ((p->port % 4) << 1));
     }
     pal_reg_wr32(PP_(CFG_PP_SW_RESET, p->port), val);
 }
@@ -178,20 +178,32 @@ pcieport_set_sw_reset(pcieport_t *p, const int on)
 static void
 pcieport_set_pcie_pll_rst(pcieport_t *p, const int on)
 {
-    /* XXX ELBA-TODO */
-#if 0
+    /* XXX ELBA-TODO  HV need pll number here or just do this for both PLLs */
+    /* XXX ELBA-TODO  HV updated */
+
+    const int pll = p->port;
+    u_int32_t pll_cfg[3];
+
+    pal_reg_rd32w(CFG_PCIE_PLL_(pll), pll_cfg, 3);
+
+    /*****************
+     * word2
+     */
+    /* set resetb and post_resetb according to input value of on */
+
     if (on) {
-        pal_reg_wr32(PP_(CFG_PP_PCIE_PLL_RST_N, p->port), 0);
+        pll_cfg[2] &= ~(0x3 << 2);  /* assert post_resetb, resetb */
     } else {
-        pal_reg_wr32(PP_(CFG_PP_PCIE_PLL_RST_N, p->port), 0x3);
+        pll_cfg[2] |= (0x3 << 2);  /* deassert post_resetb, resetb */
     }
-#endif
+
+    pal_reg_wr32w(CFG_PCIE_PLL_(pll), pll_cfg, 3);
 }
 
 static void
 pcieport_set_pcs_interrupt_disable(pcieport_t *p)
 {
-    /* XXX ELBA-TODO check this */
+    /* XXX ELBA-TODO check this HV comment, PP_ macro takes care of port 4..7 = PP1 for multi-port support */
     pal_reg_wr32(PP_(CFG_PP_PCS_INTERRUPT_DISABLE, p->port), p->lanemask);
 }
 
@@ -389,16 +401,14 @@ pcieportpd_mac_set_ids(pcieport_t *p)
 void
 pcieportpd_select_pcie_refclk(const int port, const int host_clock)
 {
-    /* XXX ELBA-TODO */
-#if 0
+    /* XXX ELBA-TODO HV-updated */
     if (host_clock) {
         pal_reg_wr32(PP_(CFG_PP_PCIE_PLL_REFCLK_SEL, port), 0xff);
-        pal_reg_wr32(PP_(CFG_PP_PCIE_PLL_REFCLK_SOURCE_SEL, port), 0x3);
+        pal_reg_wr32(CFG_PCIE_PLL_REFCLK_SOURCE, 0x3);
     } else {
         pal_reg_wr32(PP_(CFG_PP_PCIE_PLL_REFCLK_SEL, port), 0x00);
-        pal_reg_wr32(PP_(CFG_PP_PCIE_PLL_REFCLK_SOURCE_SEL, port), 0x0);
+        pal_reg_wr32(CFG_PCIE_PLL_REFCLK_SOURCE, 0x0);
     }
-#endif
 }
 
 int

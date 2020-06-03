@@ -16,6 +16,7 @@ extern "C" {
 #include "elb_pp_c_hdr.h"
 #include "elb_pxb_c_hdr.h"
 #include "elb_pxc_c_hdr.h"
+#include "elb_soc_c_hdr.h"
 
 /*
  * Register convenience macros.
@@ -63,7 +64,7 @@ extern "C" {
 #define PP_INTREG_PERST0N \
     ELB_PP_CSR_INT_PP_INTREG_PERST0N_DN2UP_INTERRUPT_FIELD_MASK
 #define PP_INTREG_PERSTN(port) \
-    (PP_INTREG_PERST0N >> (port))
+    (PP_INTREG_PERST0N >> (port % 4))
 
 #define PP_INTREG_PORT0_C_INT_INTERRUPT \
     ELB_PP_CSR_INT_PP_INTREG_PORT0_C_INT_INTERRUPT_FIELD_MASK
@@ -83,6 +84,15 @@ extern "C" {
     ELB_PXC_CSR_CFG_C_PORT_MAC_CFG_C_PORT_MAC_0_2_TL_CLOCK_FREQ_FIELD_MASK
 #define CFG_C_PORT_MAC_F_CLOCK_FREQ_SHIFT \
     ELB_PXC_CSR_CFG_C_PORT_MAC_CFG_C_PORT_MAC_0_2_TL_CLOCK_FREQ_LSB
+
+/* pcie registers in MS/SOC block */
+#define CFG_PCIE_PLL_REFCLK_SOURCE \
+    (ELB_ADDR_BASE_MS_SOC_OFFSET + ELB_SOC_CSR_CFG_REFCLK_SEL_BYTE_ADDRESS)
+
+#define CFG_PCIE_PLL_(pll) \
+    (ELB_ADDR_BASE_MS_SOC_OFFSET + \
+     ELB_SOC_CSR_SCA_CFG_PLL_PCIE_0_BYTE_ADDRESS + \
+     ((pll) * ELB_SOCA_CSR_CFG_PLL_PCIE_0_BYTE_SIZE))
 
 #ifdef __cplusplus
 }

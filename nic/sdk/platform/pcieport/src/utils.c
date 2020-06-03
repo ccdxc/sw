@@ -167,6 +167,26 @@ pcieport_set_serdes_reset(pcieport_t *p, const int on)
     pal_reg_wr32(PP_(CFG_PP_SD_ASYNC_RESET_N, p->port), v);
 }
 
+#ifdef ASIC_ELBA
+/*
+ * Note this function sets reset on/off, but the register
+ * is inverted logic for _RESET_N.  If on=1 then put the serdes
+ * in reset by clearing reset_n bits;
+ */
+void
+pcieport_set_pcs_reset(pcieport_t *p, const int on)
+{
+    u_int32_t v = pal_reg_rd32(PP_(CFG_PP_PCS_RESET_N, p->port));
+    if (on) {
+        v &= ~(1 << (p->port % 4));
+    } else {
+        v |=  (1 << (p->port % 4));
+    }
+    pal_reg_wr32(PP_(CFG_PP_PCS_RESET_N, p->port), v);
+}
+#endif
+
+#ifdef ASIC_CAPRI
 /*
  * Note this function sets reset on/off, but the register
  * is inverted logic for _RESET_N.  If on=1 then put the serdes
@@ -183,6 +203,8 @@ pcieport_set_pcs_reset(pcieport_t *p, const int on)
     }
     pal_reg_wr32(PP_(CFG_PP_PCS_RESET_N, p->port), v);
 }
+
+#endif
 
 void
 pcieport_set_mac_reset(pcieport_t *p, const int on)

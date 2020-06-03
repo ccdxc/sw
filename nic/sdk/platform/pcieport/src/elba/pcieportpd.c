@@ -30,8 +30,8 @@ pcieportpd_validate_hostconfig(pcieport_t *p)
     }
 
     switch (p->cap_width) {
-    case 1: /* x1 uses 2 lanes */
-    case 2:
+    case 1: /* x1 uses 4 lanes */
+    case 2: /* x1 uses 4 lanes */
     case 4:
         /* XXX verify peer isn't also configured to use our lanes */
         break;
@@ -62,12 +62,13 @@ pcieportpd_validate_hostconfig(pcieport_t *p)
 int
 pcieportpd_hostconfig(pcieport_t *p, const pciemgr_params_t *params)
 {
+    /* HV comment : Legal combinations within a PP: 4x ports = 0,1,2,3 ; 8x ports = 0,2 ; 16x port = 0; */
     switch (p->cap_width) {
     case  1: /* x1 uses 2 lanes */
     case  2:
-    case  4: p->lanemask = 0x0003 << (p->port << 1); break;
-    case  8: p->lanemask = 0x000f << (p->port << 2); break;
-    case 16: p->lanemask = 0x00ff << (p->port << 4); break;
+    case  4: p->lanemask = 0x000f << ((p->port % 4 ) << 2); break;
+    case  8: p->lanemask = 0x00ff << ((p->port % 4 ) << 2); break;
+    case 16: p->lanemask = 0xffff ; break;
     }
 
     return 0;

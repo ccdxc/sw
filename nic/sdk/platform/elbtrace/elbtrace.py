@@ -125,6 +125,7 @@ elif args.command == "decode":
 
         trace = defaultdict(list)
 
+        #Justina - continue
         # Decode and filter the trace
         for fhdr, hdr, key, data, instructions in decode_mpu_trace_file(f.read()):
 

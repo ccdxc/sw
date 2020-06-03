@@ -105,7 +105,7 @@ class MpuTraceInstructionEntry(BigEndianStructure):
         ("timestamp", c_uint64, 48)
     ]
 
-
+//todo: shd be 64B aligned
 class TraceFileHeader(LittleEndianStructure):
     _pack_ = 1
     _fields_ = [

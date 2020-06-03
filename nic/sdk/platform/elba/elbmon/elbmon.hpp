@@ -69,6 +69,8 @@ typedef struct mpu_ {
     uint32_t inst_executed;
     uint32_t icache_miss;
     uint32_t dcache_miss;
+    uint32_t icache_hit;
+    uint32_t dcache_hit;
     uint32_t cycles;
     uint32_t phv_executed;
     uint32_t phvwr_stall;
@@ -139,6 +141,23 @@ typedef struct pipeline_ {
     uint8_t pkt_full_fifos;
     uint8_t ff_depth;
     uint8_t xoff;
+
+  uint64_t lat_ff_depth;
+  uint64_t wdata_ff_depth;
+  uint64_t dfence_ff_depth;
+  uint64_t ffence_ff_depth;
+  uint64_t ma_srdy;
+  uint64_t ma_drdy;
+  uint64_t pbus_srdy;
+  uint64_t pbus_drdy;
+  uint64_t txs_srdy;
+  uint64_t txs_drdy;
+  uint64_t npv_full;
+  uint64_t pend_rsc;
+  uint64_t fc_axi_wr_nordy;
+  uint64_t fc_axi_rd_nordy;
+  uint64_t axi_rd_req;
+  uint64_t axi_wr_req;
 
     uint64_t phv; // ma_cnt
     uint64_t pb_pbus_cnt;
@@ -304,6 +323,17 @@ void elbmon_pipeline_data_store2(uint8_t, uint64_t, uint64_t, uint64_t,
                                  uint64_t, uint64_t, uint64_t);
 void elbmon_pipeline_data_store3(uint8_t, uint64_t, uint64_t, uint64_t,
                                  uint64_t, uint64_t, uint64_t);
+void elbmon_pipeline_data_store4 (uint8_t, 
+				  uint64_t, uint64_t, 
+				  uint64_t, uint64_t,
+				  uint64_t, uint64_t, uint64_t, 
+				  uint64_t, uint64_t, 
+				  uint64_t, uint64_t,
+				  uint64_t,
+				  uint64_t, uint64_t, 
+				  uint64_t, uint64_t, 
+				  uint64_t);
+
 extern bool export_to_file;
 extern FILE *fp;
 void *elbtop_display_routine(void *);

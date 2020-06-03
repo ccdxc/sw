@@ -198,6 +198,8 @@ mpu_read_counters (int verbose, uint8_t pipeline, uint8_t stage, uint8_t mpu)
     uint32_t inst_executed;
     uint32_t icache_miss;
     uint32_t dcache_miss;
+    uint32_t icache_hit;
+    uint32_t dcache_hit;
     uint32_t cycles;
     uint32_t phv_executed;
     uint32_t phvwr_stall;
@@ -212,8 +214,14 @@ mpu_read_counters (int verbose, uint8_t pipeline, uint8_t stage, uint8_t mpu)
                           ELB_MPU_CSR_CNT_ICACHE_MISS_BYTE_OFFSET,
                       &icache_miss, 1);
         pal_reg_rd32w( mpu_base +
+                          ELB_MPU_CSR_CNT_ICACHE_HIT_BYTE_OFFSET,
+                      &icache_hit, 1);
+        pal_reg_rd32w( mpu_base +
                           ELB_MPU_CSR_CNT_DCACHE_MISS_BYTE_OFFSET,
                       &dcache_miss, 1);
+        pal_reg_rd32w( mpu_base +
+                          ELB_MPU_CSR_CNT_DCACHE_HIT_BYTE_OFFSET,
+                      &dcache_hit, 1);
         pal_reg_rd32w( mpu_base + ELB_MPU_CSR_CNT_CYCLES_BYTE_OFFSET,
                       &cycles, 1);
         pal_reg_rd32w( mpu_base +
@@ -229,7 +237,9 @@ mpu_read_counters (int verbose, uint8_t pipeline, uint8_t stage, uint8_t mpu)
 
         mpu_ptr->inst_executed = inst_executed;
         mpu_ptr->icache_miss = icache_miss;
+        mpu_ptr->icache_hit = icache_hit;
         mpu_ptr->dcache_miss = dcache_miss;
+        mpu_ptr->dcache_hit = dcache_hit;
         mpu_ptr->phv_executed = phv_executed;
         mpu_ptr->phvwr_stall = phvwr_stall;
         mpu_ptr->st_stall = st_stall;
@@ -251,22 +261,10 @@ void
 mpu_reset_counters (int verbose, uint8_t pipeline, uint8_t stage, uint8_t mpu)
 {
   uint64_t mpu_base = get_mpu_base(pipeline, stage, mpu);
-    uint32_t zero = 0;
+  uint32_t one = 1;
 
-    pal_reg_wr32w( mpu_base + ELB_MPU_CSR_CNT_INST_EXECUTED_BYTE_OFFSET,
-                  &zero, 1);
-    pal_reg_wr32w( mpu_base + ELB_MPU_CSR_CNT_ICACHE_MISS_BYTE_OFFSET,
-                  &zero, 1);
-    pal_reg_wr32w( mpu_base + ELB_MPU_CSR_CNT_DCACHE_MISS_BYTE_OFFSET,
-                  &zero, 1);
-    pal_reg_wr32w( mpu_base + ELB_MPU_CSR_CNT_CYCLES_BYTE_OFFSET, &zero,
-                  1);
-    pal_reg_wr32w( mpu_base + ELB_MPU_CSR_CNT_PHV_EXECUTED_BYTE_OFFSET,
-                  &zero, 1);
-    pal_reg_wr32w( mpu_base + ELB_MPU_CSR_CNT_PHVWR_STALL_BYTE_OFFSET,
-                  &zero, 1);
-    pal_reg_wr32w( mpu_base + ELB_MPU_CSR_CNT_ST_STALL_BYTE_OFFSET,
-                  &zero, 1);
+  pal_reg_wr32w( mpu_base + ELB_MPU_CSR_MPU_COUNTERS_BYTE_OFFSET,
+		 &one, 1);
 }
 
 void

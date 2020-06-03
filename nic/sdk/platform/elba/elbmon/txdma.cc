@@ -15,6 +15,7 @@
 #include "dtls.hpp"
 #include "elb_top_csr_defines.h"
 #include "elb_txs_c_hdr.h"
+#include "elb_ptd_c_hdr.h"
 #include "elb_wa_c_hdr.h"
 namespace pt {
 #include "elb_pt_c_hdr.h"
@@ -64,9 +65,41 @@ elbmon_pipeline_data_store2 (uint8_t type, uint64_t pend_rd, uint64_t pend_wr,
 }
 
 void
+elbmon_pipeline_data_store4 (uint8_t type, 
+			     uint64_t lat_ff_depth, uint64_t wdata_ff_depth, 
+			     uint64_t dfence_ff_depth, uint64_t ffence_ff_depth,
+			     uint64_t ma_srdy, uint64_t ma_drdy, uint64_t pbus_srdy, 
+			     uint64_t pbus_drdy, uint64_t txs_srdy, 
+			     uint64_t txs_drdy, uint64_t npv_full,
+			     uint64_t pend_rsc,
+			     uint64_t fc_axi_wr_nordy, uint64_t fc_axi_rd_nordy, 
+			     uint64_t axi_rd_req, uint64_t axi_wr_req, 
+			     uint64_t polls)
+{
+    pipeline_t *pipeline = &asic->pipelines[type];
+
+    pipeline->lat_ff_depth = lat_ff_depth / polls;
+    pipeline->wdata_ff_depth = wdata_ff_depth / polls;
+    pipeline->dfence_ff_depth = dfence_ff_depth / polls;
+    pipeline->ffence_ff_depth = ffence_ff_depth / polls;
+    pipeline->ma_srdy = (ma_srdy * 100) / polls;
+    pipeline->ma_drdy = (ma_drdy * 100) / polls;
+    pipeline->pbus_srdy = (pbus_srdy * 100) / polls;
+    pipeline->pbus_drdy = (pbus_drdy * 100) / polls;
+    pipeline->txs_srdy = (txs_srdy * 100) / polls;
+    pipeline->txs_drdy = (txs_drdy * 100) / polls;
+    pipeline->npv_full = npv_full / polls;
+    pipeline->pend_rsc = pend_rsc / polls;
+    // counts:
+    pipeline->fc_axi_wr_nordy = fc_axi_wr_nordy;
+    pipeline->fc_axi_rd_nordy = fc_axi_rd_nordy;
+    pipeline->axi_rd_req = axi_rd_req;
+    pipeline->axi_wr_req = axi_wr_req;
+}
+
+void
 ptd_read_counters (int verbose)
 {
-    uint32_t cnt_pend[2];
     uint32_t sta_xoff = 0;
     uint32_t  sta_fifo[2];
     int i;
@@ -81,7 +114,23 @@ ptd_read_counters (int verbose)
     int pkt_ff_full = 0;
     int polls = 100;
 
+    int ma_srdy = 0;
+    int ma_drdy = 0;
+    int pbus_srdy = 0;
+    int pbus_drdy = 0;
+    int txs_srdy = 0;
+    int txs_drdy = 0;
+    int npv_full = 0;
+    int pend_rsc = 0;
+
     uint32_t cnt[4];
+    uint32_t sta_fifo_depth[3];
+    uint32_t sta_id[2];
+    uint32_t lat_ff_depth=0;
+    uint32_t wdata_ff_depth=0;
+    uint32_t dfence_ff_depth=0;
+    uint32_t ffence_ff_depth=0;
+    uint32_t sta_fc;
 
     pal_reg_rd32w(ELB_ADDR_BASE_PT_PT_OFFSET + ELB_PT_CSR_PTD_BYTE_ADDRESS +
                       ELB_PTD_CSR_CNT_PHV_BYTE_OFFSET,
@@ -107,11 +156,32 @@ ptd_read_counters (int verbose)
                   cnt, 3);
     int pb_cnt = ELB_PTD_CSR_CNT_PB_CNT_PB_0_3_SOP_31_0_GET(cnt[0]);
 
+
+    uint32_t fc_axi_wr, fc_axi_rd;
+    int fc_axi_wr_nordy, fc_axi_rd_nordy;
+    uint64_t  axi_rd_req, axi_wr_req;
+    // AXI fc
+    pal_reg_rd32w(ELB_ADDR_BASE_PT_PT_OFFSET +
+		  ELB_PTD_CSR_CNT_FC_AXI_WR_BYTE_ADDRESS,
+		  &fc_axi_wr, 1);
+    fc_axi_wr_nordy = ELB_PTD_CSR_CNT_FC_AXI_WR_NO_READY_GET(fc_axi_wr);
+    pal_reg_rd32w(ELB_ADDR_BASE_PT_PT_OFFSET +
+		  ELB_PTD_CSR_CNT_FC_AXI_RD_BYTE_ADDRESS,
+		  &fc_axi_rd, 1);
+    fc_axi_rd_nordy = ELB_PTD_CSR_CNT_FC_AXI_RD_NO_READY_GET(fc_axi_rd);
+    // AXI req
+    pal_reg_rd32w(ELB_ADDR_BASE_PT_PT_OFFSET +
+		  ELB_PTD_CSR_CNT_AXI_RD_REQ_BYTE_ADDRESS,
+		  (uint32_t *)&axi_rd_req, 2);
+    pal_reg_rd32w(ELB_ADDR_BASE_PT_PT_OFFSET +
+		  ELB_PTD_CSR_CNT_AXI_WR_REQ_BYTE_ADDRESS,
+		  (uint32_t *)&axi_wr_req, 2);
+    
     // Pending Reads/Writes, # PHVs
     for (i = 0; i < polls; i++) {
         // FIFO Status
         pal_reg_rd32w(ELB_ADDR_BASE_PT_PT_OFFSET +
-                          ELB_PT_CSR_PTD_STA_FIFO_BYTE_ADDRESS,
+		      ELB_PT_CSR_PTD_STA_FIFO_BYTE_ADDRESS,
                       sta_fifo, 2);
         rd_ff_full   += ELB_PTD_CSR_STA_FIFO_STA_FIFO_0_2_LAT_FF_FULL_GET(sta_fifo[0]);
         rd_ff_empty  += ELB_PTD_CSR_STA_FIFO_STA_FIFO_0_2_LAT_FF_EMPTY_GET(sta_fifo[0]);
@@ -119,23 +189,52 @@ ptd_read_counters (int verbose)
         wr_ff_empty  += ELB_PTD_CSR_STA_FIFO_STA_FIFO_0_2_WR_MEM_FF_EMPTY_GET(sta_fifo[0]);
         pkt_ff_full  += ELB_PTD_CSR_STA_FIFO_STA_FIFO_0_2_PKT_FF_FULL_GET(sta_fifo[0]);
         pkt_ff_empty += ELB_PTD_CSR_STA_FIFO_STA_FIFO_0_2_PKT_FF_EMPTY_GET(sta_fifo[0]);
-        // Pending:
-        pal_reg_rd32w(ELB_ADDR_BASE_PT_PT_OFFSET +
-                          ELB_PT_CSR_PTD_STA_ID_BYTE_ADDRESS,
-                      cnt_pend, 2);
         pal_reg_rd32w(ELB_ADDR_BASE_PT_PT_OFFSET +
                           ELB_PT_CSR_PTD_STA_XOFF_BYTE_ADDRESS,
                       &sta_xoff, 1);
-        pend_rd += ELB_PTD_CSR_STA_ID_STA_ID_0_2_RD_PEND_CNT_GET(cnt_pend[0]);
-        pend_wr += ELB_PTD_CSR_STA_ID_STA_ID_0_2_WR_PEND_CNT_GET(cnt_pend[0]);
         num_phv += ELB_PTD_CSR_STA_XOFF_NUMPHV_COUNTER_GET(sta_xoff);
+	// FIFO depths:
+	pal_reg_rd32w(ELB_ADDR_BASE_PT_PT_OFFSET +
+		      ELB_PTD_CSR_STA_FIFO_FLDS_BYTE_ADDRESS,
+		      sta_fifo_depth, 3);
+	lat_ff_depth    += ELB_PTD_CSR_STA_FIFO_FLDS_STA_FIFO_FLDS_0_3_LAT_FF_DEPTH_GET(sta_fifo_depth[0]);
+	wdata_ff_depth  += ELB_PTD_CSR_STA_FIFO_FLDS_STA_FIFO_FLDS_0_3_WDATA_FF_DEPTH_GET(sta_fifo_depth[0]);
+	dfence_ff_depth += ELB_PTD_CSR_STA_FIFO_FLDS_STA_FIFO_FLDS_0_3_DFENCE_FF_DEPTH_GET(sta_fifo_depth[0]);
+	ffence_ff_depth += ELB_PTD_CSR_STA_FIFO_FLDS_STA_FIFO_FLDS_0_3_FFENCE_FF_DEPTH_GET(sta_fifo_depth[0]);
+	// FlowControl:
+	pal_reg_rd32w(ELB_ADDR_BASE_PT_PT_OFFSET +
+		      ELB_PTD_CSR_STA_FC_BYTE_ADDRESS,
+		      &sta_fc, 1);
+	ma_srdy += ELB_PTD_CSR_STA_FC_MA_SRDY_GET(sta_fc);
+	ma_drdy += ELB_PTD_CSR_STA_FC_MA_DRDY_GET(sta_fc);
+	pbus_srdy += ELB_PTD_CSR_STA_FC_PB_PBUS_SRDY_GET(sta_fc);
+	pbus_drdy += ELB_PTD_CSR_STA_FC_PB_PBUS_DRDY_GET(sta_fc);
+	txs_srdy += ELB_PTD_CSR_STA_FC_PTD_TXS_FEEDBACK_SRDY_GET(sta_fc);
+	txs_drdy += ELB_PTD_CSR_STA_FC_PTD_TXS_FEEDBACK_DRDY_GET(sta_fc);
+        npv_full += ELB_PTD_CSR_STA_FC_PTD_NPV_PHV_FULL_GET(sta_fc);
+	// pending IDs
+	pal_reg_rd32w(ELB_ADDR_BASE_PT_PT_OFFSET +
+		      ELB_PTD_CSR_STA_ID_STA_ID_0_2_BYTE_ADDRESS,
+		      sta_id, 2);
+	pend_rsc += ELB_PTD_CSR_STA_ID_STA_ID_0_2_RD_PEND_RSRC_CNT_GET(sta_id[0]);
+        pend_rd += ELB_PTD_CSR_STA_ID_STA_ID_0_2_RD_PEND_CNT_GET(sta_id[0]);
+        pend_wr += ELB_PTD_CSR_STA_ID_STA_ID_0_2_WR_PEND_CNT_GET(sta_id[0]);
     }
 
-    elbmon_pipeline_data_store1(TXDMA, ma_cnt, pb_cnt, phv_drop, phv_err,
+    elbmon_pipeline_data_store1(TXDMA, 
+				ma_cnt, pb_cnt, phv_drop, phv_err,
                                 phv_recirc, resub_cnt, num_phv, polls);
-    elbmon_pipeline_data_store2(
-        TXDMA, pend_rd / polls, pend_wr / polls, rd_ff_empty, rd_ff_full,
-        wr_ff_empty, wr_ff_full, pkt_ff_empty, pkt_ff_full, 0, polls);
+    elbmon_pipeline_data_store2(TXDMA, 
+				pend_rd, pend_wr, rd_ff_empty, rd_ff_full,
+				wr_ff_empty, wr_ff_full, pkt_ff_empty, pkt_ff_full, 0, polls);
+    elbmon_pipeline_data_store4(TXDMA,
+				// polls:
+				lat_ff_depth, wdata_ff_depth, dfence_ff_depth, ffence_ff_depth,
+				ma_srdy, ma_drdy, pbus_srdy, pbus_drdy, txs_srdy, txs_drdy, npv_full,
+				pend_rsc,
+				fc_axi_wr_nordy, fc_axi_rd_nordy, // counts
+				axi_rd_req, axi_wr_req, // counts
+				polls);
 }
 
 void
@@ -155,6 +254,18 @@ ptd_reset_counters (int verbose)
     pal_reg_wr32w(ELB_ADDR_BASE_PT_PT_OFFSET +
                       ELB_PT_CSR_PTD_CNT_PB_BYTE_ADDRESS,
                   zero, 3);
+    pal_reg_wr32w(ELB_ADDR_BASE_PT_PT_OFFSET +
+		  ELB_PTD_CSR_CNT_FC_AXI_WR_BYTE_ADDRESS,
+                  zero, 1);
+    pal_reg_wr32w(ELB_ADDR_BASE_PT_PT_OFFSET +
+		  ELB_PTD_CSR_CNT_FC_AXI_RD_BYTE_ADDRESS,
+                  zero, 1);
+    pal_reg_wr32w(ELB_ADDR_BASE_PT_PT_OFFSET +
+		  ELB_PTD_CSR_CNT_AXI_RD_REQ_BYTE_ADDRESS,
+                  zero, 2);
+    pal_reg_wr32w(ELB_ADDR_BASE_PT_PT_OFFSET +
+		  ELB_PTD_CSR_CNT_AXI_WR_REQ_BYTE_ADDRESS,
+                  zero, 2);
 }
 
 void

@@ -158,8 +158,10 @@ elbmon_mpu_display_fn (void *ptr)
 
         ELBMON_REPORT(" mpu %d cycles=%u", mpu->index, cycles);
         ELBMON_REPORT(" inst=%u", mpu->inst_executed);
-        ELBMON_REPORT(" miss=%u", mpu->icache_miss);
-        ELBMON_REPORT(" miss=%u", mpu->dcache_miss);
+        ELBMON_REPORT(" imiss=%u", mpu->icache_miss);
+        ELBMON_REPORT(" ihit=%u", mpu->icache_hit);
+        ELBMON_REPORT(" dmiss=%u", mpu->dcache_miss);
+        ELBMON_REPORT(" dhit=%u", mpu->dcache_hit);
         ELBMON_REPORT(" phv=%u", mpu->phv_executed);
         ELBMON_REPORT(" phvwr_stl=%u", mpu->phvwr_stall);
         ELBMON_REPORT(" st_stl=%u", mpu->st_stall);
@@ -168,8 +170,10 @@ elbmon_mpu_display_fn (void *ptr)
         cycles = cycles == 0 ? 1 : cycles;
         ELBMON_REPORT(" mpu %u percentages", mpu->index);
         ELBMON_REPORT(" inst=%u%%", (mpu->inst_executed * 100) / cycles);
-        ELBMON_REPORT(" miss=%u%%", (mpu->icache_miss * 100) / cycles);
-        ELBMON_REPORT(" miss=%u%%", (mpu->dcache_miss * 100) / cycles);
+	ELBMON_REPORT(" imiss=%u%%", (mpu->icache_miss * 100) / cycles);
+	ELBMON_REPORT(" ihit=%u%%", (mpu->icache_hit * 100) / cycles);
+	ELBMON_REPORT(" dmiss=%u%%", (mpu->dcache_miss * 100) / cycles);
+	ELBMON_REPORT(" dhit=%u%%", (mpu->dcache_hit * 100) / cycles);
         ELBMON_REPORT(" phv=%u%%", (mpu->phv_executed * 100) / cycles);
         ELBMON_REPORT(" phvwr_stl=%u%%", (mpu->phvwr_stall * 100) / cycles);
         ELBMON_REPORT(" st_stl=%u%%", (mpu->st_stall * 100) / cycles);
@@ -285,13 +289,13 @@ elbmon_dma_pipeline_data_display2 (pipeline_t *pipeline)
                       pipeline->pr_pbus_cnt, pipeline->sw_cnt,
                       pipeline->phv_drop_cnt, pipeline->recirc_cnt);
     } else if (pipeline->type == RXDMA) {
-        ELBMON_REPORT(" PSP: phv=%lu pb_pbus=%ld pr_pbus=%ld sw=%ld "
+        ELBMON_REPORT(" PSP: phv=%" PRIu64 " pb_pbus=%ld pr_pbus=%ld sw=%ld "
                       "phv_drop=%ld recirc=%ld\n",
                       pipeline->phv, pipeline->pb_pbus_cnt,
                       pipeline->pr_pbus_cnt, pipeline->sw_cnt,
                       pipeline->phv_drop_cnt, pipeline->recirc_cnt);
     } else if (pipeline->type == SXDMA) {
-        ELBMON_REPORT(" NPV: phv=%lu pb_pbus=%ld pr_pbus=%ld sw=%ld "
+        ELBMON_REPORT(" NPV: phv=%" PRIu64 " pb_pbus=%ld pr_pbus=%ld sw=%ld "
                       "phv_drop=%ld recirc=%ld\n",
                       pipeline->phv, pipeline->pb_pbus_cnt,
                       pipeline->pr_pbus_cnt, pipeline->sw_cnt,
@@ -349,21 +353,35 @@ elbmon_dma_post_stage_display (pipeline_t *pipeline)
         ELBMON_REPORT(" RxDMA:");
     }
     ELBMON_REPORT(" phv=%ld pkt=%ld drop=%ld err=%ld recirc=%ld "
-                  "resub=%ld in_flight=%ld\n",
+                  "resub=%ld in_flight=%ld",
                   pipeline->phv, pipeline->pb_cnt, pipeline->phv_drop,
           pipeline->phv_err,
                   pipeline->phv_recirc, pipeline->resub_cnt,
                   pipeline->in_flight);
 
-    ELBMON_REPORT("       AXI reads=%ld writes=%ld\n", pipeline->axi_reads,
-                  pipeline->axi_writes);
+    ELBMON_REPORT(" srdy%%/drdy%% TXS=%" PRIu64 "/%" PRIu64 ", MA=%" PRIu64 "/%" PRIu64 ", PBUS=%" PRIu64 "/%" PRIu64 "\n",
+		  pipeline->txs_srdy, pipeline->txs_drdy,
+		  pipeline->ma_srdy, pipeline->ma_drdy, 
+		  pipeline->pbus_srdy, pipeline->pbus_drdy);
 
     ELBMON_REPORT("       FIFO (empty%%/full%%) rd=%d/%d wr=%d/%d pkt=%d/%d",
                   pipeline->rd_empty_fifos, pipeline->rd_full_fifos,
                   pipeline->wr_empty_fifos, pipeline->wr_full_fifos,
                   pipeline->pkt_empty_fifos, pipeline->pkt_full_fifos);
+
+    ELBMON_REPORT("  depths: lat=%" PRIu64 " wdata=%" PRIu64 " dfence=%" PRIu64 " fence=%" PRIu64 " \n",
+		  pipeline->lat_ff_depth, pipeline->wdata_ff_depth,
+		  pipeline->dfence_ff_depth, pipeline->ffence_ff_depth);
+
+    ELBMON_REPORT("       AXI pending reads=%ld pending writes=%ld", pipeline->axi_reads,
+                  pipeline->axi_writes);
+
+    ELBMON_REPORT(" AXI_rd_req=%" PRIu64 "/nordy=%" PRIu64 ", AXI_wr_req=%" PRIu64 "/nordy=%" PRIu64 "\n",
+		  pipeline->axi_rd_req, pipeline->fc_axi_rd_nordy,
+		  pipeline->axi_wr_req, pipeline->fc_axi_wr_nordy);
+    
     if (pipeline->type == RXDMA) {
-        ELBMON_REPORT(" ff_depth=%u\n", pipeline->ff_depth);
+      // ELBMON_REPORT(" ff_depth=%u\n", pipeline->ff_depth);
     } else {
         ELBMON_REPORT("\n");
     }

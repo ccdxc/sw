@@ -32,7 +32,7 @@ std::map<std::string, int> pipeline_str_to_id = {
     {"p4ig", P4IG},
     {"p4eg", P4EG},
 };
-std::map<int, int> max_stages = {{TXDMA, 7}, {RXDMA, 7}, {P4IG, 5}, {P4EG, 5}};
+std::map<int, int> max_stages = {{TXDMA, 7}, {RXDMA, 7}, {P4IG, 7}, {P4EG, 7}};
 std::map<std::string, int> trace_options = {
     {"trace_enable", MPUTRACE_TRACE_ENABLE},
     {"phv_debug", MPUTRACE_PHV_DEBUG},
@@ -43,6 +43,9 @@ std::map<std::string, int> trace_options = {
     {"watch_pc", MPUTRACE_WATCH_PC},
     {"trace_size", MPUTRACE_TRACE_SIZE},
 };
+
+
+
 
 std::string
 mputrace_pipeline_str_get (int pipeline_num) {
@@ -55,6 +58,18 @@ mputrace_pipeline_str_get (int pipeline_num) {
         return std::string("p4ig");
     case P4EG:
         return std::string("p4eg");
+    default:
+        return std::string("");
+    }
+}
+
+std::string
+dmatrace_pipeline_str_get (int pipeline_num) {
+    switch (pipeline_num) {
+    case TXPDMA:
+        return std::string("txdma");
+    case RXPDMA:
+        return std::string("rxdma");
     default:
         return std::string("");
     }
@@ -99,7 +114,59 @@ mputrace_cfg_inst_init (mputrace_cfg_inst_t *cfg_inst)
     cfg_inst->settings.reset = false;
     cfg_inst->settings.wrap = false;
     cfg_inst->settings.trace_addr = 0;
-    cfg_inst->settings.trace_size = 4096;
+    cfg_inst->settings.trace_size = 4096; //todo:
+}
+
+static inline void
+sdptrace_cfg_inst_init (sdptrace_cfg_inst_t *cfg_inst)
+{
+    if (cfg_inst == NULL) {
+        cout << "Error: elbtrace SDP cfg instance is NULL." << endl;
+        assert(0);
+    }
+    memset(cfg_inst, 0, sizeof(sdptrace_cfg_inst_t));
+    cfg_inst->pipeline_str.assign(MPUTRACE_MATCH_ALL);
+    cfg_inst->stage_str.assign(MPUTRACE_MATCH_ALL);
+
+    cfg_inst->ctrl.enable = false;
+    cfg_inst->ctrl.trace_trigger_enable = false;
+
+    for (uint32_t i = 0; i < 8; i++) {
+      //      cfg_inst->capture.trigger_data[i] = i;
+      //cfg_inst->capture.trigger_mask[i] = i;
+    }
+    //cfg_inst->capture.trigger_data = 0;
+    //cfg_inst->capture.trigger_mask = 0;
+    
+    cfg_inst->settings.sw_reset_enable = false;
+    cfg_inst->settings.no_trace_when_full = false;
+    cfg_inst->settings.stop_when_full = false;
+    cfg_inst->settings.ring_size = 4096; //todo
+    cfg_inst->settings.phv_base_addr = 0;
+    cfg_inst->settings.ctl_base_addr = 0;
+
+}
+
+static inline void
+dmatrace_cfg_inst_init (dmatrace_cfg_inst_t *cfg_inst)
+{
+    if (cfg_inst == NULL) {
+        cout << "Error: elbtrace DMA cfg instance is NULL." << endl;
+        assert(0);
+    }
+    memset(cfg_inst, 0, sizeof(dmatrace_cfg_inst_t));
+    cfg_inst->pipeline_str.assign(MPUTRACE_MATCH_ALL);
+
+    cfg_inst->ctrl.enable = false;
+    cfg_inst->ctrl.phv_enable = false;
+    cfg_inst->ctrl.capture_all = false;
+    cfg_inst->ctrl.axi_err_enable = false;
+    cfg_inst->ctrl.pkt_phv_sync_err_enable = false;
+
+    cfg_inst->settings.wrap = false;
+    cfg_inst->settings.reset = false;
+    cfg_inst->settings.buf_size  = 4096; //todo
+    cfg_inst->settings.base_addr = 0;
 }
 
 static inline uint64_t
@@ -251,6 +318,14 @@ mputrace_json_ctrl_parse (ptree &pt, mputrace_cfg_inst_t *cfg_inst)
     boost::optional<bool> val;
     boost::optional<std::string> str;
 
+    //    for (ptree::iterator pos = pt.begin(); pos != pt.end();) {
+    //  cout << "justina test " << pos->first.data() << endl;
+    //  val = pt.get_optional<bool>(pos->first.data());
+    //  //call a macro
+    //  JUSTINA_MACRO(pos->first.data(), val);
+    //  pos++;
+    // }
+
     val = pt.get_optional<bool>("trace");
     if (val) {
         cfg_inst->ctrl.trace_enable = val.get();
@@ -313,8 +388,101 @@ mputrace_json_settings_parse (ptree &pt, mputrace_cfg_inst_t *cfg_inst)
     }
 }
 
+  //////// SDP  ////////////
+
+static inline void
+sdptrace_json_ctrl_parse (ptree &pt, sdptrace_cfg_inst_t *cfg_inst)
+{
+    boost::optional<bool> val;
+    boost::optional<std::string> str;
+
+    val = pt.get_optional<bool>("trace");
+    if (val) {
+        cfg_inst->ctrl.enable = val.get();
+    }
+    val = pt.get_optional<bool>("trace_trigger_enable");
+    if (val) {
+        cfg_inst->ctrl.trace_trigger_enable = val.get();
+    }
+}
+
+
+static inline void
+sdptrace_json_settings_parse (ptree &pt, sdptrace_cfg_inst_t *cfg_inst)
+{
+    boost::optional<std::string> str =
+        pt.get_optional<std::string>("trace-size");
+    boost::optional<bool> val;
+
+    if (str) {
+        cfg_inst->settings.ring_size = atoi(str.get().c_str());
+    }
+    //    val = pt.get_optional<bool>("sw_reset_enable");   //todo: shd this be part of reset and not json??
+    //    if (val) {
+    //        cfg_inst->settings.sw_reset_enable = val.get();
+    //    }
+    val = pt.get_optional<bool>("no_trace_when_full");
+    if (val) {
+        cfg_inst->settings.no_trace_when_full = val.get();
+    }
+    val = pt.get_optional<bool>("stop_when_full");
+    if (val) {
+        cfg_inst->settings.stop_when_full = val.get();
+    }
+}
+
+  //////// DMA  ////////////
+
+static inline void
+dmatrace_json_ctrl_parse (ptree &pt, dmatrace_cfg_inst_t *cfg_inst)
+{
+    boost::optional<bool> val;
+    boost::optional<std::string> str;
+
+    val = pt.get_optional<bool>("trace");
+    if (val) {
+        cfg_inst->ctrl.enable = val.get();
+	cout << "ctrl parse enable " << val.get() << endl;
+    }
+    val = pt.get_optional<bool>("phv_enable");
+    if (val) {
+        cfg_inst->ctrl.phv_enable = val.get();
+    }
+    val = pt.get_optional<bool>("capture_all");
+    if (val) {
+        cfg_inst->ctrl.capture_all = val.get();
+    }
+    val = pt.get_optional<bool>("axi_err_enable");
+    if (val) {
+        cfg_inst->ctrl.axi_err_enable = val.get();
+    }
+    val = pt.get_optional<bool>("pkt_phv_sync_err_enable");
+    if (val) {
+        cfg_inst->ctrl.pkt_phv_sync_err_enable = val.get();
+    }
+}
+
+static inline void
+dmatrace_json_settings_parse (ptree &pt, dmatrace_cfg_inst_t *cfg_inst)
+{
+    boost::optional<std::string> str =
+        pt.get_optional<std::string>("trace-size");
+    boost::optional<bool> val;
+
+    if (str) {
+        cfg_inst->settings.buf_size = atoi(str.get().c_str());
+    }
+    val = pt.get_optional<bool>("wrap");
+    if (val) {
+      cfg_inst->settings.wrap = val.get();
+    }
+    //program rst bit directly in register for dmatrace reset
+}
+
+
+
 static inline bool
-mputrace_is_match (std::string num_str, std::string str)
+elbtrace_is_match (std::string num_str, std::string str)
 {
     regex reg_exp(str);
     if (regex_match(num_str, reg_exp)) {
@@ -345,32 +513,124 @@ mputrace_json_cfg_inst_parse (ptree &pt, mputrace_cfg_inst_t *cfg_inst)
     }
 }
 
-// Read each pipeline object from the json file
-void
-mputrace_json_cfg_inst_program (ptree &pt)
+static inline void
+sdptrace_json_cfg_inst_parse (ptree &pt, sdptrace_cfg_inst_t *cfg_inst)
 {
-    mputrace_cfg_inst_t cfg_inst;
-    mputrace_json_cfg_inst_parse(pt, &cfg_inst);
-
-    for (int p = 0; p < PIPE_CNT; p++) {
-        if (mputrace_is_match(mputrace_pipeline_str_get(p),
-                              cfg_inst.pipeline_str)) {
-            for (int s = 0; s <= max_stages[p]; s++) {
-                if (mputrace_is_match(std::to_string(s), cfg_inst.stage_str)) {
-                    for (int m = 0; m < MPUTRACE_MAX_MPU; m++) {
-                        if (mputrace_is_match(std::to_string(m),
-                                              cfg_inst.mpu_str)) {
-                            mputrace_cfg_trace(p, s, m, &cfg_inst);
-                        }
-                    }
-                }
-            }
+    sdptrace_cfg_inst_init(cfg_inst);
+    for (ptree::iterator pos = pt.begin(); pos != pt.end();) {
+        if (strcmp(pos->first.data(), "pipeline") == 0) {
+            cfg_inst->pipeline_str = pos->second.data();
+        } else if (strcmp(pos->first.data(), "stage") == 0) {
+            cfg_inst->stage_str = pos->second.data();
+        } else if (strcmp(pos->first.data(), "control") == 0) {
+            sdptrace_json_ctrl_parse(pos->second, cfg_inst);
+        } else if (strcmp(pos->first.data(), "capture") == 0) {
+	  //todo: change the function below to return structs for all pipes
+            sdptrace_json_capture_parse(pos->second, cfg_inst);
+        } else if (strcmp(pos->first.data(), "settings") == 0) {
+            sdptrace_json_settings_parse(pos->second, cfg_inst);
         }
+        pos++;
     }
+    
 }
 
 static inline void
-mputrace_json_parse_and_program (const char *cfg_file)
+dmatrace_json_cfg_inst_parse (ptree &pt, dmatrace_cfg_inst_t *cfg_inst)
+{
+    dmatrace_cfg_inst_init(cfg_inst);
+    for (ptree::iterator pos = pt.begin(); pos != pt.end();) {
+        if (strcmp(pos->first.data(), "pipeline") == 0) {
+            cfg_inst->pipeline_str = pos->second.data();
+        } else if (strcmp(pos->first.data(), "control") == 0) {
+            dmatrace_json_ctrl_parse(pos->second, cfg_inst);
+        } else if (strcmp(pos->first.data(), "settings") == 0) {
+            dmatrace_json_settings_parse(pos->second, cfg_inst);
+        }
+        pos++;
+    }
+
+    cout << "\n dma_cfg_inst_parse begin" << endl;
+    cout << "buf_size " << dec << cfg_inst->settings.buf_size  << endl;
+    cout << "wrap "           <<  cfg_inst->settings.wrap	  << endl;
+    cout << "reset "          <<  cfg_inst->settings.reset	  << endl;
+    cout << "phv_enable "     <<  cfg_inst->ctrl.phv_enable	  << endl;
+    cout << "capture_all "    <<  cfg_inst->ctrl.capture_all	  << endl;
+    cout << "axi_err_enable " <<  cfg_inst->ctrl.axi_err_enable   << endl;
+    cout << "dma_cfg_inst_parse end \n" << endl;
+    
+
+
+
+}
+
+// Read each pipeline object from the json file
+void
+elbtrace_json_cfg_inst_program (ptree &pt, std::string mod_name)
+{
+
+  
+    mputrace_cfg_inst_t cfg_inst;
+    sdptrace_cfg_inst_t cfg_inst_sdp;
+    dmatrace_cfg_inst_t cfg_inst_dma;
+
+    if (mod_name == "mpu") {
+      mputrace_json_cfg_inst_parse(pt, &cfg_inst);
+      
+      for (int p = 0; p < PIPE_CNT; p++) {
+        if (elbtrace_is_match(mputrace_pipeline_str_get(p),
+                              cfg_inst.pipeline_str)) {
+	  for (int s = 0; s <= max_stages[p]; s++) {
+	    if (elbtrace_is_match(std::to_string(s), cfg_inst.stage_str)) {
+	      for (int m = 0; m < MPUTRACE_MAX_MPU; m++) {
+		if (elbtrace_is_match(std::to_string(m),
+				      cfg_inst.mpu_str)) {
+		  mputrace_cfg_trace(p, s, m, &cfg_inst);
+		}
+	      }
+	    }
+	  }
+        }
+      }
+    }
+    else if (mod_name == "sdp") {
+      //      cout << "before sdptrace_json_cfg_inst_parse" << endl;
+      sdptrace_json_cfg_inst_parse(pt, &cfg_inst_sdp);
+      
+      for (int p = 0; p < PIPE_CNT; p++) {
+        if (elbtrace_is_match(mputrace_pipeline_str_get(p),
+                              cfg_inst_sdp.pipeline_str)) {
+	  for (int s = 0; s <= max_stages[p]; s++) {
+	    if (elbtrace_is_match(std::to_string(s), cfg_inst_sdp.stage_str)) {
+	      //	      cout << "before sdptrace_cfg_trace" << endl;
+	      sdptrace_cfg_trace(p, s, &cfg_inst_sdp);
+	    }
+	  }
+        }
+      }
+    }
+    else if (mod_name == "dma") {
+      dmatrace_json_cfg_inst_parse(pt, &cfg_inst_dma);
+      cout << "json_cfg_inst_program" << endl;
+      
+      for (int p = 0; p < DMA_PIPE_CNT; p++) {
+	cout << "json_cfg_inst_program pipe " << p << endl;
+	
+	cout << "pipeline str is " << cfg_inst_dma.pipeline_str << endl;
+	cout << "pipeline str get is " << dmatrace_pipeline_str_get(p) << endl;
+        if (elbtrace_is_match(dmatrace_pipeline_str_get(p),
+                              cfg_inst_dma.pipeline_str)) {
+	  cout << "json_cfg_inst_program inside if " << endl;
+	  dmatrace_cfg_trace(p, &cfg_inst_dma);
+	  cout << "json_cfg_inst_program end if " << endl;
+        }
+      }
+    }
+
+}
+
+static inline void
+elbtrace_json_parse_and_program (const char *cfg_file, std::string mod_name)
 {
     ptree pt, iter;
     ptree::iterator pos;
@@ -387,18 +647,39 @@ mputrace_json_parse_and_program (const char *cfg_file)
     iter = pos->second;
     for (pos = iter.begin(); pos != iter.end();) {
         if (strcmp(pos->first.data(), "") == 0) {
-            mputrace_json_cfg_inst_program(pos->second);
+	  //	  cout << "justina" << pos->first.data() << endl;
+	  //cout << "inside elbtrace_json_parse_and_program" << endl;
+	  elbtrace_json_cfg_inst_program(pos->second, mod_name);
         }
         ++pos;
     }
 }
 
 void
-mputrace_cfg (const char *cfg_file)
+elbtrace_cfg (const char *cfg_file, std::string mod_name)
 {
-    mputrace_json_parse_and_program(cfg_file);
-    cout << "'elbtrace conf " << cfg_file << "' success!" << endl;
-}
 
+  if ( !((mod_name == "mpu") || 
+	 (mod_name == "sdp") || 
+	 (mod_name == "dma")) ) {
+	 cout << "Module name did not match mpu, sdp or dma. Incorrect argument." << endl;
+       }
+  else {
+     if (mod_name == "mpu") {
+      cout << "Initiating MPU config from file " << cfg_file << endl;
+     }
+     else if (mod_name == "sdp") {
+       cout << "Initiating SDP config from file " << cfg_file << endl;
+     }
+     else if (mod_name == "dma") {
+       cout << "Initiating DMA config from file " << cfg_file << endl;
+     }
+     elbtrace_json_parse_and_program(cfg_file, mod_name);
+     cout << "'elbtrace conf " << cfg_file << "' success!" << endl;
+  }
+  
+}
+  
+         
 }    // end namespace platform
 }    // end namespace sdk
