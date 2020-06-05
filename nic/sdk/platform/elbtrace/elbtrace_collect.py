@@ -368,7 +368,7 @@ if __name__ == "__main__":
             logging.info('Exiting')
             exit()
         else:
-            fltr = raw_input('\nProvide the filter to be applied. e.g. mpu_processing_pkt_id_next=0xaf\n')
+            fltr = raw_input('\nProvide the filter to be applied. e.g. sdp_pkt_id=0xaf\n')
             os.chdir(pwd + '/../../../')
             cmd = pwd + '/../../../sdk/platform/mputrace/captrace.py decode captrace.bin --fltr ' + fltr + ' > captrace.decode.filter'
             logging.info(cmd)

@@ -1,9 +1,9 @@
 # MPUTRACE
 
-captrace is a tool to enable tracing on each Match Processing Unit (MPU) using
+elbtrace is a tool to enable tracing on each Match Processing Unit (MPU) using
 the independent trace facility provided by the ASIC.
 
-captrace supports the following operations
+elbtrace supports the following operations
 config <cfg.json>
     It takes a config json file as input. The input file specifies the MPUs that
     need to be enabled for tracing.
@@ -31,7 +31,7 @@ instruction in the p4 program or by watching the pc address using a watch-pc
 address.
 
 The traced logs from the HBM are copied into a binary file when the user intends
-to decode. A separate utility, captrace.py is provided to decode the binary file
+to decode. A separate utility, elbtrace.py is provided to decode the binary file
 offline.
 
 When MPU trace is enabled, performance will degrade due to the HBM trace
@@ -41,12 +41,12 @@ enabled for that MPU until the end of the current program is reached.
 ## Usage :
 1. Conf:
 ```
-    # captrace conf /tmp/captrace_cfg.json
+    # elbtrace conf_mpu /tmp/elbtrace_cfg.json
 ```
 
 
     A sample json is explained below. More json samples are provided in
-    /nic/conf/captrace/ on the naples.
+    /nic/conf/elbtrace/ on the naples.
 
 ```
  {
@@ -133,7 +133,7 @@ enabled for that MPU until the end of the current program is reached.
       },
 
        // description - this field can be used to label the current json
-       // object based on what it does. This is ignored by the captrace tool.
+       // object based on what it does. This is ignored by the elbtrace tool.
 
       "description": "this enables tracing for txdma pipeline, stage 1 and mpu
                       1 with the specified options"
@@ -145,7 +145,7 @@ enabled for that MPU until the end of the current program is reached.
 
     If any field or json sub block is not specified then default values are
     assumed for those.
-Create a captrace_cfg.json file on NAPLES device specifying the MPUs that
+Create a elbtrace_cfg.json file on NAPLES device specifying the MPUs that
 require to be traced.
 If two json objects have the same pipeline, stage and mpu combination, then
 the former takes effect while the latter is ignored and a warning is shown to
@@ -240,12 +240,12 @@ Following is a sample config.json file for reference -
 
 
 2. show
-    'captrace show'
+    'elbtrace show_mpu'
     This will show the state of each MPU with tracing enable.
 
     For eg.,
 ```
-    # captrace show
+    # elbtrace show_mpu
 
      pipeline      stage        mpu     enable       wrap      reset      trace  phv_debug  phv_error   watch_pc   table_kd      instr trace_addr trace_nent   trace_sz
          1          0          0          1          1          0          0          0          0 0x00000000          1          1 0x13e690000       1024      65536
@@ -256,47 +256,47 @@ Following is a sample config.json file for reference -
 ```
 
 3. reset
-    'captrace reset'
+    'elbtrace reset_mpu'
     This will reset the tracing registers for all MPUs.
 ```
-    # captrace reset
+    # elbtrace reset_mpu
 ```
 
 4. dump
-    'captrace dump <file path>'
+    'elbtrace dump_mpu <file path>'
     This will dump the contents from HBM (High Bandwidth Memory) into the
     specified file. The file needs to be copied out and decoded to get
     the actual instructions executed by the MPUs.
 ```
-    # captrace dump /tmp/captrace.bin
+    # elbtrace dump_mpu /tmp/mpu.bin
 
-    # ls -l /tmp/captrace.bin
-    -rw-r--r--    1 root     root       7347200 Jan  5 06:03 /tmp/captrace.bin
+    # ls -l /tmp/mpu.bin
+    -rw-r--r--    1 root     root       7347200 Jan  5 06:03 /tmp/mpu.bin
 ```
 
 ## Steps to decode the dump file in the container -
     1 Copy the following files into the container
-        - the dump file from 'captrace dump' command
+        - the dump file from 'elbtrace dump' command
         - /nic/conf/gen/mpu_prog_info.json file from the naples device
-    2 Generate captrace.syms symbol file in container (from /sw/nic dir).
-        - sdk/platform/mputrace/captrace.py gen_syms --pipeline=<pipeline>
+    2 Generate elbtrace.syms symbol file in container (from /sw/nic dir).
+        - sdk/platform/mputrace/elbtrace.py gen_syms --pipeline=<pipeline>
             - <pipeline> can be iris or apollo or artemis or gft
-        - this will generate captrace.syms in nic/
-    2 Run captrace.py script on the binary with mpu_prog_info.conf and
-      captrace.syms files
+        - this will generate elbtrace.syms in nic/
+    2 Run elbtrace.py script on the binary with mpu_prog_info.conf and
+      elbtrace.syms files
         To decode the trace dump file
-            sdk/platform/mputrace/captrace.py decode captrace.bin --load=mpu_prog_info.json --sym=captrace.syms
+            sdk/platform/elbtrace/elbtrace.py decode mpu.bin --load=mpu_prog_info.json --sym=elbtrace.syms
         To track packet with PHV timestamp “0x1c07a80c” across stages
-            sdk/platform/mputrace/captrace.py decode captrace.bin --fltr phv_timestamp_capture=0x1c07a80c --load=mpu_prog_info.json --sym=captrace.syms > pkt1c07.log
+            sdk/platform/mputrace/elbtrace.py decode mpu.bin --fltr phv_timestamp_capture=0x1c07a80c --load=mpu_prog_info.json --sym=elbtrace.syms > pkt1c07.log
         To dump info about the packet
             grep -e pipeline -e stage -e PROGRAM -e BRANCH -e table_hit pkt1c07.log
 
-5. captrace_collect.py
-    captrace_collect.py is a simple tool that automates the above steps to collect and decode.
+5. elbtrace_collect.py
+    elbtrace_collect.py is a simple tool that automates the above steps to collect and decode.
     It can connect to NAPLES either via oob_mnic0 or through the host,
     enable the trace options provided, collect the logs, decode and filter them.
     The decoded output is collected in nic/ dir.
     Usage:
-        - sdk/platform/mputrace/captrace_collect.py --mgmt <naples mgmt ip> --rxdma
+        - sdk/platform/mputrace/elbtrace_collect.py --mgmt <naples mgmt ip> --rxdma
         or
-        - sdk/platform/mputrace/captrace_collect.py --host <host ip> --rxdma
+        - sdk/platform/mputrace/elbtrace_collect.py --host <host ip> --rxdma

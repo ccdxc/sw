@@ -1095,52 +1095,45 @@ sdptrace_json_capture_parse (ptree &pt, sdptrace_cfg_inst_t *cfg_inst)
         pos++;
     }
 
-    cpp_int glb_data = 0;
-    cpp_int hdr_data = 0;
-    cpp_int glb_mask = 0;
-    cpp_int hdr_mask = 0;
+    cpp_int glb_data_0 = 0;
+    cpp_int glb_data_1 = 0;
+    cpp_int glb_data_2 = 0;
+    cpp_int glb_mask_0 = 0;
+    cpp_int glb_mask_1 = 0;
+    cpp_int glb_mask_2 = 0;
+    cpp_int hdr_data_0 = 0;
+    cpp_int hdr_data_1 = 0;
+    cpp_int hdr_data_2 = 0;
+    cpp_int hdr_mask_0 = 0;
+    cpp_int hdr_mask_1 = 0;
+    cpp_int hdr_mask_2 = 0;
     //assign phv back to sdptrace_cfg_inst.trigger_data and mask
-    if ( !( (cfg_inst->pipeline_str == "p4ig") || 
-	    (cfg_inst->pipeline_str == "p4eg") ||
-	    (cfg_inst->pipeline_str == "txdma")||
-	    (cfg_inst->pipeline_str == "rxdma")) ) {
 
-      //todo: fix this. This shdn't be hit
-      cout << cfg_inst->pipeline_str << "is not a valid pipeline jk" << endl;
+	glb_data_0 = sdptrace_pack_global(glb_data_0, &cfg_phv_p4_data.phv_global);
+	hdr_data_0 = sdptrace_pack_p4(hdr_data_0, glb_data_0, &cfg_phv_p4_data);
+	glb_mask_0 = sdptrace_pack_global(glb_mask_0, &cfg_phv_p4_mask.phv_global);
+	hdr_mask_0 = sdptrace_pack_p4(hdr_mask_0, glb_mask_0, &cfg_phv_p4_mask);
 
-    }
-    else {
+	glb_data_1 = sdptrace_pack_global(glb_data_1, &cfg_phv_txdma_data.phv_global);
+	hdr_data_1 = sdptrace_pack_tx(hdr_data_1, glb_data_1, &cfg_phv_txdma_data);
+	glb_mask_1 = sdptrace_pack_global(glb_mask_1, &cfg_phv_txdma_mask.phv_global);
+	hdr_mask_1 = sdptrace_pack_tx(hdr_mask_1, glb_mask_1, &cfg_phv_txdma_mask);
 
-      if ( (cfg_inst->pipeline_str == "p4ig") || 
-	   (cfg_inst->pipeline_str == "p4eg") ) {
-	
-	cout << "cfg_parse_phv pipeline is  " << cfg_inst->pipeline_str << endl; \
-	glb_data = sdptrace_pack_global(glb_data, &cfg_phv_p4_data.phv_global);
-	hdr_data = sdptrace_pack_p4(hdr_data, glb_data, &cfg_phv_p4_data);
-	glb_mask = sdptrace_pack_global(glb_mask, &cfg_phv_p4_mask.phv_global);
-	hdr_mask = sdptrace_pack_p4(hdr_mask, glb_mask, &cfg_phv_p4_mask);
-      }
-      else if (cfg_inst->pipeline_str == "txdma") {
-	cout << "cfg_parse_phv pipeline is  " << cfg_inst->pipeline_str << endl;
-	glb_data = sdptrace_pack_global(glb_data, &cfg_phv_txdma_data.phv_global);
-	hdr_data = sdptrace_pack_tx(hdr_data, glb_data, &cfg_phv_txdma_data);
-	glb_mask = sdptrace_pack_global(glb_mask, &cfg_phv_txdma_mask.phv_global);
-	hdr_mask = sdptrace_pack_tx(hdr_mask, glb_mask, &cfg_phv_txdma_mask);
-      }
-      else if (cfg_inst->pipeline_str == "rxdma") {
-	cout << "cfg_parse_phv pipeline is  " << cfg_inst->pipeline_str << endl;
-	glb_data = sdptrace_pack_global(glb_data, &cfg_phv_rxdma_data.phv_global);
-	hdr_data = sdptrace_pack_rx(hdr_data, glb_data, &cfg_phv_rxdma_data);
-	glb_mask = sdptrace_pack_global(glb_mask, &cfg_phv_rxdma_mask.phv_global);
-	hdr_mask = sdptrace_pack_rx(hdr_mask, glb_mask, &cfg_phv_rxdma_mask);
-      } 
+	glb_data_2 = sdptrace_pack_global(glb_data_2, &cfg_phv_rxdma_data.phv_global);
+	hdr_data_2 = sdptrace_pack_rx(hdr_data_2, glb_data_2, &cfg_phv_rxdma_data);
+	glb_mask_2 = sdptrace_pack_global(glb_mask_2, &cfg_phv_rxdma_mask.phv_global);
+	hdr_mask_2 = sdptrace_pack_rx(hdr_mask_2, glb_mask_2, &cfg_phv_rxdma_mask);
+
       //assign hdr_data and hdr_mask to cfg_inst.trigger_data/mask
-      cfg_inst->capture.trigger_data = hdr_data;
-      cfg_inst->capture.trigger_mask = hdr_mask;
+      cfg_inst->capture.trigger_data_p4 = hdr_data_0;
+      cfg_inst->capture.trigger_mask_p4 = hdr_mask_0;
+      cfg_inst->capture.trigger_data_tx = hdr_data_1;
+      cfg_inst->capture.trigger_mask_tx = hdr_mask_1;
+      cfg_inst->capture.trigger_data_rx = hdr_data_2;
+      cfg_inst->capture.trigger_mask_rx = hdr_mask_2;
       
-      cout << "parse phv trigger data " << hex << cfg_inst->capture.trigger_data << endl;
-      cout << "parse phv trigger mask " << hex << cfg_inst->capture.trigger_mask << endl;
-    }
+      //      cout << "parse phv trigger data " << hex << cfg_inst->capture.trigger_data << endl;
+      //      cout << "parse phv trigger mask " << hex << cfg_inst->capture.trigger_mask << endl;
     //check if copying worked correctly
     //    sdptrace_json_capture_parse_verify(cfg_inst);
 

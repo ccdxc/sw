@@ -30,18 +30,20 @@ namespace platform {
     dma_trace.rst(cfg_inst->settings.reset);                                  \
     dma_trace.phv_enable(cfg_inst->ctrl.phv_enable);                          \
     dma_trace.capture_all(cfg_inst->ctrl.capture_all);                        \
-    dma_trace.axi_err_enable(cfg_inst->ctrl.axi_err_enable);                  
+    dma_trace.axi_err_enable(cfg_inst->ctrl.axi_err_enable);                  \
+
 
  
-#define DMATRACE_TRACE_HDR_WRITE(dma_trace, pipeline)                         \
+#define DMATRACE_TRACE_HDR_WRITE(sta_trace, dma_trace, pipeline)	\
     trace_hdr->pipeline_num = pipeline;                                       \
     trace_hdr->enable = (uint32_t)dma_trace.enable();                         \
     trace_hdr->phv_enable = (uint32_t)dma_trace.phv_enable();                 \
     trace_hdr->capture_all = (uint32_t)dma_trace.capture_all();               \
     trace_hdr->axi_err_enable = (uint32_t)dma_trace.axi_err_enable();         \
     trace_hdr->wrap = (uint32_t)dma_trace.wrap();                             \
-    trace_hdr->reset = (uint32_t)dma_trace.rst();                           \
+    trace_hdr->reset = (uint32_t)dma_trace.rst();                             \
     trace_hdr->base_addr = (uint64_t)(dma_trace.base_addr() << 6);            \
+    trace_hdr->trace_index = (uint32_t)sta_trace.debug_index();		\
     trace_hdr->buf_size =                                                     \
         (uint32_t)(ELBTRACE_ONE << (uint32_t)dma_trace.buf_size());           \
 
@@ -145,7 +147,10 @@ sdptrace_util_reg_program (elb_sdp_csr_cfg_sdp_axi_t &sdp_axi,
 
     sdp_axi.ctl_base_addr(ctl_base_addr >> 6); //todo
     sdp_axi.phv_base_addr(phv_base_addr >> 6); //todo
-    sdp_axi.ring_size((uint32_t)log2(cfg_inst->settings.ring_size)); //todo
+    //if 8192 entries are needed for PHV, 
+    //program 8192 >> 4 (8192/16) in ring_size.
+    //so control ring = 512 and phv ring = 8192
+    sdp_axi.ring_size((uint32_t)((cfg_inst->settings.ring_size) >> 4)); //todo: check with Neil/pratima
     sdp_axi.enable(enable);
     sdp_axi.stop_when_full(cfg_inst->settings.stop_when_full);
     sdp_axi.no_trace_when_full(cfg_inst->settings.no_trace_when_full);
@@ -172,21 +177,31 @@ sdptrace_util_reg_program (elb_sdp_csr_cfg_sdp_axi_t &sdp_axi,
 
     //printf ("trace trigger enable 0x%x\n",cfg_inst->ctrl.trace_trigger_enable);
 
-    //todo: check with suresh for 512 reg write from an array
-    
     cpp_int trigger_data_val = sdp_trace_trigger.data();
     cpp_int_helper hlp0;
-       trigger_data_val = hlp0.set_slc(trigger_data_val,cfg_inst->capture.trigger_data, 0, 511);
     
-       //for (uint32_t i = 0; i < 8; i++) {
-       //trigger_data_val = hlp0.set_slc(trigger_data_val,cfg_inst->capture.trigger_data[i], i*64, i*64+64-1);
-       //}
+    if (cfg_inst->pipeline_str == "rxdma") {
+      trigger_data_val = hlp0.set_slc(trigger_data_val,cfg_inst->capture.trigger_data_rx, 0, 511);
+    } else if (cfg_inst->pipeline_str == "txdma") {
+      trigger_data_val = hlp0.set_slc(trigger_data_val,cfg_inst->capture.trigger_data_tx, 0, 511);
+    } else {
+      trigger_data_val = hlp0.set_slc(trigger_data_val,cfg_inst->capture.trigger_data_p4, 0, 511);
+    }
     //        cout << " justina " << hex << trigger_data_val << dec << endl;
     sdp_trace_trigger.data(trigger_data_val);
 
     cpp_int trigger_mask_val = sdp_trace_trigger.mask();
     cpp_int_helper hlp1;
-    trigger_mask_val = hlp1.set_slc(trigger_mask_val,cfg_inst->capture.trigger_mask, 0, 511);
+
+
+    if (cfg_inst->pipeline_str == "rxdma") {
+      trigger_mask_val = hlp1.set_slc(trigger_mask_val,cfg_inst->capture.trigger_mask_rx, 0, 511);
+    } else if (cfg_inst->pipeline_str == "txdma") {
+      trigger_mask_val = hlp1.set_slc(trigger_mask_val,cfg_inst->capture.trigger_mask_rx, 0, 511);
+    } else {
+      trigger_mask_val = hlp1.set_slc(trigger_mask_val,cfg_inst->capture.trigger_mask_p4, 0, 511);
+    }
+
     sdp_trace_trigger.mask(trigger_mask_val);
 
     sdp_trace_trigger.write();
@@ -626,16 +641,19 @@ mputrace_dump_trace_hdr_fill (mputrace_trace_hdr_t *trace_hdr,
     trace_hdr->pipeline_num = pipeline;
     trace_hdr->stage_num = stage;
     trace_hdr->mpu_num = mpu;
+    trace_hdr->enable = (uint32_t)trace.enable();
     trace_hdr->trace_enable = (uint32_t)trace.trace_enable();
     trace_hdr->phv_debug = (uint32_t)trace.phv_debug();
     trace_hdr->phv_error = (uint32_t)trace.phv_error();
-    //    trace_hdr->watch_pc = (uint32_t)(trace.watch_pc() << 3);
     trace_hdr->table_key = (uint32_t)trace.table_and_key();
     trace_hdr->instructions = (uint32_t)trace.instructions();
     trace_hdr->wrap = (uint32_t)trace.wrap();
     trace_hdr->trace_addr = (uint64_t)(trace.base_addr() << 6);
     trace_hdr->trace_size =
         (uint32_t)(ELBTRACE_ONE << (uint32_t)trace.buf_size());
+
+    trace_hdr->debug_index	= (uint32_t)trace.debug_index();
+    trace_hdr->debug_generation =  (uint8_t)trace.debug_generation();
 
     //watch_pc
     trace_hdr->wpc_trace = (uint32_t)watch_pc.trace();
@@ -661,6 +679,8 @@ mputrace_dump_trace_hdr_fill (mputrace_trace_hdr_t *trace_hdr,
 
 static inline void
 sdptrace_dump_trace_hdr_fill (sdptrace_trace_hdr_t *trace_hdr,
+			      elb_sdp_csr_sta_sdp_axi_write_control_t &ctl_ptr,
+			      elb_sdp_csr_sta_sdp_axi_write_phv_t &phv_ptr,
 			      elb_sdp_csr_cfg_sdp_axi_t &sdp_axi,
 			      elb_sdp_csr_cfg_sdp_axi_sw_reset_t &sdp_axi_sw_reset,
 			      elb_sdp_csr_cfg_sdp_trace_trigger_t &sdp_trace_trigger,
@@ -675,13 +695,17 @@ sdptrace_dump_trace_hdr_fill (sdptrace_trace_hdr_t *trace_hdr,
     trace_hdr->no_trace_when_full = (uint32_t)sdp_axi.no_trace_when_full();
     trace_hdr->ctl_base_addr = (uint64_t)(sdp_axi.ctl_base_addr() << 6);
     trace_hdr->phv_base_addr = (uint64_t)(sdp_axi.phv_base_addr() << 6);
-    trace_hdr->ring_size =
-        (uint32_t)(ELBTRACE_ONE << (uint32_t)sdp_axi.ring_size());
+    trace_hdr->ring_size = (uint32_t)sdp_axi.ring_size();
 
     trace_hdr->sw_reset_enable = (uint32_t)sdp_axi_sw_reset.enable();
 
     trace_hdr->trigger_data = (uint512_t)sdp_trace_trigger.data();
     trace_hdr->trigger_mask = (uint512_t)sdp_trace_trigger.mask();
+
+    //get the write pointers for control and phv ring
+    trace_hdr->ctl_ring_wr_ptr = (uint32_t)ctl_ptr.pointer();
+    trace_hdr->phv_ring_wr_ptr = (uint32_t)phv_ptr.pointer();
+    
 }
 
 static inline void
@@ -693,16 +717,20 @@ dmatrace_dump_trace_hdr_fill (dmatrace_trace_hdr_t *trace_hdr,
 
   elb_prd_csr_cfg_trace_t prd_trace = elb0.pr.pr.prd.cfg_trace;
   elb_ptd_csr_cfg_trace_t ptd_trace = elb0.pt.pt.ptd.cfg_trace;
+  elb_prd_csr_sta_trace_t prd_sta_trace = elb0.pr.pr.prd.sta_trace;
+  elb_ptd_csr_sta_trace_t ptd_sta_trace = elb0.pt.pt.ptd.sta_trace;
 
     if (mod_name == "prd") {
       prd_trace.read();
-      DMATRACE_TRACE_HDR_WRITE(prd_trace, pipeline);
+      prd_sta_trace.read();
+      DMATRACE_TRACE_HDR_WRITE(prd_sta_trace, prd_trace, pipeline);
 	trace_hdr->pkt_phv_sync_err_enable =			      
 	(uint32_t)prd_trace.pkt_phv_sync_err_enable();		    
     }
     else {
       ptd_trace.read();
-      DMATRACE_TRACE_HDR_WRITE(ptd_trace, pipeline);
+      ptd_sta_trace.read();
+      DMATRACE_TRACE_HDR_WRITE(ptd_sta_trace, ptd_trace, pipeline);
     }
 }
 
@@ -720,14 +748,16 @@ mputrace_dump_trace_hdr_write (elb_mpu_csr_trace_t trace,
 }
 
 static inline void
-sdptrace_dump_trace_hdr_write (elb_sdp_csr_cfg_sdp_axi_t sdp_axi, 
-			      elb_sdp_csr_cfg_sdp_axi_sw_reset_t &sdp_axi_sw_reset,
-			      elb_sdp_csr_cfg_sdp_trace_trigger_t &sdp_trace_trigger,
-                               int pipeline, int stage, FILE *fp)
+sdptrace_dump_trace_hdr_write (elb_sdp_csr_sta_sdp_axi_write_control_t ctl_ptr,
+				 elb_sdp_csr_sta_sdp_axi_write_phv_t phv_ptr,
+				 elb_sdp_csr_cfg_sdp_axi_t sdp_axi, 
+				 elb_sdp_csr_cfg_sdp_axi_sw_reset_t &sdp_axi_sw_reset,
+				 elb_sdp_csr_cfg_sdp_trace_trigger_t &sdp_trace_trigger,
+				 int pipeline, int stage, FILE *fp)
 {
     sdptrace_trace_hdr_t trace_hdr = {};
 
-    sdptrace_dump_trace_hdr_fill(&trace_hdr, sdp_axi, 
+    sdptrace_dump_trace_hdr_fill(&trace_hdr, ctl_ptr, phv_ptr, sdp_axi, 
 				 sdp_axi_sw_reset, sdp_trace_trigger,
 				 pipeline, stage);
     fwrite(&trace_hdr, sizeof(uint8_t), sizeof(trace_hdr), fp);
@@ -749,7 +779,7 @@ dmatrace_dump_trace_hdr_write (elb_top_csr_t &elb0,
 static inline void
 mputrace_dump_trace_info_write (elb_mpu_csr_trace_t trace, FILE *fp)
 {
-  uint8_t buf[64] = {0}; //todo: why 64?
+  uint8_t buf[64] = {0}; 
     uint32_t trace_size = mputrace_util_size_get(trace);
     mem_addr_t trace_addr = mputrace_util_base_addr_get(trace);
 
@@ -764,16 +794,34 @@ static inline void
 sdptrace_dump_trace_info_write (elb_sdp_csr_cfg_sdp_axi_t sdp_axi, 
 				FILE *fp)
 {
-  uint8_t buf[64] = {0}; //todo
+  uint8_t buf[64] = {0}; 
   
-  uint32_t trace_size = (ELBTRACE_ONE << (uint32_t)sdp_axi.ring_size());
-  mem_addr_t trace_addr = (mem_addr_t)(sdp_axi.phv_base_addr() << 6);
+  uint32_t   ctl_trace_size = (uint32_t)sdp_axi.ring_size();
+  mem_addr_t ctl_trace_addr = (mem_addr_t)(sdp_axi.ctl_base_addr() << 6);
+
+  uint32_t   phv_trace_size = ((uint32_t)sdp_axi.ring_size() << 4);
+  mem_addr_t phv_trace_addr = (mem_addr_t)(sdp_axi.phv_base_addr() << 6);
   
-  //todo: how to dump ctl_base_addr content???
-  for (uint32_t i = 0; i < trace_size; i++) {
-    sdk::lib::pal_mem_read(trace_addr, buf, sizeof(buf));
+  //printf ("ctl_trace_size %d\n",ctl_trace_size);
+  //printf ("ctl_trace_addr 0x%lx\n",ctl_trace_addr);
+
+  //printf ("phv_trace_size %d\n",phv_trace_size);
+  //printf ("phv_trace_addr 0x%lx\n",phv_trace_addr);
+
+  //dump control ring first
+  for (uint32_t i = 0; i < ctl_trace_size; i++) {
+    sdk::lib::pal_mem_read(ctl_trace_addr, buf, sizeof(buf));
     fwrite(buf, sizeof(buf[0]), sizeof(buf), fp);
-    trace_addr += sizeof(buf);
+    ctl_trace_addr += sizeof(buf);
+    //printf ("ctl_trace_addr %d is 0x%lx\n",i, ctl_trace_addr);
+
+  }
+  //followed by PHV ring
+  for (uint32_t i = 0; i < phv_trace_size; i++) {
+    sdk::lib::pal_mem_read(phv_trace_addr, buf, sizeof(buf));
+    fwrite(buf, sizeof(buf[0]), sizeof(buf), fp);
+    phv_trace_addr += sizeof(buf);
+    //printf ("phv_trace_addr %d is 0x%lx\n",i, phv_trace_addr);
   }
 }
 
@@ -782,7 +830,7 @@ dmatrace_dump_trace_info_write (elb_top_csr_t &elb0,
 				FILE *fp,
 				std::string mod_name)
 {
-  uint8_t buf[64] = {0}; //todo
+  uint8_t buf[64] = {0}; 
 
   elb_prd_csr_cfg_trace_t prd_trace = elb0.pr.pr.prd.cfg_trace;
   elb_ptd_csr_cfg_trace_t ptd_trace = elb0.pt.pt.ptd.cfg_trace;
@@ -836,7 +884,9 @@ mputrace_dump_trace_file_write (elb_mpu_csr_trace_t trace,
 }
 
 static inline void
-sdptrace_dump_trace_file_write (elb_sdp_csr_cfg_sdp_axi_t sdp_axi, 
+sdptrace_dump_trace_file_write (elb_sdp_csr_sta_sdp_axi_write_control_t ctl_ptr,
+				elb_sdp_csr_sta_sdp_axi_write_phv_t phv_ptr,
+				elb_sdp_csr_cfg_sdp_axi_t sdp_axi, 
 				elb_sdp_csr_cfg_sdp_axi_sw_reset_t &sdp_axi_sw_reset,
 				elb_sdp_csr_cfg_sdp_trace_trigger_t &sdp_trace_trigger,
                                 int pipeline, int stage)
@@ -844,13 +894,16 @@ sdptrace_dump_trace_file_write (elb_sdp_csr_cfg_sdp_axi_t sdp_axi,
     static FILE *fp = fopen(g_state.ELBTRACE_DUMP_FILE, "wb");
 
     sdp_axi.read();
+    ctl_ptr.read();
+    phv_ptr.read();
     if (fp == NULL) {
         std::cerr << "Failed to open dump file for writing - "
                   << g_state.ELBTRACE_DUMP_FILE << std::endl;
         exit(EXIT_FAILURE);
     }
 
-    sdptrace_dump_trace_hdr_write(sdp_axi, sdp_axi_sw_reset,
+    sdptrace_dump_trace_hdr_write(ctl_ptr, phv_ptr, 
+				  sdp_axi, sdp_axi_sw_reset,
 				  sdp_trace_trigger,
                                   pipeline, stage, fp);
     sdptrace_dump_trace_info_write(sdp_axi, fp);
@@ -903,7 +956,9 @@ sdptrace_dump_pipeline_info_fetch (int stage_count, elb_stg_csr_t *stg_ptr,
     
     stg_ptr[stage].sdp.cfg_sdp_axi.read();
     if (stg_ptr[stage].sdp.cfg_sdp_axi.int_var__enable) {
-      sdptrace_dump_trace_file_write(stg_ptr[stage].sdp.cfg_sdp_axi,
+      sdptrace_dump_trace_file_write(stg_ptr[stage].sdp.sta_sdp_axi_write_control,
+				     stg_ptr[stage].sdp.sta_sdp_axi_write_phv,
+				     stg_ptr[stage].sdp.cfg_sdp_axi,
 				     stg_ptr[stage].sdp.cfg_sdp_axi_sw_reset,
 				     stg_ptr[stage].sdp.cfg_sdp_trace_trigger,
 				     pipeline, stage);
@@ -1050,7 +1105,8 @@ sdptrace_reset_buffer_erase (elb_sdp_csr_cfg_sdp_axi_t sdp_axi)
     if ( (int)sdp_axi.int_var__enable) {
         phv_base_addr = (mem_addr_t)(sdp_axi.phv_base_addr() << 6);
         ctl_base_addr = (mem_addr_t)(sdp_axi.ctl_base_addr() << 6);
-        ring_size = (ELBTRACE_ONE << (uint32_t)sdp_axi.ring_size());
+	//        ring_size = (ELBTRACE_ONE << (uint32_t)sdp_axi.ring_size());
+        ring_size = (uint32_t)sdp_axi.ring_size();
         sdk::lib::pal_mem_set(phv_base_addr, 0, ring_size * SDPTRACE_PHV_ENTRY_SIZE);
         sdk::lib::pal_mem_set(ctl_base_addr, 0, ring_size * SDPTRACE_CTL_ENTRY_SIZE);
     }

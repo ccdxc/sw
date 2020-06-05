@@ -424,3 +424,53 @@ stg_poll (int verbose, uint8_t pipeline, uint8_t stage)
     }
 }
 
+void set_watch_all()
+{
+  uint8_t pipeline;
+  uint8_t stage;
+  uint64_t stg_base;
+  uint32_t count_stage_value;
+
+  for(pipeline = 0; pipeline < PIPE_CNT; pipeline++) {
+    for(stage = 0; stage <  stage_cnt[pipeline]; stage++) {
+      stg_base = get_stg_base(pipeline, stage); 
+
+      count_stage_value = (ELB_MPU_CSR_COUNT_STAGE_ALWAYS_ON_SET(1) | 
+			   ELB_MPU_CSR_COUNT_STAGE_DEBUG_SET(0) |
+			   ELB_MPU_CSR_COUNT_STAGE_WATCH_SET(0) | 
+			   ELB_MPU_CSR_COUNT_STAGE_STOP_ON_SATURATE_SET(1));
+
+      pal_reg_rd32w(stg_base + ELB_STG_CSR_MPU_COUNT_STAGE_BYTE_ADDRESS,
+		    &count_stage_value, 1);
+    }
+  }
+}
+
+void set_watch_debug()
+{
+}
+
+void set_watch_inst(uint8_t pipeline, uint8_t stage, int64_t inst_lo, int64_t inst_hi)
+{
+  uint64_t stg_base = get_stg_base(pipeline, stage);
+
+  uint32_t watch_pc[3];
+  inst_lo = inst_lo >> 3;  // byte address to PC
+  inst_hi = inst_hi >> 3;  // byte address to PC
+  watch_pc[0] = (ELB_MPU_CSR_WATCH_PC_WATCH_PC_0_3_ADDR_LO_26_0_SET(inst_lo) |
+		 ELB_MPU_CSR_WATCH_PC_WATCH_PC_0_3_COUNT_SET(1));
+  watch_pc[1] = (ELB_MPU_CSR_WATCH_PC_WATCH_PC_1_3_ADDR_HI_24_0_SET(inst_hi) |
+		 ELB_MPU_CSR_WATCH_PC_WATCH_PC_1_3_ADDR_LO_33_27_SET(inst_lo >> (27)));
+  watch_pc[2] = ELB_MPU_CSR_WATCH_PC_WATCH_PC_2_3_ADDR_HI_33_25_SET(inst_hi >> 25);
+
+  pal_reg_rd32w(stg_base + ELB_STG_CSR_MPU_WATCH_PC_BYTE_ADDRESS,
+		watch_pc, 3);
+
+  uint32_t count_stage_value = (ELB_MPU_CSR_COUNT_STAGE_ALWAYS_ON_SET(0) | 
+				ELB_MPU_CSR_COUNT_STAGE_DEBUG_SET(0) |
+				ELB_MPU_CSR_COUNT_STAGE_WATCH_SET(1) | 
+				ELB_MPU_CSR_COUNT_STAGE_STOP_ON_SATURATE_SET(1));
+
+  pal_reg_rd32w(stg_base + ELB_STG_CSR_MPU_COUNT_STAGE_BYTE_ADDRESS,
+		&count_stage_value, 1);
+}

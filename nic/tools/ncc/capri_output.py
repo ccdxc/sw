@@ -4874,8 +4874,10 @@ def elba_te_cfg_output(stage):
     json_regs = te_json['elb_te']['registers']
     json_mems = te_json['elb_te']['memories']
 
-    json_regs['elb_te_csr_cfg_global']['max_table_num']["value"] = str(len(stage.ct_list))
-    json_regs['elb_te_csr_cfg_global']['max_table_num']['_modified'] = True
+    #json_regs['elb_te_csr_cfg_global']['max_table_num']["value"] = str(len(stage.ct_list))
+    #json_regs['elb_te_csr_cfg_global']['max_table_num']['_modified'] = True
+    json_regs['elb_te_csr_cfg_global']['max_table_num']["value"] = str(stage.max_table_num)
+    json_regs['elb_te_csr_cfg_global']['_modified'] = True
 
     for prof in stage.hw_km_profiles:
         if prof == None:

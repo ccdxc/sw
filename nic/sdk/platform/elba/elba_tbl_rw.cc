@@ -775,21 +775,6 @@ elba_mpu_icache_dcache_invalidate (void)
     }
 }
 
-//
-// Reset tcam memories
-//
-static void
-elba_tcam_memory_init (asic_cfg_t *elba_cfg)
-{
-    if (!elba_cfg ||
-        ((elba_cfg->platform != platform_type_t::PLATFORM_TYPE_HAPS) &&
-        (elba_cfg->platform != platform_type_t::PLATFORM_TYPE_HW))) {
-        return;
-    }
-
-    elb_pict_zero_init_tcam(0, 0, 8);
-    elb_pict_zero_init_tcam(0, 1, 4);
-}
 
 void
 elba_table_rw_cleanup (void)
@@ -945,9 +930,6 @@ elba_table_rw_init (asic_cfg_t *elba_cfg)
     hbm_mem_base_addr = elba_get_mem_addr(MEM_REGION_P4_PROGRAM_NAME);
 
     elba_mpu_icache_dcache_invalidate();
-
-    // Initialize tcam memories
-    elba_tcam_memory_init(elba_cfg);
 
     // Initialize sram memories
     elba_sram_memory_init(elba_cfg);

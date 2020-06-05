@@ -3746,6 +3746,7 @@ class capri_stage:
         max_km_profiles = self.gtm.tm.be.hw_model['match_action']['num_km_profiles']
         self.hw_km_profiles = [None for _ in range(max_km_profiles)]
         self.pred_sel_bits = 0
+        self.max_table_num = 1
 
     def _can_share_hash_tcam_km(self, h_km, t_km):
         flit_sz = self.gtm.tm.be.hw_model['phv']['flit_size']
@@ -4523,6 +4524,13 @@ class capri_stage:
         for fid in range(num_flits):
             flit_km_used = max_km - self.km_allocator[fid].count(None)
             max_km_used = max(max_km_used, flit_km_used)
+        for ct in self.ct_list:
+            if not ct.is_wide_key:
+                self.max_table_num += 1
+            else:
+                self.max_table_num += len(ct.flits_used)
+        self.gtm.tm.logger.debug("%s:Stage %d: max_table_num %d" % \
+            (self.gtm.d.name, self.id, self.max_table_num))
 
         self.gtm.tm.logger.info("%s:Stage %d: Total Key Maker used %d, Km_profiles used %d" % \
             (self.gtm.d.name, self.id, max_km_used, km_profiles_used))

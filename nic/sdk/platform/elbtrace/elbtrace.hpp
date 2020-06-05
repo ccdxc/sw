@@ -33,7 +33,7 @@ namespace platform {
 
 #define ELBTRACE_STR_NAME_LEN 256
 #define TRACE_ENTRY_SIZE 64
-#define SDPTRACE_PHV_ENTRY_SIZE 64  //todo - justina
+#define SDPTRACE_PHV_ENTRY_SIZE 1024  //todo - justina
 #define SDPTRACE_CTL_ENTRY_SIZE 64  //todo - justina
 #define DMATRACE_ENTRY_SIZE 64  //todo - justina
 #define MPUTRACE_FREE(ptr)                                                     \
@@ -176,10 +176,12 @@ typedef struct sdptrace_cfg_inst_ctrl_s {
 
   // capture
 typedef struct sdptrace_cfg_inst_capture_s {
-  cpp_int trigger_data;  // PHV SOP data
-  cpp_int trigger_mask;  // PHV SOP mask
-  //  uint64_t trigger_data[8];    
-  //uint64_t trigger_mask[8];    
+  cpp_int trigger_data_tx;  // PHV SOP data
+  cpp_int trigger_mask_tx;  // PHV SOP mask
+  cpp_int trigger_data_rx;  // PHV SOP data
+  cpp_int trigger_mask_rx;  // PHV SOP mask
+  cpp_int trigger_data_p4;  // PHV SOP data
+  cpp_int trigger_mask_p4;  // PHV SOP mask
 } sdptrace_cfg_inst_capture_t;
 
   // settings
@@ -230,9 +232,7 @@ typedef struct dmatrace_cfg_inst_s {
 
 #pragma pack(push, 1)
 
-  //todo: Justina: original one doesn't seem to be 64Bytes. Check with Neel
-  // current one is 74B. Why is there a restriction for 64B???
-typedef struct mputrace_trace_hdr_s {
+typedef struct  mputrace_trace_hdr_s {
     uint8_t pipeline_num;
     uint32_t stage_num;
     uint32_t mpu_num;
@@ -244,8 +244,7 @@ typedef struct mputrace_trace_hdr_s {
         trace_enable;     // tracing starts if a trace instr is in the program
     uint8_t phv_debug;    // trace only for phvs with phv_debug enabled
     uint8_t phv_error;    // trace only for phvs with table error enabled
-  //    uint64_t watch_pc;    // trace whenever pc == watch_pc
-    // data to be traced
+
     uint64_t trace_addr;
     uint8_t table_key;       // Data and Key pair
     uint8_t instructions;    // Instructions
@@ -275,10 +274,13 @@ typedef struct mputrace_trace_hdr_s {
   uint64_t wdata_addr_lo;
   uint64_t wdata_addr_hi;
 
-  uint8_t __pad[54];    // Pad to 64 bytes boundary
+  uint32_t debug_index;
+  uint8_t  debug_generation;
+  
+  uint8_t __pad[49];    // Pad to 64 bytes boundary
 } mputrace_trace_hdr_t;
 
-  //todo: changed assert to 74B from 64B. Is that ok? Why 64B??? Neel??
+  //make it 64B aligned for post processing python script
 static_assert(sizeof(mputrace_trace_hdr_t) == 128,
               "mpu trace instance struct should be 128B");
 
@@ -293,17 +295,20 @@ typedef struct sdptrace_trace_hdr_s {
   uint32_t ctl_base_addr;
   uint32_t phv_base_addr;
   uint32_t ring_size;
+  uint32_t ctl_ring_wr_ptr;
+  uint32_t phv_ring_wr_ptr;
+  
   uint512_t trigger_data; //todo: shd this map to PHV?    
   uint512_t trigger_mask;    //todo: shd this map to PHV?
 
-  uint8_t __pad[10];    // Pad to 64 bytes boundary
+  uint8_t __pad[2];    // Pad to 64 bytes boundary
 } sdptrace_trace_hdr_t;
 
-  //todo: it's 150, but somehow reads as 182. Check why
+  //todo: it's 158, but somehow reads as 190. Check why
   static_assert(sizeof(sdptrace_trace_hdr_t) == 192,
 		"sdp trace instance struct should be 192B");
 
-typedef struct dmatrace_trace_hdr_s {
+typedef struct  dmatrace_trace_hdr_s {
   uint8_t pipeline_num;
     uint8_t enable;     
     uint8_t phv_enable;     
@@ -314,8 +319,10 @@ typedef struct dmatrace_trace_hdr_s {
   uint8_t reset;  //elbtrace reset_dma will take care of this   
   uint32_t buf_size;
   uint64_t base_addr;
+  uint32_t trace_index;
 
-  uint8_t __pad[44];    // Pad to 64 bytes
+
+  uint8_t __pad[40];    // Pad to 64 bytes
 
 } dmatrace_trace_hdr_t;
 

@@ -6,6 +6,7 @@
 /// \file
 /// This file contains the implementation for elbmon tool
 /// usage: elbmon -v[erbose] -r[eset] -q[ueues] -b[wmon] -s[pps]
+///  -x[port] -wa -wd -wi hi:lo
 ///  -l[lif] -t[qtype] -i[qid] -R[ring] -p[poll]<interval>
 ///
 //===----------------------------------------------------------------------===//
@@ -49,6 +50,9 @@ void dump_qstate(int, int, uint64_t);
 void measure_pps(int);
 void qstate_lif_dump(int lif_start, int lif_end, int queue_type, int qid_start,
                      int qid_end, int rid, int rsize, int poll, int verbose);
+void set_watch_all();
+void set_watch_debug();
+void set_watch_inst(uint8_t pipeline, uint8_t stage, int64_t inst_lo, int64_t inst_hi);
 using namespace std;
 
 // Default options
@@ -221,10 +225,62 @@ main (int argc, char *argv[])
             }
             measure_pps(interval);
             return (0);
+        } else if (strcmp(argv[i], "-wa") == 0) {
+  	    printf("Setting all MPU performance counters to watch all PHVs.\n");
+	    set_watch_all();
+        } else if (strcmp(argv[i], "-wd") == 0) { 
+  	    printf("Setting all MPU performance counters to watch DEBUG PHVs.\n");
+ 	    set_watch_debug();
+        } else if (strcmp(argv[i], "-wi") == 0) {
+            int inputs = 0;
+	    char pipe[8];
+	    uint8_t pipeline;
+	    uint8_t stage = 0;
+	    uint64_t inst_lo = 0;
+	    uint64_t inst_hi = 0;
+            i++;
+            if (i >= (argc-2)) {
+                printf("Error: -wi requires pipe stage lo:hi (addresses in hex)\n");
+                return (-1);
+            }
+            inputs = sscanf(argv[i], "%s", pipe);
+	    if (strcmp(pipe, "TXDMA") == 0) {
+	      pipeline = TXDMA;
+	    } else if (strcmp(pipe, "RXDMA") == 0) {
+	      pipeline = RXDMA;	      
+	    } else if (strcmp(pipe, "P4EG") == 0) {
+	      pipeline = P4EG;	      
+	    } else if (strcmp(pipe, "P4IG") == 0) {
+	      pipeline = P4IG;	      
+	    } else {
+	      printf("Error: -wi requires pipe of TXDMA, RXDMA, P4EG, or P4IG (read %s)\n", pipe);
+	      return(-1);
+	    }
+            i++;
+            inputs = sscanf(argv[i], "%hhd", &stage);
+	    if((stage < 0) | (stage > 7)) {
+                printf("Error: -wi requires pipe stage lo:hi (stage from 0-7)\n");
+                return (-1);
+	    }
+            i++;
+            inputs = sscanf(argv[i], "%lx:%lx", &inst_lo, &inst_hi);
+            if (!inputs) {
+	        printf("Error: -wi requires pipe stage lo:hi\n");
+                return (-1);
+            }
+	    if((inst_lo > inst_hi)) {
+                printf("Error: -wi lo must be less than hi\n");
+                return (-1);
+	    }
+
+            printf("watch instruction pipe %s stage %hhd range = 0x%lx:0x%lx\n", pipe, stage, inst_lo, inst_hi);
+	    set_watch_inst(pipeline, stage, inst_lo, inst_hi);
         } else {
             printf(
                 "usage: elbmon -v[erbose] -r[eset] -q[ueues] -b[wmon]"
-                " -s[pps] -l[lif] -t[qtype] -i[qid] -R[ring] -p[poll]"
+		" -c[rypto] -x[port to /tmp]"
+		" -wa[watch all] -wd[watch debug] -wi[watch inst_addr] pipe:stage:lo:hi"
+                " -s[pps] -l[lif] -t[qtype] -i[qid] -R[ring] -p[poll]"		
                 "<interval>\n\n");
             printf("Example: elbmon -q -l 1003:1005 -t 0 -i 0:5 -R 1 -p 100\n");
             return (0);
@@ -524,3 +580,4 @@ reset_counters (void)
         }
     }
 }
+

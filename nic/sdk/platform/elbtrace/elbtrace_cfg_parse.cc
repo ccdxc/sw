@@ -131,12 +131,16 @@ sdptrace_cfg_inst_init (sdptrace_cfg_inst_t *cfg_inst)
     cfg_inst->ctrl.enable = false;
     cfg_inst->ctrl.trace_trigger_enable = false;
 
-    for (uint32_t i = 0; i < 8; i++) {
+    //    for (uint32_t i = 0; i < 8; i++) {
       //      cfg_inst->capture.trigger_data[i] = i;
       //cfg_inst->capture.trigger_mask[i] = i;
-    }
-    //cfg_inst->capture.trigger_data = 0;
-    //cfg_inst->capture.trigger_mask = 0;
+    //}
+    cfg_inst->capture.trigger_data_p4 = 0;
+    cfg_inst->capture.trigger_mask_p4 = 0;
+    cfg_inst->capture.trigger_data_tx = 0;
+    cfg_inst->capture.trigger_mask_tx = 0;
+    cfg_inst->capture.trigger_data_rx = 0;
+    cfg_inst->capture.trigger_mask_rx = 0;
     
     cfg_inst->settings.sw_reset_enable = false;
     cfg_inst->settings.no_trace_when_full = false;
