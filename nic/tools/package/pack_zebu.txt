@@ -95,8 +95,8 @@ nic/build/x86_64/iris/lib/libeth_p4plus.so                       /nic/lib/
 nic/build/x86_64/iris/lib/libnicmgr_iris.so                      /nic/lib/
 
 # AAPL
-nic/sdk/third-party/avago/build/x86_64/bin/aapl                  /nic/bin/
-nic/sdk/third-party/avago/build/x86_64/lib/aapl/C/libAAPL.so     /nic/lib/
+nic/sdk/third-party/avago/build_$ASIC/x86_64/bin/aapl                  /nic/bin/
+nic/sdk/third-party/avago/build_$ASIC/x86_64/lib/aapl/C/libAAPL.so     /nic/lib/
 
 nic/gen/x86_64/lib/libhalproto.so                                /nic/lib/
 nic/hal/third-party/lkl/export/x86_64/lib/liblkl.so              /nic/lib/

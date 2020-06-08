@@ -134,8 +134,8 @@ nic/build/$ARCH/$PIPELINE/gen/p4gen/p4plus_rxdma/p4pd/p4_table_map.json   /nic/c
 nic/build/$ARCH/$PIPELINE/gen/p4gen/p4plus_txdma/p4pd/p4_table_map.json   /nic/conf/$PIPELINE/txdma_table_map.json
 
 # link specific libs
-nic/sdk/third-party/avago/build/$ARCH/bin/aapl                    /nic/bin/
-nic/sdk/third-party/avago/build/$ARCH/lib/aapl/C/libAAPL.so       /nic/lib/
+nic/sdk/third-party/avago/build_$ASIC/$ARCH/bin/aapl                    /nic/bin/
+nic/sdk/third-party/avago/build_$ASIC/$ARCH/lib/aapl/C/libAAPL.so       /nic/lib/
 nic/sdk/third-party/avago/fw/serdes.0x1087_244D.rom               /nic/conf/fw/
 nic/sdk/third-party/avago/fw/serdes.0x1094_244D.rom               /nic/conf/fw/
 

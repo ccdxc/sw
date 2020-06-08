@@ -10,7 +10,11 @@ cscope.*
 gen
 include/sdk/asic/capri/csrlite/cap_top_csr_defines.h
 build
+third-party/avago/module.mk
 third-party/avago/fw
+third-party/avago/build_capri
+third-party/avago/build_elba
+third-party/avago/aapl
 third-party/locale
 third-party/dpdk
 third-party/asic

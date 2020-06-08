@@ -32,6 +32,7 @@
 #include "third-party/asic/elba/model/elb_prd/elb_prd_csr.h"
 #include "third-party/asic/elba/model/utils/elb_csr_py_if.h"
 #include "third-party/asic/elba/verif/apis/elb_txs_sw_api.h"
+#include "third-party/asic/elba/model/elb_sema/elb_sema_csr_define.h"
 
 using namespace sdk::asic;
 
@@ -158,13 +159,13 @@ elba_cache_init (asic_cfg_t *cfg)
 static sdk_ret_t
 elba_prd_init(void)
 {
-    elb_top_csr_t &cap0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
-    elb_pr_csr_t &pr_csr = cap0.pr.pr;
+    //elb_top_csr_t &cap0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
+    //elb_pr_csr_t &pr_csr = cap0.pr.pr;
 
-    pr_csr.prd.cfg_ctrl.read();
-    pr_csr.prd.cfg_ctrl.pkt_phv_sync_err_recovery_en(0);
-    pr_csr.prd.cfg_ctrl.write();
-    SDK_TRACE_DEBUG("Disabled pkt_phv_sync_err_recovery_en in pr_prd_cfg_ctrl");
+    //pr_csr.prd.cfg_ctrl.read();
+    //pr_csr.prd.cfg_ctrl.pkt_phv_sync_err_recovery_en(0);
+    //pr_csr.prd.cfg_ctrl.write();
+    //SDK_TRACE_DEBUG("Disabled pkt_phv_sync_err_recovery_en in pr_prd_cfg_ctrl");
 
     return SDK_RET_OK;
 }
@@ -216,6 +217,28 @@ elba_sxdma_psp_init(void)
     pt_npv_csr.cfg_qstate_map_rsp.addr_shift_value(0);
     pt_npv_csr.cfg_qstate_map_rsp.write();
     SDK_TRACE_DEBUG("Disabled Qstate address shift for Elba sxdma");
+
+    return SDK_RET_OK;
+}
+
+static sdk_ret_t
+elba_sema_init(void)
+{
+    elb_top_csr_t &cap0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
+    elb_sema_csr_t &sema_csr = cap0.sema.sema;
+    
+    sema_csr.csr_intr.dowstream_enable(0);
+    sema_csr.csr_intr.write();
+    sema_csr.semaphore_raw.entry[ELB_SEMA_CSR_SEMAPHORE_RAW_ENTRY_ARRAY_INDEX_MAX].all(0);
+    sema_csr.semaphore_raw.entry[ELB_SEMA_CSR_SEMAPHORE_RAW_ENTRY_ARRAY_INDEX_MAX].write();
+
+    sema_csr.sema_err.intreg.read();
+    if (sema_csr.sema_err.intreg.all() > 0) {
+        sema_csr.sema_err.intreg.write();
+    }
+
+    enable_all_interrupts(&sema_csr);
+    SDK_TRACE_DEBUG("Initialize sema_raw memory last entry manually.");
 
     return SDK_RET_OK;
 }
@@ -529,6 +552,10 @@ elba_init (asic_cfg_t *cfg)
     ret = elba_sxdma_psp_init();
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
                             "Elba sxdma psp init failure, err : %d", ret);
+    
+    ret = elba_sema_init();
+    SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
+                            "Elba sema init failure, err : %d", ret);
 
     ret = elba_te_enable_capri_mode();
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,

@@ -201,8 +201,8 @@ nic/build/$ARCH/$PIPELINE/lib/liblinkmgrdelphi.so                      /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdklinkmgr.so                         /nic/lib/
 
 # AAPL
-nic/sdk/third-party/avago/build/aarch64/bin/aapl                    /nic/bin/
-nic/sdk/third-party/avago/build/aarch64/lib/aapl/C/libAAPL.so       /nic/lib/
+nic/sdk/third-party/avago/build_$ASIC/aarch64/bin/aapl                    /nic/bin/
+nic/sdk/third-party/avago/build_$ASIC/aarch64/lib/aapl/C/libAAPL.so       /nic/lib/
 
 # link scripts
 nic/tools/start-linkmgr-hw.sh                                       /nic/tools/
@@ -214,6 +214,8 @@ nic/tools/speed_change.sh                                           /nic/tools/
 
 nic/sdk/third-party/avago/fw/serdes.0x1087_244D.rom                 /nic/conf/fw/
 nic/sdk/third-party/avago/fw/serdes.0x1094_244D.rom                 /nic/conf/fw/
+nic/sdk/third-party/avago/fw/serdes.0x10A4_1045.rom                 /nic/conf/fw/
+nic/sdk/third-party/avago/fw/blackhawk7_v1l8p2_ucode_image_D004_09_0x61C8.h   /nic/conf/fw/
 nic/e2etests/go/agent/configs/golden                                /nic/conf/
 
 # CLI

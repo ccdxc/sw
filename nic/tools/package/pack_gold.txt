@@ -184,8 +184,8 @@ nic/build/$ARCH/$PIPELINE/lib/libnicmgr.so                             /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libnicmgr_iris.so                        /nic/lib/
 
 # AAPL
-nic/sdk/third-party/avago/build/aarch64/bin/aapl                    /nic/bin/
-nic/sdk/third-party/avago/build/aarch64/lib/aapl/C/libAAPL.so       /nic/lib/
+nic/sdk/third-party/avago/build_$ASIC/aarch64/bin/aapl                    /nic/bin/
+nic/sdk/third-party/avago/build_$ASIC/aarch64/lib/aapl/C/libAAPL.so       /nic/lib/
 
 # link scripts
 nic/tools/start-linkmgr-hw.sh                                       /nic/tools/
