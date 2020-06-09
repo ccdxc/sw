@@ -4,7 +4,7 @@ include ${MKDEFS}/pre.mk
 MODULE_TARGET   = libsdklinkmgrcsr.lib
 ifeq ($(ASIC),elba)
 MODULE_SRCS     = ${MODULE_SRC_DIR}/pknobs.cc \
-                  ${MODULE_SRC_DIR}/elb_mx_api.cc \
+                  ${MODULE_SRC_DIR}/elb_mx_common_api.cc \
                   ${MODULE_SRC_DIR}/elb_bx_api.cc
 else
 MODULE_SRCS     = ${MODULE_SRC_DIR}/pknobs.cc \

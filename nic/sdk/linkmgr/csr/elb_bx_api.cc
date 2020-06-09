@@ -1,7 +1,7 @@
 #include "model_sim/include/sknobs.h"
 #include "include/sdk/types.hpp"
 #include "lib/catalog/catalog.hpp"
-#include "include/sdk/asic/elba/elb_mx_api.h"
+#include "include/sdk/asic/elba/elb_mx_common_api.h"
 #include "elb_bx_api.h"
 #include "msg_man.h"
 

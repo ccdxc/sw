@@ -6,7 +6,7 @@
 #include "include/sdk/base.hpp"
 #include "linkmgr.hpp"
 #ifdef ELBA
-#include "include/sdk/asic/elba/elb_mx_api.h"
+#include "include/sdk/asic/elba/elb_mx_common_api.h"
 #else
 #include "include/sdk/asic/capri/cap_mx_api.h"
 #endif
@@ -69,6 +69,11 @@ typedef struct mac_fn_s_ {
                                    bool send);
     int  (*mac_tx_drain)(uint32_t mac_inst, uint32_t mac_ch,
                          bool drain);
+    int  (*mac_an_start)(uint32_t mac_ch, uint32_t user_cap, bool fec_ability, uint32_t fec_request);
+    bool (*mac_an_wait_hcd)(uint32_t mac_ch);
+    uint32_t (*mac_an_hcd_read)(uint32_t mac_ch);
+    int  (*mac_an_fec_enable_read)(uint32_t mac_ch);
+    int  (*mac_an_rsfec_enable_read)(uint32_t mac_ch);
 } mac_fn_t;
 
 extern mac_fn_t mac_fns;

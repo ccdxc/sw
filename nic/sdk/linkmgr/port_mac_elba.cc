@@ -7,6 +7,7 @@
 #include "linkmgr_rw.hpp"
 #include "linkmgr_types.hpp"
 #include "linkmgr_internal.hpp"
+#include "platform/drivers/xcvr.hpp"
 
 using sdk::types::port_speed_t;
 
@@ -426,15 +427,25 @@ mac_temac_stats_rd (uint32_t port_num, uint32_t size)
 //----------------------------------------------------------------------------
 
 static uint32_t
-mac_get_inst_from_port(uint32_t port_num)
+mac_get_ch_from_port(uint32_t port_num)
 {
-    return (port_num / MAX_PORT_LANES);
+    return port_num;  // For elba, port.cc set port_num = mac_ch (see port::port_mac_port_num_calc)
 }
 
 static uint32_t
-mac_get_lane_from_port(uint32_t port_num)
+mac_get_tm_port_from_mac_ch(uint32_t mac_ch)
 {
-    return (port_num % MAX_PORT_LANES);
+    // when 4 ports are enabled in mx, channels assigment is {0, 4, 2, 6} for port 0~3
+    if (mac_ch == 0) return 0;
+    else if (mac_ch == 4) return 1;
+    else if (mac_ch == 2) return 2;
+    else if (mac_ch == 6) return 3;
+    // when 5 ports are enabled in mx, channels assigment is {0, 4, 5, 6, 7} for port 0~4
+    else if (mac_ch == 5) return 2;
+    else if (mac_ch == 7) return 4;
+
+    SDK_LINKMGR_TRACE_DEBUG("ERROR: mac_get_tm_port_from_mac_ch unsupported mac_ch=%d", mac_ch);
+    return 0;
 }
 
 static bool
@@ -447,25 +458,46 @@ static int
 mac_cfg_fec_hw (mac_info_t *mac_info)
 {
     int          chip_id       = 0;
-    uint32_t     inst_id       = mac_info->mac_id;
-    uint32_t     start_lane    = mac_info->mac_ch;
+    uint32_t     inst_id       = 0;
+    uint32_t     mac_ch        = mac_info->mac_ch;
     uint32_t     num_lanes     = mac_info->num_lanes;
     uint32_t     fec           = mac_info->fec;
+    port_speed_t      port_speed = (port_speed_t) mac_info->speed;
+    int          ch_speed      = 0;
 
-    for (uint32_t ch = start_lane; ch < start_lane + num_lanes; ch++) {
-        cap_mx_set_fec(chip_id, inst_id, ch, fec);
+    switch (port_speed) {
+    case port_speed_t::PORT_SPEED_10G:
+        ch_speed = 10;
+        break;
+    case port_speed_t::PORT_SPEED_25G:
+        ch_speed = 25;
+        break;
+    case port_speed_t::PORT_SPEED_40G:
+        ch_speed = 40;
+        break;
+    case port_speed_t::PORT_SPEED_50G:
+        ch_speed = 50;
+        break;
+    case port_speed_t::PORT_SPEED_100G:
+        ch_speed = 100;
+        break;
+    case port_speed_t::PORT_SPEED_200G:
+        ch_speed = 200;
+        break;
+    default:
+        break;
     }
-    return 0;
+    return elb_mx_set_ch_mode(chip_id, inst_id, mac_ch, ch_speed, num_lanes, fec);
 }
 
 static int
 mac_cfg_hw (mac_info_t *mac_info)
 {
     int          chip_id       = 0;
-    int          ch_enable_vec = 0;
     int          mac_ch_en     = 0;
-    uint32_t     inst_id       = mac_info->mac_id;
-    uint32_t     start_lane    = mac_info->mac_ch;
+    uint32_t     inst_id       = 0;
+    uint32_t     mac_ch        = mac_info->mac_ch;
+    uint32_t     tm_port         = mac_get_tm_port_from_mac_ch(mac_ch);
     uint32_t     num_lanes     = mac_info->num_lanes;
     uint32_t     fec           = mac_info->fec;
     uint32_t     mx_api_speed  = 0;
@@ -475,128 +507,127 @@ mac_cfg_hw (mac_info_t *mac_info)
     bool         rx_pause_enable = mac_info->rx_pause_enable;
     port_speed_t      port_speed = (port_speed_t) mac_info->speed;
 
+    int port_ch_map_arr[5] = {0, 4, 2, 6, 0};
+    int port_speed_arr[5]  = {0, 0, 0, 0, 0};
+    int port_vec_arr[5]    = {0, 0, 0, 0, 0};
+    int slot_port_arr[8];
+    int slot_ch_arr[8];
+
+    // For future 5-port configure
+    //int port_ch_map_arr[5] = {0, 4, 5, 6, 7};
+    //int port_vec_arr[5]    = {200, 50, 50, 50, 50} or {100, 25, 25, 25, 25};
+
     switch (port_speed) {
     case port_speed_t::PORT_SPEED_10G:
-        mx[inst_id].mac_mode = MAC_MODE_4x10g;
         mx_api_speed = 10;
-        if ((g_linkmgr_cfg.catalog->is_card_naples25()) ||
-                 (g_linkmgr_cfg.catalog->is_card_naples25_swm())) {
-            mx[inst_id].tdm[0] = 0;
-            mx[inst_id].tdm[1] = 0;
-            mx[inst_id].tdm[2] = 0;
-            mx[inst_id].tdm[3] = 0;
-        } else {
-            mx[inst_id].tdm[0] = 0;
-            mx[inst_id].tdm[1] = 1;
-            mx[inst_id].tdm[2] = 2;
-            mx[inst_id].tdm[3] = 3;
-        }
+        for (int i = 0; i < 4; i++) port_speed_arr[i] = 10;
+        for (int i = 0; i < 4; i++) port_vec_arr[i] = 1;
         break;
 
     case port_speed_t::PORT_SPEED_25G:
-        mx[inst_id].mac_mode = MAC_MODE_4x25g;
         mx_api_speed = 25;
-        if ((g_linkmgr_cfg.catalog->is_card_naples25()) ||
-                 (g_linkmgr_cfg.catalog->is_card_naples25_swm())) {
-            mx[inst_id].tdm[0] = 0;
-            mx[inst_id].tdm[1] = 0;
-            mx[inst_id].tdm[2] = 0;
-            mx[inst_id].tdm[3] = 0;
-        } else {
-            mx[inst_id].tdm[0] = 0;
-            mx[inst_id].tdm[1] = 1;
-            mx[inst_id].tdm[2] = 2;
-            mx[inst_id].tdm[3] = 3;
-        }
+        for (int i = 0; i < 4; i++) port_speed_arr[i] = 25;
+        for (int i = 0; i < 4; i++) port_vec_arr[i] = 1;
         break;
 
     case port_speed_t::PORT_SPEED_40G:
-        mx[inst_id].mac_mode = MAC_MODE_1x40g;
         mx_api_speed = 40;
-        mx[inst_id].tdm[0] = 0;
-        mx[inst_id].tdm[1] = 0;
-        mx[inst_id].tdm[2] = 0;
-        mx[inst_id].tdm[3] = 0;
+        for (int i = 0; i < 4; i++) port_speed_arr[i] = 40;
+        for (int i = 0; i < 4; i++) port_vec_arr[i] = 1;
         break;
 
     case port_speed_t::PORT_SPEED_50G:
-        mx[inst_id].mac_mode = MAC_MODE_2x50g;
         mx_api_speed = 50;
-        mx[inst_id].tdm[0] = 0;
-        mx[inst_id].tdm[1] = 1;
-        mx[inst_id].tdm[2] = 0;
-        mx[inst_id].tdm[3] = 1;
+        for (int i = 0; i < 4; i++) port_speed_arr[i] = 50;
+        for (int i = 0; i < 4; i++) port_vec_arr[i] = 1;
         break;
 
     case port_speed_t::PORT_SPEED_100G:
-        mx[inst_id].mac_mode = MAC_MODE_1x100g;
         mx_api_speed = 100;
-        mx[inst_id].tdm[0] = 0;
-        mx[inst_id].tdm[1] = 0;
-        mx[inst_id].tdm[2] = 0;
-        mx[inst_id].tdm[3] = 0;
+        for (int i = 0; i < 4; i++) port_speed_arr[i] = 100;
+        for (int i = 0; i < 4; i++) port_vec_arr[i] = 1;
+        break;
+
+    case port_speed_t::PORT_SPEED_200G:
+        mx_api_speed = 200;
+        for (int i = 0; i < 2; i++) port_speed_arr[i] = 200;
+        for (int i = 0; i < 2; i++) port_vec_arr[i] = 1;
         break;
 
     default:
         break;
     }
 
-    mx[inst_id].glbl_mode = glbl_mode(mx[inst_id].mac_mode);
-
-    // Only master lane
-    mac_ch_en |= (1 << start_lane);
-
-    mx[inst_id].ch_mode [start_lane] =
-                           ch_mode(mx[inst_id].mac_mode, start_lane);
-
-    mx[inst_id].speed      [start_lane] = mx_api_speed;
-    mx[inst_id].port_enable[start_lane] = 1;
-
     if (mac_global_init(inst_id) == 0 || mac_info->force_global_init == true) {
-        cap_mx_load_from_cfg_glbl1(chip_id, inst_id, &ch_enable_vec);
-
-        cap_mx_set_tx_padding(chip_id, inst_id, mac_info->tx_pad_enable);
-
+      // Set TDM slot cfg. Potentially, json file can provide slot_port and slot_ch directly.
+      if (elb_mx_slot_gen(inst_id, port_vec_arr, port_ch_map_arr, port_speed_arr, slot_port_arr, slot_ch_arr) < 0) return -1;
+      elb_mx_set_slot(chip_id, inst_id, slot_port_arr, slot_ch_arr);
     }
 
     mx_init[inst_id] = mx_init[inst_id] | mac_ch_en;
 
-    SDK_LINKMGR_TRACE_DEBUG("mac_inst: %d, mac_ch: %d, mx_init: 0x%x",
-                    inst_id, start_lane, mx_init[inst_id]);
+    // Only master lane
+    SDK_LINKMGR_TRACE_DEBUG("mac_inst: %d, mac_ch: %d, tm_port: %d, mx_init: 0x%x",
+                    inst_id, mac_ch, tm_port, mx_init[inst_id]);
 
     // set MAC serdes loopback if enabled
-    cap_mx_serdes_lpbk_set(0, inst_id, mac_ch_en, loopback);
+    elb_mx_pcs_lpbk_set(chip_id, inst_id, mac_ch, num_lanes, loopback);
 
-    for (uint32_t ch = start_lane; ch < start_lane + num_lanes; ch++) {
-        cap_mx_cfg_ch(chip_id, inst_id, ch);
+    // Channel configuration
+    elb_mx_set_ch_mode(chip_id, inst_id, mac_ch, mx_api_speed, num_lanes, fec);
 
-        (void)fec;
-        cap_mx_set_fec(chip_id, inst_id, ch, fec);
-        cap_mx_set_rx_padding(chip_id, inst_id, ch, mac_info->rx_pad_enable);
-        cap_mx_set_mtu(chip_id, inst_id, ch, mx_api_speed, mac_info->mtu);
-        cap_mx_set_vlan_check(chip_id, inst_id, ch,
-                              3 /* num of tags to check */,
-                              0x8100 /* tag1 */,
-                              0x8100 /* tag2 */,
-                              0x8100 /* tag3 */);
-
-        switch (pause) {
-        case port_pause_type_t::PORT_PAUSE_TYPE_LINK:
-            cap_mx_set_pause(chip_id, inst_id, ch, 0x1, 1,
-                             tx_pause_enable, rx_pause_enable);
-            break;
-
-        case port_pause_type_t::PORT_PAUSE_TYPE_PFC:
-            cap_mx_set_pause(chip_id, inst_id, ch, 0xff, 0,
-                             tx_pause_enable, rx_pause_enable);
-            break;
-
-        default:
-            cap_mx_set_pause(chip_id, inst_id, ch, 0x0, 0,
-                             tx_pause_enable, rx_pause_enable);
-            break;
-        }
+    // Tx FIFO early-full and min-start thresholds
+    if (mx_api_speed >= 200) {
+       elb_mx_set_txthresh(chip_id, inst_id, mac_ch, 0x3f, 0x4);
+     } else {
+       elb_mx_set_txthresh(chip_id, inst_id, mac_ch, 0x3f, 0x2);
     }
+
+    // MTU/Jabber
+    elb_mx_set_mtu_jabber(chip_id, inst_id, mac_ch, mac_info->mtu, 4+mac_info->mtu);
+
+    // By default enable the RX len error check
+    elb_mx_disable_eth_len_err(chip_id, inst_id, mac_ch, 0);
+
+    // Set Tx IFG to 12 (call this function to resolve conflict between ifglen and tx_ipg)
+    elb_mx_set_ifglen(chip_id, inst_id, mac_ch, 12);
+
+    elb_mx_set_tx_padding(chip_id, inst_id, mac_ch, mac_info->tx_pad_enable);
+
+    // No more rx padding disable in elba. 
+    // By disabling rx padding in capri, it may cause rx overflow in pb.
+    //cap_mx_set_rx_padding(chip_id, inst_id, mac_ch, mac_info->rx_pad_enable);  // TODO: why sw disable capri rx padding?
+
+    elb_mx_set_vlan_check(chip_id, inst_id, mac_ch,
+                          3 /* num of tags to check */,
+                          0x8100 /* tag1 */,
+                          0x8100 /* tag2 */,
+                          0x8100 /* tag3 */);
+
+    // Rx eof timeout max
+    elb_mx_set_fixer_timeout(chip_id, inst_id, tm_port, 256);
+
+    switch (pause) {
+    case port_pause_type_t::PORT_PAUSE_TYPE_LINK:
+        elb_mx_set_pause(chip_id, inst_id, tm_port, mac_ch, 0x1, 1,
+                         tx_pause_enable, rx_pause_enable);
+        break;
+
+    case port_pause_type_t::PORT_PAUSE_TYPE_PFC:
+        elb_mx_set_pause(chip_id, inst_id, tm_port, mac_ch, 0xff, 0,
+                         tx_pause_enable, rx_pause_enable);
+        break;
+
+    default:
+        elb_mx_set_pause(chip_id, inst_id, tm_port, mac_ch, 0x0, 0,
+                         tx_pause_enable, rx_pause_enable);
+        break;
+    }
+
+    if ((mx_api_speed == 25 || mx_api_speed == 10) && (fec == 0)) {
+       elb_mx_enable_false_linkup_detection(chip_id , inst_id, mac_ch, (9800/8));
+    }
+
 
     return 0;
 }
@@ -607,19 +638,14 @@ mac_enable_hw (uint32_t port_num, uint32_t speed,
 {
     uint32_t chip_id    = 0;
     int      value      = 0;
-    uint32_t inst_id    = mac_get_inst_from_port(port_num);
-    uint32_t start_lane = mac_get_lane_from_port(port_num);;
-    uint32_t max_lanes  = start_lane + num_lanes;
+    uint32_t inst_id    = 0;
+    uint32_t mac_ch     = mac_get_ch_from_port(port_num);
 
     if (enable == true) {
         value = 1;
-        // Enable only master lane
-        max_lanes = start_lane + 1;
     }
 
-    for (uint32_t lane = start_lane; lane < max_lanes; lane++) {
-        cap_mx_set_ch_enable(chip_id, inst_id, lane, value);
-    }
+    elb_mx_set_ch_enable(chip_id, inst_id, mac_ch, value, value);
 
     return 0;
 }
@@ -630,19 +656,15 @@ mac_soft_reset_hw (uint32_t port_num, uint32_t speed,
 {
     uint32_t chip_id    = 0;
     int      value      = 0;
-    uint32_t inst_id    = mac_get_inst_from_port(port_num);
-    uint32_t start_lane = mac_get_lane_from_port(port_num);;
-    uint32_t max_lanes  = start_lane + 1;
+    uint32_t inst_id    = 0;
+    uint32_t mac_ch     = mac_get_ch_from_port(port_num);
+    uint32_t tm_port    = mac_get_tm_port_from_mac_ch(mac_ch);
 
     if (reset == true) {
         value = 1;
-        // Reset all lanes
-        max_lanes = start_lane + num_lanes;
     }
 
-    for (uint32_t lane = start_lane; lane < max_lanes; lane++) {
-        cap_mx_set_soft_reset(chip_id, inst_id, lane, value);
-    }
+    elb_mx_set_soft_reset(chip_id, inst_id, tm_port, mac_ch, value);
 
     return 0;
 }
@@ -653,9 +675,9 @@ mac_stats_reset_hw (uint32_t mac_inst, uint32_t mac_ch, bool reset)
     int chip_id = 0;
 
     if (reset == true) {
-        cap_mx_stats_reset(chip_id, mac_inst, mac_ch, 1);
+        elb_mx_clear_mac_stat(chip_id, mac_inst, mac_ch, 1);
     } else {
-        cap_mx_stats_reset(chip_id, mac_inst, mac_ch, 0);
+        elb_mx_clear_mac_stat(chip_id, mac_inst, mac_ch, 0);
     }
     return 0;
 }
@@ -663,6 +685,9 @@ mac_stats_reset_hw (uint32_t mac_inst, uint32_t mac_ch, bool reset)
 static int
 mac_intr_clear_hw (uint32_t port_num, uint32_t speed, uint32_t num_lanes)
 {
+    int chip_id = 0;
+    int inst_id = 0;
+    elb_mx_clear_int(chip_id, inst_id);
     return 0;
 }
 
@@ -670,6 +695,9 @@ static int
 mac_intr_enable_hw (uint32_t port_num, uint32_t speed,
                          uint32_t num_lanes, bool enable)
 {
+    int chip_id = 0;
+    int inst_id = 0;
+    elb_mx_enable_int(chip_id, inst_id);
     return 0;
 }
 
@@ -677,26 +705,28 @@ static int
 mac_faults_clear_hw (uint32_t inst_id, uint32_t mac_ch)
 {
     int chip_id = 0;
-    return cap_mx_base_r_pcs_status2_clear(chip_id, inst_id, mac_ch);
+    elb_mx_read_stats(chip_id, inst_id, mac_ch, 96, true);  // ber_err_cnt
+    elb_mx_read_stats(chip_id, inst_id, mac_ch, 97, true);  // err_blocks_cnt
+    return 0;
 }
 
 static bool
 mac_faults_get_hw (uint32_t inst_id, uint32_t mac_ch)
 {
     int chip_id = 0;
-    int faults = 0;
-    faults = cap_mx_base_r_pcs_status2(chip_id, inst_id, mac_ch);
-    return faults != 0;
+    uint64_t ber_err_cnt = elb_mx_read_stats(chip_id, inst_id, mac_ch, 96);
+    uint64_t err_blocks_cnt = elb_mx_read_stats(chip_id, inst_id, mac_ch, 97);
+    return (ber_err_cnt > 0) || (err_blocks_cnt > 0);
 }
 
 static bool
 mac_sync_get_hw (uint32_t port_num)
 {
     uint32_t chip_id    = 0;
-    uint32_t inst_id    = mac_get_inst_from_port(port_num);
-    uint32_t start_lane = mac_get_lane_from_port(port_num);;
+    uint32_t inst_id    = 0;
+    uint32_t mac_ch     = mac_get_ch_from_port(port_num);
 
-    return cap_mx_check_ch_sync(chip_id, inst_id, start_lane) == 1;
+    return elb_mx_check_ch_sync(chip_id, inst_id, mac_ch) == 1;
 }
 
 static int
@@ -704,15 +734,17 @@ mac_flush_set_hw (uint32_t port_num, bool enable)
 {
     int      val        = 0x1;
     uint32_t chip_id    = 0;
-    uint32_t inst_id    = mac_get_inst_from_port(port_num);
-    uint32_t start_lane = mac_get_lane_from_port(port_num);;
+    uint32_t inst_id    = 0;
+    uint32_t mac_ch     = mac_get_ch_from_port(port_num);
+    uint32_t tm_port    = mac_get_tm_port_from_mac_ch(mac_ch);
 
-    // if flush is true, reset Tx/Rx
     if (enable == true) {
         val = 0x0;
     }
 
-    cap_mx_cfg_ch_en(chip_id, inst_id, start_lane, val);
+    //elb_mx_set_flush(chip_id, inst_id, tm_port, enable);
+    elb_mx_set_rxsm_enable(chip_id, inst_id, tm_port, val);
+    elb_mx_set_tx_drain(chip_id, inst_id, mac_ch, enable);
 
     return 0;
 }
@@ -721,14 +753,14 @@ static int
 mac_stats_get_hw (uint32_t mac_inst, uint32_t mac_ch,
                   uint64_t *stats_data)
 {
-    cap_mx_mac_stat(0 /*chip_id*/, mac_inst, mac_ch, 0, stats_data);
+    elb_mx_mac_stat(0 /*chip_id*/, mac_inst, mac_ch, stats_data);
     return 0;
 }
 
 static int
 mac_pause_src_addr_hw (uint32_t mac_inst, uint32_t mac_ch, uint8_t *mac_addr)
 {
-    cap_mx_set_pause_src_addr(0, mac_inst, mac_ch, mac_addr);
+    elb_mx_set_pause_src_addr(0, mac_inst, mac_ch, mac_addr);
     return 0;
 }
 
@@ -747,15 +779,58 @@ static int
 mac_send_remote_faults_hw (uint32_t mac_inst, uint32_t mac_ch,
                            bool send)
 {
-    cap_mx_send_remote_faults(0, mac_inst, mac_ch, send);
+    elb_mx_send_remote_faults(0, mac_inst, mac_ch, send);
     return 0;
 }
 
 static int
 mac_tx_drain_hw (uint32_t mac_inst, uint32_t mac_ch, bool drain)
 {
-    cap_mx_tx_drain(0, mac_inst, mac_ch, drain);
+    elb_mx_set_tx_drain(0, mac_inst, mac_ch, drain);
     return 0;
+}
+
+static int
+mac_an_start_hw (uint32_t mac_ch, uint32_t user_cap, bool fec_ability, uint32_t fec_request)
+{
+   int user_fec = 0;
+   int user_pause = 0;
+   int ignore_nonce = 1;
+   if (fec_ability) {
+      user_fec = user_fec | elb_mx_an_fec_capability_t::ELB_MX_AN_FEC_FEC_10G_ABI;
+   }
+   if ((fec_request & AN_FEC_REQ_25GB_RSFEC) == 1) {
+      user_fec = user_fec | elb_mx_an_fec_capability_t::ELB_MX_AN_FEC_RSFEC_25G_REQ;
+   }
+   if ((fec_request & AN_FEC_REQ_25GB_FCFEC) == 1) {
+      user_fec = user_fec | elb_mx_an_fec_capability_t::ELB_MX_AN_FEC_FCFEC_25G_REQ;
+   }
+   elb_mx_an_init(0, 0, mac_ch, user_cap, user_fec, user_pause, ignore_nonce);
+   return 0;
+}
+
+static bool
+mac_an_wait_hcd_hw (uint32_t mac_ch)
+{
+   return elb_mx_an_get_an_complete(0, 0, mac_ch);
+}
+
+static uint32_t
+mac_an_hcd_read_hw (uint32_t mac_ch)
+{
+   return elb_mx_an_get_hcd(0, 0, mac_ch);
+}
+
+static int
+mac_an_fec_enable_read_hw (uint32_t mac_ch)
+{
+   return elb_mx_an_get_25g_fcfec(0, 0, mac_ch);
+}
+
+static int
+mac_an_rsfec_enable_read_hw (uint32_t mac_ch)
+{
+   return elb_mx_an_get_25g_rsfec(0, 0, mac_ch);
 }
 
 //----------------------------------------------------------------------------
@@ -858,7 +933,7 @@ mac_mgmt_enable_hw (uint32_t port_num, uint32_t speed,
     uint32_t chip_id    = 0;
     int      value      = 0;
     uint32_t inst_id    = 0;
-    uint32_t start_lane = mac_get_lane_from_port(port_num);;
+    uint32_t start_lane = 0;
     uint32_t max_lanes  = start_lane + num_lanes;
 
     if (enable == true) {
@@ -881,7 +956,7 @@ mac_mgmt_soft_reset_hw (uint32_t port_num, uint32_t speed,
     uint32_t chip_id    = 0;
     int      value      = 0;
     uint32_t inst_id    = 0;
-    uint32_t start_lane = mac_get_lane_from_port(port_num);;
+    uint32_t start_lane = 0;
     uint32_t max_lanes  = start_lane + 1;
 
     if (reset == true) {
@@ -969,8 +1044,8 @@ mac_mgmt_stats_reset_hw (uint32_t mac_inst, uint32_t mac_ch, bool reset)
 static bool
 mac_sync_get_mock (uint32_t port_num)
 {
-    uint32_t inst_id    = mac_get_inst_from_port(port_num);
-    uint32_t start_lane = mac_get_lane_from_port(port_num);;
+    uint32_t inst_id    = 0;
+    uint32_t start_lane = mac_get_ch_from_port(port_num);
 
     static uint8_t *cnt = NULL;
 
@@ -1114,7 +1189,7 @@ mac_an_wait_hcd_default (uint32_t mac_ch)
 
 static uint32_t
 mac_an_hcd_read_default (uint32_t mac_ch)
-{
+{   
     return 0;
 }
 
@@ -1181,7 +1256,6 @@ port_mac_fn_init(linkmgr_cfg_t *cfg)
     mac_mgmt_fn->mac_an_fec_enable_read   = &mac_an_fec_enable_read_default;
     mac_mgmt_fn->mac_an_rsfec_enable_read = &mac_an_rsfec_enable_read_default;
 
-
     switch (platform_type) {
     case platform_type_t::PLATFORM_TYPE_HAPS:
         // TODO needs sequencing from hal
@@ -1204,6 +1278,11 @@ port_mac_fn_init(linkmgr_cfg_t *cfg)
         mac_fn->mac_pause_src_addr = &mac_pause_src_addr_hw;
         mac_fn->mac_deinit         = &mac_deinit_hw;
         mac_fn->mac_tx_drain       = &mac_tx_drain_hw;
+        mac_fn->mac_an_start             = &mac_an_start_hw;
+        mac_fn->mac_an_wait_hcd          = &mac_an_wait_hcd_hw;
+        mac_fn->mac_an_hcd_read          = &mac_an_hcd_read_hw;
+        mac_fn->mac_an_fec_enable_read   = &mac_an_fec_enable_read_hw;
+        mac_fn->mac_an_rsfec_enable_read = &mac_an_rsfec_enable_read_hw;
 
         mac_mgmt_fn->mac_cfg          = &mac_mgmt_cfg_hw;
         mac_mgmt_fn->mac_cfg_fec      = &mac_mgmt_cfg_fec_hw;
@@ -1237,6 +1316,11 @@ port_mac_fn_init(linkmgr_cfg_t *cfg)
         mac_fn->mac_deinit         = &mac_deinit_hw;
         mac_fn->mac_send_remote_faults = &mac_send_remote_faults_hw;
         mac_fn->mac_tx_drain       = &mac_tx_drain_hw;
+        mac_fn->mac_an_start             = &mac_an_start_hw;
+        mac_fn->mac_an_wait_hcd          = &mac_an_wait_hcd_hw;
+        mac_fn->mac_an_hcd_read          = &mac_an_hcd_read_hw;
+        mac_fn->mac_an_fec_enable_read   = &mac_an_fec_enable_read_hw;
+        mac_fn->mac_an_rsfec_enable_read = &mac_an_rsfec_enable_read_hw;
 
         mac_mgmt_fn->mac_cfg         = &mac_mgmt_cfg_hw;
         mac_mgmt_fn->mac_cfg_fec     = &mac_mgmt_cfg_fec_hw;

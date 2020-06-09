@@ -36,6 +36,15 @@ typedef enum card_id_e {
 } card_id_t;
 
 typedef enum mac_mode_e {
+    // new modes for Elba
+    MAC_MODE_2x200ghs,
+    MAC_MODE_2x100ghs,
+    MAC_MODE_1x100ghs,
+    MAC_MODE_2x50ghs,
+    MAC_MODE_1x50ghs,
+    MAC_MODE_2x100g,
+
+    // modes for both Capri and Elba
     MAC_MODE_1x100g,
     MAC_MODE_1x40g,
     MAC_MODE_1x50g,

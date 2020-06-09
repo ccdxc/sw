@@ -3,6 +3,7 @@
 #include "port.hpp"
 #include "port_mac.hpp"
 #include "port_serdes.hpp"
+#include "port_an.hpp"
 #include "linkmgr_internal.hpp"
 #include "linkmgr.hpp"
 #include "linkmgr_types.hpp"
@@ -608,15 +609,19 @@ port::port_serdes_an_start (void)
         serdes_fns()->serdes_cfg(sbus_addr, serdes_info);
     }
     // start AN
-    return serdes_fns()->serdes_an_start(port_sbus_addr(0), &serdes_info_an,
-                                         user_cap(), fec_ability(),
-                                         fec_request());
+    //return serdes_fns()->serdes_an_start(port_sbus_addr(0), &serdes_info_an,
+    //                                     user_cap(), fec_ability(),
+    //                                     fec_request());
+    return port_an_start(this->mac_ch_, port_sbus_addr(0), &serdes_info_an,
+                         user_cap(), fec_ability(),
+                         fec_request());
 }
 
 bool
 port::port_serdes_an_wait_hcd (void)
 {
-    return serdes_fns()->serdes_an_wait_hcd(port_sbus_addr(0));
+    //return serdes_fns()->serdes_an_wait_hcd(port_sbus_addr(0));
+    return port_an_wait_hcd(this->mac_ch_, port_sbus_addr(0));
 }
 
 bool
@@ -694,9 +699,12 @@ port::port_serdes_an_hcd_cfg (void)
     serdes_info_t *serdes_info = NULL;
     uint32_t      num_lanes    = 0;
 
-    an_hcd       = serdes_fns()->serdes_an_hcd_read(port_sbus_addr(0));
-    fec_enable   = serdes_fns()->serdes_an_fec_enable_read(port_sbus_addr(0));
-    rsfec_enable = serdes_fns()->serdes_an_rsfec_enable_read(port_sbus_addr(0));
+    //an_hcd       = serdes_fns()->serdes_an_hcd_read(port_sbus_addr(0));
+    //fec_enable   = serdes_fns()->serdes_an_fec_enable_read(port_sbus_addr(0));
+    //rsfec_enable = serdes_fns()->serdes_an_rsfec_enable_read(port_sbus_addr(0));
+    an_hcd       = port_an_hcd_read(this->mac_ch_, port_sbus_addr(0));
+    fec_enable   = port_an_fec_enable_read(this->mac_ch_, port_sbus_addr(0));
+    rsfec_enable = port_an_rsfec_enable_read(this->mac_ch_, port_sbus_addr(0));
 
     SDK_LINKMGR_TRACE_DEBUG("port: %d, an_hcd: %d, fec_enable: %d, "
                             "rsfec_enable: %d",

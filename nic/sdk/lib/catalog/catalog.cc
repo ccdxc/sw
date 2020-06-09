@@ -68,6 +68,8 @@ catalog::populate_asic(ptree::value_type &asic, catalog_asic_t *asic_p)
 {
     if (asic.second.get<std::string>("name", "") ==  "capri") {
         asic_p->type = asic_type_t::SDK_ASIC_TYPE_CAPRI;
+    } else if (asic.second.get<std::string>("name", "") ==  "elba") {
+        asic_p->type = asic_type_t::SDK_ASIC_TYPE_ELBA;
     } else {
         asic_p->type = asic_type_t::SDK_ASIC_TYPE_NONE;
     }
@@ -116,6 +118,8 @@ catalog::catalog_speed_to_port_speed(std::string speed)
         return port_speed_t::PORT_SPEED_50G;
     } else if (speed == "100G") {
         return port_speed_t::PORT_SPEED_100G;
+    } else if (speed == "200G") {
+        return port_speed_t::PORT_SPEED_200G;
     }
 
     return port_speed_t::PORT_SPEED_NONE;
@@ -164,6 +168,12 @@ catalog::parse_breakout_mode(std::string breakout_mode)
         return port_breakout_mode_t::BREAKOUT_MODE_4x10G;
     } else if (breakout_mode == "2x50G") {
         return port_breakout_mode_t::BREAKOUT_MODE_2x50G;
+    } else if (breakout_mode == "4x50G") {
+        return port_breakout_mode_t::BREAKOUT_MODE_4x50G;
+    } else if (breakout_mode == "4x100G") {
+        return port_breakout_mode_t::BREAKOUT_MODE_4x100G;
+    } else if (breakout_mode == "2x200G") {
+        return port_breakout_mode_t::BREAKOUT_MODE_2x200G;
     }
 
     return port_breakout_mode_t::BREAKOUT_MODE_NONE;
